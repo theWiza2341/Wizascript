@@ -4,14 +4,23 @@
 
 import { formatLine, sanitizeText } from "./formatting.js";
 import { getPageWindow } from "../core/page-window.js";
+import {
+  buildLocalizedCardNameMap,
+  getCardIdByExactGameLookup,
+  resolveCardId,
+  attachCardHover
+} from "../core/card-data.js";
 
 const STATE_KEY = "wizascript.patchmaker.state.v1";
 const cycleOrder = ["none", "other", "buff", "rework", "nerf"];
 
-export function createPatchMakerOverlay({ logger, wordColors, underlineTokens, settings }) {
+  export function createPatchMakerOverlay({
+  logger, wordColors, underlineTokens, getCardHoversEnabled, languageLabel
+}) {
   let overlay, container, toggle, modeToggle, resetBtn, helpBtn;
   let custom = false;
   let isViewerMode = false;
+  let cardNameMap = new Map(); // populated async below, empty until then
 
   // ---- persistence (raw GM storage - not a user-facing setting) ----
 
@@ -294,15 +303,32 @@ export function createPatchMakerOverlay({ logger, wordColors, underlineTokens, s
   }
 
   // ---- viewer/editor mode ----
+    
+  function bindCardHovers() {
+    if (!getCardHoversEnabled()) return;
 
+    container.querySelectorAll(".uc-card-ref").forEach(el => {
+      if (el.dataset.ucHoverBound === "true") return;
+
+      const name = el.textContent.trim();
+      const cardId = getCardIdByExactGameLookup(name) || resolveCardId(name, cardNameMap);
+
+      if (!cardId) {
+        logger.warn("hover", "Card not found for hover", name);
+        return;
+      }
+      attachCardHover(el, cardId);
+    });
+  }
+    
   function applyFormattingOverlay() {
     container.querySelectorAll("li").forEach(li => {
       const span = li.querySelector(".uc-li-text");
       if (span) span.innerHTML = formatLine(li.dataset.raw, wordColors, underlineTokens);
     });
-    // TODO: card hover binding depends on core/card-data.js (not yet built)
+      bindCardHovers();
   }
-
+    
   function clearFormattingOverlay() {
     container.querySelectorAll("li").forEach(li => {
       const span = li.querySelector(".uc-li-text");
@@ -414,6 +440,10 @@ export function createPatchMakerOverlay({ logger, wordColors, underlineTokens, s
 
     overlay.appendChild(container);
     headerNav.insertAdjacentElement("afterend", overlay);
+
+    buildLocalizedCardNameMap(languageLabel).then(map => {
+      cardNameMap = map;
+    }).catch(e => logger.error("init", "Failed to build card name map", e));
 
     buildControlButtons(headerNav);
     loadState();

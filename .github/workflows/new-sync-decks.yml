@@ -1,0 +1,6 @@
+# Scheduled (every few hours) + manual. Runs bot/new-only-sync.js to
+# check only the current season's channels for new/updated decks,
+# appending to bot/decks.json without a full rescan.
+#
+# Not implemented yet - see existing new-sync-decks.yml from the
+# standalone True Hub Bridge repo for reference when porting this over.

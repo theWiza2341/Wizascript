@@ -1,0 +1,5 @@
+# Manual-only (workflow_dispatch). Runs bot/bot.js against the entire
+# Discord server history and rewrites bot/decks.json from scratch.
+#
+# Not implemented yet - see existing full-sync-decks.yml from the
+# standalone True Hub Bridge repo for reference when porting this over.

@@ -1,3 +1,10 @@
-// Resolves unsafeWindow vs window depending on sandboxing. Needed once
-// any feature (e.g. true-hub-bridge) requires a GM_* grant, which forces
-// the whole bundle into a sandboxed context.
+// Resolves unsafeWindow vs window. Needed once GM_xmlhttpRequest (for
+// True Hub Bridge) forces the whole bundle into a sandboxed context.
+
+export function getPageWindow() {
+  return typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+}
+
+export function getPageGlobal(name) {
+  return getPageWindow()[name];
+}

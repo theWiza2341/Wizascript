@@ -40,16 +40,37 @@ export function insertUnderlineMarkers(text, underlineTokens) {
   return result;
 }
 
-export function applyColorWords(seg, wordColors) {
-  const colorKeys = Object.keys(wordColors).filter(Boolean)
-    .sort((a, b) => b.length - a.length).map(escapeRegExp);
-  if (!colorKeys.length) return seg;
+// Rarity words require exact-case matches (e.g. "BASE" colors, "base"
+// does not). Without this, ordinary prose like "base stats were
+// adjusted" gets tinted as if it referenced the BASE rarity. Everything
+// else (stats, souls, keywords) keeps the previous case-insensitive
+// behavior - this is intentionally scoped to rarities only.
+const CASE_SENSITIVE_COLOR_WORDS = new Set(["BASE", "COMMON", "RARE", "EPIC", "LEGENDARY", "TOKEN"]);
 
-  const regex = new RegExp(`(^|[^\\p{L}\\p{N}_])(${colorKeys.join("|")})(?=([^\\p{L}\\p{N}_]|$))`, "giu");
-  return seg.replace(regex, (match, pre, word) => {
-    const c = wordColors[word] || wordColors[word.toUpperCase()] || wordColors[word.toLowerCase()];
-    return c ? `${pre}<span style="color:${c};">${word}</span>` : match;
-  });
+export function applyColorWords(seg, wordColors) {
+  const allKeys = Object.keys(wordColors).filter(Boolean);
+  const caseSensitiveKeys = allKeys.filter(k => CASE_SENSITIVE_COLOR_WORDS.has(k));
+  const caseInsensitiveKeys = allKeys.filter(k => !CASE_SENSITIVE_COLOR_WORDS.has(k));
+
+  if (caseSensitiveKeys.length) {
+    const pattern = caseSensitiveKeys.sort((a, b) => b.length - a.length).map(escapeRegExp).join("|");
+    const regex = new RegExp(`(^|[^\\p{L}\\p{N}_])(${pattern})(?=([^\\p{L}\\p{N}_]|$))`, "gu");
+    seg = seg.replace(regex, (match, pre, word) => {
+      const c = wordColors[word];
+      return c ? `${pre}<span style="color:${c};">${word}</span>` : match;
+    });
+  }
+
+  if (caseInsensitiveKeys.length) {
+    const pattern = caseInsensitiveKeys.sort((a, b) => b.length - a.length).map(escapeRegExp).join("|");
+    const regex = new RegExp(`(^|[^\\p{L}\\p{N}_])(${pattern})(?=([^\\p{L}\\p{N}_]|$))`, "giu");
+    seg = seg.replace(regex, (match, pre, word) => {
+      const c = wordColors[word] || wordColors[word.toUpperCase()] || wordColors[word.toLowerCase()];
+      return c ? `${pre}<span style="color:${c};">${word}</span>` : match;
+    });
+  }
+
+  return seg;
 }
 
 export function applyCardFormatting(seg, wordColors) {

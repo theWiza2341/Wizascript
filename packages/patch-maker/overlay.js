@@ -4,23 +4,135 @@ import {
   resolveCardId,
   attachCardHover
 } from "../core/card-data.js";
+import { getPageWindow } from "../core/page-window.js";
+import { injectPatchMakerStyle } from "./styles.js";
+import { enableInputBlocker, disableInputBlocker } from "./input-blocker.js";
+import { createNewCardsFeature } from "./new-cards.js";
 
 const STATE_KEY = "wizascript.patchmaker.state.v1";
 const cycleOrder = ["none", "other", "buff", "rework", "nerf"];
 
+const DEFAULT_SECTIONS = [
+  "Balancing (Monsters)",
+  "Balancing (Spells)",
+  "Balancing (Artifacts)",
+  "Balancing (Board Slots)",
+  "Balancing (Souls)",
+  "Balancing (Other)"
+];
+
+// Restored from the original script: these three start open on a fresh
+// state, the rest start collapsed. Was dropped during the initial port.
+const DEFAULT_OPEN_SECTIONS = new Set([
+  "Balancing (Monsters)",
+  "Balancing (Spells)",
+  "Balancing (Artifacts)"
+]);
+
+function buildHelpMessage(version) {
+  return `<u><b>Basic Editing</b></u>
+Click any balance change to begin editing
+• Enter  = Confirm change
+
+
+<u><b>Adding & Removing Entries</b></u>
+• Green/Red +/- Button – Add a new entry / Remove entry
+
+
+<u><b>Toggle Balance Sections</b></u>
+• Blue +/- Button – Toggle visibility of a balance section
+<span style="color:#ff5555;">NOTE:</span> Hidden sections will not appear in Viewer Mode
+
+
+<u><b>Entry Class Type</b></u>
+Each entry needs a category:
+• Other (GRAY)
+• Buff (GREEN)
+• Rework (GOLD)
+• Nerf (RED)
+• None (EMPTY)
+
+
+<u><b>Category Shortcuts</b></u>
+• Ctrl  + Up / Down   → Change class type
+• Shift + Up / Down   → Move entry up/down in section
+
+
+<u><b>Custom Balance Sections</b></u>
+• Green + Button – Add a new custom balance section
+• Red - Button - Remove custom balance section (Double Click Required)
+• Click a section name to select it
+• Shift + Up / Down – Move selected section up/down
+
+
+<u><b>Automatic Highlighting</b></u>
+The following are highlighted automatically:
+• Stats: ATK, HP, COST, DMG
+• Numeric stats: 3/2, +1/+1, 1/1/1
+• Rarities, resources, keywords, and tribes
+
+
+<u><b>Manually Ignore Formatting</b></u>
+Use backwards slash to skip automatic formatting for words:
+Red \\Snail -- \\ATK 2 > 1.
+
+
+<u><b>Manual Underlining</b></u>
+Use underscores to force underline:
+Magic: Equip _Example_.
+
+
+<u><b>Manual Switch Highlighting</b></u>
+Use double brackets for switch effects:
+Switch: [[Example 1]] or [[Example 2]]
+
+
+<u><b>Manual Card References</b></u>
+Use curly braces to reference cards:
+Magic: Cast {Example}.
+
+
+<u><b>Viewer Mode vs Editor Mode</b></u>
+Editor Mode:
+• Editable, no formatting
+
+Viewer Mode:
+• Read-only
+• Formatting applied
+• Clean display
+
+
+<u><b>Saving & Reset</b></u>
+• Changes save automatically
+• Double-click Reset Data to clear everything
+
+Version: v${version}`;
+}
+
 export function createPatchMakerOverlay({
-  logger, getWordColors, getUnderlineTokens, getCardHoversEnabled, getCardNameMap
+  logger, getWordColors, getUnderlineTokens, getCardHoversEnabled, getCardNameMap,
+  getHideControlsEnabled, getOpenOnLoad, version
 }) {
   let overlay, container, toggle, modeToggle, resetBtn, helpBtn;
   let custom = false;
   let isViewerMode = false;
+  let originalPatchNotesNodes = []; // the real page's content between navbar and footer
+  let controlButtons = [];
+
+  const newCards = createNewCardsFeature({
+    isViewerMode: () => overlay.classList.contains("viewer-mode"),
+    saveState: () => saveState()
+  });
 
   // ---- persistence (raw GM storage - not a user-facing setting) ----
 
   function saveState() {
     try {
       const state = collectState();
-      if (state) GM_setValue(STATE_KEY, JSON.stringify(state));
+      if (state) {
+        GM_setValue(STATE_KEY, JSON.stringify(state));
+        logger.log("save", "State saved.", { sections: state.sections.length });
+      }
     } catch (e) {
       logger.error("save", "Failed to save state", e);
     }
@@ -28,10 +140,16 @@ export function createPatchMakerOverlay({
 
   function loadState() {
     const text = GM_getValue(STATE_KEY, "");
-    if (!text) return;
+    if (!text) {
+      logger.log("load", "No saved state found.");
+      return;
+    }
     try {
       const saved = JSON.parse(text);
-      if (saved && saved.sections) restoreState(saved);
+      if (saved && saved.sections) {
+        restoreState(saved);
+        logger.log("load", "State restored.", { sections: saved.sections.length });
+      }
     } catch (e) {
       logger.error("load", "Failed to parse saved state", e);
     }
@@ -39,6 +157,43 @@ export function createPatchMakerOverlay({
 
   function resetState() {
     GM_deleteValue(STATE_KEY);
+  }
+
+  // ---- generic editable-field behavior (title h2) ----
+
+  function makeEditable(el, placeholder) {
+    el.setAttribute("contenteditable", "true");
+    el.spellcheck = false;
+
+    el.addEventListener("focus", () => {
+      el.dataset.prevText = el.textContent.trim();
+      enableInputBlocker();
+    });
+
+    el.addEventListener("blur", () => {
+      let t = sanitizeText(el.textContent);
+      if (!t) t = placeholder;
+      el.textContent = t;
+      saveState();
+      disableInputBlocker();
+    });
+
+    el.addEventListener("keydown", e => {
+      if (overlay.classList.contains("viewer-mode")) return;
+      if (e.key === "Enter") { e.preventDefault(); el.blur(); }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        el.textContent = el.dataset.prevText;
+        el.blur();
+      }
+    });
+
+    el.addEventListener("paste", e => {
+      if (overlay.classList.contains("viewer-mode")) { e.preventDefault(); return; }
+      e.preventDefault();
+      const txt = (e.clipboardData || window.clipboardData).getData("text") || "";
+      document.execCommand("insertText", false, sanitizeText(txt));
+    });
   }
 
   // ---- section / li construction ----
@@ -103,6 +258,7 @@ export function createPatchMakerOverlay({
 
     span.addEventListener("focus", () => {
       span.dataset.prevText = span.textContent.trim();
+      enableInputBlocker();
     });
 
     span.addEventListener("blur", () => {
@@ -111,6 +267,7 @@ export function createPatchMakerOverlay({
       span.textContent = t;
       li.dataset.raw = t;
       saveState();
+      disableInputBlocker();
     });
 
     span.addEventListener("keydown", e => {
@@ -124,9 +281,16 @@ export function createPatchMakerOverlay({
         span.blur();
       }
     }, true);
+
+    span.addEventListener("paste", e => {
+      if (overlay.classList.contains("viewer-mode")) { e.preventDefault(); return; }
+      e.preventDefault();
+      const txt = (e.clipboardData || window.clipboardData).getData("text") || "";
+      document.execCommand("insertText", false, sanitizeText(txt));
+    });
   }
 
-  function appendSection(label, isCustom, focusName, beforeNode) {
+  function appendSection(label, isCustom, focusName, beforeNode, startCollapsed = false) {
     const p = document.createElement("p");
     p.className = "uc-section-header";
     p.dataset.custom = isCustom ? "true" : "false";
@@ -136,16 +300,34 @@ export function createPatchMakerOverlay({
     labelEl.textContent = label || "[New Balance Section]";
     labelEl.setAttribute("contenteditable", isCustom ? "true" : "false");
     labelEl.setAttribute("tabindex", "0");
+    labelEl.spellcheck = false;
 
-    labelEl.addEventListener("blur", () => {
-      if (!isCustom) return;
-      let t = sanitizeText(labelEl.textContent);
-      if (!t) t = "[New Balance Section]";
-      labelEl.textContent = t;
-      saveState();
+    labelEl.addEventListener("focus", () => {
+      labelEl.dataset.prevText = labelEl.textContent.trim();
+      enableInputBlocker();
     });
 
-    labelEl.addEventListener("keydown", e => handleShortcut(e), true);
+    labelEl.addEventListener("blur", () => {
+      if (isCustom) {
+        let t = sanitizeText(labelEl.textContent);
+        if (!t) t = "[New Balance Section]";
+        labelEl.textContent = t;
+        saveState();
+      }
+      disableInputBlocker();
+    });
+
+    labelEl.addEventListener("keydown", e => {
+      if (handleShortcut(e)) return;
+      if (!isCustom) return;
+      if (e.key === "Enter") { e.preventDefault(); labelEl.blur(); }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        labelEl.textContent = labelEl.dataset.prevText || "[New Balance Section]";
+        labelEl.blur();
+      }
+    }, true);
+
     p.appendChild(labelEl);
 
     const ul = document.createElement("ul");
@@ -153,7 +335,6 @@ export function createPatchMakerOverlay({
 
     const collapseBtn = document.createElement("button");
     collapseBtn.className = "uc-collapse-btn";
-    collapseBtn.textContent = "−";
     collapseBtn.onclick = () => {
       if (overlay.classList.contains("viewer-mode")) return;
       const collapsed = ul.style.display === "none";
@@ -186,6 +367,10 @@ export function createPatchMakerOverlay({
     }
 
     updateDeleteState(ul);
+
+    ul.style.display = startCollapsed ? "none" : "";
+    collapseBtn.textContent = startCollapsed ? "+" : "−";
+
     if (focusName) setTimeout(() => labelEl.focus(), 0);
     return { p, ul };
   }
@@ -262,8 +447,6 @@ export function createPatchMakerOverlay({
   }
 
   // ---- consolidated keyboard shortcut handler ----
-  // Replaces three overlapping handlers from the original script that
-  // all dispatched the same Ctrl/Shift+Arrow logic.
 
   function handleShortcut(e) {
     if (overlay.classList.contains("viewer-mode")) return false;
@@ -289,6 +472,12 @@ export function createPatchMakerOverlay({
       if (!p) return false;
       e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
       moveSection(p, dir);
+      // FIX: the original re-focuses the section label after every move
+      // (each of its callers did this individually). The consolidated
+      // handler here dropped that step, so every Shift+Arrow press lost
+      // focus - meaning repeated moves required re-clicking each time.
+      const label = p.querySelector(".uc-section-label");
+      if (label) setTimeout(() => label.focus(), 0);
       return true;
     }
 
@@ -342,7 +531,7 @@ export function createPatchMakerOverlay({
 
   function collectState() {
     if (!container) return null;
-    const state = { title: "", sections: [] };
+    const state = { title: "", sections: [], newCards: newCards.collectState(container) };
     const h2 = container.querySelector("h2");
     if (h2) state.title = h2.textContent.trim();
 
@@ -367,6 +556,8 @@ export function createPatchMakerOverlay({
     const h2 = container.querySelector("h2");
     if (h2 && saved.title) h2.textContent = saved.title;
 
+    newCards.restoreState(container, saved.newCards);
+
     getSectionPairs().forEach(pair => { pair.ul.remove(); pair.p.remove(); });
     const addSectionRow = container.querySelector(".uc-add-section-row");
 
@@ -388,6 +579,16 @@ export function createPatchMakerOverlay({
     });
   }
 
+  // ---- control button visibility ("Hide Patch Maker controls") ----
+
+  function setControlsHidden(hidden) {
+    controlButtons.forEach(btn => {
+      if (!btn) return;
+      btn.style.visibility = hidden ? "hidden" : "visible";
+      btn.style.pointerEvents = hidden ? "none" : "auto";
+    });
+  }
+
   // ---- init ----
 
   function init(mainEl) {
@@ -396,6 +597,8 @@ export function createPatchMakerOverlay({
       return;
     }
 
+    injectPatchMakerStyle();
+
     const navbars = mainEl.querySelectorAll(".navbar.navbar-default");
     const headerNav = navbars[0];
     if (!headerNav) {
@@ -403,21 +606,53 @@ export function createPatchMakerOverlay({
       return;
     }
 
+    const footer = mainEl.querySelector("footer");
+    originalPatchNotesNodes = [];
+    let ptr = headerNav.nextElementSibling;
+    while (ptr && ptr !== footer) {
+      originalPatchNotesNodes.push(ptr);
+      ptr = ptr.nextElementSibling;
+    }
+
+    let h3 = null, hr1 = null, h2 = null, hr2 = null;
+    for (const el of originalPatchNotesNodes) {
+      if (!h3 && el.tagName === "H3") { h3 = el.cloneNode(true); continue; }
+      if (!hr1 && el.tagName === "HR") { hr1 = el.cloneNode(true); continue; }
+      if (!h2 && el.tagName === "H2") { h2 = el.cloneNode(true); continue; }
+      if (!hr2 && el.tagName === "HR") { hr2 = el.cloneNode(true); continue; }
+    }
+
+    const endBRs = [];
+    for (let i = originalPatchNotesNodes.length - 1; i >= 0; i--) {
+      if (originalPatchNotesNodes[i].tagName === "BR") endBRs.push(originalPatchNotesNodes[i].cloneNode(true));
+      else break;
+    }
+    endBRs.reverse();
+
     overlay = document.createElement("div");
     overlay.id = "uc-patch-overlay";
     overlay.style.display = "none";
     overlay.classList.add("editor-mode");
 
     container = document.createElement("div");
-    const h2 = document.createElement("h2");
-    h2.textContent = "[Untitled Patch]";
-    h2.setAttribute("contenteditable", "true");
-    h2.addEventListener("blur", saveState);
-    container.appendChild(h2);
+    if (h3) container.appendChild(h3);
+    if (hr1) container.appendChild(hr1);
 
-    ["Balancing (Monsters)", "Balancing (Spells)", "Balancing (Artifacts)",
-     "Balancing (Board Slots)", "Balancing (Souls)", "Balancing (Other)"]
-      .forEach(label => appendSection(label, false, false));
+    const titleEl = h2 || document.createElement("h2");
+    if (!h2) titleEl.textContent = "[Untitled Patch]";
+    makeEditable(titleEl, "[Untitled Patch]");
+    container.appendChild(titleEl);
+
+    if (hr2) container.appendChild(hr2);
+
+    const newCardsSec = newCards.createSection(container);
+    newCardsSec.section.style.display = "none"; // collapsed by default, matches original
+    const newCardsBtn = newCardsSec.p.querySelector(".uc-collapse-btn");
+    if (newCardsBtn) newCardsBtn.textContent = "+";
+
+    DEFAULT_SECTIONS.forEach(label => {
+      appendSection(label, false, false, null, !DEFAULT_OPEN_SECTIONS.has(label));
+    });
 
     const addSectionRow = document.createElement("div");
     addSectionRow.className = "uc-add-section-row";
@@ -432,11 +667,18 @@ export function createPatchMakerOverlay({
     addSectionRow.appendChild(addSectionBtn);
     container.appendChild(addSectionRow);
 
+    endBRs.forEach(br => container.appendChild(br));
+
     overlay.appendChild(container);
     headerNav.insertAdjacentElement("afterend", overlay);
 
     buildControlButtons();
     loadState();
+    logger.log("init", "Overlay initialized.");
+
+    if (getOpenOnLoad()) {
+      setTimeout(() => { if (!custom) toggle.click(); }, 0);
+    }
   }
 
   function buildControlButtons() {
@@ -471,10 +713,13 @@ export function createPatchMakerOverlay({
     });
 
     [toggle, modeToggle, resetBtn, helpBtn].forEach(b => document.body.appendChild(b));
+    controlButtons = [toggle, modeToggle, resetBtn, helpBtn];
+    setControlsHidden(getHideControlsEnabled());
 
     toggle.onclick = () => {
       custom = !custom;
       overlay.style.display = custom ? "" : "none";
+      originalPatchNotesNodes.forEach(n => n.style.display = custom ? "none" : "");
       toggle.textContent = custom ? "Show Original Patch Notes" : "Show Custom Patch Notes";
       [modeToggle, resetBtn, helpBtn].forEach(b => b.style.display = custom ? "inline-block" : "none");
       if (!custom && isViewerMode) {
@@ -493,22 +738,46 @@ export function createPatchMakerOverlay({
       overlay.classList.toggle("viewer-mode", isViewerMode);
       overlay.classList.toggle("editor-mode", !isViewerMode);
       modeToggle.textContent = isViewerMode ? "Switch to Editor Mode" : "Switch to Viewer Mode";
-      if (isViewerMode) { applyFormattingOverlay(); setEditingEnabled(false); }
-      else { clearFormattingOverlay(); setEditingEnabled(true); }
+
+      if (isViewerMode) {
+        // Restored: a collapsed section's header should stay fully
+        // hidden in Viewer Mode too, not just its (already-hidden)
+        // list - so screenshots only show sections the user actually
+        // left expanded. This check runs over every <p> in container,
+        // which also naturally covers the New Cards header if that
+        // section is collapsed.
+        container.querySelectorAll("p").forEach(p => {
+          const sibling = p.nextElementSibling;
+          if (sibling && sibling.style.display === "none") p.style.display = "none";
+        });
+        applyFormattingOverlay();
+        setEditingEnabled(false);
+        logger.log("mode", "Switched to viewer mode.");
+      } else {
+        container.querySelectorAll("p").forEach(p => { p.style.display = ""; });
+        clearFormattingOverlay();
+        setEditingEnabled(true);
+        logger.log("mode", "Switched to editor mode.");
+      }
     };
 
     resetBtn.onclick = e => { if (custom && e.detail === 2) { resetState(); location.reload(); } };
 
+    // FIX: was checking bare `window.BootstrapDialog`, which is always
+    // undefined in this script's sandboxed context (same root cause as
+    // the earlier UnderScript-not-registering bug). BootstrapDialog is
+    // a real page global, so it has to be read via getPageWindow().
     helpBtn.onclick = () => {
-      const message = "Patch Maker help - see documentation for full shortcut list.";
-      const BootstrapDialogRef = window.BootstrapDialog;
+      const message = buildHelpMessage(version);
+      const pageWindow = getPageWindow();
+      const BootstrapDialogRef = pageWindow.BootstrapDialog;
       if (BootstrapDialogRef && typeof BootstrapDialogRef.alert === "function") {
         BootstrapDialogRef.alert({ title: "Custom Patch Maker – Help", message, closable: true });
       } else {
-        alert(message);
+        alert(message.replace(/<[^>]+>/g, ""));
       }
     };
   }
 
-  return { init };
+  return { init, setControlsHidden };
 }

@@ -4,15 +4,14 @@ import { BASE_WORD_COLORS } from "./formatting.js";
 import { registerPatchMakerSettings } from "./settings.js";
 import { createPatchMakerOverlay } from "./overlay.js";
 
+const FEATURE_VERSION = "0.1.0";
+
 function waitForMainContent(callback) {
   const existing = document.querySelector(".mainContent");
   if (existing) return callback(existing);
   setTimeout(() => waitForMainContent(callback), 50);
 }
 
-// Patch Maker only makes sense on the Patch Notes page - matches the
-// original standalone script's @match restriction, now enforced inside
-// the feature itself since the merged suite's @match is broad.
 function isPatchNotesPage() {
   return location.pathname.toLowerCase().includes("gameupdates");
 }
@@ -20,8 +19,6 @@ function isPatchNotesPage() {
 export function initPatchMaker(plugin) {
   const settings = registerPatchMakerSettings(plugin);
 
-  // Bail before anything is registered or waited on - the whole point
-  // of the master toggle is that a disabled feature costs ~nothing.
   if (!settings.enabled.value()) return;
   if (!isPatchNotesPage()) return;
 
@@ -38,22 +35,27 @@ export function initPatchMaker(plugin) {
 
   const overlay = createPatchMakerOverlay({
     logger,
+    version: FEATURE_VERSION,
     getWordColors: () => wordColors,
     getUnderlineTokens: () => underlineTokens,
     getCardHoversEnabled: () => settings.cardHovers.value(),
-    getCardNameMap: () => cardNameMap
+    getCardNameMap: () => cardNameMap,
+    getHideControlsEnabled: () => settings.hideControls.value(),
+    getOpenOnLoad: () => settings.openOnLoad.value()
   });
+
+  settings.hideControls.on(value => overlay.setControlsHidden(value));
 
   async function refreshLocalizedData() {
     const languageLabel = settings.language.value();
     const { tokens, localizedColors } = await buildLocalizedFormattingData(languageLabel, BASE_WORD_COLORS);
     underlineTokens = tokens;
     wordColors = { ...BASE_WORD_COLORS, ...localizedColors };
-
     cardNameMap = await buildLocalizedCardNameMap(languageLabel);
   }
 
-  refreshLocalizedData()
-    .then(() => waitForMainContent(mainEl => overlay.init(mainEl)))
-    .catch(e => logger.error("init", "Failed to initialize Patch Maker", e));
+  waitForMainContent(mainEl => {
+    overlay.init(mainEl);
+    refreshLocalizedData().catch(e => logger.error("init", "Failed to load localized data", e));
+  });
 }

@@ -241,3 +241,40 @@ export async function buildLocalizedCardNameMap(selectedLanguageLabel, attempt =
 
   return map;
 }
+
+// Card hover binding - low-level page-global access, so this lives in
+// core rather than overlay.js. Two resolution paths: the game's own
+// getCardWithName() first (authoritative, current locale), falling
+// back to the localized name map for cases it misses.
+
+export function getCardIdByExactGameLookup(name) {
+  const pageWindow = getPageWindow();
+  const getCardWithName = pageWindow.getCardWithName;
+  if (typeof getCardWithName !== "function") return null;
+  try {
+    const card = getCardWithName(name);
+    return card && card.id ? card.id : null;
+  } catch {
+    return null;
+  }
+}
+
+export function resolveCardId(name, cardNameMap) {
+  if (!cardNameMap) return null;
+  return cardNameMap.get(String(name).toLowerCase()) || null;
+}
+
+export function attachCardHover(el, cardId) {
+  const pageWindow = getPageWindow();
+  const displayCardHelp = pageWindow.displayCardHelp;
+  const removeCardHover = pageWindow.removeCardHover;
+  if (typeof displayCardHelp !== "function" || typeof removeCardHover !== "function") {
+    return false;
+  }
+
+  el.dataset.ucHoverBound = "true";
+  el.style.cursor = "pointer";
+  el.addEventListener("mouseover", function () { displayCardHelp(this, cardId); });
+  el.addEventListener("mouseleave", function () { removeCardHover(); });
+  return true;
+}

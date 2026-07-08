@@ -1,11 +1,5 @@
-// Builds the #uc-patch-overlay DOM, the floating toggle/mode/reset/help
-// buttons, and the editor-mode <-> viewer-mode switching logic. Ported
-// from the original startPatchMaker()/init().
-
 import { formatLine, sanitizeText } from "./formatting.js";
-import { getPageWindow } from "../core/page-window.js";
 import {
-  buildLocalizedCardNameMap,
   getCardIdByExactGameLookup,
   resolveCardId,
   attachCardHover
@@ -14,13 +8,12 @@ import {
 const STATE_KEY = "wizascript.patchmaker.state.v1";
 const cycleOrder = ["none", "other", "buff", "rework", "nerf"];
 
-  export function createPatchMakerOverlay({
-  logger, wordColors, underlineTokens, getCardHoversEnabled, languageLabel
+export function createPatchMakerOverlay({
+  logger, getWordColors, getUnderlineTokens, getCardHoversEnabled, getCardNameMap
 }) {
   let overlay, container, toggle, modeToggle, resetBtn, helpBtn;
   let custom = false;
   let isViewerMode = false;
-  let cardNameMap = new Map(); // populated async below, empty until then
 
   // ---- persistence (raw GM storage - not a user-facing setting) ----
 
@@ -303,9 +296,10 @@ const cycleOrder = ["none", "other", "buff", "rework", "nerf"];
   }
 
   // ---- viewer/editor mode ----
-    
+
   function bindCardHovers() {
     if (!getCardHoversEnabled()) return;
+    const cardNameMap = getCardNameMap();
 
     container.querySelectorAll(".uc-card-ref").forEach(el => {
       if (el.dataset.ucHoverBound === "true") return;
@@ -320,15 +314,15 @@ const cycleOrder = ["none", "other", "buff", "rework", "nerf"];
       attachCardHover(el, cardId);
     });
   }
-    
+
   function applyFormattingOverlay() {
     container.querySelectorAll("li").forEach(li => {
       const span = li.querySelector(".uc-li-text");
-      if (span) span.innerHTML = formatLine(li.dataset.raw, wordColors, underlineTokens);
+      if (span) span.innerHTML = formatLine(li.dataset.raw, getWordColors(), getUnderlineTokens());
     });
-      bindCardHovers();
+    bindCardHovers();
   }
-    
+
   function clearFormattingOverlay() {
     container.querySelectorAll("li").forEach(li => {
       const span = li.querySelector(".uc-li-text");
@@ -441,11 +435,7 @@ const cycleOrder = ["none", "other", "buff", "rework", "nerf"];
     overlay.appendChild(container);
     headerNav.insertAdjacentElement("afterend", overlay);
 
-    buildLocalizedCardNameMap(languageLabel).then(map => {
-      cardNameMap = map;
-    }).catch(e => logger.error("init", "Failed to build card name map", e));
-
-    buildControlButtons(headerNav);
+    buildControlButtons();
     loadState();
   }
 
@@ -459,7 +449,27 @@ const cycleOrder = ["none", "other", "buff", "rework", "nerf"];
     helpBtn = document.createElement("button");
     helpBtn.textContent = "Help";
 
-    [modeToggle, resetBtn, helpBtn].forEach(b => b.style.display = "none");
+    Object.assign(toggle.style, {
+      position: "fixed", left: "10px", bottom: "10px", padding: "8px 12px",
+      background: "#333", color: "white", border: "none", borderRadius: "6px",
+      cursor: "pointer", zIndex: "99999"
+    });
+    Object.assign(modeToggle.style, {
+      position: "fixed", left: "10px", bottom: "50px", padding: "8px 12px",
+      background: "#333", color: "white", border: "none", borderRadius: "6px",
+      cursor: "pointer", zIndex: "99999", fontSize: "14px", display: "none"
+    });
+    Object.assign(resetBtn.style, {
+      position: "fixed", left: "10px", bottom: "90px", padding: "8px 12px",
+      background: "#aa3333", color: "white", border: "none", borderRadius: "6px",
+      cursor: "pointer", zIndex: "99999", fontSize: "14px", display: "none"
+    });
+    Object.assign(helpBtn.style, {
+      position: "fixed", left: "130px", bottom: "90px", padding: "8px 12px",
+      background: "#3366cc", color: "white", border: "none", borderRadius: "6px",
+      cursor: "pointer", zIndex: "99999", fontSize: "14px", display: "none"
+    });
+
     [toggle, modeToggle, resetBtn, helpBtn].forEach(b => document.body.appendChild(b));
 
     toggle.onclick = () => {
@@ -469,7 +479,8 @@ const cycleOrder = ["none", "other", "buff", "rework", "nerf"];
       [modeToggle, resetBtn, helpBtn].forEach(b => b.style.display = custom ? "inline-block" : "none");
       if (!custom && isViewerMode) {
         isViewerMode = false;
-        overlay.classList.replace("viewer-mode", "editor-mode");
+        overlay.classList.remove("viewer-mode");
+        overlay.classList.add("editor-mode");
         modeToggle.textContent = "Switch to Viewer Mode";
         clearFormattingOverlay();
         setEditingEnabled(true);
@@ -487,6 +498,16 @@ const cycleOrder = ["none", "other", "buff", "rework", "nerf"];
     };
 
     resetBtn.onclick = e => { if (custom && e.detail === 2) { resetState(); location.reload(); } };
+
+    helpBtn.onclick = () => {
+      const message = "Patch Maker help - see documentation for full shortcut list.";
+      const BootstrapDialogRef = window.BootstrapDialog;
+      if (BootstrapDialogRef && typeof BootstrapDialogRef.alert === "function") {
+        BootstrapDialogRef.alert({ title: "Custom Patch Maker – Help", message, closable: true });
+      } else {
+        alert(message);
+      }
+    };
   }
 
   return { init };

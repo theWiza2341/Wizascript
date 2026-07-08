@@ -242,10 +242,11 @@ export async function buildLocalizedCardNameMap(selectedLanguageLabel, attempt =
   return map;
 }
 
-// Card hover binding - low-level page-global access, so this lives in
-// core rather than overlay.js. Two resolution paths: the game's own
-// getCardWithName() first (authoritative, current locale), falling
-// back to the localized name map for cases it misses.
+// ---- card hover binding ----
+// Low-level page-global access, so this lives in core rather than
+// overlay.js. Two resolution paths: the game's own getCardWithName()
+// first (authoritative, current locale), falling back to the localized
+// name map for cases it misses.
 
 export function getCardIdByExactGameLookup(name) {
   const pageWindow = getPageWindow();

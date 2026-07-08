@@ -1,5 +1,5 @@
 import { createLogger } from "../core/debug-logger.js";
-import { buildLocalizedFormattingData } from "../core/card-data.js";
+import { buildLocalizedFormattingData, buildLocalizedCardNameMap } from "../core/card-data.js";
 import { BASE_WORD_COLORS } from "./formatting.js";
 import { registerPatchMakerSettings } from "./settings.js";
 import { createPatchMakerOverlay } from "./overlay.js";
@@ -10,15 +10,22 @@ function waitForMainContent(callback) {
   setTimeout(() => waitForMainContent(callback), 50);
 }
 
+// Patch Maker only makes sense on the Patch Notes page - matches the
+// original standalone script's @match restriction, now enforced inside
+// the feature itself since the merged suite's @match is broad.
+function isPatchNotesPage() {
+  return location.pathname.toLowerCase().includes("gameupdates");
+}
+
 export function initPatchMaker(plugin) {
   const settings = registerPatchMakerSettings(plugin);
 
   // Bail before anything is registered or waited on - the whole point
   // of the master toggle is that a disabled feature costs ~nothing.
   if (!settings.enabled.value()) return;
+  if (!isPatchNotesPage()) return;
 
   const logger = createLogger("PatchMaker");
-  logger.setCategory("general", true); // overridden below once the setting loads
 
   const originalWarn = logger.warn.bind(logger);
   const originalLog = logger.log.bind(logger);
@@ -27,22 +34,23 @@ export function initPatchMaker(plugin) {
 
   let wordColors = { ...BASE_WORD_COLORS };
   let underlineTokens = [];
+  let cardNameMap = new Map();
 
   const overlay = createPatchMakerOverlay({
     logger,
-    wordColors,
-    underlineTokens,
+    getWordColors: () => wordColors,
+    getUnderlineTokens: () => underlineTokens,
     getCardHoversEnabled: () => settings.cardHovers.value(),
-    languageLabel: settings.language.value()
+    getCardNameMap: () => cardNameMap
   });
 
   async function refreshLocalizedData() {
-    const { tokens, localizedColors } = await buildLocalizedFormattingData(
-      settings.language.value(),
-      BASE_WORD_COLORS
-    );
+    const languageLabel = settings.language.value();
+    const { tokens, localizedColors } = await buildLocalizedFormattingData(languageLabel, BASE_WORD_COLORS);
     underlineTokens = tokens;
     wordColors = { ...BASE_WORD_COLORS, ...localizedColors };
+
+    cardNameMap = await buildLocalizedCardNameMap(languageLabel);
   }
 
   refreshLocalizedData()

@@ -1,0 +1,6 @@
+# Builds manifest.js (and everything it imports from packages/*) via
+# build.js, then commits the result to wizascript.user.js at the repo
+# root. Triggers on push to main, excluding pushes that only touch
+# wizascript.user.js itself (to avoid re-triggering on its own commit).
+#
+# Not implemented yet.

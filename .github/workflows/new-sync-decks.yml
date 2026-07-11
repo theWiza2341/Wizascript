@@ -1,6 +1,43 @@
 # Scheduled (every few hours) + manual. Runs bot/new-only-sync.js to
 # check only the current season's channels for new/updated decks,
 # appending to bot/decks.json without a full rescan.
-#
-# Not implemented yet - see existing new-sync-decks.yml from the
-# standalone True Hub Bridge repo for reference when porting this over.
+
+name: New Only Sync True Hub Decks
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        working-directory: bot
+        run: npm install
+
+      - name: Run incremental sync
+        working-directory: bot
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+        run: node new-only-sync.js
+
+      - name: Commit updated decks.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add bot/decks.json
+          git commit -m "Update decks.json [incremental]" || echo "No changes to commit"
+          git push

@@ -21,6 +21,14 @@ export function registerTrueHubBridgeSettings(plugin) {
       type: "boolean",
       default: true
     }),
+    // The original script had no debug-logging toggle at all (just
+    // always-on console.log calls) - added here for consistency with
+    // patch-maker, using the same working per-feature debug logger.
+    debugLogging: settings.add("debugLogging", {
+      name: "Enable debug logging",
+      type: "boolean",
+      default: false
+    }),
     autoOpen: settings.add("autoOpenTrueHub", {
       name: "Auto Open True Hub",
       type: "boolean",

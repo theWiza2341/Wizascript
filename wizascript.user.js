@@ -2951,6 +2951,12 @@ Version: v${version}`;
         method: "GET",
         url: DECKS_URL,
         onload(res) {
+          if (res.status !== 200) {
+            reject(new Error(
+              `Failed to fetch decks.json (HTTP ${res.status}). Check that the repo is public and bot/decks.json exists on main.`
+            ));
+            return;
+          }
           try {
             const raw = JSON.parse(res.responseText);
             resolve(Array.isArray(raw) ? raw : raw.decks || []);

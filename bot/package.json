@@ -1,0 +1,10 @@
+{
+  "name": "wizascript-bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Discord scraper producing bot/decks.json for True Hub Bridge.",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.4.5"
+  }
+}

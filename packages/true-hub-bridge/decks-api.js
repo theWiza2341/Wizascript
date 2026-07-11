@@ -16,6 +16,19 @@ export function loadDecks() {
       method: "GET",
       url: DECKS_URL,
       onload(res) {
+        if (res.status !== 200) {
+          // A non-200 response here almost always means either the
+          // repo is private (raw.githubusercontent.com 404s rather
+          // than 403s for private repos when unauthenticated) or
+          // bot/decks.json doesn't exist on main yet. Fails loudly
+          // here instead of letting JSON.parse choke on an HTML/plain-
+          // text error page and produce a confusing parse error.
+          reject(new Error(
+            `Failed to fetch decks.json (HTTP ${res.status}). ` +
+            `Check that the repo is public and bot/decks.json exists on main.`
+          ));
+          return;
+        }
         try {
           const raw = JSON.parse(res.responseText);
           resolve(Array.isArray(raw) ? raw : (raw.decks || []));

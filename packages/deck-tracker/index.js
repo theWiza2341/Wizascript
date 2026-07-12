@@ -143,23 +143,25 @@ export function initDeckTracker(plugin) {
   // is inferred from reading that code, not something we've verified
   // empirically yet - worth confirming once real soul-tied presets
   // exist to actually test auto-load against.
-  plugin.events.on("connect", data => {
-    // ============================================================
-    // TEMPORARY FOR TESTING ONLY - RESTORE BEFORE MERGING TO MAIN
-    // Spectate guard disabled so favorited/soul-matched auto-load can
-    // be tested without needing a fresh real match every time.
-    // if (isSpectating()) return;
-    // ============================================================
-
+  // Auto-load favorited/retained presets on GameStart, NOT 'connect'.
+  // FIX: 'connect' is only re-dispatched from inside UnderScript's own
+  // GameEvent handler via a plain (non-singleton) emit - if our plugin
+  // registers its listener even slightly after the real connect event
+  // fires (very possible, since bootstrap() polls every 250ms for
+  // UnderScript to exist), we'd simply miss it forever with zero
+  // console output, since our handler never runs at all. 'GameStart' is
+  // fired via eventManager.singleton.emit(), which UnderScript's own
+  // event emitter explicitly replays to late subscribers - confirmed
+  // by reading its `on()` implementation. Neither favorited nor
+  // retained spawning need any data from the event itself, so this
+  // switch has no downside for them.
+  plugin.events.on("GameStart", () => {
     const favoritedIds = getFavoritedPresetIds();
     favoritedIds.forEach(id => spawnPreset(id));
     if (favoritedIds.length) {
       logger.log("autoload", "Spawned favorited presets at match start.", favoritedIds);
     }
 
-    // "Retain Unclosed Presets Between Matches" - independent from
-    // favoriting. Restores whatever was left open (favorited or not)
-    // last time, skipping anything already spawned above.
     if (settings.retainUnclosedPresets.value()) {
       const retainedIds = getRetainedPresetIds().filter(id => !favoritedIds.includes(id));
       retainedIds.forEach(id => spawnPreset(id));
@@ -167,10 +169,24 @@ export function initDeckTracker(plugin) {
         logger.log("autoload", "Restored retained (unclosed) presets.", retainedIds);
       }
     }
+  });
+
+  // NOTE: still on 'connect' specifically because it's the only place
+  // we have yourSoul available - this keeps the same unverified timing
+  // risk described above. Lower stakes for now since no soul-tied
+  // presets exist yet to actually depend on this firing reliably.
+  plugin.events.on("connect", data => {
+    // ============================================================
+    // TEMPORARY FOR TESTING ONLY - RESTORE BEFORE MERGING TO MAIN
+    // Spectate guard disabled so soul-matched auto-load can be tested
+    // without needing a fresh real match every time.
+    // if (isSpectating()) return;
+    // ============================================================
 
     if (settings.autoLoadSoulPresets.value()) {
       const soul = data?.yourSoul;
       if (soul) {
+        const favoritedIds = getFavoritedPresetIds();
         const matches = getAvailablePresets().filter(p => p.soul === soul && !favoritedIds.includes(p.id));
         matches.forEach(p => spawnPreset(p.id));
         if (matches.length) {

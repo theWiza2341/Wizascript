@@ -3933,7 +3933,7 @@ Version: v${version}`;
     }
     waitForAvatar(createButton);
     plugin.events.on("GameEvent", (event) => dispatchGameEvent(event));
-    plugin.events.on("connect", (data) => {
+    plugin.events.on("GameStart", () => {
       const favoritedIds = getFavoritedPresetIds();
       favoritedIds.forEach((id) => spawnPreset(id));
       if (favoritedIds.length) {
@@ -3946,9 +3946,12 @@ Version: v${version}`;
           logger.log("autoload", "Restored retained (unclosed) presets.", retainedIds);
         }
       }
+    });
+    plugin.events.on("connect", (data) => {
       if (settings.autoLoadSoulPresets.value()) {
         const soul = data == null ? void 0 : data.yourSoul;
         if (soul) {
+          const favoritedIds = getFavoritedPresetIds();
           const matches = getAvailablePresets().filter((p) => p.soul === soul && !favoritedIds.includes(p.id));
           matches.forEach((p) => spawnPreset(p.id));
           if (matches.length) {

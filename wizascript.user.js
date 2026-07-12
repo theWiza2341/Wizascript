@@ -3462,6 +3462,9 @@ Version: v${version}`;
     liveWidgets.delete(id);
     forgetActiveLayout(id);
   }
+  function isWidgetOpen(id) {
+    return liveWidgets.has(id);
+  }
   function getCurrentLayoutIfOpen(id) {
     const entry = liveWidgets.get(id);
     if (!entry) return null;
@@ -3527,7 +3530,21 @@ Version: v${version}`;
   }
 
   // packages/deck-tracker/picker.js
-  function buildPresetRow(preset, onAdd, onDelete) {
+  function heartIconSVG(filled) {
+    const fill = filled ? "#e74c3c" : "none";
+    const stroke = filled ? "#e74c3c" : "#888";
+    return `<svg width="18" height="18" viewBox="0 0 24 24" fill="${fill}" stroke="${stroke}" stroke-width="2" stroke-linejoin="round">
+    <path d="M12 21s-6.716-4.35-9.428-8.06C.686 10.06 1.2 6.5 4.2 5.1 6.6 4 9 5 12 8c3-3 5.4-4 7.8-2.9 3 1.4 3.514 4.96 1.628 7.84C18.716 16.65 12 21 12 21z"/>
+  </svg>`;
+  }
+  function starIconSVG(filled) {
+    const fill = filled ? "#2ecc71" : "none";
+    const stroke = filled ? "#2ecc71" : "#888";
+    return `<svg width="16" height="16" viewBox="0 0 24 24" fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-linejoin="round">
+    <path d="M12 2l2.9 6.6 7.1.6-5.4 4.6 1.6 7-6.2-3.8L6 21l1.6-7L2.2 9.2l7.1-.6L12 2z"/>
+  </svg>`;
+  }
+  function buildPresetRow(preset, onAdd, onCloseWidget, onDelete) {
     const row = $("<div>").css({
       display: "flex",
       alignItems: "center",
@@ -3539,14 +3556,19 @@ Version: v${version}`;
     }).on("mouseleave", function() {
       $(this).css("background", "");
     });
-    const heart = $("<span>").text(preset.favorited ? "\u2665" : "\u2661").css({
-      color: preset.favorited ? "#e74c3c" : "#777",
-      fontSize: "18px",
-      flexShrink: 0,
+    const heart = $("<span>").css({
       width: "20px",
-      textAlign: "center",
+      flexShrink: 0,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
       cursor: "pointer"
-    }).attr("title", "Favorite - always auto-load at match start");
+    });
+    function renderHeart() {
+      heart.html(heartIconSVG(isFavorited(preset.id)));
+    }
+    renderHeart();
+    heart.attr("title", "Favorite - always auto-load at match start");
     heart.on("click", (e) => {
       e.stopPropagation();
       const nowFavorited = !isFavorited(preset.id);
@@ -3555,7 +3577,7 @@ Version: v${version}`;
         const currentLayout = getCurrentLayoutIfOpen(preset.id);
         if (currentLayout) setLayout(preset.id, currentLayout);
       }
-      heart.text(nowFavorited ? "\u2665" : "\u2661").css("color", nowFavorited ? "#e74c3c" : "#777");
+      renderHeart();
     });
     const info = $("<div>").css({ flex: 1 });
     const nameLine = $("<div>").css({ fontWeight: "bold", fontSize: "14px" }).text(preset.name);
@@ -3569,53 +3591,51 @@ Version: v${version}`;
     }
     const descLine = $("<div>").css({ fontSize: "12px", color: "#aaa", marginTop: "2px" }).text(preset.description || "");
     info.append(nameLine, descLine);
-    const actions = $("<div>").css({ display: "flex", gap: "4px", flexShrink: 0 });
-    const addBtn = $("<button>").text("+").css({
+    const starBtn = $("<span>").css({
       width: "28px",
       height: "28px",
-      lineHeight: "1",
-      fontSize: "16px",
-      fontWeight: "bold",
-      background: "#2ecc71",
-      color: "white",
-      border: "none",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
       borderRadius: "4px",
+      background: "rgba(255,255,255,0.08)",
       cursor: "pointer",
       flexShrink: 0
     });
-    addBtn.on("click", (e) => {
+    let active = isWidgetOpen(preset.id);
+    function renderStar() {
+      starBtn.html(starIconSVG(active));
+      if (active && preset.custom) {
+        starBtn.attr("title", "Double-click to permanently delete this preset");
+      } else if (active) {
+        starBtn.attr("title", "Remove from screen");
+      } else {
+        starBtn.attr("title", "Add to screen");
+      }
+    }
+    renderStar();
+    starBtn.on("click", (e) => {
       e.stopPropagation();
-      onAdd(preset.id);
-      addBtn.text("\u2713").css("background", "#1a8f4c");
-      setTimeout(() => addBtn.text("+").css("background", "#2ecc71"), 800);
-    });
-    actions.append(addBtn);
-    if (preset.custom) {
-      const delBtn = $("<button>").text("\u2212").attr("title", "Double-click to permanently delete this preset").css({
-        width: "28px",
-        height: "28px",
-        lineHeight: "1",
-        fontSize: "16px",
-        fontWeight: "bold",
-        background: "#e74c3c",
-        color: "white",
-        border: "none",
-        borderRadius: "4px",
-        cursor: "pointer",
-        flexShrink: 0
-      });
-      delBtn.on("click", (e) => {
-        e.stopPropagation();
+      if (!active) {
+        onAdd(preset.id);
+        active = true;
+        renderStar();
+        return;
+      }
+      if (preset.custom) {
         if (e.detail !== 2) return;
         onDelete(preset.id);
         row.remove();
-      });
-      actions.append(delBtn);
-    }
-    row.append(heart, info, actions);
+        return;
+      }
+      onCloseWidget(preset.id);
+      active = false;
+      renderStar();
+    });
+    row.append(heart, info, starBtn);
     return row;
   }
-  function renderList(container, term, onAdd, onDelete) {
+  function renderList(container, term, onAdd, onCloseWidget, onDelete) {
     container.empty();
     const all = getAvailablePresets();
     const filtered = term ? all.filter((p) => p.name.toLowerCase().includes(term.toLowerCase())) : all;
@@ -3628,7 +3648,7 @@ Version: v${version}`;
       }));
       return;
     }
-    filtered.sort((a, b) => b.favorited - a.favorited).forEach((p) => container.append(buildPresetRow(p, onAdd, onDelete)));
+    filtered.sort((a, b) => b.favorited - a.favorited).forEach((p) => container.append(buildPresetRow(p, onAdd, onCloseWidget, onDelete)));
   }
   function buildCustomRow(onCreateAdHoc) {
     const row = $("<div>").css({
@@ -3668,7 +3688,7 @@ Version: v${version}`;
     row.append(info, addBtn);
     return row;
   }
-  function openPresetPicker({ onAddPreset, onCreateAdHoc, onDeletePreset }) {
+  function openPresetPicker({ onAddPreset, onCreateAdHoc, onCloseWidget, onDeletePreset }) {
     const wrapper = $("<div>").css({ minWidth: "360px" });
     const searchInput = $('<input type="text" placeholder="Search presets...">').addClass("form-control").css({
       width: "100%",
@@ -3689,10 +3709,10 @@ Version: v${version}`;
       onCreateAdHoc();
     });
     searchInput.on("input", function() {
-      renderList(listContainer, $(this).val(), onAddPreset, onDeletePreset);
+      renderList(listContainer, $(this).val(), onAddPreset, onCloseWidget, onDeletePreset);
     });
     wrapper.append(searchInput, listContainer, customRow);
-    renderList(listContainer, "", onAddPreset, onDeletePreset);
+    renderList(listContainer, "", onAddPreset, onCloseWidget, onDeletePreset);
     dialogRef = BootstrapDialog.show({
       title: "Add Tracker Preset",
       message: wrapper,
@@ -3869,6 +3889,10 @@ Version: v${version}`;
       spawnPreset(id);
       logger.log("hud", "Spawned preset from picker:", id);
     }
+    function handleCloseWidget(id) {
+      closeWidget(id);
+      logger.log("hud", "Closed preset from picker:", id);
+    }
     function handleDeletePreset(id) {
       closeWidget(id);
       deleteCustomPreset(id);
@@ -3934,7 +3958,7 @@ Version: v${version}`;
         if (revealed) reposition();
       }, 250);
       window.addEventListener("resize", reposition);
-      btn.onclick = () => openPresetPicker({ onAddPreset: handleAddPreset, onCreateAdHoc: handleCreateAdHoc, onDeletePreset: handleDeletePreset });
+      btn.onclick = () => openPresetPicker({ onAddPreset: handleAddPreset, onCreateAdHoc: handleCreateAdHoc, onCloseWidget: handleCloseWidget, onDeletePreset: handleDeletePreset });
       return btn;
     }
     waitForAvatar(createButton);

@@ -42,6 +42,11 @@ export function initDeckTracker(plugin) {
     logger.log("hud", "Spawned preset from picker:", id);
   }
 
+  function handleCloseWidget(id) {
+    closeWidget(id);
+    logger.log("hud", "Closed preset from picker:", id);
+  }
+
   function handleDeletePreset(id) {
     // Close the widget first if it's currently on screen, so we never
     // end up with a DOM widget referencing a preset the registry no
@@ -121,7 +126,7 @@ export function initDeckTracker(plugin) {
     // as-is until we know exactly which class/element the game uses
     // for that dimming state - flagged during live testing, not
     // forgotten.
-    btn.onclick = () => openPresetPicker({ onAddPreset: handleAddPreset, onCreateAdHoc: handleCreateAdHoc, onDeletePreset: handleDeletePreset });
+    btn.onclick = () => openPresetPicker({ onAddPreset: handleAddPreset, onCreateAdHoc: handleCreateAdHoc, onCloseWidget: handleCloseWidget, onDeletePreset: handleDeletePreset });
 
     return btn;
   }

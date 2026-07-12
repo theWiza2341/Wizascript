@@ -3290,10 +3290,10 @@ Version: v${version}`;
       cursor: "grab"
     });
     if (savedLayout) {
-      widget.css({ left: savedLayout.left + "px", top: savedLayout.top + "px" });
+      widget.css({ left: savedLayout.left + "px", top: savedLayout.top + "px", right: "auto", bottom: "auto" });
     } else {
       const pos = getNextCascadePosition();
-      widget.css({ bottom: pos.bottom + "px", right: pos.right + "px" });
+      widget.css({ bottom: pos.bottom + "px", right: pos.right + "px", left: "auto", top: "auto" });
     }
     const nameLine = $("<div>").css({
       fontWeight: "bold",
@@ -3402,7 +3402,7 @@ Version: v${version}`;
       if (!dragging) return;
       if (Math.abs(e.clientX - startX) > 4 || Math.abs(e.clientY - startY) > 4) dragMoved = true;
       if (dragMoved) {
-        widget.css({ left: e.clientX - offsetX + "px", top: e.clientY - offsetY + "px", right: "auto" });
+        widget.css({ left: e.clientX - offsetX + "px", top: e.clientY - offsetY + "px", right: "auto", bottom: "auto" });
       }
     });
     $(document).on("mouseup" + ns, function() {

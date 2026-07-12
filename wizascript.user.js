@@ -3225,6 +3225,18 @@ Version: v${version}`;
   var MIN_WIDTH = 90;
   var MAX_WIDTH = 220;
   var DEFAULT_WIDTH = 155;
+  var CASCADE_STEP = 24;
+  var CASCADE_MAX_STEPS = 6;
+  var CASCADE_BASE = 20;
+  var cascadeIndex = 0;
+  function getNextCascadePosition() {
+    const step = cascadeIndex % CASCADE_MAX_STEPS;
+    cascadeIndex++;
+    return {
+      right: CASCADE_BASE + step * CASCADE_STEP,
+      bottom: CASCADE_BASE + step * CASCADE_STEP
+    };
+  }
   var liveWidgets = /* @__PURE__ */ new Map();
   function widgetElementId(id) {
     return `dt-tracker-${id.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
@@ -3277,7 +3289,12 @@ Version: v${version}`;
       userSelect: "none",
       cursor: "grab"
     });
-    widget.css(savedLayout ? { left: savedLayout.left + "px", top: savedLayout.top + "px" } : { top: "120px", right: "20px" });
+    if (savedLayout) {
+      widget.css({ left: savedLayout.left + "px", top: savedLayout.top + "px" });
+    } else {
+      const pos = getNextCascadePosition();
+      widget.css({ bottom: pos.bottom + "px", right: pos.right + "px" });
+    }
     const nameLine = $("<div>").css({
       fontWeight: "bold",
       textAlign: "center",

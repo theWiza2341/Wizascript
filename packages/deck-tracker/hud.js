@@ -20,6 +20,25 @@ const MIN_WIDTH = 90;
 const MAX_WIDTH = 220;
 const DEFAULT_WIDTH = 155;
 
+// Simple cascade for freshly-spawned (non-favorited/non-retained)
+// widgets, so adding several at once doesn't stack them exactly on top
+// of each other. Deliberately basic - no real collision detection, just
+// a small diagonal offset per spawn that wraps after a handful of
+// slots, rather than marching off-screen indefinitely.
+const CASCADE_STEP = 24;
+const CASCADE_MAX_STEPS = 6;
+const CASCADE_BASE = 20;
+let cascadeIndex = 0;
+
+function getNextCascadePosition() {
+  const step = cascadeIndex % CASCADE_MAX_STEPS;
+  cascadeIndex++;
+  return {
+    right: CASCADE_BASE + step * CASCADE_STEP,
+    bottom: CASCADE_BASE + step * CASCADE_STEP
+  };
+}
+
 const liveWidgets = new Map(); // id -> { widget, ..., unsubscribe }
 
 function widgetElementId(id) {
@@ -64,7 +83,12 @@ function buildWidget({ id, name, sprite, initialCount, savedLayout, showSaveButt
     userSelect: 'none', cursor: 'grab'
   });
 
-  widget.css(savedLayout ? { left: savedLayout.left + 'px', top: savedLayout.top + 'px' } : { top: '120px', right: '20px' });
+  if (savedLayout) {
+    widget.css({ left: savedLayout.left + 'px', top: savedLayout.top + 'px' });
+  } else {
+    const pos = getNextCascadePosition();
+    widget.css({ bottom: pos.bottom + 'px', right: pos.right + 'px' });
+  }
 
   const nameLine = $('<div>').css({
     fontWeight: 'bold', textAlign: 'center', width: '100%',

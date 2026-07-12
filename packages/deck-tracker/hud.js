@@ -11,14 +11,14 @@
 import {
   getDefinition, isFavorited, setFavorited, getLayout, setLayout,
   activate, deactivate, getCount, setCount, onCountChange,
-  createCustomPreset
+  createCustomPreset, getRetainedLayout, trackActiveLayout, forgetActiveLayout
 } from "./registry.js";
 
 const CARD_IMAGE_BASE = "https://undercards.net/images/cards/";
 const SPRITE_RATIO = "160 / 90";
 const MIN_WIDTH = 90;
 const MAX_WIDTH = 220;
-const DEFAULT_WIDTH = 162;
+const DEFAULT_WIDTH = 155;
 
 const liveWidgets = new Map(); // id -> { widget, ..., unsubscribe }
 
@@ -123,7 +123,7 @@ function buildWidget({ id, name, sprite, favorited, initialCount, savedLayout })
 // on the same widget (the ad-hoc -> saved-preset upgrade) replaces the
 // previous bindings instead of stacking a duplicate set alongside them.
 
-function bindInteractions(parts, { getCurrentCount, setCurrentCount, isFavorited, persistLayout }) {
+function bindInteractions(parts, { getCurrentCount, setCurrentCount, isFavorited, persistLayout, id, trackRetain = false }) {
   const { widget, resizeHandle, applySize, getWidth, ns } = parts;
 
   widget.off(ns).off('contextmenu' + ns);
@@ -164,9 +164,12 @@ function bindInteractions(parts, { getCurrentCount, setCurrentCount, isFavorited
     dragging = false;
     widget.css('cursor', 'grab');
     if (dragMoved) {
+      const rect = widget[0].getBoundingClientRect();
       if (isFavorited()) {
-        const rect = widget[0].getBoundingClientRect();
         persistLayout({ left: rect.left, top: rect.top, width: getWidth() });
+      }
+      if (trackRetain) {
+        trackActiveLayout(id, { left: rect.left, top: rect.top, width: getWidth() });
       }
     } else {
       setCurrentCount(getCurrentCount() + 1);
@@ -196,9 +199,12 @@ function bindInteractions(parts, { getCurrentCount, setCurrentCount, isFavorited
   $(document).on('mouseup' + ns + '-resize', function () {
     if (!resizing) return;
     resizing = false;
+    const rect = widget[0].getBoundingClientRect();
     if (isFavorited()) {
-      const rect = widget[0].getBoundingClientRect();
       persistLayout({ left: rect.left, top: rect.top, width: getWidth() });
+    }
+    if (trackRetain) {
+      trackActiveLayout(id, { left: rect.left, top: rect.top, width: getWidth() });
     }
   });
 }
@@ -215,7 +221,11 @@ export function spawnPreset(id) {
 
   activate(id);
   const favorited = isFavorited(id);
-  const savedLayout = favorited ? getLayout(id) : null;
+  // Favorited layout takes priority; if not favorited, fall back to a
+  // retained layout (from "Retain Unclosed Presets Between Matches")
+  // so a preset that was merely left open - not favorited - still
+  // reappears where it was.
+  const savedLayout = favorited ? getLayout(id) : getRetainedLayout(id);
 
   const parts = buildWidget({
     id,
@@ -225,6 +235,11 @@ export function spawnPreset(id) {
     initialCount: getCount(id),
     savedLayout
   });
+
+  // Records a baseline retained position/size the moment this spawns,
+  // even if the user never touches it - satisfies "if you leave with
+  // things open, they'll be remembered" without requiring a drag first.
+  trackActiveLayout(id, { left: parts.widget[0].getBoundingClientRect().left, top: parts.widget[0].getBoundingClientRect().top, width: parts.getWidth() });
 
   parts.star.on('click', e => {
     e.stopPropagation();
@@ -239,7 +254,9 @@ export function spawnPreset(id) {
     getCurrentCount: () => getCount(id),
     setCurrentCount: next => setCount(id, next),
     isFavorited: () => isFavorited(id),
-    persistLayout: layout => setLayout(id, layout)
+    persistLayout: layout => setLayout(id, layout),
+    id,
+    trackRetain: true
   });
 
   const unsubscribe = onCountChange(id, count => parts.countEl.text('×' + count));
@@ -268,6 +285,9 @@ export function closeWidget(id) {
   entry.widget.remove();
   deactivate(id);
   liveWidgets.delete(id);
+  // Always clears, regardless of the "retain" setting's current value -
+  // closing always means "don't bring this back."
+  forgetActiveLayout(id);
 }
 
 export function isWidgetOpen(id) {
@@ -288,7 +308,9 @@ export function spawnAdHocCustomTracker({ name, sprite, onRequestSaveAsPreset })
     getCurrentCount: () => count,
     setCurrentCount: next => { count = Math.max(0, next); parts.countEl.text('×' + count); },
     isFavorited: () => false,
-    persistLayout: () => {} // can't persist layout until this is a real saved preset
+    persistLayout: () => {}, // can't persist layout until this is a real saved preset
+    id: tempId,
+    trackRetain: false // no real registry id yet - nothing meaningful to retain
   });
 
   parts.closeBtn.on('click', e => {
@@ -324,7 +346,9 @@ export function spawnAdHocCustomTracker({ name, sprite, onRequestSaveAsPreset })
         getCurrentCount: () => getCount(definition.id),
         setCurrentCount: next => setCount(definition.id, next),
         isFavorited: () => isFavorited(definition.id),
-        persistLayout: layout => setLayout(definition.id, layout)
+        persistLayout: layout => setLayout(definition.id, layout),
+        id: definition.id,
+        trackRetain: true
       });
 
       const unsubscribe = onCountChange(definition.id, c => parts.countEl.text('×' + c));

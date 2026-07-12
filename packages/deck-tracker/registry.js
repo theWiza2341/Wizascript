@@ -14,6 +14,7 @@
 
 const FAVORITES_KEY = "wizascript.decktracker.favorites";
 const CUSTOM_PRESETS_KEY = "wizascript.decktracker.customPresets";
+const RETAINED_KEY = "wizascript.decktracker.retained";
 
 // Registered preset TYPES - built-ins (SAVE Tracker, CoW, Curve
 // Tracker) register themselves here at load time via registerPresetType.
@@ -27,6 +28,8 @@ const activeInstances = new Map();
 
 let favoritesCache = null;
 let customPresetsCache = null;
+let retainedCache = null;
+let retainEnabledGetter = () => false;
 
 function loadFavorites() {
   if (favoritesCache) return favoritesCache;
@@ -192,4 +195,60 @@ export function dispatchGameEvent(event) {
       setCount: next => setCount(id, next)
     });
   });
+}
+
+// ---- retained state ("Retain Unclosed Presets Between Matches") ----
+// Independent from favorites - tracks whatever is CURRENTLY open
+// (regardless of favorited status) so it can come back once, in the
+// same spot, next match. Cleared the moment that preset is closed,
+// unconditionally, regardless of the setting's current value - closing
+// always means "don't bring this back."
+
+function loadRetained() {
+  if (retainedCache) return retainedCache;
+  try {
+    retainedCache = JSON.parse(GM_getValue(RETAINED_KEY, "{}"));
+  } catch {
+    retainedCache = {};
+  }
+  return retainedCache;
+}
+
+function saveRetained() {
+  GM_setValue(RETAINED_KEY, JSON.stringify(retainedCache || {}));
+}
+
+// index.js calls this once at startup (after settings are registered)
+// so registry.js can check the setting without importing settings.js
+// directly - keeps settings registration and persistence policy as
+// separate concerns.
+export function setRetainEnabledGetter(fn) {
+  retainEnabledGetter = fn;
+}
+
+export function getRetainedPresetIds() {
+  return Object.keys(loadRetained());
+}
+
+export function getRetainedLayout(id) {
+  return loadRetained()[id]?.layout || null;
+}
+
+// Called by hud.js on every spawn and every drag/resize-end,
+// UNCONDITIONALLY - whether this actually persists anything depends on
+// the injected setting, checked here rather than by every caller.
+export function trackActiveLayout(id, layout) {
+  if (!retainEnabledGetter()) return;
+  const retained = loadRetained();
+  retained[id] = { layout };
+  saveRetained();
+}
+
+// Called by hud.js on every close, UNCONDITIONALLY.
+export function forgetActiveLayout(id) {
+  const retained = loadRetained();
+  if (retained[id]) {
+    delete retained[id];
+    saveRetained();
+  }
 }

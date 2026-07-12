@@ -26,6 +26,14 @@ export function registerDeckTrackerSettings(plugin) {
       name: "Auto-enable Soul-Specific Presets",
       type: "boolean",
       default: false
+    }),
+    // Independent from favoriting - this remembers whatever was left
+    // open (favorited or not) at the end of a session and restores it
+    // once, in the same spot, until the user explicitly closes it.
+    retainUnclosedPresets: settings.add("retainUnclosedPresets", {
+      name: "Retain Unclosed Presets Between Matches",
+      type: "boolean",
+      default: false
     })
   };
 }

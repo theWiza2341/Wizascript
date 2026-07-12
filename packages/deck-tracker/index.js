@@ -1,6 +1,6 @@
 import { createLogger } from "../core/debug-logger.js";
 import { registerDeckTrackerSettings } from "./settings.js";
-import { getFavoritedPresetIds, getAvailablePresets, dispatchGameEvent, deleteCustomPreset } from "./registry.js";
+import { getFavoritedPresetIds, getAvailablePresets, dispatchGameEvent, deleteCustomPreset, setRetainEnabledGetter, getRetainedPresetIds } from "./registry.js";
 import { spawnPreset, spawnAdHocCustomTracker, closeWidget } from "./hud.js";
 import { openPresetPicker } from "./picker.js";
 import { openCustomTrackerBuilder, openSaveAsPresetPrompt } from "./presets/custom.js";
@@ -34,6 +34,8 @@ export function initDeckTracker(plugin) {
   const originalLog = logger.log.bind(logger);
   logger.log = (...args) => { if (settings.debugLogging.value()) originalLog(...args); };
   logger.warn = (...args) => { if (settings.debugLogging.value()) originalWarn(...args); };
+
+  setRetainEnabledGetter(() => settings.retainUnclosedPresets.value());
 
   function handleAddPreset(id) {
     spawnPreset(id);
@@ -153,6 +155,17 @@ export function initDeckTracker(plugin) {
     favoritedIds.forEach(id => spawnPreset(id));
     if (favoritedIds.length) {
       logger.log("autoload", "Spawned favorited presets at match start.", favoritedIds);
+    }
+
+    // "Retain Unclosed Presets Between Matches" - independent from
+    // favoriting. Restores whatever was left open (favorited or not)
+    // last time, skipping anything already spawned above.
+    if (settings.retainUnclosedPresets.value()) {
+      const retainedIds = getRetainedPresetIds().filter(id => !favoritedIds.includes(id));
+      retainedIds.forEach(id => spawnPreset(id));
+      if (retainedIds.length) {
+        logger.log("autoload", "Restored retained (unclosed) presets.", retainedIds);
+      }
     }
 
     if (settings.autoLoadSoulPresets.value()) {

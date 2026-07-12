@@ -3023,6 +3023,14 @@ Version: v${version}`;
         name: "Auto-enable Soul-Specific Presets",
         type: "boolean",
         default: false
+      }),
+      // Independent from favoriting - this remembers whatever was left
+      // open (favorited or not) at the end of a session and restores it
+      // once, in the same spot, until the user explicitly closes it.
+      retainUnclosedPresets: settings.add("retainUnclosedPresets", {
+        name: "Retain Unclosed Presets Between Matches",
+        type: "boolean",
+        default: false
       })
     };
   }
@@ -3030,10 +3038,13 @@ Version: v${version}`;
   // packages/deck-tracker/registry.js
   var FAVORITES_KEY = "wizascript.decktracker.favorites";
   var CUSTOM_PRESETS_KEY = "wizascript.decktracker.customPresets";
+  var RETAINED_KEY = "wizascript.decktracker.retained";
   var presetTypes = /* @__PURE__ */ new Map();
   var activeInstances = /* @__PURE__ */ new Map();
   var favoritesCache = null;
   var customPresetsCache = null;
+  var retainedCache = null;
+  var retainEnabledGetter = () => false;
   function loadFavorites() {
     if (favoritesCache) return favoritesCache;
     try {
@@ -3152,13 +3163,48 @@ Version: v${version}`;
       });
     });
   }
+  function loadRetained() {
+    if (retainedCache) return retainedCache;
+    try {
+      retainedCache = JSON.parse(GM_getValue(RETAINED_KEY, "{}"));
+    } catch {
+      retainedCache = {};
+    }
+    return retainedCache;
+  }
+  function saveRetained() {
+    GM_setValue(RETAINED_KEY, JSON.stringify(retainedCache || {}));
+  }
+  function setRetainEnabledGetter(fn) {
+    retainEnabledGetter = fn;
+  }
+  function getRetainedPresetIds() {
+    return Object.keys(loadRetained());
+  }
+  function getRetainedLayout(id) {
+    var _a;
+    return ((_a = loadRetained()[id]) == null ? void 0 : _a.layout) || null;
+  }
+  function trackActiveLayout(id, layout) {
+    if (!retainEnabledGetter()) return;
+    const retained = loadRetained();
+    retained[id] = { layout };
+    saveRetained();
+  }
+  function forgetActiveLayout(id) {
+    const retained = loadRetained();
+    if (retained[id]) {
+      delete retained[id];
+      saveRetained();
+    }
+  }
 
   // packages/deck-tracker/hud.js
   var CARD_IMAGE_BASE = "https://undercards.net/images/cards/";
   var SPRITE_RATIO = "160 / 90";
   var MIN_WIDTH = 90;
   var MAX_WIDTH = 220;
-  var DEFAULT_WIDTH = 162;
+  var DEFAULT_WIDTH = 155;
   var liveWidgets = /* @__PURE__ */ new Map();
   function widgetElementId(id) {
     return `dt-tracker-${id.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
@@ -3287,7 +3333,7 @@ Version: v${version}`;
     closeBtn.on("mousedown", (e) => e.stopPropagation());
     return { widget, nameLine, countEl, imageWrap, star, closeBtn, resizeHandle, applySize, getWidth: () => width, ns };
   }
-  function bindInteractions(parts, { getCurrentCount, setCurrentCount, isFavorited: isFavorited2, persistLayout }) {
+  function bindInteractions(parts, { getCurrentCount, setCurrentCount, isFavorited: isFavorited2, persistLayout, id, trackRetain = false }) {
     const { widget, resizeHandle, applySize, getWidth, ns } = parts;
     widget.off(ns).off("contextmenu" + ns);
     $(document).off(ns);
@@ -3322,9 +3368,12 @@ Version: v${version}`;
       dragging = false;
       widget.css("cursor", "grab");
       if (dragMoved) {
+        const rect = widget[0].getBoundingClientRect();
         if (isFavorited2()) {
-          const rect = widget[0].getBoundingClientRect();
           persistLayout({ left: rect.left, top: rect.top, width: getWidth() });
+        }
+        if (trackRetain) {
+          trackActiveLayout(id, { left: rect.left, top: rect.top, width: getWidth() });
         }
       } else {
         setCurrentCount(getCurrentCount() + 1);
@@ -3349,9 +3398,12 @@ Version: v${version}`;
     $(document).on("mouseup" + ns + "-resize", function() {
       if (!resizing) return;
       resizing = false;
+      const rect = widget[0].getBoundingClientRect();
       if (isFavorited2()) {
-        const rect = widget[0].getBoundingClientRect();
         persistLayout({ left: rect.left, top: rect.top, width: getWidth() });
+      }
+      if (trackRetain) {
+        trackActiveLayout(id, { left: rect.left, top: rect.top, width: getWidth() });
       }
     });
   }
@@ -3364,7 +3416,7 @@ Version: v${version}`;
     if (liveWidgets.has(id)) return liveWidgets.get(id).widget;
     activate(id);
     const favorited = isFavorited(id);
-    const savedLayout = favorited ? getLayout(id) : null;
+    const savedLayout = favorited ? getLayout(id) : getRetainedLayout(id);
     const parts = buildWidget({
       id,
       name: definition.name,
@@ -3373,6 +3425,7 @@ Version: v${version}`;
       initialCount: getCount(id),
       savedLayout
     });
+    trackActiveLayout(id, { left: parts.widget[0].getBoundingClientRect().left, top: parts.widget[0].getBoundingClientRect().top, width: parts.getWidth() });
     parts.star.on("click", (e) => {
       e.stopPropagation();
       toggleFavorite(id, parts);
@@ -3385,7 +3438,9 @@ Version: v${version}`;
       getCurrentCount: () => getCount(id),
       setCurrentCount: (next) => setCount(id, next),
       isFavorited: () => isFavorited(id),
-      persistLayout: (layout) => setLayout(id, layout)
+      persistLayout: (layout) => setLayout(id, layout),
+      id,
+      trackRetain: true
     });
     const unsubscribe = onCountChange(id, (count) => parts.countEl.text("\xD7" + count));
     liveWidgets.set(id, { ...parts, unsubscribe });
@@ -3411,6 +3466,7 @@ Version: v${version}`;
     entry.widget.remove();
     deactivate(id);
     liveWidgets.delete(id);
+    forgetActiveLayout(id);
   }
   function spawnAdHocCustomTracker({ name, sprite, onRequestSaveAsPreset }) {
     const tempId = `adhoc:${Date.now().toString(36)}`;
@@ -3431,8 +3487,11 @@ Version: v${version}`;
       },
       isFavorited: () => false,
       persistLayout: () => {
-      }
+      },
       // can't persist layout until this is a real saved preset
+      id: tempId,
+      trackRetain: false
+      // no real registry id yet - nothing meaningful to retain
     });
     parts.closeBtn.on("click", (e) => {
       e.stopPropagation();
@@ -3460,7 +3519,9 @@ Version: v${version}`;
           getCurrentCount: () => getCount(definition.id),
           setCurrentCount: (next) => setCount(definition.id, next),
           isFavorited: () => isFavorited(definition.id),
-          persistLayout: (layout) => setLayout(definition.id, layout)
+          persistLayout: (layout) => setLayout(definition.id, layout),
+          id: definition.id,
+          trackRetain: true
         });
         const unsubscribe = onCountChange(definition.id, (c) => parts.countEl.text("\xD7" + c));
         liveWidgets.set(definition.id, { ...parts, unsubscribe });
@@ -3797,6 +3858,7 @@ Version: v${version}`;
     logger.warn = (...args) => {
       if (settings.debugLogging.value()) originalWarn(...args);
     };
+    setRetainEnabledGetter(() => settings.retainUnclosedPresets.value());
     function handleAddPreset(id) {
       spawnPreset(id);
       logger.log("hud", "Spawned preset from picker:", id);
@@ -3876,6 +3938,13 @@ Version: v${version}`;
       favoritedIds.forEach((id) => spawnPreset(id));
       if (favoritedIds.length) {
         logger.log("autoload", "Spawned favorited presets at match start.", favoritedIds);
+      }
+      if (settings.retainUnclosedPresets.value()) {
+        const retainedIds = getRetainedPresetIds().filter((id) => !favoritedIds.includes(id));
+        retainedIds.forEach((id) => spawnPreset(id));
+        if (retainedIds.length) {
+          logger.log("autoload", "Restored retained (unclosed) presets.", retainedIds);
+        }
       }
       if (settings.autoLoadSoulPresets.value()) {
         const soul = data == null ? void 0 : data.yourSoul;

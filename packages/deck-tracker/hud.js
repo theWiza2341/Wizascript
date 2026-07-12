@@ -9,7 +9,7 @@
 //    hits its star and goes through the save-as-preset flow.
 
 import {
-  getDefinition, isFavorited, setFavorited, getLayout, setLayout,
+  getDefinition, isFavorited, getLayout, setLayout,
   activate, deactivate, getCount, setCount, onCountChange,
   createCustomPreset, getRetainedLayout, trackActiveLayout, forgetActiveLayout
 } from "./registry.js";
@@ -49,7 +49,7 @@ function spriteImage(sprite) {
 // each rebind would leak the previous call's document-level drag/
 // resize listeners rather than replacing them.
 
-function buildWidget({ id, name, sprite, favorited, initialCount, savedLayout }) {
+function buildWidget({ id, name, sprite, initialCount, savedLayout, showSaveButton = false }) {
   const elId = widgetElementId(id);
   $(`#${elId}`).remove();
 
@@ -74,12 +74,18 @@ function buildWidget({ id, name, sprite, favorited, initialCount, savedLayout })
   const imageWrap = $('<div>').css({ position: 'relative', width: '100%' });
   const imageBox = spriteImage(sprite);
 
-  const star = $('<span>').text(favorited ? '★' : '☆').css({
-    position: 'absolute', top: '2px', right: '2px', cursor: 'pointer',
-    color: favorited ? '#ffd700' : '#eee', fontSize: '15px',
-    background: 'rgba(0,0,0,0.55)', borderRadius: '50%', width: '18px', height: '18px',
-    display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1'
-  });
+  // Star only exists on not-yet-saved ad-hoc trackers now, meaning
+  // "Save as Preset" - it no longer represents or toggles favorited
+  // status at all. Favoriting moved entirely to the picker's heart icon.
+  let star = null;
+  if (showSaveButton) {
+    star = $('<span>').text('☆').attr('title', 'Save as Preset').css({
+      position: 'absolute', top: '2px', right: '2px', cursor: 'pointer',
+      color: '#eee', fontSize: '15px',
+      background: 'rgba(0,0,0,0.55)', borderRadius: '50%', width: '18px', height: '18px',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1'
+    });
+  }
 
   const closeBtn = $('<span>').text('×').css({
     position: 'absolute', top: '2px', left: '2px', cursor: 'pointer',
@@ -93,7 +99,9 @@ function buildWidget({ id, name, sprite, favorited, initialCount, savedLayout })
     cursor: 'nwse-resize', background: 'transparent'
   });
 
-  imageWrap.append(imageBox, star, closeBtn);
+  imageWrap.append(imageBox);
+  if (star) imageWrap.append(star);
+  imageWrap.append(closeBtn);
 
   const countEl = $('<div>').css({
     fontWeight: 'bold', width: '100%', textAlign: 'center',
@@ -112,7 +120,7 @@ function buildWidget({ id, name, sprite, favorited, initialCount, savedLayout })
   widget.append(nameLine, imageWrap, countEl, resizeHandle);
   $('body').append(widget);
 
-  star.on('mousedown', e => e.stopPropagation());
+  if (star) star.on('mousedown', e => e.stopPropagation());
   closeBtn.on('mousedown', e => e.stopPropagation());
 
   return { widget, nameLine, countEl, imageWrap, star, closeBtn, resizeHandle, applySize, getWidth: () => width, ns };
@@ -231,9 +239,9 @@ export function spawnPreset(id) {
     id,
     name: definition.name,
     sprite: definition.sprite,
-    favorited,
     initialCount: getCount(id),
-    savedLayout
+    savedLayout,
+    showSaveButton: false
   });
 
   // Records a baseline retained position/size the moment this spawns,
@@ -241,10 +249,6 @@ export function spawnPreset(id) {
   // things open, they'll be remembered" without requiring a drag first.
   trackActiveLayout(id, { left: parts.widget[0].getBoundingClientRect().left, top: parts.widget[0].getBoundingClientRect().top, width: parts.getWidth() });
 
-  parts.star.on('click', e => {
-    e.stopPropagation();
-    toggleFavorite(id, parts);
-  });
   parts.closeBtn.on('click', e => {
     e.stopPropagation();
     closeWidget(id);
@@ -265,17 +269,8 @@ export function spawnPreset(id) {
   return parts.widget;
 }
 
-function toggleFavorite(id, parts) {
-  if (isFavorited(id)) {
-    setFavorited(id, false);
-    parts.star.text('☆').css('color', '#eee');
-  } else {
-    setFavorited(id, true);
-    parts.star.text('★').css('color', '#ffd700');
-    const rect = parts.widget[0].getBoundingClientRect();
-    setLayout(id, { left: rect.left, top: rect.top, width: parts.getWidth() });
-  }
-}
+// (toggleFavorite removed - favoriting no longer happens on widgets,
+// only in the picker's heart icon)
 
 export function closeWidget(id) {
   const entry = liveWidgets.get(id);
@@ -294,6 +289,16 @@ export function isWidgetOpen(id) {
   return liveWidgets.has(id);
 }
 
+// Used by the picker when favoriting from the list - if the preset
+// happens to be open on screen right now, snapshot its current
+// position/size as the starting layout rather than leaving it unset.
+export function getCurrentLayoutIfOpen(id) {
+  const entry = liveWidgets.get(id);
+  if (!entry) return null;
+  const rect = entry.widget[0].getBoundingClientRect();
+  return { left: rect.left, top: rect.top, width: entry.getWidth() };
+}
+
 // ---- ad-hoc custom tracker (not yet saved as a preset) ----
 
 export function spawnAdHocCustomTracker({ name, sprite, onRequestSaveAsPreset }) {
@@ -301,7 +306,7 @@ export function spawnAdHocCustomTracker({ name, sprite, onRequestSaveAsPreset })
   let count = 0;
 
   const parts = buildWidget({
-    id: tempId, name, sprite, favorited: false, initialCount: 0, savedLayout: null
+    id: tempId, name, sprite, initialCount: 0, savedLayout: null, showSaveButton: true
   });
 
   bindInteractions(parts, {
@@ -319,24 +324,29 @@ export function spawnAdHocCustomTracker({ name, sprite, onRequestSaveAsPreset })
     parts.widget.remove();
   });
 
+  // Star here means "Save as Preset" ONLY - it does not favorite the
+  // preset. Favoriting is now an entirely separate, deliberate action
+  // done later from the picker's heart icon, so a freshly-saved preset
+  // does not silently end up auto-loading every match just because it
+  // was saved.
   parts.star.on('click', e => {
     e.stopPropagation();
     onRequestSaveAsPreset(name, sprite, (savedName, description) => {
       const definition = createCustomPreset({ name: savedName, description, sprite });
 
       activate(definition.id, { initialCount: count });
-      setFavorited(definition.id, true);
       const rect = parts.widget[0].getBoundingClientRect();
+      // Not favorited by default - just record where it currently sits
+      // so IF the user later favorites it from the picker, there's a
+      // sensible starting layout rather than nothing at all. This write
+      // is harmless even if never favorited (setLayout no-ops unless
+      // the id is already marked favorited).
       setLayout(definition.id, { left: rect.left, top: rect.top, width: parts.getWidth() });
 
       // Rebind the SAME DOM node to real, registry-backed behavior
       // rather than tearing it down - avoids a visual flicker right
       // after saving.
       parts.widget.attr('id', widgetElementId(definition.id));
-      parts.star.off('click').on('click', e2 => {
-        e2.stopPropagation();
-        toggleFavorite(definition.id, parts);
-      });
       parts.closeBtn.off('click').on('click', e2 => {
         e2.stopPropagation();
         closeWidget(definition.id);
@@ -354,7 +364,9 @@ export function spawnAdHocCustomTracker({ name, sprite, onRequestSaveAsPreset })
       const unsubscribe = onCountChange(definition.id, c => parts.countEl.text('×' + c));
       liveWidgets.set(definition.id, { ...parts, unsubscribe });
 
-      parts.star.text('★').css('color', '#ffd700');
+      // Nothing left to save - remove the star entirely rather than
+      // leaving a now-meaningless icon behind.
+      parts.star.remove();
     });
   });
 

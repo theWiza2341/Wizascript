@@ -3238,7 +3238,7 @@ Version: v${version}`;
       $(this).replaceWith(genericIcon());
     });
   }
-  function buildWidget({ id, name, sprite, favorited, initialCount, savedLayout }) {
+  function buildWidget({ id, name, sprite, initialCount, savedLayout, showSaveButton = false }) {
     const elId = widgetElementId(id);
     $(`#${elId}`).remove();
     const ns = `.dt-widget-${Math.random().toString(36).slice(2)}`;
@@ -3272,22 +3272,25 @@ Version: v${version}`;
     }).text(name);
     const imageWrap = $("<div>").css({ position: "relative", width: "100%" });
     const imageBox = spriteImage(sprite);
-    const star = $("<span>").text(favorited ? "\u2605" : "\u2606").css({
-      position: "absolute",
-      top: "2px",
-      right: "2px",
-      cursor: "pointer",
-      color: favorited ? "#ffd700" : "#eee",
-      fontSize: "15px",
-      background: "rgba(0,0,0,0.55)",
-      borderRadius: "50%",
-      width: "18px",
-      height: "18px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      lineHeight: "1"
-    });
+    let star = null;
+    if (showSaveButton) {
+      star = $("<span>").text("\u2606").attr("title", "Save as Preset").css({
+        position: "absolute",
+        top: "2px",
+        right: "2px",
+        cursor: "pointer",
+        color: "#eee",
+        fontSize: "15px",
+        background: "rgba(0,0,0,0.55)",
+        borderRadius: "50%",
+        width: "18px",
+        height: "18px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        lineHeight: "1"
+      });
+    }
     const closeBtn = $("<span>").text("\xD7").css({
       position: "absolute",
       top: "2px",
@@ -3314,7 +3317,9 @@ Version: v${version}`;
       cursor: "nwse-resize",
       background: "transparent"
     });
-    imageWrap.append(imageBox, star, closeBtn);
+    imageWrap.append(imageBox);
+    if (star) imageWrap.append(star);
+    imageWrap.append(closeBtn);
     const countEl = $("<div>").css({
       fontWeight: "bold",
       width: "100%",
@@ -3333,7 +3338,7 @@ Version: v${version}`;
     applySize(width);
     widget.append(nameLine, imageWrap, countEl, resizeHandle);
     $("body").append(widget);
-    star.on("mousedown", (e) => e.stopPropagation());
+    if (star) star.on("mousedown", (e) => e.stopPropagation());
     closeBtn.on("mousedown", (e) => e.stopPropagation());
     return { widget, nameLine, countEl, imageWrap, star, closeBtn, resizeHandle, applySize, getWidth: () => width, ns };
   }
@@ -3425,15 +3430,11 @@ Version: v${version}`;
       id,
       name: definition.name,
       sprite: definition.sprite,
-      favorited,
       initialCount: getCount(id),
-      savedLayout
+      savedLayout,
+      showSaveButton: false
     });
     trackActiveLayout(id, { left: parts.widget[0].getBoundingClientRect().left, top: parts.widget[0].getBoundingClientRect().top, width: parts.getWidth() });
-    parts.star.on("click", (e) => {
-      e.stopPropagation();
-      toggleFavorite(id, parts);
-    });
     parts.closeBtn.on("click", (e) => {
       e.stopPropagation();
       closeWidget(id);
@@ -3450,17 +3451,6 @@ Version: v${version}`;
     liveWidgets.set(id, { ...parts, unsubscribe });
     return parts.widget;
   }
-  function toggleFavorite(id, parts) {
-    if (isFavorited(id)) {
-      setFavorited(id, false);
-      parts.star.text("\u2606").css("color", "#eee");
-    } else {
-      setFavorited(id, true);
-      parts.star.text("\u2605").css("color", "#ffd700");
-      const rect = parts.widget[0].getBoundingClientRect();
-      setLayout(id, { left: rect.left, top: rect.top, width: parts.getWidth() });
-    }
-  }
   function closeWidget(id) {
     var _a;
     const entry = liveWidgets.get(id);
@@ -3472,6 +3462,12 @@ Version: v${version}`;
     liveWidgets.delete(id);
     forgetActiveLayout(id);
   }
+  function getCurrentLayoutIfOpen(id) {
+    const entry = liveWidgets.get(id);
+    if (!entry) return null;
+    const rect = entry.widget[0].getBoundingClientRect();
+    return { left: rect.left, top: rect.top, width: entry.getWidth() };
+  }
   function spawnAdHocCustomTracker({ name, sprite, onRequestSaveAsPreset }) {
     const tempId = `adhoc:${Date.now().toString(36)}`;
     let count = 0;
@@ -3479,9 +3475,9 @@ Version: v${version}`;
       id: tempId,
       name,
       sprite,
-      favorited: false,
       initialCount: 0,
-      savedLayout: null
+      savedLayout: null,
+      showSaveButton: true
     });
     bindInteractions(parts, {
       getCurrentCount: () => count,
@@ -3507,14 +3503,9 @@ Version: v${version}`;
       onRequestSaveAsPreset(name, sprite, (savedName, description) => {
         const definition = createCustomPreset({ name: savedName, description, sprite });
         activate(definition.id, { initialCount: count });
-        setFavorited(definition.id, true);
         const rect = parts.widget[0].getBoundingClientRect();
         setLayout(definition.id, { left: rect.left, top: rect.top, width: parts.getWidth() });
         parts.widget.attr("id", widgetElementId(definition.id));
-        parts.star.off("click").on("click", (e2) => {
-          e2.stopPropagation();
-          toggleFavorite(definition.id, parts);
-        });
         parts.closeBtn.off("click").on("click", (e2) => {
           e2.stopPropagation();
           closeWidget(definition.id);
@@ -3529,7 +3520,7 @@ Version: v${version}`;
         });
         const unsubscribe = onCountChange(definition.id, (c) => parts.countEl.text("\xD7" + c));
         liveWidgets.set(definition.id, { ...parts, unsubscribe });
-        parts.star.text("\u2605").css("color", "#ffd700");
+        parts.star.remove();
       });
     });
     return parts.widget;
@@ -3548,12 +3539,23 @@ Version: v${version}`;
     }).on("mouseleave", function() {
       $(this).css("background", "");
     });
-    const star = $("<span>").text(preset.favorited ? "\u2605" : "\u2606").css({
-      color: preset.favorited ? "#ffd700" : "#777",
+    const heart = $("<span>").text(preset.favorited ? "\u2665" : "\u2661").css({
+      color: preset.favorited ? "#e74c3c" : "#777",
       fontSize: "18px",
       flexShrink: 0,
       width: "20px",
-      textAlign: "center"
+      textAlign: "center",
+      cursor: "pointer"
+    }).attr("title", "Favorite - always auto-load at match start");
+    heart.on("click", (e) => {
+      e.stopPropagation();
+      const nowFavorited = !isFavorited(preset.id);
+      setFavorited(preset.id, nowFavorited);
+      if (nowFavorited) {
+        const currentLayout = getCurrentLayoutIfOpen(preset.id);
+        if (currentLayout) setLayout(preset.id, currentLayout);
+      }
+      heart.text(nowFavorited ? "\u2665" : "\u2661").css("color", nowFavorited ? "#e74c3c" : "#777");
     });
     const info = $("<div>").css({ flex: 1 });
     const nameLine = $("<div>").css({ fontWeight: "bold", fontSize: "14px" }).text(preset.name);
@@ -3610,7 +3612,7 @@ Version: v${version}`;
       });
       actions.append(delBtn);
     }
-    row.append(star, info, actions);
+    row.append(heart, info, actions);
     return row;
   }
   function renderList(container, term, onAdd, onDelete) {

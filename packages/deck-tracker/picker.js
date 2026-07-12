@@ -4,7 +4,8 @@
 // rest - it's the option meant to be reached for constantly, so it
 // shouldn't have to compete with scrolling or filtering.
 
-import { getAvailablePresets } from "./registry.js";
+import { getAvailablePresets, isFavorited, setFavorited, setLayout } from "./registry.js";
+import { getCurrentLayoutIfOpen } from "./hud.js";
 
 function buildPresetRow(preset, onAdd, onDelete) {
   const row = $('<div>').css({
@@ -13,9 +14,26 @@ function buildPresetRow(preset, onAdd, onDelete) {
   }).on('mouseenter', function () { $(this).css('background', 'rgba(255,255,255,0.08)'); })
     .on('mouseleave', function () { $(this).css('background', ''); });
 
-  const star = $('<span>').text(preset.favorited ? '★' : '☆').css({
-    color: preset.favorited ? '#ffd700' : '#777', fontSize: '18px',
-    flexShrink: 0, width: '20px', textAlign: 'center'
+  // Favoriting now happens ONLY here (not on the widget itself) - a
+  // heart, deliberately distinct from the widget's "Save as Preset"
+  // star, so saving a preset never silently favorites it too.
+  const heart = $('<span>').text(preset.favorited ? '♥' : '♡').css({
+    color: preset.favorited ? '#e74c3c' : '#777', fontSize: '18px',
+    flexShrink: 0, width: '20px', textAlign: 'center', cursor: 'pointer'
+  }).attr('title', 'Favorite - always auto-load at match start');
+
+  heart.on('click', e => {
+    e.stopPropagation();
+    const nowFavorited = !isFavorited(preset.id);
+    setFavorited(preset.id, nowFavorited);
+    if (nowFavorited) {
+      // If it happens to be open right now, snapshot its current
+      // position/size as the starting layout rather than leaving it
+      // unset - mirrors what favoriting from the widget used to do.
+      const currentLayout = getCurrentLayoutIfOpen(preset.id);
+      if (currentLayout) setLayout(preset.id, currentLayout);
+    }
+    heart.text(nowFavorited ? '♥' : '♡').css('color', nowFavorited ? '#e74c3c' : '#777');
   });
 
   const info = $('<div>').css({ flex: 1 });
@@ -61,7 +79,7 @@ function buildPresetRow(preset, onAdd, onDelete) {
     actions.append(delBtn);
   }
 
-  row.append(star, info, actions);
+  row.append(heart, info, actions);
   return row;
 }
 

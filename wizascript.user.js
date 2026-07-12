@@ -3084,6 +3084,10 @@ Version: v${version}`;
   function slugify(name) {
     return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "tracker";
   }
+  function registerPresetType(definition, { onGameEvent } = {}) {
+    if (!definition || !definition.id) throw new Error("Preset definition requires an id");
+    presetTypes.set(definition.id, { definition, onGameEvent: onGameEvent || null });
+  }
   function createCustomPreset({ name, description = "", sprite = null }) {
     const id = `custom:${slugify(name)}:${Date.now().toString(36)}`;
     const definition = { id, name, description, sprite, soul: null, custom: true, kind: "manual" };
@@ -3873,6 +3877,64 @@ Version: v${version}`;
     });
   }
 
+  // packages/deck-tracker/presets/built-in.js
+  var BUILT_IN_PRESETS = [
+    {
+      id: "builtin:enemy-hlbs",
+      name: "Enemy HLBs",
+      description: "Tracks Hyperlinks Blocked added to the enemy deck",
+      sprite: "Hyperlink_Blocked"
+    },
+    {
+      id: "builtin:enemy-mines",
+      name: "Enemy Mines",
+      description: "Tracks Mines added to the enemy deck",
+      sprite: "Mine"
+    },
+    {
+      id: "builtin:cjester-procs",
+      name: "CJester Procs",
+      description: "Tracks the counters to be added by Freedom",
+      sprite: "Caged_Jester"
+    },
+    {
+      id: "builtin:pink-laser-atk",
+      name: "Pink Laser ATK",
+      description: "Tracks the number of monsters you played this game with 7 base HP",
+      sprite: "Pink_Laser"
+      // best-guess image name, not yet confirmed
+    },
+    {
+      id: "builtin:skris-procs",
+      name: "Skris Procs",
+      description: "Tracks the counters to be added by Dark Fountain",
+      sprite: "Soulless_Kris"
+    },
+    {
+      id: "builtin:noellecoaster",
+      name: "Noellecoaster",
+      description: "Tracks the number of spells costing 2+ G you casted this game",
+      sprite: "Noellecoaster"
+      // best-guess image name, not yet confirmed
+    }
+  ];
+  function registerBuiltInPresets() {
+    BUILT_IN_PRESETS.forEach(({ id, name, description, sprite }) => {
+      registerPresetType({
+        id,
+        name,
+        description,
+        sprite,
+        soul: null,
+        // card/archetype-specific, not a whole-Soul strategy tracker
+        custom: false,
+        // built-in - cannot be deleted via the picker's double-click
+        kind: "manual"
+        // click/right-click/middle-click driven, same as user custom trackers
+      });
+    });
+  }
+
   // packages/deck-tracker/index.js
   function isGamePage() {
     const path = location.pathname.toLowerCase();
@@ -3897,6 +3959,7 @@ Version: v${version}`;
       if (settings.debugLogging.value()) originalWarn(...args);
     };
     setRetainEnabledGetter(() => settings.retainUnclosedPresets.value());
+    registerBuiltInPresets();
     function handleAddPreset(id) {
       spawnPreset(id);
       logger.log("hud", "Spawned preset from picker:", id);

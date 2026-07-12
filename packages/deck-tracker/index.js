@@ -4,6 +4,7 @@ import { getFavoritedPresetIds, getAvailablePresets, dispatchGameEvent, deleteCu
 import { spawnPreset, spawnAdHocCustomTracker, closeWidget } from "./hud.js";
 import { openPresetPicker } from "./picker.js";
 import { openCustomTrackerBuilder, openSaveAsPresetPrompt } from "./presets/custom.js";
+import { registerBuiltInPresets } from "./presets/built-in.js";
 
 // Deck Tracker only makes sense on Game/Spectate pages - matches the
 // original standalone script's @match restriction, now enforced inside
@@ -36,6 +37,7 @@ export function initDeckTracker(plugin) {
   logger.warn = (...args) => { if (settings.debugLogging.value()) originalWarn(...args); };
 
   setRetainEnabledGetter(() => settings.retainUnclosedPresets.value());
+  registerBuiltInPresets();
 
   function handleAddPreset(id) {
     spawnPreset(id);

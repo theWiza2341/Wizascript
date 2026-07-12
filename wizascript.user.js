@@ -3084,9 +3084,13 @@ Version: v${version}`;
   function slugify(name) {
     return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "tracker";
   }
-  function registerPresetType(definition, { onGameEvent } = {}) {
+  function registerPresetType(definition, { onGameEvent, hudBehavior } = {}) {
     if (!definition || !definition.id) throw new Error("Preset definition requires an id");
-    presetTypes.set(definition.id, { definition, onGameEvent: onGameEvent || null });
+    presetTypes.set(definition.id, { definition, onGameEvent: onGameEvent || null, hudBehavior: hudBehavior || null });
+  }
+  function getHudBehavior(id) {
+    var _a;
+    return ((_a = presetTypes.get(id)) == null ? void 0 : _a.hudBehavior) || null;
   }
   function createCustomPreset({ name, description = "", sprite = null }) {
     const id = `custom:${slugify(name)}:${Date.now().toString(36)}`;
@@ -3266,7 +3270,7 @@ Version: v${version}`;
       $(this).replaceWith(genericIcon());
     });
   }
-  function buildWidget({ id, name, sprite, initialCount, savedLayout, showSaveButton = false }) {
+  function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode = false, savedLayout, showSaveButton = false }) {
     const elId = widgetElementId(id);
     $(`#${elId}`).remove();
     const ns = `.dt-widget-${Math.random().toString(36).slice(2)}`;
@@ -3304,7 +3308,7 @@ Version: v${version}`;
       whiteSpace: "nowrap"
     }).text(name);
     const imageWrap = $("<div>").css({ position: "relative", width: "100%" });
-    const imageBox = spriteImage(sprite);
+    let imageBox = spriteImage(sprite);
     let star = null;
     if (showSaveButton) {
       star = $("<span>").text("\u2606").attr("title", "Save as Preset").css({
@@ -3360,7 +3364,7 @@ Version: v${version}`;
       background: "rgba(255,255,255,0.08)",
       borderRadius: "3px",
       padding: "2px 0"
-    }).text("\xD7" + initialCount);
+    }).text(isLabelMode ? initialLabel != null ? initialLabel : "?" : "\xD7" + initialCount);
     function applySize(newWidth) {
       width = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, newWidth));
       widget.css("width", width + "px");
@@ -3373,9 +3377,17 @@ Version: v${version}`;
     $("body").append(widget);
     if (star) star.on("mousedown", (e) => e.stopPropagation());
     closeBtn.on("mousedown", (e) => e.stopPropagation());
-    return { widget, nameLine, countEl, imageWrap, star, closeBtn, resizeHandle, applySize, getWidth: () => width, ns };
+    function setSprite(newSprite) {
+      const fresh = spriteImage(newSprite);
+      imageBox.replaceWith(fresh);
+      imageBox = fresh;
+    }
+    function setLabel(text) {
+      countEl.text(text);
+    }
+    return { widget, nameLine, countEl, imageWrap, star, closeBtn, resizeHandle, applySize, getWidth: () => width, ns, setSprite, setLabel };
   }
-  function bindInteractions(parts, { getCurrentCount, setCurrentCount, isFavorited: isFavorited2, persistLayout, id, trackRetain = false }) {
+  function bindInteractions(parts, { onLeftClick, onRightClick, onMiddleClick, isFavorited: isFavorited2, persistLayout, id, trackRetain = false }) {
     const { widget, resizeHandle, applySize, getWidth, ns } = parts;
     widget.off(ns).off("contextmenu" + ns);
     $(document).off(ns);
@@ -3384,7 +3396,7 @@ Version: v${version}`;
     widget.on("mousedown" + ns, function(e) {
       if (e.button === 1) {
         e.preventDefault();
-        setCurrentCount(0);
+        onMiddleClick == null ? void 0 : onMiddleClick();
         return;
       }
       if (e.button !== 0) return;
@@ -3418,12 +3430,12 @@ Version: v${version}`;
           trackActiveLayout(id, { left: rect.left, top: rect.top, width: getWidth() });
         }
       } else {
-        setCurrentCount(getCurrentCount() + 1);
+        onLeftClick == null ? void 0 : onLeftClick();
       }
     });
     widget.on("contextmenu" + ns, function(e) {
       e.preventDefault();
-      setCurrentCount(getCurrentCount() - 1);
+      onRightClick == null ? void 0 : onRightClick();
     });
     let resizing = false, resizeStartX, resizeStartWidth;
     resizeHandle.on("mousedown" + ns, function(e) {
@@ -3450,6 +3462,7 @@ Version: v${version}`;
     });
   }
   function spawnPreset(id) {
+    var _a;
     const definition = getDefinition(id);
     if (!definition) {
       console.warn("[DeckTracker] Unknown preset id:", id);
@@ -3459,11 +3472,14 @@ Version: v${version}`;
     activate(id);
     const favorited = isFavorited(id);
     const savedLayout = favorited ? getLayout(id) : getRetainedLayout(id);
+    const behavior = getHudBehavior(id);
     const parts = buildWidget({
       id,
       name: definition.name,
-      sprite: definition.sprite,
+      sprite: (behavior == null ? void 0 : behavior.getInitialSprite) ? behavior.getInitialSprite() : definition.sprite,
       initialCount: getCount(id),
+      initialLabel: (behavior == null ? void 0 : behavior.getInitialLabel) ? behavior.getInitialLabel() : void 0,
+      isLabelMode: !!behavior,
       savedLayout,
       showSaveButton: false
     });
@@ -3472,20 +3488,38 @@ Version: v${version}`;
       e.stopPropagation();
       closeWidget(id);
     });
+    const interactionCallbacks = behavior ? {
+      onLeftClick: () => {
+        var _a2;
+        return (_a2 = behavior.onLeftClick) == null ? void 0 : _a2.call(behavior, id, parts);
+      },
+      onRightClick: () => {
+        var _a2;
+        return (_a2 = behavior.onRightClick) == null ? void 0 : _a2.call(behavior, id, parts);
+      },
+      onMiddleClick: () => {
+        var _a2;
+        return (_a2 = behavior.onMiddleClick) == null ? void 0 : _a2.call(behavior, id, parts);
+      }
+    } : {
+      onLeftClick: () => setCount(id, getCount(id) + 1),
+      onRightClick: () => setCount(id, getCount(id) - 1),
+      onMiddleClick: () => setCount(id, 0)
+    };
     bindInteractions(parts, {
-      getCurrentCount: () => getCount(id),
-      setCurrentCount: (next) => setCount(id, next),
+      ...interactionCallbacks,
       isFavorited: () => isFavorited(id),
       persistLayout: (layout) => setLayout(id, layout),
       id,
       trackRetain: true
     });
-    const unsubscribe = onCountChange(id, (count) => parts.countEl.text("\xD7" + count));
+    const unsubscribe = behavior ? null : onCountChange(id, (count) => parts.countEl.text("\xD7" + count));
     liveWidgets.set(id, { ...parts, unsubscribe });
+    (_a = behavior == null ? void 0 : behavior.onMount) == null ? void 0 : _a.call(behavior, id, parts);
     return parts.widget;
   }
   function closeWidget(id) {
-    var _a;
+    var _a, _b, _c;
     const entry = liveWidgets.get(id);
     if (!entry) return;
     (_a = entry.unsubscribe) == null ? void 0 : _a.call(entry);
@@ -3493,6 +3527,7 @@ Version: v${version}`;
     entry.widget.remove();
     deactivate(id);
     liveWidgets.delete(id);
+    (_c = (_b = getHudBehavior(id)) == null ? void 0 : _b.onUnmount) == null ? void 0 : _c.call(_b, id);
     forgetActiveLayout(id);
   }
   function isWidgetOpen(id) {
@@ -3515,12 +3550,14 @@ Version: v${version}`;
       savedLayout: null,
       showSaveButton: true
     });
+    function setLocalCount(next) {
+      count = Math.max(0, next);
+      parts.countEl.text("\xD7" + count);
+    }
     bindInteractions(parts, {
-      getCurrentCount: () => count,
-      setCurrentCount: (next) => {
-        count = Math.max(0, next);
-        parts.countEl.text("\xD7" + count);
-      },
+      onLeftClick: () => setLocalCount(count + 1),
+      onRightClick: () => setLocalCount(count - 1),
+      onMiddleClick: () => setLocalCount(0),
       isFavorited: () => false,
       persistLayout: () => {
       },
@@ -3547,8 +3584,9 @@ Version: v${version}`;
           closeWidget(definition.id);
         });
         bindInteractions(parts, {
-          getCurrentCount: () => getCount(definition.id),
-          setCurrentCount: (next) => setCount(definition.id, next),
+          onLeftClick: () => setCount(definition.id, getCount(definition.id) + 1),
+          onRightClick: () => setCount(definition.id, getCount(definition.id) - 1),
+          onMiddleClick: () => setCount(definition.id, 0),
           isFavorited: () => isFavorited(definition.id),
           persistLayout: (layout) => setLayout(definition.id, layout),
           id: definition.id,
@@ -3952,6 +3990,90 @@ Version: v${version}`;
     });
   }
 
+  // packages/core/player-context.js
+  function getMyPlayerId() {
+    const id = getPageWindow().userId;
+    return typeof id === "number" ? id : null;
+  }
+
+  // packages/deck-tracker/presets/save-tracker.js
+  var SAVE_ARTIFACT_ID = 33;
+  var PRESET_ID = "builtin:save-tracker";
+  var LOST_SOUL_ORDER = ["Lost Alphys", "Lost Papyrus", "Lost Undyne", "Lost Toriel", "Lost Asgore", "Lost Sans"];
+  function spriteFor(name) {
+    return name.replace(/ /g, "_");
+  }
+  var upNextIndex = null;
+  var liveParts = null;
+  function getUpNextName() {
+    return upNextIndex === null ? null : LOST_SOUL_ORDER[upNextIndex];
+  }
+  function refreshDisplay(parts) {
+    const name = getUpNextName();
+    parts.setSprite(name ? spriteFor(name) : null);
+    parts.setLabel(name || "?");
+  }
+  function refreshLiveWidget() {
+    if (liveParts) refreshDisplay(liveParts);
+  }
+  function resetForMatchStart(turn) {
+    upNextIndex = turn <= 1 ? 0 : null;
+    refreshLiveWidget();
+  }
+  function handleGameEvent(event) {
+    var _a, _b;
+    if (event.action !== "getArtifactDoingEffect") return;
+    if (event.artifactId !== SAVE_ARTIFACT_ID) return;
+    if (event.playerId !== getMyPlayerId()) return;
+    if (event.affecteds === "[]") return;
+    try {
+      const battleLog = typeof event.battleLog === "string" ? JSON.parse(event.battleLog) : event.battleLog;
+      const targetName = (_b = (_a = battleLog == null ? void 0 : battleLog.targetCards) == null ? void 0 : _a[0]) == null ? void 0 : _b.name;
+      if (!targetName) return;
+      const procIndex = LOST_SOUL_ORDER.indexOf(targetName);
+      if (procIndex === -1) return;
+      upNextIndex = (procIndex + 1) % LOST_SOUL_ORDER.length;
+      refreshLiveWidget();
+    } catch (e) {
+    }
+  }
+  function registerSaveTracker() {
+    registerPresetType(
+      {
+        id: PRESET_ID,
+        name: "SAVE Tracker",
+        description: "Shows which Lost Soul is up next from the SAVE artifact's summon cycle.",
+        sprite: null,
+        soul: "DETERMINATION",
+        custom: false,
+        kind: "event"
+      },
+      {
+        onGameEvent: handleGameEvent,
+        hudBehavior: {
+          getInitialSprite: () => {
+            const name = getUpNextName();
+            return name ? spriteFor(name) : null;
+          },
+          getInitialLabel: () => getUpNextName() || "?",
+          // Manual cycle - lets the user self-correct if they know
+          // better than our current guess, or resolve "?" by hand.
+          onLeftClick: (id, parts) => {
+            upNextIndex = upNextIndex === null ? 0 : (upNextIndex + 1) % LOST_SOUL_ORDER.length;
+            refreshDisplay(parts);
+          },
+          onMount: (id, parts) => {
+            liveParts = parts;
+            refreshDisplay(parts);
+          },
+          onUnmount: () => {
+            liveParts = null;
+          }
+        }
+      }
+    );
+  }
+
   // packages/deck-tracker/index.js
   function isGamePage() {
     const path = location.pathname.toLowerCase();
@@ -3977,6 +4099,7 @@ Version: v${version}`;
     };
     setRetainEnabledGetter(() => settings.retainUnclosedPresets.value());
     registerBuiltInPresets();
+    registerSaveTracker();
     function handleAddPreset(id) {
       spawnPreset(id);
       logger.log("hud", "Spawned preset from picker:", id);
@@ -4112,6 +4235,8 @@ Version: v${version}`;
       }
     });
     plugin.events.on("connect", (data) => {
+      var _a;
+      resetForMatchStart((_a = data == null ? void 0 : data.turn) != null ? _a : 0);
       if (settings.autoLoadSoulPresets.value()) {
         const soul = data == null ? void 0 : data.yourSoul;
         if (soul) {

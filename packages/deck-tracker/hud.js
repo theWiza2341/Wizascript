@@ -11,7 +11,8 @@
 import {
   getDefinition, isFavorited, getLayout, setLayout,
   activate, deactivate, getCount, setCount, onCountChange,
-  createCustomPreset, getRetainedLayout, trackActiveLayout, forgetActiveLayout
+  createCustomPreset, getRetainedLayout, trackActiveLayout, forgetActiveLayout,
+  getHudBehavior
 } from "./registry.js";
 
 const CARD_IMAGE_BASE = "https://undercards.net/images/cards/";
@@ -68,7 +69,7 @@ function spriteImage(sprite) {
 // each rebind would leak the previous call's document-level drag/
 // resize listeners rather than replacing them.
 
-function buildWidget({ id, name, sprite, initialCount, savedLayout, showSaveButton = false }) {
+function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode = false, savedLayout, showSaveButton = false }) {
   const elId = widgetElementId(id);
   $(`#${elId}`).remove();
 
@@ -96,7 +97,7 @@ function buildWidget({ id, name, sprite, initialCount, savedLayout, showSaveButt
   }).text(name);
 
   const imageWrap = $('<div>').css({ position: 'relative', width: '100%' });
-  const imageBox = spriteImage(sprite);
+  let imageBox = spriteImage(sprite);
 
   // Star only exists on not-yet-saved ad-hoc trackers now, meaning
   // "Save as Preset" - it no longer represents or toggles favorited
@@ -130,7 +131,7 @@ function buildWidget({ id, name, sprite, initialCount, savedLayout, showSaveButt
   const countEl = $('<div>').css({
     fontWeight: 'bold', width: '100%', textAlign: 'center',
     background: 'rgba(255,255,255,0.08)', borderRadius: '3px', padding: '2px 0'
-  }).text('×' + initialCount);
+  }).text(isLabelMode ? (initialLabel ?? '?') : ('×' + initialCount));
 
   function applySize(newWidth) {
     width = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, newWidth));
@@ -147,7 +148,21 @@ function buildWidget({ id, name, sprite, initialCount, savedLayout, showSaveButt
   if (star) star.on('mousedown', e => e.stopPropagation());
   closeBtn.on('mousedown', e => e.stopPropagation());
 
-  return { widget, nameLine, countEl, imageWrap, star, closeBtn, resizeHandle, applySize, getWidth: () => width, ns };
+  // Used by event-driven presets (SAVE Tracker) to push updates into an
+  // already-rendered widget in response to game events, independent of
+  // registry's generic count system - that system assumes a number,
+  // this is for arbitrary sprite/text changes.
+  function setSprite(newSprite) {
+    const fresh = spriteImage(newSprite);
+    imageBox.replaceWith(fresh);
+    imageBox = fresh;
+  }
+
+  function setLabel(text) {
+    countEl.text(text);
+  }
+
+  return { widget, nameLine, countEl, imageWrap, star, closeBtn, resizeHandle, applySize, getWidth: () => width, ns, setSprite, setLabel };
 }
 
 // ---- shared drag/resize/click interaction wiring ----
@@ -155,7 +170,7 @@ function buildWidget({ id, name, sprite, initialCount, savedLayout, showSaveButt
 // on the same widget (the ad-hoc -> saved-preset upgrade) replaces the
 // previous bindings instead of stacking a duplicate set alongside them.
 
-function bindInteractions(parts, { getCurrentCount, setCurrentCount, isFavorited, persistLayout, id, trackRetain = false }) {
+function bindInteractions(parts, { onLeftClick, onRightClick, onMiddleClick, isFavorited, persistLayout, id, trackRetain = false }) {
   const { widget, resizeHandle, applySize, getWidth, ns } = parts;
 
   widget.off(ns).off('contextmenu' + ns);
@@ -167,7 +182,7 @@ function bindInteractions(parts, { getCurrentCount, setCurrentCount, isFavorited
   widget.on('mousedown' + ns, function (e) {
     if (e.button === 1) {
       e.preventDefault();
-      setCurrentCount(0);
+      onMiddleClick?.();
       return;
     }
     if (e.button !== 0) return;
@@ -204,13 +219,13 @@ function bindInteractions(parts, { getCurrentCount, setCurrentCount, isFavorited
         trackActiveLayout(id, { left: rect.left, top: rect.top, width: getWidth() });
       }
     } else {
-      setCurrentCount(getCurrentCount() + 1);
+      onLeftClick?.();
     }
   });
 
   widget.on('contextmenu' + ns, function (e) {
     e.preventDefault();
-    setCurrentCount(getCurrentCount() - 1);
+    onRightClick?.();
   });
 
   let resizing = false, resizeStartX, resizeStartWidth;
@@ -258,12 +273,15 @@ export function spawnPreset(id) {
   // so a preset that was merely left open - not favorited - still
   // reappears where it was.
   const savedLayout = favorited ? getLayout(id) : getRetainedLayout(id);
+  const behavior = getHudBehavior(id);
 
   const parts = buildWidget({
     id,
     name: definition.name,
-    sprite: definition.sprite,
+    sprite: behavior?.getInitialSprite ? behavior.getInitialSprite() : definition.sprite,
     initialCount: getCount(id),
+    initialLabel: behavior?.getInitialLabel ? behavior.getInitialLabel() : undefined,
+    isLabelMode: !!behavior,
     savedLayout,
     showSaveButton: false
   });
@@ -278,17 +296,32 @@ export function spawnPreset(id) {
     closeWidget(id);
   });
 
+  const interactionCallbacks = behavior
+    ? {
+        onLeftClick: () => behavior.onLeftClick?.(id, parts),
+        onRightClick: () => behavior.onRightClick?.(id, parts),
+        onMiddleClick: () => behavior.onMiddleClick?.(id, parts)
+      }
+    : {
+        onLeftClick: () => setCount(id, getCount(id) + 1),
+        onRightClick: () => setCount(id, getCount(id) - 1),
+        onMiddleClick: () => setCount(id, 0)
+      };
+
   bindInteractions(parts, {
-    getCurrentCount: () => getCount(id),
-    setCurrentCount: next => setCount(id, next),
+    ...interactionCallbacks,
     isFavorited: () => isFavorited(id),
     persistLayout: layout => setLayout(id, layout),
     id,
     trackRetain: true
   });
 
-  const unsubscribe = onCountChange(id, count => parts.countEl.text('×' + count));
+  // Event-driven presets (behavior !== null) manage their own display
+  // via setSprite/setLabel in response to game events, not registry's
+  // generic count system - no onCountChange subscription needed for them.
+  const unsubscribe = behavior ? null : onCountChange(id, count => parts.countEl.text('×' + count));
   liveWidgets.set(id, { ...parts, unsubscribe });
+  behavior?.onMount?.(id, parts);
 
   return parts.widget;
 }
@@ -304,6 +337,7 @@ export function closeWidget(id) {
   entry.widget.remove();
   deactivate(id);
   liveWidgets.delete(id);
+  getHudBehavior(id)?.onUnmount?.(id);
   // Always clears, regardless of the "retain" setting's current value -
   // closing always means "don't bring this back."
   forgetActiveLayout(id);
@@ -333,9 +367,15 @@ export function spawnAdHocCustomTracker({ name, sprite, onRequestSaveAsPreset })
     id: tempId, name, sprite, initialCount: 0, savedLayout: null, showSaveButton: true
   });
 
+  function setLocalCount(next) {
+    count = Math.max(0, next);
+    parts.countEl.text('×' + count);
+  }
+
   bindInteractions(parts, {
-    getCurrentCount: () => count,
-    setCurrentCount: next => { count = Math.max(0, next); parts.countEl.text('×' + count); },
+    onLeftClick: () => setLocalCount(count + 1),
+    onRightClick: () => setLocalCount(count - 1),
+    onMiddleClick: () => setLocalCount(0),
     isFavorited: () => false,
     persistLayout: () => {}, // can't persist layout until this is a real saved preset
     id: tempId,
@@ -377,8 +417,9 @@ export function spawnAdHocCustomTracker({ name, sprite, onRequestSaveAsPreset })
       });
 
       bindInteractions(parts, {
-        getCurrentCount: () => getCount(definition.id),
-        setCurrentCount: next => setCount(definition.id, next),
+        onLeftClick: () => setCount(definition.id, getCount(definition.id) + 1),
+        onRightClick: () => setCount(definition.id, getCount(definition.id) - 1),
+        onMiddleClick: () => setCount(definition.id, 0),
         isFavorited: () => isFavorited(definition.id),
         persistLayout: layout => setLayout(definition.id, layout),
         id: definition.id,

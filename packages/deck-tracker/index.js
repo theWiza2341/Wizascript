@@ -5,6 +5,7 @@ import { spawnPreset, spawnAdHocCustomTracker, closeWidget } from "./hud.js";
 import { openPresetPicker } from "./picker.js";
 import { openCustomTrackerBuilder, openSaveAsPresetPrompt } from "./presets/custom.js";
 import { registerBuiltInPresets } from "./presets/built-in.js";
+import { registerSaveTracker, resetForMatchStart } from "./presets/save-tracker.js";
 
 // Deck Tracker only makes sense on Game/Spectate pages - matches the
 // original standalone script's @match restriction, now enforced inside
@@ -38,6 +39,7 @@ export function initDeckTracker(plugin) {
 
   setRetainEnabledGetter(() => settings.retainUnclosedPresets.value());
   registerBuiltInPresets();
+  registerSaveTracker();
 
   function handleAddPreset(id) {
     spawnPreset(id);
@@ -261,6 +263,12 @@ export function initDeckTracker(plugin) {
     // without needing a fresh real match every time.
     // if (isSpectating()) return;
     // ============================================================
+
+    // Always runs, regardless of settings - this is just state
+    // initialization for SAVE Tracker (and any future preset that
+    // similarly needs to know "is this a fresh match or a mid-match
+    // join"), not an auto-load behavior gated by a toggle.
+    resetForMatchStart(data?.turn ?? 0);
 
     if (settings.autoLoadSoulPresets.value()) {
       const soul = data?.yourSoul;

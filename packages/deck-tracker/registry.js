@@ -65,9 +65,21 @@ function slugify(name) {
 
 // ---- preset type registration (built-ins call this at load time) ----
 
-export function registerPresetType(definition, { onGameEvent } = {}) {
+// hudBehavior is for presets whose widget doesn't behave like a normal
+// count-based tracker (SAVE Tracker's changing sprite/label, driven by
+// game events rather than clicks). Optional shape:
+//   { getInitialSprite(), getInitialLabel(), onLeftClick(id, parts),
+//     onRightClick(id, parts), onMiddleClick(id, parts),
+//     onMount(id, parts), onUnmount(id) }
+// hud.js checks for this and branches its rendering/interaction wiring
+// accordingly - manual presets (the default) never need to supply it.
+export function registerPresetType(definition, { onGameEvent, hudBehavior } = {}) {
   if (!definition || !definition.id) throw new Error("Preset definition requires an id");
-  presetTypes.set(definition.id, { definition, onGameEvent: onGameEvent || null });
+  presetTypes.set(definition.id, { definition, onGameEvent: onGameEvent || null, hudBehavior: hudBehavior || null });
+}
+
+export function getHudBehavior(id) {
+  return presetTypes.get(id)?.hudBehavior || null;
 }
 
 // ---- custom preset CRUD ----

@@ -105,13 +105,52 @@ export function initDeckTracker(plugin) {
     // and keep checking every animation frame until the avatar actually
     // has a real, laid-out rect, THEN reveal the button already
     // correctly positioned. Nothing is ever seen in the wrong spot.
+    // FIX: the previous version revealed as soon as the avatar's rect
+    // was merely non-zero - but that can happen a moment BEFORE the
+    // avatar settles into its true final position (e.g. an intermediate
+    // layout pass), so the button would appear slightly wrong, then get
+    // visibly corrected once the ongoing sync caught the real position
+    // ~250ms later. This waits for the rect to be genuinely STABLE
+    // (identical across repeated checks for a short window), not just
+    // present, before ever showing the button - with a max-wait safety
+    // net in case something never fully settles.
     function tryReveal() {
-      if (reposition()) {
-        revealed = true;
-        btn.style.opacity = "1";
-      } else {
-        requestAnimationFrame(tryReveal);
+      let lastRect = null;
+      let lastChangeTime = performance.now();
+      const startTime = performance.now();
+      const STABLE_MS = 200;
+      const MAX_WAIT_MS = 3000;
+
+      function ratsMatch(a, b) {
+        return a && b && a.left === b.left && a.top === b.top && a.width === b.width && a.height === b.height;
       }
+
+      function check() {
+        const rect = avatar.getBoundingClientRect();
+        const now = performance.now();
+        const hasSize = rect.width > 0 || rect.height > 0;
+
+        if (hasSize) {
+          if (!ratsMatch(rect, lastRect)) {
+            lastRect = rect;
+            lastChangeTime = now;
+          }
+
+          const stableFor = now - lastChangeTime;
+          const waitedTooLong = (now - startTime) > MAX_WAIT_MS;
+
+          if (stableFor >= STABLE_MS || waitedTooLong) {
+            reposition();
+            revealed = true;
+            btn.style.opacity = "1";
+            return;
+          }
+        }
+
+        requestAnimationFrame(check);
+      }
+
+      requestAnimationFrame(check);
     }
     tryReveal();
 

@@ -3946,12 +3946,35 @@ Version: v${version}`;
         return true;
       }
       function tryReveal() {
-        if (reposition()) {
-          revealed = true;
-          btn.style.opacity = "1";
-        } else {
-          requestAnimationFrame(tryReveal);
+        let lastRect = null;
+        let lastChangeTime = performance.now();
+        const startTime = performance.now();
+        const STABLE_MS = 200;
+        const MAX_WAIT_MS = 3e3;
+        function ratsMatch(a, b) {
+          return a && b && a.left === b.left && a.top === b.top && a.width === b.width && a.height === b.height;
         }
+        function check() {
+          const rect = avatar.getBoundingClientRect();
+          const now = performance.now();
+          const hasSize = rect.width > 0 || rect.height > 0;
+          if (hasSize) {
+            if (!ratsMatch(rect, lastRect)) {
+              lastRect = rect;
+              lastChangeTime = now;
+            }
+            const stableFor = now - lastChangeTime;
+            const waitedTooLong = now - startTime > MAX_WAIT_MS;
+            if (stableFor >= STABLE_MS || waitedTooLong) {
+              reposition();
+              revealed = true;
+              btn.style.opacity = "1";
+              return;
+            }
+          }
+          requestAnimationFrame(check);
+        }
+        requestAnimationFrame(check);
       }
       tryReveal();
       const syncInterval = setInterval(() => {

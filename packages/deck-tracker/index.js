@@ -157,8 +157,37 @@ export function initDeckTracker(plugin) {
     // Once revealed, a lightweight ongoing sync handles any later
     // shifts (window resize, other UI changing nearby) without relying
     // on guessed one-shot timeouts for that case either.
-    const syncInterval = setInterval(() => { if (revealed) reposition(); }, 250);
+    // Detects any open Bootstrap-based modal (BootstrapDialog's own
+    // convention: adds "modal-open" to <body> and a .modal-backdrop
+    // element) - generic, so it should catch our own picker dialog too,
+    // not just the game's native messageBoxes. Untested against
+    // mulligan and card-choice modals specifically - worth confirming
+    // those get caught too, since they may use a different mechanism.
+    function isBlockingModalOpen() {
+      return document.body.classList.contains("modal-open") || document.querySelector(".modal-backdrop") !== null;
+    }
+
+    let isDimmed = false;
+
+    const syncInterval = setInterval(() => {
+      if (!revealed) return;
+      reposition();
+
+      const shouldDim = isBlockingModalOpen();
+      if (shouldDim !== isDimmed) {
+        isDimmed = shouldDim;
+        btn.style.opacity = shouldDim ? String(settings.dimOpacity.value()) : "1";
+        btn.style.pointerEvents = shouldDim ? "none" : "auto";
+      }
+    }, 250);
+
     window.addEventListener("resize", reposition);
+    // FIX: scroll wasn't triggering an immediate reposition at all -
+    // only the 250ms interval eventually caught up, making the button
+    // visibly lag during active scrolling. capture: true catches
+    // scrolling on any scrollable element on the page, not just the
+    // window itself, since the scroll event doesn't bubble by default.
+    window.addEventListener("scroll", reposition, { passive: true, capture: true });
 
     // KNOWN FOLLOW-UP (not fixed here): UC's modal-dimming overlay
     // doesn't hide this button, since our z-index sits above it. Left

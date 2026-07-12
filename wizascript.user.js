@@ -3031,6 +3031,18 @@ Version: v${version}`;
         name: "Retain Unclosed Presets Between Matches",
         type: "boolean",
         default: false
+      }),
+      // Lets the user tune how dim the tracker button gets while a
+      // blocking modal (messageBox, mulligan, card-choice) is open, since
+      // there's no single "correct" value - it just needs to visually
+      // match whatever the rest of the dimmed screen looks like.
+      dimOpacity: settings.add("dimOpacity", {
+        name: "Tracker Button Dim Opacity",
+        type: "slider",
+        default: 0.4,
+        min: 0,
+        max: 1,
+        step: 0.05
       })
     };
   }
@@ -3977,10 +3989,22 @@ Version: v${version}`;
         requestAnimationFrame(check);
       }
       tryReveal();
+      function isBlockingModalOpen() {
+        return document.body.classList.contains("modal-open") || document.querySelector(".modal-backdrop") !== null;
+      }
+      let isDimmed = false;
       const syncInterval = setInterval(() => {
-        if (revealed) reposition();
+        if (!revealed) return;
+        reposition();
+        const shouldDim = isBlockingModalOpen();
+        if (shouldDim !== isDimmed) {
+          isDimmed = shouldDim;
+          btn.style.opacity = shouldDim ? String(settings.dimOpacity.value()) : "1";
+          btn.style.pointerEvents = shouldDim ? "none" : "auto";
+        }
       }, 250);
       window.addEventListener("resize", reposition);
+      window.addEventListener("scroll", reposition, { passive: true, capture: true });
       btn.onclick = () => openPresetPicker({ onAddPreset: handleAddPreset, onCreateAdHoc: handleCreateAdHoc, onCloseWidget: handleCloseWidget, onDeletePreset: handleDeletePreset });
       return btn;
     }

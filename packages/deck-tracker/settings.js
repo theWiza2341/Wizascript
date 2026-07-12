@@ -34,6 +34,18 @@ export function registerDeckTrackerSettings(plugin) {
       name: "Retain Unclosed Presets Between Matches",
       type: "boolean",
       default: false
+    }),
+    // Lets the user tune how dim the tracker button gets while a
+    // blocking modal (messageBox, mulligan, card-choice) is open, since
+    // there's no single "correct" value - it just needs to visually
+    // match whatever the rest of the dimmed screen looks like.
+    dimOpacity: settings.add("dimOpacity", {
+      name: "Tracker Button Dim Opacity",
+      type: "slider",
+      default: 0.4,
+      min: 0,
+      max: 1,
+      step: 0.05
     })
   };
 }

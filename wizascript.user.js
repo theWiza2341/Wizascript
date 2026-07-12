@@ -3070,6 +3070,13 @@ Version: v${version}`;
     presetTypes.set(id, { definition, onGameEvent: null });
     return definition;
   }
+  function deleteCustomPreset(id) {
+    customPresetsCache = loadCustomPresets().filter((p) => p.id !== id);
+    saveCustomPresets();
+    presetTypes.delete(id);
+    deactivate(id);
+    setFavorited(id, false);
+  }
   function getAvailablePresets() {
     loadCustomPresets().forEach((def) => {
       if (!presetTypes.has(def.id)) presetTypes.set(def.id, { definition: def, onGameEvent: null });
@@ -3464,7 +3471,7 @@ Version: v${version}`;
   }
 
   // packages/deck-tracker/picker.js
-  function buildPresetRow(preset, onAdd) {
+  function buildPresetRow(preset, onAdd, onDelete) {
     const row = $("<div>").css({
       display: "flex",
       alignItems: "center",
@@ -3495,6 +3502,7 @@ Version: v${version}`;
     }
     const descLine = $("<div>").css({ fontSize: "12px", color: "#aaa", marginTop: "2px" }).text(preset.description || "");
     info.append(nameLine, descLine);
+    const actions = $("<div>").css({ display: "flex", gap: "4px", flexShrink: 0 });
     const addBtn = $("<button>").text("+").css({
       width: "28px",
       height: "28px",
@@ -3514,10 +3522,33 @@ Version: v${version}`;
       addBtn.text("\u2713").css("background", "#1a8f4c");
       setTimeout(() => addBtn.text("+").css("background", "#2ecc71"), 800);
     });
-    row.append(star, info, addBtn);
+    actions.append(addBtn);
+    if (preset.custom) {
+      const delBtn = $("<button>").text("\u2212").attr("title", "Double-click to permanently delete this preset").css({
+        width: "28px",
+        height: "28px",
+        lineHeight: "1",
+        fontSize: "16px",
+        fontWeight: "bold",
+        background: "#e74c3c",
+        color: "white",
+        border: "none",
+        borderRadius: "4px",
+        cursor: "pointer",
+        flexShrink: 0
+      });
+      delBtn.on("click", (e) => {
+        e.stopPropagation();
+        if (e.detail !== 2) return;
+        onDelete(preset.id);
+        row.remove();
+      });
+      actions.append(delBtn);
+    }
+    row.append(star, info, actions);
     return row;
   }
-  function renderList(container, term, onAdd) {
+  function renderList(container, term, onAdd, onDelete) {
     container.empty();
     const all = getAvailablePresets();
     const filtered = term ? all.filter((p) => p.name.toLowerCase().includes(term.toLowerCase())) : all;
@@ -3530,7 +3561,7 @@ Version: v${version}`;
       }));
       return;
     }
-    filtered.sort((a, b) => b.favorited - a.favorited).forEach((p) => container.append(buildPresetRow(p, onAdd)));
+    filtered.sort((a, b) => b.favorited - a.favorited).forEach((p) => container.append(buildPresetRow(p, onAdd, onDelete)));
   }
   function buildCustomRow(onCreateAdHoc) {
     const row = $("<div>").css({
@@ -3570,7 +3601,7 @@ Version: v${version}`;
     row.append(info, addBtn);
     return row;
   }
-  function openPresetPicker({ onAddPreset, onCreateAdHoc }) {
+  function openPresetPicker({ onAddPreset, onCreateAdHoc, onDeletePreset }) {
     const wrapper = $("<div>").css({ minWidth: "360px" });
     const searchInput = $('<input type="text" placeholder="Search presets...">').addClass("form-control").css({
       width: "100%",
@@ -3591,10 +3622,10 @@ Version: v${version}`;
       onCreateAdHoc();
     });
     searchInput.on("input", function() {
-      renderList(listContainer, $(this).val(), onAddPreset);
+      renderList(listContainer, $(this).val(), onAddPreset, onDeletePreset);
     });
     wrapper.append(searchInput, listContainer, customRow);
-    renderList(listContainer, "", onAddPreset);
+    renderList(listContainer, "", onAddPreset, onDeletePreset);
     dialogRef = BootstrapDialog.show({
       title: "Add Tracker Preset",
       message: wrapper,
@@ -3770,6 +3801,11 @@ Version: v${version}`;
       spawnPreset(id);
       logger.log("hud", "Spawned preset from picker:", id);
     }
+    function handleDeletePreset(id) {
+      closeWidget(id);
+      deleteCustomPreset(id);
+      logger.log("hud", "Deleted custom preset:", id);
+    }
     function handleCreateAdHoc() {
       openCustomTrackerBuilder({
         onCreate: ({ name, sprite }) => {
@@ -3830,7 +3866,7 @@ Version: v${version}`;
         if (revealed) reposition();
       }, 250);
       window.addEventListener("resize", reposition);
-      btn.onclick = () => openPresetPicker({ onAddPreset: handleAddPreset, onCreateAdHoc: handleCreateAdHoc });
+      btn.onclick = () => openPresetPicker({ onAddPreset: handleAddPreset, onCreateAdHoc: handleCreateAdHoc, onDeletePreset: handleDeletePreset });
       return btn;
     }
     waitForAvatar(createButton);

@@ -1,7 +1,7 @@
 import { createLogger } from "../core/debug-logger.js";
 import { registerDeckTrackerSettings } from "./settings.js";
-import { getFavoritedPresetIds, getAvailablePresets, dispatchGameEvent } from "./registry.js";
-import { spawnPreset, spawnAdHocCustomTracker } from "./hud.js";
+import { getFavoritedPresetIds, getAvailablePresets, dispatchGameEvent, deleteCustomPreset } from "./registry.js";
+import { spawnPreset, spawnAdHocCustomTracker, closeWidget } from "./hud.js";
 import { openPresetPicker } from "./picker.js";
 import { openCustomTrackerBuilder, openSaveAsPresetPrompt } from "./presets/custom.js";
 
@@ -38,6 +38,15 @@ export function initDeckTracker(plugin) {
   function handleAddPreset(id) {
     spawnPreset(id);
     logger.log("hud", "Spawned preset from picker:", id);
+  }
+
+  function handleDeletePreset(id) {
+    // Close the widget first if it's currently on screen, so we never
+    // end up with a DOM widget referencing a preset the registry no
+    // longer knows about.
+    closeWidget(id);
+    deleteCustomPreset(id);
+    logger.log("hud", "Deleted custom preset:", id);
   }
 
   function handleCreateAdHoc() {
@@ -110,7 +119,7 @@ export function initDeckTracker(plugin) {
     // as-is until we know exactly which class/element the game uses
     // for that dimming state - flagged during live testing, not
     // forgotten.
-    btn.onclick = () => openPresetPicker({ onAddPreset: handleAddPreset, onCreateAdHoc: handleCreateAdHoc });
+    btn.onclick = () => openPresetPicker({ onAddPreset: handleAddPreset, onCreateAdHoc: handleCreateAdHoc, onDeletePreset: handleDeletePreset });
 
     return btn;
   }

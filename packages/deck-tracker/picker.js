@@ -6,7 +6,7 @@
 
 import { getAvailablePresets } from "./registry.js";
 
-function buildPresetRow(preset, onAdd) {
+function buildPresetRow(preset, onAdd, onDelete) {
   const row = $('<div>').css({
     display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 6px',
     borderBottom: '1px solid rgba(255,255,255,0.1)'
@@ -28,6 +28,8 @@ function buildPresetRow(preset, onAdd) {
   const descLine = $('<div>').css({ fontSize: '12px', color: '#aaa', marginTop: '2px' }).text(preset.description || '');
   info.append(nameLine, descLine);
 
+  const actions = $('<div>').css({ display: 'flex', gap: '4px', flexShrink: 0 });
+
   const addBtn = $('<button>').text('+').css({
     width: '28px', height: '28px', lineHeight: '1', fontSize: '16px', fontWeight: 'bold',
     background: '#2ecc71', color: 'white', border: 'none', borderRadius: '4px',
@@ -39,18 +41,32 @@ function buildPresetRow(preset, onAdd) {
     addBtn.text('✓').css('background', '#1a8f4c');
     setTimeout(() => addBtn.text('+').css('background', '#2ecc71'), 800);
   });
+  actions.append(addBtn);
 
-  row.append(star, info, addBtn);
+  // Only user-created presets get a delete button at all - built-in
+  // presets structurally can never show one, rather than relying on a
+  // runtime check to block deletion after the fact.
+  if (preset.custom) {
+    const delBtn = $('<button>').text('−').attr('title', 'Double-click to permanently delete this preset').css({
+      width: '28px', height: '28px', lineHeight: '1', fontSize: '16px', fontWeight: 'bold',
+      background: '#e74c3c', color: 'white', border: 'none', borderRadius: '4px',
+      cursor: 'pointer', flexShrink: 0
+    });
+    delBtn.on('click', e => {
+      e.stopPropagation();
+      if (e.detail !== 2) return; // double-click required, matches patch-maker's custom-section delete
+      onDelete(preset.id);
+      row.remove();
+    });
+    actions.append(delBtn);
+  }
+
+  row.append(star, info, actions);
   return row;
 }
 
-function renderList(container, term, onAdd) {
+function renderList(container, term, onAdd, onDelete) {
   container.empty();
-  // FIX: previously filtered out ALL custom presets here
-  // (`.filter(p => !p.custom)`), meaning no saved custom preset could
-  // ever reappear in this list regardless of favoriting/reloading. The
-  // pinned Custom row below is only a shortcut to CREATE a new one -
-  // it has nothing to do with whether already-saved ones are listed.
   const all = getAvailablePresets();
   const filtered = term ? all.filter(p => p.name.toLowerCase().includes(term.toLowerCase())) : all;
 
@@ -61,7 +77,7 @@ function renderList(container, term, onAdd) {
     return;
   }
 
-  filtered.sort((a, b) => b.favorited - a.favorited).forEach(p => container.append(buildPresetRow(p, onAdd)));
+  filtered.sort((a, b) => b.favorited - a.favorited).forEach(p => container.append(buildPresetRow(p, onAdd, onDelete)));
 }
 
 function buildCustomRow(onCreateAdHoc) {
@@ -90,7 +106,7 @@ function buildCustomRow(onCreateAdHoc) {
   return row;
 }
 
-export function openPresetPicker({ onAddPreset, onCreateAdHoc }) {
+export function openPresetPicker({ onAddPreset, onCreateAdHoc, onDeletePreset }) {
   const wrapper = $('<div>').css({ minWidth: '360px' });
   const searchInput = $('<input type="text" placeholder="Search presets...">').addClass('form-control').css({
     width: '100%', boxSizing: 'border-box', padding: '6px 8px', marginBottom: '8px', fontSize: '13px'
@@ -99,20 +115,15 @@ export function openPresetPicker({ onAddPreset, onCreateAdHoc }) {
     maxHeight: '220px', overflowY: 'auto', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px'
   });
 
-  // FIX: opening the custom tracker builder used to stack a second
-  // BootstrapDialog on top of this one instead of replacing it -
-  // annoying to have to close two dialogs for one action. `dialogRef`
-  // is assigned synchronously below (before any click is possible), so
-  // referencing it inside this closure is safe.
   let dialogRef = null;
   const customRow = buildCustomRow(() => {
     dialogRef?.close();
     onCreateAdHoc();
   });
 
-  searchInput.on('input', function () { renderList(listContainer, $(this).val(), onAddPreset); });
+  searchInput.on('input', function () { renderList(listContainer, $(this).val(), onAddPreset, onDeletePreset); });
   wrapper.append(searchInput, listContainer, customRow);
-  renderList(listContainer, '', onAddPreset);
+  renderList(listContainer, '', onAddPreset, onDeletePreset);
 
   dialogRef = BootstrapDialog.show({
     title: 'Add Tracker Preset',

@@ -46,7 +46,12 @@ function buildPresetRow(preset, onAdd) {
 
 function renderList(container, term, onAdd) {
   container.empty();
-  const all = getAvailablePresets().filter(p => !p.custom); // custom presets don't show here - only the pinned row does
+  // FIX: previously filtered out ALL custom presets here
+  // (`.filter(p => !p.custom)`), meaning no saved custom preset could
+  // ever reappear in this list regardless of favoriting/reloading. The
+  // pinned Custom row below is only a shortcut to CREATE a new one -
+  // it has nothing to do with whether already-saved ones are listed.
+  const all = getAvailablePresets();
   const filtered = term ? all.filter(p => p.name.toLowerCase().includes(term.toLowerCase())) : all;
 
   if (!filtered.length) {
@@ -94,15 +99,27 @@ export function openPresetPicker({ onAddPreset, onCreateAdHoc }) {
     maxHeight: '220px', overflowY: 'auto', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px'
   });
 
+  // FIX: opening the custom tracker builder used to stack a second
+  // BootstrapDialog on top of this one instead of replacing it -
+  // annoying to have to close two dialogs for one action. `dialogRef`
+  // is assigned synchronously below (before any click is possible), so
+  // referencing it inside this closure is safe.
+  let dialogRef = null;
+  const customRow = buildCustomRow(() => {
+    dialogRef?.close();
+    onCreateAdHoc();
+  });
+
   searchInput.on('input', function () { renderList(listContainer, $(this).val(), onAddPreset); });
-  wrapper.append(searchInput, listContainer, buildCustomRow(onCreateAdHoc));
+  wrapper.append(searchInput, listContainer, customRow);
   renderList(listContainer, '', onAddPreset);
 
-  return BootstrapDialog.show({
+  dialogRef = BootstrapDialog.show({
     title: 'Add Tracker Preset',
     message: wrapper,
     cssClass: 'mono',
     onshown: () => searchInput.trigger('focus'),
     buttons: [{ label: 'Close', cssClass: 'btn-primary', action: dialog => dialog.close() }]
   });
+  return dialogRef;
 }

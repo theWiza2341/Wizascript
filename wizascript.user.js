@@ -3519,7 +3519,7 @@ Version: v${version}`;
   }
   function renderList(container, term, onAdd) {
     container.empty();
-    const all = getAvailablePresets().filter((p) => !p.custom);
+    const all = getAvailablePresets();
     const filtered = term ? all.filter((p) => p.name.toLowerCase().includes(term.toLowerCase())) : all;
     if (!filtered.length) {
       container.append($("<div>").text("No presets found.").css({
@@ -3585,18 +3585,24 @@ Version: v${version}`;
       border: "1px solid rgba(255,255,255,0.15)",
       borderRadius: "4px"
     });
+    let dialogRef = null;
+    const customRow = buildCustomRow(() => {
+      dialogRef == null ? void 0 : dialogRef.close();
+      onCreateAdHoc();
+    });
     searchInput.on("input", function() {
       renderList(listContainer, $(this).val(), onAddPreset);
     });
-    wrapper.append(searchInput, listContainer, buildCustomRow(onCreateAdHoc));
+    wrapper.append(searchInput, listContainer, customRow);
     renderList(listContainer, "", onAddPreset);
-    return BootstrapDialog.show({
+    dialogRef = BootstrapDialog.show({
       title: "Add Tracker Preset",
       message: wrapper,
       cssClass: "mono",
       onshown: () => searchInput.trigger("focus"),
       buttons: [{ label: "Close", cssClass: "btn-primary", action: (dialog) => dialog.close() }]
     });
+    return dialogRef;
   }
 
   // packages/deck-tracker/presets/custom.js
@@ -3797,26 +3803,32 @@ Version: v${version}`;
         fontSize: "20px",
         fontWeight: "bold",
         lineHeight: "1",
-        boxShadow: "0 1px 4px rgba(0,0,0,0.5)"
+        boxShadow: "0 1px 4px rgba(0,0,0,0.5)",
+        opacity: "0"
+        // hidden until we've confirmed a real position - see tryReveal() below
       });
       document.body.appendChild(btn);
+      let revealed = false;
       function reposition() {
         const rect = avatar.getBoundingClientRect();
+        if (rect.width === 0 && rect.height === 0) return false;
         const btnRect = btn.getBoundingClientRect();
         btn.style.left = rect.left - btnRect.width - 16 + "px";
         btn.style.top = rect.top + (rect.height - btnRect.height) / 2 + "px";
+        return true;
       }
-      function positionWhenReady() {
-        reposition();
-        requestAnimationFrame(() => requestAnimationFrame(reposition));
-        setTimeout(reposition, 500);
+      function tryReveal() {
+        if (reposition()) {
+          revealed = true;
+          btn.style.opacity = "1";
+        } else {
+          requestAnimationFrame(tryReveal);
+        }
       }
-      if (avatar.complete) {
-        positionWhenReady();
-      } else {
-        avatar.addEventListener("load", positionWhenReady, { once: true });
-        reposition();
-      }
+      tryReveal();
+      const syncInterval = setInterval(() => {
+        if (revealed) reposition();
+      }, 250);
       window.addEventListener("resize", reposition);
       btn.onclick = () => openPresetPicker({ onAddPreset: handleAddPreset, onCreateAdHoc: handleCreateAdHoc });
       return btn;

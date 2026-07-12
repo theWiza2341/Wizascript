@@ -64,39 +64,45 @@ export function initDeckTracker(plugin) {
     Object.assign(btn.style, {
       position: "fixed", zIndex: 99999, width: "34px", height: "34px", borderRadius: "4px",
       background: "#2ecc71", color: "white", border: "none", cursor: "pointer",
-      fontSize: "20px", fontWeight: "bold", lineHeight: "1", boxShadow: "0 1px 4px rgba(0,0,0,0.5)"
+      fontSize: "20px", fontWeight: "bold", lineHeight: "1", boxShadow: "0 1px 4px rgba(0,0,0,0.5)",
+      opacity: "0" // hidden until we've confirmed a real position - see tryReveal() below
     });
     document.body.appendChild(btn);
 
+    let revealed = false;
+
     function reposition() {
       const rect = avatar.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) return false; // avatar not laid out yet
       const btnRect = btn.getBoundingClientRect();
       btn.style.left = (rect.left - btnRect.width - 16) + "px";
       btn.style.top = (rect.top + (rect.height - btnRect.height) / 2) + "px";
+      return true;
     }
 
-    // FIX: #yourAvatar is an <img> - before its image data has actually
-    // loaded, its rendered rect can be stale/wrong-sized, so an
-    // immediate reposition() right after finding the element can grab
-    // bad coordinates. This is exactly why the button "corrected
-    // itself" the moment DevTools resized the viewport - that resize
-    // event just triggered a recalculation once the image had already
-    // loaded. Waiting for the actual load event (or one more pass
-    // shortly after, in case something else nearby still shifts) fixes
-    // the root cause instead of relying on an incidental resize.
-    function positionWhenReady() {
-      reposition();
-      requestAnimationFrame(() => requestAnimationFrame(reposition));
-      setTimeout(reposition, 500);
+    // FIX: the previous approach (avatar.complete check + double rAF +
+    // a 500ms safety-net timeout) still produced a visible "teleport"
+    // once the 500ms timeout fired and corrected a wrong initial
+    // position. Guessing fixed delays either fires too early (still
+    // wrong) or noticeably late (visible jump) - there's no delay that
+    // reliably avoids both. Instead: keep the button fully invisible
+    // and keep checking every animation frame until the avatar actually
+    // has a real, laid-out rect, THEN reveal the button already
+    // correctly positioned. Nothing is ever seen in the wrong spot.
+    function tryReveal() {
+      if (reposition()) {
+        revealed = true;
+        btn.style.opacity = "1";
+      } else {
+        requestAnimationFrame(tryReveal);
+      }
     }
+    tryReveal();
 
-    if (avatar.complete) {
-      positionWhenReady();
-    } else {
-      avatar.addEventListener("load", positionWhenReady, { once: true });
-      reposition(); // best-effort placement now, corrected once loaded
-    }
-
+    // Once revealed, a lightweight ongoing sync handles any later
+    // shifts (window resize, other UI changing nearby) without relying
+    // on guessed one-shot timeouts for that case either.
+    const syncInterval = setInterval(() => { if (revealed) reposition(); }, 250);
     window.addEventListener("resize", reposition);
 
     // KNOWN FOLLOW-UP (not fixed here): UC's modal-dimming overlay

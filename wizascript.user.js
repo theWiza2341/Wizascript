@@ -3462,7 +3462,7 @@ Version: v${version}`;
     });
   }
   function spawnPreset(id) {
-    var _a;
+    var _a, _b;
     const definition = getDefinition(id);
     if (!definition) {
       console.warn("[DeckTracker] Unknown preset id:", id);
@@ -3475,7 +3475,11 @@ Version: v${version}`;
     const behavior = getHudBehavior(id);
     const parts = buildWidget({
       id,
-      name: definition.name,
+      // The picker lists presets by their real name ("SAVE Tracker"), but
+      // the on-screen widget itself can show something more directly
+      // descriptive of what it's currently displaying, if the preset
+      // supplies one.
+      name: (_a = behavior == null ? void 0 : behavior.widgetTitle) != null ? _a : definition.name,
       sprite: (behavior == null ? void 0 : behavior.getInitialSprite) ? behavior.getInitialSprite() : definition.sprite,
       initialCount: getCount(id),
       initialLabel: (behavior == null ? void 0 : behavior.getInitialLabel) ? behavior.getInitialLabel() : void 0,
@@ -3515,7 +3519,7 @@ Version: v${version}`;
     });
     const unsubscribe = behavior ? null : onCountChange(id, (count) => parts.countEl.text("\xD7" + count));
     liveWidgets.set(id, { ...parts, unsubscribe });
-    (_a = behavior == null ? void 0 : behavior.onMount) == null ? void 0 : _a.call(behavior, id, parts);
+    (_b = behavior == null ? void 0 : behavior.onMount) == null ? void 0 : _b.call(behavior, id, parts);
     return parts.widget;
   }
   function closeWidget(id) {
@@ -3995,6 +3999,29 @@ Version: v${version}`;
     const id = getPageWindow().userId;
     return typeof id === "number" ? id : null;
   }
+  function isSpectating() {
+    return location.pathname.toLowerCase().includes("spectate");
+  }
+  function getSpectatedPlayerIdFromUrl() {
+    const match = location.search.match(/[?&]playerId=(\d+)/i);
+    return match ? Number(match[1]) : null;
+  }
+  function getRelevantPlayerId() {
+    return isSpectating() ? getSpectatedPlayerIdFromUrl() : getMyPlayerId();
+  }
+  function getRelevantPlayerSoul(connectData) {
+    var _a, _b, _c, _d;
+    const relevantId = getRelevantPlayerId();
+    if (relevantId === null) return null;
+    try {
+      const you = typeof connectData.you === "string" ? JSON.parse(connectData.you) : connectData.you;
+      const enemy = typeof connectData.enemy === "string" ? JSON.parse(connectData.enemy) : connectData.enemy;
+      if ((you == null ? void 0 : you.id) === relevantId) return (_b = (_a = you.soul) == null ? void 0 : _a.name) != null ? _b : null;
+      if ((enemy == null ? void 0 : enemy.id) === relevantId) return (_d = (_c = enemy.soul) == null ? void 0 : _c.name) != null ? _d : null;
+    } catch (e) {
+    }
+    return null;
+  }
 
   // packages/deck-tracker/presets/save-tracker.js
   var SAVE_ARTIFACT_ID = 33;
@@ -4051,6 +4078,7 @@ Version: v${version}`;
       {
         onGameEvent: handleGameEvent,
         hudBehavior: {
+          widgetTitle: "Up Next",
           getInitialSprite: () => {
             const name = getUpNextName();
             return name ? spriteFor(name) : null;
@@ -4214,6 +4242,7 @@ Version: v${version}`;
     waitForAvatar(createButton);
     plugin.events.on("GameEvent", (event) => dispatchGameEvent(event));
     plugin.events.on("GameStart", () => {
+      if (isSpectating()) return;
       const favoritedIds = getFavoritedPresetIds();
       const spawnedFavorites = favoritedIds.filter((id) => spawnPreset(id) !== null);
       if (spawnedFavorites.length) {
@@ -4238,7 +4267,7 @@ Version: v${version}`;
       var _a;
       resetForMatchStart((_a = data == null ? void 0 : data.turn) != null ? _a : 0);
       if (settings.autoLoadSoulPresets.value()) {
-        const soul = data == null ? void 0 : data.yourSoul;
+        const soul = getRelevantPlayerSoul(data);
         if (soul) {
           const favoritedIds = getFavoritedPresetIds();
           const matches = getAvailablePresets().filter((p) => p.soul === soul && !favoritedIds.includes(p.id));

@@ -6,6 +6,7 @@ import { openPresetPicker } from "./picker.js";
 import { openCustomTrackerBuilder, openSaveAsPresetPrompt } from "./presets/custom.js";
 import { registerBuiltInPresets } from "./presets/built-in.js";
 import { registerSaveTracker, resetForMatchStart } from "./presets/save-tracker.js";
+import { isSpectating, getRelevantPlayerSoul } from "../core/player-context.js";
 
 // Deck Tracker only makes sense on Game/Spectate pages - matches the
 // original standalone script's @match restriction, now enforced inside
@@ -13,10 +14,6 @@ import { registerSaveTracker, resetForMatchStart } from "./presets/save-tracker.
 function isGamePage() {
   const path = location.pathname.toLowerCase();
   return path.includes("game") || path.includes("spectate");
-}
-
-function isSpectating() {
-  return location.pathname.toLowerCase().includes("spectate");
 }
 
 function waitForAvatar(callback) {
@@ -233,6 +230,14 @@ export function initDeckTracker(plugin) {
   // retained spawning need any data from the event itself, so this
   // switch has no downside for them.
   plugin.events.on("GameStart", () => {
+    // Favorited/retained auto-load explicitly does NOT apply while
+    // spectating, per the original design - this guard had gone
+    // missing entirely when this logic moved from 'connect' to
+    // 'GameStart' earlier, since the old guard was still sitting on
+    // the 'connect' handler where it no longer had any effect on this
+    // path.
+    if (isSpectating()) return;
+
     const favoritedIds = getFavoritedPresetIds();
     const spawnedFavorites = favoritedIds.filter(id => spawnPreset(id) !== null);
     if (spawnedFavorites.length) {
@@ -257,21 +262,18 @@ export function initDeckTracker(plugin) {
   // risk described above. Lower stakes for now since no soul-tied
   // presets exist yet to actually depend on this firing reliably.
   plugin.events.on("connect", data => {
-    // ============================================================
-    // TEMPORARY FOR TESTING ONLY - RESTORE BEFORE MERGING TO MAIN
-    // Spectate guard disabled so soul-matched auto-load can be tested
-    // without needing a fresh real match every time.
-    // if (isSpectating()) return;
-    // ============================================================
-
     // Always runs, regardless of settings - this is just state
     // initialization for SAVE Tracker (and any future preset that
     // similarly needs to know "is this a fresh match or a mid-match
     // join"), not an auto-load behavior gated by a toggle.
     resetForMatchStart(data?.turn ?? 0);
 
+    // Soul-specific auto-load deliberately has NO spectate guard -
+    // unlike favorited/retained, this should fire whether joining a
+    // real match or spectating one, checking whichever player is
+    // actually relevant (see getRelevantPlayerSoul).
     if (settings.autoLoadSoulPresets.value()) {
-      const soul = data?.yourSoul;
+      const soul = getRelevantPlayerSoul(data);
       if (soul) {
         const favoritedIds = getFavoritedPresetIds();
         const matches = getAvailablePresets().filter(p => p.soul === soul && !favoritedIds.includes(p.id));

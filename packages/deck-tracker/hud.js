@@ -277,7 +277,11 @@ export function spawnPreset(id) {
 
   const parts = buildWidget({
     id,
-    name: definition.name,
+    // The picker lists presets by their real name ("SAVE Tracker"), but
+    // the on-screen widget itself can show something more directly
+    // descriptive of what it's currently displaying, if the preset
+    // supplies one.
+    name: behavior?.widgetTitle ?? definition.name,
     sprite: behavior?.getInitialSprite ? behavior.getInitialSprite() : definition.sprite,
     initialCount: getCount(id),
     initialLabel: behavior?.getInitialLabel ? behavior.getInitialLabel() : undefined,

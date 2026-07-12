@@ -89,6 +89,7 @@ export function registerSaveTracker() {
     {
       onGameEvent: handleGameEvent,
       hudBehavior: {
+        widgetTitle: "Up Next",
         getInitialSprite: () => {
           const name = getUpNextName();
           return name ? spriteFor(name) : null;

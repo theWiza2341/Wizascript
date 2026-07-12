@@ -4239,9 +4239,18 @@ Version: v${version}`;
       btn.onclick = () => openPresetPicker({ onAddPreset: handleAddPreset, onCreateAdHoc: handleCreateAdHoc, onCloseWidget: handleCloseWidget, onDeletePreset: handleDeletePreset });
       return btn;
     }
-    waitForAvatar(createButton);
-    plugin.events.on("GameEvent", (event) => dispatchGameEvent(event));
+    let trackerButton = null;
+    waitForAvatar((avatar) => {
+      trackerButton = createButton(avatar);
+    });
+    plugin.events.on("GameEvent", (event) => {
+      dispatchGameEvent(event);
+      if ((event == null ? void 0 : event.action) === "getVictory" || (event == null ? void 0 : event.action) === "getDefeat" || (event == null ? void 0 : event.action) === "getResult") {
+        (trackerButton == null ? void 0 : trackerButton.style) && (trackerButton.style.display = "none");
+      }
+    });
     plugin.events.on("GameStart", () => {
+      if (trackerButton == null ? void 0 : trackerButton.style) trackerButton.style.display = "";
       if (isSpectating()) return;
       const favoritedIds = getFavoritedPresetIds();
       const spawnedFavorites = favoritedIds.filter((id) => spawnPreset(id) !== null);

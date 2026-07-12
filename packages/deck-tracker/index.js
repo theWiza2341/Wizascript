@@ -200,14 +200,24 @@ export function initDeckTracker(plugin) {
     return btn;
   }
 
-  waitForAvatar(createButton);
+  let trackerButton = null;
+  waitForAvatar(avatar => { trackerButton = createButton(avatar); });
 
   // Single central GameEvent subscription - fans out to active, event-
   // driven presets via registry.dispatchGameEvent. No soul-tied presets
   // exist yet (SAVE Tracker/Change of Winds/Curve Tracker are still
   // planned), so this currently has nothing to dispatch to, but the
   // wiring is ready for when they're built.
-  plugin.events.on("GameEvent", event => dispatchGameEvent(event));
+  // The button should only exist during active play - hidden once the
+  // game ends, before the victory/defeat screen shows. Same three
+  // GameEvent actions the Titan Eye Effect script (and, per its own
+  // comment, UnderScript's own logger) treats as "the game just ended."
+  plugin.events.on("GameEvent", event => {
+    dispatchGameEvent(event);
+    if (event?.action === "getVictory" || event?.action === "getDefeat" || event?.action === "getResult") {
+      trackerButton?.style && (trackerButton.style.display = "none");
+    }
+  });
 
   // Auto-load at match start.
   // NOTE: 'connect' is assumed here to fire once per match with full
@@ -230,6 +240,8 @@ export function initDeckTracker(plugin) {
   // retained spawning need any data from the event itself, so this
   // switch has no downside for them.
   plugin.events.on("GameStart", () => {
+    if (trackerButton?.style) trackerButton.style.display = "";
+
     // Favorited/retained auto-load explicitly does NOT apply while
     // spectating, per the original design - this guard had gone
     // missing entirely when this logic moved from 'connect' to

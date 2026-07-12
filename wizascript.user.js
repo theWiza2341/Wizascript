@@ -3742,9 +3742,6 @@ Version: v${version}`;
     const path = location.pathname.toLowerCase();
     return path.includes("game") || path.includes("spectate");
   }
-  function isSpectating() {
-    return location.pathname.toLowerCase().includes("spectate");
-  }
   function waitForAvatar(callback) {
     const existing = document.getElementById("yourAvatar");
     if (existing) return callback(existing);
@@ -3809,7 +3806,17 @@ Version: v${version}`;
         btn.style.left = rect.left - btnRect.width - 16 + "px";
         btn.style.top = rect.top + (rect.height - btnRect.height) / 2 + "px";
       }
-      reposition();
+      function positionWhenReady() {
+        reposition();
+        requestAnimationFrame(() => requestAnimationFrame(reposition));
+        setTimeout(reposition, 500);
+      }
+      if (avatar.complete) {
+        positionWhenReady();
+      } else {
+        avatar.addEventListener("load", positionWhenReady, { once: true });
+        reposition();
+      }
       window.addEventListener("resize", reposition);
       btn.onclick = () => openPresetPicker({ onAddPreset: handleAddPreset, onCreateAdHoc: handleCreateAdHoc });
       return btn;
@@ -3817,7 +3824,6 @@ Version: v${version}`;
     waitForAvatar(createButton);
     plugin.events.on("GameEvent", (event) => dispatchGameEvent(event));
     plugin.events.on("connect", (data) => {
-      if (isSpectating()) return;
       const favoritedIds = getFavoritedPresetIds();
       favoritedIds.forEach((id) => spawnPreset(id));
       if (favoritedIds.length) {

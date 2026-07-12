@@ -74,7 +74,29 @@ export function initDeckTracker(plugin) {
       btn.style.left = (rect.left - btnRect.width - 16) + "px";
       btn.style.top = (rect.top + (rect.height - btnRect.height) / 2) + "px";
     }
-    reposition();
+
+    // FIX: #yourAvatar is an <img> - before its image data has actually
+    // loaded, its rendered rect can be stale/wrong-sized, so an
+    // immediate reposition() right after finding the element can grab
+    // bad coordinates. This is exactly why the button "corrected
+    // itself" the moment DevTools resized the viewport - that resize
+    // event just triggered a recalculation once the image had already
+    // loaded. Waiting for the actual load event (or one more pass
+    // shortly after, in case something else nearby still shifts) fixes
+    // the root cause instead of relying on an incidental resize.
+    function positionWhenReady() {
+      reposition();
+      requestAnimationFrame(() => requestAnimationFrame(reposition));
+      setTimeout(reposition, 500);
+    }
+
+    if (avatar.complete) {
+      positionWhenReady();
+    } else {
+      avatar.addEventListener("load", positionWhenReady, { once: true });
+      reposition(); // best-effort placement now, corrected once loaded
+    }
+
     window.addEventListener("resize", reposition);
 
     // KNOWN FOLLOW-UP (not fixed here): UC's modal-dimming overlay
@@ -105,7 +127,12 @@ export function initDeckTracker(plugin) {
   // empirically yet - worth confirming once real soul-tied presets
   // exist to actually test auto-load against.
   plugin.events.on("connect", data => {
-    if (isSpectating()) return;
+    // ============================================================
+    // TEMPORARY FOR TESTING ONLY - RESTORE BEFORE MERGING TO MAIN
+    // Spectate guard disabled so favorited/soul-matched auto-load can
+    // be tested without needing a fresh real match every time.
+    // if (isSpectating()) return;
+    // ============================================================
 
     const favoritedIds = getFavoritedPresetIds();
     favoritedIds.forEach(id => spawnPreset(id));

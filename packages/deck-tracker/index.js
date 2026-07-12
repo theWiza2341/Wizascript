@@ -157,9 +157,13 @@ export function initDeckTracker(plugin) {
   // switch has no downside for them.
   plugin.events.on("GameStart", () => {
     const favoritedIds = getFavoritedPresetIds();
-    favoritedIds.forEach(id => spawnPreset(id));
-    if (favoritedIds.length) {
-      logger.log("autoload", "Spawned favorited presets at match start.", favoritedIds);
+    const spawnedFavorites = favoritedIds.filter(id => spawnPreset(id) !== null);
+    if (spawnedFavorites.length) {
+      logger.log("autoload", "Spawned favorited presets at match start.", spawnedFavorites);
+    }
+    if (spawnedFavorites.length < favoritedIds.length) {
+      logger.warn("autoload", "Some favorited presets could not be spawned (missing definition).",
+        favoritedIds.filter(id => !spawnedFavorites.includes(id)));
     }
 
     if (settings.retainUnclosedPresets.value()) {

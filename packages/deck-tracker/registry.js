@@ -93,12 +93,22 @@ export function deleteCustomPreset(id) {
 
 // ---- listing (for the picker dialog) ----
 
-export function getAvailablePresets() {
-  // Custom presets persist across page loads but only get re-registered
-  // as "known types" here, the first time they're actually listed.
+// FIX: this used to only run inside getAvailablePresets() - meaning
+// custom presets were only ever merged into presetTypes as a side
+// effect of opening the picker dialog. If GameStart fired and tried to
+// auto-spawn a favorited custom preset BEFORE the picker had ever been
+// opened this session, getDefinition() would find nothing (even though
+// the preset was genuinely persisted in storage), and spawnPreset would
+// silently bail with "Unknown preset id." Extracted so both read paths
+// ensure custom presets are loaded first.
+function ensureCustomPresetsRegistered() {
   loadCustomPresets().forEach(def => {
     if (!presetTypes.has(def.id)) presetTypes.set(def.id, { definition: def, onGameEvent: null });
   });
+}
+
+export function getAvailablePresets() {
+  ensureCustomPresetsRegistered();
 
   return [...presetTypes.values()].map(entry => ({
     ...entry.definition,
@@ -107,6 +117,7 @@ export function getAvailablePresets() {
 }
 
 export function getDefinition(id) {
+  ensureCustomPresetsRegistered();
   return presetTypes.get(id)?.definition || null;
 }
 

@@ -3088,10 +3088,13 @@ Version: v${version}`;
     deactivate(id);
     setFavorited(id, false);
   }
-  function getAvailablePresets() {
+  function ensureCustomPresetsRegistered() {
     loadCustomPresets().forEach((def) => {
       if (!presetTypes.has(def.id)) presetTypes.set(def.id, { definition: def, onGameEvent: null });
     });
+  }
+  function getAvailablePresets() {
+    ensureCustomPresetsRegistered();
     return [...presetTypes.values()].map((entry) => ({
       ...entry.definition,
       favorited: isFavorited(entry.definition.id)
@@ -3099,6 +3102,7 @@ Version: v${version}`;
   }
   function getDefinition(id) {
     var _a;
+    ensureCustomPresetsRegistered();
     return ((_a = presetTypes.get(id)) == null ? void 0 : _a.definition) || null;
   }
   function isFavorited(id) {
@@ -3935,9 +3939,16 @@ Version: v${version}`;
     plugin.events.on("GameEvent", (event) => dispatchGameEvent(event));
     plugin.events.on("GameStart", () => {
       const favoritedIds = getFavoritedPresetIds();
-      favoritedIds.forEach((id) => spawnPreset(id));
-      if (favoritedIds.length) {
-        logger.log("autoload", "Spawned favorited presets at match start.", favoritedIds);
+      const spawnedFavorites = favoritedIds.filter((id) => spawnPreset(id) !== null);
+      if (spawnedFavorites.length) {
+        logger.log("autoload", "Spawned favorited presets at match start.", spawnedFavorites);
+      }
+      if (spawnedFavorites.length < favoritedIds.length) {
+        logger.warn(
+          "autoload",
+          "Some favorited presets could not be spawned (missing definition).",
+          favoritedIds.filter((id) => !spawnedFavorites.includes(id))
+        );
       }
       if (settings.retainUnclosedPresets.value()) {
         const retainedIds = getRetainedPresetIds().filter((id) => !favoritedIds.includes(id));

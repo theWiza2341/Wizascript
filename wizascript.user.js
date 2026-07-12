@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.1";
+  var SUITE_VERSION = "0.1.0";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2266,9 +2266,7 @@ Version: v${version}`;
     }
   }
   function getPlayableCards() {
-    const allCards = getPageWindow().allCards;
-    if (!Array.isArray(allCards)) return [];
-    return allCards.filter((c) => c.rarity !== "STORY" && c.rarity !== "TOKEN");
+    return getAllCards().filter((c) => c.rarity !== "STORY" && c.rarity !== "TOKEN");
   }
   function determineImageFromDeck(deckCode) {
     const decoded = decodeDeck(deckCode);
@@ -2999,9 +2997,849 @@ Version: v${version}`;
     }).catch((e) => logger.error("data", "Failed to load decks.json", e));
   }
 
+  // packages/deck-tracker/settings.js
+  function registerDeckTrackerSettings(plugin) {
+    const settings = createFeatureSettings(plugin, "decktracker", "Deck Tracker");
+    return {
+      settings,
+      // Master toggle - same "one plugin, categories as boxes" model as
+      // patch-maker and true-hub-bridge.
+      enabled: settings.add("enabled", {
+        name: "Enable Deck Tracker",
+        type: "boolean",
+        default: true
+      }),
+      debugLogging: settings.add("debugLogging", {
+        name: "Enable debug logging",
+        type: "boolean",
+        default: false
+      }),
+      // When enabled, soul-tied presets (SAVE Tracker, Change of Winds,
+      // Curve Tracker, etc.) auto-spawn at match start if the player's
+      // current Soul matches - but only in matches the player is actually
+      // in, not while spectating. More granular per-preset toggles can be
+      // added later without touching this shape.
+      autoLoadSoulPresets: settings.add("autoLoadSoulPresets", {
+        name: "Auto-enable Soul-Specific Presets",
+        type: "boolean",
+        default: false
+      })
+    };
+  }
+
+  // packages/deck-tracker/registry.js
+  var FAVORITES_KEY = "wizascript.decktracker.favorites";
+  var CUSTOM_PRESETS_KEY = "wizascript.decktracker.customPresets";
+  var presetTypes = /* @__PURE__ */ new Map();
+  var activeInstances = /* @__PURE__ */ new Map();
+  var favoritesCache = null;
+  var customPresetsCache = null;
+  function loadFavorites() {
+    if (favoritesCache) return favoritesCache;
+    try {
+      favoritesCache = JSON.parse(GM_getValue(FAVORITES_KEY, "{}"));
+    } catch {
+      favoritesCache = {};
+    }
+    return favoritesCache;
+  }
+  function saveFavorites() {
+    GM_setValue(FAVORITES_KEY, JSON.stringify(favoritesCache || {}));
+  }
+  function loadCustomPresets() {
+    if (customPresetsCache) return customPresetsCache;
+    try {
+      customPresetsCache = JSON.parse(GM_getValue(CUSTOM_PRESETS_KEY, "[]"));
+    } catch {
+      customPresetsCache = [];
+    }
+    return customPresetsCache;
+  }
+  function saveCustomPresets() {
+    GM_setValue(CUSTOM_PRESETS_KEY, JSON.stringify(customPresetsCache || []));
+  }
+  function slugify(name) {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "tracker";
+  }
+  function createCustomPreset({ name, description = "", sprite = null }) {
+    const id = `custom:${slugify(name)}:${Date.now().toString(36)}`;
+    const definition = { id, name, description, sprite, soul: null, custom: true, kind: "manual" };
+    const list = loadCustomPresets();
+    list.push(definition);
+    saveCustomPresets();
+    presetTypes.set(id, { definition, onGameEvent: null });
+    return definition;
+  }
+  function getAvailablePresets() {
+    loadCustomPresets().forEach((def) => {
+      if (!presetTypes.has(def.id)) presetTypes.set(def.id, { definition: def, onGameEvent: null });
+    });
+    return [...presetTypes.values()].map((entry) => ({
+      ...entry.definition,
+      favorited: isFavorited(entry.definition.id)
+    }));
+  }
+  function getDefinition(id) {
+    var _a;
+    return ((_a = presetTypes.get(id)) == null ? void 0 : _a.definition) || null;
+  }
+  function isFavorited(id) {
+    var _a;
+    return !!((_a = loadFavorites()[id]) == null ? void 0 : _a.favorited);
+  }
+  function setFavorited(id, favorited) {
+    const favorites = loadFavorites();
+    if (favorited) {
+      favorites[id] = { ...favorites[id] || {}, favorited: true };
+    } else {
+      delete favorites[id];
+    }
+    saveFavorites();
+  }
+  function getLayout(id) {
+    var _a;
+    return ((_a = loadFavorites()[id]) == null ? void 0 : _a.layout) || null;
+  }
+  function setLayout(id, layout) {
+    const favorites = loadFavorites();
+    if (!favorites[id]) return;
+    favorites[id].layout = layout;
+    saveFavorites();
+  }
+  function getFavoritedPresetIds() {
+    return Object.keys(loadFavorites());
+  }
+  function activate(id, { initialCount = 0 } = {}) {
+    if (activeInstances.has(id)) return activeInstances.get(id);
+    const instance = { count: initialCount, listeners: /* @__PURE__ */ new Set() };
+    activeInstances.set(id, instance);
+    return instance;
+  }
+  function deactivate(id) {
+    activeInstances.delete(id);
+  }
+  function getCount(id) {
+    var _a, _b;
+    return (_b = (_a = activeInstances.get(id)) == null ? void 0 : _a.count) != null ? _b : 0;
+  }
+  function setCount(id, count) {
+    const instance = activeInstances.get(id);
+    if (!instance) return;
+    instance.count = Math.max(0, count);
+    instance.listeners.forEach((fn) => fn(instance.count));
+  }
+  function onCountChange(id, callback) {
+    const instance = activeInstances.get(id);
+    if (!instance) return () => {
+    };
+    instance.listeners.add(callback);
+    return () => instance.listeners.delete(callback);
+  }
+  function dispatchGameEvent(event) {
+    activeInstances.forEach((instance, id) => {
+      const type = presetTypes.get(id);
+      if (!type || !type.onGameEvent) return;
+      type.onGameEvent(event, {
+        getCount: () => instance.count,
+        setCount: (next) => setCount(id, next)
+      });
+    });
+  }
+
+  // packages/deck-tracker/hud.js
+  var CARD_IMAGE_BASE = "https://undercards.net/images/cards/";
+  var SPRITE_RATIO = "160 / 90";
+  var MIN_WIDTH = 90;
+  var MAX_WIDTH = 220;
+  var DEFAULT_WIDTH = 162;
+  var liveWidgets = /* @__PURE__ */ new Map();
+  function widgetElementId(id) {
+    return `dt-tracker-${id.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+  }
+  function genericIcon() {
+    return $("<div>").css({
+      width: "100%",
+      aspectRatio: SPRITE_RATIO,
+      background: "#333",
+      borderRadius: "3px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      color: "#777"
+    }).text("#");
+  }
+  function spriteImage(sprite) {
+    if (!sprite) return genericIcon();
+    return $("<img>").attr("src", `${CARD_IMAGE_BASE}${sprite}.png`).css({
+      width: "100%",
+      aspectRatio: SPRITE_RATIO,
+      objectFit: "cover",
+      borderRadius: "3px",
+      display: "block",
+      background: "#000"
+    }).on("error", function() {
+      $(this).replaceWith(genericIcon());
+    });
+  }
+  function buildWidget({ id, name, sprite, favorited, initialCount, savedLayout }) {
+    const elId = widgetElementId(id);
+    $(`#${elId}`).remove();
+    const ns = `.dt-widget-${Math.random().toString(36).slice(2)}`;
+    let width = (savedLayout == null ? void 0 : savedLayout.width) || DEFAULT_WIDTH;
+    const widget = $(`<div id="${elId}">`).addClass("dt-tracker-widget").css({
+      position: "fixed",
+      zIndex: 99999,
+      width: width + "px",
+      background: "#1a1a1a",
+      border: "2px solid #444",
+      borderRadius: "6px",
+      padding: "6px",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: "4px",
+      color: "white",
+      fontFamily: "inherit",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
+      userSelect: "none",
+      cursor: "grab"
+    });
+    widget.css(savedLayout ? { left: savedLayout.left + "px", top: savedLayout.top + "px" } : { top: "120px", right: "20px" });
+    const nameLine = $("<div>").css({
+      fontWeight: "bold",
+      textAlign: "center",
+      width: "100%",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap"
+    }).text(name);
+    const imageWrap = $("<div>").css({ position: "relative", width: "100%" });
+    const imageBox = spriteImage(sprite);
+    const star = $("<span>").text(favorited ? "\u2605" : "\u2606").css({
+      position: "absolute",
+      top: "2px",
+      right: "2px",
+      cursor: "pointer",
+      color: favorited ? "#ffd700" : "#eee",
+      fontSize: "15px",
+      background: "rgba(0,0,0,0.55)",
+      borderRadius: "50%",
+      width: "18px",
+      height: "18px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      lineHeight: "1"
+    });
+    const closeBtn = $("<span>").text("\xD7").css({
+      position: "absolute",
+      top: "2px",
+      left: "2px",
+      cursor: "pointer",
+      color: "#eee",
+      fontSize: "15px",
+      fontWeight: "bold",
+      background: "rgba(180,30,30,0.75)",
+      borderRadius: "50%",
+      width: "18px",
+      height: "18px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      lineHeight: "1"
+    });
+    const resizeHandle = $("<div>").css({
+      position: "absolute",
+      bottom: "-2px",
+      right: "-2px",
+      width: "14px",
+      height: "14px",
+      cursor: "nwse-resize",
+      background: "transparent"
+    });
+    imageWrap.append(imageBox, star, closeBtn);
+    const countEl = $("<div>").css({
+      fontWeight: "bold",
+      width: "100%",
+      textAlign: "center",
+      background: "rgba(255,255,255,0.08)",
+      borderRadius: "3px",
+      padding: "2px 0"
+    }).text("\xD7" + initialCount);
+    function applySize(newWidth) {
+      width = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, newWidth));
+      widget.css("width", width + "px");
+      nameLine.css("fontSize", Math.round(width * 0.105) + "px");
+      countEl.css("fontSize", Math.round(width * 0.14) + "px");
+      return width;
+    }
+    applySize(width);
+    widget.append(nameLine, imageWrap, countEl, resizeHandle);
+    $("body").append(widget);
+    star.on("mousedown", (e) => e.stopPropagation());
+    closeBtn.on("mousedown", (e) => e.stopPropagation());
+    return { widget, nameLine, countEl, imageWrap, star, closeBtn, resizeHandle, applySize, getWidth: () => width, ns };
+  }
+  function bindInteractions(parts, { getCurrentCount, setCurrentCount, isFavorited: isFavorited2, persistLayout }) {
+    const { widget, resizeHandle, applySize, getWidth, ns } = parts;
+    widget.off(ns).off("contextmenu" + ns);
+    $(document).off(ns);
+    resizeHandle.off(ns);
+    let dragging = false, dragMoved = false, startX, startY, offsetX, offsetY;
+    widget.on("mousedown" + ns, function(e) {
+      if (e.button === 1) {
+        e.preventDefault();
+        setCurrentCount(0);
+        return;
+      }
+      if (e.button !== 0) return;
+      dragging = true;
+      dragMoved = false;
+      const rect = widget[0].getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      startX = e.clientX;
+      startY = e.clientY;
+      widget.css("cursor", "grabbing");
+      e.preventDefault();
+    });
+    $(document).on("mousemove" + ns, function(e) {
+      if (!dragging) return;
+      if (Math.abs(e.clientX - startX) > 4 || Math.abs(e.clientY - startY) > 4) dragMoved = true;
+      if (dragMoved) {
+        widget.css({ left: e.clientX - offsetX + "px", top: e.clientY - offsetY + "px", right: "auto" });
+      }
+    });
+    $(document).on("mouseup" + ns, function() {
+      if (!dragging) return;
+      dragging = false;
+      widget.css("cursor", "grab");
+      if (dragMoved) {
+        if (isFavorited2()) {
+          const rect = widget[0].getBoundingClientRect();
+          persistLayout({ left: rect.left, top: rect.top, width: getWidth() });
+        }
+      } else {
+        setCurrentCount(getCurrentCount() + 1);
+      }
+    });
+    widget.on("contextmenu" + ns, function(e) {
+      e.preventDefault();
+      setCurrentCount(getCurrentCount() - 1);
+    });
+    let resizing = false, resizeStartX, resizeStartWidth;
+    resizeHandle.on("mousedown" + ns, function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      resizing = true;
+      resizeStartX = e.clientX;
+      resizeStartWidth = getWidth();
+    });
+    $(document).on("mousemove" + ns + "-resize", function(e) {
+      if (!resizing) return;
+      applySize(resizeStartWidth + (e.clientX - resizeStartX));
+    });
+    $(document).on("mouseup" + ns + "-resize", function() {
+      if (!resizing) return;
+      resizing = false;
+      if (isFavorited2()) {
+        const rect = widget[0].getBoundingClientRect();
+        persistLayout({ left: rect.left, top: rect.top, width: getWidth() });
+      }
+    });
+  }
+  function spawnPreset(id) {
+    const definition = getDefinition(id);
+    if (!definition) {
+      console.warn("[DeckTracker] Unknown preset id:", id);
+      return null;
+    }
+    if (liveWidgets.has(id)) return liveWidgets.get(id).widget;
+    activate(id);
+    const favorited = isFavorited(id);
+    const savedLayout = favorited ? getLayout(id) : null;
+    const parts = buildWidget({
+      id,
+      name: definition.name,
+      sprite: definition.sprite,
+      favorited,
+      initialCount: getCount(id),
+      savedLayout
+    });
+    parts.star.on("click", (e) => {
+      e.stopPropagation();
+      toggleFavorite(id, parts);
+    });
+    parts.closeBtn.on("click", (e) => {
+      e.stopPropagation();
+      closeWidget(id);
+    });
+    bindInteractions(parts, {
+      getCurrentCount: () => getCount(id),
+      setCurrentCount: (next) => setCount(id, next),
+      isFavorited: () => isFavorited(id),
+      persistLayout: (layout) => setLayout(id, layout)
+    });
+    const unsubscribe = onCountChange(id, (count) => parts.countEl.text("\xD7" + count));
+    liveWidgets.set(id, { ...parts, unsubscribe });
+    return parts.widget;
+  }
+  function toggleFavorite(id, parts) {
+    if (isFavorited(id)) {
+      setFavorited(id, false);
+      parts.star.text("\u2606").css("color", "#eee");
+    } else {
+      setFavorited(id, true);
+      parts.star.text("\u2605").css("color", "#ffd700");
+      const rect = parts.widget[0].getBoundingClientRect();
+      setLayout(id, { left: rect.left, top: rect.top, width: parts.getWidth() });
+    }
+  }
+  function closeWidget(id) {
+    var _a;
+    const entry = liveWidgets.get(id);
+    if (!entry) return;
+    (_a = entry.unsubscribe) == null ? void 0 : _a.call(entry);
+    $(document).off(entry.ns);
+    entry.widget.remove();
+    deactivate(id);
+    liveWidgets.delete(id);
+  }
+  function spawnAdHocCustomTracker({ name, sprite, onRequestSaveAsPreset }) {
+    const tempId = `adhoc:${Date.now().toString(36)}`;
+    let count = 0;
+    const parts = buildWidget({
+      id: tempId,
+      name,
+      sprite,
+      favorited: false,
+      initialCount: 0,
+      savedLayout: null
+    });
+    bindInteractions(parts, {
+      getCurrentCount: () => count,
+      setCurrentCount: (next) => {
+        count = Math.max(0, next);
+        parts.countEl.text("\xD7" + count);
+      },
+      isFavorited: () => false,
+      persistLayout: () => {
+      }
+      // can't persist layout until this is a real saved preset
+    });
+    parts.closeBtn.on("click", (e) => {
+      e.stopPropagation();
+      $(document).off(parts.ns);
+      parts.widget.remove();
+    });
+    parts.star.on("click", (e) => {
+      e.stopPropagation();
+      onRequestSaveAsPreset(name, sprite, (savedName, description) => {
+        const definition = createCustomPreset({ name: savedName, description, sprite });
+        activate(definition.id, { initialCount: count });
+        setFavorited(definition.id, true);
+        const rect = parts.widget[0].getBoundingClientRect();
+        setLayout(definition.id, { left: rect.left, top: rect.top, width: parts.getWidth() });
+        parts.widget.attr("id", widgetElementId(definition.id));
+        parts.star.off("click").on("click", (e2) => {
+          e2.stopPropagation();
+          toggleFavorite(definition.id, parts);
+        });
+        parts.closeBtn.off("click").on("click", (e2) => {
+          e2.stopPropagation();
+          closeWidget(definition.id);
+        });
+        bindInteractions(parts, {
+          getCurrentCount: () => getCount(definition.id),
+          setCurrentCount: (next) => setCount(definition.id, next),
+          isFavorited: () => isFavorited(definition.id),
+          persistLayout: (layout) => setLayout(definition.id, layout)
+        });
+        const unsubscribe = onCountChange(definition.id, (c) => parts.countEl.text("\xD7" + c));
+        liveWidgets.set(definition.id, { ...parts, unsubscribe });
+        parts.star.text("\u2605").css("color", "#ffd700");
+      });
+    });
+    return parts.widget;
+  }
+
+  // packages/deck-tracker/picker.js
+  function buildPresetRow(preset, onAdd) {
+    const row = $("<div>").css({
+      display: "flex",
+      alignItems: "center",
+      gap: "10px",
+      padding: "8px 6px",
+      borderBottom: "1px solid rgba(255,255,255,0.1)"
+    }).on("mouseenter", function() {
+      $(this).css("background", "rgba(255,255,255,0.08)");
+    }).on("mouseleave", function() {
+      $(this).css("background", "");
+    });
+    const star = $("<span>").text(preset.favorited ? "\u2605" : "\u2606").css({
+      color: preset.favorited ? "#ffd700" : "#777",
+      fontSize: "18px",
+      flexShrink: 0,
+      width: "20px",
+      textAlign: "center"
+    });
+    const info = $("<div>").css({ flex: 1 });
+    const nameLine = $("<div>").css({ fontWeight: "bold", fontSize: "14px" }).text(preset.name);
+    if (preset.soul) {
+      nameLine.append($("<span>").text(` (${preset.soul})`).css({
+        fontSize: "11px",
+        fontWeight: "normal",
+        color: "#4a7aaa",
+        marginLeft: "6px"
+      }));
+    }
+    const descLine = $("<div>").css({ fontSize: "12px", color: "#aaa", marginTop: "2px" }).text(preset.description || "");
+    info.append(nameLine, descLine);
+    const addBtn = $("<button>").text("+").css({
+      width: "28px",
+      height: "28px",
+      lineHeight: "1",
+      fontSize: "16px",
+      fontWeight: "bold",
+      background: "#2ecc71",
+      color: "white",
+      border: "none",
+      borderRadius: "4px",
+      cursor: "pointer",
+      flexShrink: 0
+    });
+    addBtn.on("click", (e) => {
+      e.stopPropagation();
+      onAdd(preset.id);
+      addBtn.text("\u2713").css("background", "#1a8f4c");
+      setTimeout(() => addBtn.text("+").css("background", "#2ecc71"), 800);
+    });
+    row.append(star, info, addBtn);
+    return row;
+  }
+  function renderList(container, term, onAdd) {
+    container.empty();
+    const all = getAvailablePresets().filter((p) => !p.custom);
+    const filtered = term ? all.filter((p) => p.name.toLowerCase().includes(term.toLowerCase())) : all;
+    if (!filtered.length) {
+      container.append($("<div>").text("No presets found.").css({
+        padding: "12px",
+        color: "#777",
+        fontStyle: "italic",
+        textAlign: "center"
+      }));
+      return;
+    }
+    filtered.sort((a, b) => b.favorited - a.favorited).forEach((p) => container.append(buildPresetRow(p, onAdd)));
+  }
+  function buildCustomRow(onCreateAdHoc) {
+    const row = $("<div>").css({
+      display: "flex",
+      alignItems: "center",
+      gap: "10px",
+      padding: "10px 6px",
+      marginTop: "8px",
+      borderTop: "2px dashed rgba(255,255,255,0.25)",
+      cursor: "pointer"
+    }).on("mouseenter", function() {
+      $(this).css("background", "rgba(255,255,255,0.08)");
+    }).on("mouseleave", function() {
+      $(this).css("background", "");
+    });
+    const info = $("<div>").css({ flex: 1 });
+    info.append(
+      $("<div>").css({ fontWeight: "bold", fontSize: "14px" }).text("Custom Tracker"),
+      $("<div>").css({ fontSize: "12px", color: "#aaa", marginTop: "2px" }).text("Build your own manual counter, named and tracked however you like.")
+    );
+    const addBtn = $("<button>").text("+").css({
+      width: "28px",
+      height: "28px",
+      lineHeight: "1",
+      fontSize: "16px",
+      fontWeight: "bold",
+      background: "#2ecc71",
+      color: "white",
+      border: "none",
+      borderRadius: "4px",
+      cursor: "pointer",
+      flexShrink: 0
+    }).on("click", (e) => {
+      e.stopPropagation();
+      onCreateAdHoc();
+    });
+    row.append(info, addBtn);
+    return row;
+  }
+  function openPresetPicker({ onAddPreset, onCreateAdHoc }) {
+    const wrapper = $("<div>").css({ minWidth: "360px" });
+    const searchInput = $('<input type="text" placeholder="Search presets...">').addClass("form-control").css({
+      width: "100%",
+      boxSizing: "border-box",
+      padding: "6px 8px",
+      marginBottom: "8px",
+      fontSize: "13px"
+    });
+    const listContainer = $("<div>").css({
+      maxHeight: "220px",
+      overflowY: "auto",
+      border: "1px solid rgba(255,255,255,0.15)",
+      borderRadius: "4px"
+    });
+    searchInput.on("input", function() {
+      renderList(listContainer, $(this).val(), onAddPreset);
+    });
+    wrapper.append(searchInput, listContainer, buildCustomRow(onCreateAdHoc));
+    renderList(listContainer, "", onAddPreset);
+    return BootstrapDialog.show({
+      title: "Add Tracker Preset",
+      message: wrapper,
+      cssClass: "mono",
+      onshown: () => searchInput.trigger("focus"),
+      buttons: [{ label: "Close", cssClass: "btn-primary", action: (dialog) => dialog.close() }]
+    });
+  }
+
+  // packages/deck-tracker/presets/custom.js
+  var CARD_IMAGE_BASE2 = "https://undercards.net/images/cards/";
+  var SPRITE_RATIO2 = "160 / 90";
+  function searchSpriteCards(term) {
+    if (!term) return [];
+    const t = term.toLowerCase();
+    return getAllCards().filter((c) => c.name && c.image && c.name.toLowerCase().includes(t)).slice(0, 20);
+  }
+  function buildSpriteResultRow(card, onPick) {
+    const row = $("<div>").css({
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      padding: "5px 8px",
+      cursor: "pointer",
+      fontSize: "13px"
+    }).on("mouseenter", function() {
+      $(this).css("background", "rgba(255,255,255,0.08)");
+    }).on("mouseleave", function() {
+      $(this).css("background", "");
+    });
+    const thumb = $("<img>").attr("src", `${CARD_IMAGE_BASE2}${card.image}.png`).css({
+      width: "28px",
+      aspectRatio: SPRITE_RATIO2,
+      objectFit: "cover",
+      flexShrink: 0,
+      background: "#111"
+    }).on("error", function() {
+      $(this).replaceWith($("<div>").css({ width: "28px", aspectRatio: SPRITE_RATIO2, background: "#333", flexShrink: 0 }));
+    });
+    row.append(thumb, $("<span>").text(card.name));
+    row.on("click", () => onPick(card));
+    return row;
+  }
+  function openCustomTrackerBuilder({ onCreate }) {
+    let selectedCard = null;
+    const wrapper = $("<div>").css({ minWidth: "340px" });
+    const spriteSearch = $('<input type="text" placeholder="Search for a card sprite (optional)...">').addClass("form-control").css({ width: "100%", boxSizing: "border-box", padding: "6px 8px", fontSize: "13px" });
+    const spriteResults = $("<div>").css({
+      maxHeight: "150px",
+      overflowY: "auto",
+      border: "1px solid rgba(255,255,255,0.15)",
+      borderRadius: "4px",
+      marginTop: "4px",
+      display: "none"
+    });
+    const selectedPreview = $("<div>").css({
+      display: "none",
+      alignItems: "center",
+      gap: "8px",
+      marginTop: "8px",
+      padding: "6px",
+      background: "rgba(255,255,255,0.06)",
+      borderRadius: "4px"
+    });
+    const nameInput = $('<input type="text" placeholder="Tracker name">').addClass("form-control").css({ width: "100%", boxSizing: "border-box", padding: "6px 8px", fontSize: "13px", marginTop: "10px" });
+    spriteSearch.on("input", function() {
+      const matches = searchSpriteCards($(this).val());
+      spriteResults.empty();
+      if (!matches.length) {
+        spriteResults.hide();
+        return;
+      }
+      matches.forEach((card) => spriteResults.append(buildSpriteResultRow(card, (picked) => {
+        selectedCard = picked;
+        nameInput.val(picked.name);
+        selectedPreview.empty().css("display", "flex").append(
+          $("<img>").attr("src", `${CARD_IMAGE_BASE2}${picked.image}.png`).css({ width: "28px", aspectRatio: SPRITE_RATIO2, objectFit: "cover" }).on("error", function() {
+            $(this).replaceWith("(image unavailable)");
+          }),
+          $("<span>").text(`Sprite: ${picked.name}`)
+        );
+        spriteResults.hide();
+        spriteSearch.val("");
+      })));
+      spriteResults.show();
+    });
+    wrapper.append(spriteSearch, spriteResults, selectedPreview, nameInput);
+    const dialog = BootstrapDialog.show({
+      title: "Create Custom Tracker",
+      message: wrapper,
+      cssClass: "mono",
+      buttons: [
+        { label: "Cancel", action: (d) => d.close() },
+        {
+          label: "Create",
+          cssClass: "btn-success",
+          action: (d) => {
+            const name = nameInput.val().trim() || "Untitled Tracker";
+            d.close();
+            onCreate({ name, sprite: (selectedCard == null ? void 0 : selectedCard.image) || null });
+          }
+        }
+      ]
+    });
+    setTimeout(() => spriteSearch.trigger("focus"), 100);
+    return dialog;
+  }
+  function openSaveAsPresetPrompt(defaultName, onSaved) {
+    const wrapper = $("<div>").css({ minWidth: "320px" });
+    const nameInput = $('<input type="text">').addClass("form-control").val(defaultName).css({ width: "100%", boxSizing: "border-box", padding: "6px 8px", fontSize: "13px", marginBottom: "8px" });
+    const descInput = $('<textarea placeholder="Short description (optional)">').addClass("form-control").css({
+      width: "100%",
+      boxSizing: "border-box",
+      padding: "6px 8px",
+      fontSize: "13px",
+      minHeight: "60px",
+      resize: "vertical",
+      background: "#111",
+      color: "#eee",
+      border: "1px solid #444"
+    });
+    wrapper.append(
+      $("<label>").css({ fontSize: "12px", color: "#aaa" }).text("Preset name"),
+      nameInput,
+      $("<label>").css({ fontSize: "12px", color: "#aaa", marginTop: "6px", display: "block" }).text("Description"),
+      descInput
+    );
+    return BootstrapDialog.show({
+      title: "Save as Preset",
+      message: wrapper,
+      cssClass: "mono",
+      buttons: [
+        { label: "Cancel", action: (d) => d.close() },
+        {
+          label: "Save",
+          cssClass: "btn-success",
+          action: (d) => {
+            const name = nameInput.val().trim() || defaultName;
+            const description = descInput.val().trim();
+            d.close();
+            onSaved(name, description);
+          }
+        }
+      ]
+    });
+  }
+
+  // packages/deck-tracker/index.js
+  function isGamePage() {
+    const path = location.pathname.toLowerCase();
+    return path.includes("game") || path.includes("spectate");
+  }
+  function isSpectating() {
+    return location.pathname.toLowerCase().includes("spectate");
+  }
+  function waitForAvatar(callback) {
+    const existing = document.getElementById("yourAvatar");
+    if (existing) return callback(existing);
+    setTimeout(() => waitForAvatar(callback), 100);
+  }
+  function initDeckTracker(plugin) {
+    const settings = registerDeckTrackerSettings(plugin);
+    if (!settings.enabled.value()) return;
+    if (!isGamePage()) return;
+    const logger = createLogger("DeckTracker");
+    const originalWarn = logger.warn.bind(logger);
+    const originalLog = logger.log.bind(logger);
+    logger.log = (...args) => {
+      if (settings.debugLogging.value()) originalLog(...args);
+    };
+    logger.warn = (...args) => {
+      if (settings.debugLogging.value()) originalWarn(...args);
+    };
+    function handleAddPreset(id) {
+      spawnPreset(id);
+      logger.log("hud", "Spawned preset from picker:", id);
+    }
+    function handleCreateAdHoc() {
+      openCustomTrackerBuilder({
+        onCreate: ({ name, sprite }) => {
+          spawnAdHocCustomTracker({
+            name,
+            sprite,
+            onRequestSaveAsPreset: (defaultName, _spriteArg, onSaved) => {
+              openSaveAsPresetPrompt(defaultName, (savedName, description) => {
+                onSaved(savedName, description);
+                logger.log("hud", "Saved custom tracker as preset:", savedName);
+              });
+            }
+          });
+        }
+      });
+    }
+    function createButton(avatar) {
+      const btn = document.createElement("button");
+      btn.textContent = "+";
+      btn.id = "dt-add-tracker-button";
+      Object.assign(btn.style, {
+        position: "fixed",
+        zIndex: 99999,
+        width: "34px",
+        height: "34px",
+        borderRadius: "4px",
+        background: "#2ecc71",
+        color: "white",
+        border: "none",
+        cursor: "pointer",
+        fontSize: "20px",
+        fontWeight: "bold",
+        lineHeight: "1",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.5)"
+      });
+      document.body.appendChild(btn);
+      function reposition() {
+        const rect = avatar.getBoundingClientRect();
+        const btnRect = btn.getBoundingClientRect();
+        btn.style.left = rect.left - btnRect.width - 16 + "px";
+        btn.style.top = rect.top + (rect.height - btnRect.height) / 2 + "px";
+      }
+      reposition();
+      window.addEventListener("resize", reposition);
+      btn.onclick = () => openPresetPicker({ onAddPreset: handleAddPreset, onCreateAdHoc: handleCreateAdHoc });
+      return btn;
+    }
+    waitForAvatar(createButton);
+    plugin.events.on("GameEvent", (event) => dispatchGameEvent(event));
+    plugin.events.on("connect", (data) => {
+      if (isSpectating()) return;
+      const favoritedIds = getFavoritedPresetIds();
+      favoritedIds.forEach((id) => spawnPreset(id));
+      if (favoritedIds.length) {
+        logger.log("autoload", "Spawned favorited presets at match start.", favoritedIds);
+      }
+      if (settings.autoLoadSoulPresets.value()) {
+        const soul = data == null ? void 0 : data.yourSoul;
+        if (soul) {
+          const matches = getAvailablePresets().filter((p) => p.soul === soul && !favoritedIds.includes(p.id));
+          matches.forEach((p) => spawnPreset(p.id));
+          if (matches.length) {
+            logger.log("autoload", `Auto-loaded soul-specific presets for ${soul}.`, matches.map((p) => p.id));
+          }
+        }
+      }
+    });
+  }
+
   // manifest.js
   bootstrap((plugin) => {
     initPatchMaker(plugin);
     initTrueHubBridge(plugin);
+    initDeckTracker(plugin);
   });
 })();

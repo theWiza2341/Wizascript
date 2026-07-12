@@ -184,7 +184,14 @@ export async function buildLocalizedFormattingData(selectedLanguageLabel, baseWo
 
 // ---- card name resolution ----
 
-function getAllCards() {
+// Exported - this is the one part of card lookup that's genuinely
+// identical everywhere it's needed (true-hub-bridge's deck filter,
+// deck-tracker's custom sprite picker, and likely more presets to
+// come). The FILTERING policy on top of this (which rarities to
+// exclude, whether an .image field is required) differs per caller and
+// deliberately stays local to each feature rather than being forced
+// into one generic function here.
+export function getAllCards() {
   const pageWindow = getPageWindow();
   const candidates = [pageWindow.allCards, pageWindow.cards, pageWindow.cardList, pageWindow.ucCards];
   for (const c of candidates) {

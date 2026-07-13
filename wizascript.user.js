@@ -4520,8 +4520,12 @@ Version: v${version}`;
         requestAnimationFrame(check);
       }
       tryReveal();
+      function isUnderScriptMenuOpen() {
+        const menu = document.querySelector('.menu-content[role="Menu"]');
+        return menu !== null && menu.offsetParent !== null;
+      }
       function isBlockingModalOpen() {
-        return document.body.classList.contains("modal-open") || document.querySelector(".modal-backdrop") !== null;
+        return document.body.classList.contains("modal-open") || document.querySelector(".modal-backdrop") !== null || isUnderScriptMenuOpen();
       }
       let isDimmed = false;
       const syncInterval = setInterval(() => {

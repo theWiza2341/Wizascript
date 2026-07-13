@@ -168,8 +168,18 @@ export function initDeckTracker(plugin) {
     // not just the game's native messageBoxes. Untested against
     // mulligan and card-choice modals specifically - worth confirming
     // those get caught too, since they may use a different mechanism.
+    function isUnderScriptMenuOpen() {
+      const menu = document.querySelector('.menu-content[role="Menu"]');
+      // offsetParent is null when an element (or an ancestor) is
+      // display:none - guards against the menu staying in the DOM but
+      // hidden between opens, rather than being removed entirely.
+      return menu !== null && menu.offsetParent !== null;
+    }
+
     function isBlockingModalOpen() {
-      return document.body.classList.contains("modal-open") || document.querySelector(".modal-backdrop") !== null;
+      return document.body.classList.contains("modal-open")
+        || document.querySelector(".modal-backdrop") !== null
+        || isUnderScriptMenuOpen();
     }
 
     let isDimmed = false;

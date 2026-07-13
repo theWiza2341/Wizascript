@@ -83,7 +83,7 @@ export function initDeckTracker(plugin) {
     btn.textContent = "+";
     btn.id = "dt-add-tracker-button";
     Object.assign(btn.style, {
-      position: "fixed", zIndex: 99999, width: "34px", height: "34px", borderRadius: "4px",
+      position: "fixed", zIndex: 500, width: "34px", height: "34px", borderRadius: "4px",
       background: "#2ecc71", color: "white", border: "none", cursor: "pointer",
       fontSize: "20px", fontWeight: "bold", lineHeight: "1", boxShadow: "0 1px 4px rgba(0,0,0,0.5)",
       opacity: "0" // hidden until we've confirmed a real position - see tryReveal() below

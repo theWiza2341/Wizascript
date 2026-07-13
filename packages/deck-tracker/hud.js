@@ -92,7 +92,7 @@ function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode
   let width = savedLayout?.width || (showImage ? DEFAULT_WIDTH : COMPACT_DEFAULT_WIDTH);
 
   const widget = $(`<div id="${elId}">`).addClass('dt-tracker-widget').css({
-    position: 'fixed', zIndex: 99999, width: width + 'px',
+    position: 'fixed', zIndex: 500, width: width + 'px',
     background: '#1a1a1a', border: '2px solid #444', borderRadius: '6px',
     padding: '6px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
     color: 'white', fontFamily: 'inherit', boxShadow: '0 2px 8px rgba(0,0,0,0.5)',

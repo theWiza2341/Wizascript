@@ -70,7 +70,7 @@ function spriteImage(sprite) {
 // each rebind would leak the previous call's document-level drag/
 // resize listeners rather than replacing them.
 
-function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode = false, savedLayout, showSaveButton = false, showImage = true }) {
+function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode = false, savedLayout, showSaveButton = false, showImage = true, contentMode = null, initialListItems = [], onRemoveListItem = null }) {
   const elId = widgetElementId(id);
   $(`#${elId}`).remove();
 
@@ -96,6 +96,79 @@ function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode
     fontWeight: 'bold', textAlign: 'center', width: '100%',
     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
   }).text(name);
+
+  // ---- list mode (Change of Winds Tracker): a small ordered list of
+  // known cards instead of a sprite or plain text. Entirely separate
+  // from the image/compact paths above/below - shares only the outer
+  // chrome (name line, close button, resize handle, drag/favorite via
+  // bindInteractions).
+  if (contentMode === "list") {
+    widget.append(nameLine);
+
+    const closeBtnList = $('<span>').text('×').css({
+      position: 'absolute', top: '-8px', left: '-8px', cursor: 'pointer',
+      color: '#eee', fontSize: '15px', fontWeight: 'bold',
+      background: 'rgba(180,30,30,0.75)', borderRadius: '50%', width: '18px', height: '18px',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1'
+    });
+    closeBtnList.on('mousedown', e => e.stopPropagation());
+    widget.append(closeBtnList);
+
+    const listBody = $('<div>').css({
+      width: '100%', maxHeight: '150px', overflowY: 'auto',
+      display: 'flex', flexDirection: 'column', gap: '3px'
+    });
+
+    function renderListItems(items) {
+      listBody.empty();
+      if (!items.length) {
+        listBody.append($('<div>').css({
+          fontSize: '11px', color: '#777', fontStyle: 'italic', textAlign: 'center', padding: '4px 0'
+        }).text('No known cards yet'));
+        return;
+      }
+      items.forEach((item, idx) => {
+        const row = $('<div>').css({
+          fontSize: '12px', padding: '3px 6px', background: 'rgba(255,255,255,0.06)',
+          borderRadius: '3px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+        }).attr('title', 'Right-click to remove this card');
+
+        row.append(
+          $('<span>').css({ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }).text(item.name),
+          $('<span>').css({ fontSize: '10px', color: '#777', flexShrink: 0, marginLeft: '6px' }).text(idx === 0 ? 'next' : `+${idx}`)
+        );
+        row.on('mouseenter', () => row.css('background', 'rgba(255,255,255,0.12)'));
+        row.on('mouseleave', () => row.css('background', 'rgba(255,255,255,0.06)'));
+        row.on('mousedown', e => e.stopPropagation()); // don't let clicking a row start a widget drag
+        row.on('contextmenu', e => {
+          e.preventDefault();
+          e.stopPropagation(); // don't also trigger the widget's own contextmenu handler
+          onRemoveListItem?.(item);
+        });
+        listBody.append(row);
+      });
+    }
+    renderListItems(initialListItems);
+
+    widget.append(listBody, resizeHandle);
+    $('body').append(widget);
+
+    function applySizeList(newWidth) {
+      width = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, newWidth));
+      widget.css('width', width + 'px');
+      nameLine.css('fontSize', Math.round(width * 0.105) + 'px');
+      listBody.css('fontSize', Math.round(width * 0.09) + 'px');
+      return width;
+    }
+    applySizeList(width);
+
+    return {
+      widget, nameLine, imageWrap: null, star: null, closeBtn: closeBtnList, resizeHandle,
+      applySize: applySizeList, getWidth: () => width, ns,
+      setSprite: () => {}, setLabel: () => {},
+      setListItems: renderListItems
+    };
+  }
 
   // Compact presets (Curve Tracker) skip the image area entirely - no
   // card sprite makes sense for a pure number, and the widget stays
@@ -312,7 +385,10 @@ export function spawnPreset(id) {
     isLabelMode: !!behavior,
     savedLayout,
     showSaveButton: false,
-    showImage: !behavior?.compact
+    showImage: !behavior?.compact,
+    contentMode: behavior?.listMode ? "list" : null,
+    initialListItems: behavior?.getInitialListItems ? behavior.getInitialListItems() : [],
+    onRemoveListItem: behavior?.onRemoveListItem ? item => behavior.onRemoveListItem(id, item) : null
   });
 
   // Records a baseline retained position/size the moment this spawns,

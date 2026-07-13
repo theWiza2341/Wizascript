@@ -3271,7 +3271,7 @@ Version: v${version}`;
       $(this).replaceWith(genericIcon());
     });
   }
-  function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode = false, savedLayout, showSaveButton = false, showImage = true }) {
+  function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode = false, savedLayout, showSaveButton = false, showImage = true, contentMode = null, initialListItems = [], onRemoveListItem = null }) {
     const elId = widgetElementId(id);
     $(`#${elId}`).remove();
     const ns = `.dt-widget-${Math.random().toString(36).slice(2)}`;
@@ -3308,6 +3308,99 @@ Version: v${version}`;
       textOverflow: "ellipsis",
       whiteSpace: "nowrap"
     }).text(name);
+    if (contentMode === "list") {
+      let renderListItems = function(items) {
+        listBody.empty();
+        if (!items.length) {
+          listBody.append($("<div>").css({
+            fontSize: "11px",
+            color: "#777",
+            fontStyle: "italic",
+            textAlign: "center",
+            padding: "4px 0"
+          }).text("No known cards yet"));
+          return;
+        }
+        items.forEach((item, idx) => {
+          const row = $("<div>").css({
+            fontSize: "12px",
+            padding: "3px 6px",
+            background: "rgba(255,255,255,0.06)",
+            borderRadius: "3px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center"
+          }).attr("title", "Right-click to remove this card");
+          row.append(
+            $("<span>").css({ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }).text(item.name),
+            $("<span>").css({ fontSize: "10px", color: "#777", flexShrink: 0, marginLeft: "6px" }).text(idx === 0 ? "next" : `+${idx}`)
+          );
+          row.on("mouseenter", () => row.css("background", "rgba(255,255,255,0.12)"));
+          row.on("mouseleave", () => row.css("background", "rgba(255,255,255,0.06)"));
+          row.on("mousedown", (e) => e.stopPropagation());
+          row.on("contextmenu", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onRemoveListItem == null ? void 0 : onRemoveListItem(item);
+          });
+          listBody.append(row);
+        });
+      }, applySizeList = function(newWidth) {
+        width = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, newWidth));
+        widget.css("width", width + "px");
+        nameLine.css("fontSize", Math.round(width * 0.105) + "px");
+        listBody.css("fontSize", Math.round(width * 0.09) + "px");
+        return width;
+      };
+      widget.append(nameLine);
+      const closeBtnList = $("<span>").text("\xD7").css({
+        position: "absolute",
+        top: "-8px",
+        left: "-8px",
+        cursor: "pointer",
+        color: "#eee",
+        fontSize: "15px",
+        fontWeight: "bold",
+        background: "rgba(180,30,30,0.75)",
+        borderRadius: "50%",
+        width: "18px",
+        height: "18px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        lineHeight: "1"
+      });
+      closeBtnList.on("mousedown", (e) => e.stopPropagation());
+      widget.append(closeBtnList);
+      const listBody = $("<div>").css({
+        width: "100%",
+        maxHeight: "150px",
+        overflowY: "auto",
+        display: "flex",
+        flexDirection: "column",
+        gap: "3px"
+      });
+      renderListItems(initialListItems);
+      widget.append(listBody, resizeHandle);
+      $("body").append(widget);
+      applySizeList(width);
+      return {
+        widget,
+        nameLine,
+        imageWrap: null,
+        star: null,
+        closeBtn: closeBtnList,
+        resizeHandle,
+        applySize: applySizeList,
+        getWidth: () => width,
+        ns,
+        setSprite: () => {
+        },
+        setLabel: () => {
+        },
+        setListItems: renderListItems
+      };
+    }
     let imageWrap = null;
     let imageBox = null;
     let star = null;
@@ -3502,7 +3595,10 @@ Version: v${version}`;
       isLabelMode: !!behavior,
       savedLayout,
       showSaveButton: false,
-      showImage: !(behavior == null ? void 0 : behavior.compact)
+      showImage: !(behavior == null ? void 0 : behavior.compact),
+      contentMode: (behavior == null ? void 0 : behavior.listMode) ? "list" : null,
+      initialListItems: (behavior == null ? void 0 : behavior.getInitialListItems) ? behavior.getInitialListItems() : [],
+      onRemoveListItem: (behavior == null ? void 0 : behavior.onRemoveListItem) ? (item) => behavior.onRemoveListItem(id, item) : null
     });
     trackActiveLayout(id, { left: parts.widget[0].getBoundingClientRect().left, top: parts.widget[0].getBoundingClientRect().top, width: parts.getWidth() });
     parts.closeBtn.on("click", (e) => {
@@ -4185,6 +4281,115 @@ Version: v${version}`;
     );
   }
 
+  // packages/deck-tracker/presets/cow-tracker.js
+  var PRESET_ID3 = "builtin:cow-tracker";
+  var COW_FIXED_ID = 552;
+  var bottomCards = [];
+  var lastModalOptions = null;
+  var liveParts3 = null;
+  var seenModals = /* @__PURE__ */ new WeakSet();
+  var modalObserverStarted = false;
+  function refreshLiveWidget3() {
+    if (liveParts3) liveParts3.setListItems(bottomCards.slice());
+  }
+  function looksLikeCoW(modal) {
+    var _a;
+    return ((_a = modal.innerText) == null ? void 0 : _a.includes("Change of Winds")) || modal.querySelector("#select-cards");
+  }
+  function extractOptions(modal) {
+    return [...modal.querySelectorAll(".card")].map((card) => {
+      var _a, _b, _c;
+      return { name: ((_b = (_a = card.querySelector(".cardName")) == null ? void 0 : _a.innerText) == null ? void 0 : _b.trim()) || ((_c = card.innerText) == null ? void 0 : _c.trim()) };
+    }).filter((c) => c.name);
+  }
+  function startModalWatch() {
+    if (modalObserverStarted) return;
+    modalObserverStarted = true;
+    const observer = new MutationObserver(() => {
+      document.querySelectorAll(".modal, .bootstrap-dialog").forEach((modal) => {
+        if (seenModals.has(modal)) return;
+        if (!looksLikeCoW(modal)) return;
+        const options = extractOptions(modal);
+        if (options.length < 2) return;
+        seenModals.add(modal);
+        lastModalOptions = options;
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+  function handleGameEvent3(event) {
+    var _a;
+    if (event.action !== "getDoingEffect") return;
+    let card, battleLog;
+    try {
+      card = typeof event.card === "string" ? JSON.parse(event.card) : event.card;
+      battleLog = typeof event.battleLog === "string" ? JSON.parse(event.battleLog) : event.battleLog;
+    } catch (e) {
+      return;
+    }
+    if ((card == null ? void 0 : card.fixedId) !== COW_FIXED_ID) return;
+    const relevantId = getRelevantPlayerId();
+    if (relevantId === null || (battleLog == null ? void 0 : battleLog.playerId) !== relevantId) return;
+    const chosen = (_a = battleLog == null ? void 0 : battleLog.targetCards) == null ? void 0 : _a[0];
+    if (!(chosen == null ? void 0 : chosen.name)) return;
+    if (!lastModalOptions || lastModalOptions.length < 2) {
+      console.warn("[DeckTracker/CoW] Change of Winds resolved but no modal options were captured - can't determine the rejected card this time.");
+      return;
+    }
+    const rejected = lastModalOptions.find((opt) => opt.name !== chosen.name);
+    if (!rejected) return;
+    bottomCards.unshift({ name: rejected.name });
+    refreshLiveWidget3();
+  }
+  function resetCowTrackerForMatchStart(turn) {
+    if (turn <= 1) {
+      bottomCards = [];
+      refreshLiveWidget3();
+    }
+  }
+  function registerCowTracker() {
+    startModalWatch();
+    registerPresetType(
+      {
+        id: PRESET_ID3,
+        name: "Change of Winds Tracker",
+        description: "Tracks the known bottom of your deck as Change of Winds pushes cards down.",
+        sprite: null,
+        soul: "PATIENCE",
+        custom: false,
+        kind: "event"
+      },
+      {
+        onGameEvent: handleGameEvent3,
+        hudBehavior: {
+          widgetTitle: "CoW Tracker",
+          listMode: true,
+          getInitialListItems: () => bottomCards.slice(),
+          // Right-click a specific row removes just that card - lets the
+          // user self-correct if they suspect a shuffle effect disturbed
+          // that particular known position.
+          onRemoveListItem: (_id, item) => {
+            const idx = bottomCards.findIndex((c) => c.name === item.name);
+            if (idx !== -1) bottomCards.splice(idx, 1);
+            refreshLiveWidget3();
+          },
+          // Middle-click clears the whole list, matching the "middle-
+          // click resets" convention used elsewhere in Deck Tracker.
+          onMiddleClick: () => {
+            bottomCards = [];
+            refreshLiveWidget3();
+          },
+          onMount: (id, parts) => {
+            liveParts3 = parts;
+          },
+          onUnmount: () => {
+            liveParts3 = null;
+          }
+        }
+      }
+    );
+  }
+
   // packages/deck-tracker/index.js
   function isGamePage() {
     const path = location.pathname.toLowerCase();
@@ -4212,6 +4417,7 @@ Version: v${version}`;
     registerBuiltInPresets();
     registerSaveTracker();
     registerCurveTracker();
+    registerCowTracker();
     function handleAddPreset(id) {
       spawnPreset(id);
       logger.log("hud", "Spawned preset from picker:", id);
@@ -4357,8 +4563,9 @@ Version: v${version}`;
       }
     });
     plugin.events.on("connect", (data) => {
-      var _a;
+      var _a, _b;
       resetForMatchStart((_a = data == null ? void 0 : data.turn) != null ? _a : 0);
+      resetCowTrackerForMatchStart((_b = data == null ? void 0 : data.turn) != null ? _b : 0);
       if (settings.autoLoadSoulPresets.value()) {
         const soul = getRelevantPlayerSoul(data);
         if (soul) {

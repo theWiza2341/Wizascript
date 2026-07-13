@@ -7,6 +7,7 @@ import { openCustomTrackerBuilder, openSaveAsPresetPrompt } from "./presets/cust
 import { registerBuiltInPresets } from "./presets/built-in.js";
 import { registerSaveTracker, resetForMatchStart } from "./presets/save-tracker.js";
 import { registerCurveTracker } from "./presets/curve-tracker.js";
+import { registerCowTracker, resetCowTrackerForMatchStart } from "./presets/cow-tracker.js";
 import { isSpectating, getRelevantPlayerSoul } from "../core/player-context.js";
 
 // Deck Tracker only makes sense on Game/Spectate pages - matches the
@@ -39,6 +40,7 @@ export function initDeckTracker(plugin) {
   registerBuiltInPresets();
   registerSaveTracker();
   registerCurveTracker();
+  registerCowTracker();
 
   function handleAddPreset(id) {
     spawnPreset(id);
@@ -281,6 +283,7 @@ export function initDeckTracker(plugin) {
     // similarly needs to know "is this a fresh match or a mid-match
     // join"), not an auto-load behavior gated by a toggle.
     resetForMatchStart(data?.turn ?? 0);
+    resetCowTrackerForMatchStart(data?.turn ?? 0);
 
     // Soul-specific auto-load deliberately has NO spectate guard -
     // unlike favorited/retained, this should fire whether joining a

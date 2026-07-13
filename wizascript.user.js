@@ -3282,7 +3282,7 @@ Version: v${version}`;
     let width = (savedLayout == null ? void 0 : savedLayout.width) || (showImage ? DEFAULT_WIDTH : COMPACT_DEFAULT_WIDTH);
     const widget = $(`<div id="${elId}">`).addClass("dt-tracker-widget").css({
       position: "fixed",
-      zIndex: 500,
+      zIndex: 14,
       width: width + "px",
       background: "#1a1a1a",
       border: "2px solid #444",
@@ -4473,7 +4473,7 @@ Version: v${version}`;
       btn.id = "dt-add-tracker-button";
       Object.assign(btn.style, {
         position: "fixed",
-        zIndex: 500,
+        zIndex: 14,
         width: "34px",
         height: "34px",
         borderRadius: "4px",

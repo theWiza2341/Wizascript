@@ -3468,7 +3468,12 @@ Version: v${version}`;
       background: "rgba(255,255,255,0.08)",
       borderRadius: "3px",
       padding: "2px 0"
-    }).text(isLabelMode ? initialLabel != null ? initialLabel : "?" : "\xD7" + initialCount);
+    });
+    if (isLabelMode) {
+      countEl.html(initialLabel != null ? initialLabel : "?");
+    } else {
+      countEl.text("\xD7" + initialCount);
+    }
     function applySize(newWidth) {
       width = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, newWidth));
       widget.css("width", width + "px");
@@ -3491,8 +3496,8 @@ Version: v${version}`;
       imageBox.replaceWith(fresh);
       imageBox = fresh;
     }
-    function setLabel(text) {
-      countEl.text(text);
+    function setLabel(html) {
+      countEl.html(html);
     }
     return { widget, nameLine, countEl, imageWrap, star, closeBtn, resizeHandle, applySize, getWidth: () => width, ns, setSprite, setLabel };
   }
@@ -3646,6 +3651,9 @@ Version: v${version}`;
     liveWidgets.delete(id);
     (_c = (_b = getHudBehavior(id)) == null ? void 0 : _b.onUnmount) == null ? void 0 : _c.call(_b, id);
     forgetActiveLayout(id);
+  }
+  function closeAllWidgets() {
+    [...liveWidgets.keys()].forEach((id) => closeWidget(id));
   }
   function isWidgetOpen(id) {
     return liveWidgets.has(id);
@@ -4221,8 +4229,10 @@ Version: v${version}`;
   var turnSpend = 0;
   var lastTurnSpend = null;
   var liveParts2 = null;
+  var G_SPAN = '<span style="color: gold; font-weight: bold;">G</span>';
   function getDisplayLabel() {
-    return lastTurnSpend === null ? "Last Turn: ? G" : `Last Turn: ${lastTurnSpend} G`;
+    const value = lastTurnSpend === null ? "?" : String(lastTurnSpend);
+    return `Last Turn: ${value} ${G_SPAN}`;
   }
   function refreshDisplay2(parts) {
     parts.setLabel(getDisplayLabel());
@@ -4537,6 +4547,7 @@ Version: v${version}`;
       dispatchGameEvent(event);
       if ((event == null ? void 0 : event.action) === "getVictory" || (event == null ? void 0 : event.action) === "getDefeat" || (event == null ? void 0 : event.action) === "getResult") {
         (trackerButton == null ? void 0 : trackerButton.style) && (trackerButton.style.display = "none");
+        closeAllWidgets();
       }
     });
     plugin.events.on("GameStart", () => {

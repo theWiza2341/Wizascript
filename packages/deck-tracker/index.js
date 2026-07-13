@@ -1,7 +1,7 @@
 import { createLogger } from "../core/debug-logger.js";
 import { registerDeckTrackerSettings } from "./settings.js";
 import { getFavoritedPresetIds, getAvailablePresets, dispatchGameEvent, deleteCustomPreset, setRetainEnabledGetter, getRetainedPresetIds } from "./registry.js";
-import { spawnPreset, spawnAdHocCustomTracker, closeWidget } from "./hud.js";
+import { spawnPreset, spawnAdHocCustomTracker, closeWidget, closeAllWidgets } from "./hud.js";
 import { openPresetPicker } from "./picker.js";
 import { openCustomTrackerBuilder, openSaveAsPresetPrompt } from "./presets/custom.js";
 import { registerBuiltInPresets } from "./presets/built-in.js";
@@ -218,8 +218,15 @@ export function initDeckTracker(plugin) {
   // comment, UnderScript's own logger) treats as "the game just ended."
   plugin.events.on("GameEvent", event => {
     dispatchGameEvent(event);
+    // Same three actions as before - a disconnect isn't its own
+    // distinct action as far as we've seen; it resolves as a win/loss
+    // for the remaining player through these same three, so this
+    // should already cover it. Worth flagging if a genuine disconnect
+    // is ever observed NOT firing any of these three, since that would
+    // mean a fourth action name we haven't identified yet.
     if (event?.action === "getVictory" || event?.action === "getDefeat" || event?.action === "getResult") {
       trackerButton?.style && (trackerButton.style.display = "none");
+      closeAllWidgets();
     }
   });
 

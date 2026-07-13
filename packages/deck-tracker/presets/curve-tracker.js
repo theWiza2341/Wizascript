@@ -28,8 +28,13 @@ let turnSpend = 0;         // running total of drops observed THIS turn
 let lastTurnSpend = null;  // frozen total from the turn that just ended - what's displayed
 let liveParts = null;
 
+// Matches Patch Maker's own BASE_WORD_COLORS entry (G: "gold") - same
+// shade used everywhere else in the suite for gold-cost text.
+const G_SPAN = '<span style="color: gold; font-weight: bold;">G</span>';
+
 function getDisplayLabel() {
-  return lastTurnSpend === null ? "Last Turn: ? G" : `Last Turn: ${lastTurnSpend} G`;
+  const value = lastTurnSpend === null ? "?" : String(lastTurnSpend);
+  return `Last Turn: ${value} ${G_SPAN}`;
 }
 
 function refreshDisplay(parts) {

@@ -224,7 +224,12 @@ function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode
   const countEl = $('<div>').css({
     fontWeight: 'bold', width: '100%', textAlign: 'center',
     background: 'rgba(255,255,255,0.08)', borderRadius: '3px', padding: '2px 0'
-  }).text(isLabelMode ? (initialLabel ?? '?') : ('×' + initialCount));
+  });
+  if (isLabelMode) {
+    countEl.html(initialLabel ?? '?');
+  } else {
+    countEl.text('×' + initialCount);
+  }
 
   function applySize(newWidth) {
     width = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, newWidth));
@@ -257,8 +262,12 @@ function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode
     imageBox = fresh;
   }
 
-  function setLabel(text) {
-    countEl.text(text);
+  // Renders as HTML rather than plain text, so a preset can style part
+  // of its label (e.g. Curve Tracker coloring the "G" the same gold
+  // used elsewhere in the suite). Only ever called by first-party
+  // built-in presets with fixed templates - never raw user input.
+  function setLabel(html) {
+    countEl.html(html);
   }
 
   return { widget, nameLine, countEl, imageWrap, star, closeBtn, resizeHandle, applySize, getWidth: () => width, ns, setSprite, setLabel };
@@ -448,6 +457,13 @@ export function closeWidget(id) {
   // Always clears, regardless of the "retain" setting's current value -
   // closing always means "don't bring this back."
   forgetActiveLayout(id);
+}
+
+// Used on game-end - snapshot the keys first, since closeWidget mutates
+// liveWidgets as it runs and iterating a Map while deleting from it
+// directly would skip entries.
+export function closeAllWidgets() {
+  [...liveWidgets.keys()].forEach(id => closeWidget(id));
 }
 
 export function isWidgetOpen(id) {

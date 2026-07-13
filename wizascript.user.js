@@ -4137,7 +4137,7 @@ Version: v${version}`;
   function handleGameEvent2(event) {
     const relevantId = getRelevantPlayerId();
     if (relevantId === null) return;
-    if (event.action === "getTurnStart" && event.idPlayer === relevantId) {
+    if (event.action === "getTurnStart" && event.idPlayer !== relevantId) {
       lastTurnSpend = turnSpend;
       turnSpend = 0;
       refreshLiveWidget2();

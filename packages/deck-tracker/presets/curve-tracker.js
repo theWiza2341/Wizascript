@@ -44,9 +44,16 @@ function handleGameEvent(event) {
   const relevantId = getRelevantPlayerId();
   if (relevantId === null) return;
 
-  if (event.action === "getTurnStart" && event.idPlayer === relevantId) {
-    // Freeze whatever accumulated during the turn that just ended as
-    // "last turn's" total, then start a fresh tally for the new turn.
+  // FIX: freezing on MY OWN next getTurnStart meant waiting through the
+  // opponent's entire turn before the display updated. Freezing on
+  // getTurnEnd instead seemed like the obvious fix, but live testing
+  // showed "Turn end: spend your G" triggers actually resolve AFTER
+  // getTurnEnd fires, not before - freezing right at getTurnEnd would
+  // miss that spend entirely. The opponent's getTurnStart is the right
+  // moment: by definition everything triggered by my turn ending has
+  // already resolved by then, and it updates far sooner than waiting
+  // for my own next turn.
+  if (event.action === "getTurnStart" && event.idPlayer !== relevantId) {
     lastTurnSpend = turnSpend;
     turnSpend = 0;
     refreshLiveWidget();

@@ -3308,6 +3308,15 @@ Version: v${version}`;
       textOverflow: "ellipsis",
       whiteSpace: "nowrap"
     }).text(name);
+    const resizeHandle = $("<div>").css({
+      position: "absolute",
+      bottom: "-2px",
+      right: "-2px",
+      width: "14px",
+      height: "14px",
+      cursor: "nwse-resize",
+      background: "transparent"
+    });
     if (contentMode === "list") {
       let renderListItems = function(items) {
         listBody.empty();
@@ -3442,15 +3451,6 @@ Version: v${version}`;
       alignItems: "center",
       justifyContent: "center",
       lineHeight: "1"
-    });
-    const resizeHandle = $("<div>").css({
-      position: "absolute",
-      bottom: "-2px",
-      right: "-2px",
-      width: "14px",
-      height: "14px",
-      cursor: "nwse-resize",
-      background: "transparent"
     });
     if (showImage) {
       imageWrap.append(imageBox);

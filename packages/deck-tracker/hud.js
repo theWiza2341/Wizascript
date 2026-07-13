@@ -97,6 +97,13 @@ function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode
     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
   }).text(name);
 
+  // Generic, mode-independent - created up front so every content mode
+  // (image/compact/list) can reference it without ordering issues.
+  const resizeHandle = $('<div>').css({
+    position: 'absolute', bottom: '-2px', right: '-2px', width: '14px', height: '14px',
+    cursor: 'nwse-resize', background: 'transparent'
+  });
+
   // ---- list mode (Change of Winds Tracker): a small ordered list of
   // known cards instead of a sprite or plain text. Entirely separate
   // from the image/compact paths above/below - shares only the outer
@@ -202,11 +209,6 @@ function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode
     color: '#eee', fontSize: '15px', fontWeight: 'bold',
     background: 'rgba(180,30,30,0.75)', borderRadius: '50%', width: '18px', height: '18px',
     display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1'
-  });
-
-  const resizeHandle = $('<div>').css({
-    position: 'absolute', bottom: '-2px', right: '-2px', width: '14px', height: '14px',
-    cursor: 'nwse-resize', background: 'transparent'
   });
 
   if (showImage) {

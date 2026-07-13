@@ -3229,6 +3229,7 @@ Version: v${version}`;
   var MIN_WIDTH = 90;
   var MAX_WIDTH = 220;
   var DEFAULT_WIDTH = 155;
+  var COMPACT_DEFAULT_WIDTH = 120;
   var CASCADE_STEP = 24;
   var CASCADE_MAX_STEPS = 6;
   var CASCADE_BASE = 20;
@@ -3270,11 +3271,11 @@ Version: v${version}`;
       $(this).replaceWith(genericIcon());
     });
   }
-  function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode = false, savedLayout, showSaveButton = false }) {
+  function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode = false, savedLayout, showSaveButton = false, showImage = true }) {
     const elId = widgetElementId(id);
     $(`#${elId}`).remove();
     const ns = `.dt-widget-${Math.random().toString(36).slice(2)}`;
-    let width = (savedLayout == null ? void 0 : savedLayout.width) || DEFAULT_WIDTH;
+    let width = (savedLayout == null ? void 0 : savedLayout.width) || (showImage ? DEFAULT_WIDTH : COMPACT_DEFAULT_WIDTH);
     const widget = $(`<div id="${elId}">`).addClass("dt-tracker-widget").css({
       position: "fixed",
       zIndex: 99999,
@@ -3307,26 +3308,30 @@ Version: v${version}`;
       textOverflow: "ellipsis",
       whiteSpace: "nowrap"
     }).text(name);
-    const imageWrap = $("<div>").css({ position: "relative", width: "100%" });
-    let imageBox = spriteImage(sprite);
+    let imageWrap = null;
+    let imageBox = null;
     let star = null;
-    if (showSaveButton) {
-      star = $("<span>").text("\u2606").attr("title", "Save as Preset").css({
-        position: "absolute",
-        top: "2px",
-        right: "2px",
-        cursor: "pointer",
-        color: "#eee",
-        fontSize: "15px",
-        background: "rgba(0,0,0,0.55)",
-        borderRadius: "50%",
-        width: "18px",
-        height: "18px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        lineHeight: "1"
-      });
+    if (showImage) {
+      imageWrap = $("<div>").css({ position: "relative", width: "100%" });
+      imageBox = spriteImage(sprite);
+      if (showSaveButton) {
+        star = $("<span>").text("\u2606").attr("title", "Save as Preset").css({
+          position: "absolute",
+          top: "2px",
+          right: "2px",
+          cursor: "pointer",
+          color: "#eee",
+          fontSize: "15px",
+          background: "rgba(0,0,0,0.55)",
+          borderRadius: "50%",
+          width: "18px",
+          height: "18px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          lineHeight: "1"
+        });
+      }
     }
     const closeBtn = $("<span>").text("\xD7").css({
       position: "absolute",
@@ -3354,9 +3359,15 @@ Version: v${version}`;
       cursor: "nwse-resize",
       background: "transparent"
     });
-    imageWrap.append(imageBox);
-    if (star) imageWrap.append(star);
-    imageWrap.append(closeBtn);
+    if (showImage) {
+      imageWrap.append(imageBox);
+      if (star) imageWrap.append(star);
+      imageWrap.append(closeBtn);
+    } else {
+      widget.css("position", "fixed");
+      closeBtn.css({ top: "-8px", left: "-8px" });
+      widget.append(closeBtn);
+    }
     const countEl = $("<div>").css({
       fontWeight: "bold",
       width: "100%",
@@ -3373,11 +3384,16 @@ Version: v${version}`;
       return width;
     }
     applySize(width);
-    widget.append(nameLine, imageWrap, countEl, resizeHandle);
+    if (showImage) {
+      widget.append(nameLine, imageWrap, countEl, resizeHandle);
+    } else {
+      widget.append(nameLine, countEl, resizeHandle);
+    }
     $("body").append(widget);
     if (star) star.on("mousedown", (e) => e.stopPropagation());
     closeBtn.on("mousedown", (e) => e.stopPropagation());
     function setSprite(newSprite) {
+      if (!showImage || !imageBox) return;
       const fresh = spriteImage(newSprite);
       imageBox.replaceWith(fresh);
       imageBox = fresh;
@@ -3485,7 +3501,8 @@ Version: v${version}`;
       initialLabel: (behavior == null ? void 0 : behavior.getInitialLabel) ? behavior.getInitialLabel() : void 0,
       isLabelMode: !!behavior,
       savedLayout,
-      showSaveButton: false
+      showSaveButton: false,
+      showImage: !(behavior == null ? void 0 : behavior.compact)
     });
     trackActiveLayout(id, { left: parts.widget[0].getBoundingClientRect().left, top: parts.widget[0].getBoundingClientRect().top, width: parts.getWidth() });
     parts.closeBtn.on("click", (e) => {
@@ -4102,6 +4119,72 @@ Version: v${version}`;
     );
   }
 
+  // packages/deck-tracker/presets/curve-tracker.js
+  var PRESET_ID2 = "builtin:curve-tracker";
+  var lastKnownGold = null;
+  var turnSpend = 0;
+  var lastTurnSpend = null;
+  var liveParts2 = null;
+  function getDisplayLabel() {
+    return lastTurnSpend === null ? "Last Turn: ? G" : `Last Turn: ${lastTurnSpend} G`;
+  }
+  function refreshDisplay2(parts) {
+    parts.setLabel(getDisplayLabel());
+  }
+  function refreshLiveWidget2() {
+    if (liveParts2) refreshDisplay2(liveParts2);
+  }
+  function handleGameEvent2(event) {
+    const relevantId = getRelevantPlayerId();
+    if (relevantId === null) return;
+    if (event.action === "getTurnStart" && event.idPlayer === relevantId) {
+      lastTurnSpend = turnSpend;
+      turnSpend = 0;
+      refreshLiveWidget2();
+      return;
+    }
+    if (event.action === "getPlayersStats" && event.golds) {
+      try {
+        const byPlayer = JSON.parse(event.golds);
+        const current = byPlayer[relevantId];
+        if (typeof current !== "number") return;
+        if (lastKnownGold !== null && current < lastKnownGold) {
+          turnSpend += lastKnownGold - current;
+        }
+        lastKnownGold = current;
+      } catch (e) {
+      }
+    }
+  }
+  function registerCurveTracker() {
+    registerPresetType(
+      {
+        id: PRESET_ID2,
+        name: "Curve Tracker",
+        description: "Shows how much G you spent last turn, to help play around Integrity's passive.",
+        sprite: null,
+        soul: "INTEGRITY",
+        custom: false,
+        kind: "event"
+      },
+      {
+        onGameEvent: handleGameEvent2,
+        hudBehavior: {
+          widgetTitle: "Curve Tracker",
+          compact: true,
+          getInitialLabel: () => getDisplayLabel(),
+          onMount: (id, parts) => {
+            liveParts2 = parts;
+            refreshDisplay2(parts);
+          },
+          onUnmount: () => {
+            liveParts2 = null;
+          }
+        }
+      }
+    );
+  }
+
   // packages/deck-tracker/index.js
   function isGamePage() {
     const path = location.pathname.toLowerCase();
@@ -4128,6 +4211,7 @@ Version: v${version}`;
     setRetainEnabledGetter(() => settings.retainUnclosedPresets.value());
     registerBuiltInPresets();
     registerSaveTracker();
+    registerCurveTracker();
     function handleAddPreset(id) {
       spawnPreset(id);
       logger.log("hud", "Spawned preset from picker:", id);

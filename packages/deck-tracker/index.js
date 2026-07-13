@@ -6,6 +6,7 @@ import { openPresetPicker } from "./picker.js";
 import { openCustomTrackerBuilder, openSaveAsPresetPrompt } from "./presets/custom.js";
 import { registerBuiltInPresets } from "./presets/built-in.js";
 import { registerSaveTracker, resetForMatchStart } from "./presets/save-tracker.js";
+import { registerCurveTracker } from "./presets/curve-tracker.js";
 import { isSpectating, getRelevantPlayerSoul } from "../core/player-context.js";
 
 // Deck Tracker only makes sense on Game/Spectate pages - matches the
@@ -37,6 +38,7 @@ export function initDeckTracker(plugin) {
   setRetainEnabledGetter(() => settings.retainUnclosedPresets.value());
   registerBuiltInPresets();
   registerSaveTracker();
+  registerCurveTracker();
 
   function handleAddPreset(id) {
     spawnPreset(id);

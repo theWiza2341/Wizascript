@@ -20,6 +20,7 @@ const SPRITE_RATIO = "160 / 90";
 const MIN_WIDTH = 90;
 const MAX_WIDTH = 220;
 const DEFAULT_WIDTH = 155;
+const COMPACT_DEFAULT_WIDTH = 120;
 
 // Simple cascade for freshly-spawned (non-favorited/non-retained)
 // widgets, so adding several at once doesn't stack them exactly on top
@@ -69,12 +70,12 @@ function spriteImage(sprite) {
 // each rebind would leak the previous call's document-level drag/
 // resize listeners rather than replacing them.
 
-function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode = false, savedLayout, showSaveButton = false }) {
+function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode = false, savedLayout, showSaveButton = false, showImage = true }) {
   const elId = widgetElementId(id);
   $(`#${elId}`).remove();
 
   const ns = `.dt-widget-${Math.random().toString(36).slice(2)}`;
-  let width = savedLayout?.width || DEFAULT_WIDTH;
+  let width = savedLayout?.width || (showImage ? DEFAULT_WIDTH : COMPACT_DEFAULT_WIDTH);
 
   const widget = $(`<div id="${elId}">`).addClass('dt-tracker-widget').css({
     position: 'fixed', zIndex: 99999, width: width + 'px',
@@ -96,20 +97,31 @@ function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode
     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
   }).text(name);
 
-  const imageWrap = $('<div>').css({ position: 'relative', width: '100%' });
-  let imageBox = spriteImage(sprite);
-
-  // Star only exists on not-yet-saved ad-hoc trackers now, meaning
-  // "Save as Preset" - it no longer represents or toggles favorited
-  // status at all. Favoriting moved entirely to the picker's heart icon.
+  // Compact presets (Curve Tracker) skip the image area entirely - no
+  // card sprite makes sense for a pure number, and the widget stays
+  // deliberately smaller as a result. The close button attaches
+  // directly to the widget itself instead of an image wrapper, since
+  // `widget`'s own `position: fixed` already establishes a valid
+  // containing block for an absolutely-positioned child.
+  let imageWrap = null;
+  let imageBox = null;
   let star = null;
-  if (showSaveButton) {
-    star = $('<span>').text('☆').attr('title', 'Save as Preset').css({
-      position: 'absolute', top: '2px', right: '2px', cursor: 'pointer',
-      color: '#eee', fontSize: '15px',
-      background: 'rgba(0,0,0,0.55)', borderRadius: '50%', width: '18px', height: '18px',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1'
-    });
+
+  if (showImage) {
+    imageWrap = $('<div>').css({ position: 'relative', width: '100%' });
+    imageBox = spriteImage(sprite);
+
+    // Star only exists on not-yet-saved ad-hoc trackers now, meaning
+    // "Save as Preset" - it no longer represents or toggles favorited
+    // status at all. Favoriting moved entirely to the picker's heart icon.
+    if (showSaveButton) {
+      star = $('<span>').text('☆').attr('title', 'Save as Preset').css({
+        position: 'absolute', top: '2px', right: '2px', cursor: 'pointer',
+        color: '#eee', fontSize: '15px',
+        background: 'rgba(0,0,0,0.55)', borderRadius: '50%', width: '18px', height: '18px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: '1'
+      });
+    }
   }
 
   const closeBtn = $('<span>').text('×').css({
@@ -124,9 +136,15 @@ function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode
     cursor: 'nwse-resize', background: 'transparent'
   });
 
-  imageWrap.append(imageBox);
-  if (star) imageWrap.append(star);
-  imageWrap.append(closeBtn);
+  if (showImage) {
+    imageWrap.append(imageBox);
+    if (star) imageWrap.append(star);
+    imageWrap.append(closeBtn);
+  } else {
+    widget.css('position', 'fixed'); // already set above; explicit for clarity as the containing block
+    closeBtn.css({ top: '-8px', left: '-8px' });
+    widget.append(closeBtn);
+  }
 
   const countEl = $('<div>').css({
     fontWeight: 'bold', width: '100%', textAlign: 'center',
@@ -142,7 +160,11 @@ function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode
   }
   applySize(width);
 
-  widget.append(nameLine, imageWrap, countEl, resizeHandle);
+  if (showImage) {
+    widget.append(nameLine, imageWrap, countEl, resizeHandle);
+  } else {
+    widget.append(nameLine, countEl, resizeHandle);
+  }
   $('body').append(widget);
 
   if (star) star.on('mousedown', e => e.stopPropagation());
@@ -151,8 +173,10 @@ function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode
   // Used by event-driven presets (SAVE Tracker) to push updates into an
   // already-rendered widget in response to game events, independent of
   // registry's generic count system - that system assumes a number,
-  // this is for arbitrary sprite/text changes.
+  // this is for arbitrary sprite/text changes. No-op in compact mode,
+  // since there's no image to swap.
   function setSprite(newSprite) {
+    if (!showImage || !imageBox) return;
     const fresh = spriteImage(newSprite);
     imageBox.replaceWith(fresh);
     imageBox = fresh;
@@ -287,7 +311,8 @@ export function spawnPreset(id) {
     initialLabel: behavior?.getInitialLabel ? behavior.getInitialLabel() : undefined,
     isLabelMode: !!behavior,
     savedLayout,
-    showSaveButton: false
+    showSaveButton: false,
+    showImage: !behavior?.compact
   });
 
   // Records a baseline retained position/size the moment this spawns,

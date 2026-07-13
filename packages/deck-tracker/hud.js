@@ -43,6 +43,20 @@ function getNextCascadePosition() {
 
 const liveWidgets = new Map(); // id -> { widget, ..., unsubscribe }
 
+// Session-only "remember where I put it" cache - always active,
+// regardless of favorited status or the "Retain Unclosed Presets"
+// setting. Without this, closing and reopening a preset via the
+// picker mid-match would re-cascade to a fresh spot every time unless
+// it also happened to be favorited or retain was enabled - annoying
+// for a preset you just dragged into place moments earlier. Cross-
+// match persistence still requires favoriting or the retain setting;
+// this only ever lives in memory for the current page session.
+const sessionLayouts = new Map();
+
+function rememberSessionLayout(id, layout) {
+  sessionLayouts.set(id, layout);
+}
+
 function widgetElementId(id) {
   return `dt-tracker-${id.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
 }
@@ -320,12 +334,14 @@ function bindInteractions(parts, { onLeftClick, onRightClick, onMiddleClick, isF
     widget.css('cursor', 'grab');
     if (dragMoved) {
       const rect = widget[0].getBoundingClientRect();
+      const layout = { left: rect.left, top: rect.top, width: getWidth() };
       if (isFavorited()) {
-        persistLayout({ left: rect.left, top: rect.top, width: getWidth() });
+        persistLayout(layout);
       }
       if (trackRetain) {
-        trackActiveLayout(id, { left: rect.left, top: rect.top, width: getWidth() });
+        trackActiveLayout(id, layout);
       }
+      rememberSessionLayout(id, layout);
     } else {
       onLeftClick?.();
     }
@@ -355,12 +371,14 @@ function bindInteractions(parts, { onLeftClick, onRightClick, onMiddleClick, isF
     if (!resizing) return;
     resizing = false;
     const rect = widget[0].getBoundingClientRect();
+    const layout = { left: rect.left, top: rect.top, width: getWidth() };
     if (isFavorited()) {
-      persistLayout({ left: rect.left, top: rect.top, width: getWidth() });
+      persistLayout(layout);
     }
     if (trackRetain) {
-      trackActiveLayout(id, { left: rect.left, top: rect.top, width: getWidth() });
+      trackActiveLayout(id, layout);
     }
+    rememberSessionLayout(id, layout);
   });
 }
 
@@ -380,7 +398,12 @@ export function spawnPreset(id) {
   // retained layout (from "Retain Unclosed Presets Between Matches")
   // so a preset that was merely left open - not favorited - still
   // reappears where it was.
-  const savedLayout = favorited ? getLayout(id) : getRetainedLayout(id);
+  // Priority: persisted favorite layout > persisted retain layout (if
+  // that setting's on) > this-session's last known position > cascade
+  // as a last resort. The session fallback is what stops a re-open via
+  // the picker from re-cascading when neither favorited nor retain
+  // applies but the widget was positioned moments earlier this match.
+  const savedLayout = (favorited && getLayout(id)) || getRetainedLayout(id) || sessionLayouts.get(id) || null;
   const behavior = getHudBehavior(id);
 
   const parts = buildWidget({
@@ -405,7 +428,9 @@ export function spawnPreset(id) {
   // Records a baseline retained position/size the moment this spawns,
   // even if the user never touches it - satisfies "if you leave with
   // things open, they'll be remembered" without requiring a drag first.
-  trackActiveLayout(id, { left: parts.widget[0].getBoundingClientRect().left, top: parts.widget[0].getBoundingClientRect().top, width: parts.getWidth() });
+  const baselineRect = { left: parts.widget[0].getBoundingClientRect().left, top: parts.widget[0].getBoundingClientRect().top, width: parts.getWidth() };
+  trackActiveLayout(id, baselineRect);
+  rememberSessionLayout(id, baselineRect);
 
   parts.closeBtn.on('click', e => {
     e.stopPropagation();

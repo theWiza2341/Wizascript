@@ -3243,6 +3243,10 @@ Version: v${version}`;
     };
   }
   var liveWidgets = /* @__PURE__ */ new Map();
+  var sessionLayouts = /* @__PURE__ */ new Map();
+  function rememberSessionLayout(id, layout) {
+    sessionLayouts.set(id, layout);
+  }
   function widgetElementId(id) {
     return `dt-tracker-${id.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
   }
@@ -3537,12 +3541,14 @@ Version: v${version}`;
       widget.css("cursor", "grab");
       if (dragMoved) {
         const rect = widget[0].getBoundingClientRect();
+        const layout = { left: rect.left, top: rect.top, width: getWidth() };
         if (isFavorited2()) {
-          persistLayout({ left: rect.left, top: rect.top, width: getWidth() });
+          persistLayout(layout);
         }
         if (trackRetain) {
-          trackActiveLayout(id, { left: rect.left, top: rect.top, width: getWidth() });
+          trackActiveLayout(id, layout);
         }
+        rememberSessionLayout(id, layout);
       } else {
         onLeftClick == null ? void 0 : onLeftClick();
       }
@@ -3567,12 +3573,14 @@ Version: v${version}`;
       if (!resizing) return;
       resizing = false;
       const rect = widget[0].getBoundingClientRect();
+      const layout = { left: rect.left, top: rect.top, width: getWidth() };
       if (isFavorited2()) {
-        persistLayout({ left: rect.left, top: rect.top, width: getWidth() });
+        persistLayout(layout);
       }
       if (trackRetain) {
-        trackActiveLayout(id, { left: rect.left, top: rect.top, width: getWidth() });
+        trackActiveLayout(id, layout);
       }
+      rememberSessionLayout(id, layout);
     });
   }
   function spawnPreset(id) {
@@ -3585,7 +3593,7 @@ Version: v${version}`;
     if (liveWidgets.has(id)) return liveWidgets.get(id).widget;
     activate(id);
     const favorited = isFavorited(id);
-    const savedLayout = favorited ? getLayout(id) : getRetainedLayout(id);
+    const savedLayout = favorited && getLayout(id) || getRetainedLayout(id) || sessionLayouts.get(id) || null;
     const behavior = getHudBehavior(id);
     const parts = buildWidget({
       id,
@@ -3605,7 +3613,9 @@ Version: v${version}`;
       initialListItems: (behavior == null ? void 0 : behavior.getInitialListItems) ? behavior.getInitialListItems() : [],
       onRemoveListItem: (behavior == null ? void 0 : behavior.onRemoveListItem) ? (item) => behavior.onRemoveListItem(id, item) : null
     });
-    trackActiveLayout(id, { left: parts.widget[0].getBoundingClientRect().left, top: parts.widget[0].getBoundingClientRect().top, width: parts.getWidth() });
+    const baselineRect = { left: parts.widget[0].getBoundingClientRect().left, top: parts.widget[0].getBoundingClientRect().top, width: parts.getWidth() };
+    trackActiveLayout(id, baselineRect);
+    rememberSessionLayout(id, baselineRect);
     parts.closeBtn.on("click", (e) => {
       e.stopPropagation();
       closeWidget(id);

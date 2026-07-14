@@ -1721,7 +1721,7 @@ Version: v${version}`;
         border: "none",
         borderRadius: "6px",
         cursor: "pointer",
-        : "99999"
+        zIndex: "99999"
       });
       Object.assign(modeToggle.style, {
         position: "fixed",
@@ -1733,7 +1733,7 @@ Version: v${version}`;
         border: "none",
         borderRadius: "6px",
         cursor: "pointer",
-        : "99999",
+        zIndex: "99999",
         fontSize: "14px",
         display: "none"
       });
@@ -1747,7 +1747,7 @@ Version: v${version}`;
         border: "none",
         borderRadius: "6px",
         cursor: "pointer",
-        : "99999",
+        zIndex: "99999",
         fontSize: "14px",
         display: "none"
       });
@@ -1761,7 +1761,7 @@ Version: v${version}`;
         border: "none",
         borderRadius: "6px",
         cursor: "pointer",
-        : "99999",
+        zIndex: "99999",
         fontSize: "14px",
         display: "none"
       });

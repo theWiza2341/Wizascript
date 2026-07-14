@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.1";
+  var SUITE_VERSION = "0.1.0";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2266,9 +2266,7 @@ Version: v${version}`;
     }
   }
   function getPlayableCards() {
-    const allCards = getPageWindow().allCards;
-    if (!Array.isArray(allCards)) return [];
-    return allCards.filter((c) => c.rarity !== "STORY" && c.rarity !== "TOKEN");
+    return getAllCards().filter((c) => c.rarity !== "STORY" && c.rarity !== "TOKEN");
   }
   function determineImageFromDeck(deckCode) {
     const decoded = decodeDeck(deckCode);
@@ -2999,9 +2997,1618 @@ Version: v${version}`;
     }).catch((e) => logger.error("data", "Failed to load decks.json", e));
   }
 
+  // packages/deck-tracker/settings.js
+  function registerDeckTrackerSettings(plugin) {
+    const settings = createFeatureSettings(plugin, "decktracker", "Deck Tracker");
+    return {
+      settings,
+      // Master toggle - same "one plugin, categories as boxes" model as
+      // patch-maker and true-hub-bridge.
+      enabled: settings.add("enabled", {
+        name: "Enable Deck Tracker",
+        type: "boolean",
+        default: true
+      }),
+      debugLogging: settings.add("debugLogging", {
+        name: "Enable debug logging",
+        type: "boolean",
+        default: false
+      }),
+      // When enabled, soul-tied presets (SAVE Tracker, Change of Winds,
+      // Curve Tracker, etc.) auto-spawn at match start if the player's
+      // current Soul matches - but only in matches the player is actually
+      // in, not while spectating. More granular per-preset toggles can be
+      // added later without touching this shape.
+      autoLoadSoulPresets: settings.add("autoLoadSoulPresets", {
+        name: "Auto-enable Soul-Specific Presets",
+        type: "boolean",
+        default: false
+      }),
+      // Independent from favoriting - this remembers whatever was left
+      // open (favorited or not) at the end of a session and restores it
+      // once, in the same spot, until the user explicitly closes it.
+      retainUnclosedPresets: settings.add("retainUnclosedPresets", {
+        name: "Retain Unclosed Presets Between Matches",
+        type: "boolean",
+        default: false
+      }),
+      // Lets the user tune how dim the tracker button gets while a
+      // blocking modal (messageBox, mulligan, card-choice) is open, since
+      // there's no single "correct" value - it just needs to visually
+      // match whatever the rest of the dimmed screen looks like.
+      dimOpacity: settings.add("dimOpacity", {
+        name: "Tracker Button Dim Opacity",
+        type: "slider",
+        default: 0.4,
+        min: 0,
+        max: 1,
+        step: 0.05
+      })
+    };
+  }
+
+  // packages/deck-tracker/registry.js
+  var FAVORITES_KEY = "wizascript.decktracker.favorites";
+  var CUSTOM_PRESETS_KEY = "wizascript.decktracker.customPresets";
+  var RETAINED_KEY = "wizascript.decktracker.retained";
+  var presetTypes = /* @__PURE__ */ new Map();
+  var activeInstances = /* @__PURE__ */ new Map();
+  var favoritesCache = null;
+  var customPresetsCache = null;
+  var retainedCache = null;
+  var retainEnabledGetter = () => false;
+  function loadFavorites() {
+    if (favoritesCache) return favoritesCache;
+    try {
+      favoritesCache = JSON.parse(GM_getValue(FAVORITES_KEY, "{}"));
+    } catch {
+      favoritesCache = {};
+    }
+    return favoritesCache;
+  }
+  function saveFavorites() {
+    GM_setValue(FAVORITES_KEY, JSON.stringify(favoritesCache || {}));
+  }
+  function loadCustomPresets() {
+    if (customPresetsCache) return customPresetsCache;
+    try {
+      customPresetsCache = JSON.parse(GM_getValue(CUSTOM_PRESETS_KEY, "[]"));
+    } catch {
+      customPresetsCache = [];
+    }
+    return customPresetsCache;
+  }
+  function saveCustomPresets() {
+    GM_setValue(CUSTOM_PRESETS_KEY, JSON.stringify(customPresetsCache || []));
+  }
+  function slugify(name) {
+    return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "tracker";
+  }
+  function registerPresetType(definition, { onGameEvent, hudBehavior } = {}) {
+    if (!definition || !definition.id) throw new Error("Preset definition requires an id");
+    presetTypes.set(definition.id, { definition, onGameEvent: onGameEvent || null, hudBehavior: hudBehavior || null });
+  }
+  function getHudBehavior(id) {
+    var _a;
+    return ((_a = presetTypes.get(id)) == null ? void 0 : _a.hudBehavior) || null;
+  }
+  function createCustomPreset({ name, description = "", sprite = null }) {
+    const id = `custom:${slugify(name)}:${Date.now().toString(36)}`;
+    const definition = { id, name, description, sprite, soul: null, custom: true, kind: "manual" };
+    const list = loadCustomPresets();
+    list.push(definition);
+    saveCustomPresets();
+    presetTypes.set(id, { definition, onGameEvent: null });
+    return definition;
+  }
+  function deleteCustomPreset(id) {
+    customPresetsCache = loadCustomPresets().filter((p) => p.id !== id);
+    saveCustomPresets();
+    presetTypes.delete(id);
+    deactivate(id);
+    setFavorited(id, false);
+  }
+  function ensureCustomPresetsRegistered() {
+    loadCustomPresets().forEach((def) => {
+      if (!presetTypes.has(def.id)) presetTypes.set(def.id, { definition: def, onGameEvent: null });
+    });
+  }
+  function getAvailablePresets() {
+    ensureCustomPresetsRegistered();
+    return [...presetTypes.values()].map((entry) => ({
+      ...entry.definition,
+      favorited: isFavorited(entry.definition.id)
+    }));
+  }
+  function getDefinition(id) {
+    var _a;
+    ensureCustomPresetsRegistered();
+    return ((_a = presetTypes.get(id)) == null ? void 0 : _a.definition) || null;
+  }
+  function isFavorited(id) {
+    var _a;
+    return !!((_a = loadFavorites()[id]) == null ? void 0 : _a.favorited);
+  }
+  function setFavorited(id, favorited) {
+    const favorites = loadFavorites();
+    if (favorited) {
+      favorites[id] = { ...favorites[id] || {}, favorited: true };
+    } else {
+      delete favorites[id];
+    }
+    saveFavorites();
+  }
+  function getLayout(id) {
+    var _a;
+    return ((_a = loadFavorites()[id]) == null ? void 0 : _a.layout) || null;
+  }
+  function setLayout(id, layout) {
+    const favorites = loadFavorites();
+    if (!favorites[id]) return;
+    favorites[id].layout = layout;
+    saveFavorites();
+  }
+  function getFavoritedPresetIds() {
+    return Object.keys(loadFavorites());
+  }
+  function activate(id, { initialCount = 0 } = {}) {
+    if (activeInstances.has(id)) return activeInstances.get(id);
+    const instance = { count: initialCount, listeners: /* @__PURE__ */ new Set() };
+    activeInstances.set(id, instance);
+    return instance;
+  }
+  function deactivate(id) {
+    activeInstances.delete(id);
+  }
+  function getCount(id) {
+    var _a, _b;
+    return (_b = (_a = activeInstances.get(id)) == null ? void 0 : _a.count) != null ? _b : 0;
+  }
+  function setCount(id, count) {
+    const instance = activeInstances.get(id);
+    if (!instance) return;
+    instance.count = Math.max(0, count);
+    instance.listeners.forEach((fn) => fn(instance.count));
+  }
+  function onCountChange(id, callback) {
+    const instance = activeInstances.get(id);
+    if (!instance) return () => {
+    };
+    instance.listeners.add(callback);
+    return () => instance.listeners.delete(callback);
+  }
+  function dispatchGameEvent(event) {
+    activeInstances.forEach((instance, id) => {
+      const type = presetTypes.get(id);
+      if (!type || !type.onGameEvent) return;
+      type.onGameEvent(event, {
+        getCount: () => instance.count,
+        setCount: (next) => setCount(id, next)
+      });
+    });
+  }
+  function loadRetained() {
+    if (retainedCache) return retainedCache;
+    try {
+      retainedCache = JSON.parse(GM_getValue(RETAINED_KEY, "{}"));
+    } catch {
+      retainedCache = {};
+    }
+    return retainedCache;
+  }
+  function saveRetained() {
+    GM_setValue(RETAINED_KEY, JSON.stringify(retainedCache || {}));
+  }
+  function setRetainEnabledGetter(fn) {
+    retainEnabledGetter = fn;
+  }
+  function getRetainedPresetIds() {
+    return Object.keys(loadRetained());
+  }
+  function getRetainedLayout(id) {
+    var _a;
+    return ((_a = loadRetained()[id]) == null ? void 0 : _a.layout) || null;
+  }
+  function trackActiveLayout(id, layout) {
+    if (!retainEnabledGetter()) return;
+    const retained = loadRetained();
+    retained[id] = { layout };
+    saveRetained();
+  }
+  function forgetActiveLayout(id) {
+    const retained = loadRetained();
+    if (retained[id]) {
+      delete retained[id];
+      saveRetained();
+    }
+  }
+
+  // packages/deck-tracker/hud.js
+  var CARD_IMAGE_BASE = "https://undercards.net/images/cards/";
+  var SPRITE_RATIO = "160 / 90";
+  var MIN_WIDTH = 90;
+  var MAX_WIDTH = 220;
+  var DEFAULT_WIDTH = 155;
+  var COMPACT_DEFAULT_WIDTH = 120;
+  var CASCADE_STEP = 24;
+  var CASCADE_MAX_STEPS = 6;
+  var CASCADE_BASE = 20;
+  var cascadeIndex = 0;
+  function getNextCascadePosition() {
+    const step = cascadeIndex % CASCADE_MAX_STEPS;
+    cascadeIndex++;
+    return {
+      right: CASCADE_BASE + step * CASCADE_STEP,
+      bottom: CASCADE_BASE + step * CASCADE_STEP
+    };
+  }
+  var liveWidgets = /* @__PURE__ */ new Map();
+  var sessionLayouts = /* @__PURE__ */ new Map();
+  function rememberSessionLayout(id, layout) {
+    sessionLayouts.set(id, layout);
+  }
+  function widgetElementId(id) {
+    return `dt-tracker-${id.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+  }
+  function genericIcon() {
+    return $("<div>").css({
+      width: "100%",
+      aspectRatio: SPRITE_RATIO,
+      background: "#333",
+      borderRadius: "3px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      color: "#777"
+    }).text("#");
+  }
+  function spriteImage(sprite) {
+    if (!sprite) return genericIcon();
+    return $("<img>").attr("src", `${CARD_IMAGE_BASE}${sprite}.png`).css({
+      width: "100%",
+      aspectRatio: SPRITE_RATIO,
+      objectFit: "cover",
+      borderRadius: "3px",
+      display: "block",
+      background: "#000"
+    }).on("error", function() {
+      $(this).replaceWith(genericIcon());
+    });
+  }
+  function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode = false, savedLayout, showSaveButton = false, showImage = true, contentMode = null, initialListItems = [], onRemoveListItem = null }) {
+    const elId = widgetElementId(id);
+    $(`#${elId}`).remove();
+    const ns = `.dt-widget-${Math.random().toString(36).slice(2)}`;
+    let width = (savedLayout == null ? void 0 : savedLayout.width) || (showImage ? DEFAULT_WIDTH : COMPACT_DEFAULT_WIDTH);
+    const widget = $(`<div id="${elId}">`).addClass("dt-tracker-widget").css({
+      position: "fixed",
+      zIndex: 8,
+      width: width + "px",
+      background: "#1a1a1a",
+      border: "2px solid #444",
+      borderRadius: "6px",
+      padding: "6px",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      gap: "4px",
+      color: "white",
+      fontFamily: "inherit",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
+      userSelect: "none",
+      cursor: "grab"
+    });
+    if (savedLayout) {
+      widget.css({ left: savedLayout.left + "px", top: savedLayout.top + "px", right: "auto", bottom: "auto" });
+    } else {
+      const pos = getNextCascadePosition();
+      widget.css({ bottom: pos.bottom + "px", right: pos.right + "px", left: "auto", top: "auto" });
+    }
+    const nameLine = $("<div>").css({
+      fontWeight: "bold",
+      textAlign: "center",
+      width: "100%",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap"
+    }).text(name);
+    const resizeHandle = $("<div>").css({
+      position: "absolute",
+      bottom: "-2px",
+      right: "-2px",
+      width: "14px",
+      height: "14px",
+      cursor: "nwse-resize",
+      background: "transparent"
+    });
+    if (contentMode === "list") {
+      let renderListItems = function(items) {
+        listBody.empty();
+        if (!items.length) {
+          listBody.append($("<div>").css({
+            fontSize: "11px",
+            color: "#777",
+            fontStyle: "italic",
+            textAlign: "center",
+            padding: "4px 0"
+          }).text("No known cards yet"));
+          return;
+        }
+        items.forEach((item, idx) => {
+          const row = $("<div>").css({
+            fontSize: "12px",
+            padding: "3px 6px",
+            background: "rgba(255,255,255,0.06)",
+            borderRadius: "3px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center"
+          }).attr("title", "Right-click to remove this card");
+          row.append(
+            $("<span>").css({ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }).text(item.name),
+            $("<span>").css({ fontSize: "10px", color: "#777", flexShrink: 0, marginLeft: "6px" }).text(idx === 0 ? "next" : `+${idx}`)
+          );
+          row.on("mouseenter", () => row.css("background", "rgba(255,255,255,0.12)"));
+          row.on("mouseleave", () => row.css("background", "rgba(255,255,255,0.06)"));
+          row.on("mousedown", (e) => e.stopPropagation());
+          row.on("contextmenu", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onRemoveListItem == null ? void 0 : onRemoveListItem(item);
+          });
+          listBody.append(row);
+        });
+      }, applySizeList = function(newWidth) {
+        width = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, newWidth));
+        widget.css("width", width + "px");
+        nameLine.css("fontSize", Math.round(width * 0.105) + "px");
+        listBody.css("fontSize", Math.round(width * 0.09) + "px");
+        return width;
+      };
+      widget.append(nameLine);
+      const closeBtnList = $("<span>").text("\xD7").css({
+        position: "absolute",
+        top: "-8px",
+        left: "-8px",
+        cursor: "pointer",
+        color: "#eee",
+        fontSize: "15px",
+        fontWeight: "bold",
+        background: "rgba(180,30,30,0.75)",
+        borderRadius: "50%",
+        width: "18px",
+        height: "18px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        lineHeight: "1"
+      });
+      closeBtnList.on("mousedown", (e) => e.stopPropagation());
+      widget.append(closeBtnList);
+      const listBody = $("<div>").css({
+        width: "100%",
+        maxHeight: "150px",
+        overflowY: "auto",
+        display: "flex",
+        flexDirection: "column",
+        gap: "3px"
+      });
+      renderListItems(initialListItems);
+      widget.append(listBody, resizeHandle);
+      $("body").append(widget);
+      applySizeList(width);
+      return {
+        widget,
+        nameLine,
+        imageWrap: null,
+        star: null,
+        closeBtn: closeBtnList,
+        resizeHandle,
+        applySize: applySizeList,
+        getWidth: () => width,
+        ns,
+        setSprite: () => {
+        },
+        setLabel: () => {
+        },
+        setListItems: renderListItems
+      };
+    }
+    let imageWrap = null;
+    let imageBox = null;
+    let star = null;
+    if (showImage) {
+      imageWrap = $("<div>").css({ position: "relative", width: "100%" });
+      imageBox = spriteImage(sprite);
+      if (showSaveButton) {
+        star = $("<span>").text("\u2606").attr("title", "Save as Preset").css({
+          position: "absolute",
+          top: "2px",
+          right: "2px",
+          cursor: "pointer",
+          color: "#eee",
+          fontSize: "15px",
+          background: "rgba(0,0,0,0.55)",
+          borderRadius: "50%",
+          width: "18px",
+          height: "18px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          lineHeight: "1"
+        });
+      }
+    }
+    const closeBtn = $("<span>").text("\xD7").css({
+      position: "absolute",
+      top: "2px",
+      left: "2px",
+      cursor: "pointer",
+      color: "#eee",
+      fontSize: "15px",
+      fontWeight: "bold",
+      background: "rgba(180,30,30,0.75)",
+      borderRadius: "50%",
+      width: "18px",
+      height: "18px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      lineHeight: "1"
+    });
+    if (showImage) {
+      imageWrap.append(imageBox);
+      if (star) imageWrap.append(star);
+      imageWrap.append(closeBtn);
+    } else {
+      widget.css("position", "fixed");
+      closeBtn.css({ top: "-8px", left: "-8px" });
+      widget.append(closeBtn);
+    }
+    const countEl = $("<div>").css({
+      fontWeight: "bold",
+      width: "100%",
+      textAlign: "center",
+      background: "rgba(255,255,255,0.08)",
+      borderRadius: "3px",
+      padding: "2px 0"
+    });
+    if (isLabelMode) {
+      countEl.html(initialLabel != null ? initialLabel : "?");
+    } else {
+      countEl.text("\xD7" + initialCount);
+    }
+    function applySize(newWidth) {
+      width = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, newWidth));
+      widget.css("width", width + "px");
+      nameLine.css("fontSize", Math.round(width * 0.105) + "px");
+      countEl.css("fontSize", Math.round(width * 0.14) + "px");
+      return width;
+    }
+    applySize(width);
+    if (showImage) {
+      widget.append(nameLine, imageWrap, countEl, resizeHandle);
+    } else {
+      widget.append(nameLine, countEl, resizeHandle);
+    }
+    $("body").append(widget);
+    if (star) star.on("mousedown", (e) => e.stopPropagation());
+    closeBtn.on("mousedown", (e) => e.stopPropagation());
+    function setSprite(newSprite) {
+      if (!showImage || !imageBox) return;
+      const fresh = spriteImage(newSprite);
+      imageBox.replaceWith(fresh);
+      imageBox = fresh;
+    }
+    function setLabel(html) {
+      countEl.html(html);
+    }
+    return { widget, nameLine, countEl, imageWrap, star, closeBtn, resizeHandle, applySize, getWidth: () => width, ns, setSprite, setLabel };
+  }
+  function bindInteractions(parts, { onLeftClick, onRightClick, onMiddleClick, isFavorited: isFavorited2, persistLayout, id, trackRetain = false }) {
+    const { widget, resizeHandle, applySize, getWidth, ns } = parts;
+    widget.off(ns).off("contextmenu" + ns);
+    $(document).off(ns);
+    resizeHandle.off(ns);
+    let dragging = false, dragMoved = false, startX, startY, offsetX, offsetY;
+    widget.on("mousedown" + ns, function(e) {
+      if (e.button === 1) {
+        e.preventDefault();
+        onMiddleClick == null ? void 0 : onMiddleClick();
+        return;
+      }
+      if (e.button !== 0) return;
+      dragging = true;
+      dragMoved = false;
+      const rect = widget[0].getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      startX = e.clientX;
+      startY = e.clientY;
+      widget.css("cursor", "grabbing");
+      e.preventDefault();
+    });
+    $(document).on("mousemove" + ns, function(e) {
+      if (!dragging) return;
+      if (Math.abs(e.clientX - startX) > 4 || Math.abs(e.clientY - startY) > 4) dragMoved = true;
+      if (dragMoved) {
+        widget.css({ left: e.clientX - offsetX + "px", top: e.clientY - offsetY + "px", right: "auto", bottom: "auto" });
+      }
+    });
+    $(document).on("mouseup" + ns, function() {
+      if (!dragging) return;
+      dragging = false;
+      widget.css("cursor", "grab");
+      if (dragMoved) {
+        const rect = widget[0].getBoundingClientRect();
+        const layout = { left: rect.left, top: rect.top, width: getWidth() };
+        if (isFavorited2()) {
+          persistLayout(layout);
+        }
+        if (trackRetain) {
+          trackActiveLayout(id, layout);
+        }
+        rememberSessionLayout(id, layout);
+      } else {
+        onLeftClick == null ? void 0 : onLeftClick();
+      }
+    });
+    widget.on("contextmenu" + ns, function(e) {
+      e.preventDefault();
+      onRightClick == null ? void 0 : onRightClick();
+    });
+    let resizing = false, resizeStartX, resizeStartWidth;
+    resizeHandle.on("mousedown" + ns, function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      resizing = true;
+      resizeStartX = e.clientX;
+      resizeStartWidth = getWidth();
+    });
+    $(document).on("mousemove" + ns + "-resize", function(e) {
+      if (!resizing) return;
+      applySize(resizeStartWidth + (e.clientX - resizeStartX));
+    });
+    $(document).on("mouseup" + ns + "-resize", function() {
+      if (!resizing) return;
+      resizing = false;
+      const rect = widget[0].getBoundingClientRect();
+      const layout = { left: rect.left, top: rect.top, width: getWidth() };
+      if (isFavorited2()) {
+        persistLayout(layout);
+      }
+      if (trackRetain) {
+        trackActiveLayout(id, layout);
+      }
+      rememberSessionLayout(id, layout);
+    });
+  }
+  function spawnPreset(id) {
+    var _a, _b;
+    const definition = getDefinition(id);
+    if (!definition) {
+      console.warn("[DeckTracker] Unknown preset id:", id);
+      return null;
+    }
+    if (liveWidgets.has(id)) return liveWidgets.get(id).widget;
+    activate(id);
+    const favorited = isFavorited(id);
+    const savedLayout = favorited && getLayout(id) || getRetainedLayout(id) || sessionLayouts.get(id) || null;
+    const behavior = getHudBehavior(id);
+    const parts = buildWidget({
+      id,
+      // The picker lists presets by their real name ("SAVE Tracker"), but
+      // the on-screen widget itself can show something more directly
+      // descriptive of what it's currently displaying, if the preset
+      // supplies one.
+      name: (_a = behavior == null ? void 0 : behavior.widgetTitle) != null ? _a : definition.name,
+      sprite: (behavior == null ? void 0 : behavior.getInitialSprite) ? behavior.getInitialSprite() : definition.sprite,
+      initialCount: getCount(id),
+      initialLabel: (behavior == null ? void 0 : behavior.getInitialLabel) ? behavior.getInitialLabel() : void 0,
+      isLabelMode: !!behavior,
+      savedLayout,
+      showSaveButton: false,
+      showImage: !(behavior == null ? void 0 : behavior.compact),
+      contentMode: (behavior == null ? void 0 : behavior.listMode) ? "list" : null,
+      initialListItems: (behavior == null ? void 0 : behavior.getInitialListItems) ? behavior.getInitialListItems() : [],
+      onRemoveListItem: (behavior == null ? void 0 : behavior.onRemoveListItem) ? (item) => behavior.onRemoveListItem(id, item) : null
+    });
+    const baselineRect = { left: parts.widget[0].getBoundingClientRect().left, top: parts.widget[0].getBoundingClientRect().top, width: parts.getWidth() };
+    trackActiveLayout(id, baselineRect);
+    rememberSessionLayout(id, baselineRect);
+    parts.closeBtn.on("click", (e) => {
+      e.stopPropagation();
+      closeWidget(id);
+    });
+    const interactionCallbacks = behavior ? {
+      onLeftClick: () => {
+        var _a2;
+        return (_a2 = behavior.onLeftClick) == null ? void 0 : _a2.call(behavior, id, parts);
+      },
+      onRightClick: () => {
+        var _a2;
+        return (_a2 = behavior.onRightClick) == null ? void 0 : _a2.call(behavior, id, parts);
+      },
+      onMiddleClick: () => {
+        var _a2;
+        return (_a2 = behavior.onMiddleClick) == null ? void 0 : _a2.call(behavior, id, parts);
+      }
+    } : {
+      onLeftClick: () => setCount(id, getCount(id) + 1),
+      onRightClick: () => setCount(id, getCount(id) - 1),
+      onMiddleClick: () => setCount(id, 0)
+    };
+    bindInteractions(parts, {
+      ...interactionCallbacks,
+      isFavorited: () => isFavorited(id),
+      persistLayout: (layout) => setLayout(id, layout),
+      id,
+      trackRetain: true
+    });
+    const unsubscribe = behavior ? null : onCountChange(id, (count) => parts.countEl.text("\xD7" + count));
+    liveWidgets.set(id, { ...parts, unsubscribe });
+    (_b = behavior == null ? void 0 : behavior.onMount) == null ? void 0 : _b.call(behavior, id, parts);
+    return parts.widget;
+  }
+  function closeWidget(id) {
+    var _a, _b, _c;
+    const entry = liveWidgets.get(id);
+    if (!entry) return;
+    (_a = entry.unsubscribe) == null ? void 0 : _a.call(entry);
+    $(document).off(entry.ns);
+    entry.widget.remove();
+    deactivate(id);
+    liveWidgets.delete(id);
+    (_c = (_b = getHudBehavior(id)) == null ? void 0 : _b.onUnmount) == null ? void 0 : _c.call(_b, id);
+    forgetActiveLayout(id);
+  }
+  function closeAllWidgets() {
+    [...liveWidgets.keys()].forEach((id) => closeWidget(id));
+  }
+  function isWidgetOpen(id) {
+    return liveWidgets.has(id);
+  }
+  function getCurrentLayoutIfOpen(id) {
+    const entry = liveWidgets.get(id);
+    if (!entry) return null;
+    const rect = entry.widget[0].getBoundingClientRect();
+    return { left: rect.left, top: rect.top, width: entry.getWidth() };
+  }
+  function spawnAdHocCustomTracker({ name, sprite, onRequestSaveAsPreset }) {
+    const tempId = `adhoc:${Date.now().toString(36)}`;
+    let count = 0;
+    const parts = buildWidget({
+      id: tempId,
+      name,
+      sprite,
+      initialCount: 0,
+      savedLayout: null,
+      showSaveButton: true
+    });
+    function setLocalCount(next) {
+      count = Math.max(0, next);
+      parts.countEl.text("\xD7" + count);
+    }
+    bindInteractions(parts, {
+      onLeftClick: () => setLocalCount(count + 1),
+      onRightClick: () => setLocalCount(count - 1),
+      onMiddleClick: () => setLocalCount(0),
+      isFavorited: () => false,
+      persistLayout: () => {
+      },
+      // can't persist layout until this is a real saved preset
+      id: tempId,
+      trackRetain: false
+      // no real registry id yet - nothing meaningful to retain
+    });
+    parts.closeBtn.on("click", (e) => {
+      e.stopPropagation();
+      $(document).off(parts.ns);
+      parts.widget.remove();
+    });
+    parts.star.on("click", (e) => {
+      e.stopPropagation();
+      onRequestSaveAsPreset(name, sprite, (savedName, description) => {
+        const definition = createCustomPreset({ name: savedName, description, sprite });
+        activate(definition.id, { initialCount: count });
+        const rect = parts.widget[0].getBoundingClientRect();
+        setLayout(definition.id, { left: rect.left, top: rect.top, width: parts.getWidth() });
+        parts.widget.attr("id", widgetElementId(definition.id));
+        parts.closeBtn.off("click").on("click", (e2) => {
+          e2.stopPropagation();
+          closeWidget(definition.id);
+        });
+        bindInteractions(parts, {
+          onLeftClick: () => setCount(definition.id, getCount(definition.id) + 1),
+          onRightClick: () => setCount(definition.id, getCount(definition.id) - 1),
+          onMiddleClick: () => setCount(definition.id, 0),
+          isFavorited: () => isFavorited(definition.id),
+          persistLayout: (layout) => setLayout(definition.id, layout),
+          id: definition.id,
+          trackRetain: true
+        });
+        const unsubscribe = onCountChange(definition.id, (c) => parts.countEl.text("\xD7" + c));
+        liveWidgets.set(definition.id, { ...parts, unsubscribe });
+        parts.star.remove();
+      });
+    });
+    return parts.widget;
+  }
+
+  // packages/deck-tracker/picker.js
+  function heartIconSVG(filled) {
+    const fill = filled ? "#e74c3c" : "none";
+    const stroke = filled ? "#e74c3c" : "#888";
+    return `<svg width="18" height="18" viewBox="0 0 24 24" fill="${fill}" stroke="${stroke}" stroke-width="2" stroke-linejoin="round">
+    <path d="M12 21s-6.716-4.35-9.428-8.06C.686 10.06 1.2 6.5 4.2 5.1 6.6 4 9 5 12 8c3-3 5.4-4 7.8-2.9 3 1.4 3.514 4.96 1.628 7.84C18.716 16.65 12 21 12 21z"/>
+  </svg>`;
+  }
+  function starIconSVG(filled) {
+    const fill = filled ? "#2ecc71" : "none";
+    const stroke = filled ? "#2ecc71" : "#888";
+    return `<svg width="16" height="16" viewBox="0 0 24 24" fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-linejoin="round">
+    <path d="M12 2l2.9 6.6 7.1.6-5.4 4.6 1.6 7-6.2-3.8L6 21l1.6-7L2.2 9.2l7.1-.6L12 2z"/>
+  </svg>`;
+  }
+  function buildPresetRow(preset, onAdd, onCloseWidget, onDelete) {
+    const row = $("<div>").css({
+      display: "flex",
+      alignItems: "center",
+      gap: "10px",
+      padding: "8px 6px",
+      borderBottom: "1px solid rgba(255,255,255,0.1)"
+    }).on("mouseenter", function() {
+      $(this).css("background", "rgba(255,255,255,0.08)");
+    }).on("mouseleave", function() {
+      $(this).css("background", "");
+    });
+    const heart = $("<span>").css({
+      width: "20px",
+      flexShrink: 0,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      cursor: "pointer"
+    });
+    function renderHeart() {
+      heart.html(heartIconSVG(isFavorited(preset.id)));
+    }
+    renderHeart();
+    heart.attr("title", "Favorite - always auto-load at match start");
+    heart.on("click", (e) => {
+      e.stopPropagation();
+      const nowFavorited = !isFavorited(preset.id);
+      setFavorited(preset.id, nowFavorited);
+      if (nowFavorited) {
+        const currentLayout = getCurrentLayoutIfOpen(preset.id);
+        if (currentLayout) setLayout(preset.id, currentLayout);
+      }
+      renderHeart();
+    });
+    const info = $("<div>").css({ flex: 1 });
+    const nameLine = $("<div>").css({ fontWeight: "bold", fontSize: "14px" }).text(preset.name);
+    if (preset.soul) {
+      nameLine.append($("<span>").text(` (${preset.soul})`).css({
+        fontSize: "11px",
+        fontWeight: "normal",
+        color: "#4a7aaa",
+        marginLeft: "6px"
+      }));
+    }
+    const descLine = $("<div>").css({ fontSize: "12px", color: "#aaa", marginTop: "2px" }).text(preset.description || "");
+    info.append(nameLine, descLine);
+    const starBtn = $("<span>").css({
+      width: "28px",
+      height: "28px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      borderRadius: "4px",
+      background: "rgba(255,255,255,0.08)",
+      cursor: "pointer",
+      flexShrink: 0
+    });
+    let active = isWidgetOpen(preset.id);
+    function renderStar() {
+      starBtn.html(starIconSVG(active));
+      if (active && preset.custom) {
+        starBtn.attr("title", "Double-click to permanently delete this preset");
+      } else if (active) {
+        starBtn.attr("title", "Remove from screen");
+      } else {
+        starBtn.attr("title", "Add to screen");
+      }
+    }
+    renderStar();
+    starBtn.on("click", (e) => {
+      e.stopPropagation();
+      if (!active) {
+        onAdd(preset.id);
+        active = true;
+        renderStar();
+        return;
+      }
+      if (preset.custom) {
+        if (e.detail !== 2) return;
+        onDelete(preset.id);
+        row.remove();
+        return;
+      }
+      onCloseWidget(preset.id);
+      active = false;
+      renderStar();
+    });
+    row.append(heart, info, starBtn);
+    return row;
+  }
+  function renderList(container, term, onAdd, onCloseWidget, onDelete) {
+    container.empty();
+    const all = getAvailablePresets();
+    const filtered = term ? all.filter((p) => p.name.toLowerCase().includes(term.toLowerCase())) : all;
+    if (!filtered.length) {
+      container.append($("<div>").text("No presets found.").css({
+        padding: "12px",
+        color: "#777",
+        fontStyle: "italic",
+        textAlign: "center"
+      }));
+      return;
+    }
+    filtered.sort((a, b) => b.favorited - a.favorited).forEach((p) => container.append(buildPresetRow(p, onAdd, onCloseWidget, onDelete)));
+  }
+  function buildCustomRow(onCreateAdHoc) {
+    const row = $("<div>").css({
+      display: "flex",
+      alignItems: "center",
+      gap: "10px",
+      padding: "10px 6px",
+      marginTop: "8px",
+      borderTop: "2px dashed rgba(255,255,255,0.25)",
+      cursor: "pointer"
+    }).on("mouseenter", function() {
+      $(this).css("background", "rgba(255,255,255,0.08)");
+    }).on("mouseleave", function() {
+      $(this).css("background", "");
+    });
+    const info = $("<div>").css({ flex: 1 });
+    info.append(
+      $("<div>").css({ fontWeight: "bold", fontSize: "14px" }).text("Custom Tracker"),
+      $("<div>").css({ fontSize: "12px", color: "#aaa", marginTop: "2px" }).text("Build your own manual counter, named and tracked however you like.")
+    );
+    const addBtn = $("<button>").text("+").css({
+      width: "28px",
+      height: "28px",
+      lineHeight: "1",
+      fontSize: "16px",
+      fontWeight: "bold",
+      background: "#2ecc71",
+      color: "white",
+      border: "none",
+      borderRadius: "4px",
+      cursor: "pointer",
+      flexShrink: 0
+    }).on("click", (e) => {
+      e.stopPropagation();
+      onCreateAdHoc();
+    });
+    row.append(info, addBtn);
+    return row;
+  }
+  function openPresetPicker({ onAddPreset, onCreateAdHoc, onCloseWidget, onDeletePreset }) {
+    const wrapper = $("<div>").css({ minWidth: "360px" });
+    const searchInput = $('<input type="text" placeholder="Search presets...">').addClass("form-control").css({
+      width: "100%",
+      boxSizing: "border-box",
+      padding: "6px 8px",
+      marginBottom: "8px",
+      fontSize: "13px"
+    });
+    const listContainer = $("<div>").css({
+      maxHeight: "220px",
+      overflowY: "auto",
+      border: "1px solid rgba(255,255,255,0.15)",
+      borderRadius: "4px"
+    });
+    let dialogRef = null;
+    const customRow = buildCustomRow(() => {
+      dialogRef == null ? void 0 : dialogRef.close();
+      onCreateAdHoc();
+    });
+    searchInput.on("input", function() {
+      renderList(listContainer, $(this).val(), onAddPreset, onCloseWidget, onDeletePreset);
+    });
+    wrapper.append(searchInput, listContainer, customRow);
+    renderList(listContainer, "", onAddPreset, onCloseWidget, onDeletePreset);
+    dialogRef = BootstrapDialog.show({
+      title: "Add Tracker Preset",
+      message: wrapper,
+      cssClass: "mono",
+      onshown: () => searchInput.trigger("focus"),
+      buttons: [{ label: "Close", cssClass: "btn-primary", action: (dialog) => dialog.close() }]
+    });
+    return dialogRef;
+  }
+
+  // packages/deck-tracker/presets/custom.js
+  var CARD_IMAGE_BASE2 = "https://undercards.net/images/cards/";
+  var SPRITE_RATIO2 = "160 / 90";
+  function searchSpriteCards(term) {
+    if (!term) return [];
+    const t = term.toLowerCase();
+    return getAllCards().filter((c) => c.name && c.image && c.name.toLowerCase().includes(t)).slice(0, 20);
+  }
+  function buildSpriteResultRow(card, onPick) {
+    const row = $("<div>").css({
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+      padding: "5px 8px",
+      cursor: "pointer",
+      fontSize: "13px"
+    }).on("mouseenter", function() {
+      $(this).css("background", "rgba(255,255,255,0.08)");
+    }).on("mouseleave", function() {
+      $(this).css("background", "");
+    });
+    const thumb = $("<img>").attr("src", `${CARD_IMAGE_BASE2}${card.image}.png`).css({
+      width: "28px",
+      aspectRatio: SPRITE_RATIO2,
+      objectFit: "cover",
+      flexShrink: 0,
+      background: "#111"
+    }).on("error", function() {
+      $(this).replaceWith($("<div>").css({ width: "28px", aspectRatio: SPRITE_RATIO2, background: "#333", flexShrink: 0 }));
+    });
+    row.append(thumb, $("<span>").text(card.name));
+    row.on("click", () => onPick(card));
+    return row;
+  }
+  function openCustomTrackerBuilder({ onCreate }) {
+    let selectedCard = null;
+    const wrapper = $("<div>").css({ minWidth: "340px" });
+    const spriteSearch = $('<input type="text" placeholder="Search for a card sprite (optional)...">').addClass("form-control").css({ width: "100%", boxSizing: "border-box", padding: "6px 8px", fontSize: "13px" });
+    const spriteResults = $("<div>").css({
+      maxHeight: "150px",
+      overflowY: "auto",
+      border: "1px solid rgba(255,255,255,0.15)",
+      borderRadius: "4px",
+      marginTop: "4px",
+      display: "none"
+    });
+    const selectedPreview = $("<div>").css({
+      display: "none",
+      alignItems: "center",
+      gap: "8px",
+      marginTop: "8px",
+      padding: "6px",
+      background: "rgba(255,255,255,0.06)",
+      borderRadius: "4px"
+    });
+    const nameInput = $('<input type="text" placeholder="Tracker name">').addClass("form-control").css({ width: "100%", boxSizing: "border-box", padding: "6px 8px", fontSize: "13px", marginTop: "10px" });
+    spriteSearch.on("input", function() {
+      const matches = searchSpriteCards($(this).val());
+      spriteResults.empty();
+      if (!matches.length) {
+        spriteResults.hide();
+        return;
+      }
+      matches.forEach((card) => spriteResults.append(buildSpriteResultRow(card, (picked) => {
+        selectedCard = picked;
+        nameInput.val(picked.name);
+        selectedPreview.empty().css("display", "flex").append(
+          $("<img>").attr("src", `${CARD_IMAGE_BASE2}${picked.image}.png`).css({ width: "28px", aspectRatio: SPRITE_RATIO2, objectFit: "cover" }).on("error", function() {
+            $(this).replaceWith("(image unavailable)");
+          }),
+          $("<span>").text(`Sprite: ${picked.name}`)
+        );
+        spriteResults.hide();
+        spriteSearch.val("");
+      })));
+      spriteResults.show();
+    });
+    wrapper.append(spriteSearch, spriteResults, selectedPreview, nameInput);
+    const dialog = BootstrapDialog.show({
+      title: "Create Custom Tracker",
+      message: wrapper,
+      cssClass: "mono",
+      buttons: [
+        { label: "Cancel", action: (d) => d.close() },
+        {
+          label: "Create",
+          cssClass: "btn-success",
+          action: (d) => {
+            const name = nameInput.val().trim() || "Untitled Tracker";
+            d.close();
+            onCreate({ name, sprite: (selectedCard == null ? void 0 : selectedCard.image) || null });
+          }
+        }
+      ]
+    });
+    setTimeout(() => spriteSearch.trigger("focus"), 100);
+    return dialog;
+  }
+  function openSaveAsPresetPrompt(defaultName, onSaved) {
+    const wrapper = $("<div>").css({ minWidth: "320px" });
+    const nameInput = $('<input type="text">').addClass("form-control").val(defaultName).css({ width: "100%", boxSizing: "border-box", padding: "6px 8px", fontSize: "13px", marginBottom: "8px" });
+    const descInput = $('<textarea placeholder="Short description (optional)">').addClass("form-control").css({
+      width: "100%",
+      boxSizing: "border-box",
+      padding: "6px 8px",
+      fontSize: "13px",
+      minHeight: "60px",
+      resize: "vertical",
+      background: "#111",
+      color: "#eee",
+      border: "1px solid #444"
+    });
+    wrapper.append(
+      $("<label>").css({ fontSize: "12px", color: "#aaa" }).text("Preset name"),
+      nameInput,
+      $("<label>").css({ fontSize: "12px", color: "#aaa", marginTop: "6px", display: "block" }).text("Description"),
+      descInput
+    );
+    return BootstrapDialog.show({
+      title: "Save as Preset",
+      message: wrapper,
+      cssClass: "mono",
+      buttons: [
+        { label: "Cancel", action: (d) => d.close() },
+        {
+          label: "Save",
+          cssClass: "btn-success",
+          action: (d) => {
+            const name = nameInput.val().trim() || defaultName;
+            const description = descInput.val().trim();
+            d.close();
+            onSaved(name, description);
+          }
+        }
+      ]
+    });
+  }
+
+  // packages/deck-tracker/presets/built-in.js
+  var BUILT_IN_PRESETS = [
+    {
+      id: "builtin:enemy-hlbs",
+      name: "Enemy HLBs",
+      description: "Tracks Hyperlinks Blocked added to the enemy deck",
+      sprite: "Hyperlink_Blocked"
+    },
+    {
+      id: "builtin:enemy-mines",
+      name: "Enemy Mines",
+      description: "Tracks Mines added to the enemy deck",
+      sprite: "Mine"
+    },
+    {
+      id: "builtin:cjester-procs",
+      name: "CJester Procs",
+      description: "Tracks the counters to be added by Freedom",
+      sprite: "Caged_Jester"
+    },
+    {
+      id: "builtin:pink-laser-atk",
+      name: "Pink Laser ATK",
+      description: "Tracks the number of monsters you played this game with 7 base HP",
+      sprite: "Pink_Laser"
+      // best-guess image name, not yet confirmed
+    },
+    {
+      id: "builtin:skris-procs",
+      name: "Skris Procs",
+      description: "Tracks the counters to be added by Dark Fountain",
+      sprite: "Soulless_Kris"
+    },
+    {
+      id: "builtin:noellecoaster",
+      name: "Noellecoaster",
+      description: "Tracks the number of spells costing 2+ G you casted this game",
+      sprite: "Noellecoaster"
+      // best-guess image name, not yet confirmed
+    }
+  ];
+  function registerBuiltInPresets() {
+    BUILT_IN_PRESETS.forEach(({ id, name, description, sprite }) => {
+      registerPresetType({
+        id,
+        name,
+        description,
+        sprite,
+        soul: null,
+        // card/archetype-specific, not a whole-Soul strategy tracker
+        custom: false,
+        // built-in - cannot be deleted via the picker's double-click
+        kind: "manual"
+        // click/right-click/middle-click driven, same as user custom trackers
+      });
+    });
+  }
+
+  // packages/core/player-context.js
+  function getMyPlayerId() {
+    const id = getPageWindow().userId;
+    return typeof id === "number" ? id : null;
+  }
+  function isSpectating() {
+    return location.pathname.toLowerCase().includes("spectate");
+  }
+  function getSpectatedPlayerIdFromUrl() {
+    const match = location.search.match(/[?&]playerId=(\d+)/i);
+    return match ? Number(match[1]) : null;
+  }
+  function getRelevantPlayerId() {
+    return isSpectating() ? getSpectatedPlayerIdFromUrl() : getMyPlayerId();
+  }
+  function getRelevantPlayerSoul(connectData) {
+    var _a, _b, _c, _d;
+    const relevantId = getRelevantPlayerId();
+    if (relevantId === null) return null;
+    try {
+      const you = typeof connectData.you === "string" ? JSON.parse(connectData.you) : connectData.you;
+      const enemy = typeof connectData.enemy === "string" ? JSON.parse(connectData.enemy) : connectData.enemy;
+      if ((you == null ? void 0 : you.id) === relevantId) return (_b = (_a = you.soul) == null ? void 0 : _a.name) != null ? _b : null;
+      if ((enemy == null ? void 0 : enemy.id) === relevantId) return (_d = (_c = enemy.soul) == null ? void 0 : _c.name) != null ? _d : null;
+    } catch (e) {
+    }
+    return null;
+  }
+
+  // packages/deck-tracker/presets/save-tracker.js
+  var SAVE_ARTIFACT_ID = 33;
+  var PRESET_ID = "builtin:save-tracker";
+  var LOST_SOUL_ORDER = ["Lost Alphys", "Lost Papyrus", "Lost Undyne", "Lost Toriel", "Lost Asgore", "Lost Sans"];
+  function spriteFor(name) {
+    return name.replace(/ /g, "_");
+  }
+  var upNextIndex = null;
+  var liveParts = null;
+  function getUpNextName() {
+    return upNextIndex === null ? null : LOST_SOUL_ORDER[upNextIndex];
+  }
+  function refreshDisplay(parts) {
+    const name = getUpNextName();
+    parts.setSprite(name ? spriteFor(name) : null);
+    parts.setLabel(name || "?");
+  }
+  function refreshLiveWidget() {
+    if (liveParts) refreshDisplay(liveParts);
+  }
+  function resetForMatchStart(turn) {
+    upNextIndex = turn <= 1 ? 0 : null;
+    refreshLiveWidget();
+  }
+  function handleGameEvent(event) {
+    var _a, _b;
+    if (event.action !== "getArtifactDoingEffect") return;
+    if (event.artifactId !== SAVE_ARTIFACT_ID) return;
+    if (event.playerId !== getMyPlayerId()) return;
+    if (event.affecteds === "[]") return;
+    try {
+      const battleLog = typeof event.battleLog === "string" ? JSON.parse(event.battleLog) : event.battleLog;
+      const targetName = (_b = (_a = battleLog == null ? void 0 : battleLog.targetCards) == null ? void 0 : _a[0]) == null ? void 0 : _b.name;
+      if (!targetName) return;
+      const procIndex = LOST_SOUL_ORDER.indexOf(targetName);
+      if (procIndex === -1) return;
+      upNextIndex = (procIndex + 1) % LOST_SOUL_ORDER.length;
+      refreshLiveWidget();
+    } catch (e) {
+    }
+  }
+  function registerSaveTracker() {
+    registerPresetType(
+      {
+        id: PRESET_ID,
+        name: "SAVE Tracker",
+        description: "Shows which Lost Soul is up next from the SAVE artifact's summon cycle.",
+        sprite: null,
+        soul: "DETERMINATION",
+        custom: false,
+        kind: "event"
+      },
+      {
+        onGameEvent: handleGameEvent,
+        hudBehavior: {
+          widgetTitle: "Up Next",
+          getInitialSprite: () => {
+            const name = getUpNextName();
+            return name ? spriteFor(name) : null;
+          },
+          getInitialLabel: () => getUpNextName() || "?",
+          // Manual cycle - lets the user self-correct if they know
+          // better than our current guess, or resolve "?" by hand.
+          onLeftClick: (id, parts) => {
+            upNextIndex = upNextIndex === null ? 0 : (upNextIndex + 1) % LOST_SOUL_ORDER.length;
+            refreshDisplay(parts);
+          },
+          onMount: (id, parts) => {
+            liveParts = parts;
+            refreshDisplay(parts);
+          },
+          onUnmount: () => {
+            liveParts = null;
+          }
+        }
+      }
+    );
+  }
+
+  // packages/deck-tracker/presets/curve-tracker.js
+  var PRESET_ID2 = "builtin:curve-tracker";
+  var lastKnownGold = null;
+  var turnSpend = 0;
+  var lastTurnSpend = null;
+  var liveParts2 = null;
+  var G_SPAN = '<span style="color: gold; font-weight: bold;">G</span>';
+  function getDisplayLabel() {
+    const value = lastTurnSpend === null ? "?" : String(lastTurnSpend);
+    return `Last Turn: ${value} ${G_SPAN}`;
+  }
+  function refreshDisplay2(parts) {
+    parts.setLabel(getDisplayLabel());
+  }
+  function refreshLiveWidget2() {
+    if (liveParts2) refreshDisplay2(liveParts2);
+  }
+  function handleGameEvent2(event) {
+    const relevantId = getRelevantPlayerId();
+    if (relevantId === null) return;
+    if (event.action === "getTurnStart" && event.idPlayer !== relevantId) {
+      lastTurnSpend = turnSpend;
+      turnSpend = 0;
+      refreshLiveWidget2();
+      return;
+    }
+    if (event.action === "getPlayersStats" && event.golds) {
+      try {
+        const byPlayer = JSON.parse(event.golds);
+        const current = byPlayer[relevantId];
+        if (typeof current !== "number") return;
+        if (lastKnownGold !== null && current < lastKnownGold) {
+          turnSpend += lastKnownGold - current;
+        }
+        lastKnownGold = current;
+      } catch (e) {
+      }
+    }
+  }
+  function registerCurveTracker() {
+    registerPresetType(
+      {
+        id: PRESET_ID2,
+        name: "Curve Tracker",
+        description: "Shows how much G you spent last turn, to help play around Integrity's passive.",
+        sprite: null,
+        soul: "INTEGRITY",
+        custom: false,
+        kind: "event"
+      },
+      {
+        onGameEvent: handleGameEvent2,
+        hudBehavior: {
+          widgetTitle: "Curve Tracker",
+          compact: true,
+          getInitialLabel: () => getDisplayLabel(),
+          onMount: (id, parts) => {
+            liveParts2 = parts;
+            refreshDisplay2(parts);
+          },
+          onUnmount: () => {
+            liveParts2 = null;
+          }
+        }
+      }
+    );
+  }
+
+  // packages/deck-tracker/presets/cow-tracker.js
+  var PRESET_ID3 = "builtin:cow-tracker";
+  var COW_FIXED_ID = 552;
+  var bottomCards = [];
+  var lastModalOptions = null;
+  var liveParts3 = null;
+  var seenModals = /* @__PURE__ */ new WeakSet();
+  var modalObserverStarted = false;
+  function refreshLiveWidget3() {
+    if (liveParts3) liveParts3.setListItems(bottomCards.slice());
+  }
+  function looksLikeCoW(modal) {
+    var _a;
+    return ((_a = modal.innerText) == null ? void 0 : _a.includes("Change of Winds")) || modal.querySelector("#select-cards");
+  }
+  function extractOptions(modal) {
+    return [...modal.querySelectorAll(".card")].map((card) => {
+      var _a, _b, _c;
+      return { name: ((_b = (_a = card.querySelector(".cardName")) == null ? void 0 : _a.innerText) == null ? void 0 : _b.trim()) || ((_c = card.innerText) == null ? void 0 : _c.trim()) };
+    }).filter((c) => c.name);
+  }
+  function startModalWatch() {
+    if (modalObserverStarted) return;
+    modalObserverStarted = true;
+    const observer = new MutationObserver(() => {
+      document.querySelectorAll(".modal, .bootstrap-dialog").forEach((modal) => {
+        if (seenModals.has(modal)) return;
+        if (!looksLikeCoW(modal)) return;
+        const options = extractOptions(modal);
+        if (options.length < 2) return;
+        seenModals.add(modal);
+        lastModalOptions = options;
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+  function handleGameEvent3(event) {
+    var _a;
+    if (event.action !== "getDoingEffect") return;
+    let card, battleLog;
+    try {
+      card = typeof event.card === "string" ? JSON.parse(event.card) : event.card;
+      battleLog = typeof event.battleLog === "string" ? JSON.parse(event.battleLog) : event.battleLog;
+    } catch (e) {
+      return;
+    }
+    if ((card == null ? void 0 : card.fixedId) !== COW_FIXED_ID) return;
+    const relevantId = getRelevantPlayerId();
+    if (relevantId === null || (battleLog == null ? void 0 : battleLog.playerId) !== relevantId) return;
+    const chosen = (_a = battleLog == null ? void 0 : battleLog.targetCards) == null ? void 0 : _a[0];
+    if (!(chosen == null ? void 0 : chosen.name)) return;
+    if (!lastModalOptions || lastModalOptions.length < 2) {
+      console.warn("[DeckTracker/CoW] Change of Winds resolved but no modal options were captured - can't determine the rejected card this time.");
+      return;
+    }
+    const rejected = lastModalOptions.find((opt) => opt.name !== chosen.name);
+    if (!rejected) return;
+    bottomCards.unshift({ name: rejected.name });
+    refreshLiveWidget3();
+  }
+  function resetCowTrackerForMatchStart(turn) {
+    if (turn <= 1) {
+      bottomCards = [];
+      refreshLiveWidget3();
+    }
+  }
+  function registerCowTracker() {
+    startModalWatch();
+    registerPresetType(
+      {
+        id: PRESET_ID3,
+        name: "Change of Winds Tracker",
+        description: "Tracks the known bottom of your deck as Change of Winds pushes cards down.",
+        sprite: null,
+        soul: "PATIENCE",
+        custom: false,
+        kind: "event"
+      },
+      {
+        onGameEvent: handleGameEvent3,
+        hudBehavior: {
+          widgetTitle: "CoW Tracker",
+          listMode: true,
+          getInitialListItems: () => bottomCards.slice(),
+          // Right-click a specific row removes just that card - lets the
+          // user self-correct if they suspect a shuffle effect disturbed
+          // that particular known position.
+          onRemoveListItem: (_id, item) => {
+            const idx = bottomCards.findIndex((c) => c.name === item.name);
+            if (idx !== -1) bottomCards.splice(idx, 1);
+            refreshLiveWidget3();
+          },
+          // Middle-click clears the whole list, matching the "middle-
+          // click resets" convention used elsewhere in Deck Tracker.
+          onMiddleClick: () => {
+            bottomCards = [];
+            refreshLiveWidget3();
+          },
+          onMount: (id, parts) => {
+            liveParts3 = parts;
+          },
+          onUnmount: () => {
+            liveParts3 = null;
+          }
+        }
+      }
+    );
+  }
+
+  // packages/deck-tracker/index.js
+  function isGamePage() {
+    const path = location.pathname.toLowerCase();
+    return path.includes("game") || path.includes("spectate");
+  }
+  function waitForAvatar(callback) {
+    const existing = document.getElementById("yourAvatar");
+    if (existing) return callback(existing);
+    setTimeout(() => waitForAvatar(callback), 100);
+  }
+  function initDeckTracker(plugin) {
+    const settings = registerDeckTrackerSettings(plugin);
+    if (!settings.enabled.value()) return;
+    if (!isGamePage()) return;
+    const logger = createLogger("DeckTracker");
+    const originalWarn = logger.warn.bind(logger);
+    const originalLog = logger.log.bind(logger);
+    logger.log = (...args) => {
+      if (settings.debugLogging.value()) originalLog(...args);
+    };
+    logger.warn = (...args) => {
+      if (settings.debugLogging.value()) originalWarn(...args);
+    };
+    setRetainEnabledGetter(() => settings.retainUnclosedPresets.value());
+    registerBuiltInPresets();
+    registerSaveTracker();
+    registerCurveTracker();
+    registerCowTracker();
+    function handleAddPreset(id) {
+      spawnPreset(id);
+      logger.log("hud", "Spawned preset from picker:", id);
+    }
+    function handleCloseWidget(id) {
+      closeWidget(id);
+      logger.log("hud", "Closed preset from picker:", id);
+    }
+    function handleDeletePreset(id) {
+      closeWidget(id);
+      deleteCustomPreset(id);
+      logger.log("hud", "Deleted custom preset:", id);
+    }
+    function handleCreateAdHoc() {
+      openCustomTrackerBuilder({
+        onCreate: ({ name, sprite }) => {
+          spawnAdHocCustomTracker({
+            name,
+            sprite,
+            onRequestSaveAsPreset: (defaultName, _spriteArg, onSaved) => {
+              openSaveAsPresetPrompt(defaultName, (savedName, description) => {
+                onSaved(savedName, description);
+                logger.log("hud", "Saved custom tracker as preset:", savedName);
+              });
+            }
+          });
+        }
+      });
+    }
+    function createButton(avatar) {
+      const btn = document.createElement("button");
+      btn.textContent = "+";
+      btn.id = "dt-add-tracker-button";
+      Object.assign(btn.style, {
+        position: "fixed",
+        zIndex: 8,
+        width: "34px",
+        height: "34px",
+        borderRadius: "4px",
+        background: "#2ecc71",
+        color: "white",
+        border: "none",
+        cursor: "pointer",
+        fontSize: "20px",
+        fontWeight: "bold",
+        lineHeight: "1",
+        boxShadow: "0 1px 4px rgba(0,0,0,0.5)",
+        opacity: "0"
+        // hidden until we've confirmed a real position - see tryReveal() below
+      });
+      document.body.appendChild(btn);
+      let revealed = false;
+      function reposition() {
+        const rect = avatar.getBoundingClientRect();
+        if (rect.width === 0 && rect.height === 0) return false;
+        const btnRect = btn.getBoundingClientRect();
+        btn.style.left = rect.left - btnRect.width - 16 + "px";
+        btn.style.top = rect.top + (rect.height - btnRect.height) / 2 + "px";
+        return true;
+      }
+      function tryReveal() {
+        let lastRect = null;
+        let lastChangeTime = performance.now();
+        const startTime = performance.now();
+        const STABLE_MS = 200;
+        const MAX_WAIT_MS = 3e3;
+        function ratsMatch(a, b) {
+          return a && b && a.left === b.left && a.top === b.top && a.width === b.width && a.height === b.height;
+        }
+        function check() {
+          const rect = avatar.getBoundingClientRect();
+          const now = performance.now();
+          const hasSize = rect.width > 0 || rect.height > 0;
+          if (hasSize) {
+            if (!ratsMatch(rect, lastRect)) {
+              lastRect = rect;
+              lastChangeTime = now;
+            }
+            const stableFor = now - lastChangeTime;
+            const waitedTooLong = now - startTime > MAX_WAIT_MS;
+            if (stableFor >= STABLE_MS || waitedTooLong) {
+              reposition();
+              revealed = true;
+              btn.style.opacity = "1";
+              return;
+            }
+          }
+          requestAnimationFrame(check);
+        }
+        requestAnimationFrame(check);
+      }
+      tryReveal();
+      function isUnderScriptMenuOpen() {
+        const menu = document.querySelector('.menu-content[role="Menu"]');
+        return menu !== null && menu.offsetParent !== null;
+      }
+      function isBlockingModalOpen() {
+        return document.body.classList.contains("modal-open") || document.querySelector(".modal-backdrop") !== null || isUnderScriptMenuOpen();
+      }
+      let isDimmed = false;
+      const syncInterval = setInterval(() => {
+        if (!revealed) return;
+        reposition();
+        const shouldDim = isBlockingModalOpen();
+        if (shouldDim !== isDimmed) {
+          isDimmed = shouldDim;
+          btn.style.opacity = shouldDim ? String(settings.dimOpacity.value()) : "1";
+          btn.style.pointerEvents = shouldDim ? "none" : "auto";
+        }
+      }, 250);
+      window.addEventListener("resize", reposition);
+      window.addEventListener("scroll", reposition, { passive: true, capture: true });
+      btn.onclick = () => openPresetPicker({ onAddPreset: handleAddPreset, onCreateAdHoc: handleCreateAdHoc, onCloseWidget: handleCloseWidget, onDeletePreset: handleDeletePreset });
+      return btn;
+    }
+    let trackerButton = null;
+    waitForAvatar((avatar) => {
+      trackerButton = createButton(avatar);
+    });
+    plugin.events.on("GameEvent", (event) => {
+      dispatchGameEvent(event);
+      if ((event == null ? void 0 : event.action) === "getVictory" || (event == null ? void 0 : event.action) === "getDefeat" || (event == null ? void 0 : event.action) === "getResult") {
+        (trackerButton == null ? void 0 : trackerButton.style) && (trackerButton.style.display = "none");
+        closeAllWidgets();
+      }
+    });
+    plugin.events.on("GameStart", () => {
+      if (trackerButton == null ? void 0 : trackerButton.style) trackerButton.style.display = "";
+      if (isSpectating()) return;
+      const favoritedIds = getFavoritedPresetIds();
+      const spawnedFavorites = favoritedIds.filter((id) => spawnPreset(id) !== null);
+      if (spawnedFavorites.length) {
+        logger.log("autoload", "Spawned favorited presets at match start.", spawnedFavorites);
+      }
+      if (spawnedFavorites.length < favoritedIds.length) {
+        logger.warn(
+          "autoload",
+          "Some favorited presets could not be spawned (missing definition).",
+          favoritedIds.filter((id) => !spawnedFavorites.includes(id))
+        );
+      }
+      if (settings.retainUnclosedPresets.value()) {
+        const retainedIds = getRetainedPresetIds().filter((id) => !favoritedIds.includes(id));
+        retainedIds.forEach((id) => spawnPreset(id));
+        if (retainedIds.length) {
+          logger.log("autoload", "Restored retained (unclosed) presets.", retainedIds);
+        }
+      }
+    });
+    plugin.events.on("connect", (data) => {
+      var _a, _b;
+      resetForMatchStart((_a = data == null ? void 0 : data.turn) != null ? _a : 0);
+      resetCowTrackerForMatchStart((_b = data == null ? void 0 : data.turn) != null ? _b : 0);
+      if (settings.autoLoadSoulPresets.value()) {
+        const soul = getRelevantPlayerSoul(data);
+        if (soul) {
+          const favoritedIds = getFavoritedPresetIds();
+          const matches = getAvailablePresets().filter((p) => p.soul === soul && !favoritedIds.includes(p.id));
+          matches.forEach((p) => spawnPreset(p.id));
+          if (matches.length) {
+            logger.log("autoload", `Auto-loaded soul-specific presets for ${soul}.`, matches.map((p) => p.id));
+          }
+        }
+      }
+    });
+  }
+
   // manifest.js
   bootstrap((plugin) => {
     initPatchMaker(plugin);
     initTrueHubBridge(plugin);
+    initDeckTracker(plugin);
   });
 })();

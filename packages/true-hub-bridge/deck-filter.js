@@ -4,6 +4,7 @@
 // actual filter state and re-renders when it changes.
 
 import { getPageWindow } from "../core/page-window.js";
+import { getAllCards } from "../core/card-data.js";
 
 export function decodeDeck(deckCode) {
   try {
@@ -32,9 +33,7 @@ export function getArtifactById(id) {
 }
 
 export function getPlayableCards() {
-  const allCards = getPageWindow().allCards;
-  if (!Array.isArray(allCards)) return [];
-  return allCards.filter(c => c.rarity !== "STORY" && c.rarity !== "TOKEN");
+  return getAllCards().filter(c => c.rarity !== "STORY" && c.rarity !== "TOKEN");
 }
 
 // Picks the most-repeated monster card in a deck as its representative

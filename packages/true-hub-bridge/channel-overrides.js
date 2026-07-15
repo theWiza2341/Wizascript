@@ -407,10 +407,6 @@ export const CHANNEL_OVERRIDES = {
   "royal-loox": "Royal_Loox",
   "rloox": "Royal_Loox",
 
-  // Hanging Spider
-  "hanging-spider": "Hanging_Spider",
-  "hang": "Hanging_Spider",
-
   // Titan Fuzzy
   "titan-fuzzy": "Titan_Fuzzy",
   "fuzzy": "Titan_Fuzzy",

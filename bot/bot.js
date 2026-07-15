@@ -47,25 +47,16 @@ function extractDeckCode(text) {
     return null;
 }
 
-// Strips any image/CDN link from text before record extraction ever
-// sees it. Broader than a single https-only rule: a link with no
-// protocol prefix, a Discord CDN link with a long query string, or any
-// filename-shaped token ending in a common image extension can all
-// still leave a stray run of digits behind for extractRecord to
-// misread as a win/loss record if only partially stripped.
+// Strips links from text before record extraction sees it - skip
+// everything from "http(s)" up to the next whitespace, same for a bare
+// "www." link. This is the original, minimal rule; the broader CDN-
+// domain and catch-all-image-extension matching added on top of it
+// turned out to be over-aggressive, stripping ordinary words that
+// merely looked like a filename/domain but weren't actually links.
 function stripImageLinks(text) {
     return text
-        // Any full http(s) link, regardless of what it points to.
         .replace(/https?:\/\/\S+/gi, " ")
-        // Any bare "www." link.
-        .replace(/www\.\S+/gi, " ")
-        // Common Discord/media CDN domains, even without a protocol
-        // prefix - rare, but seen in manually copy-pasted text.
-        .replace(/\b(?:cdn\.discordapp\.com|media\.discordapp\.net|i\.imgur\.com|imgur\.com)\S*/gi, " ")
-        // Any remaining token that looks like a filename/link ending in
-        // a common image extension, with or without a query string -
-        // catches anything the rules above missed.
-        .replace(/\S*\.(?:png|jpe?g|gif|webp|bmp|svg)(?:\?\S*)?/gi, " ");
+        .replace(/www\.\S+/gi, " ");
 }
 
 function extractRecord(text) {

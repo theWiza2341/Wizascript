@@ -47,19 +47,31 @@ function extractDeckCode(text) {
     return null;
 }
 
+// Strips any image/CDN link from text before record extraction ever
+// sees it. Broader than a single https-only rule: a link with no
+// protocol prefix, a Discord CDN link with a long query string, or any
+// filename-shaped token ending in a common image extension can all
+// still leave a stray run of digits behind for extractRecord to
+// misread as a win/loss record if only partially stripped.
+function stripImageLinks(text) {
+    return text
+        // Any full http(s) link, regardless of what it points to.
+        .replace(/https?:\/\/\S+/gi, " ")
+        // Any bare "www." link.
+        .replace(/www\.\S+/gi, " ")
+        // Common Discord/media CDN domains, even without a protocol
+        // prefix - rare, but seen in manually copy-pasted text.
+        .replace(/\b(?:cdn\.discordapp\.com|media\.discordapp\.net|i\.imgur\.com|imgur\.com)\S*/gi, " ")
+        // Any remaining token that looks like a filename/link ending in
+        // a common image extension, with or without a query string -
+        // catches anything the rules above missed.
+        .replace(/\S*\.(?:png|jpe?g|gif|webp|bmp|svg)(?:\?\S*)?/gi, " ");
+}
+
 function extractRecord(text) {
     if (!text) return null;
 
-    const cleaned = text
-    .replace(/https?:\/\/\S+/gi, "")
-    .replace(/www\.\S+/gi, "")
-    // FIX (bug 3): the two rules above only strip links that already
-    // have a protocol/www prefix - a bare pasted domain (e.g. an image
-    // link like "cdn.discordapp.com/attachments/...") slips through
-    // untouched, and a stray run of digits inside it could then get
-    // misread as a win/loss record. This catches those too.
-    .replace(/\b[\w-]+\.(com|net|org|gg|io|png|jpg|jpeg|gif|webp)\S*/gi, "")
-    .toLowerCase();
+    const cleaned = stripImageLinks(text).toLowerCase();
 
     let match;
 
@@ -251,10 +263,29 @@ client.once("clientReady", async () => {
                 // null anyway, but being explicit here documents the
                 // intent and protects against any future content-
                 // stripping edge case letting something slip through.
-                const isAttachmentOnly = msg.attachments.size > 0 && !msg.content.trim();
-                if (isAttachmentOnly) continue;
-
-                if (!record) {
+                // FIX (bug 3, strengthened): previously only skipped
+                // messages that were PURELY an image with no text at
+                // all. That still left a gap - a message with real
+                // caption text plus an attached image was still fed to
+                // extractRecord, and an attachment's own URL/filename
+                // (which often contains long numeric IDs) could still
+                // end up influencing the match. Now any message with an
+                // attachment is skipped for record/creator purposes
+                // entirely, regardless of accompanying text.
+                // FIX (bug 3, strengthened): previously only skipped
+                // record extraction for messages that were PURELY an
+                // image with no text at all. That still left a gap - a
+                // message with real caption text plus an attached
+                // image was still fed to extractRecord, and an
+                // attachment's own URL/filename (which often contains
+                // long numeric IDs) could still end up misread as a
+                // win/loss record. Now ANY message with an attachment
+                // is skipped for record purposes, regardless of
+                // accompanying text. Creator detection is deliberately
+                // left unaffected - a caption alongside an image isn't
+                // at risk the same way a numeric match is, so blanket-
+                // skipping that too would just lose valid attribution.
+                if (!record && msg.attachments.size === 0) {
                     record = extractRecord(msg.content);
                 }
 

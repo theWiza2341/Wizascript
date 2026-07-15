@@ -77,7 +77,7 @@ export function registerZenithMartletTracker() {
       name: "Zenith Martlet Tracker",
       description: "Predicts the proc order of Zenith Martlet's dust effect, before you even play it.",
       sprite: null,
-      soul: null, // not yet confirmed - won't participate in soul-based auto-load until set
+      soul: null, // not soul-tied - this is a card-specific tracker, not a whole-Soul strategy one
       custom: false,
       kind: "event"
     },

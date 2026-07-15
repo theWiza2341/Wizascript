@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.1";
+  var SUITE_VERSION = "0.1.0";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -3048,11 +3051,13 @@ Version: v${version}`;
   var FAVORITES_KEY = "wizascript.decktracker.favorites";
   var CUSTOM_PRESETS_KEY = "wizascript.decktracker.customPresets";
   var RETAINED_KEY = "wizascript.decktracker.retained";
+  var POSITIONS_KEY = "wizascript.decktracker.positions";
   var presetTypes = /* @__PURE__ */ new Map();
   var activeInstances = /* @__PURE__ */ new Map();
   var favoritesCache = null;
   var customPresetsCache = null;
   var retainedCache = null;
+  var positionsCache = null;
   var retainEnabledGetter = () => false;
   function loadFavorites() {
     if (favoritesCache) return favoritesCache;
@@ -3135,16 +3140,6 @@ Version: v${version}`;
     }
     saveFavorites();
   }
-  function getLayout(id) {
-    var _a;
-    return ((_a = loadFavorites()[id]) == null ? void 0 : _a.layout) || null;
-  }
-  function setLayout(id, layout) {
-    const favorites = loadFavorites();
-    if (!favorites[id]) return;
-    favorites[id].layout = layout;
-    saveFavorites();
-  }
   function getFavoritedPresetIds() {
     return Object.keys(loadFavorites());
   }
@@ -3202,21 +3197,44 @@ Version: v${version}`;
   function getRetainedPresetIds() {
     return Object.keys(loadRetained());
   }
-  function getRetainedLayout(id) {
-    var _a;
-    return ((_a = loadRetained()[id]) == null ? void 0 : _a.layout) || null;
-  }
-  function trackActiveLayout(id, layout) {
+  function markRetained(id) {
     if (!retainEnabledGetter()) return;
     const retained = loadRetained();
-    retained[id] = { layout };
+    retained[id] = true;
     saveRetained();
   }
-  function forgetActiveLayout(id) {
+  function unmarkRetained(id) {
     const retained = loadRetained();
     if (retained[id]) {
       delete retained[id];
       saveRetained();
+    }
+  }
+  function loadPositions() {
+    if (positionsCache) return positionsCache;
+    try {
+      positionsCache = JSON.parse(GM_getValue(POSITIONS_KEY, "{}"));
+    } catch {
+      positionsCache = {};
+    }
+    return positionsCache;
+  }
+  function savePositions() {
+    GM_setValue(POSITIONS_KEY, JSON.stringify(positionsCache || {}));
+  }
+  function getSavedPosition(id) {
+    return loadPositions()[id] || null;
+  }
+  function setSavedPosition(id, layout) {
+    const positions = loadPositions();
+    positions[id] = layout;
+    savePositions();
+  }
+  function clearSavedPosition(id) {
+    const positions = loadPositions();
+    if (positions[id]) {
+      delete positions[id];
+      savePositions();
     }
   }
 
@@ -3240,10 +3258,6 @@ Version: v${version}`;
     };
   }
   var liveWidgets = /* @__PURE__ */ new Map();
-  var sessionLayouts = /* @__PURE__ */ new Map();
-  function rememberSessionLayout(id, layout) {
-    sessionLayouts.set(id, layout);
-  }
   function widgetElementId(id) {
     return `dt-tracker-${id.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
   }
@@ -3502,7 +3516,7 @@ Version: v${version}`;
     }
     return { widget, nameLine, countEl, imageWrap, star, closeBtn, resizeHandle, applySize, getWidth: () => width, ns, setSprite, setLabel };
   }
-  function bindInteractions(parts, { onLeftClick, onRightClick, onMiddleClick, isFavorited: isFavorited2, persistLayout, id, trackRetain = false }) {
+  function bindInteractions(parts, { onLeftClick, onRightClick, onMiddleClick, id, trackRetain = false }) {
     const { widget, resizeHandle, applySize, getWidth, ns } = parts;
     widget.off(ns).off("contextmenu" + ns);
     $(document).off(ns);
@@ -3539,13 +3553,10 @@ Version: v${version}`;
       if (dragMoved) {
         const rect = widget[0].getBoundingClientRect();
         const layout = { left: rect.left, top: rect.top, width: getWidth() };
-        if (isFavorited2()) {
-          persistLayout(layout);
-        }
         if (trackRetain) {
-          trackActiveLayout(id, layout);
+          setSavedPosition(id, layout);
+          markRetained(id);
         }
-        rememberSessionLayout(id, layout);
       } else {
         onLeftClick == null ? void 0 : onLeftClick();
       }
@@ -3571,13 +3582,10 @@ Version: v${version}`;
       resizing = false;
       const rect = widget[0].getBoundingClientRect();
       const layout = { left: rect.left, top: rect.top, width: getWidth() };
-      if (isFavorited2()) {
-        persistLayout(layout);
-      }
       if (trackRetain) {
-        trackActiveLayout(id, layout);
+        setSavedPosition(id, layout);
+        markRetained(id);
       }
-      rememberSessionLayout(id, layout);
     });
   }
   function spawnPreset(id) {
@@ -3589,8 +3597,7 @@ Version: v${version}`;
     }
     if (liveWidgets.has(id)) return liveWidgets.get(id).widget;
     activate(id);
-    const favorited = isFavorited(id);
-    const savedLayout = favorited && getLayout(id) || getRetainedLayout(id) || sessionLayouts.get(id) || null;
+    const savedLayout = getSavedPosition(id);
     const behavior = getHudBehavior(id);
     const parts = buildWidget({
       id,
@@ -3611,8 +3618,8 @@ Version: v${version}`;
       onRemoveListItem: (behavior == null ? void 0 : behavior.onRemoveListItem) ? (item) => behavior.onRemoveListItem(id, item) : null
     });
     const baselineRect = { left: parts.widget[0].getBoundingClientRect().left, top: parts.widget[0].getBoundingClientRect().top, width: parts.getWidth() };
-    trackActiveLayout(id, baselineRect);
-    rememberSessionLayout(id, baselineRect);
+    setSavedPosition(id, baselineRect);
+    markRetained(id);
     parts.closeBtn.on("click", (e) => {
       e.stopPropagation();
       closeWidget(id);
@@ -3637,8 +3644,6 @@ Version: v${version}`;
     };
     bindInteractions(parts, {
       ...interactionCallbacks,
-      isFavorited: () => isFavorited(id),
-      persistLayout: (layout) => setLayout(id, layout),
       id,
       trackRetain: true
     });
@@ -3657,19 +3662,14 @@ Version: v${version}`;
     deactivate(id);
     liveWidgets.delete(id);
     (_c = (_b = getHudBehavior(id)) == null ? void 0 : _b.onUnmount) == null ? void 0 : _c.call(_b, id);
-    forgetActiveLayout(id);
+    clearSavedPosition(id);
+    unmarkRetained(id);
   }
   function closeAllWidgets() {
     [...liveWidgets.keys()].forEach((id) => closeWidget(id));
   }
   function isWidgetOpen(id) {
     return liveWidgets.has(id);
-  }
-  function getCurrentLayoutIfOpen(id) {
-    const entry = liveWidgets.get(id);
-    if (!entry) return null;
-    const rect = entry.widget[0].getBoundingClientRect();
-    return { left: rect.left, top: rect.top, width: entry.getWidth() };
   }
   function spawnAdHocCustomTracker({ name, sprite, onRequestSaveAsPreset }) {
     const tempId = `adhoc:${Date.now().toString(36)}`;
@@ -3690,10 +3690,6 @@ Version: v${version}`;
       onLeftClick: () => setLocalCount(count + 1),
       onRightClick: () => setLocalCount(count - 1),
       onMiddleClick: () => setLocalCount(0),
-      isFavorited: () => false,
-      persistLayout: () => {
-      },
-      // can't persist layout until this is a real saved preset
       id: tempId,
       trackRetain: false
       // no real registry id yet - nothing meaningful to retain
@@ -3709,7 +3705,7 @@ Version: v${version}`;
         const definition = createCustomPreset({ name: savedName, description, sprite });
         activate(definition.id, { initialCount: count });
         const rect = parts.widget[0].getBoundingClientRect();
-        setLayout(definition.id, { left: rect.left, top: rect.top, width: parts.getWidth() });
+        setSavedPosition(definition.id, { left: rect.left, top: rect.top, width: parts.getWidth() });
         parts.widget.attr("id", widgetElementId(definition.id));
         parts.closeBtn.off("click").on("click", (e2) => {
           e2.stopPropagation();
@@ -3719,8 +3715,6 @@ Version: v${version}`;
           onLeftClick: () => setCount(definition.id, getCount(definition.id) + 1),
           onRightClick: () => setCount(definition.id, getCount(definition.id) - 1),
           onMiddleClick: () => setCount(definition.id, 0),
-          isFavorited: () => isFavorited(definition.id),
-          persistLayout: (layout) => setLayout(definition.id, layout),
           id: definition.id,
           trackRetain: true
         });
@@ -3776,10 +3770,6 @@ Version: v${version}`;
       e.stopPropagation();
       const nowFavorited = !isFavorited(preset.id);
       setFavorited(preset.id, nowFavorited);
-      if (nowFavorited) {
-        const currentLayout = getCurrentLayoutIfOpen(preset.id);
-        if (currentLayout) setLayout(preset.id, currentLayout);
-      }
       renderHeart();
     });
     const info = $("<div>").css({ flex: 1 });

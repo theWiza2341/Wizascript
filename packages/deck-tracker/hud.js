@@ -9,10 +9,10 @@
 //    hits its star and goes through the save-as-preset flow.
 
 import {
-  getDefinition, isFavorited, getLayout, setLayout,
+  getDefinition,
   activate, deactivate, getCount, setCount, onCountChange,
-  createCustomPreset, getRetainedLayout, trackActiveLayout, forgetActiveLayout,
-  getHudBehavior
+  createCustomPreset, getSavedPosition, setSavedPosition, clearSavedPosition,
+  markRetained, unmarkRetained, getHudBehavior
 } from "./registry.js";
 
 const CARD_IMAGE_BASE = "https://undercards.net/images/cards/";
@@ -43,19 +43,11 @@ function getNextCascadePosition() {
 
 const liveWidgets = new Map(); // id -> { widget, ..., unsubscribe }
 
-// Session-only "remember where I put it" cache - always active,
-// regardless of favorited status or the "Retain Unclosed Presets"
-// setting. Without this, closing and reopening a preset via the
-// picker mid-match would re-cascade to a fresh spot every time unless
-// it also happened to be favorited or retain was enabled - annoying
-// for a preset you just dragged into place moments earlier. Cross-
-// match persistence still requires favoriting or the retain setting;
-// this only ever lives in memory for the current page session.
-const sessionLayouts = new Map();
+// Position persistence is now handled unconditionally by registry.js's
+// getSavedPosition/setSavedPosition/clearSavedPosition - always
+// persisted (not session-only), decoupled entirely from favorited
+// status and the retain setting, cleared only on explicit close.
 
-function rememberSessionLayout(id, layout) {
-  sessionLayouts.set(id, layout);
-}
 
 function widgetElementId(id) {
   return `dt-tracker-${id.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
@@ -292,7 +284,7 @@ function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode
 // on the same widget (the ad-hoc -> saved-preset upgrade) replaces the
 // previous bindings instead of stacking a duplicate set alongside them.
 
-function bindInteractions(parts, { onLeftClick, onRightClick, onMiddleClick, isFavorited, persistLayout, id, trackRetain = false }) {
+function bindInteractions(parts, { onLeftClick, onRightClick, onMiddleClick, id, trackRetain = false }) {
   const { widget, resizeHandle, applySize, getWidth, ns } = parts;
 
   widget.off(ns).off('contextmenu' + ns);
@@ -335,13 +327,10 @@ function bindInteractions(parts, { onLeftClick, onRightClick, onMiddleClick, isF
     if (dragMoved) {
       const rect = widget[0].getBoundingClientRect();
       const layout = { left: rect.left, top: rect.top, width: getWidth() };
-      if (isFavorited()) {
-        persistLayout(layout);
-      }
       if (trackRetain) {
-        trackActiveLayout(id, layout);
+        setSavedPosition(id, layout);
+        markRetained(id);
       }
-      rememberSessionLayout(id, layout);
     } else {
       onLeftClick?.();
     }
@@ -372,13 +361,10 @@ function bindInteractions(parts, { onLeftClick, onRightClick, onMiddleClick, isF
     resizing = false;
     const rect = widget[0].getBoundingClientRect();
     const layout = { left: rect.left, top: rect.top, width: getWidth() };
-    if (isFavorited()) {
-      persistLayout(layout);
-    }
     if (trackRetain) {
-      trackActiveLayout(id, layout);
+      setSavedPosition(id, layout);
+      markRetained(id);
     }
-    rememberSessionLayout(id, layout);
   });
 }
 
@@ -393,17 +379,11 @@ export function spawnPreset(id) {
   if (liveWidgets.has(id)) return liveWidgets.get(id).widget; // already on screen
 
   activate(id);
-  const favorited = isFavorited(id);
-  // Favorited layout takes priority; if not favorited, fall back to a
-  // retained layout (from "Retain Unclosed Presets Between Matches")
-  // so a preset that was merely left open - not favorited - still
-  // reappears where it was.
-  // Priority: persisted favorite layout > persisted retain layout (if
-  // that setting's on) > this-session's last known position > cascade
-  // as a last resort. The session fallback is what stops a re-open via
-  // the picker from re-cascading when neither favorited nor retain
-  // applies but the widget was positioned moments earlier this match.
-  const savedLayout = (favorited && getLayout(id)) || getRetainedLayout(id) || sessionLayouts.get(id) || null;
+  // Position is always remembered regardless of favorited/retain-
+  // setting status - those two only control whether something auto-
+  // appears, not where it appears once it does. Falls back to cascade
+  // only if this preset has genuinely never been positioned before.
+  const savedLayout = getSavedPosition(id);
   const behavior = getHudBehavior(id);
 
   const parts = buildWidget({
@@ -425,12 +405,12 @@ export function spawnPreset(id) {
     onRemoveListItem: behavior?.onRemoveListItem ? item => behavior.onRemoveListItem(id, item) : null
   });
 
-  // Records a baseline retained position/size the moment this spawns,
-  // even if the user never touches it - satisfies "if you leave with
-  // things open, they'll be remembered" without requiring a drag first.
+  // Records a baseline position the moment this spawns, even if the
+  // user never touches it - satisfies "always remembered" without
+  // requiring a drag first.
   const baselineRect = { left: parts.widget[0].getBoundingClientRect().left, top: parts.widget[0].getBoundingClientRect().top, width: parts.getWidth() };
-  trackActiveLayout(id, baselineRect);
-  rememberSessionLayout(id, baselineRect);
+  setSavedPosition(id, baselineRect);
+  markRetained(id);
 
   parts.closeBtn.on('click', e => {
     e.stopPropagation();
@@ -451,8 +431,6 @@ export function spawnPreset(id) {
 
   bindInteractions(parts, {
     ...interactionCallbacks,
-    isFavorited: () => isFavorited(id),
-    persistLayout: layout => setLayout(id, layout),
     id,
     trackRetain: true
   });
@@ -479,9 +457,11 @@ export function closeWidget(id) {
   deactivate(id);
   liveWidgets.delete(id);
   getHudBehavior(id)?.onUnmount?.(id);
-  // Always clears, regardless of the "retain" setting's current value -
-  // closing always means "don't bring this back."
-  forgetActiveLayout(id);
+  // Always clears, unconditionally - closing always means "don't
+  // bring this back" AND "forget where it was," per the user's
+  // explicit spec: position only ever resets on an explicit close.
+  clearSavedPosition(id);
+  unmarkRetained(id);
 }
 
 // Used on game-end - snapshot the keys first, since closeWidget mutates
@@ -493,16 +473,6 @@ export function closeAllWidgets() {
 
 export function isWidgetOpen(id) {
   return liveWidgets.has(id);
-}
-
-// Used by the picker when favoriting from the list - if the preset
-// happens to be open on screen right now, snapshot its current
-// position/size as the starting layout rather than leaving it unset.
-export function getCurrentLayoutIfOpen(id) {
-  const entry = liveWidgets.get(id);
-  if (!entry) return null;
-  const rect = entry.widget[0].getBoundingClientRect();
-  return { left: rect.left, top: rect.top, width: entry.getWidth() };
 }
 
 // ---- ad-hoc custom tracker (not yet saved as a preset) ----
@@ -524,8 +494,6 @@ export function spawnAdHocCustomTracker({ name, sprite, onRequestSaveAsPreset })
     onLeftClick: () => setLocalCount(count + 1),
     onRightClick: () => setLocalCount(count - 1),
     onMiddleClick: () => setLocalCount(0),
-    isFavorited: () => false,
-    persistLayout: () => {}, // can't persist layout until this is a real saved preset
     id: tempId,
     trackRetain: false // no real registry id yet - nothing meaningful to retain
   });
@@ -548,12 +516,10 @@ export function spawnAdHocCustomTracker({ name, sprite, onRequestSaveAsPreset })
 
       activate(definition.id, { initialCount: count });
       const rect = parts.widget[0].getBoundingClientRect();
-      // Not favorited by default - just record where it currently sits
-      // so IF the user later favorites it from the picker, there's a
-      // sensible starting layout rather than nothing at all. This write
-      // is harmless even if never favorited (setLayout no-ops unless
-      // the id is already marked favorited).
-      setLayout(definition.id, { left: rect.left, top: rect.top, width: parts.getWidth() });
+      // Position is always remembered now, regardless of favorited
+      // status - this records where it currently sits the moment it
+      // becomes a real preset.
+      setSavedPosition(definition.id, { left: rect.left, top: rect.top, width: parts.getWidth() });
 
       // Rebind the SAME DOM node to real, registry-backed behavior
       // rather than tearing it down - avoids a visual flicker right
@@ -568,8 +534,6 @@ export function spawnAdHocCustomTracker({ name, sprite, onRequestSaveAsPreset })
         onLeftClick: () => setCount(definition.id, getCount(definition.id) + 1),
         onRightClick: () => setCount(definition.id, getCount(definition.id) - 1),
         onMiddleClick: () => setCount(definition.id, 0),
-        isFavorited: () => isFavorited(definition.id),
-        persistLayout: layout => setLayout(definition.id, layout),
         id: definition.id,
         trackRetain: true
       });

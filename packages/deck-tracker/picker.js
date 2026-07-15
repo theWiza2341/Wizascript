@@ -11,8 +11,8 @@
 //    specifically, double-clicking it while filled permanently deletes
 //    the preset (there's no separate delete button anymore)
 
-import { getAvailablePresets, isFavorited, setFavorited, setLayout } from "./registry.js";
-import { getCurrentLayoutIfOpen, isWidgetOpen } from "./hud.js";
+import { getAvailablePresets, isFavorited, setFavorited } from "./registry.js";
+import { isWidgetOpen } from "./hud.js";
 
 function heartIconSVG(filled) {
   const fill = filled ? '#e74c3c' : 'none';
@@ -50,10 +50,6 @@ function buildPresetRow(preset, onAdd, onCloseWidget, onDelete) {
     e.stopPropagation();
     const nowFavorited = !isFavorited(preset.id);
     setFavorited(preset.id, nowFavorited);
-    if (nowFavorited) {
-      const currentLayout = getCurrentLayoutIfOpen(preset.id);
-      if (currentLayout) setLayout(preset.id, currentLayout);
-    }
     renderHeart();
   });
 

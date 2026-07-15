@@ -15,6 +15,7 @@
 const FAVORITES_KEY = "wizascript.decktracker.favorites";
 const CUSTOM_PRESETS_KEY = "wizascript.decktracker.customPresets";
 const RETAINED_KEY = "wizascript.decktracker.retained";
+const POSITIONS_KEY = "wizascript.decktracker.positions";
 
 // Registered preset TYPES - built-ins (SAVE Tracker, CoW, Curve
 // Tracker) register themselves here at load time via registerPresetType.
@@ -29,6 +30,7 @@ const activeInstances = new Map();
 let favoritesCache = null;
 let customPresetsCache = null;
 let retainedCache = null;
+let positionsCache = null;
 let retainEnabledGetter = () => false;
 
 function loadFavorites() {
@@ -152,17 +154,6 @@ export function setFavorited(id, favorited) {
   saveFavorites();
 }
 
-export function getLayout(id) {
-  return loadFavorites()[id]?.layout || null;
-}
-
-export function setLayout(id, layout) {
-  const favorites = loadFavorites();
-  if (!favorites[id]) return; // not favorited - nothing to persist
-  favorites[id].layout = layout;
-  saveFavorites();
-}
-
 export function getFavoritedPresetIds() {
   return Object.keys(loadFavorites());
 }
@@ -220,12 +211,11 @@ export function dispatchGameEvent(event) {
   });
 }
 
-// ---- retained state ("Retain Unclosed Presets Between Matches") ----
-// Independent from favorites - tracks whatever is CURRENTLY open
-// (regardless of favorited status) so it can come back once, in the
-// same spot, next match. Cleared the moment that preset is closed,
-// unconditionally, regardless of the setting's current value - closing
-// always means "don't bring this back."
+// ---- "Retain Unclosed Presets Between Matches" ----
+// This ONLY controls auto-reopen eligibility (was this open when the
+// setting is on, so bring it back next match) - NOT position, which
+// is handled unconditionally below by getSavedPosition/setSavedPosition
+// regardless of this setting or favorited status.
 
 function loadRetained() {
   if (retainedCache) return retainedCache;
@@ -253,25 +243,60 @@ export function getRetainedPresetIds() {
   return Object.keys(loadRetained());
 }
 
-export function getRetainedLayout(id) {
-  return loadRetained()[id]?.layout || null;
-}
-
-// Called by hud.js on every spawn and every drag/resize-end,
-// UNCONDITIONALLY - whether this actually persists anything depends on
-// the injected setting, checked here rather than by every caller.
-export function trackActiveLayout(id, layout) {
+// Called by hud.js on every spawn, UNCONDITIONALLY - whether this
+// actually marks anything depends on the injected setting, checked
+// here rather than by every caller.
+export function markRetained(id) {
   if (!retainEnabledGetter()) return;
   const retained = loadRetained();
-  retained[id] = { layout };
+  retained[id] = true;
   saveRetained();
 }
 
 // Called by hud.js on every close, UNCONDITIONALLY.
-export function forgetActiveLayout(id) {
+export function unmarkRetained(id) {
   const retained = loadRetained();
   if (retained[id]) {
     delete retained[id];
     saveRetained();
+  }
+}
+
+// ---- position persistence (always-on) ----
+// Completely decoupled from favorited status and the retain setting -
+// those two control WHETHER a preset auto-appears; this controls WHERE
+// it appears once it does. Every drag/resize updates this
+// unconditionally, and it's only ever cleared when the user explicitly
+// closes the tracker - "remember where I put it until I close it."
+
+function loadPositions() {
+  if (positionsCache) return positionsCache;
+  try {
+    positionsCache = JSON.parse(GM_getValue(POSITIONS_KEY, "{}"));
+  } catch {
+    positionsCache = {};
+  }
+  return positionsCache;
+}
+
+function savePositions() {
+  GM_setValue(POSITIONS_KEY, JSON.stringify(positionsCache || {}));
+}
+
+export function getSavedPosition(id) {
+  return loadPositions()[id] || null;
+}
+
+export function setSavedPosition(id, layout) {
+  const positions = loadPositions();
+  positions[id] = layout;
+  savePositions();
+}
+
+export function clearSavedPosition(id) {
+  const positions = loadPositions();
+  if (positions[id]) {
+    delete positions[id];
+    savePositions();
   }
 }

@@ -76,7 +76,7 @@ function spriteImage(sprite) {
 // each rebind would leak the previous call's document-level drag/
 // resize listeners rather than replacing them.
 
-function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode = false, savedLayout, showSaveButton = false, showImage = true, contentMode = null, initialListItems = [], onRemoveListItem = null }) {
+function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode = false, savedLayout, showSaveButton = false, showImage = true, contentMode = null, initialListItems = [], onRemoveListItem = null, firstItemLabel = 'next' }) {
   const elId = widgetElementId(id);
   $(`#${elId}`).remove();
 
@@ -148,7 +148,7 @@ function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode
 
         row.append(
           $('<span>').css({ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }).text(item.name),
-          $('<span>').css({ fontSize: '10px', color: '#777', flexShrink: 0, marginLeft: '6px' }).text(idx === 0 ? 'next' : `+${idx}`)
+          $('<span>').css({ fontSize: '10px', color: '#777', flexShrink: 0, marginLeft: '6px' }).text(idx === 0 ? firstItemLabel : `+${idx}`)
         );
         row.on('mouseenter', () => row.css('background', 'rgba(255,255,255,0.12)'));
         row.on('mouseleave', () => row.css('background', 'rgba(255,255,255,0.06)'));
@@ -402,7 +402,8 @@ export function spawnPreset(id) {
     showImage: !behavior?.compact,
     contentMode: behavior?.listMode ? "list" : null,
     initialListItems: behavior?.getInitialListItems ? behavior.getInitialListItems() : [],
-    onRemoveListItem: behavior?.onRemoveListItem ? item => behavior.onRemoveListItem(id, item) : null
+    onRemoveListItem: behavior?.onRemoveListItem ? item => behavior.onRemoveListItem(id, item) : null,
+    firstItemLabel: behavior?.firstItemLabel ?? 'next'
   });
 
   // Records a baseline position the moment this spawns, even if the

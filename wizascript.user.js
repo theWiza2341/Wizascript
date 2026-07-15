@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.1";
+  var SUITE_VERSION = "0.1.0";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -3283,7 +3286,7 @@ Version: v${version}`;
       $(this).replaceWith(genericIcon());
     });
   }
-  function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode = false, savedLayout, showSaveButton = false, showImage = true, contentMode = null, initialListItems = [], onRemoveListItem = null }) {
+  function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode = false, savedLayout, showSaveButton = false, showImage = true, contentMode = null, initialListItems = [], onRemoveListItem = null, firstItemLabel = "next" }) {
     const elId = widgetElementId(id);
     $(`#${elId}`).remove();
     const ns = `.dt-widget-${Math.random().toString(36).slice(2)}`;
@@ -3354,7 +3357,7 @@ Version: v${version}`;
           }).attr("title", "Right-click to remove this card");
           row.append(
             $("<span>").css({ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }).text(item.name),
-            $("<span>").css({ fontSize: "10px", color: "#777", flexShrink: 0, marginLeft: "6px" }).text(idx === 0 ? "next" : `+${idx}`)
+            $("<span>").css({ fontSize: "10px", color: "#777", flexShrink: 0, marginLeft: "6px" }).text(idx === 0 ? firstItemLabel : `+${idx}`)
           );
           row.on("mouseenter", () => row.css("background", "rgba(255,255,255,0.12)"));
           row.on("mouseleave", () => row.css("background", "rgba(255,255,255,0.06)"));
@@ -3586,7 +3589,7 @@ Version: v${version}`;
     });
   }
   function spawnPreset(id) {
-    var _a, _b;
+    var _a, _b, _c;
     const definition = getDefinition(id);
     if (!definition) {
       console.warn("[DeckTracker] Unknown preset id:", id);
@@ -3612,7 +3615,8 @@ Version: v${version}`;
       showImage: !(behavior == null ? void 0 : behavior.compact),
       contentMode: (behavior == null ? void 0 : behavior.listMode) ? "list" : null,
       initialListItems: (behavior == null ? void 0 : behavior.getInitialListItems) ? behavior.getInitialListItems() : [],
-      onRemoveListItem: (behavior == null ? void 0 : behavior.onRemoveListItem) ? (item) => behavior.onRemoveListItem(id, item) : null
+      onRemoveListItem: (behavior == null ? void 0 : behavior.onRemoveListItem) ? (item) => behavior.onRemoveListItem(id, item) : null,
+      firstItemLabel: (_b = behavior == null ? void 0 : behavior.firstItemLabel) != null ? _b : "next"
     });
     const baselineRect = { left: parts.widget[0].getBoundingClientRect().left, top: parts.widget[0].getBoundingClientRect().top, width: parts.getWidth() };
     setSavedPosition(id, baselineRect);
@@ -3646,7 +3650,7 @@ Version: v${version}`;
     });
     const unsubscribe = behavior ? null : onCountChange(id, (count) => parts.countEl.text("\xD7" + count));
     liveWidgets.set(id, { ...parts, unsubscribe });
-    (_b = behavior == null ? void 0 : behavior.onMount) == null ? void 0 : _b.call(behavior, id, parts);
+    (_c = behavior == null ? void 0 : behavior.onMount) == null ? void 0 : _c.call(behavior, id, parts);
     return parts.widget;
   }
   function closeWidget(id) {
@@ -4511,8 +4515,9 @@ Version: v${version}`;
       {
         onGameEvent: handleGameEvent4,
         hudBehavior: {
-          widgetTitle: "Proc Order",
+          widgetTitle: "Zmart Procs",
           listMode: true,
+          firstItemLabel: "first",
           getInitialListItems: () => computePredictedOrder(),
           onMount: (id, parts) => {
             liveParts4 = parts;

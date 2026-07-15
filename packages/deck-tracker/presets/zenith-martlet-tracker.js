@@ -133,8 +133,9 @@ export function registerZenithMartletTracker() {
     {
       onGameEvent: handleGameEvent,
       hudBehavior: {
-        widgetTitle: "Proc Order",
+        widgetTitle: "Zmart Procs",
         listMode: true,
+        firstItemLabel: "first",
         getInitialListItems: () => computePredictedOrder(),
         onMount: (id, parts) => {
           liveParts = parts;

@@ -9,6 +9,7 @@ import { registerSaveTracker, resetForMatchStart } from "./presets/save-tracker.
 import { registerCurveTracker } from "./presets/curve-tracker.js";
 import { registerCowTracker, resetCowTrackerForMatchStart } from "./presets/cow-tracker.js";
 import { registerZenithMartletTracker } from "./presets/zenith-martlet-tracker.js";
+import { registerGasterTracker, resetGasterTrackerForMatchStart } from "./presets/gaster-tracker.js";
 import { isSpectating, getRelevantPlayerSoul } from "../core/player-context.js";
 
 // Deck Tracker only makes sense on Game/Spectate pages - matches the
@@ -43,6 +44,7 @@ export function initDeckTracker(plugin) {
   registerCurveTracker();
   registerCowTracker();
   registerZenithMartletTracker();
+  registerGasterTracker();
 
   function handleAddPreset(id) {
     spawnPreset(id);
@@ -303,6 +305,7 @@ export function initDeckTracker(plugin) {
     // join"), not an auto-load behavior gated by a toggle.
     resetForMatchStart(data?.turn ?? 0);
     resetCowTrackerForMatchStart(data?.turn ?? 0);
+    resetGasterTrackerForMatchStart(data?.turn ?? 0);
 
     // Soul-specific auto-load deliberately has NO spectate guard -
     // unlike favorited/retained, this should fire whether joining a

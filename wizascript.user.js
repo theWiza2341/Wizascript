@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.1";
+  var SUITE_VERSION = "0.1.0";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -4528,6 +4531,107 @@ Version: v${version}`;
     );
   }
 
+  // packages/deck-tracker/presets/gaster-tracker.js
+  var PRESET_ID5 = "builtin:gaster-tracker";
+  var MAX_PER_UNIQUE_EFFECT2 = 2;
+  var TRANSLATION_URL2 = "https://undercards.net/translation/en.json";
+  var liveParts5 = null;
+  var translationsCache2 = null;
+  var translationsFetchPromise2 = null;
+  var tribesPlayedThisTurn = /* @__PURE__ */ new Set();
+  var synergyProcOrder = [];
+  var synergyCounts = /* @__PURE__ */ new Map();
+  function ensureTranslationsLoaded2() {
+    if (translationsCache2) return Promise.resolve(translationsCache2);
+    if (translationsFetchPromise2) return translationsFetchPromise2;
+    translationsFetchPromise2 = fetch(TRANSLATION_URL2).then((res) => res.json()).then((json) => {
+      translationsCache2 = json;
+      return json;
+    }).catch((err) => {
+      console.warn("[DeckTracker/Gaster] Failed to load card text for Synergy lookup:", err);
+      translationsFetchPromise2 = null;
+      return null;
+    });
+    return translationsFetchPromise2;
+  }
+  function hasSynergyEffect(fixedId) {
+    if (!translationsCache2) return false;
+    const text = translationsCache2[`card-${fixedId}`];
+    return typeof text === "string" && text.includes("{{KW:SYNERGY}}");
+  }
+  function refreshDisplay4(parts) {
+    parts.setListItems(synergyProcOrder.slice());
+  }
+  function refreshLiveWidget5() {
+    if (liveParts5) refreshDisplay4(liveParts5);
+  }
+  function handleGameEvent5(event) {
+    const relevantId = getRelevantPlayerId();
+    if (relevantId === null) return;
+    if (event.action === "getTurnStart" && event.idPlayer === relevantId) {
+      tribesPlayedThisTurn = /* @__PURE__ */ new Set();
+      return;
+    }
+    if (event.action !== "getMonsterPlayed") return;
+    if (event.idPlayer !== relevantId) return;
+    let card;
+    try {
+      card = typeof event.card === "string" ? JSON.parse(event.card) : event.card;
+    } catch (e) {
+      return;
+    }
+    const tribes = Array.isArray(card.tribes) ? card.tribes : [];
+    const conditionMet = tribes.some((t) => tribesPlayedThisTurn.has(t));
+    if (conditionMet && hasSynergyEffect(card.fixedId)) {
+      const count = synergyCounts.get(card.fixedId) || 0;
+      if (count < MAX_PER_UNIQUE_EFFECT2) {
+        synergyCounts.set(card.fixedId, count + 1);
+        synergyProcOrder.push({ name: card.name });
+        refreshLiveWidget5();
+      }
+    }
+    tribes.forEach((t) => tribesPlayedThisTurn.add(t));
+  }
+  function resetGasterTrackerForMatchStart(turn) {
+    if (turn <= 1) {
+      tribesPlayedThisTurn = /* @__PURE__ */ new Set();
+      synergyProcOrder = [];
+      synergyCounts = /* @__PURE__ */ new Map();
+      refreshLiveWidget5();
+    }
+  }
+  function registerGasterTracker() {
+    ensureTranslationsLoaded2().then(() => refreshLiveWidget5());
+    registerPresetType(
+      {
+        id: PRESET_ID5,
+        name: "Gaster Tracker",
+        description: "Tracks the order Synergy effects have triggered this game, to predict Gaster's repeat order.",
+        sprite: null,
+        soul: null,
+        // card-specific, not soul-tied
+        custom: false,
+        kind: "event"
+      },
+      {
+        onGameEvent: handleGameEvent5,
+        hudBehavior: {
+          widgetTitle: "Gaster Repeats",
+          listMode: true,
+          firstItemLabel: "first",
+          getInitialListItems: () => synergyProcOrder.slice(),
+          onMount: (id, parts) => {
+            liveParts5 = parts;
+            refreshDisplay4(parts);
+          },
+          onUnmount: () => {
+            liveParts5 = null;
+          }
+        }
+      }
+    );
+  }
+
   // packages/deck-tracker/index.js
   function isGamePage() {
     const path = location.pathname.toLowerCase();
@@ -4557,6 +4661,7 @@ Version: v${version}`;
     registerCurveTracker();
     registerCowTracker();
     registerZenithMartletTracker();
+    registerGasterTracker();
     function handleAddPreset(id) {
       spawnPreset(id);
       logger.log("hud", "Spawned preset from picker:", id);
@@ -4707,9 +4812,10 @@ Version: v${version}`;
       }
     });
     plugin.events.on("connect", (data) => {
-      var _a, _b;
+      var _a, _b, _c;
       resetForMatchStart((_a = data == null ? void 0 : data.turn) != null ? _a : 0);
       resetCowTrackerForMatchStart((_b = data == null ? void 0 : data.turn) != null ? _b : 0);
+      resetGasterTrackerForMatchStart((_c = data == null ? void 0 : data.turn) != null ? _c : 0);
       if (settings.autoLoadSoulPresets.value()) {
         const soul = getRelevantPlayerSoul(data);
         if (soul) {

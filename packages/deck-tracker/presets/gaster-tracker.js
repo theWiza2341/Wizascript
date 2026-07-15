@@ -102,13 +102,24 @@ function handleGameEvent(event) {
     return;
   }
 
+  // Inferred from live testing: an instance whose creatorInfo.id
+  // equals its own fixedId was created by its OWN card's effect (e.g.
+  // "Synergy: Summon a copy of this") rather than genuinely played by
+  // the user. Without this check, a self-summoned copy's
+  // getMonsterPlayed would be evaluated for its OWN synergy trigger
+  // too, double-counting a single real trigger as two. It still
+  // physically exists on the board though, so it should still count
+  // toward enabling a LATER, different card's tribe condition - it's
+  // only excluded from being checked for ITS OWN trigger.
+  const isSelfSummoned = card.creatorInfo && card.creatorInfo.id === card.fixedId;
+
   const tribes = Array.isArray(card.tribes) ? card.tribes : [];
 
   // Checked BEFORE this card's own tribes are registered - must be a
   // genuinely earlier, different play this turn, never itself.
   const conditionMet = tribes.some(t => tribesPlayedThisTurn.has(t));
 
-  if (conditionMet && hasSynergyEffect(card.fixedId)) {
+  if (!isSelfSummoned && conditionMet && hasSynergyEffect(card.fixedId)) {
     const count = synergyCounts.get(card.fixedId) || 0;
     if (count < MAX_PER_UNIQUE_EFFECT) {
       synergyCounts.set(card.fixedId, count + 1);
@@ -152,7 +163,7 @@ export function registerGasterTracker() {
     {
       onGameEvent: handleGameEvent,
       hudBehavior: {
-        widgetTitle: "Gaster Repeats",
+        widgetTitle: "Gaster Order",
         listMode: true,
         firstItemLabel: "first",
         getInitialListItems: () => synergyProcOrder.slice(),

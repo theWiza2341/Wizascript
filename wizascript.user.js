@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.1";
+  var SUITE_VERSION = "0.1.0";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -4577,9 +4580,10 @@ Version: v${version}`;
     } catch (e) {
       return;
     }
+    const isSelfSummoned = card.creatorInfo && card.creatorInfo.id === card.fixedId;
     const tribes = Array.isArray(card.tribes) ? card.tribes : [];
     const conditionMet = tribes.some((t) => tribesPlayedThisTurn.has(t));
-    if (conditionMet && hasSynergyEffect(card.fixedId)) {
+    if (!isSelfSummoned && conditionMet && hasSynergyEffect(card.fixedId)) {
       const count = synergyCounts.get(card.fixedId) || 0;
       if (count < MAX_PER_UNIQUE_EFFECT2) {
         synergyCounts.set(card.fixedId, count + 1);
@@ -4613,7 +4617,7 @@ Version: v${version}`;
       {
         onGameEvent: handleGameEvent5,
         hudBehavior: {
-          widgetTitle: "Gaster Repeats",
+          widgetTitle: "Gaster Order",
           listMode: true,
           firstItemLabel: "first",
           getInitialListItems: () => synergyProcOrder.slice(),

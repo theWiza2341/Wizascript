@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.1";
+  var SUITE_VERSION = "0.1.0";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -3878,6 +3881,45 @@ Version: v${version}`;
     row.append(info, addBtn);
     return row;
   }
+  function openHelpDialog() {
+    const content = $("<div>").css({ fontSize: "13px", lineHeight: "1.5" });
+    function section(title, body) {
+      content.append(
+        $("<div>").css({ fontWeight: "bold", marginTop: "10px" }).text(title),
+        $("<div>").css({ color: "#ccc", marginTop: "2px" }).html(body)
+      );
+    }
+    section(
+      "Manual trackers (click counters)",
+      "Left-click: +1 &nbsp;&nbsp; Right-click: -1 &nbsp;&nbsp; Middle-click: reset to 0."
+    );
+    section(
+      "The heart (\u2665 / \u2661)",
+      "Favorites a preset - a favorited preset always auto-loads at the start of every match, in the same spot you left it."
+    );
+    section(
+      "The star (\u2605 / \u2606)",
+      "Adds the preset to your screen. Once active, the star fills in - click it again to remove it from screen. For your own custom presets specifically, double-clicking the filled star permanently deletes it (built-in presets can't be deleted this way)."
+    );
+    section(
+      "Creating your own preset",
+      'Use "Custom Tracker" below the list to build one - search for a card sprite (optional), name it, and create it. That gives you a plain counter on screen; click its own star to "Save as Preset," adding it to this list permanently.'
+    );
+    section(
+      "Soul-specific trackers",
+      "SAVE, Curve, and Change of Winds trackers update automatically from what happens in your match. Some also support a manual click for self-correction - e.g. left-clicking SAVE Tracker cycles it forward, and right-clicking an entry in Change of Winds Tracker removes just that card."
+    );
+    section(
+      "Position &amp; size",
+      "Drag a tracker by its body to move it, or its bottom-right corner to resize it - it'll remember exactly where you left it until you close it."
+    );
+    BootstrapDialog.show({
+      title: "Deck Tracker Help",
+      message: content,
+      cssClass: "mono",
+      buttons: [{ label: "Got it", cssClass: "btn-primary", action: (dialog) => dialog.close() }]
+    });
+  }
   function openPresetPicker({ onAddPreset, onCreateAdHoc, onCloseWidget, onDeletePreset }) {
     const wrapper = $("<div>").css({ minWidth: "360px" });
     const searchInput = $('<input type="text" placeholder="Search presets...">').addClass("form-control").css({
@@ -3908,7 +3950,14 @@ Version: v${version}`;
       message: wrapper,
       cssClass: "mono",
       onshown: () => searchInput.trigger("focus"),
-      buttons: [{ label: "Close", cssClass: "btn-primary", action: (dialog) => dialog.close() }]
+      buttons: [
+        // Deliberately does NOT close dialogRef - unlike the Custom
+        // Tracker row above, help should stack on top and leave the
+        // picker open underneath, since the user likely wants to keep
+        // referring back to it while reading.
+        { label: "Help", cssClass: "btn-default", action: () => openHelpDialog() },
+        { label: "Close", cssClass: "btn-primary", action: (dialog) => dialog.close() }
+      ]
     });
     return dialogRef;
   }

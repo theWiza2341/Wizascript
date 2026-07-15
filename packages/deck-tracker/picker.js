@@ -159,6 +159,43 @@ function buildCustomRow(onCreateAdHoc) {
   return row;
 }
 
+function openHelpDialog() {
+  const content = $('<div>').css({ fontSize: '13px', lineHeight: '1.5' });
+
+  function section(title, body) {
+    content.append(
+      $('<div>').css({ fontWeight: 'bold', marginTop: '10px' }).text(title),
+      $('<div>').css({ color: '#ccc', marginTop: '2px' }).html(body)
+    );
+  }
+
+  section('Manual trackers (click counters)',
+    'Left-click: +1 &nbsp;&nbsp; Right-click: -1 &nbsp;&nbsp; Middle-click: reset to 0.'
+  );
+  section('The heart (♥ / ♡)',
+    'Favorites a preset - a favorited preset always auto-loads at the start of every match, in the same spot you left it.'
+  );
+  section('The star (★ / ☆)',
+    'Adds the preset to your screen. Once active, the star fills in - click it again to remove it from screen. For your own custom presets specifically, double-clicking the filled star permanently deletes it (built-in presets can\'t be deleted this way).'
+  );
+  section('Creating your own preset',
+    'Use "Custom Tracker" below the list to build one - search for a card sprite (optional), name it, and create it. That gives you a plain counter on screen; click its own star to "Save as Preset," adding it to this list permanently.'
+  );
+  section('Soul-specific trackers',
+    'SAVE, Curve, and Change of Winds trackers update automatically from what happens in your match. Some also support a manual click for self-correction - e.g. left-clicking SAVE Tracker cycles it forward, and right-clicking an entry in Change of Winds Tracker removes just that card.'
+  );
+  section('Position &amp; size',
+    'Drag a tracker by its body to move it, or its bottom-right corner to resize it - it\'ll remember exactly where you left it until you close it.'
+  );
+
+  BootstrapDialog.show({
+    title: 'Deck Tracker Help',
+    message: content,
+    cssClass: 'mono',
+    buttons: [{ label: 'Got it', cssClass: 'btn-primary', action: dialog => dialog.close() }]
+  });
+}
+
 export function openPresetPicker({ onAddPreset, onCreateAdHoc, onCloseWidget, onDeletePreset }) {
   const wrapper = $('<div>').css({ minWidth: '360px' });
   const searchInput = $('<input type="text" placeholder="Search presets...">').addClass('form-control').css({
@@ -183,7 +220,14 @@ export function openPresetPicker({ onAddPreset, onCreateAdHoc, onCloseWidget, on
     message: wrapper,
     cssClass: 'mono',
     onshown: () => searchInput.trigger('focus'),
-    buttons: [{ label: 'Close', cssClass: 'btn-primary', action: dialog => dialog.close() }]
+    buttons: [
+      // Deliberately does NOT close dialogRef - unlike the Custom
+      // Tracker row above, help should stack on top and leave the
+      // picker open underneath, since the user likely wants to keep
+      // referring back to it while reading.
+      { label: 'Help', cssClass: 'btn-default', action: () => openHelpDialog() },
+      { label: 'Close', cssClass: 'btn-primary', action: dialog => dialog.close() }
+    ]
   });
   return dialogRef;
 }

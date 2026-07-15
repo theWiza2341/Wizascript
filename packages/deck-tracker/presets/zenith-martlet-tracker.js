@@ -16,6 +16,17 @@
 // costing 9 or less in your dustpile (max. 3 per unique effect)."
 // "Unique effect" is interpreted here as "same card" (matched by
 // fixedId) - not confirmed against real gameplay, worth validating.
+//
+// There's no ability-text field anywhere on card objects (confirmed by
+// live testing - allCards is purely mechanical: cost, rarity, stats,
+// no description field at all). The actual card text lives in the
+// game's own translation file, same-origin, so a plain fetch() works
+// with no GM_xmlhttpRequest/@connect grant needed. Looked up by
+// fixedId (the card TYPE's stable id, not the per-copy instance id),
+// checking for the literal substring "{{KW:DUST}}:" - the raw
+// keyword-placeholder token, not the rendered English word "Dust".
+// Checked LAST, after cost/rarity, since it's the only one requiring
+// network data.
 
 import { registerPresetType } from "../registry.js";
 import { getRelevantPlayerId } from "../../core/player-context.js";
@@ -24,8 +35,38 @@ import { getPageWindow } from "../../core/page-window.js";
 const PRESET_ID = "builtin:zenith-martlet-tracker";
 const MAX_PER_UNIQUE_EFFECT = 3;
 const MAX_COST = 9;
+const TRANSLATION_URL = "https://undercards.net/translation/en.json";
 
 let liveParts = null;
+let translationsCache = null;
+let translationsFetchPromise = null;
+
+function ensureTranslationsLoaded() {
+  if (translationsCache) return Promise.resolve(translationsCache);
+  if (translationsFetchPromise) return translationsFetchPromise;
+
+  translationsFetchPromise = fetch(TRANSLATION_URL)
+    .then(res => res.json())
+    .then(json => {
+      translationsCache = json;
+      return json;
+    })
+    .catch(err => {
+      console.warn("[DeckTracker/ZenithMartlet] Failed to load card text for Dust-effect lookup:", err);
+      translationsFetchPromise = null; // allow a retry on next call
+      return null;
+    });
+
+  return translationsFetchPromise;
+}
+
+function hasDustEffect(fixedId) {
+  // Conservative default: if we haven't loaded the text yet, assume NO
+  // Dust effect rather than risk a false inclusion in the prediction.
+  if (!translationsCache) return false;
+  const text = translationsCache[`card-${fixedId}`];
+  return typeof text === "string" && text.includes("{{KW:DUST}}:");
+}
 
 function computePredictedOrder() {
   const relevantId = getRelevantPlayerId();
@@ -42,6 +83,7 @@ function computePredictedOrder() {
   for (const card of mine) {
     if (card.rarity === "TOKEN") continue;
     if (typeof card.cost !== "number" || card.cost > MAX_COST) continue;
+    if (!hasDustEffect(card.fixedId)) continue; // checked last, per the user's request
 
     const count = seenCounts.get(card.fixedId) || 0;
     if (count >= MAX_PER_UNIQUE_EFFECT) continue; // cap reached - doesn't proc, excluded entirely
@@ -71,6 +113,13 @@ function handleGameEvent(event) {
 }
 
 export function registerZenithMartletTracker() {
+  // Kicks off immediately, regardless of whether the widget is ever
+  // spawned - by the time the user actually adds it, the text is
+  // likely already cached. Refreshes any currently-live widget once it
+  // resolves, since the very first prediction may have been computed
+  // conservatively (assuming no Dust effect) before this landed.
+  ensureTranslationsLoaded().then(() => refreshLiveWidget());
+
   registerPresetType(
     {
       id: PRESET_ID,

@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.1";
+  var SUITE_VERSION = "0.1.0";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -4444,7 +4447,28 @@ Version: v${version}`;
   var PRESET_ID4 = "builtin:zenith-martlet-tracker";
   var MAX_PER_UNIQUE_EFFECT = 3;
   var MAX_COST = 9;
+  var TRANSLATION_URL = "https://undercards.net/translation/en.json";
   var liveParts4 = null;
+  var translationsCache = null;
+  var translationsFetchPromise = null;
+  function ensureTranslationsLoaded() {
+    if (translationsCache) return Promise.resolve(translationsCache);
+    if (translationsFetchPromise) return translationsFetchPromise;
+    translationsFetchPromise = fetch(TRANSLATION_URL).then((res) => res.json()).then((json) => {
+      translationsCache = json;
+      return json;
+    }).catch((err) => {
+      console.warn("[DeckTracker/ZenithMartlet] Failed to load card text for Dust-effect lookup:", err);
+      translationsFetchPromise = null;
+      return null;
+    });
+    return translationsFetchPromise;
+  }
+  function hasDustEffect(fixedId) {
+    if (!translationsCache) return false;
+    const text = translationsCache[`card-${fixedId}`];
+    return typeof text === "string" && text.includes("{{KW:DUST}}:");
+  }
   function computePredictedOrder() {
     const relevantId = getRelevantPlayerId();
     if (relevantId === null) return [];
@@ -4456,6 +4480,7 @@ Version: v${version}`;
     for (const card of mine) {
       if (card.rarity === "TOKEN") continue;
       if (typeof card.cost !== "number" || card.cost > MAX_COST) continue;
+      if (!hasDustEffect(card.fixedId)) continue;
       const count = seenCounts.get(card.fixedId) || 0;
       if (count >= MAX_PER_UNIQUE_EFFECT) continue;
       seenCounts.set(card.fixedId, count + 1);
@@ -4474,6 +4499,7 @@ Version: v${version}`;
     refreshLiveWidget4();
   }
   function registerZenithMartletTracker() {
+    ensureTranslationsLoaded().then(() => refreshLiveWidget4());
     registerPresetType(
       {
         id: PRESET_ID4,

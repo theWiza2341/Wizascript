@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.1";
+  var SUITE_VERSION = "0.1.0";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -4440,6 +4443,69 @@ Version: v${version}`;
     );
   }
 
+  // packages/deck-tracker/presets/zenith-martlet-tracker.js
+  var PRESET_ID4 = "builtin:zenith-martlet-tracker";
+  var MAX_PER_UNIQUE_EFFECT = 3;
+  var MAX_COST = 9;
+  var liveParts4 = null;
+  function computePredictedOrder() {
+    const relevantId = getRelevantPlayerId();
+    if (relevantId === null) return [];
+    const dustpile = getPageWindow().dustpile;
+    if (!Array.isArray(dustpile)) return [];
+    const mine = dustpile.filter((c) => c.ownerId === relevantId);
+    const seenCounts = /* @__PURE__ */ new Map();
+    const predicted = [];
+    for (const card of mine) {
+      if (card.rarity === "TOKEN") continue;
+      if (typeof card.cost !== "number" || card.cost > MAX_COST) continue;
+      const count = seenCounts.get(card.fixedId) || 0;
+      if (count >= MAX_PER_UNIQUE_EFFECT) continue;
+      seenCounts.set(card.fixedId, count + 1);
+      predicted.push({ name: card.name });
+    }
+    return predicted;
+  }
+  function refreshDisplay3(parts) {
+    parts.setListItems(computePredictedOrder());
+  }
+  function refreshLiveWidget4() {
+    if (liveParts4) refreshDisplay3(liveParts4);
+  }
+  function handleGameEvent4(event) {
+    if (event.action !== "getUpdateDustpile") return;
+    refreshLiveWidget4();
+  }
+  function registerZenithMartletTracker() {
+    registerPresetType(
+      {
+        id: PRESET_ID4,
+        name: "Zenith Martlet Tracker",
+        description: "Predicts the proc order of Zenith Martlet's dust effect, before you even play it.",
+        sprite: null,
+        soul: null,
+        // not yet confirmed - won't participate in soul-based auto-load until set
+        custom: false,
+        kind: "event"
+      },
+      {
+        onGameEvent: handleGameEvent4,
+        hudBehavior: {
+          widgetTitle: "Proc Order",
+          listMode: true,
+          getInitialListItems: () => computePredictedOrder(),
+          onMount: (id, parts) => {
+            liveParts4 = parts;
+            refreshDisplay3(parts);
+          },
+          onUnmount: () => {
+            liveParts4 = null;
+          }
+        }
+      }
+    );
+  }
+
   // packages/deck-tracker/index.js
   function isGamePage() {
     const path = location.pathname.toLowerCase();
@@ -4468,6 +4534,7 @@ Version: v${version}`;
     registerSaveTracker();
     registerCurveTracker();
     registerCowTracker();
+    registerZenithMartletTracker();
     function handleAddPreset(id) {
       spawnPreset(id);
       logger.log("hud", "Spawned preset from picker:", id);

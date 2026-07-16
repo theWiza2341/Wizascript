@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.1";
+  var SUITE_VERSION = "0.1.0";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -4902,27 +4905,39 @@ Version: v${version}`;
     return document.querySelector(`#enemyArtifacts img.artifact-img[name="${DOOM_ARTIFACT_NAME}"]`);
   }
   function createDoomTurnGate() {
-    let userWentFirst = null;
-    let nextTriggerTurn = null;
+    let opponentWentFirst = null;
+    let myTurnCount = 0;
+    let opponentTurnCount = 0;
+    let nextTriggerTurn = 11;
     function reset() {
-      userWentFirst = null;
-      nextTriggerTurn = null;
+      opponentWentFirst = null;
+      myTurnCount = 0;
+      opponentTurnCount = 0;
+      nextTriggerTurn = 11;
     }
-    function checkTurnStart(event) {
-      if (event.action !== "getTurnStart") return false;
-      if (userWentFirst === null) {
-        const relevantId = getRelevantPlayerId();
-        userWentFirst = event.idPlayer === relevantId;
-        nextTriggerTurn = userWentFirst ? 12 : 11;
+    function checkEvent(event) {
+      const relevantId = getRelevantPlayerId();
+      if (relevantId === null) return false;
+      if (event.action === "getTurnStart" && opponentWentFirst === null) {
+        opponentWentFirst = event.idPlayer !== relevantId;
       }
-      const numTurn = event.numTurn;
-      if (typeof numTurn === "number" && nextTriggerTurn !== null && numTurn >= nextTriggerTurn) {
-        nextTriggerTurn += 12;
-        return true;
+      if (opponentWentFirst === false && event.action === "getTurnStart" && event.idPlayer === relevantId) {
+        myTurnCount++;
+        if (myTurnCount >= nextTriggerTurn) {
+          nextTriggerTurn += 12;
+          return true;
+        }
+      }
+      if (opponentWentFirst === true && event.action === "getTurnEnd" && event.idPlayer !== relevantId) {
+        opponentTurnCount++;
+        if (opponentTurnCount >= nextTriggerTurn) {
+          nextTriggerTurn += 12;
+          return true;
+        }
       }
       return false;
     }
-    return { checkTurnStart, reset };
+    return { checkEvent, reset };
   }
 
   // packages/misc/doom-reminder.js
@@ -4988,7 +5003,7 @@ Version: v${version}`;
     injectStyle();
     plugin.events.on("GameEvent", (event) => {
       if (!isEnabled()) return;
-      if (turnGate.checkTurnStart(event)) {
+      if (turnGate.checkEvent(event)) {
         if (findEnemyDoomElement()) {
           sendFakeDoomPing();
         }
@@ -5155,7 +5170,7 @@ Version: v${version}`;
   function registerDoomOverlay(plugin, isEnabled, getVolume) {
     plugin.events.on("GameEvent", (event) => {
       if (!isEnabled()) return;
-      if (turnGate2.checkTurnStart(event)) {
+      if (turnGate2.checkEvent(event)) {
         showDoomOverlay(getVolume);
       }
     });
@@ -5170,6 +5185,7 @@ Version: v${version}`;
       () => settings.doomReminderMode.value() === "Evil",
       () => settings.doomOverlayVolume.value()
     );
+    window.wizascriptGetDoomVolume = () => settings.doomOverlayVolume.value();
     plugin.events.on("connect", (data) => {
       var _a, _b;
       resetDoomReminderForMatchStart((_a = data == null ? void 0 : data.turn) != null ? _a : 0);

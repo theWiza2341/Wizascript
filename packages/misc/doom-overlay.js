@@ -226,7 +226,7 @@ export function registerDoomOverlay(plugin, isEnabled, getVolume) {
   plugin.events.on("GameEvent", event => {
     if (!isEnabled()) return;
 
-    if (turnGate.checkTurnStart(event)) {
+    if (turnGate.checkEvent(event)) {
       showDoomOverlay(getVolume);
     }
   });

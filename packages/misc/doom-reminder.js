@@ -102,7 +102,7 @@ export function registerDoomReminder(plugin, isEnabled) {
   plugin.events.on("GameEvent", event => {
     if (!isEnabled()) return;
 
-    if (turnGate.checkTurnStart(event)) {
+    if (turnGate.checkEvent(event)) {
       if (findEnemyDoomElement()) {
         sendFakeDoomPing();
       }

@@ -15,45 +15,61 @@ export function findEnemyDoomElement() {
   return document.querySelector(`#enemyArtifacts img.artifact-img[name="${DOOM_ARTIFACT_NAME}"]`);
 }
 
-// Confirmed via live testing: Doom's own 12-turn cycle lines up
-// differently against the shared/global numTurn depending on turn
-// order each match. numTurn is shared per ROUND (both players'
-// getTurnStart events report the same value), so a strict modulo
-// check would double-fire; a forward-only threshold can't, since it's
-// already moved past that value the instant it fires once.
+// Confirmed via live testing: which event to watch depends on turn
+// order. If the OPPONENT (Doom's owner) goes first, we watch THEIR
+// getTurnEnd - the reminder should land once their own last playable
+// turn before Doom is over, not before it's even started. If the USER
+// goes first instead, we watch the USER's OWN getTurnStart, since in
+// that order the user's last playable turn before Doom comes at the
+// START of their own turn, while the opponent is still mid-turn.
 //
-// The actual offset depends on who goes first: if the ENEMY (Doom's
-// owner) goes first, the correct warning turns are (11 + 12n); if the
-// USER goes first instead, they're (12 + 12n). Determined from the
-// very first getTurnStart event seen each match, since that alone
-// reveals turn order for that match.
+// Counts each side's own turn occurrences directly rather than relying
+// on numTurn - numTurn is shared per ROUND (both players' getTurnStart
+// events report the same value) and getTurnEnd isn't confirmed to
+// carry numTurn at all, so counting turns as they actually happen for
+// the relevant side avoids both problems entirely.
 export function createDoomTurnGate() {
-  let userWentFirst = null;
-  let nextTriggerTurn = null;
+  let opponentWentFirst = null; // determined from the FIRST getTurnStart of the match
+  let myTurnCount = 0;
+  let opponentTurnCount = 0;
+  let nextTriggerTurn = 11;
 
   function reset() {
-    userWentFirst = null;
-    nextTriggerTurn = null;
+    opponentWentFirst = null;
+    myTurnCount = 0;
+    opponentTurnCount = 0;
+    nextTriggerTurn = 11;
   }
 
-  // Call this from a getTurnStart handler. Returns true exactly once
-  // per qualifying turn boundary - act on a true return value.
-  function checkTurnStart(event) {
-    if (event.action !== "getTurnStart") return false;
+  // Call this from a GameEvent handler for every event. Returns true
+  // exactly once per qualifying turn boundary - act on a true return
+  // value.
+  function checkEvent(event) {
+    const relevantId = getRelevantPlayerId();
+    if (relevantId === null) return false;
 
-    if (userWentFirst === null) {
-      const relevantId = getRelevantPlayerId();
-      userWentFirst = event.idPlayer === relevantId;
-      nextTriggerTurn = userWentFirst ? 12 : 11;
+    if (event.action === "getTurnStart" && opponentWentFirst === null) {
+      opponentWentFirst = event.idPlayer !== relevantId;
     }
 
-    const numTurn = event.numTurn;
-    if (typeof numTurn === "number" && nextTriggerTurn !== null && numTurn >= nextTriggerTurn) {
-      nextTriggerTurn += 12;
-      return true;
+    if (opponentWentFirst === false && event.action === "getTurnStart" && event.idPlayer === relevantId) {
+      myTurnCount++;
+      if (myTurnCount >= nextTriggerTurn) {
+        nextTriggerTurn += 12;
+        return true;
+      }
     }
+
+    if (opponentWentFirst === true && event.action === "getTurnEnd" && event.idPlayer !== relevantId) {
+      opponentTurnCount++;
+      if (opponentTurnCount >= nextTriggerTurn) {
+        nextTriggerTurn += 12;
+        return true;
+      }
+    }
+
     return false;
   }
 
-  return { checkTurnStart, reset };
+  return { checkEvent, reset };
 }

@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.0";
+  var SUITE_VERSION = "0.1.1";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,9 +2210,6 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
-    // Hanging Spider
-    "hanging-spider": "Hanging_Spider",
-    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -5173,7 +5170,6 @@ Version: v${version}`;
       () => settings.doomReminderMode.value() === "Evil",
       () => settings.doomOverlayVolume.value()
     );
-    window.wizascriptGetDoomVolume = () => settings.doomOverlayVolume.value();
     plugin.events.on("connect", (data) => {
       var _a, _b;
       resetDoomReminderForMatchStart((_a = data == null ? void 0 : data.turn) != null ? _a : 0);

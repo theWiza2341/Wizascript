@@ -7,25 +7,22 @@ export function registerMiscSettings(plugin) {
     settings,
     // A lighthearted easter egg - Doom is an artifact that procs every
     // 12 turns, and because of the long wait, players often forget
-    // it's ticking. This recreates the community meme of pinging
-    // someone "don't forget about doom" as a fake, purely client-side
-    // chat message - nothing is ever sent over the network, so nobody
-    // else ever sees it.
-    enableDoomReminder: settings.add("enableDoomReminder", {
-      name: "Enable Doom Reminder",
-      type: "boolean",
-      default: false
-    }),
-    // The "unserious" version - independent of the setting above,
-    // either or both can be enabled at once.
-    enableDoomOverlay: settings.add("enableDoomOverlay", {
-      name: "Enable Doom Reminder (Clickbait Overlay)",
-      type: "boolean",
-      default: false
+    // it's ticking. A single dropdown rather than a checkbox - lets
+    // the user decide both WHETHER this is on and HOW, in one control.
+    // "None" is the default (off); "Classic" recreates the community
+    // meme via a fake, purely client-side chat ping - nothing is ever
+    // sent over the network, so nobody else ever sees it; "Evil" is
+    // the clickbait circle+arrows+sound version. Matches the confirmed
+    // "select" pattern already used by Patch Maker's language setting.
+    doomReminderMode: settings.add("doomReminderMode", {
+      name: "Doom Reminder",
+      type: "select",
+      options: ["None", "Classic", "Evil"],
+      default: "None"
     }),
     // Defaults to 50% - confirmed via live testing that full volume on
     // the vine-boom/reaction sounds is genuinely too loud for what
-    // this feature is.
+    // this feature is. Only relevant to the "Evil" mode above.
     doomOverlayVolume: settings.add("doomOverlayVolume", {
       name: "Doom Overlay Volume",
       type: "slider",

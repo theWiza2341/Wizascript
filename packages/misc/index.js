@@ -5,8 +5,12 @@ import { registerDoomOverlay, resetDoomOverlayForMatchStart } from "./doom-overl
 export function initMisc(plugin) {
   const settings = registerMiscSettings(plugin);
 
-  registerDoomReminder(plugin, () => settings.enableDoomReminder.value());
-  registerDoomOverlay(plugin, () => settings.enableDoomOverlay.value(), () => settings.doomOverlayVolume.value());
+  registerDoomReminder(plugin, () => settings.doomReminderMode.value() === "Classic");
+  registerDoomOverlay(
+    plugin,
+    () => settings.doomReminderMode.value() === "Evil",
+    () => settings.doomOverlayVolume.value()
+  );
 
   // Own 'connect' listener, independent of Deck Tracker's - UnderScript
   // supports multiple listeners on the same event name, each firing

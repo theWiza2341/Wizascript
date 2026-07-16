@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.1";
+  var SUITE_VERSION = "0.1.0";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -4869,25 +4872,22 @@ Version: v${version}`;
       settings,
       // A lighthearted easter egg - Doom is an artifact that procs every
       // 12 turns, and because of the long wait, players often forget
-      // it's ticking. This recreates the community meme of pinging
-      // someone "don't forget about doom" as a fake, purely client-side
-      // chat message - nothing is ever sent over the network, so nobody
-      // else ever sees it.
-      enableDoomReminder: settings.add("enableDoomReminder", {
-        name: "Enable Doom Reminder",
-        type: "boolean",
-        default: false
-      }),
-      // The "unserious" version - independent of the setting above,
-      // either or both can be enabled at once.
-      enableDoomOverlay: settings.add("enableDoomOverlay", {
-        name: "Enable Doom Reminder (Clickbait Overlay)",
-        type: "boolean",
-        default: false
+      // it's ticking. A single dropdown rather than a checkbox - lets
+      // the user decide both WHETHER this is on and HOW, in one control.
+      // "None" is the default (off); "Classic" recreates the community
+      // meme via a fake, purely client-side chat ping - nothing is ever
+      // sent over the network, so nobody else ever sees it; "Evil" is
+      // the clickbait circle+arrows+sound version. Matches the confirmed
+      // "select" pattern already used by Patch Maker's language setting.
+      doomReminderMode: settings.add("doomReminderMode", {
+        name: "Doom Reminder",
+        type: "select",
+        options: ["None", "Classic", "Evil"],
+        default: "None"
       }),
       // Defaults to 50% - confirmed via live testing that full volume on
       // the vine-boom/reaction sounds is genuinely too loud for what
-      // this feature is.
+      // this feature is. Only relevant to the "Evil" mode above.
       doomOverlayVolume: settings.add("doomOverlayVolume", {
         name: "Doom Overlay Volume",
         type: "slider",
@@ -5161,8 +5161,12 @@ Version: v${version}`;
   // packages/misc/index.js
   function initMisc(plugin) {
     const settings = registerMiscSettings(plugin);
-    registerDoomReminder(plugin, () => settings.enableDoomReminder.value());
-    registerDoomOverlay(plugin, () => settings.enableDoomOverlay.value(), () => settings.doomOverlayVolume.value());
+    registerDoomReminder(plugin, () => settings.doomReminderMode.value() === "Classic");
+    registerDoomOverlay(
+      plugin,
+      () => settings.doomReminderMode.value() === "Evil",
+      () => settings.doomOverlayVolume.value()
+    );
     plugin.events.on("connect", (data) => {
       var _a, _b;
       resetDoomReminderForMatchStart((_a = data == null ? void 0 : data.turn) != null ? _a : 0);

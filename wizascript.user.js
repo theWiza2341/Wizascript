@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.1";
+  var SUITE_VERSION = "0.1.0";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -4884,6 +4887,7 @@ Version: v${version}`;
   // packages/misc/doom-reminder.js
   var DOOM_ARTIFACT_NAME = "Doom";
   var doomActive = null;
+  var nextReminderTurn = 11;
   function injectStyle() {
     if (document.getElementById("wizascript-doom-reminder-style")) return;
     const style = document.createElement("style");
@@ -4950,6 +4954,7 @@ Version: v${version}`;
   function resetDoomReminderForMatchStart(turn) {
     if (turn <= 1) {
       doomActive = null;
+      nextReminderTurn = 11;
     }
   }
   function registerDoomReminder(plugin, isEnabled) {
@@ -4959,8 +4964,9 @@ Version: v${version}`;
       checkForDoomArtifact(event);
       if (event.action === "getTurnStart" && doomActive) {
         const numTurn = event.numTurn;
-        if (typeof numTurn === "number" && numTurn >= 11 && (numTurn - 11) % 12 === 0) {
+        if (typeof numTurn === "number" && numTurn >= nextReminderTurn) {
           sendFakeDoomPing();
+          nextReminderTurn += 12;
         }
       }
     });

@@ -31,6 +31,15 @@ const DOOM_ARTIFACT_NAME = "Doom";
 // match, check... if not seen, the reminder doesn't come into play."
 let doomActive = null;
 
+// Raised by 12 every time the reminder actually fires, rather than
+// using a strict (numTurn - 11) % 12 === 0 check - confirmed via live
+// testing that numTurn is shared per ROUND, not strictly incrementing
+// per player-turn, so both players' getTurnStart events can report the
+// SAME numTurn at once. A modulo check would match both and fire
+// twice; a forward-only threshold can't, since it's already moved past
+// that value the instant the first one fires.
+let nextReminderTurn = 11;
+
 function injectStyle() {
   if (document.getElementById("wizascript-doom-reminder-style")) return;
   const style = document.createElement("style");
@@ -107,6 +116,7 @@ function sendFakeDoomPing() {
 export function resetDoomReminderForMatchStart(turn) {
   if (turn <= 1) {
     doomActive = null;
+    nextReminderTurn = 11;
   }
 }
 
@@ -120,8 +130,9 @@ export function registerDoomReminder(plugin, isEnabled) {
 
     if (event.action === "getTurnStart" && doomActive) {
       const numTurn = event.numTurn;
-      if (typeof numTurn === "number" && numTurn >= 11 && (numTurn - 11) % 12 === 0) {
+      if (typeof numTurn === "number" && numTurn >= nextReminderTurn) {
         sendFakeDoomPing();
+        nextReminderTurn += 12;
       }
     }
   });

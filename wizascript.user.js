@@ -2210,9 +2210,6 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
-    // Hanging Spider
-    "hanging-spider": "Hanging_Spider",
-    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -5187,7 +5184,6 @@ Version: v${version}`;
       () => settings.doomReminderMode.value() === "Evil",
       () => settings.doomOverlayVolume.value()
     );
-    window.wizascriptGetDoomVolume = () => settings.doomOverlayVolume.value();
     plugin.events.on("connect", (data) => {
       var _a, _b;
       resetDoomReminderForMatchStart((_a = data == null ? void 0 : data.turn) != null ? _a : 0);

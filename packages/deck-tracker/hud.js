@@ -494,6 +494,14 @@ export function spawnAdHocCustomTracker({ name, sprite, onRequestSaveAsPreset })
     id: tempId, name, sprite, initialCount: 0, savedLayout: null, showSaveButton: true
   });
 
+  // Tracked in liveWidgets from the moment it's created, not just once
+  // saved - otherwise an unsaved ad-hoc tracker is entirely invisible
+  // to closeAllWidgets()'s game-end cleanup (which only ever iterates
+  // liveWidgets), leaving it stuck on screen after the match ends
+  // while every other preset correctly disappears. No count-change
+  // subscription exists yet at this point, hence null.
+  liveWidgets.set(tempId, { ...parts, unsubscribe: null });
+
   function setLocalCount(next) {
     count = Math.max(0, next);
     parts.countEl.text('×' + count);
@@ -507,10 +515,13 @@ export function spawnAdHocCustomTracker({ name, sprite, onRequestSaveAsPreset })
     trackRetain: false // no real registry id yet - nothing meaningful to retain
   });
 
+  // Routed through the shared closeWidget rather than a separate
+  // manual removal - keeps this in sync with liveWidgets automatically
+  // (deactivate, entry cleanup, etc.) instead of maintaining two
+  // parallel close code paths that could drift apart.
   parts.closeBtn.on('click', e => {
     e.stopPropagation();
-    $(document).off(parts.ns);
-    parts.widget.remove();
+    closeWidget(tempId);
   });
 
   // Star here means "Save as Preset" ONLY - it does not favorite the
@@ -548,6 +559,11 @@ export function spawnAdHocCustomTracker({ name, sprite, onRequestSaveAsPreset })
       });
 
       const unsubscribe = onCountChange(definition.id, c => parts.countEl.text('×' + c));
+      // Drop the old temp-id entry - the same DOM node now lives under
+      // definition.id instead, and leaving the stale tempId entry
+      // behind would point closeAllWidgets/closeWidget at a widget
+      // reference that's no longer the correct identity for it.
+      liveWidgets.delete(tempId);
       liveWidgets.set(definition.id, { ...parts, unsubscribe });
 
       // Nothing left to save - remove the star entirely rather than

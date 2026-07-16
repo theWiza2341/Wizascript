@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.1";
+  var SUITE_VERSION = "0.1.0";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -3693,6 +3696,7 @@ Version: v${version}`;
       savedLayout: null,
       showSaveButton: true
     });
+    liveWidgets.set(tempId, { ...parts, unsubscribe: null });
     function setLocalCount(next) {
       count = Math.max(0, next);
       parts.countEl.text("\xD7" + count);
@@ -3707,8 +3711,7 @@ Version: v${version}`;
     });
     parts.closeBtn.on("click", (e) => {
       e.stopPropagation();
-      $(document).off(parts.ns);
-      parts.widget.remove();
+      closeWidget(tempId);
     });
     parts.star.on("click", (e) => {
       e.stopPropagation();
@@ -3730,6 +3733,7 @@ Version: v${version}`;
           trackRetain: true
         });
         const unsubscribe = onCountChange(definition.id, (c) => parts.countEl.text("\xD7" + c));
+        liveWidgets.delete(tempId);
         liveWidgets.set(definition.id, { ...parts, unsubscribe });
         parts.star.remove();
       });

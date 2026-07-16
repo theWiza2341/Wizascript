@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.1";
+  var SUITE_VERSION = "0.1.0";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -4804,13 +4807,12 @@ Version: v${version}`;
         closeAllWidgets();
       }
     });
-    plugin.events.on("GameStart", () => {
-      if (trackerButton == null ? void 0 : trackerButton.style) trackerButton.style.display = "";
+    function restoreFavoritedAndRetained() {
       if (isSpectating()) return;
       const favoritedIds = getFavoritedPresetIds();
       const spawnedFavorites = favoritedIds.filter((id) => spawnPreset(id) !== null);
       if (spawnedFavorites.length) {
-        logger.log("autoload", "Spawned favorited presets at match start.", spawnedFavorites);
+        logger.log("autoload", "Spawned favorited presets.", spawnedFavorites);
       }
       if (spawnedFavorites.length < favoritedIds.length) {
         logger.warn(
@@ -4826,12 +4828,17 @@ Version: v${version}`;
           logger.log("autoload", "Restored retained (unclosed) presets.", retainedIds);
         }
       }
+    }
+    plugin.events.on("GameStart", () => {
+      if (trackerButton == null ? void 0 : trackerButton.style) trackerButton.style.display = "";
+      restoreFavoritedAndRetained();
     });
     plugin.events.on("connect", (data) => {
       var _a, _b, _c;
       resetForMatchStart((_a = data == null ? void 0 : data.turn) != null ? _a : 0);
       resetCowTrackerForMatchStart((_b = data == null ? void 0 : data.turn) != null ? _b : 0);
       resetGasterTrackerForMatchStart((_c = data == null ? void 0 : data.turn) != null ? _c : 0);
+      restoreFavoritedAndRetained();
       if (settings.autoLoadSoulPresets.value()) {
         const soul = getRelevantPlayerSoul(data);
         if (soul) {

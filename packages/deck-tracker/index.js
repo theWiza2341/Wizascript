@@ -264,21 +264,20 @@ export function initDeckTracker(plugin) {
   // by reading its `on()` implementation. Neither favorited nor
   // retained spawning need any data from the event itself, so this
   // switch has no downside for them.
-  plugin.events.on("GameStart", () => {
-    if (trackerButton?.style) trackerButton.style.display = "";
-
-    // Favorited/retained auto-load explicitly does NOT apply while
-    // spectating, per the original design - this guard had gone
-    // missing entirely when this logic moved from 'connect' to
-    // 'GameStart' earlier, since the old guard was still sitting on
-    // the 'connect' handler where it no longer had any effect on this
-    // path.
+  // Factored out so it can run from BOTH GameStart (the reliable
+  // singleton-replay case) AND connect (which - per the discovery
+  // below - also fires on a mid-match page refresh, unlike GameStart's
+  // replay mechanism, which only survives within the same page session
+  // and is wiped out entirely by an actual reload). spawnPreset is
+  // already safely idempotent (no-ops if already open), so calling
+  // this from both events risks no duplicate widgets.
+  function restoreFavoritedAndRetained() {
     if (isSpectating()) return;
 
     const favoritedIds = getFavoritedPresetIds();
     const spawnedFavorites = favoritedIds.filter(id => spawnPreset(id) !== null);
     if (spawnedFavorites.length) {
-      logger.log("autoload", "Spawned favorited presets at match start.", spawnedFavorites);
+      logger.log("autoload", "Spawned favorited presets.", spawnedFavorites);
     }
     if (spawnedFavorites.length < favoritedIds.length) {
       logger.warn("autoload", "Some favorited presets could not be spawned (missing definition).",
@@ -292,6 +291,11 @@ export function initDeckTracker(plugin) {
         logger.log("autoload", "Restored retained (unclosed) presets.", retainedIds);
       }
     }
+  }
+
+  plugin.events.on("GameStart", () => {
+    if (trackerButton?.style) trackerButton.style.display = "";
+    restoreFavoritedAndRetained();
   });
 
   // NOTE: still on 'connect' specifically because it's the only place
@@ -306,6 +310,14 @@ export function initDeckTracker(plugin) {
     resetForMatchStart(data?.turn ?? 0);
     resetCowTrackerForMatchStart(data?.turn ?? 0);
     resetGasterTrackerForMatchStart(data?.turn ?? 0);
+
+    // Discovered via live testing: a mid-match page refresh fires
+    // 'connect' but NOT 'GameStart' (the match is reconnecting, not
+    // starting) - meaning favorited/retained presets never got a
+    // chance to restore themselves after a refresh, even though the
+    // data was correctly persisted. Running the same restoration here
+    // too closes that gap.
+    restoreFavoritedAndRetained();
 
     // Soul-specific auto-load deliberately has NO spectate guard -
     // unlike favorited/retained, this should fire whether joining a

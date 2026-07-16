@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.1";
+  var SUITE_VERSION = "0.1.0";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -4862,10 +4865,115 @@ Version: v${version}`;
     });
   }
 
+  // packages/misc/settings.js
+  function registerMiscSettings(plugin) {
+    const settings = createFeatureSettings(plugin, "misc", "Miscellaneous");
+    return {
+      settings,
+      // A lighthearted easter egg - Doom is an artifact that procs every
+      // 12 turns, and because of the long wait, players often forget
+      // it's ticking. This recreates the community meme of pinging
+      // someone "don't forget about doom" as a fake, purely client-side
+      // chat message - nothing is ever sent over the network, so nobody
+      // else ever sees it.
+      enableDoomReminder: settings.add("enableDoomReminder", {
+        name: "Enable Doom Reminder",
+        type: "boolean",
+        default: false
+      })
+    };
+  }
+
+  // packages/misc/doom-reminder.js
+  var DOOM_CYCLE_LENGTH = 12;
+  var REMINDER_AT_TURN = 11;
+  var turnsSeenThisMatch = 0;
+  function injectStyle() {
+    if (document.getElementById("wizascript-doom-reminder-style")) return;
+    const style = document.createElement("style");
+    style.id = "wizascript-doom-reminder-style";
+    style.textContent = `
+.chat-user.Wizascript {
+  color: #ffb400;
+  font-weight: bold;
+}
+`;
+    document.head.appendChild(style);
+  }
+  function getCurrentRoomId(win) {
+    const match = String(win.lastChatId || "").match(/(\d+)$/);
+    return match ? Number(match[1]) : 1;
+  }
+  function sendFakeDoomPing() {
+    const win = getPageWindow();
+    if (typeof win.appendMessage !== "function") return;
+    const username = win.selfUsername;
+    if (!username) return;
+    const idRoom = getCurrentRoomId(win);
+    const fakeMessage = {
+      id: `wizascript-doom-${Date.now()}`,
+      user: {
+        shinyAvatar: false,
+        id: 0,
+        username: "Wizascript",
+        usernameSafe: "wizascript",
+        // Astral Assault - confirmed to be a real, existing avatar from
+        // live data seen elsewhere in this project. No full avatar list
+        // is available to pick from, so reusing a confirmed-real one
+        // avoids a broken image icon.
+        avatar: { rarity: "MYTHIC", id: 0, name: "Astral Assault", image: "Astral_Assault", ucpCost: 0 },
+        profileSkin: { id: 1, name: "Base", image: "Base", ucpCost: 0 },
+        frameSkin: { id: 2, name: "Deltarune", image: "Deltarune", ucpCost: 0 },
+        division: void 0,
+        // omitted deliberately - chatGetDivisionIcon/chatNormalizeDivision both safely no-op on a falsy division, avoiding a fake rank badge
+        groups: [],
+        // empty - avoids an accidental Staff/Contributor/Recruiter icon appearing
+        mainGroup: { id: -1, name: "Wizascript", priority: 0 }
+      },
+      message: `@${username} don't forget about doom`,
+      me: false,
+      rainbow: false,
+      deleted: false,
+      idRoom,
+      timestamp: Date.now()
+    };
+    win.appendMessage(fakeMessage, idRoom, false, true);
+  }
+  function resetDoomReminderForMatchStart(turn) {
+    if (turn <= 1) {
+      turnsSeenThisMatch = 0;
+    }
+  }
+  function registerDoomReminder(plugin, isEnabled) {
+    injectStyle();
+    plugin.events.on("GameEvent", (event) => {
+      if (!isEnabled()) return;
+      const relevantId = getRelevantPlayerId();
+      if (relevantId === null) return;
+      if (event.action === "getTurnStart" && event.idPlayer === relevantId) {
+        turnsSeenThisMatch++;
+        if (turnsSeenThisMatch % DOOM_CYCLE_LENGTH === REMINDER_AT_TURN) {
+          sendFakeDoomPing();
+        }
+      }
+    });
+  }
+
+  // packages/misc/index.js
+  function initMisc(plugin) {
+    const settings = registerMiscSettings(plugin);
+    registerDoomReminder(plugin, () => settings.enableDoomReminder.value());
+    plugin.events.on("connect", (data) => {
+      var _a;
+      resetDoomReminderForMatchStart((_a = data == null ? void 0 : data.turn) != null ? _a : 0);
+    });
+  }
+
   // manifest.js
   bootstrap((plugin) => {
     initPatchMaker(plugin);
     initTrueHubBridge(plugin);
     initDeckTracker(plugin);
+    initMisc(plugin);
   });
 })();

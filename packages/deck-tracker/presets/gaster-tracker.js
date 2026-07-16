@@ -23,11 +23,14 @@
 // translation file, same lazy same-origin fetch, checking for the
 // literal "{{KW:SYNERGY}}" substring.
 //
-// Known assumption, unconfirmed: a card listing multiple tribes is
-// handled correctly (checked individually), but if an "ALL tribes"
-// card represents that as a single literal string rather than
-// enumerating every tribe, this wouldn't recognize it as matching -
-// worth testing specifically against such a card.
+// Confirmed via inspecting the game's own tribe icon element
+// (images/tribes/ALL.png, wired to showTribeCards('ALL')): "ALL" is a
+// literal tribe string the game itself uses for ally-of-every-tribe
+// cards, not an enumeration of every real tribe name. Handled via
+// ALL_TRIBE/allTribePlayedThisTurn below, in both directions - an
+// ALL-tribes card's own condition is met by ANY tribe already down,
+// and once played it satisfies every OTHER card's specific-tribe
+// condition too.
 //
 // Accumulates PERMANENTLY across the whole match (not recomputed fresh
 // like Zenith Martlet) - once triggered, a Synergy proc can't be
@@ -39,12 +42,14 @@ import { getRelevantPlayerId } from "../../core/player-context.js";
 const PRESET_ID = "builtin:gaster-tracker";
 const MAX_PER_UNIQUE_EFFECT = 2;
 const TRANSLATION_URL = "https://undercards.net/translation/en.json";
+const ALL_TRIBE = "ALL"; // literal tribe value for "ally of every tribe" cards, confirmed via the game's own tribe icon (images/tribes/ALL.png)
 
 let liveParts = null;
 let translationsCache = null;
 let translationsFetchPromise = null;
 
 let tribesPlayedThisTurn = new Set();
+let allTribePlayedThisTurn = false; // separate flag for the literal "ALL" tribe - a wildcard, not a real tribe name
 let synergyProcOrder = [];       // permanent, accumulates all game - [{name}]
 let synergyCounts = new Map();   // fixedId -> how many times triggered so far
 
@@ -83,12 +88,35 @@ function refreshLiveWidget() {
   if (liveParts) refreshDisplay(liveParts);
 }
 
+// Handles "ALL" as a wildcard in both directions:
+// - A card whose OWN tribes include "ALL" counts as satisfied if ANY
+//   tribe at all was played earlier this turn (it's an ally of
+//   whatever's down, not a literal tribe named "ALL").
+// - Regardless of a card's own tribes, if an "ALL"-tribe ally was
+//   already played earlier this turn, that alone satisfies ANY other
+//   card's condition too (an ally of every tribe is an ally of this
+//   one specifically).
+function isSynergyConditionMet(tribes) {
+  if (allTribePlayedThisTurn) return true;
+  if (tribes.includes(ALL_TRIBE)) return tribesPlayedThisTurn.size > 0;
+  return tribes.some(t => tribesPlayedThisTurn.has(t));
+}
+
+function registerTribesPlayed(tribes) {
+  if (tribes.includes(ALL_TRIBE)) {
+    allTribePlayedThisTurn = true;
+  } else {
+    tribes.forEach(t => tribesPlayedThisTurn.add(t));
+  }
+}
+
 function handleGameEvent(event) {
   const relevantId = getRelevantPlayerId();
   if (relevantId === null) return;
 
   if (event.action === "getTurnStart" && event.idPlayer === relevantId) {
     tribesPlayedThisTurn = new Set();
+    allTribePlayedThisTurn = false;
     return;
   }
 
@@ -117,7 +145,7 @@ function handleGameEvent(event) {
 
   // Checked BEFORE this card's own tribes are registered - must be a
   // genuinely earlier, different play this turn, never itself.
-  const conditionMet = tribes.some(t => tribesPlayedThisTurn.has(t));
+  const conditionMet = isSynergyConditionMet(tribes);
 
   if (!isSelfSummoned && conditionMet && hasSynergyEffect(card.fixedId)) {
     const count = synergyCounts.get(card.fixedId) || 0;
@@ -131,7 +159,7 @@ function handleGameEvent(event) {
   // Registered AFTER the check, regardless of outcome - this card can
   // still enable a LATER card of the same tribe this same turn even
   // if its own condition wasn't met.
-  tribes.forEach(t => tribesPlayedThisTurn.add(t));
+  registerTribesPlayed(tribes);
 }
 
 // Defensive reset, same pattern as SAVE/CoW Trackers - module state is
@@ -141,6 +169,7 @@ function handleGameEvent(event) {
 export function resetGasterTrackerForMatchStart(turn) {
   if (turn <= 1) {
     tribesPlayedThisTurn = new Set();
+    allTribePlayedThisTurn = false;
     synergyProcOrder = [];
     synergyCounts = new Map();
     refreshLiveWidget();

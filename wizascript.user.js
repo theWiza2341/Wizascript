@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.1";
+  var SUITE_VERSION = "0.1.0";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -4532,10 +4535,12 @@ Version: v${version}`;
   var PRESET_ID5 = "builtin:gaster-tracker";
   var MAX_PER_UNIQUE_EFFECT2 = 2;
   var TRANSLATION_URL2 = "https://undercards.net/translation/en.json";
+  var ALL_TRIBE = "ALL";
   var liveParts5 = null;
   var translationsCache2 = null;
   var translationsFetchPromise2 = null;
   var tribesPlayedThisTurn = /* @__PURE__ */ new Set();
+  var allTribePlayedThisTurn = false;
   var synergyProcOrder = [];
   var synergyCounts = /* @__PURE__ */ new Map();
   function ensureTranslationsLoaded2() {
@@ -4562,11 +4567,24 @@ Version: v${version}`;
   function refreshLiveWidget5() {
     if (liveParts5) refreshDisplay4(liveParts5);
   }
+  function isSynergyConditionMet(tribes) {
+    if (allTribePlayedThisTurn) return true;
+    if (tribes.includes(ALL_TRIBE)) return tribesPlayedThisTurn.size > 0;
+    return tribes.some((t) => tribesPlayedThisTurn.has(t));
+  }
+  function registerTribesPlayed(tribes) {
+    if (tribes.includes(ALL_TRIBE)) {
+      allTribePlayedThisTurn = true;
+    } else {
+      tribes.forEach((t) => tribesPlayedThisTurn.add(t));
+    }
+  }
   function handleGameEvent5(event) {
     const relevantId = getRelevantPlayerId();
     if (relevantId === null) return;
     if (event.action === "getTurnStart" && event.idPlayer === relevantId) {
       tribesPlayedThisTurn = /* @__PURE__ */ new Set();
+      allTribePlayedThisTurn = false;
       return;
     }
     if (event.action !== "getMonsterPlayed") return;
@@ -4579,7 +4597,7 @@ Version: v${version}`;
     }
     const isSelfSummoned = card.creatorInfo && card.creatorInfo.id === card.fixedId;
     const tribes = Array.isArray(card.tribes) ? card.tribes : [];
-    const conditionMet = tribes.some((t) => tribesPlayedThisTurn.has(t));
+    const conditionMet = isSynergyConditionMet(tribes);
     if (!isSelfSummoned && conditionMet && hasSynergyEffect(card.fixedId)) {
       const count = synergyCounts.get(card.fixedId) || 0;
       if (count < MAX_PER_UNIQUE_EFFECT2) {
@@ -4588,11 +4606,12 @@ Version: v${version}`;
         refreshLiveWidget5();
       }
     }
-    tribes.forEach((t) => tribesPlayedThisTurn.add(t));
+    registerTribesPlayed(tribes);
   }
   function resetGasterTrackerForMatchStart(turn) {
     if (turn <= 1) {
       tribesPlayedThisTurn = /* @__PURE__ */ new Set();
+      allTribePlayedThisTurn = false;
       synergyProcOrder = [];
       synergyCounts = /* @__PURE__ */ new Map();
       refreshLiveWidget5();

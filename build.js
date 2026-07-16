@@ -10,7 +10,7 @@ const HEADER = `// ==UserScript==
 // @author       TheWiza2341
 // @match        https://undercards.net/*
 // @match        https://*.undercards.net/*
-// @icon         https://i.imgur.com/qKHDfnB.png
+// @icon         https://i.imgur.com/FOIUHej.png
 // @updateURL    https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @downloadURL  https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @grant        GM_getValue

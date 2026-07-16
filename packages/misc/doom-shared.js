@@ -32,13 +32,13 @@ export function createDoomTurnGate() {
   let opponentWentFirst = null; // determined from the FIRST getTurnStart of the match
   let myTurnCount = 0;
   let opponentTurnCount = 0;
-  let nextTriggerTurn = 11;
+  let nextTriggerTurn = null; // set once we know who went first
 
   function reset() {
     opponentWentFirst = null;
     myTurnCount = 0;
     opponentTurnCount = 0;
-    nextTriggerTurn = 11;
+    nextTriggerTurn = null;
   }
 
   // Call this from a GameEvent handler for every event. Returns true
@@ -50,7 +50,13 @@ export function createDoomTurnGate() {
 
     if (event.action === "getTurnStart" && opponentWentFirst === null) {
       opponentWentFirst = event.idPlayer !== relevantId;
+      // User goes first: watched via the user's own getTurnStart,
+      // starting at 12 (12 + 12n). User goes second: watched via the
+      // opponent's getTurnEnd instead, starting at 11 (11 + 12n).
+      nextTriggerTurn = opponentWentFirst ? 11 : 12;
     }
+
+    if (nextTriggerTurn === null) return false;
 
     if (opponentWentFirst === false && event.action === "getTurnStart" && event.idPlayer === relevantId) {
       myTurnCount++;

@@ -21,7 +21,7 @@
 // media elements can be played, just not sample-analyzed, without CORS
 // headers), so no @connect grant is needed for this.
 
-const SOUND_BASE_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/miscellaneous/sounds/";
+const SOUND_BASE_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/main/packages/misc/sounds/";
 const VINE_BOOM_SOUND = "vine-boom.mp3";
 // "Bad to the Bone" deliberately excluded - copyright concern flagged
 // by the user, dropped from the pool entirely.
@@ -94,31 +94,6 @@ function injectOverlayStyle() {
 .wizascript-doom-arrow.wizascript-doom-arrow-in {
   opacity: 1;
 }
-.wizascript-doom-text {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: Impact, "Arial Black", sans-serif;
-  font-size: 52px;
-  font-weight: 900;
-  color: #fff;
-  -webkit-text-stroke: 3px #000;
-  text-shadow: 3px 3px 0 #000, -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 0 0 14px rgba(0,0,0,0.5);
-  letter-spacing: 2px;
-  text-align: center;
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.3s ease-in;
-}
-.wizascript-doom-text.wizascript-doom-text-in {
-  opacity: 1;
-}
-.wizascript-doom-text-top {
-  top: 6%;
-}
-.wizascript-doom-text-bottom {
-  bottom: 6%;
-}
 .wizascript-doom-fade-out {
   transition: opacity ${FADE_OUT_MS}ms ease-out;
   opacity: 0 !important;
@@ -164,16 +139,6 @@ function showDoomOverlay() {
   circle.style.top = (centerY - circleSize / 2) + "px";
   overlay.appendChild(circle);
 
-  const topText = document.createElement("div");
-  topText.className = "wizascript-doom-text wizascript-doom-text-top";
-  topText.textContent = "HEY!";
-  overlay.appendChild(topText);
-
-  const bottomText = document.createElement("div");
-  bottomText.className = "wizascript-doom-text wizascript-doom-text-bottom";
-  bottomText.textContent = "DON'T FORGET ABOUT DOOM!";
-  overlay.appendChild(bottomText);
-
   document.body.appendChild(overlay);
 
   const spawnPoints = getArrowSpawnPoints(window.innerWidth, window.innerHeight);
@@ -200,11 +165,6 @@ function showDoomOverlay() {
       });
     }, i * ARROW_STAGGER_MS);
   });
-
-  setTimeout(() => {
-    topText.classList.add("wizascript-doom-text-in");
-    bottomText.classList.add("wizascript-doom-text-in");
-  }, 150);
 
   const allArrowsLandedDelay = spawnPoints.length * ARROW_STAGGER_MS + REMINDER_SOUND_DELAY_MS;
   setTimeout(() => {

@@ -3,12 +3,15 @@
 // module stays focused on DOM/rendering rather than owning network
 // fetch too.
 //
-// NOTE: this URL points at bot/decks.json in THIS repo (Wizascript),
-// not the original standalone UC-True-Hub-Integrator repo - decks.json
-// now lives inside bot/ per the monorepo layout, not at repo root.
+// NOTE: points at a SEPARATE, PUBLIC "Wizascript-assets" repo, not the
+// main Wizascript repo - the main repo went private (raw.githubusercontent.com
+// only serves unauthenticated requests from public repos), so only the
+// data files themselves (this JSON, plus Doom Overlay's sound files)
+// live in a small public repo, while all actual source stays private.
+// Adjust this URL once the assets repo's real name/path is confirmed.
 
 const DECKS_URL =
-  "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/bot/decks.json";
+  "https://raw.githubusercontent.com/theWiza2341/Wizascript-assets/refs/heads/main/bot/decks.json";
 
 export function loadDecks() {
   return new Promise((resolve, reject) => {

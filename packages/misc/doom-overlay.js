@@ -29,7 +29,13 @@ import { findEnemyDoomElement, createDoomTurnGate } from "./doom-shared.js";
 
 const turnGate = createDoomTurnGate();
 
-const SOUND_BASE_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/main/packages/misc/sounds/";
+// NOTE: points at a SEPARATE, PUBLIC "Wizascript-assets" repo, not the
+// main Wizascript repo - same reasoning as decks-api.js: the main repo
+// went private, so only the data files themselves (these mp3s, plus
+// True Hub Bridge's decks.json) live in a small public repo, while all
+// actual source stays private. Adjust once the assets repo's real
+// name/path is confirmed.
+const SOUND_BASE_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript-assets/main/misc/sounds/";
 const VINE_BOOM_SOUND = "vine-boom.mp3";
 // "Bad to the Bone" deliberately excluded - copyright concern flagged
 // by the user, dropped from the pool entirely.

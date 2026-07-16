@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.1";
+  var SUITE_VERSION = "0.1.0";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -3012,9 +3015,10 @@ Version: v${version}`;
         default: false
       }),
       // When enabled, soul-tied presets (SAVE Tracker, Change of Winds,
-      // Curve Tracker, etc.) auto-spawn at match start if the player's
-      // current Soul matches - but only in matches the player is actually
-      // in, not while spectating. More granular per-preset toggles can be
+      // Curve Tracker, etc.) auto-spawn at match start if the relevant
+      // player's current Soul matches - this INCLUDES spectating,
+      // checking whichever player is actually relevant to watch, unlike
+      // favorited/retained below. More granular per-preset toggles can be
       // added later without touching this shape.
       autoLoadSoulPresets: settings.add("autoLoadSoulPresets", {
         name: "Auto-enable Soul-Specific Presets",
@@ -3026,6 +3030,16 @@ Version: v${version}`;
       // once, in the same spot, until the user explicitly closes it.
       retainUnclosedPresets: settings.add("retainUnclosedPresets", {
         name: "Retain Unclosed Presets Between Matches",
+        type: "boolean",
+        default: false
+      }),
+      // Off by default, matching the original design: auto-loading your
+      // OWN favorited/retained presets while merely spectating someone
+      // else's match felt like it shouldn't happen unless deliberately
+      // opted into. Soul-based auto-load above is unaffected by this -
+      // it already always applies to spectating regardless.
+      allowFavoritedRetainedWhileSpectating: settings.add("allowFavoritedRetainedWhileSpectating", {
+        name: "Auto-load Favorited/Retained Presets While Spectating",
         type: "boolean",
         default: false
       }),
@@ -4805,7 +4819,7 @@ Version: v${version}`;
       }
     });
     function restoreFavoritedAndRetained() {
-      if (isSpectating()) return;
+      if (isSpectating() && !settings.allowFavoritedRetainedWhileSpectating.value()) return;
       const favoritedIds = getFavoritedPresetIds();
       const spawnedFavorites = favoritedIds.filter((id) => spawnPreset(id) !== null);
       if (spawnedFavorites.length) {

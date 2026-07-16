@@ -272,7 +272,10 @@ export function initDeckTracker(plugin) {
   // already safely idempotent (no-ops if already open), so calling
   // this from both events risks no duplicate widgets.
   function restoreFavoritedAndRetained() {
-    if (isSpectating()) return;
+    // Off by default (matching the original design), but can now be
+    // opted into via the new setting - soul-based auto-load below is
+    // separate and always applies to spectating regardless.
+    if (isSpectating() && !settings.allowFavoritedRetainedWhileSpectating.value()) return;
 
     const favoritedIds = getFavoritedPresetIds();
     const spawnedFavorites = favoritedIds.filter(id => spawnPreset(id) !== null);

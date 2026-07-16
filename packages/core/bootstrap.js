@@ -14,7 +14,7 @@
 import { getPageWindow } from "./page-window.js";
 
 const SUITE_NAME = "Wizascript";
-const SUITE_VERSION = "0.1.1";
+const SUITE_VERSION = "1.1.04";
 const DOWNLOAD_URL =
   "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
 const RETRY_MS = 250;

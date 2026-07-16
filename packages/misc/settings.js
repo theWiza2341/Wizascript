@@ -15,6 +15,13 @@ export function registerMiscSettings(plugin) {
       name: "Enable Doom Reminder",
       type: "boolean",
       default: false
+    }),
+    // The "unserious" version - independent of the setting above,
+    // either or both can be enabled at once.
+    enableDoomOverlay: settings.add("enableDoomOverlay", {
+      name: "Enable Doom Reminder (Clickbait Overlay)",
+      type: "boolean",
+      default: false
     })
   };
 }

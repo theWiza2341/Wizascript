@@ -1,10 +1,12 @@
 import { registerMiscSettings } from "./settings.js";
 import { registerDoomReminder, resetDoomReminderForMatchStart } from "./doom-reminder.js";
+import { registerDoomOverlay, resetDoomOverlayForMatchStart } from "./doom-overlay.js";
 
 export function initMisc(plugin) {
   const settings = registerMiscSettings(plugin);
 
   registerDoomReminder(plugin, () => settings.enableDoomReminder.value());
+  registerDoomOverlay(plugin, () => settings.enableDoomOverlay.value());
 
   // Own 'connect' listener, independent of Deck Tracker's - UnderScript
   // supports multiple listeners on the same event name, each firing
@@ -12,5 +14,6 @@ export function initMisc(plugin) {
   // with any other package's handler.
   plugin.events.on("connect", data => {
     resetDoomReminderForMatchStart(data?.turn ?? 0);
+    resetDoomOverlayForMatchStart(data?.turn ?? 0);
   });
 }

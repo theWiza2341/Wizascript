@@ -449,7 +449,16 @@ export function spawnPreset(id) {
 // (toggleFavorite removed - favoriting no longer happens on widgets,
 // only in the picker's heart icon)
 
-export function closeWidget(id) {
+// userInitiated distinguishes an explicit × click (should wipe both
+// the saved position and retained status - "don't bring this back")
+// from system-triggered cleanup at game-end (closeAllWidgets), which
+// must NOT wipe either - otherwise every match-end would silently
+// erase retention data for anything that was open, making "Retain
+// Unclosed Presets" effectively non-functional regardless of the
+// setting's value. Only removes the on-screen widget and internal
+// bookkeeping in that case; the persisted data survives untouched so
+// it can correctly restore at the start of the next match.
+export function closeWidget(id, { userInitiated = true } = {}) {
   const entry = liveWidgets.get(id);
   if (!entry) return;
   entry.unsubscribe?.();
@@ -458,18 +467,17 @@ export function closeWidget(id) {
   deactivate(id);
   liveWidgets.delete(id);
   getHudBehavior(id)?.onUnmount?.(id);
-  // Always clears, unconditionally - closing always means "don't
-  // bring this back" AND "forget where it was," per the user's
-  // explicit spec: position only ever resets on an explicit close.
-  clearSavedPosition(id);
-  unmarkRetained(id);
+  if (userInitiated) {
+    clearSavedPosition(id);
+    unmarkRetained(id);
+  }
 }
 
 // Used on game-end - snapshot the keys first, since closeWidget mutates
 // liveWidgets as it runs and iterating a Map while deleting from it
 // directly would skip entries.
 export function closeAllWidgets() {
-  [...liveWidgets.keys()].forEach(id => closeWidget(id));
+  [...liveWidgets.keys()].forEach(id => closeWidget(id, { userInitiated: false }));
 }
 
 export function isWidgetOpen(id) {

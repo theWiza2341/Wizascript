@@ -22,6 +22,17 @@ export function registerMiscSettings(plugin) {
       name: "Enable Doom Reminder (Clickbait Overlay)",
       type: "boolean",
       default: false
+    }),
+    // Defaults to 50% - confirmed via live testing that full volume on
+    // the vine-boom/reaction sounds is genuinely too loud for what
+    // this feature is.
+    doomOverlayVolume: settings.add("doomOverlayVolume", {
+      name: "Doom Overlay Volume",
+      type: "slider",
+      default: 0.5,
+      min: 0,
+      max: 1,
+      step: 0.05
     })
   };
 }

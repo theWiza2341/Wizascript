@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.1";
+  var SUITE_VERSION = "0.1.0";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -4884,6 +4887,17 @@ Version: v${version}`;
         name: "Enable Doom Reminder (Clickbait Overlay)",
         type: "boolean",
         default: false
+      }),
+      // Defaults to 50% - confirmed via live testing that full volume on
+      // the vine-boom/reaction sounds is genuinely too loud for what
+      // this feature is.
+      doomOverlayVolume: settings.add("doomOverlayVolume", {
+        name: "Doom Overlay Volume",
+        type: "slider",
+        default: 0.5,
+        min: 0,
+        max: 1,
+        step: 0.05
       })
     };
   }
@@ -4991,11 +5005,20 @@ Version: v${version}`;
   var REMINDER_SOUND_DELAY_MS = 400;
   var TOTAL_DISPLAY_MS = 4200;
   var FADE_OUT_MS = 700;
+  var CIRCLE_SIZE_MULTIPLIER = 3.3;
+  var CIRCLE_TO_ARROW_TIP_GAP = 10;
+  var ARROW_TRAVEL_DISTANCE = 420;
+  var ARROW_HEAD_LENGTH = 30;
+  var ARROW_HEAD_WIDTH = 56;
+  var ARROW_SHAFT_LENGTH = 60;
+  var ARROW_SHAFT_THICKNESS = 18;
+  var ARROW_TOTAL_LENGTH = ARROW_SHAFT_LENGTH + ARROW_HEAD_LENGTH;
+  var ARROW_TIP_LOCAL_Y = ARROW_HEAD_WIDTH / 2;
   var nextOverlayTurn = 11;
-  function playSound(filename, volume = 1) {
+  function playSound(filename, baseVolume, getVolume) {
     try {
       const audio = new Audio(SOUND_BASE_URL + filename);
-      audio.volume = volume;
+      audio.volume = baseVolume * getVolume();
       audio.play().catch(() => {
       });
     } catch (e) {
@@ -5030,14 +5053,10 @@ Version: v${version}`;
 }
 .wizascript-doom-arrow {
   position: absolute;
-  width: 0;
-  height: 0;
   opacity: 0;
-  border-style: solid;
-  border-width: 28px 46px 28px 0;
-  border-color: transparent #ff1414 transparent transparent;
+  background: #ff1414;
   filter: drop-shadow(0 0 6px rgba(0,0,0,0.65));
-  transition: transform 0.4s cubic-bezier(.2,.8,.3,1.15), opacity 0.2s ease-out;
+  transition: left 0.4s cubic-bezier(.2,.8,.3,1.15), top 0.4s cubic-bezier(.2,.8,.3,1.15), opacity 0.2s ease-out;
 }
 .wizascript-doom-arrow.wizascript-doom-arrow-in {
   opacity: 1;
@@ -5049,18 +5068,25 @@ Version: v${version}`;
 `;
     document.head.appendChild(style);
   }
-  function getArrowSpawnPoints(w, h) {
-    return [
-      { x: -60, y: -60 },
-      { x: w + 60, y: -60 },
-      { x: -60, y: h + 60 },
-      { x: w + 60, y: h + 60 }
-    ];
+  function buildArrowElement() {
+    const upperShoulderY = (ARROW_HEAD_WIDTH - ARROW_SHAFT_THICKNESS) / 2;
+    const lowerShoulderY = (ARROW_HEAD_WIDTH + ARROW_SHAFT_THICKNESS) / 2;
+    const arrow = document.createElement("div");
+    arrow.className = "wizascript-doom-arrow";
+    arrow.style.width = ARROW_TOTAL_LENGTH + "px";
+    arrow.style.height = ARROW_HEAD_WIDTH + "px";
+    arrow.style.clipPath = `polygon(
+    ${ARROW_TOTAL_LENGTH}px ${ARROW_HEAD_WIDTH / 2}px,
+    ${ARROW_SHAFT_LENGTH}px 0px,
+    ${ARROW_SHAFT_LENGTH}px ${upperShoulderY}px,
+    0px ${upperShoulderY}px,
+    0px ${lowerShoulderY}px,
+    ${ARROW_SHAFT_LENGTH}px ${lowerShoulderY}px,
+    ${ARROW_SHAFT_LENGTH}px ${ARROW_HEAD_WIDTH}px
+  )`;
+    return arrow;
   }
-  function angleToward(fromX, fromY, toX, toY) {
-    return Math.atan2(toY - fromY, toX - fromX) * (180 / Math.PI);
-  }
-  function showDoomOverlay() {
+  function showDoomOverlay(getVolume) {
     const doomEl = findEnemyDoomElement();
     if (!doomEl) return;
     injectOverlayStyle();
@@ -5069,7 +5095,8 @@ Version: v${version}`;
     const centerY = rect.top + rect.height / 2;
     const overlay = document.createElement("div");
     overlay.className = "wizascript-doom-overlay";
-    const circleSize = Math.max(rect.width, rect.height) * 2.2;
+    const circleSize = Math.max(rect.width, rect.height) * CIRCLE_SIZE_MULTIPLIER;
+    const circleRadius = circleSize / 2;
     const circle = document.createElement("div");
     circle.className = "wizascript-doom-circle";
     circle.style.width = circleSize + "px";
@@ -5078,28 +5105,39 @@ Version: v${version}`;
     circle.style.top = centerY - circleSize / 2 + "px";
     overlay.appendChild(circle);
     document.body.appendChild(overlay);
-    const spawnPoints = getArrowSpawnPoints(window.innerWidth, window.innerHeight);
-    const arrowTravelDistance = 90;
-    spawnPoints.forEach((point, i) => {
+    const arrowCount = 1 + Math.floor(Math.random() * 4);
+    const slotSize = 360 / arrowCount;
+    for (let i = 0; i < arrowCount; i++) {
+      const angleDeg = i * slotSize + Math.random() * slotSize;
       setTimeout(() => {
-        const angle = angleToward(point.x, point.y, centerX, centerY);
-        const arrow = document.createElement("div");
-        arrow.className = "wizascript-doom-arrow";
-        arrow.style.left = point.x + "px";
-        arrow.style.top = point.y + "px";
-        arrow.style.transform = `rotate(${angle}deg) translateX(0px)`;
+        const angleRad = angleDeg * Math.PI / 180;
+        const dirX = Math.cos(angleRad);
+        const dirY = Math.sin(angleRad);
+        const endDist = circleRadius + CIRCLE_TO_ARROW_TIP_GAP;
+        const endX = centerX + endDist * dirX;
+        const endY = centerY + endDist * dirY;
+        const startDist = endDist + ARROW_TRAVEL_DISTANCE;
+        const startX = centerX + startDist * dirX;
+        const startY = centerY + startDist * dirY;
+        const pointAngle = angleDeg + 180;
+        const arrow = buildArrowElement();
+        arrow.style.transformOrigin = `${ARROW_TOTAL_LENGTH}px ${ARROW_TIP_LOCAL_Y}px`;
+        arrow.style.transform = `rotate(${pointAngle}deg)`;
+        arrow.style.left = startX - ARROW_TOTAL_LENGTH + "px";
+        arrow.style.top = startY - ARROW_TIP_LOCAL_Y + "px";
         overlay.appendChild(arrow);
-        playSound(VINE_BOOM_SOUND, 0.8);
+        playSound(VINE_BOOM_SOUND, 0.8, getVolume);
         requestAnimationFrame(() => {
           arrow.classList.add("wizascript-doom-arrow-in");
-          arrow.style.transform = `rotate(${angle}deg) translateX(${arrowTravelDistance}px)`;
+          arrow.style.left = endX - ARROW_TOTAL_LENGTH + "px";
+          arrow.style.top = endY - ARROW_TIP_LOCAL_Y + "px";
         });
       }, i * ARROW_STAGGER_MS);
-    });
-    const allArrowsLandedDelay = spawnPoints.length * ARROW_STAGGER_MS + REMINDER_SOUND_DELAY_MS;
+    }
+    const allArrowsLandedDelay = arrowCount * ARROW_STAGGER_MS + REMINDER_SOUND_DELAY_MS;
     setTimeout(() => {
       const pick = REMINDER_SOUND_POOL[Math.floor(Math.random() * REMINDER_SOUND_POOL.length)];
-      playSound(pick, 1);
+      playSound(pick, 1, getVolume);
     }, allArrowsLandedDelay);
     setTimeout(() => {
       overlay.classList.add("wizascript-doom-fade-out");
@@ -5111,14 +5149,14 @@ Version: v${version}`;
       nextOverlayTurn = 11;
     }
   }
-  function registerDoomOverlay(plugin, isEnabled) {
+  function registerDoomOverlay(plugin, isEnabled, getVolume) {
     plugin.events.on("GameEvent", (event) => {
       if (!isEnabled()) return;
       if (event.action !== "getTurnStart") return;
       const numTurn = event.numTurn;
       if (typeof numTurn === "number" && numTurn >= nextOverlayTurn) {
         nextOverlayTurn += 12;
-        showDoomOverlay();
+        showDoomOverlay(getVolume);
       }
     });
   }
@@ -5127,7 +5165,7 @@ Version: v${version}`;
   function initMisc(plugin) {
     const settings = registerMiscSettings(plugin);
     registerDoomReminder(plugin, () => settings.enableDoomReminder.value());
-    registerDoomOverlay(plugin, () => settings.enableDoomOverlay.value());
+    registerDoomOverlay(plugin, () => settings.enableDoomOverlay.value(), () => settings.doomOverlayVolume.value());
     plugin.events.on("connect", (data) => {
       var _a, _b;
       resetDoomReminderForMatchStart((_a = data == null ? void 0 : data.turn) != null ? _a : 0);

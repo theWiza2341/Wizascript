@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.1";
+  var SUITE_VERSION = "0.1.0";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -4896,10 +4899,37 @@ Version: v${version}`;
     };
   }
 
-  // packages/misc/doom-reminder.js
+  // packages/misc/doom-shared.js
   var DOOM_ARTIFACT_NAME = "Doom";
-  var doomActive = null;
-  var nextReminderTurn = 11;
+  function findEnemyDoomElement() {
+    return document.querySelector(`#enemyArtifacts img.artifact-img[name="${DOOM_ARTIFACT_NAME}"]`);
+  }
+  function createDoomTurnGate() {
+    let userWentFirst = null;
+    let nextTriggerTurn = null;
+    function reset() {
+      userWentFirst = null;
+      nextTriggerTurn = null;
+    }
+    function checkTurnStart(event) {
+      if (event.action !== "getTurnStart") return false;
+      if (userWentFirst === null) {
+        const relevantId = getRelevantPlayerId();
+        userWentFirst = event.idPlayer === relevantId;
+        nextTriggerTurn = userWentFirst ? 12 : 11;
+      }
+      const numTurn = event.numTurn;
+      if (typeof numTurn === "number" && nextTriggerTurn !== null && numTurn >= nextTriggerTurn) {
+        nextTriggerTurn += 12;
+        return true;
+      }
+      return false;
+    }
+    return { checkTurnStart, reset };
+  }
+
+  // packages/misc/doom-reminder.js
+  var turnGate = createDoomTurnGate();
   function injectStyle() {
     if (document.getElementById("wizascript-doom-reminder-style")) return;
     const style = document.createElement("style");
@@ -4911,17 +4941,6 @@ Version: v${version}`;
 }
 `;
     document.head.appendChild(style);
-  }
-  function checkForDoomArtifact(event) {
-    if (doomActive !== null) return;
-    if (event.action !== "getPlayersStats" || !event.artifacts) return;
-    try {
-      const artifactsByPlayer = JSON.parse(event.artifacts);
-      doomActive = Object.values(artifactsByPlayer).some(
-        (list) => Array.isArray(list) && list.some((a) => a.name === DOOM_ARTIFACT_NAME)
-      );
-    } catch (e) {
-    }
   }
   function getFirstOpenChatRoomId(win) {
     if (Array.isArray(win.openPublicChats) && win.openPublicChats.length > 0) {
@@ -4965,26 +4984,23 @@ Version: v${version}`;
   }
   function resetDoomReminderForMatchStart(turn) {
     if (turn <= 1) {
-      doomActive = null;
-      nextReminderTurn = 11;
+      turnGate.reset();
     }
   }
   function registerDoomReminder(plugin, isEnabled) {
     injectStyle();
     plugin.events.on("GameEvent", (event) => {
       if (!isEnabled()) return;
-      checkForDoomArtifact(event);
-      if (event.action === "getTurnStart" && doomActive) {
-        const numTurn = event.numTurn;
-        if (typeof numTurn === "number" && numTurn >= nextReminderTurn) {
+      if (turnGate.checkTurnStart(event)) {
+        if (findEnemyDoomElement()) {
           sendFakeDoomPing();
-          nextReminderTurn += 12;
         }
       }
     });
   }
 
   // packages/misc/doom-overlay.js
+  var turnGate2 = createDoomTurnGate();
   var SOUND_BASE_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/main/packages/misc/sounds/";
   var VINE_BOOM_SOUND = "vine-boom.mp3";
   var REMINDER_SOUND_POOL = [
@@ -5008,7 +5024,6 @@ Version: v${version}`;
   var ARROW_SHAFT_THICKNESS = 18;
   var ARROW_TOTAL_LENGTH = ARROW_SHAFT_LENGTH + ARROW_HEAD_LENGTH;
   var ARROW_TIP_LOCAL_Y = ARROW_HEAD_WIDTH / 2;
-  var nextOverlayTurn = 11;
   function playSound(filename, baseVolume, getVolume) {
     try {
       const audio = new Audio(SOUND_BASE_URL + filename);
@@ -5017,9 +5032,6 @@ Version: v${version}`;
       });
     } catch (e) {
     }
-  }
-  function findEnemyDoomElement() {
-    return document.querySelector('#enemyArtifacts img.artifact-img[name="Doom"]');
   }
   function injectOverlayStyle() {
     if (document.getElementById("wizascript-doom-overlay-style")) return;
@@ -5140,16 +5152,13 @@ Version: v${version}`;
   }
   function resetDoomOverlayForMatchStart(turn) {
     if (turn <= 1) {
-      nextOverlayTurn = 11;
+      turnGate2.reset();
     }
   }
   function registerDoomOverlay(plugin, isEnabled, getVolume) {
     plugin.events.on("GameEvent", (event) => {
       if (!isEnabled()) return;
-      if (event.action !== "getTurnStart") return;
-      const numTurn = event.numTurn;
-      if (typeof numTurn === "number" && numTurn >= nextOverlayTurn) {
-        nextOverlayTurn += 12;
+      if (turnGate2.checkTurnStart(event)) {
         showDoomOverlay(getVolume);
       }
     });
@@ -5164,6 +5173,7 @@ Version: v${version}`;
       () => settings.doomReminderMode.value() === "Evil",
       () => settings.doomOverlayVolume.value()
     );
+    window.wizascriptGetDoomVolume = () => settings.doomOverlayVolume.value();
     plugin.events.on("connect", (data) => {
       var _a, _b;
       resetDoomReminderForMatchStart((_a = data == null ? void 0 : data.turn) != null ? _a : 0);

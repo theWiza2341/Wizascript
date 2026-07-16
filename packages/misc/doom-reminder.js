@@ -1,12 +1,12 @@
-// Doom Reminder - a lighthearted easter egg. Doom is an artifact that
-// procs every 12 turns; because of the long wait, players often forget
-// it's ticking, hence the community meme of pinging someone "don't
-// forget about doom." This recreates that ping as a fake chat message,
-// rendered through the game's own real appendMessage(chatMessage,
-// idRoom, isPrivate, isNew) function - confirmed via reading its full
-// source that it's pure DOM rendering with no socketChat.send anywhere
-// in it, so nothing is ever sent over the network; nobody else in chat
-// ever sees this.
+// Doom Reminder (Classic) - a lighthearted easter egg. Doom is an
+// artifact that procs every 12 turns; because of the long wait,
+// players often forget it's ticking, hence the community meme of
+// pinging someone "don't forget about doom." This recreates that ping
+// as a fake chat message, rendered through the game's own real
+// appendMessage(chatMessage, idRoom, isPrivate, isNew) function -
+// confirmed via reading its full source that it's pure DOM rendering
+// with no socketChat.send anywhere in it, so nothing is ever sent
+// over the network; nobody else in chat ever sees this.
 //
 // Deliberately styled as an obviously-fake account rather than trying
 // to impersonate a real player - mainGroup.name gets used directly as
@@ -20,25 +20,17 @@
 // UnderScript's own ping audio; pinging the player's own name works
 // visually but produces no sound, and pinging BOTH at once breaks
 // audio entirely. The player's name is included as plain text instead.
+//
+// Only tracks the OPPONENT's Doom (see doom-shared.js) - originally
+// this checked either player's, but since Evil mode needs to be
+// enemy-only anyway (to avoid double-firing chaos if both players had
+// Doom), unifying both modes on the same enemy-only logic keeps the
+// turn-order math in one shared place instead of two.
 
 import { getPageWindow } from "../core/page-window.js";
+import { findEnemyDoomElement, createDoomTurnGate } from "./doom-shared.js";
 
-const DOOM_ARTIFACT_NAME = "Doom";
-
-// null = not yet determined this match; true/false once checked once
-// against the first available artifact snapshot. Deliberately checked
-// ONCE at match load, not continuously - matches "when loading the
-// match, check... if not seen, the reminder doesn't come into play."
-let doomActive = null;
-
-// Raised by 12 every time the reminder actually fires, rather than
-// using a strict (numTurn - 11) % 12 === 0 check - confirmed via live
-// testing that numTurn is shared per ROUND, not strictly incrementing
-// per player-turn, so both players' getTurnStart events can report the
-// SAME numTurn at once. A modulo check would match both and fire
-// twice; a forward-only threshold can't, since it's already moved past
-// that value the instant the first one fires.
-let nextReminderTurn = 11;
+const turnGate = createDoomTurnGate();
 
 function injectStyle() {
   if (document.getElementById("wizascript-doom-reminder-style")) return;
@@ -51,21 +43,6 @@ function injectStyle() {
 }
 `;
   document.head.appendChild(style);
-}
-
-function checkForDoomArtifact(event) {
-  if (doomActive !== null) return; // already determined this match
-  if (event.action !== "getPlayersStats" || !event.artifacts) return;
-
-  try {
-    const artifactsByPlayer = JSON.parse(event.artifacts);
-    doomActive = Object.values(artifactsByPlayer).some(
-      list => Array.isArray(list) && list.some(a => a.name === DOOM_ARTIFACT_NAME)
-    );
-  } catch (e) {
-    // Leave as null - malformed payload, just try again on the next
-    // stats event rather than assuming false permanently.
-  }
 }
 
 function getFirstOpenChatRoomId(win) {
@@ -115,8 +92,7 @@ function sendFakeDoomPing() {
 
 export function resetDoomReminderForMatchStart(turn) {
   if (turn <= 1) {
-    doomActive = null;
-    nextReminderTurn = 11;
+    turnGate.reset();
   }
 }
 
@@ -126,13 +102,9 @@ export function registerDoomReminder(plugin, isEnabled) {
   plugin.events.on("GameEvent", event => {
     if (!isEnabled()) return;
 
-    checkForDoomArtifact(event);
-
-    if (event.action === "getTurnStart" && doomActive) {
-      const numTurn = event.numTurn;
-      if (typeof numTurn === "number" && numTurn >= nextReminderTurn) {
+    if (turnGate.checkTurnStart(event)) {
+      if (findEnemyDoomElement()) {
         sendFakeDoomPing();
-        nextReminderTurn += 12;
       }
     }
   });

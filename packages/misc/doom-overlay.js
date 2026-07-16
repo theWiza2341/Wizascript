@@ -7,13 +7,9 @@
 //
 // Deliberately only watches the OPPONENT'S Doom (#enemyArtifacts) per
 // the user's own call - if both players had Doom and this fired for
-// both, it'd be visual chaos. Confirmed selector directly from live
-// DOM: every artifact icon carries a `name="..."` attribute matching
-// its real display name, so `#enemyArtifacts img.artifact-img[name="Doom"]`
-// reliably finds Doom specifically with no fuzzy matching needed. This
-// query IS the detection check too - checked fresh every time we'd
-// trigger, not just once at match load, so it's automatically correct
-// even if Doom is somehow acquired mid-match.
+// both, it'd be visual chaos. See doom-shared.js for the confirmed
+// selector and the turn-order-aware trigger gate, shared with the
+// Classic (chat-ping) mode so both stay correct together.
 //
 // Audio files are expected at a fixed GitHub raw path (same pattern as
 // bot/decks.json) - see SOUND_BASE_URL below. Simple <audio> playback
@@ -28,6 +24,10 @@
 // the TIP - not the shape's bounding box - lands within 10px of the
 // circle's edge, traveling in from well outside along its own angle
 // rather than a fixed, disconnected travel distance.
+
+import { findEnemyDoomElement, createDoomTurnGate } from "./doom-shared.js";
+
+const turnGate = createDoomTurnGate();
 
 const SOUND_BASE_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/main/packages/misc/sounds/";
 const VINE_BOOM_SOUND = "vine-boom.mp3";
@@ -60,8 +60,6 @@ const ARROW_SHAFT_THICKNESS = 18;
 const ARROW_TOTAL_LENGTH = ARROW_SHAFT_LENGTH + ARROW_HEAD_LENGTH; // tip sits at this local x
 const ARROW_TIP_LOCAL_Y = ARROW_HEAD_WIDTH / 2;
 
-let nextOverlayTurn = 11;
-
 function playSound(filename, baseVolume, getVolume) {
   try {
     const audio = new Audio(SOUND_BASE_URL + filename);
@@ -71,10 +69,6 @@ function playSound(filename, baseVolume, getVolume) {
     // than surfacing an error to the user.
     audio.play().catch(() => {});
   } catch (e) {}
-}
-
-function findEnemyDoomElement() {
-  return document.querySelector('#enemyArtifacts img.artifact-img[name="Doom"]');
 }
 
 function injectOverlayStyle() {
@@ -224,18 +218,15 @@ function showDoomOverlay(getVolume) {
 
 export function resetDoomOverlayForMatchStart(turn) {
   if (turn <= 1) {
-    nextOverlayTurn = 11;
+    turnGate.reset();
   }
 }
 
 export function registerDoomOverlay(plugin, isEnabled, getVolume) {
   plugin.events.on("GameEvent", event => {
     if (!isEnabled()) return;
-    if (event.action !== "getTurnStart") return;
 
-    const numTurn = event.numTurn;
-    if (typeof numTurn === "number" && numTurn >= nextOverlayTurn) {
-      nextOverlayTurn += 12;
+    if (turnGate.checkTurnStart(event)) {
       showDoomOverlay(getVolume);
     }
   });

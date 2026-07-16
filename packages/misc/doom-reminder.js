@@ -14,14 +14,22 @@
 // so setting it to "Wizascript" gives us a clean, unique hook to style
 // distinctly with our own injected rule, without needing to touch or
 // fight the real rendering code at all.
+//
+// The message pings "@Underscript" specifically - confirmed via live
+// testing that this is the one thing that reliably triggers
+// UnderScript's own ping audio; pinging the player's own name works
+// visually but produces no sound, and pinging BOTH at once breaks
+// audio entirely. The player's name is included as plain text instead.
 
 import { getPageWindow } from "../core/page-window.js";
-import { getRelevantPlayerId } from "../core/player-context.js";
 
-const DOOM_CYCLE_LENGTH = 12;
-const REMINDER_AT_TURN = 11; // one turn before Doom would actually proc, giving a heads-up
+const DOOM_ARTIFACT_NAME = "Doom";
 
-let turnsSeenThisMatch = 0;
+// null = not yet determined this match; true/false once checked once
+// against the first available artifact snapshot. Deliberately checked
+// ONCE at match load, not continuously - matches "when loading the
+// match, check... if not seen, the reminder doesn't come into play."
+let doomActive = null;
 
 function injectStyle() {
   if (document.getElementById("wizascript-doom-reminder-style")) return;
@@ -36,9 +44,27 @@ function injectStyle() {
   document.head.appendChild(style);
 }
 
-function getCurrentRoomId(win) {
-  // window.lastChatId is something like "chat-public-1" - appendMessage
-  // itself expects just the numeric part.
+function checkForDoomArtifact(event) {
+  if (doomActive !== null) return; // already determined this match
+  if (event.action !== "getPlayersStats" || !event.artifacts) return;
+
+  try {
+    const artifactsByPlayer = JSON.parse(event.artifacts);
+    doomActive = Object.values(artifactsByPlayer).some(
+      list => Array.isArray(list) && list.some(a => a.name === DOOM_ARTIFACT_NAME)
+    );
+  } catch (e) {
+    // Leave as null - malformed payload, just try again on the next
+    // stats event rather than assuming false permanently.
+  }
+}
+
+function getFirstOpenChatRoomId(win) {
+  if (Array.isArray(win.openPublicChats) && win.openPublicChats.length > 0) {
+    return win.openPublicChats[0];
+  }
+  // Fallback if that array is ever empty/unavailable - parse whatever
+  // chat tab is currently focused instead.
   const match = String(win.lastChatId || "").match(/(\d+)$/);
   return match ? Number(match[1]) : 1;
 }
@@ -47,10 +73,7 @@ function sendFakeDoomPing() {
   const win = getPageWindow();
   if (typeof win.appendMessage !== "function") return;
 
-  const username = win.selfUsername;
-  if (!username) return;
-
-  const idRoom = getCurrentRoomId(win);
+  const idRoom = getFirstOpenChatRoomId(win);
 
   const fakeMessage = {
     id: `wizascript-doom-${Date.now()}`,
@@ -70,7 +93,7 @@ function sendFakeDoomPing() {
       groups: [], // empty - avoids an accidental Staff/Contributor/Recruiter icon appearing
       mainGroup: { id: -1, name: "Wizascript", priority: 0 }
     },
-    message: `@${username} don't forget about doom`,
+    message: `@Underscript don't forget about doom, ${win.selfUsername || "friend"}!`,
     me: false,
     rainbow: false,
     deleted: false,
@@ -83,7 +106,7 @@ function sendFakeDoomPing() {
 
 export function resetDoomReminderForMatchStart(turn) {
   if (turn <= 1) {
-    turnsSeenThisMatch = 0;
+    doomActive = null;
   }
 }
 
@@ -93,12 +116,11 @@ export function registerDoomReminder(plugin, isEnabled) {
   plugin.events.on("GameEvent", event => {
     if (!isEnabled()) return;
 
-    const relevantId = getRelevantPlayerId();
-    if (relevantId === null) return;
+    checkForDoomArtifact(event);
 
-    if (event.action === "getTurnStart" && event.idPlayer === relevantId) {
-      turnsSeenThisMatch++;
-      if (turnsSeenThisMatch % DOOM_CYCLE_LENGTH === REMINDER_AT_TURN) {
+    if (event.action === "getTurnStart" && doomActive) {
+      const numTurn = event.numTurn;
+      if (typeof numTurn === "number" && numTurn >= 11 && (numTurn - 11) % 12 === 0) {
         sendFakeDoomPing();
       }
     }

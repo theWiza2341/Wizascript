@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "0.1.1";
+  var SUITE_VERSION = "0.1.0";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -4882,9 +4885,8 @@ Version: v${version}`;
   }
 
   // packages/misc/doom-reminder.js
-  var DOOM_CYCLE_LENGTH = 12;
-  var REMINDER_AT_TURN = 11;
-  var turnsSeenThisMatch = 0;
+  var DOOM_ARTIFACT_NAME = "Doom";
+  var doomActive = null;
   function injectStyle() {
     if (document.getElementById("wizascript-doom-reminder-style")) return;
     const style = document.createElement("style");
@@ -4897,16 +4899,28 @@ Version: v${version}`;
 `;
     document.head.appendChild(style);
   }
-  function getCurrentRoomId(win) {
+  function checkForDoomArtifact(event) {
+    if (doomActive !== null) return;
+    if (event.action !== "getPlayersStats" || !event.artifacts) return;
+    try {
+      const artifactsByPlayer = JSON.parse(event.artifacts);
+      doomActive = Object.values(artifactsByPlayer).some(
+        (list) => Array.isArray(list) && list.some((a) => a.name === DOOM_ARTIFACT_NAME)
+      );
+    } catch (e) {
+    }
+  }
+  function getFirstOpenChatRoomId(win) {
+    if (Array.isArray(win.openPublicChats) && win.openPublicChats.length > 0) {
+      return win.openPublicChats[0];
+    }
     const match = String(win.lastChatId || "").match(/(\d+)$/);
     return match ? Number(match[1]) : 1;
   }
   function sendFakeDoomPing() {
     const win = getPageWindow();
     if (typeof win.appendMessage !== "function") return;
-    const username = win.selfUsername;
-    if (!username) return;
-    const idRoom = getCurrentRoomId(win);
+    const idRoom = getFirstOpenChatRoomId(win);
     const fakeMessage = {
       id: `wizascript-doom-${Date.now()}`,
       user: {
@@ -4927,7 +4941,7 @@ Version: v${version}`;
         // empty - avoids an accidental Staff/Contributor/Recruiter icon appearing
         mainGroup: { id: -1, name: "Wizascript", priority: 0 }
       },
-      message: `@${username} don't forget about doom`,
+      message: `@Underscript don't forget about doom, ${win.selfUsername || "friend"}!`,
       me: false,
       rainbow: false,
       deleted: false,
@@ -4938,18 +4952,17 @@ Version: v${version}`;
   }
   function resetDoomReminderForMatchStart(turn) {
     if (turn <= 1) {
-      turnsSeenThisMatch = 0;
+      doomActive = null;
     }
   }
   function registerDoomReminder(plugin, isEnabled) {
     injectStyle();
     plugin.events.on("GameEvent", (event) => {
       if (!isEnabled()) return;
-      const relevantId = getRelevantPlayerId();
-      if (relevantId === null) return;
-      if (event.action === "getTurnStart" && event.idPlayer === relevantId) {
-        turnsSeenThisMatch++;
-        if (turnsSeenThisMatch % DOOM_CYCLE_LENGTH === REMINDER_AT_TURN) {
+      checkForDoomArtifact(event);
+      if (event.action === "getTurnStart" && doomActive) {
+        const numTurn = event.numTurn;
+        if (typeof numTurn === "number" && numTurn >= 11 && (numTurn - 11) % 12 === 0) {
           sendFakeDoomPing();
         }
       }

@@ -1,16 +1,11 @@
 import { createLogger } from "../core/debug-logger.js";
 import { registerDeckTrackerSettings } from "./settings.js";
-import { getFavoritedPresetIds, getAvailablePresets, dispatchGameEvent, deleteCustomPreset, setRetainEnabledGetter, getRetainedPresetIds } from "./registry.js";
+import { getFavoritedPresetIds, dispatchGameEvent, deleteCustomPreset, setRetainEnabledGetter, getRetainedPresetIds } from "./registry.js";
 import { spawnPreset, spawnAdHocCustomTracker, closeWidget, closeAllWidgets } from "./hud.js";
 import { openPresetPicker } from "./picker.js";
 import { openCustomTrackerBuilder, openSaveAsPresetPrompt } from "./presets/custom.js";
 import { registerBuiltInPresets } from "./presets/built-in.js";
-import { registerSaveTracker, resetForMatchStart } from "./presets/save-tracker.js";
-import { registerCurveTracker } from "./presets/curve-tracker.js";
-import { registerCowTracker, resetCowTrackerForMatchStart } from "./presets/cow-tracker.js";
-import { registerZenithMartletTracker } from "./presets/zenith-martlet-tracker.js";
-import { registerGasterTracker, resetGasterTrackerForMatchStart } from "./presets/gaster-tracker.js";
-import { isSpectating, getRelevantPlayerSoul } from "../core/player-context.js";
+import { isSpectating } from "../core/player-context.js";
 
 // Deck Tracker only makes sense on Game/Spectate pages - matches the
 // original standalone script's @match restriction, now enforced inside
@@ -40,11 +35,6 @@ export function initDeckTracker(plugin) {
 
   setRetainEnabledGetter(() => settings.retainUnclosedPresets.value());
   registerBuiltInPresets();
-  registerSaveTracker();
-  registerCurveTracker();
-  registerCowTracker();
-  registerZenithMartletTracker();
-  registerGasterTracker();
 
   function handleAddPreset(id) {
     spawnPreset(id);
@@ -306,36 +296,10 @@ export function initDeckTracker(plugin) {
   // risk described above. Lower stakes for now since no soul-tied
   // presets exist yet to actually depend on this firing reliably.
   plugin.events.on("connect", data => {
-    // Always runs, regardless of settings - this is just state
-    // initialization for SAVE Tracker (and any future preset that
-    // similarly needs to know "is this a fresh match or a mid-match
-    // join"), not an auto-load behavior gated by a toggle.
-    resetForMatchStart(data?.turn ?? 0);
-    resetCowTrackerForMatchStart(data?.turn ?? 0);
-    resetGasterTrackerForMatchStart(data?.turn ?? 0);
-
-    // Discovered via live testing: a mid-match page refresh fires
-    // 'connect' but NOT 'GameStart' (the match is reconnecting, not
-    // starting) - meaning favorited/retained presets never got a
-    // chance to restore themselves after a refresh, even though the
-    // data was correctly persisted. Running the same restoration here
-    // too closes that gap.
+    // Always runs, regardless of settings - a mid-match page refresh
+    // fires 'connect' but NOT 'GameStart' (the match is reconnecting,
+    // not starting), so restoration needs to happen here too, not
+    // just on GameStart.
     restoreFavoritedAndRetained();
-
-    // Soul-specific auto-load deliberately has NO spectate guard -
-    // unlike favorited/retained, this should fire whether joining a
-    // real match or spectating one, checking whichever player is
-    // actually relevant (see getRelevantPlayerSoul).
-    if (settings.autoLoadSoulPresets.value()) {
-      const soul = getRelevantPlayerSoul(data);
-      if (soul) {
-        const favoritedIds = getFavoritedPresetIds();
-        const matches = getAvailablePresets().filter(p => p.soul === soul && !favoritedIds.includes(p.id));
-        matches.forEach(p => spawnPreset(p.id));
-        if (matches.length) {
-          logger.log("autoload", `Auto-loaded soul-specific presets for ${soul}.`, matches.map(p => p.id));
-        }
-      }
-    }
   });
 }

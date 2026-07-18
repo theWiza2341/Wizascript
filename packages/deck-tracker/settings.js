@@ -17,17 +17,6 @@ export function registerDeckTrackerSettings(plugin) {
       type: "boolean",
       default: false
     }),
-    // When enabled, soul-tied presets (SAVE Tracker, Change of Winds,
-    // Curve Tracker, etc.) auto-spawn at match start if the relevant
-    // player's current Soul matches - this INCLUDES spectating,
-    // checking whichever player is actually relevant to watch, unlike
-    // favorited/retained below. More granular per-preset toggles can be
-    // added later without touching this shape.
-    autoLoadSoulPresets: settings.add("autoLoadSoulPresets", {
-      name: "Auto-enable Soul-Specific Presets",
-      type: "boolean",
-      default: false
-    }),
     // Independent from favoriting - this remembers whatever was left
     // open (favorited or not) at the end of a session and restores it
     // once, in the same spot, until the user explicitly closes it.

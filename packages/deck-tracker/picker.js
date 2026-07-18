@@ -181,9 +181,6 @@ function openHelpDialog() {
   section('Creating your own preset',
     'Use "Custom Tracker" below the list to build one - search for a card sprite (optional), name it, and create it. That gives you a plain counter on screen; click its own star to "Save as Preset," adding it to this list permanently.'
   );
-  section('Soul-specific trackers',
-    'SAVE, Curve, and Change of Winds trackers update automatically from what happens in your match. Some also support a manual click for self-correction - e.g. left-clicking SAVE Tracker cycles it forward, and right-clicking an entry in Change of Winds Tracker removes just that card.'
-  );
   section('Position &amp; size',
     'Drag a tracker by its body to move it, or its bottom-right corner to resize it - it\'ll remember exactly where you left it until you close it.'
   );

@@ -256,7 +256,7 @@ function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode
   if (star) star.on('mousedown', e => e.stopPropagation());
   closeBtn.on('mousedown', e => e.stopPropagation());
 
-  // Used by event-driven presets (SAVE Tracker) to push updates into an
+  // Used by event-driven presets to push updates into an
   // already-rendered widget in response to game events, independent of
   // registry's generic count system - that system assumes a number,
   // this is for arbitrary sprite/text changes. No-op in compact mode,
@@ -388,7 +388,7 @@ export function spawnPreset(id) {
 
   const parts = buildWidget({
     id,
-    // The picker lists presets by their real name ("SAVE Tracker"), but
+    // The picker lists presets by their real name, but
     // the on-screen widget itself can show something more directly
     // descriptive of what it's currently displaying, if the preset
     // supplies one.

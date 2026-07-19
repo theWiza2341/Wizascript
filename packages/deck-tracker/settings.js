@@ -57,12 +57,17 @@ export function registerDeckTrackerSettings(plugin) {
     // this does mean it likely shows up ABOVE the notepad setting in
     // the list rather than directly beneath it, since there's no
     // confirmed way to rename an already-registered setting after the
-    // fact. Defaults to true - the joke name is funny at first, but
-    // the option exists for when it stops being funny.
-    enableStupidNotepadName: settings.add("enableStupidNotepadName", {
-      name: "Enable Stupid Ass Name",
+    // fact.
+    // NOTE: renamed from "Enable Stupid Ass Name" to "Disable Wiza
+    // Ranting" - this FLIPS the polarity, since "Disable X" set to
+    // true should mean X is turned OFF, the opposite of the old
+    // "Enable X" meaning. Default flipped to false to match (ranting
+    // NOT disabled by default = long name shows by default, same
+    // actual starting behavior as before).
+    disableWizaRanting: settings.add("disableWizaRanting", {
+      name: "Disable Wiza Ranting",
       type: "boolean",
-      default: true
+      default: false
     }),
     // A lighthearted callback to the exact "pen and paper / notepad
     // files" defense given during the moderation discussion - a
@@ -70,9 +75,9 @@ export function registerDeckTrackerSettings(plugin) {
     // hooking, just a literal digital scratchpad the player operates
     // by hand.
     enableNotepad: settings.add("enableNotepad", {
-      name: settings.value("enableStupidNotepadName")
-        ? "Enable The Notepad They Said Was Fine I Swear Don't Send Them After Me It Was ONE Time Ok?"
-        : "Enable Notepad Overlay Option",
+      name: settings.value("disableWizaRanting")
+        ? "Enable Notepad Overlay Option"
+        : "Enable The Notepad They Said Was Fine I Swear Don't Send Them After Me It Was ONE Time Ok? Look I Read The Actual Statement Very Carefully And It Specifically Says Pen And Paper Type Tools Are Completely Fine And This Is Quite Literally Just Digital Pen And Paper, It Doesn't Calculate Anything, It Doesn't Hook Into Any Game Events, It Doesn't Even Know What Turn It Is, Please I Am Begging You Just Let Me Have This One Silly Little Drawing Feature And I Promise I Will Never Ever Ask For Anything Ever Again As Long As I Live",
       type: "boolean",
       default: false
     })

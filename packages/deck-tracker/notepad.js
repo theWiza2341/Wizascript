@@ -426,22 +426,22 @@ export function showNotepad() {
   }
 
   function useAt(x, y) {
-    if (currentTool === "erase") {
-      // Paints with the CURRENT background color rather than
-      // clearRect - restores the paper color instead of punching a
-      // transparent hole through to the page behind it.
-      const size = currentThickness * 2.2; // eraser reads chunkier than the pen at the same slider value
-      ctx.fillStyle = backgroundColor;
-      ctx.fillRect(x - size / 2, y - size / 2, size, size);
-    } else {
-      ctx.lineWidth = currentThickness;
-      ctx.lineCap = "round";
-      ctx.strokeStyle = currentPenColor;
-      ctx.beginPath();
-      ctx.moveTo(lastX ?? x, lastY ?? y);
-      ctx.lineTo(x, y);
-      ctx.stroke();
-    }
+    // Both tools now use the same connected-line stroke technique -
+    // the eraser previously stamped an isolated square at each point
+    // (fillRect), which left visible gaps between stamps on a fast
+    // drag since nothing connected consecutive points the way the
+    // pen's line does. Stroking a line for both eliminates that
+    // entirely, same as it already worked correctly for the pen.
+    const isErase = currentTool === "erase";
+    const size = isErase ? currentThickness * 2.2 : currentThickness; // eraser reads chunkier than the pen at the same slider value
+    ctx.lineWidth = size;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.strokeStyle = isErase ? backgroundColor : currentPenColor;
+    ctx.beginPath();
+    ctx.moveTo(lastX ?? x, lastY ?? y);
+    ctx.lineTo(x, y);
+    ctx.stroke();
     lastX = x;
     lastY = y;
   }

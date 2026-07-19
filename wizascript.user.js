@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.1.05
+// @version      1.1.04
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
 // @match        https://*.undercards.net/*
-// @icon         https://i.imgur.com/FOIUHej.png
+// @icon         https://i.imgur.com/qKHDfnB.png
 // @updateURL    https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @downloadURL  https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @grant        GM_getValue
@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "1.1.05";
+  var SUITE_VERSION = "1.1.04";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -3251,12 +3254,17 @@ Version: v${version}`;
   var CANVAS_WIDTH = 240;
   var CANVAS_HEIGHT = 200;
   var DEFAULT_THICKNESS = 5;
+  var DEFAULT_BACKGROUND = "#fffef8";
   var COLORS = {
     Black: "#1a1a1a",
     White: "#ffffff",
     Red: "#e53935",
+    Orange: "#fb8c00",
+    Yellow: "#f2c200",
+    Green: "#43a047",
     Blue: "#2255cc",
-    Yellow: "#f2c200"
+    Indigo: "#3f51b5",
+    Violet: "#8e24aa"
   };
   var widgetEl = null;
   var colorPopupEl = null;
@@ -3297,9 +3305,14 @@ Version: v${version}`;
 }
 .wizascript-notepad-body {
   padding: 8px;
+  display: flex;
+  gap: 6px;
+}
+.wizascript-notepad-main-column {
+  display: flex;
+  flex-direction: column;
 }
 .wizascript-notepad-canvas {
-  background: #fffef8;
   border: 1px solid #d8cbb0;
   display: block;
   cursor: crosshair;
@@ -3338,6 +3351,29 @@ Version: v${version}`;
   flex: 1;
   min-width: 60px;
 }
+.wizascript-notepad-bg-column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 2px;
+}
+.wizascript-notepad-bg-label {
+  font-size: 9px;
+  color: #6b5a42;
+  text-align: center;
+  margin-bottom: 2px;
+}
+.wizascript-notepad-bg-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.3);
+  cursor: pointer;
+}
+.wizascript-notepad-bg-swatch.active {
+  outline: 2px solid #2255cc;
+  outline-offset: 1px;
+}
 .wizascript-notepad-color-popup {
   position: fixed;
   z-index: 100002;
@@ -3346,7 +3382,8 @@ Version: v${version}`;
   border-radius: 5px;
   box-shadow: 0 3px 10px rgba(0,0,0,0.4);
   padding: 6px;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 5px;
 }
 .wizascript-notepad-color-swatch {
@@ -3359,23 +3396,15 @@ Version: v${version}`;
 `;
     document.head.appendChild(style);
   }
+  function hexToRgb(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    return { r: n >> 16 & 255, g: n >> 8 & 255, b: n & 255 };
+  }
   function saveDrawing(canvasEl) {
     try {
       GM_setValue(DRAWING_STORAGE_KEY, canvasEl.toDataURL("image/png"));
     } catch (e) {
     }
-  }
-  function loadDrawing(canvasEl, ctx) {
-    let saved;
-    try {
-      saved = GM_getValue(DRAWING_STORAGE_KEY, null);
-    } catch (e) {
-      return;
-    }
-    if (!saved) return;
-    const img = new Image();
-    img.onload = () => ctx.drawImage(img, 0, 0);
-    img.src = saved;
   }
   function downloadAsPng(canvasEl) {
     const link = document.createElement("a");
@@ -3419,7 +3448,8 @@ Version: v${version}`;
     if (widgetEl) return;
     injectStyle();
     let currentTool = "draw";
-    let currentColor = COLORS.Black;
+    let currentPenColor = COLORS.Black;
+    let backgroundColor = DEFAULT_BACKGROUND;
     let currentThickness = DEFAULT_THICKNESS;
     let drawing = false;
     let lastX = null;
@@ -3449,6 +3479,8 @@ Version: v${version}`;
     header.appendChild(headerButtons);
     const body = document.createElement("div");
     body.className = "wizascript-notepad-body";
+    const mainColumn = document.createElement("div");
+    mainColumn.className = "wizascript-notepad-main-column";
     const toolbar = document.createElement("div");
     toolbar.className = "wizascript-notepad-toolbar";
     const drawBox = document.createElement("div");
@@ -3456,7 +3488,7 @@ Version: v${version}`;
     drawBox.textContent = "Draw";
     const colorIndicator = document.createElement("span");
     colorIndicator.className = "wizascript-notepad-color-indicator";
-    colorIndicator.style.background = currentColor;
+    colorIndicator.style.background = currentPenColor;
     drawBox.appendChild(colorIndicator);
     drawBox.title = "Left-click to select. Right-click to change color.";
     const eraseBox = document.createElement("div");
@@ -3475,10 +3507,69 @@ Version: v${version}`;
     canvas.width = CANVAS_WIDTH;
     canvas.height = CANVAS_HEIGHT;
     const ctx = canvas.getContext("2d");
-    body.append(toolbar, canvas);
+    mainColumn.append(toolbar, canvas);
+    const bgColumn = document.createElement("div");
+    bgColumn.className = "wizascript-notepad-bg-column";
+    const bgLabel = document.createElement("div");
+    bgLabel.className = "wizascript-notepad-bg-label";
+    bgLabel.textContent = "Paper";
+    bgColumn.appendChild(bgLabel);
+    const bgSwatches = {};
+    Object.entries(COLORS).forEach(([name, hex]) => {
+      const swatch = document.createElement("div");
+      swatch.className = "wizascript-notepad-bg-swatch";
+      swatch.style.background = hex;
+      swatch.title = name;
+      if (hex.toLowerCase() === DEFAULT_BACKGROUND.toLowerCase()) {
+        swatch.classList.add("active");
+      }
+      swatch.addEventListener("click", () => changeBackground(hex));
+      bgSwatches[hex] = swatch;
+      bgColumn.appendChild(swatch);
+    });
+    body.append(mainColumn, bgColumn);
     widget.append(header, body);
     document.body.appendChild(widget);
-    loadDrawing(canvas, ctx);
+    function paintBackground(color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    function changeBackground(newColor) {
+      if (newColor === backgroundColor) return;
+      const oldRgb = hexToRgb(backgroundColor);
+      const newRgb = hexToRgb(newColor);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        if (data[i] === oldRgb.r && data[i + 1] === oldRgb.g && data[i + 2] === oldRgb.b) {
+          data[i] = newRgb.r;
+          data[i + 1] = newRgb.g;
+          data[i + 2] = newRgb.b;
+        }
+      }
+      ctx.putImageData(imageData, 0, 0);
+      if (bgSwatches[backgroundColor]) bgSwatches[backgroundColor].classList.remove("active");
+      backgroundColor = newColor;
+      if (bgSwatches[backgroundColor]) bgSwatches[backgroundColor].classList.add("active");
+      saveDrawing(canvas);
+    }
+    function loadDrawing() {
+      let saved;
+      try {
+        saved = GM_getValue(DRAWING_STORAGE_KEY, null);
+      } catch (e) {
+        saved = null;
+      }
+      if (!saved) {
+        paintBackground(backgroundColor);
+        return;
+      }
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0);
+      img.onerror = () => paintBackground(backgroundColor);
+      img.src = saved;
+    }
+    loadDrawing();
     bindWidgetDrag(widget, header);
     function selectTool(tool) {
       currentTool = tool;
@@ -3492,11 +3583,12 @@ Version: v${version}`;
     function useAt(x, y) {
       if (currentTool === "erase") {
         const size = currentThickness * 2.2;
-        ctx.clearRect(x - size / 2, y - size / 2, size, size);
+        ctx.fillStyle = backgroundColor;
+        ctx.fillRect(x - size / 2, y - size / 2, size, size);
       } else {
         ctx.lineWidth = currentThickness;
         ctx.lineCap = "round";
-        ctx.strokeStyle = currentColor;
+        ctx.strokeStyle = currentPenColor;
         ctx.beginPath();
         ctx.moveTo(lastX != null ? lastX : x, lastY != null ? lastY : y);
         ctx.lineTo(x, y);
@@ -3541,7 +3633,7 @@ Version: v${version}`;
         swatch.title = name;
         swatch.addEventListener("click", (ev) => {
           ev.stopPropagation();
-          currentColor = hex;
+          currentPenColor = hex;
           colorIndicator.style.background = hex;
           closeColorPopup();
         });
@@ -3558,7 +3650,7 @@ Version: v${version}`;
     });
     clearBtn.addEventListener("mousedown", (e) => e.stopPropagation());
     clearBtn.addEventListener("click", () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      paintBackground(backgroundColor);
       saveDrawing(canvas);
     });
     saveBtn.addEventListener("mousedown", (e) => e.stopPropagation());

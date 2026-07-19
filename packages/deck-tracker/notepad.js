@@ -2,10 +2,10 @@
 // "pen and paper / notepad files" defense given during the moderation
 // discussion. Deliberately the least "smart" thing in the whole suite:
 // a canvas the player draws on directly by hand, with a select-toggle
-// tool model rather than a drag-around one - pick "Draw" or "Erase"
-// once, then press-and-hold left click on the canvas itself to
-// draw/erase along the cursor's path, release to stop. No
-// calculation, no game-event hooking, no automation of any kind.
+// tool model - pick "Draw" or "Erase" once, then press-and-hold left
+// click on the canvas itself to draw/erase along the cursor's path,
+// release to stop. No calculation, no game-event hooking, no
+// automation of any kind.
 //
 // Position persists via the same always-on store every other tracker
 // uses (registry.js's getSavedPosition/setSavedPosition), reusing a
@@ -15,10 +15,15 @@
 // deliberately never auto-cleared, including on close - only the
 // user's own "Clear" button or eraser strokes ever remove anything.
 //
-// Color and brush size are both live, on-widget controls rather than
-// settings - right-click "Draw" for a 5-color palette (Black, White,
-// Red, Blue, Yellow), and a slider directly on the widget for size,
-// applying to whichever tool (draw/erase) is currently selected.
+// IMPORTANT: the background color is painted directly onto the
+// canvas's own pixel buffer, not just set via CSS - confirmed that a
+// CSS-only background would export as transparent via toDataURL(),
+// not the visible color, since canvas.toDataURL() only ever reflects
+// actual pixel data, never page styling layered behind it. This also
+// means the eraser tool paints with the CURRENT background color
+// rather than using clearRect (which would punch a transparent hole
+// straight through to the page behind it, not restore the paper
+// color).
 
 import { getSavedPosition, setSavedPosition } from "./registry.js";
 
@@ -28,13 +33,20 @@ const DRAWING_STORAGE_KEY = "wizascript.decktracker.notepadDrawing";
 const CANVAS_WIDTH = 240;
 const CANVAS_HEIGHT = 200;
 const DEFAULT_THICKNESS = 5;
+const DEFAULT_BACKGROUND = "#fffef8";
 
+// Shared between the pen palette and the background palette - ROYGBIV
+// plus Black and White, per the user's request.
 const COLORS = {
   Black: "#1a1a1a",
   White: "#ffffff",
   Red: "#e53935",
+  Orange: "#fb8c00",
+  Yellow: "#f2c200",
+  Green: "#43a047",
   Blue: "#2255cc",
-  Yellow: "#f2c200"
+  Indigo: "#3f51b5",
+  Violet: "#8e24aa"
 };
 
 let widgetEl = null;
@@ -77,9 +89,14 @@ function injectStyle() {
 }
 .wizascript-notepad-body {
   padding: 8px;
+  display: flex;
+  gap: 6px;
+}
+.wizascript-notepad-main-column {
+  display: flex;
+  flex-direction: column;
 }
 .wizascript-notepad-canvas {
-  background: #fffef8;
   border: 1px solid #d8cbb0;
   display: block;
   cursor: crosshair;
@@ -118,6 +135,29 @@ function injectStyle() {
   flex: 1;
   min-width: 60px;
 }
+.wizascript-notepad-bg-column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 2px;
+}
+.wizascript-notepad-bg-label {
+  font-size: 9px;
+  color: #6b5a42;
+  text-align: center;
+  margin-bottom: 2px;
+}
+.wizascript-notepad-bg-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.3);
+  cursor: pointer;
+}
+.wizascript-notepad-bg-swatch.active {
+  outline: 2px solid #2255cc;
+  outline-offset: 1px;
+}
 .wizascript-notepad-color-popup {
   position: fixed;
   z-index: 100002;
@@ -126,7 +166,8 @@ function injectStyle() {
   border-radius: 5px;
   box-shadow: 0 3px 10px rgba(0,0,0,0.4);
   padding: 6px;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 5px;
 }
 .wizascript-notepad-color-swatch {
@@ -140,26 +181,17 @@ function injectStyle() {
   document.head.appendChild(style);
 }
 
+function hexToRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+
 function saveDrawing(canvasEl) {
   try {
     GM_setValue(DRAWING_STORAGE_KEY, canvasEl.toDataURL("image/png"));
   } catch (e) {
     // Non-critical - worst case the drawing just doesn't persist this time.
   }
-}
-
-function loadDrawing(canvasEl, ctx) {
-  let saved;
-  try {
-    saved = GM_getValue(DRAWING_STORAGE_KEY, null);
-  } catch (e) {
-    return;
-  }
-  if (!saved) return;
-
-  const img = new Image();
-  img.onload = () => ctx.drawImage(img, 0, 0);
-  img.src = saved;
 }
 
 function downloadAsPng(canvasEl) {
@@ -212,7 +244,8 @@ export function showNotepad() {
   injectStyle();
 
   let currentTool = "draw"; // "draw" | "erase"
-  let currentColor = COLORS.Black;
+  let currentPenColor = COLORS.Black;
+  let backgroundColor = DEFAULT_BACKGROUND;
   let currentThickness = DEFAULT_THICKNESS;
   let drawing = false;
   let lastX = null;
@@ -248,6 +281,9 @@ export function showNotepad() {
   const body = document.createElement("div");
   body.className = "wizascript-notepad-body";
 
+  const mainColumn = document.createElement("div");
+  mainColumn.className = "wizascript-notepad-main-column";
+
   // ---- toolbar: draw/erase select-toggle, color indicator, size slider ----
   const toolbar = document.createElement("div");
   toolbar.className = "wizascript-notepad-toolbar";
@@ -257,7 +293,7 @@ export function showNotepad() {
   drawBox.textContent = "Draw";
   const colorIndicator = document.createElement("span");
   colorIndicator.className = "wizascript-notepad-color-indicator";
-  colorIndicator.style.background = currentColor;
+  colorIndicator.style.background = currentPenColor;
   drawBox.appendChild(colorIndicator);
   drawBox.title = "Left-click to select. Right-click to change color.";
 
@@ -282,11 +318,100 @@ export function showNotepad() {
   canvas.height = CANVAS_HEIGHT;
   const ctx = canvas.getContext("2d");
 
-  body.append(toolbar, canvas);
+  mainColumn.append(toolbar, canvas);
+
+  // ---- background color strip (right side) ----
+  const bgColumn = document.createElement("div");
+  bgColumn.className = "wizascript-notepad-bg-column";
+  const bgLabel = document.createElement("div");
+  bgLabel.className = "wizascript-notepad-bg-label";
+  bgLabel.textContent = "Paper";
+  bgColumn.appendChild(bgLabel);
+
+  const bgSwatches = {};
+  Object.entries(COLORS).forEach(([name, hex]) => {
+    const swatch = document.createElement("div");
+    swatch.className = "wizascript-notepad-bg-swatch";
+    swatch.style.background = hex;
+    swatch.title = name;
+    if (hex.toLowerCase() === DEFAULT_BACKGROUND.toLowerCase()) {
+      swatch.classList.add("active");
+    }
+    swatch.addEventListener("click", () => changeBackground(hex));
+    bgSwatches[hex] = swatch;
+    bgColumn.appendChild(swatch);
+  });
+
+  body.append(mainColumn, bgColumn);
   widget.append(header, body);
   document.body.appendChild(widget);
 
-  loadDrawing(canvas, ctx);
+  // Fills the ENTIRE canvas pixel buffer with the background color -
+  // not just a CSS property, since toDataURL() only ever reflects
+  // real pixel data.
+  function paintBackground(color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
+  // Replaces every pixel currently matching the OLD background color
+  // with the new one, leaving any actual drawing (any other color)
+  // untouched - lets you switch paper color without losing what's
+  // already been drawn. The one accepted edge case: a stroke drawn in
+  // the exact same color as the current background would be
+  // indistinguishable from background and get swapped too - but since
+  // it wasn't visible against that background anyway, this doesn't
+  // lose anything the user could actually see.
+  function changeBackground(newColor) {
+    if (newColor === backgroundColor) return;
+
+    const oldRgb = hexToRgb(backgroundColor);
+    const newRgb = hexToRgb(newColor);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i] === oldRgb.r && data[i + 1] === oldRgb.g && data[i + 2] === oldRgb.b) {
+        data[i] = newRgb.r;
+        data[i + 1] = newRgb.g;
+        data[i + 2] = newRgb.b;
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+
+    if (bgSwatches[backgroundColor]) bgSwatches[backgroundColor].classList.remove("active");
+    backgroundColor = newColor;
+    if (bgSwatches[backgroundColor]) bgSwatches[backgroundColor].classList.add("active");
+
+    saveDrawing(canvas);
+  }
+
+  // Loads the saved PNG directly if one exists - it already includes
+  // whatever background color was active last time, since the whole
+  // canvas (background + drawing) is saved as one flat image. Falls
+  // back to a fresh, plain-background fill for a genuinely first-ever
+  // use.
+  function loadDrawing() {
+    let saved;
+    try {
+      saved = GM_getValue(DRAWING_STORAGE_KEY, null);
+    } catch (e) {
+      saved = null;
+    }
+
+    if (!saved) {
+      paintBackground(backgroundColor);
+      return;
+    }
+
+    const img = new Image();
+    img.onload = () => ctx.drawImage(img, 0, 0);
+    img.onerror = () => paintBackground(backgroundColor);
+    img.src = saved;
+  }
+
+  loadDrawing();
   bindWidgetDrag(widget, header);
 
   function selectTool(tool) {
@@ -302,12 +427,16 @@ export function showNotepad() {
 
   function useAt(x, y) {
     if (currentTool === "erase") {
-      const size = currentThickness * 2.2; // eraser reads as chunkier than the pen at the same slider value
-      ctx.clearRect(x - size / 2, y - size / 2, size, size);
+      // Paints with the CURRENT background color rather than
+      // clearRect - restores the paper color instead of punching a
+      // transparent hole through to the page behind it.
+      const size = currentThickness * 2.2; // eraser reads chunkier than the pen at the same slider value
+      ctx.fillStyle = backgroundColor;
+      ctx.fillRect(x - size / 2, y - size / 2, size, size);
     } else {
       ctx.lineWidth = currentThickness;
       ctx.lineCap = "round";
-      ctx.strokeStyle = currentColor;
+      ctx.strokeStyle = currentPenColor;
       ctx.beginPath();
       ctx.moveTo(lastX ?? x, lastY ?? y);
       ctx.lineTo(x, y);
@@ -359,7 +488,7 @@ export function showNotepad() {
       swatch.title = name;
       swatch.addEventListener("click", ev => {
         ev.stopPropagation();
-        currentColor = hex;
+        currentPenColor = hex;
         colorIndicator.style.background = hex;
         closeColorPopup();
       });
@@ -380,7 +509,7 @@ export function showNotepad() {
 
   clearBtn.addEventListener("mousedown", e => e.stopPropagation());
   clearBtn.addEventListener("click", () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    paintBackground(backgroundColor);
     saveDrawing(canvas);
   });
 

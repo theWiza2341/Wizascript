@@ -1,6 +1,5 @@
 import { createLogger } from "../core/debug-logger.js";
 import { registerDeckTrackerSettings } from "./settings.js";
-import { showNotepad, hideNotepad } from "./notepad.js";
 import { getFavoritedPresetIds, dispatchGameEvent, deleteCustomPreset, setRetainEnabledGetter, getRetainedPresetIds } from "./registry.js";
 import { spawnPreset, spawnAdHocCustomTracker, closeWidget, closeAllWidgets } from "./hud.js";
 import { openPresetPicker } from "./picker.js";
@@ -36,19 +35,6 @@ export function initDeckTracker(plugin) {
 
   setRetainEnabledGetter(() => settings.retainUnclosedPresets.value());
   registerBuiltInPresets();
-
-  // The Notepad They Said Was Fine - purely manual, no picker
-  // involvement, directly controlled by its own setting. No "settings
-  // changed" event exists to react to instantly, so toggling this
-  // takes effect on the next page load/match rather than live.
-  function syncNotepadVisibility() {
-    if (settings.enableNotepad.value()) {
-      showNotepad();
-    } else {
-      hideNotepad();
-    }
-  }
-  syncNotepadVisibility();
 
   function handleAddPreset(id) {
     spawnPreset(id);
@@ -221,9 +207,7 @@ export function initDeckTracker(plugin) {
       onAddPreset: handleAddPreset,
       onCreateAdHoc: handleCreateAdHoc,
       onCloseWidget: handleCloseWidget,
-      onDeletePreset: handleDeletePreset,
-      onOpenNotepad: () => showNotepad(),
-      showNotepadOption: settings.enableNotepad.value()
+      onDeletePreset: handleDeletePreset
     });
 
     return btn;
@@ -318,6 +302,5 @@ export function initDeckTracker(plugin) {
     // not starting), so restoration needs to happen here too, not
     // just on GameStart.
     restoreFavoritedAndRetained();
-    syncNotepadVisibility();
   });
 }

@@ -58,17 +58,27 @@ export function registerDeckTrackerSettings(plugin) {
   // hooking, just a literal digital scratchpad the player operates by
   // hand.
   //
-  // Registered with a placeholder name first, so it appears ABOVE
-  // "Disable Wiza Ranting" below (matching the joke's intended order,
-  // where the setup line comes before the setting that turns it off) -
-  // the real name is set via direct property mutation right after
-  // BOTH settings exist, once we actually know the toggle's value.
-  // UNCONFIRMED whether the settings panel reflects a mutated .name
-  // after registration versus only ever showing what was passed to
-  // .add() - worth testing live. If it doesn't take, the fallback is
-  // just showing the placeholder name, not a crash or broken setting.
+  // Attempts to read "Disable Wiza Ranting"'s PERSISTED value directly
+  // via GM_getValue, bypassing the official settings API entirely,
+  // BEFORE registering either setting - guessing that UnderScript
+  // persists it under the same key string passed to settings.add()
+  // ("decktracker.disableWizaRanting"). If this guess is correct, we
+  // know the toggle's real value before ever calling .add() for the
+  // notepad setting, letting it register with the CORRECT name from
+  // the start while still appearing first/above (matching the joke's
+  // intended order: setup line first, the setting that turns it off
+  // second). UNCONFIRMED whether this key format guess is right - a
+  // wrong guess just means GM_getValue finds nothing and falls back to
+  // the safe default (long rant name), not a crash.
+  let rantDisabled;
+  try {
+    rantDisabled = GM_getValue("decktracker.disableWizaRanting", false);
+  } catch (e) {
+    rantDisabled = false;
+  }
+
   const enableNotepad = settings.add("enableNotepad", {
-    name: NOTEPAD_SHORT_NAME,
+    name: rantDisabled ? NOTEPAD_SHORT_NAME : NOTEPAD_RANT_NAME,
     type: "boolean",
     default: false
   });
@@ -84,15 +94,6 @@ export function registerDeckTrackerSettings(plugin) {
     type: "boolean",
     default: false
   });
-
-  // Attempt to rename the notepad setting now that both exist and we
-  // know the toggle's actual value - see the uncertainty noted above.
-  try {
-    enableNotepad.name = disableWizaRanting.value() ? NOTEPAD_SHORT_NAME : NOTEPAD_RANT_NAME;
-  } catch (e) {
-    // If .name isn't actually writable on this object, this just no-
-    // ops rather than breaking the rest of settings registration.
-  }
 
   return {
     settings,

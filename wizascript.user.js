@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.1.05
+// @version      1.1.04
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
 // @match        https://*.undercards.net/*
-// @icon         https://i.imgur.com/FOIUHej.png
+// @icon         https://i.imgur.com/qKHDfnB.png
 // @updateURL    https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @downloadURL  https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @grant        GM_getValue
@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "1.1.05";
+  var SUITE_VERSION = "1.1.04";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -3027,8 +3030,14 @@ Version: v${version}`;
       max: 1,
       step: 0.05
     });
+    let rantDisabled;
+    try {
+      rantDisabled = GM_getValue("decktracker.disableWizaRanting", false);
+    } catch (e) {
+      rantDisabled = false;
+    }
     const enableNotepad = settings.add("enableNotepad", {
-      name: NOTEPAD_SHORT_NAME,
+      name: rantDisabled ? NOTEPAD_SHORT_NAME : NOTEPAD_RANT_NAME,
       type: "boolean",
       default: false
     });
@@ -3037,10 +3046,6 @@ Version: v${version}`;
       type: "boolean",
       default: false
     });
-    try {
-      enableNotepad.name = disableWizaRanting.value() ? NOTEPAD_SHORT_NAME : NOTEPAD_RANT_NAME;
-    } catch (e) {
-    }
     return {
       settings,
       enabled,
@@ -3536,8 +3541,12 @@ Version: v${version}`;
       const newRgb = hexToRgb(newColor);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
+      const TOLERANCE = 40;
       for (let i = 0; i < data.length; i += 4) {
-        if (data[i] === oldRgb.r && data[i + 1] === oldRgb.g && data[i + 2] === oldRgb.b) {
+        const dr = Math.abs(data[i] - oldRgb.r);
+        const dg = Math.abs(data[i + 1] - oldRgb.g);
+        const db = Math.abs(data[i + 2] - oldRgb.b);
+        if (dr <= TOLERANCE && dg <= TOLERANCE && db <= TOLERANCE) {
           data[i] = newRgb.r;
           data[i + 1] = newRgb.g;
           data[i + 2] = newRgb.b;

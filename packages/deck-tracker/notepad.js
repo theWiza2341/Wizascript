@@ -370,8 +370,21 @@ export function showNotepad() {
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
 
+    // Tolerance range rather than an exact match - stroke edges
+    // (round line caps especially) are anti-aliased, meaning the
+    // pixels right at an eraser or pen stroke's boundary are a BLEND
+    // with the background, not pure background color. An exact match
+    // would skip those blended pixels entirely, leaving a faint ring
+    // of the OLD background color surviving right at every stroke
+    // edge - confirmed by the user as visible remnants after
+    // switching paper color.
+    const TOLERANCE = 40;
+
     for (let i = 0; i < data.length; i += 4) {
-      if (data[i] === oldRgb.r && data[i + 1] === oldRgb.g && data[i + 2] === oldRgb.b) {
+      const dr = Math.abs(data[i] - oldRgb.r);
+      const dg = Math.abs(data[i + 1] - oldRgb.g);
+      const db = Math.abs(data[i + 2] - oldRgb.b);
+      if (dr <= TOLERANCE && dg <= TOLERANCE && db <= TOLERANCE) {
         data[i] = newRgb.r;
         data[i + 1] = newRgb.g;
         data[i + 2] = newRgb.b;

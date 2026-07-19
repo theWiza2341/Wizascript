@@ -1,26 +1,24 @@
 // The Notepad They Said Was Fine - a lighthearted callback to the
 // "pen and paper / notepad files" defense given during the moderation
-// discussion. This is deliberately the least "smart" thing in the
-// whole suite: a canvas the player draws on by hand, with a pen and
-// eraser they physically drag around and hold over the surface. No
-// calculation, no game-event hooking, no automation of any kind -
-// exactly the kind of tool moderation explicitly said was fine.
-//
-// Interaction model, per the user's own description: the pen/eraser
-// are draggable icons, not the canvas itself. Click-and-hold one,
-// then move the cursor (treated as "the tip") over the notepad to draw
-// or erase along its path; release to stop. This deliberately differs
-// from a typical "click the canvas directly" drawing tool.
+// discussion. Deliberately the least "smart" thing in the whole suite:
+// a canvas the player draws on directly by hand, with a select-toggle
+// tool model rather than a drag-around one - pick "Draw" or "Erase"
+// once, then press-and-hold left click on the canvas itself to
+// draw/erase along the cursor's path, release to stop. No
+// calculation, no game-event hooking, no automation of any kind.
 //
 // Position persists via the same always-on store every other tracker
 // uses (registry.js's getSavedPosition/setSavedPosition), reusing a
 // fixed key rather than a registered preset id, since this isn't a
-// picker-listed preset at all - it's directly controlled by its own
-// setting. The DRAWING itself also persists (as a saved PNG data URL)
-// and is deliberately never auto-cleared, including on close - only
-// the user's own "Clear" button or eraser strokes ever remove
-// anything, since some players may want to keep doodling on the same
-// notepad across matches.
+// picker-listed preset - it's directly controlled by its own setting.
+// The DRAWING itself also persists (as a saved PNG data URL) and is
+// deliberately never auto-cleared, including on close - only the
+// user's own "Clear" button or eraser strokes ever remove anything.
+//
+// Color and brush size are both live, on-widget controls rather than
+// settings - right-click "Draw" for a 5-color palette (Black, White,
+// Red, Blue, Yellow), and a slider directly on the widget for size,
+// applying to whichever tool (draw/erase) is currently selected.
 
 import { getSavedPosition, setSavedPosition } from "./registry.js";
 
@@ -29,20 +27,18 @@ const DRAWING_STORAGE_KEY = "wizascript.decktracker.notepadDrawing";
 
 const CANVAS_WIDTH = 240;
 const CANVAS_HEIGHT = 200;
-const PEN_COLOR = "#2255cc";
+const DEFAULT_THICKNESS = 5;
 
-const THICKNESS_PX = {
-  Small: 2,
-  Medium: 5,
-  Large: 10
-};
-const ERASER_SIZE_PX = {
-  Small: 14,
-  Medium: 22,
-  Large: 32
+const COLORS = {
+  Black: "#1a1a1a",
+  White: "#ffffff",
+  Red: "#e53935",
+  Blue: "#2255cc",
+  Yellow: "#f2c200"
 };
 
 let widgetEl = null;
+let colorPopupEl = null;
 
 function injectStyle() {
   if (document.getElementById("wizascript-notepad-style")) return;
@@ -80,110 +76,68 @@ function injectStyle() {
   padding: 1px 5px;
 }
 .wizascript-notepad-body {
-  position: relative;
   padding: 8px;
 }
 .wizascript-notepad-canvas {
   background: #fffef8;
   border: 1px solid #d8cbb0;
   display: block;
+  cursor: crosshair;
 }
-.wizascript-notepad-toolbox {
-  position: absolute;
-  top: 8px;
-  right: -34px;
+.wizascript-notepad-toolbar {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
 }
-.wizascript-notepad-pen {
-  width: 10px;
-  height: 32px;
-  background: linear-gradient(#333 0 70%, #d4a017 70% 100%);
-  border-radius: 4px 4px 1px 1px;
-  cursor: grab;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+.wizascript-notepad-tool-box {
+  padding: 3px 10px;
+  border: 2px solid #8a7355;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #5a4a35;
+  background: #efe4cf;
+  cursor: pointer;
 }
-.wizascript-notepad-eraser {
-  width: 22px;
-  height: 14px;
-  background: #e08fa0;
-  border: 1px solid #b8657a;
-  border-radius: 3px;
-  cursor: grab;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+.wizascript-notepad-tool-box.active {
+  background: #d4a017;
+  color: #fff;
+  border-color: #a97e0f;
 }
-.wizascript-notepad-tool.wizascript-notepad-dragging {
+.wizascript-notepad-color-indicator {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.4);
+  margin-left: 5px;
+  vertical-align: middle;
+}
+.wizascript-notepad-size-slider {
+  flex: 1;
+  min-width: 60px;
+}
+.wizascript-notepad-color-popup {
   position: fixed;
-  z-index: 100001;
-  cursor: grabbing;
-  pointer-events: none;
+  z-index: 100002;
+  background: #fff;
+  border: 1px solid #999;
+  border-radius: 5px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+  padding: 6px;
+  display: flex;
+  gap: 5px;
+}
+.wizascript-notepad-color-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.3);
+  cursor: pointer;
 }
 `;
   document.head.appendChild(style);
-}
-
-// Reused for both the pen and the eraser - the only difference is
-// whether it draws or erases, and the brush size used while doing so.
-function makeToolDraggable(toolEl, canvasEl, ctx, isEraser, getThicknessKey) {
-  let dragging = false;
-  let lastX = null;
-  let lastY = null;
-
-  function pointFromEvent(e) {
-    const rect = canvasEl.getBoundingClientRect();
-    return { x: e.clientX - rect.left, y: e.clientY - rect.top, overCanvas: e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom };
-  }
-
-  function useAt(x, y) {
-    const key = getThicknessKey();
-    if (isEraser) {
-      const size = ERASER_SIZE_PX[key] ?? ERASER_SIZE_PX.Medium;
-      ctx.clearRect(x - size / 2, y - size / 2, size, size);
-    } else {
-      const size = THICKNESS_PX[key] ?? THICKNESS_PX.Medium;
-      ctx.lineWidth = size;
-      ctx.lineCap = "round";
-      ctx.strokeStyle = PEN_COLOR;
-      ctx.beginPath();
-      if (lastX !== null) {
-        ctx.moveTo(lastX, lastY);
-      } else {
-        ctx.moveTo(x, y);
-      }
-      ctx.lineTo(x, y);
-      ctx.stroke();
-    }
-    lastX = x;
-    lastY = y;
-  }
-
-  toolEl.addEventListener("mousedown", e => {
-    dragging = true;
-    lastX = null;
-    lastY = null;
-    e.preventDefault();
-    e.stopPropagation();
-  });
-
-  document.addEventListener("mousemove", e => {
-    if (!dragging) return;
-    const point = pointFromEvent(e);
-    if (point.overCanvas) {
-      useAt(point.x, point.y);
-    } else {
-      lastX = null;
-      lastY = null;
-    }
-  });
-
-  document.addEventListener("mouseup", () => {
-    if (!dragging) return;
-    dragging = false;
-    lastX = null;
-    lastY = null;
-    saveDrawing(canvasEl);
-  });
 }
 
 function saveDrawing(canvasEl) {
@@ -213,6 +167,13 @@ function downloadAsPng(canvasEl) {
   link.download = "notepad-doodle.png";
   link.href = canvasEl.toDataURL("image/png");
   link.click();
+}
+
+function closeColorPopup() {
+  if (colorPopupEl) {
+    colorPopupEl.remove();
+    colorPopupEl = null;
+  }
 }
 
 function bindWidgetDrag(widget, header) {
@@ -245,10 +206,17 @@ function bindWidgetDrag(widget, header) {
   });
 }
 
-export function showNotepad(getPenThicknessKey) {
+export function showNotepad() {
   if (widgetEl) return; // already open
 
   injectStyle();
+
+  let currentTool = "draw"; // "draw" | "erase"
+  let currentColor = COLORS.Black;
+  let currentThickness = DEFAULT_THICKNESS;
+  let drawing = false;
+  let lastX = null;
+  let lastY = null;
 
   const widget = document.createElement("div");
   widget.className = "wizascript-notepad";
@@ -266,45 +234,149 @@ export function showNotepad(getPenThicknessKey) {
   header.className = "wizascript-notepad-header";
   header.innerHTML = `<span>Notepad</span>`;
 
-  const buttons = document.createElement("span");
-  buttons.className = "wizascript-notepad-header-buttons";
+  const headerButtons = document.createElement("span");
+  headerButtons.className = "wizascript-notepad-header-buttons";
   const clearBtn = document.createElement("span");
   clearBtn.textContent = "Clear";
   const saveBtn = document.createElement("span");
   saveBtn.textContent = "Save PNG";
   const closeBtn = document.createElement("span");
   closeBtn.textContent = "×";
-  buttons.append(clearBtn, saveBtn, closeBtn);
-  header.appendChild(buttons);
+  headerButtons.append(clearBtn, saveBtn, closeBtn);
+  header.appendChild(headerButtons);
 
   const body = document.createElement("div");
   body.className = "wizascript-notepad-body";
 
+  // ---- toolbar: draw/erase select-toggle, color indicator, size slider ----
+  const toolbar = document.createElement("div");
+  toolbar.className = "wizascript-notepad-toolbar";
+
+  const drawBox = document.createElement("div");
+  drawBox.className = "wizascript-notepad-tool-box active";
+  drawBox.textContent = "Draw";
+  const colorIndicator = document.createElement("span");
+  colorIndicator.className = "wizascript-notepad-color-indicator";
+  colorIndicator.style.background = currentColor;
+  drawBox.appendChild(colorIndicator);
+  drawBox.title = "Left-click to select. Right-click to change color.";
+
+  const eraseBox = document.createElement("div");
+  eraseBox.className = "wizascript-notepad-tool-box";
+  eraseBox.textContent = "Erase";
+
+  const sizeSlider = document.createElement("input");
+  sizeSlider.type = "range";
+  sizeSlider.className = "wizascript-notepad-size-slider";
+  sizeSlider.min = "1";
+  sizeSlider.max = "30";
+  sizeSlider.value = String(currentThickness);
+  sizeSlider.title = "Brush size";
+
+  toolbar.append(drawBox, eraseBox, sizeSlider);
+
+  // ---- canvas ----
   const canvas = document.createElement("canvas");
   canvas.className = "wizascript-notepad-canvas";
   canvas.width = CANVAS_WIDTH;
   canvas.height = CANVAS_HEIGHT;
   const ctx = canvas.getContext("2d");
 
-  const toolbox = document.createElement("div");
-  toolbox.className = "wizascript-notepad-toolbox";
-  const pen = document.createElement("div");
-  pen.className = "wizascript-notepad-pen";
-  pen.title = "Click and hold, then drag over the notepad to draw";
-  const eraser = document.createElement("div");
-  eraser.className = "wizascript-notepad-eraser";
-  eraser.title = "Click and hold, then drag over the notepad to erase";
-  toolbox.append(pen, eraser);
-
-  body.append(canvas, toolbox);
+  body.append(toolbar, canvas);
   widget.append(header, body);
   document.body.appendChild(widget);
 
   loadDrawing(canvas, ctx);
-
   bindWidgetDrag(widget, header);
-  makeToolDraggable(pen, canvas, ctx, false, getPenThicknessKey);
-  makeToolDraggable(eraser, canvas, ctx, true, getPenThicknessKey);
+
+  function selectTool(tool) {
+    currentTool = tool;
+    drawBox.classList.toggle("active", tool === "draw");
+    eraseBox.classList.toggle("active", tool === "erase");
+  }
+
+  function getCanvasPoint(e) {
+    const rect = canvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  function useAt(x, y) {
+    if (currentTool === "erase") {
+      const size = currentThickness * 2.2; // eraser reads as chunkier than the pen at the same slider value
+      ctx.clearRect(x - size / 2, y - size / 2, size, size);
+    } else {
+      ctx.lineWidth = currentThickness;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = currentColor;
+      ctx.beginPath();
+      ctx.moveTo(lastX ?? x, lastY ?? y);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    }
+    lastX = x;
+    lastY = y;
+  }
+
+  canvas.addEventListener("mousedown", e => {
+    if (e.button !== 0) return; // left click only
+    drawing = true;
+    const pt = getCanvasPoint(e);
+    lastX = pt.x;
+    lastY = pt.y;
+    useAt(pt.x, pt.y); // marks a single dot even on a plain click, no drag needed
+  });
+
+  document.addEventListener("mousemove", e => {
+    if (!drawing) return;
+    const pt = getCanvasPoint(e);
+    useAt(pt.x, pt.y);
+  });
+
+  document.addEventListener("mouseup", () => {
+    if (!drawing) return;
+    drawing = false;
+    lastX = null;
+    lastY = null;
+    saveDrawing(canvas);
+  });
+
+  drawBox.addEventListener("click", () => selectTool("draw"));
+  eraseBox.addEventListener("click", () => selectTool("erase"));
+
+  drawBox.addEventListener("contextmenu", e => {
+    e.preventDefault();
+    closeColorPopup();
+
+    const popup = document.createElement("div");
+    popup.className = "wizascript-notepad-color-popup";
+    popup.style.left = e.clientX + "px";
+    popup.style.top = e.clientY + "px";
+
+    Object.entries(COLORS).forEach(([name, hex]) => {
+      const swatch = document.createElement("div");
+      swatch.className = "wizascript-notepad-color-swatch";
+      swatch.style.background = hex;
+      swatch.title = name;
+      swatch.addEventListener("click", ev => {
+        ev.stopPropagation();
+        currentColor = hex;
+        colorIndicator.style.background = hex;
+        closeColorPopup();
+      });
+      popup.appendChild(swatch);
+    });
+
+    document.body.appendChild(popup);
+    colorPopupEl = popup;
+
+    setTimeout(() => {
+      document.addEventListener("click", closeColorPopup, { once: true });
+    }, 0);
+  });
+
+  sizeSlider.addEventListener("input", () => {
+    currentThickness = Number(sizeSlider.value);
+  });
 
   clearBtn.addEventListener("mousedown", e => e.stopPropagation());
   clearBtn.addEventListener("click", () => {
@@ -322,6 +394,7 @@ export function showNotepad(getPenThicknessKey) {
 }
 
 export function hideNotepad() {
+  closeColorPopup();
   if (!widgetEl) return;
   widgetEl.remove();
   widgetEl = null;

@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.1.05
+// @version      1.1.04
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
 // @match        https://*.undercards.net/*
-// @icon         https://i.imgur.com/FOIUHej.png
+// @icon         https://i.imgur.com/qKHDfnB.png
 // @updateURL    https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @downloadURL  https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @grant        GM_getValue
@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "1.1.05";
+  var SUITE_VERSION = "1.1.04";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -3050,12 +3053,6 @@ Version: v${version}`;
         name: "Enable The Notepad They Said Was Fine I Swear Don't Send Them After Me It Was ONE Time Ok?",
         type: "boolean",
         default: false
-      }),
-      notepadPenThickness: settings.add("notepadPenThickness", {
-        name: "Notepad Pen Thickness",
-        type: "select",
-        options: ["Small", "Medium", "Large"],
-        default: "Medium"
       })
     };
   }
@@ -3256,18 +3253,16 @@ Version: v${version}`;
   var DRAWING_STORAGE_KEY = "wizascript.decktracker.notepadDrawing";
   var CANVAS_WIDTH = 240;
   var CANVAS_HEIGHT = 200;
-  var PEN_COLOR = "#2255cc";
-  var THICKNESS_PX = {
-    Small: 2,
-    Medium: 5,
-    Large: 10
-  };
-  var ERASER_SIZE_PX = {
-    Small: 14,
-    Medium: 22,
-    Large: 32
+  var DEFAULT_THICKNESS = 5;
+  var COLORS = {
+    Black: "#1a1a1a",
+    White: "#ffffff",
+    Red: "#e53935",
+    Blue: "#2255cc",
+    Yellow: "#f2c200"
   };
   var widgetEl = null;
+  var colorPopupEl = null;
   function injectStyle() {
     if (document.getElementById("wizascript-notepad-style")) return;
     const style = document.createElement("style");
@@ -3304,103 +3299,68 @@ Version: v${version}`;
   padding: 1px 5px;
 }
 .wizascript-notepad-body {
-  position: relative;
   padding: 8px;
 }
 .wizascript-notepad-canvas {
   background: #fffef8;
   border: 1px solid #d8cbb0;
   display: block;
+  cursor: crosshair;
 }
-.wizascript-notepad-toolbox {
-  position: absolute;
-  top: 8px;
-  right: -34px;
+.wizascript-notepad-toolbar {
   display: flex;
-  flex-direction: column;
-  gap: 14px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
 }
-.wizascript-notepad-pen {
-  width: 10px;
-  height: 32px;
-  background: linear-gradient(#333 0 70%, #d4a017 70% 100%);
-  border-radius: 4px 4px 1px 1px;
-  cursor: grab;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+.wizascript-notepad-tool-box {
+  padding: 3px 10px;
+  border: 2px solid #8a7355;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #5a4a35;
+  background: #efe4cf;
+  cursor: pointer;
 }
-.wizascript-notepad-eraser {
-  width: 22px;
-  height: 14px;
-  background: #e08fa0;
-  border: 1px solid #b8657a;
-  border-radius: 3px;
-  cursor: grab;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+.wizascript-notepad-tool-box.active {
+  background: #d4a017;
+  color: #fff;
+  border-color: #a97e0f;
 }
-.wizascript-notepad-tool.wizascript-notepad-dragging {
+.wizascript-notepad-color-indicator {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.4);
+  margin-left: 5px;
+  vertical-align: middle;
+}
+.wizascript-notepad-size-slider {
+  flex: 1;
+  min-width: 60px;
+}
+.wizascript-notepad-color-popup {
   position: fixed;
-  z-index: 100001;
-  cursor: grabbing;
-  pointer-events: none;
+  z-index: 100002;
+  background: #fff;
+  border: 1px solid #999;
+  border-radius: 5px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+  padding: 6px;
+  display: flex;
+  gap: 5px;
+}
+.wizascript-notepad-color-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.3);
+  cursor: pointer;
 }
 `;
     document.head.appendChild(style);
-  }
-  function makeToolDraggable(toolEl, canvasEl, ctx, isEraser, getThicknessKey) {
-    let dragging = false;
-    let lastX = null;
-    let lastY = null;
-    function pointFromEvent(e) {
-      const rect = canvasEl.getBoundingClientRect();
-      return { x: e.clientX - rect.left, y: e.clientY - rect.top, overCanvas: e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom };
-    }
-    function useAt(x, y) {
-      var _a, _b;
-      const key = getThicknessKey();
-      if (isEraser) {
-        const size = (_a = ERASER_SIZE_PX[key]) != null ? _a : ERASER_SIZE_PX.Medium;
-        ctx.clearRect(x - size / 2, y - size / 2, size, size);
-      } else {
-        const size = (_b = THICKNESS_PX[key]) != null ? _b : THICKNESS_PX.Medium;
-        ctx.lineWidth = size;
-        ctx.lineCap = "round";
-        ctx.strokeStyle = PEN_COLOR;
-        ctx.beginPath();
-        if (lastX !== null) {
-          ctx.moveTo(lastX, lastY);
-        } else {
-          ctx.moveTo(x, y);
-        }
-        ctx.lineTo(x, y);
-        ctx.stroke();
-      }
-      lastX = x;
-      lastY = y;
-    }
-    toolEl.addEventListener("mousedown", (e) => {
-      dragging = true;
-      lastX = null;
-      lastY = null;
-      e.preventDefault();
-      e.stopPropagation();
-    });
-    document.addEventListener("mousemove", (e) => {
-      if (!dragging) return;
-      const point = pointFromEvent(e);
-      if (point.overCanvas) {
-        useAt(point.x, point.y);
-      } else {
-        lastX = null;
-        lastY = null;
-      }
-    });
-    document.addEventListener("mouseup", () => {
-      if (!dragging) return;
-      dragging = false;
-      lastX = null;
-      lastY = null;
-      saveDrawing(canvasEl);
-    });
   }
   function saveDrawing(canvasEl) {
     try {
@@ -3425,6 +3385,12 @@ Version: v${version}`;
     link.download = "notepad-doodle.png";
     link.href = canvasEl.toDataURL("image/png");
     link.click();
+  }
+  function closeColorPopup() {
+    if (colorPopupEl) {
+      colorPopupEl.remove();
+      colorPopupEl = null;
+    }
   }
   function bindWidgetDrag(widget, header) {
     let dragging = false;
@@ -3452,9 +3418,15 @@ Version: v${version}`;
       setSavedPosition(POSITION_KEY, { left: rect.left, top: rect.top });
     });
   }
-  function showNotepad(getPenThicknessKey) {
+  function showNotepad() {
     if (widgetEl) return;
     injectStyle();
+    let currentTool = "draw";
+    let currentColor = COLORS.Black;
+    let currentThickness = DEFAULT_THICKNESS;
+    let drawing = false;
+    let lastX = null;
+    let lastY = null;
     const widget = document.createElement("div");
     widget.className = "wizascript-notepad";
     const savedLayout = getSavedPosition(POSITION_KEY);
@@ -3468,39 +3440,125 @@ Version: v${version}`;
     const header = document.createElement("div");
     header.className = "wizascript-notepad-header";
     header.innerHTML = `<span>Notepad</span>`;
-    const buttons = document.createElement("span");
-    buttons.className = "wizascript-notepad-header-buttons";
+    const headerButtons = document.createElement("span");
+    headerButtons.className = "wizascript-notepad-header-buttons";
     const clearBtn = document.createElement("span");
     clearBtn.textContent = "Clear";
     const saveBtn = document.createElement("span");
     saveBtn.textContent = "Save PNG";
     const closeBtn = document.createElement("span");
     closeBtn.textContent = "\xD7";
-    buttons.append(clearBtn, saveBtn, closeBtn);
-    header.appendChild(buttons);
+    headerButtons.append(clearBtn, saveBtn, closeBtn);
+    header.appendChild(headerButtons);
     const body = document.createElement("div");
     body.className = "wizascript-notepad-body";
+    const toolbar = document.createElement("div");
+    toolbar.className = "wizascript-notepad-toolbar";
+    const drawBox = document.createElement("div");
+    drawBox.className = "wizascript-notepad-tool-box active";
+    drawBox.textContent = "Draw";
+    const colorIndicator = document.createElement("span");
+    colorIndicator.className = "wizascript-notepad-color-indicator";
+    colorIndicator.style.background = currentColor;
+    drawBox.appendChild(colorIndicator);
+    drawBox.title = "Left-click to select. Right-click to change color.";
+    const eraseBox = document.createElement("div");
+    eraseBox.className = "wizascript-notepad-tool-box";
+    eraseBox.textContent = "Erase";
+    const sizeSlider = document.createElement("input");
+    sizeSlider.type = "range";
+    sizeSlider.className = "wizascript-notepad-size-slider";
+    sizeSlider.min = "1";
+    sizeSlider.max = "30";
+    sizeSlider.value = String(currentThickness);
+    sizeSlider.title = "Brush size";
+    toolbar.append(drawBox, eraseBox, sizeSlider);
     const canvas = document.createElement("canvas");
     canvas.className = "wizascript-notepad-canvas";
     canvas.width = CANVAS_WIDTH;
     canvas.height = CANVAS_HEIGHT;
     const ctx = canvas.getContext("2d");
-    const toolbox = document.createElement("div");
-    toolbox.className = "wizascript-notepad-toolbox";
-    const pen = document.createElement("div");
-    pen.className = "wizascript-notepad-pen";
-    pen.title = "Click and hold, then drag over the notepad to draw";
-    const eraser = document.createElement("div");
-    eraser.className = "wizascript-notepad-eraser";
-    eraser.title = "Click and hold, then drag over the notepad to erase";
-    toolbox.append(pen, eraser);
-    body.append(canvas, toolbox);
+    body.append(toolbar, canvas);
     widget.append(header, body);
     document.body.appendChild(widget);
     loadDrawing(canvas, ctx);
     bindWidgetDrag(widget, header);
-    makeToolDraggable(pen, canvas, ctx, false, getPenThicknessKey);
-    makeToolDraggable(eraser, canvas, ctx, true, getPenThicknessKey);
+    function selectTool(tool) {
+      currentTool = tool;
+      drawBox.classList.toggle("active", tool === "draw");
+      eraseBox.classList.toggle("active", tool === "erase");
+    }
+    function getCanvasPoint(e) {
+      const rect = canvas.getBoundingClientRect();
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    }
+    function useAt(x, y) {
+      if (currentTool === "erase") {
+        const size = currentThickness * 2.2;
+        ctx.clearRect(x - size / 2, y - size / 2, size, size);
+      } else {
+        ctx.lineWidth = currentThickness;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = currentColor;
+        ctx.beginPath();
+        ctx.moveTo(lastX != null ? lastX : x, lastY != null ? lastY : y);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+      }
+      lastX = x;
+      lastY = y;
+    }
+    canvas.addEventListener("mousedown", (e) => {
+      if (e.button !== 0) return;
+      drawing = true;
+      const pt = getCanvasPoint(e);
+      lastX = pt.x;
+      lastY = pt.y;
+      useAt(pt.x, pt.y);
+    });
+    document.addEventListener("mousemove", (e) => {
+      if (!drawing) return;
+      const pt = getCanvasPoint(e);
+      useAt(pt.x, pt.y);
+    });
+    document.addEventListener("mouseup", () => {
+      if (!drawing) return;
+      drawing = false;
+      lastX = null;
+      lastY = null;
+      saveDrawing(canvas);
+    });
+    drawBox.addEventListener("click", () => selectTool("draw"));
+    eraseBox.addEventListener("click", () => selectTool("erase"));
+    drawBox.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      closeColorPopup();
+      const popup = document.createElement("div");
+      popup.className = "wizascript-notepad-color-popup";
+      popup.style.left = e.clientX + "px";
+      popup.style.top = e.clientY + "px";
+      Object.entries(COLORS).forEach(([name, hex]) => {
+        const swatch = document.createElement("div");
+        swatch.className = "wizascript-notepad-color-swatch";
+        swatch.style.background = hex;
+        swatch.title = name;
+        swatch.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          currentColor = hex;
+          colorIndicator.style.background = hex;
+          closeColorPopup();
+        });
+        popup.appendChild(swatch);
+      });
+      document.body.appendChild(popup);
+      colorPopupEl = popup;
+      setTimeout(() => {
+        document.addEventListener("click", closeColorPopup, { once: true });
+      }, 0);
+    });
+    sizeSlider.addEventListener("input", () => {
+      currentThickness = Number(sizeSlider.value);
+    });
     clearBtn.addEventListener("mousedown", (e) => e.stopPropagation());
     clearBtn.addEventListener("click", () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -3513,6 +3571,7 @@ Version: v${version}`;
     widgetEl = widget;
   }
   function hideNotepad() {
+    closeColorPopup();
     if (!widgetEl) return;
     widgetEl.remove();
     widgetEl = null;
@@ -4470,7 +4529,7 @@ Version: v${version}`;
     registerBuiltInPresets();
     function syncNotepadVisibility() {
       if (settings.enableNotepad.value()) {
-        showNotepad(() => settings.notepadPenThickness.value());
+        showNotepad();
       } else {
         hideNotepad();
       }

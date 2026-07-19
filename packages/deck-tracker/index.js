@@ -43,7 +43,7 @@ export function initDeckTracker(plugin) {
   // takes effect on the next page load/match rather than live.
   function syncNotepadVisibility() {
     if (settings.enableNotepad.value()) {
-      showNotepad(() => settings.notepadPenThickness.value());
+      showNotepad();
     } else {
       hideNotepad();
     }

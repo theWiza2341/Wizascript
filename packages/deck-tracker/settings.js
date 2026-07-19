@@ -56,12 +56,6 @@ export function registerDeckTrackerSettings(plugin) {
       name: "Enable The Notepad They Said Was Fine I Swear Don't Send Them After Me It Was ONE Time Ok?",
       type: "boolean",
       default: false
-    }),
-    notepadPenThickness: settings.add("notepadPenThickness", {
-      name: "Notepad Pen Thickness",
-      type: "select",
-      options: ["Small", "Medium", "Large"],
-      default: "Medium"
     })
   };
 }

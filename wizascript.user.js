@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.1.05
+// @version      1.1.04
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
 // @match        https://*.undercards.net/*
-// @icon         https://i.imgur.com/FOIUHej.png
+// @icon         https://i.imgur.com/qKHDfnB.png
 // @updateURL    https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @downloadURL  https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @grant        GM_getValue
@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "1.1.05";
+  var SUITE_VERSION = "1.1.04";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -3272,7 +3275,19 @@ Version: v${version}`;
     Green: "#43a047",
     Blue: "#2255cc",
     Indigo: "#3f51b5",
-    Violet: "#8e24aa"
+    Violet: "#8e24aa",
+    // Tertiary colors (each an adjacent primary+secondary mix), plus
+    // Pink separately - pink is a TINT (red/magenta mixed with white),
+    // not part of the primary/secondary/tertiary hue system at all, so
+    // it doesn't come from expanding the hue wheel the way the other
+    // six do.
+    RedOrange: "#f4511e",
+    YellowOrange: "#ffb300",
+    YellowGreen: "#9ccc65",
+    BlueGreen: "#00897b",
+    BlueViolet: "#5e35b1",
+    RedViolet: "#ad1457",
+    Pink: "#f06292"
   };
   var widgetEl = null;
   var colorPopupEl = null;
@@ -3360,12 +3375,14 @@ Version: v${version}`;
   min-width: 60px;
 }
 .wizascript-notepad-bg-column {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3px;
   padding-top: 2px;
+  align-content: start;
 }
 .wizascript-notepad-bg-label {
+  grid-column: 1 / -1;
   font-size: 9px;
   color: #6b5a42;
   text-align: center;
@@ -3391,7 +3408,7 @@ Version: v${version}`;
   box-shadow: 0 3px 10px rgba(0,0,0,0.4);
   padding: 6px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 5px;
 }
 .wizascript-notepad-color-swatch {

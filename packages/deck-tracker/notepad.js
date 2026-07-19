@@ -46,7 +46,19 @@ const COLORS = {
   Green: "#43a047",
   Blue: "#2255cc",
   Indigo: "#3f51b5",
-  Violet: "#8e24aa"
+  Violet: "#8e24aa",
+  // Tertiary colors (each an adjacent primary+secondary mix), plus
+  // Pink separately - pink is a TINT (red/magenta mixed with white),
+  // not part of the primary/secondary/tertiary hue system at all, so
+  // it doesn't come from expanding the hue wheel the way the other
+  // six do.
+  RedOrange: "#f4511e",
+  YellowOrange: "#ffb300",
+  YellowGreen: "#9ccc65",
+  BlueGreen: "#00897b",
+  BlueViolet: "#5e35b1",
+  RedViolet: "#ad1457",
+  Pink: "#f06292"
 };
 
 let widgetEl = null;
@@ -136,12 +148,14 @@ function injectStyle() {
   min-width: 60px;
 }
 .wizascript-notepad-bg-column {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3px;
   padding-top: 2px;
+  align-content: start;
 }
 .wizascript-notepad-bg-label {
+  grid-column: 1 / -1;
   font-size: 9px;
   color: #6b5a42;
   text-align: center;
@@ -167,7 +181,7 @@ function injectStyle() {
   box-shadow: 0 3px 10px rgba(0,0,0,0.4);
   padding: 6px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 5px;
 }
 .wizascript-notepad-color-swatch {

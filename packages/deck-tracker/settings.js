@@ -46,6 +46,22 @@ export function registerDeckTrackerSettings(plugin) {
       min: 0,
       max: 1,
       step: 0.05
+    }),
+    // A lighthearted callback to the exact "pen and paper / notepad
+    // files" defense given during the moderation discussion - a
+    // genuinely manual drawing surface, no calculation, no game-event
+    // hooking, just a literal digital scratchpad the player operates
+    // by hand.
+    enableNotepad: settings.add("enableNotepad", {
+      name: "Enable The Notepad They Said Was Fine I Swear Don't Send Them After Me It Was ONE Time Ok?",
+      type: "boolean",
+      default: false
+    }),
+    notepadPenThickness: settings.add("notepadPenThickness", {
+      name: "Notepad Pen Thickness",
+      type: "select",
+      options: ["Small", "Medium", "Large"],
+      default: "Medium"
     })
   };
 }

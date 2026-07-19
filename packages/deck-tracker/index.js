@@ -1,5 +1,6 @@
 import { createLogger } from "../core/debug-logger.js";
 import { registerDeckTrackerSettings } from "./settings.js";
+import { showNotepad, hideNotepad } from "./notepad.js";
 import { getFavoritedPresetIds, dispatchGameEvent, deleteCustomPreset, setRetainEnabledGetter, getRetainedPresetIds } from "./registry.js";
 import { spawnPreset, spawnAdHocCustomTracker, closeWidget, closeAllWidgets } from "./hud.js";
 import { openPresetPicker } from "./picker.js";
@@ -35,6 +36,19 @@ export function initDeckTracker(plugin) {
 
   setRetainEnabledGetter(() => settings.retainUnclosedPresets.value());
   registerBuiltInPresets();
+
+  // The Notepad They Said Was Fine - purely manual, no picker
+  // involvement, directly controlled by its own setting. No "settings
+  // changed" event exists to react to instantly, so toggling this
+  // takes effect on the next page load/match rather than live.
+  function syncNotepadVisibility() {
+    if (settings.enableNotepad.value()) {
+      showNotepad(() => settings.notepadPenThickness.value());
+    } else {
+      hideNotepad();
+    }
+  }
+  syncNotepadVisibility();
 
   function handleAddPreset(id) {
     spawnPreset(id);
@@ -291,15 +305,12 @@ export function initDeckTracker(plugin) {
     restoreFavoritedAndRetained();
   });
 
-  // NOTE: still on 'connect' specifically because it's the only place
-  // we have yourSoul available - this keeps the same unverified timing
-  // risk described above. Lower stakes for now since no soul-tied
-  // presets exist yet to actually depend on this firing reliably.
   plugin.events.on("connect", data => {
     // Always runs, regardless of settings - a mid-match page refresh
     // fires 'connect' but NOT 'GameStart' (the match is reconnecting,
     // not starting), so restoration needs to happen here too, not
     // just on GameStart.
     restoreFavoritedAndRetained();
+    syncNotepadVisibility();
   });
 }

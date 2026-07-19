@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.1.05
+// @version      1.1.04
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
 // @match        https://*.undercards.net/*
-// @icon         https://i.imgur.com/FOIUHej.png
+// @icon         https://i.imgur.com/qKHDfnB.png
 // @updateURL    https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @downloadURL  https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @grant        GM_getValue
@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "1.1.05";
+  var SUITE_VERSION = "1.1.04";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -4387,7 +4390,6 @@ Version: v${version}`;
   var WHEEL_RADIUS = WHEEL_SIZE / 2;
   var WHEEL_FIXED_LIGHTNESS = 0.5;
   var widgetEl = null;
-  var colorPopupEl = null;
   function getSavedPosition2() {
     try {
       const raw = GM_getValue(POSITION_STORAGE_KEY, null);
@@ -4701,15 +4703,6 @@ Version: v${version}`;
   cursor: pointer;
   font-weight: bold;
 }
-.wizascript-notepad-color-popup {
-  position: fixed;
-  z-index: 100002;
-  background: #fff;
-  border: 1px solid #999;
-  border-radius: 5px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.4);
-  padding: 8px;
-}
 `;
     document.head.appendChild(style);
   }
@@ -4724,12 +4717,6 @@ Version: v${version}`;
     link.download = "notepad-doodle.png";
     link.href = canvasEl.toDataURL("image/png");
     link.click();
-  }
-  function closeColorPopup() {
-    if (colorPopupEl) {
-      colorPopupEl.remove();
-      colorPopupEl = null;
-    }
   }
   function bindWidgetDrag(widget, header) {
     let dragging = false;
@@ -4763,7 +4750,7 @@ Version: v${version}`;
     let currentTool = "draw";
     let currentPenColor = "rgb(26, 26, 26)";
     let backgroundColor = DEFAULT_BACKGROUND;
-    let pendingBackgroundColor = DEFAULT_BACKGROUND;
+    let pendingColor = "rgb(26, 26, 26)";
     let currentThickness = DEFAULT_THICKNESS;
     let drawing = false;
     let lastX = null;
@@ -4804,7 +4791,7 @@ Version: v${version}`;
     colorIndicator.className = "wizascript-notepad-color-indicator";
     colorIndicator.style.background = currentPenColor;
     drawBox.appendChild(colorIndicator);
-    drawBox.title = "Left-click to select. Right-click to change color.";
+    drawBox.title = "Click to select this tool.";
     const eraseBox = document.createElement("div");
     eraseBox.className = "wizascript-notepad-tool-box";
     eraseBox.textContent = "Erase";
@@ -4835,24 +4822,27 @@ Version: v${version}`;
     cursorIndicator.style.display = "none";
     canvasWrapper.append(canvas, cursorIndicator);
     mainColumn.append(toolbar, canvasWrapper);
-    const bgColumn = document.createElement("div");
-    bgColumn.className = "wizascript-notepad-side-column";
-    const bgLabel = document.createElement("div");
-    bgLabel.className = "wizascript-notepad-side-label";
-    bgLabel.textContent = "Paper Color";
-    const bgPicker = buildColorPicker({
-      initialHue: 40,
-      initialSaturation: 0.3,
-      initialLightness: 0.99,
+    const colorColumn = document.createElement("div");
+    colorColumn.className = "wizascript-notepad-side-column";
+    const colorLabel = document.createElement("div");
+    colorLabel.className = "wizascript-notepad-side-label";
+    colorLabel.textContent = "Color Picker";
+    const sharedPicker = buildColorPicker({
+      initialHue: 0,
+      initialSaturation: 0,
+      initialLightness: 0.1,
       onChange: (color) => {
-        pendingBackgroundColor = color;
+        pendingColor = color;
       }
     });
+    const applyPenBtn = document.createElement("button");
+    applyPenBtn.className = "wizascript-notepad-apply-bg-btn";
+    applyPenBtn.textContent = "Apply Pen Color";
     const applyBgBtn = document.createElement("button");
     applyBgBtn.className = "wizascript-notepad-apply-bg-btn";
     applyBgBtn.textContent = "Apply Paper Color";
-    bgColumn.append(bgLabel, bgPicker.element, applyBgBtn);
-    body.append(mainColumn, bgColumn);
+    colorColumn.append(colorLabel, sharedPicker.element, applyPenBtn, applyBgBtn);
+    body.append(mainColumn, colorColumn);
     widget.append(header, body);
     document.body.appendChild(widget);
     function paintBackground(color) {
@@ -4961,35 +4951,17 @@ Version: v${version}`;
     });
     drawBox.addEventListener("click", () => selectTool("draw"));
     eraseBox.addEventListener("click", () => selectTool("erase"));
-    drawBox.addEventListener("contextmenu", (e) => {
-      e.preventDefault();
-      closeColorPopup();
-      const popup = document.createElement("div");
-      popup.className = "wizascript-notepad-color-popup";
-      popup.style.left = e.clientX + "px";
-      popup.style.top = e.clientY + "px";
-      const penPicker = buildColorPicker({
-        initialHue: 0,
-        initialSaturation: 0,
-        initialLightness: 0.1,
-        onChange: (color) => {
-          currentPenColor = color;
-          colorIndicator.style.background = color;
-        }
-      });
-      popup.appendChild(penPicker.element);
-      document.body.appendChild(popup);
-      colorPopupEl = popup;
-      setTimeout(() => {
-        document.addEventListener("click", closeColorPopup, { once: true });
-      }, 0);
-    });
     sizeSlider.addEventListener("input", () => {
       currentThickness = Number(sizeSlider.value);
       updateCursorIndicatorSize();
     });
+    applyPenBtn.addEventListener("mousedown", (e) => e.stopPropagation());
+    applyPenBtn.addEventListener("click", () => {
+      currentPenColor = pendingColor;
+      colorIndicator.style.background = pendingColor;
+    });
     applyBgBtn.addEventListener("mousedown", (e) => e.stopPropagation());
-    applyBgBtn.addEventListener("click", () => changeBackground(pendingBackgroundColor));
+    applyBgBtn.addEventListener("click", () => changeBackground(pendingColor));
     clearBtn.addEventListener("mousedown", (e) => e.stopPropagation());
     clearBtn.addEventListener("click", () => {
       paintBackground(backgroundColor);
@@ -5002,7 +4974,6 @@ Version: v${version}`;
     widgetEl = widget;
   }
   function hideNotepad() {
-    closeColorPopup();
     if (!widgetEl) return;
     widgetEl.remove();
     widgetEl = null;

@@ -3,15 +3,14 @@
 // module stays focused on DOM/rendering rather than owning network
 // fetch too.
 //
-// NOTE: points at a SEPARATE, PUBLIC "Wizascript-assets" repo, not the
-// main Wizascript repo - the main repo went private (raw.githubusercontent.com
-// only serves unauthenticated requests from public repos), so only the
-// data files themselves (this JSON, plus Doom Overlay's sound files)
-// live in a small public repo, while all actual source stays private.
-// Adjust this URL once the assets repo's real name/path is confirmed.
+// NOTE: this URL points at bot/decks.json in THIS repo (Wizascript)
+// again - the separate "Wizascript-assets" repo was only needed while
+// the main repo was private (raw.githubusercontent.com can't serve
+// unauthenticated requests from a private repo); now that the main
+// repo is public again, everything lives here directly.
 
 const DECKS_URL =
-  "https://raw.githubusercontent.com/theWiza2341/Wizascript-assets/refs/heads/main/bot/decks.json";
+  "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/bot/decks.json";
 
 export function loadDecks() {
   return new Promise((resolve, reject) => {

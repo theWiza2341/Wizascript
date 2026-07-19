@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.1.05
+// @version      1.1.04
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
 // @match        https://*.undercards.net/*
-// @icon         https://i.imgur.com/FOIUHej.png
+// @icon         https://i.imgur.com/qKHDfnB.png
 // @updateURL    https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @downloadURL  https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @grant        GM_getValue
@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "1.1.05";
+  var SUITE_VERSION = "1.1.04";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -2995,8 +2998,10 @@ Version: v${version}`;
   }
 
   // packages/deck-tracker/settings.js
-  var NOTEPAD_RANT_NAME = "Enable The Notepad They Said Was Fine I Swear Don't Send Them After Me It Was ONE Time Ok? Look I Read The Actual Statement Very Carefully And It Specifically Says Pen And Paper Type Tools Are Completely Fine And This Is Quite Literally Just Digital Pen And Paper, It Doesn't Calculate Anything, It Doesn't Hook Into Any Game Events, It Doesn't Even Know What Turn It Is, Please I Am Begging You Just Let Me Have This One Silly Little Drawing Feature And I Promise I Will Never Ever Ask For Anything Ever Again";
+  var NOTEPAD_RANT_NAME = "Enable The Notepad They Said Was Fine I Swear Don't Send Them After Me It Was ONE Time Ok? Look I Read The Actual Statement Very Carefully And It Specifically Says Pen And Paper Type Tools Are Completely Fine And This Is Quite Literally Just Digital Pen And Paper, It Doesn't Calculate Anything, It Doesn't Hook Into Any Game Events, It Doesn't Even Know What Turn It Is, Please I Am Begging You Just Let Me Have This One Silly Little Drawing Feature Its So Cool And Awesome Just Try It Yourself Before You Nuke My Script First Ok?";
   var NOTEPAD_SHORT_NAME = "Enable Notepad Overlay Option";
+  var RANT_DISABLED_CACHE_KEY = "wizascript.decktracker.rantDisabledCache";
+  var CACHE_SYNC_INTERVAL_MS = 3e3;
   function registerDeckTrackerSettings(plugin) {
     const settings = createFeatureSettings(plugin, "decktracker", "Deck Tracker");
     const enabled = settings.add("enabled", {
@@ -3027,22 +3032,30 @@ Version: v${version}`;
       max: 1,
       step: 0.05
     });
-    let rantDisabled;
+    let cachedRantDisabled;
     try {
-      rantDisabled = GM_getValue("decktracker.disableWizaRanting", false);
+      cachedRantDisabled = GM_getValue(RANT_DISABLED_CACHE_KEY, false);
     } catch (e) {
-      rantDisabled = false;
+      cachedRantDisabled = false;
     }
     const enableNotepad = settings.add("enableNotepad", {
-      name: rantDisabled ? NOTEPAD_SHORT_NAME : NOTEPAD_RANT_NAME,
+      name: cachedRantDisabled ? NOTEPAD_SHORT_NAME : NOTEPAD_RANT_NAME,
       type: "boolean",
       default: false
     });
     const disableWizaRanting = settings.add("disableWizaRanting", {
-      name: "Disable Wiza Ranting",
+      name: "Disable Incessant Ranting",
       type: "boolean",
       default: false
     });
+    function syncRantCache() {
+      try {
+        GM_setValue(RANT_DISABLED_CACHE_KEY, disableWizaRanting.value());
+      } catch (e) {
+      }
+    }
+    syncRantCache();
+    setInterval(syncRantCache, CACHE_SYNC_INTERVAL_MS);
     return {
       settings,
       enabled,

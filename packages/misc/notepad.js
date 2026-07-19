@@ -45,6 +45,7 @@ const WHEEL_RADIUS = WHEEL_SIZE / 2;
 const WHEEL_FIXED_LIGHTNESS = 0.5; // the wheel itself always renders at 50% lightness for visual consistency/recognizability; the separate slider controls the ACTUAL lightness used
 
 let widgetEl = null;
+let blurHandler = null;
 
 // ---- self-contained position persistence (no deck-tracker dependency) ----
 
@@ -227,7 +228,13 @@ function buildColorPicker({ initialHue = 0, initialSaturation = 1, initialLightn
   notify();
 
   container.append(wheelWrapper, lightnessRow, preview);
-  return { element: container, getColor: currentColor };
+  return {
+    element: container,
+    getColor: currentColor,
+    // Same reasoning as bindWidgetDrag's own reset() - clears a
+    // potentially-stuck "picking" flag if mouseup never fired.
+    reset: () => { picking = false; }
+  };
 }
 
 function injectStyle() {
@@ -426,6 +433,18 @@ function bindWidgetDrag(widget, header) {
     const rect = widget.getBoundingClientRect();
     setSavedPosition({ left: rect.left, top: rect.top });
   });
+
+  // Returned so a shared window "blur" handler can forcibly clear this
+  // if mouseup never fires - which happens if the mouse button is
+  // released OUTSIDE the browser window entirely, or the tab loses
+  // focus mid-drag. Without this, "dragging" could get stuck true
+  // forever, making the widget appear to stop responding to drags.
+  return {
+    reset: () => {
+      dragging = false;
+      header.style.cursor = "grab";
+    }
+  };
 }
 
 export function showNotepad() {
@@ -502,12 +521,7 @@ export function showNotepad() {
 
   toolbar.append(drawBox, eraseBox, sizeSlider);
 
-  // ---- canvas ----
-  const canvas = document.createElement("canvas");
-  canvas.className = "wizascript-notepad-canvas";
-  canvas.width = CANVAS_WIDTH;
-  canvas.height = CANVAS_HEIGHT;
-  const ctx = canvas.getContext("2d");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
   const canvasWrapper = document.createElement("div");
   canvasWrapper.style.position = "relative";
@@ -607,7 +621,7 @@ export function showNotepad() {
   }
 
   loadDrawing();
-  bindWidgetDrag(widget, header);
+  const widgetDrag = bindWidgetDrag(widget, header);
 
   function selectTool(tool) {
     currentTool = tool;
@@ -680,6 +694,23 @@ export function showNotepad() {
     saveDrawing(canvas);
   });
 
+  // Safety net: if the window loses focus mid-drag (mouse released
+  // outside the browser entirely, tab-switched, etc.), the mouseup
+  // that's supposed to clear "in progress" states never fires at all -
+  // leaving the widget-drag/wheel-pick/draw states stuck true forever,
+  // making those controls appear to stop responding on the next
+  // attempt. This forcibly clears all of them the moment focus is
+  // lost, regardless of what was happening.
+  function handleWindowBlur() {
+    drawing = false;
+    lastX = null;
+    lastY = null;
+    widgetDrag.reset();
+    sharedPicker.reset();
+  }
+  blurHandler = handleWindowBlur;
+  window.addEventListener("blur", handleWindowBlur);
+
   drawBox.addEventListener("click", () => selectTool("draw"));
   eraseBox.addEventListener("click", () => selectTool("erase"));
 
@@ -716,6 +747,10 @@ export function hideNotepad() {
   if (!widgetEl) return;
   widgetEl.remove();
   widgetEl = null;
+  if (blurHandler) {
+    window.removeEventListener("blur", blurHandler);
+    blurHandler = null;
+  }
 }
 
 export function isNotepadOpen() {

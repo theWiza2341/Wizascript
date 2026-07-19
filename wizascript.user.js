@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.1.05
+// @version      1.1.04
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
 // @match        https://*.undercards.net/*
-// @icon         https://i.imgur.com/FOIUHej.png
+// @icon         https://i.imgur.com/qKHDfnB.png
 // @updateURL    https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @downloadURL  https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @grant        GM_getValue
@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "1.1.05";
+  var SUITE_VERSION = "1.1.04";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -925,14 +925,14 @@ html, body { overflow-x: hidden !important; }
     if (img.naturalWidth === 163 && img.naturalHeight >= 250) {
       sh = Math.max(1, img.naturalHeight - FIELDMARKER_WATERMARK_CROP_PX);
     }
-    const canvas = document.createElement("canvas");
-    canvas.width = TARGET_W;
-    canvas.height = TARGET_H;
-    const ctx = canvas.getContext("2d");
+    const canvas2 = document.createElement("canvas");
+    canvas2.width = TARGET_W;
+    canvas2.height = TARGET_H;
+    const ctx = canvas2.getContext("2d");
     ctx.imageSmoothingEnabled = false;
     ctx.clearRect(0, 0, TARGET_W, TARGET_H);
     ctx.drawImage(img, sx, sy, sw, sh, 0, 0, TARGET_W, TARGET_H);
-    return canvas.toDataURL("image/png");
+    return canvas2.toDataURL("image/png");
   }
   function createNewCardsFeature({ isViewerMode: isViewerMode2, saveState }) {
     function ensureCardAddTile(section) {
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -4387,6 +4390,7 @@ Version: v${version}`;
   var WHEEL_RADIUS = WHEEL_SIZE / 2;
   var WHEEL_FIXED_LIGHTNESS = 0.5;
   var widgetEl = null;
+  var blurHandler = null;
   function getSavedPosition2() {
     try {
       const raw = GM_getValue(POSITION_STORAGE_KEY, null);
@@ -4441,8 +4445,8 @@ Version: v${version}`;
     if (!match) return { r: 255, g: 255, b: 255 };
     return { r: Number(match[1]), g: Number(match[2]), b: Number(match[3]) };
   }
-  function drawColorWheel(canvas) {
-    const ctx = canvas.getContext("2d");
+  function drawColorWheel(canvas2) {
+    const ctx = canvas2.getContext("2d");
     const imageData = ctx.createImageData(WHEEL_SIZE, WHEEL_SIZE);
     const data = imageData.data;
     for (let y = 0; y < WHEEL_SIZE; y++) {
@@ -4549,7 +4553,15 @@ Version: v${version}`;
     updateIndicatorPosition();
     notify();
     container.append(wheelWrapper, lightnessRow, preview);
-    return { element: container, getColor: currentColor };
+    return {
+      element: container,
+      getColor: currentColor,
+      // Same reasoning as bindWidgetDrag's own reset() - clears a
+      // potentially-stuck "picking" flag if mouseup never fired.
+      reset: () => {
+        picking = false;
+      }
+    };
   }
   function injectStyle() {
     if (document.getElementById("wizascript-notepad-style")) return;
@@ -4740,6 +4752,12 @@ Version: v${version}`;
       const rect = widget.getBoundingClientRect();
       setSavedPosition2({ left: rect.left, top: rect.top });
     });
+    return {
+      reset: () => {
+        dragging = false;
+        header.style.cursor = "grab";
+      }
+    };
   }
   function showNotepad() {
     if (widgetEl) return;
@@ -4800,11 +4818,7 @@ Version: v${version}`;
     sizeSlider.value = String(currentThickness);
     sizeSlider.title = "Brush size";
     toolbar.append(drawBox, eraseBox, sizeSlider);
-    const canvas = document.createElement("canvas");
-    canvas.className = "wizascript-notepad-canvas";
-    canvas.width = CANVAS_WIDTH;
-    canvas.height = CANVAS_HEIGHT;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
     const canvasWrapper = document.createElement("div");
     canvasWrapper.style.position = "relative";
     canvasWrapper.style.width = CANVAS_WIDTH + "px";
@@ -4884,7 +4898,7 @@ Version: v${version}`;
       img.src = saved;
     }
     loadDrawing();
-    bindWidgetDrag(widget, header);
+    const widgetDrag = bindWidgetDrag(widget, header);
     function selectTool(tool) {
       currentTool = tool;
       drawBox.classList.toggle("active", tool === "draw");
@@ -4946,6 +4960,15 @@ Version: v${version}`;
       lastY = null;
       saveDrawing(canvas);
     });
+    function handleWindowBlur() {
+      drawing = false;
+      lastX = null;
+      lastY = null;
+      widgetDrag.reset();
+      sharedPicker.reset();
+    }
+    blurHandler = handleWindowBlur;
+    window.addEventListener("blur", handleWindowBlur);
     drawBox.addEventListener("click", () => selectTool("draw"));
     eraseBox.addEventListener("click", () => selectTool("erase"));
     sizeSlider.addEventListener("input", () => {
@@ -4974,6 +4997,10 @@ Version: v${version}`;
     if (!widgetEl) return;
     widgetEl.remove();
     widgetEl = null;
+    if (blurHandler) {
+      window.removeEventListener("blur", blurHandler);
+      blurHandler = null;
+    }
   }
 
   // packages/misc/index.js

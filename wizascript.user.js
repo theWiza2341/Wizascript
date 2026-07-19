@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.1.05
+// @version      1.1.04
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
 // @match        https://*.undercards.net/*
-// @icon         https://i.imgur.com/FOIUHej.png
+// @icon         https://i.imgur.com/qKHDfnB.png
 // @updateURL    https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @downloadURL  https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @grant        GM_getValue
@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "1.1.05";
+  var SUITE_VERSION = "1.1.04";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -3505,7 +3508,21 @@ Version: v${version}`;
     canvas.width = CANVAS_WIDTH;
     canvas.height = CANVAS_HEIGHT;
     const ctx = canvas.getContext("2d");
-    mainColumn.append(toolbar, canvas);
+    canvas.style.cursor = "none";
+    const canvasWrapper = document.createElement("div");
+    canvasWrapper.style.position = "relative";
+    canvasWrapper.style.width = CANVAS_WIDTH + "px";
+    canvasWrapper.style.height = CANVAS_HEIGHT + "px";
+    const cursorIndicator = document.createElement("div");
+    cursorIndicator.style.position = "absolute";
+    cursorIndicator.style.pointerEvents = "none";
+    cursorIndicator.style.borderRadius = "50%";
+    cursorIndicator.style.border = "1.5px solid rgba(0,0,0,0.75)";
+    cursorIndicator.style.boxShadow = "0 0 0 1px rgba(255,255,255,0.7)";
+    cursorIndicator.style.transform = "translate(-50%, -50%)";
+    cursorIndicator.style.display = "none";
+    canvasWrapper.append(canvas, cursorIndicator);
+    mainColumn.append(toolbar, canvasWrapper);
     const bgColumn = document.createElement("div");
     bgColumn.className = "wizascript-notepad-bg-column";
     const bgLabel = document.createElement("div");
@@ -3577,6 +3594,7 @@ Version: v${version}`;
       currentTool = tool;
       drawBox.classList.toggle("active", tool === "draw");
       eraseBox.classList.toggle("active", tool === "erase");
+      updateCursorIndicatorSize();
     }
     function getCanvasPoint(e) {
       const rect = canvas.getBoundingClientRect();
@@ -3603,6 +3621,23 @@ Version: v${version}`;
       lastX = pt.x;
       lastY = pt.y;
       useAt(pt.x, pt.y);
+    });
+    function updateCursorIndicatorSize() {
+      const size = currentTool === "erase" ? currentThickness * 2.2 : currentThickness;
+      cursorIndicator.style.width = size + "px";
+      cursorIndicator.style.height = size + "px";
+    }
+    canvas.addEventListener("mouseenter", () => {
+      cursorIndicator.style.display = "block";
+      updateCursorIndicatorSize();
+    });
+    canvas.addEventListener("mouseleave", () => {
+      cursorIndicator.style.display = "none";
+    });
+    canvas.addEventListener("mousemove", (e) => {
+      const pt = getCanvasPoint(e);
+      cursorIndicator.style.left = pt.x + "px";
+      cursorIndicator.style.top = pt.y + "px";
     });
     document.addEventListener("mousemove", (e) => {
       if (!drawing) return;
@@ -3646,6 +3681,7 @@ Version: v${version}`;
     });
     sizeSlider.addEventListener("input", () => {
       currentThickness = Number(sizeSlider.value);
+      updateCursorIndicatorSize();
     });
     clearBtn.addEventListener("mousedown", (e) => e.stopPropagation());
     clearBtn.addEventListener("click", () => {

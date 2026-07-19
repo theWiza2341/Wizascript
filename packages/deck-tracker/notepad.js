@@ -318,7 +318,32 @@ export function showNotepad() {
   canvas.height = CANVAS_HEIGHT;
   const ctx = canvas.getContext("2d");
 
-  mainColumn.append(toolbar, canvas);
+  // Native cursor hidden entirely over the canvas - a custom indicator
+  // (below) is drawn instead, guaranteed to match the exact same
+  // coordinates the drawing code itself uses, eliminating any
+  // possible mismatch between "where the cursor looks like it is" and
+  // "where the mark actually appears" - confirmed via screenshot that
+  // the native crosshair's hotspot and the actual drawn point didn't
+  // visually line up.
+  canvas.style.cursor = "none";
+
+  const canvasWrapper = document.createElement("div");
+  canvasWrapper.style.position = "relative";
+  canvasWrapper.style.width = CANVAS_WIDTH + "px";
+  canvasWrapper.style.height = CANVAS_HEIGHT + "px";
+
+  const cursorIndicator = document.createElement("div");
+  cursorIndicator.style.position = "absolute";
+  cursorIndicator.style.pointerEvents = "none";
+  cursorIndicator.style.borderRadius = "50%";
+  cursorIndicator.style.border = "1.5px solid rgba(0,0,0,0.75)";
+  cursorIndicator.style.boxShadow = "0 0 0 1px rgba(255,255,255,0.7)"; // faint outer ring, keeps it visible on dark backgrounds too
+  cursorIndicator.style.transform = "translate(-50%, -50%)"; // centers the indicator ON the coordinate, rather than top-left aligning it there
+  cursorIndicator.style.display = "none";
+
+  canvasWrapper.append(canvas, cursorIndicator);
+
+  mainColumn.append(toolbar, canvasWrapper);
 
   // ---- background color strip (right side) ----
   const bgColumn = document.createElement("div");
@@ -431,6 +456,7 @@ export function showNotepad() {
     currentTool = tool;
     drawBox.classList.toggle("active", tool === "draw");
     eraseBox.classList.toggle("active", tool === "erase");
+    updateCursorIndicatorSize();
   }
 
   function getCanvasPoint(e) {
@@ -466,6 +492,27 @@ export function showNotepad() {
     lastX = pt.x;
     lastY = pt.y;
     useAt(pt.x, pt.y); // marks a single dot even on a plain click, no drag needed
+  });
+
+  function updateCursorIndicatorSize() {
+    const size = currentTool === "erase" ? currentThickness * 2.2 : currentThickness;
+    cursorIndicator.style.width = size + "px";
+    cursorIndicator.style.height = size + "px";
+  }
+
+  canvas.addEventListener("mouseenter", () => {
+    cursorIndicator.style.display = "block";
+    updateCursorIndicatorSize();
+  });
+
+  canvas.addEventListener("mouseleave", () => {
+    cursorIndicator.style.display = "none";
+  });
+
+  canvas.addEventListener("mousemove", e => {
+    const pt = getCanvasPoint(e);
+    cursorIndicator.style.left = pt.x + "px";
+    cursorIndicator.style.top = pt.y + "px";
   });
 
   document.addEventListener("mousemove", e => {
@@ -518,6 +565,7 @@ export function showNotepad() {
 
   sizeSlider.addEventListener("input", () => {
     currentThickness = Number(sizeSlider.value);
+    updateCursorIndicatorSize();
   });
 
   clearBtn.addEventListener("mousedown", e => e.stopPropagation());

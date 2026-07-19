@@ -217,7 +217,14 @@ export function initDeckTracker(plugin) {
     // as-is until we know exactly which class/element the game uses
     // for that dimming state - flagged during live testing, not
     // forgotten.
-    btn.onclick = () => openPresetPicker({ onAddPreset: handleAddPreset, onCreateAdHoc: handleCreateAdHoc, onCloseWidget: handleCloseWidget, onDeletePreset: handleDeletePreset });
+    btn.onclick = () => openPresetPicker({
+      onAddPreset: handleAddPreset,
+      onCreateAdHoc: handleCreateAdHoc,
+      onCloseWidget: handleCloseWidget,
+      onDeletePreset: handleDeletePreset,
+      onOpenNotepad: () => showNotepad(),
+      showNotepadOption: settings.enableNotepad.value()
+    });
 
     return btn;
   }

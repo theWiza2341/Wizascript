@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.1.05
+// @version      1.1.04
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
 // @match        https://*.undercards.net/*
-// @icon         https://i.imgur.com/FOIUHej.png
+// @icon         https://i.imgur.com/qKHDfnB.png
 // @updateURL    https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @downloadURL  https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @grant        GM_getValue
@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "1.1.05";
+  var SUITE_VERSION = "1.1.04";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -3046,8 +3049,25 @@ Version: v${version}`;
       // genuinely manual drawing surface, no calculation, no game-event
       // hooking, just a literal digital scratchpad the player operates
       // by hand.
+      // Registered BEFORE the notepad setting below since its value
+      // determines which name string that setting gets registered with -
+      // this does mean it likely shows up ABOVE the notepad setting in
+      // the list rather than directly beneath it, since there's no
+      // confirmed way to rename an already-registered setting after the
+      // fact. Defaults to true - the joke name is funny at first, but
+      // the option exists for when it stops being funny.
+      enableStupidNotepadName: settings.add("enableStupidNotepadName", {
+        name: "Enable Stupid Ass Name",
+        type: "boolean",
+        default: true
+      }),
+      // A lighthearted callback to the exact "pen and paper / notepad
+      // files" defense given during the moderation discussion - a
+      // genuinely manual drawing surface, no calculation, no game-event
+      // hooking, just a literal digital scratchpad the player operates
+      // by hand.
       enableNotepad: settings.add("enableNotepad", {
-        name: "Enable The Notepad They Said Was Fine I Swear Don't Send Them After Me It Was ONE Time Ok?",
+        name: settings.value("enableStupidNotepadName") ? "Enable The Notepad They Said Was Fine I Swear Don't Send Them After Me It Was ONE Time Ok?" : "Enable Notepad Overlay Option",
         type: "boolean",
         default: false
       })
@@ -3312,7 +3332,7 @@ Version: v${version}`;
 .wizascript-notepad-canvas {
   border: 1px solid #d8cbb0;
   display: block;
-  cursor: crosshair;
+  cursor: crosshair !important;
 }
 .wizascript-notepad-toolbar {
   display: flex;
@@ -4310,6 +4330,44 @@ Version: v${version}`;
     row.append(info, addBtn);
     return row;
   }
+  function buildNotepadRow(onOpenNotepad) {
+    const row = $("<div>").css({
+      display: "flex",
+      alignItems: "center",
+      gap: "10px",
+      padding: "10px 6px",
+      marginTop: "8px",
+      borderTop: "2px dashed rgba(255,255,255,0.25)",
+      cursor: "pointer"
+    }).on("mouseenter", function() {
+      $(this).css("background", "rgba(255,255,255,0.08)");
+    }).on("mouseleave", function() {
+      $(this).css("background", "");
+    });
+    const info = $("<div>").css({ flex: 1 });
+    info.append(
+      $("<div>").css({ fontWeight: "bold", fontSize: "14px" }).text("Notepad"),
+      $("<div>").css({ fontSize: "12px", color: "#aaa", marginTop: "2px" }).text("Reopen the drawing surface, if you closed it.")
+    );
+    const addBtn = $("<button>").text("+").css({
+      width: "28px",
+      height: "28px",
+      lineHeight: "1",
+      fontSize: "16px",
+      fontWeight: "bold",
+      background: "#2ecc71",
+      color: "white",
+      border: "none",
+      borderRadius: "4px",
+      cursor: "pointer",
+      flexShrink: 0
+    }).on("click", (e) => {
+      e.stopPropagation();
+      onOpenNotepad();
+    });
+    row.append(info, addBtn);
+    return row;
+  }
   function openHelpDialog() {
     const content = $("<div>").css({ fontSize: "13px", lineHeight: "1.5" });
     function section(title, body) {
@@ -4345,7 +4403,7 @@ Version: v${version}`;
       buttons: [{ label: "Got it", cssClass: "btn-primary", action: (dialog) => dialog.close() }]
     });
   }
-  function openPresetPicker({ onAddPreset, onCreateAdHoc, onCloseWidget, onDeletePreset }) {
+  function openPresetPicker({ onAddPreset, onCreateAdHoc, onCloseWidget, onDeletePreset, onOpenNotepad, showNotepadOption }) {
     const wrapper = $("<div>").css({ minWidth: "360px" });
     const searchInput = $('<input type="text" placeholder="Search presets...">').addClass("form-control").css({
       width: "100%",
@@ -4369,6 +4427,13 @@ Version: v${version}`;
       renderList(listContainer, $(this).val(), onAddPreset, onCloseWidget, onDeletePreset);
     });
     wrapper.append(searchInput, listContainer, customRow);
+    if (showNotepadOption) {
+      const notepadRow = buildNotepadRow(() => {
+        dialogRef == null ? void 0 : dialogRef.close();
+        onOpenNotepad();
+      });
+      wrapper.append(notepadRow);
+    }
     renderList(listContainer, "", onAddPreset, onCloseWidget, onDeletePreset);
     dialogRef = BootstrapDialog.show({
       title: "Add Tracker Preset",
@@ -4733,7 +4798,14 @@ Version: v${version}`;
       }, 250);
       window.addEventListener("resize", reposition);
       window.addEventListener("scroll", reposition, { passive: true, capture: true });
-      btn.onclick = () => openPresetPicker({ onAddPreset: handleAddPreset, onCreateAdHoc: handleCreateAdHoc, onCloseWidget: handleCloseWidget, onDeletePreset: handleDeletePreset });
+      btn.onclick = () => openPresetPicker({
+        onAddPreset: handleAddPreset,
+        onCreateAdHoc: handleCreateAdHoc,
+        onCloseWidget: handleCloseWidget,
+        onDeletePreset: handleDeletePreset,
+        onOpenNotepad: () => showNotepad(),
+        showNotepadOption: settings.enableNotepad.value()
+      });
       return btn;
     }
     let trackerButton = null;

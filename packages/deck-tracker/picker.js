@@ -159,6 +159,32 @@ function buildCustomRow(onCreateAdHoc) {
   return row;
 }
 
+function buildNotepadRow(onOpenNotepad) {
+  const row = $('<div>').css({
+    display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 6px',
+    marginTop: '8px', borderTop: '2px dashed rgba(255,255,255,0.25)', cursor: 'pointer'
+  }).on('mouseenter', function () { $(this).css('background', 'rgba(255,255,255,0.08)'); })
+    .on('mouseleave', function () { $(this).css('background', ''); });
+
+  const info = $('<div>').css({ flex: 1 });
+  info.append(
+    $('<div>').css({ fontWeight: 'bold', fontSize: '14px' }).text('Notepad'),
+    $('<div>').css({ fontSize: '12px', color: '#aaa', marginTop: '2px' }).text('Reopen the drawing surface, if you closed it.')
+  );
+
+  const addBtn = $('<button>').text('+').css({
+    width: '28px', height: '28px', lineHeight: '1', fontSize: '16px', fontWeight: 'bold',
+    background: '#2ecc71', color: 'white', border: 'none', borderRadius: '4px',
+    cursor: 'pointer', flexShrink: 0
+  }).on('click', e => {
+    e.stopPropagation();
+    onOpenNotepad();
+  });
+
+  row.append(info, addBtn);
+  return row;
+}
+
 function openHelpDialog() {
   const content = $('<div>').css({ fontSize: '13px', lineHeight: '1.5' });
 
@@ -193,7 +219,7 @@ function openHelpDialog() {
   });
 }
 
-export function openPresetPicker({ onAddPreset, onCreateAdHoc, onCloseWidget, onDeletePreset }) {
+export function openPresetPicker({ onAddPreset, onCreateAdHoc, onCloseWidget, onDeletePreset, onOpenNotepad, showNotepadOption }) {
   const wrapper = $('<div>').css({ minWidth: '360px' });
   const searchInput = $('<input type="text" placeholder="Search presets...">').addClass('form-control').css({
     width: '100%', boxSizing: 'border-box', padding: '6px 8px', marginBottom: '8px', fontSize: '13px'
@@ -210,6 +236,18 @@ export function openPresetPicker({ onAddPreset, onCreateAdHoc, onCloseWidget, on
 
   searchInput.on('input', function () { renderList(listContainer, $(this).val(), onAddPreset, onCloseWidget, onDeletePreset); });
   wrapper.append(searchInput, listContainer, customRow);
+
+  // Only shown if "Enable The Notepad..." is currently on - if the
+  // user has it disabled, it shouldn't be offered here at all, only
+  // via the setting itself.
+  if (showNotepadOption) {
+    const notepadRow = buildNotepadRow(() => {
+      dialogRef?.close();
+      onOpenNotepad();
+    });
+    wrapper.append(notepadRow);
+  }
+
   renderList(listContainer, '', onAddPreset, onCloseWidget, onDeletePreset);
 
   dialogRef = BootstrapDialog.show({

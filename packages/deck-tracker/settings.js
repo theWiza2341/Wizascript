@@ -52,8 +52,27 @@ export function registerDeckTrackerSettings(plugin) {
     // genuinely manual drawing surface, no calculation, no game-event
     // hooking, just a literal digital scratchpad the player operates
     // by hand.
+    // Registered BEFORE the notepad setting below since its value
+    // determines which name string that setting gets registered with -
+    // this does mean it likely shows up ABOVE the notepad setting in
+    // the list rather than directly beneath it, since there's no
+    // confirmed way to rename an already-registered setting after the
+    // fact. Defaults to true - the joke name is funny at first, but
+    // the option exists for when it stops being funny.
+    enableStupidNotepadName: settings.add("enableStupidNotepadName", {
+      name: "Enable Stupid Ass Name",
+      type: "boolean",
+      default: true
+    }),
+    // A lighthearted callback to the exact "pen and paper / notepad
+    // files" defense given during the moderation discussion - a
+    // genuinely manual drawing surface, no calculation, no game-event
+    // hooking, just a literal digital scratchpad the player operates
+    // by hand.
     enableNotepad: settings.add("enableNotepad", {
-      name: "Enable The Notepad They Said Was Fine I Swear Don't Send Them After Me It Was ONE Time Ok?",
+      name: settings.value("enableStupidNotepadName")
+        ? "Enable The Notepad They Said Was Fine I Swear Don't Send Them After Me It Was ONE Time Ok?"
+        : "Enable Notepad Overlay Option",
       type: "boolean",
       default: false
     })

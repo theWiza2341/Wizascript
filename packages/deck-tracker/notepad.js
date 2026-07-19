@@ -99,7 +99,7 @@ function injectStyle() {
 .wizascript-notepad-canvas {
   border: 1px solid #d8cbb0;
   display: block;
-  cursor: crosshair;
+  cursor: crosshair !important;
 }
 .wizascript-notepad-toolbar {
   display: flex;

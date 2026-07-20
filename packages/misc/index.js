@@ -9,7 +9,7 @@ export function initMisc(plugin) {
   // matches entirely.
   function syncNotepadVisibility() {
     if (settings.enableNotepad.value()) {
-      showNotepad();
+      showNotepad(() => settings.enableNotepadDebugLogging.value());
     } else {
       hideNotepad();
     }

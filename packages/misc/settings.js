@@ -50,6 +50,18 @@ export function registerMiscSettings(plugin) {
     default: false
   });
 
+  // Debug logging for the Notepad specifically - added after a hard-
+  // to-diagnose round of bugs (widget drag, erase, thickness slider,
+  // and paper-color-apply all misbehaving with zero console errors).
+  // Logs key interaction events (mousedown/mouseup, tool changes,
+  // apply-button clicks) when enabled, so future issues can be
+  // diagnosed from an actual event sequence rather than guessing.
+  const enableNotepadDebugLogging = settings.add("enableNotepadDebugLogging", {
+    name: "Enable Notepad Debug Logging",
+    type: "boolean",
+    default: false
+  });
+
   // Keeps our own cache fresh throughout the session - there's no
   // "settings changed" event to react to instantly, so this polls
   // instead. Doesn't affect the ALREADY-DECIDED name for this session,
@@ -65,6 +77,7 @@ export function registerMiscSettings(plugin) {
   return {
     settings,
     enableNotepad,
-    disableWizaRanting
+    disableWizaRanting,
+    enableNotepadDebugLogging
   };
 }

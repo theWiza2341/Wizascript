@@ -45,7 +45,11 @@ const WHEEL_RADIUS = WHEEL_SIZE / 2;
 const WHEEL_FIXED_LIGHTNESS = 0.5; // the wheel itself always renders at 50% lightness for visual consistency/recognizability; the separate slider controls the ACTUAL lightness used
 
 let widgetEl = null;
-let blurHandler = null;
+let debugEnabledGetter = () => false;
+
+function debugLog(...args) {
+  if (debugEnabledGetter()) console.log("[NotepadDebug]", ...args);
+}
 
 // ---- self-contained position persistence (no deck-tracker dependency) ----
 
@@ -210,13 +214,16 @@ function buildColorPicker({ initialHue = 0, initialSaturation = 1, initialLightn
   wheelCanvas.addEventListener("mousedown", e => {
     picking = true;
     pickFromEvent(e);
+    debugLog("color wheel: mousedown, picking=true");
   });
   document.addEventListener("mousemove", e => {
     if (!picking) return;
     pickFromEvent(e);
   });
   document.addEventListener("mouseup", () => {
+    if (!picking) return;
     picking = false;
+    debugLog("color wheel: mouseup, picking=false, final color", currentColor());
   });
 
   lightnessSlider.addEventListener("input", () => {
@@ -416,6 +423,7 @@ function bindWidgetDrag(widget, header) {
     offsetX = e.clientX - rect.left;
     offsetY = e.clientY - rect.top;
     header.style.cursor = "grabbing";
+    debugLog("widget drag: mousedown, dragging=true");
   });
 
   document.addEventListener("mousemove", e => {
@@ -432,6 +440,7 @@ function bindWidgetDrag(widget, header) {
     header.style.cursor = "grab";
     const rect = widget.getBoundingClientRect();
     setSavedPosition({ left: rect.left, top: rect.top });
+    debugLog("widget drag: mouseup, dragging=false, saved position", { left: rect.left, top: rect.top });
   });
 
   // Returned so a shared window "blur" handler can forcibly clear this
@@ -447,10 +456,13 @@ function bindWidgetDrag(widget, header) {
   };
 }
 
-export function showNotepad() {
+export function showNotepad(getDebugEnabled = () => false) {
   if (widgetEl) return; // already open
 
   injectStyle();
+
+  debugEnabledGetter = getDebugEnabled;
+  debugLog("showNotepad() called - creating widget");
 
   let currentTool = "draw"; // "draw" | "erase"
   let currentPenColor = "rgb(26, 26, 26)"; // black
@@ -582,13 +594,18 @@ export function showNotepad() {
   // drawing untouched - lets you switch paper color without losing
   // what's already been drawn.
   function changeBackground(newColor) {
-    if (newColor === backgroundColor) return;
+    debugLog("changeBackground called: from", backgroundColor, "to", newColor);
+    if (newColor === backgroundColor) {
+      debugLog("changeBackground: no-op, colors are identical");
+      return;
+    }
 
     const oldRgb = parseRgbString(backgroundColor);
     const newRgb = parseRgbString(newColor);
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
     const TOLERANCE = 40;
+    let replacedCount = 0;
 
     for (let i = 0; i < data.length; i += 4) {
       const dr = Math.abs(data[i] - oldRgb.r);
@@ -598,12 +615,14 @@ export function showNotepad() {
         data[i] = newRgb.r;
         data[i + 1] = newRgb.g;
         data[i + 2] = newRgb.b;
+        replacedCount++;
       }
     }
 
     ctx.putImageData(imageData, 0, 0);
     backgroundColor = newColor;
     saveDrawing(canvas);
+    debugLog("changeBackground done: replaced", replacedCount, "of", data.length / 4, "pixels (", oldRgb, "->", newRgb, ", tolerance", TOLERANCE, ")");
   }
 
   function loadDrawing() {
@@ -626,13 +645,14 @@ export function showNotepad() {
   }
 
   loadDrawing();
-  const widgetDrag = bindWidgetDrag(widget, header);
+  bindWidgetDrag(widget, header);
 
   function selectTool(tool) {
     currentTool = tool;
     drawBox.classList.toggle("active", tool === "draw");
     eraseBox.classList.toggle("active", tool === "erase");
     updateCursorIndicatorSize();
+    debugLog("selectTool:", tool);
   }
 
   function getCanvasPoint(e) {
@@ -662,6 +682,7 @@ export function showNotepad() {
     lastX = pt.x;
     lastY = pt.y;
     useAt(pt.x, pt.y);
+    debugLog("canvas mousedown: drawing=true, tool=", currentTool, "thickness=", currentThickness, "penColor=", currentPenColor, "backgroundColor=", backgroundColor);
   });
 
   function updateCursorIndicatorSize() {
@@ -699,39 +720,27 @@ export function showNotepad() {
     saveDrawing(canvas);
   });
 
-  // Safety net: if the window loses focus mid-drag (mouse released
-  // outside the browser entirely, tab-switched, etc.), the mouseup
-  // that's supposed to clear "in progress" states never fires at all -
-  // leaving the widget-drag/wheel-pick/draw states stuck true forever,
-  // making those controls appear to stop responding on the next
-  // attempt. This forcibly clears all of them the moment focus is
-  // lost, regardless of what was happening.
-  function handleWindowBlur() {
-    drawing = false;
-    lastX = null;
-    lastY = null;
-    widgetDrag.reset();
-    sharedPicker.reset();
-  }
-  blurHandler = handleWindowBlur;
-  window.addEventListener("blur", handleWindowBlur);
-
   drawBox.addEventListener("click", () => selectTool("draw"));
   eraseBox.addEventListener("click", () => selectTool("erase"));
 
   sizeSlider.addEventListener("input", () => {
     currentThickness = Number(sizeSlider.value);
     updateCursorIndicatorSize();
+    debugLog("sizeSlider input:", currentThickness);
   });
 
   applyPenBtn.addEventListener("mousedown", e => e.stopPropagation());
   applyPenBtn.addEventListener("click", () => {
     currentPenColor = pendingColor;
     colorIndicator.style.background = pendingColor;
+    debugLog("Apply Pen Color clicked, pendingColor was:", pendingColor);
   });
 
   applyBgBtn.addEventListener("mousedown", e => e.stopPropagation());
-  applyBgBtn.addEventListener("click", () => changeBackground(pendingColor));
+  applyBgBtn.addEventListener("click", () => {
+    debugLog("Apply Paper Color clicked, pendingColor was:", pendingColor, "current backgroundColor:", backgroundColor);
+    changeBackground(pendingColor);
+  });
 
   clearBtn.addEventListener("mousedown", e => e.stopPropagation());
   clearBtn.addEventListener("click", () => {
@@ -752,10 +761,6 @@ export function hideNotepad() {
   if (!widgetEl) return;
   widgetEl.remove();
   widgetEl = null;
-  if (blurHandler) {
-    window.removeEventListener("blur", blurHandler);
-    blurHandler = null;
-  }
 }
 
 export function isNotepadOpen() {

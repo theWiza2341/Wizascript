@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.1.05
+// @version      1.1.04
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
 // @match        https://*.undercards.net/*
-// @icon         https://i.imgur.com/FOIUHej.png
+// @icon         https://i.imgur.com/qKHDfnB.png
 // @updateURL    https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @downloadURL  https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @grant        GM_getValue
@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "1.1.05";
+  var SUITE_VERSION = "1.1.04";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -4957,6 +4960,18 @@ Version: v${version}`;
     widgetEl.remove();
     widgetEl = null;
   }
+  function forceResetNotepad() {
+    if (widgetEl) {
+      widgetEl.remove();
+      widgetEl = null;
+    }
+    try {
+      GM_deleteValue(DRAWING_STORAGE_KEY);
+      GM_deleteValue(POSITION_STORAGE_KEY);
+    } catch (e) {
+    }
+    console.log("[Wizascript] Notepad forcibly reset - drawing and position cleared.");
+  }
 
   // packages/misc/index.js
   function initMisc(plugin) {
@@ -4971,6 +4986,14 @@ Version: v${version}`;
     syncNotepadVisibility();
     plugin.events.on("connect", () => {
       syncNotepadVisibility();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.ctrlKey && e.altKey && e.shiftKey && e.key.toLowerCase() === "n") {
+        forceResetNotepad();
+        if (settings.enableNotepad.value()) {
+          showNotepad();
+        }
+      }
     });
   }
 

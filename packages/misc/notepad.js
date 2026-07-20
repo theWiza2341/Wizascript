@@ -763,3 +763,23 @@ export function hideNotepad() {
 export function isNotepadOpen() {
   return widgetEl !== null;
 }
+
+// Emergency recovery: wipes the persisted drawing and position, and
+// forcibly removes any existing widget from the DOM - deliberately
+// NOT routed through the widget's own buttons/UI at all, since the
+// whole point is to work even if the widget itself is the thing
+// that's unresponsive. Bound to a global keyboard shortcut in
+// index.js rather than any on-widget control.
+export function forceResetNotepad() {
+  if (widgetEl) {
+    widgetEl.remove();
+    widgetEl = null;
+  }
+  try {
+    GM_deleteValue(DRAWING_STORAGE_KEY);
+    GM_deleteValue(POSITION_STORAGE_KEY);
+  } catch (e) {
+    // Non-critical - worst case one or both just didn't clear this time.
+  }
+  console.log("[Wizascript] Notepad forcibly reset - drawing and position cleared.");
+}

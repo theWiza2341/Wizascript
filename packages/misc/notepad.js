@@ -521,6 +521,11 @@ export function showNotepad() {
 
   toolbar.append(drawBox, eraseBox, sizeSlider);
 
+  // ---- canvas ----
+  const canvas = document.createElement("canvas");
+  canvas.className = "wizascript-notepad-canvas";
+  canvas.width = CANVAS_WIDTH;
+  canvas.height = CANVAS_HEIGHT;
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
   const canvasWrapper = document.createElement("div");

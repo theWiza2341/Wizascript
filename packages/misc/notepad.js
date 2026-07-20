@@ -639,7 +639,19 @@ export function showNotepad(getDebugEnabled = () => false) {
     }
 
     const img = new Image();
-    img.onload = () => ctx.drawImage(img, 0, 0);
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0);
+      // Detect the ACTUAL background color from the restored image by
+      // sampling a corner pixel - our in-memory backgroundColor
+      // variable otherwise always assumes the hardcoded default, which
+      // is WRONG if paper color was changed in a previous session.
+      // Confirmed via debug log: this mismatch caused changeBackground
+      // to compare against the wrong reference color entirely, only
+      // coincidentally matching a small scattered fraction of pixels.
+      const corner = ctx.getImageData(0, 0, 1, 1).data;
+      backgroundColor = `rgb(${corner[0]}, ${corner[1]}, ${corner[2]})`;
+      debugLog("loadDrawing: detected actual background color from restored image:", backgroundColor);
+    };
     img.onerror = () => paintBackground(backgroundColor);
     img.src = saved;
   }

@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.1.05
+// @version      1.1.04
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
 // @match        https://*.undercards.net/*
-// @icon         https://i.imgur.com/FOIUHej.png
+// @icon         https://i.imgur.com/qKHDfnB.png
 // @updateURL    https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @downloadURL  https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @grant        GM_getValue
@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "1.1.05";
+  var SUITE_VERSION = "1.1.04";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -2210,6 +2210,9 @@ Version: v${version}`;
     // Royal Loox
     "royal-loox": "Royal_Loox",
     "rloox": "Royal_Loox",
+    // Hanging Spider
+    "hanging-spider": "Hanging_Spider",
+    "hang": "Hanging_Spider",
     // Titan Fuzzy
     "titan-fuzzy": "Titan_Fuzzy",
     "fuzzy": "Titan_Fuzzy",
@@ -4339,46 +4342,16 @@ Version: v${version}`;
   }
 
   // packages/misc/settings.js
-  var NOTEPAD_RANT_NAME = "Enable The Notepad They Said Was Fine I Swear Don't Send Them After Me It Was ONE Time Ok? Look I Read The Actual Statement Very Carefully And It Specifically Says Pen And Paper Type Tools Are Completely Fine And This Is Quite Literally Just Digital Pen And Paper, It Doesn't Calculate Anything, It Doesn't Hook Into Any Game Events, It Doesn't Even Know What Turn It Is, Please I Am Begging You Just Let Me Have This One Silly Little Drawing Feature Its So Cool And Awesome Just Try It Yourself Before You Nuke My Script First Ok?";
-  var NOTEPAD_SHORT_NAME = "Enable Notepad Overlay Option";
-  var RANT_DISABLED_CACHE_KEY = "wizascript.misc.rantDisabledCache";
-  var CACHE_SYNC_INTERVAL_MS = 3e3;
   function registerMiscSettings(plugin) {
     const settings = createFeatureSettings(plugin, "misc", "Miscellaneous");
-    let cachedRantDisabled;
-    try {
-      cachedRantDisabled = GM_getValue(RANT_DISABLED_CACHE_KEY, false);
-    } catch (e) {
-      cachedRantDisabled = false;
-    }
     const enableNotepad = settings.add("enableNotepad", {
-      name: cachedRantDisabled ? NOTEPAD_SHORT_NAME : NOTEPAD_RANT_NAME,
+      name: "Enable Notepad Overlay Option",
       type: "boolean",
       default: false
     });
-    const disableWizaRanting = settings.add("disableWizaRanting", {
-      name: "Disable Incessant Ranting",
-      type: "boolean",
-      default: false
-    });
-    const enableNotepadDebugLogging = settings.add("enableNotepadDebugLogging", {
-      name: "Enable Notepad Debug Logging",
-      type: "boolean",
-      default: false
-    });
-    function syncRantCache() {
-      try {
-        GM_setValue(RANT_DISABLED_CACHE_KEY, disableWizaRanting.value());
-      } catch (e) {
-      }
-    }
-    syncRantCache();
-    setInterval(syncRantCache, CACHE_SYNC_INTERVAL_MS);
     return {
       settings,
-      enableNotepad,
-      disableWizaRanting,
-      enableNotepadDebugLogging
+      enableNotepad
     };
   }
 
@@ -4393,10 +4366,6 @@ Version: v${version}`;
   var WHEEL_RADIUS = WHEEL_SIZE / 2;
   var WHEEL_FIXED_LIGHTNESS = 0.5;
   var widgetEl = null;
-  var debugEnabledGetter = () => false;
-  function debugLog(...args) {
-    if (debugEnabledGetter()) console.log("[NotepadDebug]", ...args);
-  }
   function getSavedPosition2() {
     try {
       const raw = GM_getValue(POSITION_STORAGE_KEY, null);
@@ -4544,16 +4513,13 @@ Version: v${version}`;
     wheelCanvas.addEventListener("mousedown", (e) => {
       picking = true;
       pickFromEvent(e);
-      debugLog("color wheel: mousedown, picking=true");
     });
     document.addEventListener("mousemove", (e) => {
       if (!picking) return;
       pickFromEvent(e);
     });
     document.addEventListener("mouseup", () => {
-      if (!picking) return;
       picking = false;
-      debugLog("color wheel: mouseup, picking=false, final color", currentColor());
     });
     lightnessSlider.addEventListener("input", () => {
       lightness = Number(lightnessSlider.value) / 100;
@@ -4562,15 +4528,7 @@ Version: v${version}`;
     updateIndicatorPosition();
     notify();
     container.append(wheelWrapper, lightnessRow, preview);
-    return {
-      element: container,
-      getColor: currentColor,
-      // Same reasoning as bindWidgetDrag's own reset() - clears a
-      // potentially-stuck "picking" flag if mouseup never fired.
-      reset: () => {
-        picking = false;
-      }
-    };
+    return { element: container, getColor: currentColor };
   }
   function injectStyle() {
     if (document.getElementById("wizascript-notepad-style")) return;
@@ -4610,7 +4568,7 @@ Version: v${version}`;
 .wizascript-notepad-body {
   padding: 8px;
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 .wizascript-notepad-main-column {
   display: flex;
@@ -4619,7 +4577,7 @@ Version: v${version}`;
 .wizascript-notepad-canvas {
   border: 1px solid #d8cbb0;
   display: block;
-  cursor: none !important;
+  cursor: crosshair !important;
 }
 .wizascript-notepad-toolbar {
   display: flex;
@@ -4711,7 +4669,7 @@ Version: v${version}`;
   border-radius: 3px;
   border: 1px solid rgba(0,0,0,0.3);
 }
-.wizascript-notepad-apply-bg-btn {
+.wizascript-notepad-apply-btn {
   font-size: 10px;
   padding: 2px 8px;
   border-radius: 3px;
@@ -4720,6 +4678,7 @@ Version: v${version}`;
   color: #5a4a35;
   cursor: pointer;
   font-weight: bold;
+  width: 100%;
 }
 `;
     document.head.appendChild(style);
@@ -4746,7 +4705,6 @@ Version: v${version}`;
       offsetX = e.clientX - rect.left;
       offsetY = e.clientY - rect.top;
       header.style.cursor = "grabbing";
-      debugLog("widget drag: mousedown, dragging=true");
     });
     document.addEventListener("mousemove", (e) => {
       if (!dragging) return;
@@ -4761,20 +4719,11 @@ Version: v${version}`;
       header.style.cursor = "grab";
       const rect = widget.getBoundingClientRect();
       setSavedPosition2({ left: rect.left, top: rect.top });
-      debugLog("widget drag: mouseup, dragging=false, saved position", { left: rect.left, top: rect.top });
     });
-    return {
-      reset: () => {
-        dragging = false;
-        header.style.cursor = "grab";
-      }
-    };
   }
-  function showNotepad(getDebugEnabled = () => false) {
+  function showNotepad() {
     if (widgetEl) return;
     injectStyle();
-    debugEnabledGetter = getDebugEnabled;
-    debugLog("showNotepad() called - creating widget");
     let currentTool = "draw";
     let currentPenColor = "rgb(26, 26, 26)";
     let backgroundColor = DEFAULT_BACKGROUND;
@@ -4835,7 +4784,8 @@ Version: v${version}`;
     canvas.className = "wizascript-notepad-canvas";
     canvas.width = CANVAS_WIDTH;
     canvas.height = CANVAS_HEIGHT;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const ctx = canvas.getContext("2d");
+    canvas.style.cursor = "none";
     const canvasWrapper = document.createElement("div");
     canvasWrapper.style.position = "relative";
     canvasWrapper.style.width = CANVAS_WIDTH + "px";
@@ -4864,10 +4814,10 @@ Version: v${version}`;
       }
     });
     const applyPenBtn = document.createElement("button");
-    applyPenBtn.className = "wizascript-notepad-apply-bg-btn";
+    applyPenBtn.className = "wizascript-notepad-apply-btn";
     applyPenBtn.textContent = "Apply Pen Color";
     const applyBgBtn = document.createElement("button");
-    applyBgBtn.className = "wizascript-notepad-apply-bg-btn";
+    applyBgBtn.className = "wizascript-notepad-apply-btn";
     applyBgBtn.textContent = "Apply Paper Color";
     colorColumn.append(colorLabel, sharedPicker.element, applyPenBtn, applyBgBtn);
     body.append(mainColumn, colorColumn);
@@ -4878,17 +4828,12 @@ Version: v${version}`;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
     function changeBackground(newColor) {
-      debugLog("changeBackground called: from", backgroundColor, "to", newColor);
-      if (newColor === backgroundColor) {
-        debugLog("changeBackground: no-op, colors are identical");
-        return;
-      }
+      if (newColor === backgroundColor) return;
       const oldRgb = parseRgbString(backgroundColor);
       const newRgb = parseRgbString(newColor);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
       const TOLERANCE = 40;
-      let replacedCount = 0;
       for (let i = 0; i < data.length; i += 4) {
         const dr = Math.abs(data[i] - oldRgb.r);
         const dg = Math.abs(data[i + 1] - oldRgb.g);
@@ -4897,13 +4842,11 @@ Version: v${version}`;
           data[i] = newRgb.r;
           data[i + 1] = newRgb.g;
           data[i + 2] = newRgb.b;
-          replacedCount++;
         }
       }
       ctx.putImageData(imageData, 0, 0);
       backgroundColor = newColor;
       saveDrawing(canvas);
-      debugLog("changeBackground done: replaced", replacedCount, "of", data.length / 4, "pixels (", oldRgb, "->", newRgb, ", tolerance", TOLERANCE, ")");
     }
     function loadDrawing() {
       let saved;
@@ -4921,7 +4864,6 @@ Version: v${version}`;
         ctx.drawImage(img, 0, 0);
         const corner = ctx.getImageData(0, 0, 1, 1).data;
         backgroundColor = `rgb(${corner[0]}, ${corner[1]}, ${corner[2]})`;
-        debugLog("loadDrawing: detected actual background color from restored image:", backgroundColor);
       };
       img.onerror = () => paintBackground(backgroundColor);
       img.src = saved;
@@ -4933,7 +4875,6 @@ Version: v${version}`;
       drawBox.classList.toggle("active", tool === "draw");
       eraseBox.classList.toggle("active", tool === "erase");
       updateCursorIndicatorSize();
-      debugLog("selectTool:", tool);
     }
     function getCanvasPoint(e) {
       const rect = canvas.getBoundingClientRect();
@@ -4960,7 +4901,6 @@ Version: v${version}`;
       lastX = pt.x;
       lastY = pt.y;
       useAt(pt.x, pt.y);
-      debugLog("canvas mousedown: drawing=true, tool=", currentTool, "thickness=", currentThickness, "penColor=", currentPenColor, "backgroundColor=", backgroundColor);
     });
     function updateCursorIndicatorSize() {
       const size = currentTool === "erase" ? currentThickness * 2.2 : currentThickness;
@@ -4996,19 +4936,14 @@ Version: v${version}`;
     sizeSlider.addEventListener("input", () => {
       currentThickness = Number(sizeSlider.value);
       updateCursorIndicatorSize();
-      debugLog("sizeSlider input:", currentThickness);
     });
     applyPenBtn.addEventListener("mousedown", (e) => e.stopPropagation());
     applyPenBtn.addEventListener("click", () => {
       currentPenColor = pendingColor;
       colorIndicator.style.background = pendingColor;
-      debugLog("Apply Pen Color clicked, pendingColor was:", pendingColor);
     });
     applyBgBtn.addEventListener("mousedown", (e) => e.stopPropagation());
-    applyBgBtn.addEventListener("click", () => {
-      debugLog("Apply Paper Color clicked, pendingColor was:", pendingColor, "current backgroundColor:", backgroundColor);
-      changeBackground(pendingColor);
-    });
+    applyBgBtn.addEventListener("click", () => changeBackground(pendingColor));
     clearBtn.addEventListener("mousedown", (e) => e.stopPropagation());
     clearBtn.addEventListener("click", () => {
       paintBackground(backgroundColor);
@@ -5031,7 +4966,7 @@ Version: v${version}`;
     const settings = registerMiscSettings(plugin);
     function syncNotepadVisibility() {
       if (settings.enableNotepad.value()) {
-        showNotepad(() => settings.enableNotepadDebugLogging.value());
+        showNotepad();
       } else {
         hideNotepad();
       }

@@ -7,20 +7,11 @@
 // release to stop. No calculation, no game-event hooking, no
 // automation of any kind.
 //
-// Lives in the "misc" package (not deck-tracker) specifically so it
-// persists and works OUTSIDE of matches too, not just Game/Spectate
-// pages - deck-tracker gates its whole feature behind isGamePage(),
-// which would have blocked the notepad from working anywhere else.
-// This means position persistence is self-contained here (a small,
-// dedicated GM_setValue-backed store) rather than importing from
-// deck-tracker's registry.js, which would have created a cross-
-// package dependency for no good reason.
-//
-// Color selection is a full hue/saturation wheel plus a separate
-// lightness slider (HSL), rather than a fixed palette - lets the user
-// reach genuine tints (like pink) and shades that a discrete swatch
-// set can't represent, at the cost of being a bit more involved to
-// use than clicking a preset color.
+// Lives in the "misc" package (not deck-tracker) so it persists and
+// works outside of matches too, not gated behind deck-tracker's
+// isGamePage() check. Position persistence is therefore self-
+// contained here (small, dedicated GM_setValue-backed helpers) rather
+// than importing from deck-tracker's registry.js.
 //
 // IMPORTANT: the background color is painted directly onto the
 // canvas's own pixel buffer, not just set via CSS - confirmed that a
@@ -31,6 +22,12 @@
 // rather than using clearRect (which would punch a transparent hole
 // straight through to the page behind it, not restore the paper
 // color).
+//
+// Color selection is a single shared hue/saturation wheel plus a
+// lightness slider (HSL), used for BOTH pen and paper color via two
+// separate "Apply" buttons - not a fixed swatch palette, and not two
+// separate wheel instances. This lets the user reach genuine tints
+// (like pink) a discrete swatch set couldn't represent.
 
 const POSITION_STORAGE_KEY = "wizascript.misc.notepadPosition";
 const DRAWING_STORAGE_KEY = "wizascript.misc.notepadDrawing";
@@ -45,11 +42,6 @@ const WHEEL_RADIUS = WHEEL_SIZE / 2;
 const WHEEL_FIXED_LIGHTNESS = 0.5; // the wheel itself always renders at 50% lightness for visual consistency/recognizability; the separate slider controls the ACTUAL lightness used
 
 let widgetEl = null;
-let debugEnabledGetter = () => false;
-
-function debugLog(...args) {
-  if (debugEnabledGetter()) console.log("[NotepadDebug]", ...args);
-}
 
 // ---- self-contained position persistence (no deck-tracker dependency) ----
 
@@ -214,16 +206,13 @@ function buildColorPicker({ initialHue = 0, initialSaturation = 1, initialLightn
   wheelCanvas.addEventListener("mousedown", e => {
     picking = true;
     pickFromEvent(e);
-    debugLog("color wheel: mousedown, picking=true");
   });
   document.addEventListener("mousemove", e => {
     if (!picking) return;
     pickFromEvent(e);
   });
   document.addEventListener("mouseup", () => {
-    if (!picking) return;
     picking = false;
-    debugLog("color wheel: mouseup, picking=false, final color", currentColor());
   });
 
   lightnessSlider.addEventListener("input", () => {
@@ -235,13 +224,7 @@ function buildColorPicker({ initialHue = 0, initialSaturation = 1, initialLightn
   notify();
 
   container.append(wheelWrapper, lightnessRow, preview);
-  return {
-    element: container,
-    getColor: currentColor,
-    // Same reasoning as bindWidgetDrag's own reset() - clears a
-    // potentially-stuck "picking" flag if mouseup never fired.
-    reset: () => { picking = false; }
-  };
+  return { element: container, getColor: currentColor };
 }
 
 function injectStyle() {
@@ -282,7 +265,7 @@ function injectStyle() {
 .wizascript-notepad-body {
   padding: 8px;
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 .wizascript-notepad-main-column {
   display: flex;
@@ -291,7 +274,7 @@ function injectStyle() {
 .wizascript-notepad-canvas {
   border: 1px solid #d8cbb0;
   display: block;
-  cursor: none !important;
+  cursor: crosshair !important;
 }
 .wizascript-notepad-toolbar {
   display: flex;
@@ -383,7 +366,7 @@ function injectStyle() {
   border-radius: 3px;
   border: 1px solid rgba(0,0,0,0.3);
 }
-.wizascript-notepad-apply-bg-btn {
+.wizascript-notepad-apply-btn {
   font-size: 10px;
   padding: 2px 8px;
   border-radius: 3px;
@@ -392,6 +375,7 @@ function injectStyle() {
   color: #5a4a35;
   cursor: pointer;
   font-weight: bold;
+  width: 100%;
 }
 `;
   document.head.appendChild(style);
@@ -423,7 +407,6 @@ function bindWidgetDrag(widget, header) {
     offsetX = e.clientX - rect.left;
     offsetY = e.clientY - rect.top;
     header.style.cursor = "grabbing";
-    debugLog("widget drag: mousedown, dragging=true");
   });
 
   document.addEventListener("mousemove", e => {
@@ -440,29 +423,13 @@ function bindWidgetDrag(widget, header) {
     header.style.cursor = "grab";
     const rect = widget.getBoundingClientRect();
     setSavedPosition({ left: rect.left, top: rect.top });
-    debugLog("widget drag: mouseup, dragging=false, saved position", { left: rect.left, top: rect.top });
   });
-
-  // Returned so a shared window "blur" handler can forcibly clear this
-  // if mouseup never fires - which happens if the mouse button is
-  // released OUTSIDE the browser window entirely, or the tab loses
-  // focus mid-drag. Without this, "dragging" could get stuck true
-  // forever, making the widget appear to stop responding to drags.
-  return {
-    reset: () => {
-      dragging = false;
-      header.style.cursor = "grab";
-    }
-  };
 }
 
-export function showNotepad(getDebugEnabled = () => false) {
+export function showNotepad() {
   if (widgetEl) return; // already open
 
   injectStyle();
-
-  debugEnabledGetter = getDebugEnabled;
-  debugLog("showNotepad() called - creating widget");
 
   let currentTool = "draw"; // "draw" | "erase"
   let currentPenColor = "rgb(26, 26, 26)"; // black
@@ -538,7 +505,16 @@ export function showNotepad(getDebugEnabled = () => false) {
   canvas.className = "wizascript-notepad-canvas";
   canvas.width = CANVAS_WIDTH;
   canvas.height = CANVAS_HEIGHT;
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  const ctx = canvas.getContext("2d");
+
+  // Native cursor hidden entirely over the canvas - a custom indicator
+  // (below) is drawn instead, guaranteed to match the exact same
+  // coordinates the drawing code itself uses, eliminating any
+  // possible mismatch between "where the cursor looks like it is" and
+  // "where the mark actually appears" - confirmed via screenshot that
+  // the native crosshair's hotspot and the actual drawn point didn't
+  // visually line up.
+  canvas.style.cursor = "none";
 
   const canvasWrapper = document.createElement("div");
   canvasWrapper.style.position = "relative";
@@ -550,8 +526,8 @@ export function showNotepad(getDebugEnabled = () => false) {
   cursorIndicator.style.pointerEvents = "none";
   cursorIndicator.style.borderRadius = "50%";
   cursorIndicator.style.border = "1.5px solid rgba(0,0,0,0.75)";
-  cursorIndicator.style.boxShadow = "0 0 0 1px rgba(255,255,255,0.7)";
-  cursorIndicator.style.transform = "translate(-50%, -50%)";
+  cursorIndicator.style.boxShadow = "0 0 0 1px rgba(255,255,255,0.7)"; // faint outer ring, keeps it visible on dark backgrounds too
+  cursorIndicator.style.transform = "translate(-50%, -50%)"; // centers the indicator ON the coordinate, rather than top-left aligning it there
   cursorIndicator.style.display = "none";
 
   canvasWrapper.append(canvas, cursorIndicator);
@@ -569,10 +545,10 @@ export function showNotepad(getDebugEnabled = () => false) {
     onChange: color => { pendingColor = color; }
   });
   const applyPenBtn = document.createElement("button");
-  applyPenBtn.className = "wizascript-notepad-apply-bg-btn";
+  applyPenBtn.className = "wizascript-notepad-apply-btn";
   applyPenBtn.textContent = "Apply Pen Color";
   const applyBgBtn = document.createElement("button");
-  applyBgBtn.className = "wizascript-notepad-apply-bg-btn";
+  applyBgBtn.className = "wizascript-notepad-apply-btn";
   applyBgBtn.textContent = "Apply Paper Color";
   colorColumn.append(colorLabel, sharedPicker.element, applyPenBtn, applyBgBtn);
 
@@ -589,23 +565,30 @@ export function showNotepad(getDebugEnabled = () => false) {
   }
 
   // Replaces every pixel currently matching the OLD background color
-  // with the new one (within a tolerance, to catch anti-aliased
-  // blended edge pixels from stroke boundaries), leaving any actual
-  // drawing untouched - lets you switch paper color without losing
-  // what's already been drawn.
+  // with the new one, leaving any actual drawing (any other color)
+  // untouched - lets you switch paper color without losing what's
+  // already been drawn. The one accepted edge case: a stroke drawn in
+  // the exact same color as the current background would be
+  // indistinguishable from background and get swapped too - but since
+  // it wasn't visible against that background anyway, this doesn't
+  // lose anything the user could actually see.
   function changeBackground(newColor) {
-    debugLog("changeBackground called: from", backgroundColor, "to", newColor);
-    if (newColor === backgroundColor) {
-      debugLog("changeBackground: no-op, colors are identical");
-      return;
-    }
+    if (newColor === backgroundColor) return;
 
     const oldRgb = parseRgbString(backgroundColor);
     const newRgb = parseRgbString(newColor);
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
+
+    // Tolerance range rather than an exact match - stroke edges
+    // (round line caps especially) are anti-aliased, meaning the
+    // pixels right at an eraser or pen stroke's boundary are a BLEND
+    // with the background, not pure background color. An exact match
+    // would skip those blended pixels entirely, leaving a faint ring
+    // of the OLD background color surviving right at every stroke
+    // edge - confirmed by the user as visible remnants after
+    // switching paper color.
     const TOLERANCE = 40;
-    let replacedCount = 0;
 
     for (let i = 0; i < data.length; i += 4) {
       const dr = Math.abs(data[i] - oldRgb.r);
@@ -615,16 +598,19 @@ export function showNotepad(getDebugEnabled = () => false) {
         data[i] = newRgb.r;
         data[i + 1] = newRgb.g;
         data[i + 2] = newRgb.b;
-        replacedCount++;
       }
     }
 
     ctx.putImageData(imageData, 0, 0);
     backgroundColor = newColor;
     saveDrawing(canvas);
-    debugLog("changeBackground done: replaced", replacedCount, "of", data.length / 4, "pixels (", oldRgb, "->", newRgb, ", tolerance", TOLERANCE, ")");
   }
 
+  // Loads the saved PNG directly if one exists - it already includes
+  // whatever background color was active last time, since the whole
+  // canvas (background + drawing) is saved as one flat image. Falls
+  // back to a fresh, plain-background fill for a genuinely first-ever
+  // use.
   function loadDrawing() {
     let saved;
     try {
@@ -645,12 +631,12 @@ export function showNotepad(getDebugEnabled = () => false) {
       // sampling a corner pixel - our in-memory backgroundColor
       // variable otherwise always assumes the hardcoded default, which
       // is WRONG if paper color was changed in a previous session.
-      // Confirmed via debug log: this mismatch caused changeBackground
-      // to compare against the wrong reference color entirely, only
-      // coincidentally matching a small scattered fraction of pixels.
+      // Confirmed via live testing: this mismatch caused
+      // changeBackground's tolerance comparison to compare against the
+      // wrong reference color entirely, only replacing a small
+      // scattered fraction of pixels instead of the whole background.
       const corner = ctx.getImageData(0, 0, 1, 1).data;
       backgroundColor = `rgb(${corner[0]}, ${corner[1]}, ${corner[2]})`;
-      debugLog("loadDrawing: detected actual background color from restored image:", backgroundColor);
     };
     img.onerror = () => paintBackground(backgroundColor);
     img.src = saved;
@@ -664,7 +650,6 @@ export function showNotepad(getDebugEnabled = () => false) {
     drawBox.classList.toggle("active", tool === "draw");
     eraseBox.classList.toggle("active", tool === "erase");
     updateCursorIndicatorSize();
-    debugLog("selectTool:", tool);
   }
 
   function getCanvasPoint(e) {
@@ -673,8 +658,14 @@ export function showNotepad(getDebugEnabled = () => false) {
   }
 
   function useAt(x, y) {
+    // Both tools now use the same connected-line stroke technique -
+    // the eraser previously stamped an isolated square at each point
+    // (fillRect), which left visible gaps between stamps on a fast
+    // drag since nothing connected consecutive points the way the
+    // pen's line does. Stroking a line for both eliminates that
+    // entirely, same as it already worked correctly for the pen.
     const isErase = currentTool === "erase";
-    const size = isErase ? currentThickness * 2.2 : currentThickness;
+    const size = isErase ? currentThickness * 2.2 : currentThickness; // eraser reads chunkier than the pen at the same slider value
     ctx.lineWidth = size;
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
@@ -688,13 +679,12 @@ export function showNotepad(getDebugEnabled = () => false) {
   }
 
   canvas.addEventListener("mousedown", e => {
-    if (e.button !== 0) return;
+    if (e.button !== 0) return; // left click only
     drawing = true;
     const pt = getCanvasPoint(e);
     lastX = pt.x;
     lastY = pt.y;
-    useAt(pt.x, pt.y);
-    debugLog("canvas mousedown: drawing=true, tool=", currentTool, "thickness=", currentThickness, "penColor=", currentPenColor, "backgroundColor=", backgroundColor);
+    useAt(pt.x, pt.y); // marks a single dot even on a plain click, no drag needed
   });
 
   function updateCursorIndicatorSize() {
@@ -738,21 +728,16 @@ export function showNotepad(getDebugEnabled = () => false) {
   sizeSlider.addEventListener("input", () => {
     currentThickness = Number(sizeSlider.value);
     updateCursorIndicatorSize();
-    debugLog("sizeSlider input:", currentThickness);
   });
 
   applyPenBtn.addEventListener("mousedown", e => e.stopPropagation());
   applyPenBtn.addEventListener("click", () => {
     currentPenColor = pendingColor;
     colorIndicator.style.background = pendingColor;
-    debugLog("Apply Pen Color clicked, pendingColor was:", pendingColor);
   });
 
   applyBgBtn.addEventListener("mousedown", e => e.stopPropagation());
-  applyBgBtn.addEventListener("click", () => {
-    debugLog("Apply Paper Color clicked, pendingColor was:", pendingColor, "current backgroundColor:", backgroundColor);
-    changeBackground(pendingColor);
-  });
+  applyBgBtn.addEventListener("click", () => changeBackground(pendingColor));
 
   clearBtn.addEventListener("mousedown", e => e.stopPropagation());
   clearBtn.addEventListener("click", () => {

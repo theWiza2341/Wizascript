@@ -10,9 +10,11 @@ import { isSpectating } from "../core/player-context.js";
 // Deck Tracker only makes sense on Game/Spectate pages - matches the
 // original standalone script's @match restriction, now enforced inside
 // the feature itself since the merged suite's @match is broad.
+
+import { matchesPage } from "../core/page-match.js";
+
 function isGamePage() {
-  const path = location.pathname.toLowerCase();
-  return path.includes("game") || path.includes("spectate");
+  return matchesPage(["/Game", { prefix: "/Spectate" }]);
 }
 
 function waitForAvatar(callback) {

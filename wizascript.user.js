@@ -4354,6 +4354,7 @@ Version: v${version}`;
   var DRAWING_KEY = "wizascript.misc.notepad.drawing";
   var PEN_COLOR_KEY = "wizascript.misc.notepad.penColor";
   var RECENT_COLORS_KEY = "wizascript.misc.notepad.recentColors";
+  var TITLE_KEY = "wizascript.misc.notepad.title";
   function readJSON(key, fallback) {
     try {
       const raw = GM_getValue(key, null);
@@ -4418,10 +4419,24 @@ Version: v${version}`;
     } catch (e) {
     }
   }
+  function getSavedTitle() {
+    return readJSON(TITLE_KEY, null);
+  }
+  function setSavedTitle(title) {
+    writeJSON(TITLE_KEY, title);
+  }
+  function clearSavedTitle() {
+    try {
+      GM_deleteValue(TITLE_KEY);
+    } catch (e) {
+    }
+  }
 
   // packages/misc/notepad/widget.js
   var DEFAULT_RIGHT = 16;
   var DEFAULT_BOTTOM = 16;
+  var DEFAULT_TITLE = "Notepad";
+  var TITLE_SAVE_DEBOUNCE_MS = 400;
   function buildNotepadShell(signal) {
     const root = document.createElement("div");
     root.className = "wizascript-notepad";
@@ -4435,11 +4450,23 @@ Version: v${version}`;
     }
     const header = document.createElement("div");
     header.className = "wizascript-notepad-header";
-    const title = document.createElement("span");
-    title.textContent = "Notepad";
+    const titleInput = document.createElement("input");
+    titleInput.type = "text";
+    titleInput.className = "wizascript-notepad-title-input";
+    titleInput.maxLength = 60;
+    titleInput.spellcheck = false;
+    titleInput.value = getSavedTitle() || DEFAULT_TITLE;
+    titleInput.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
+    let titleSaveTimer = null;
+    titleInput.addEventListener("input", () => {
+      clearTimeout(titleSaveTimer);
+      titleSaveTimer = setTimeout(() => {
+        setSavedTitle(titleInput.value.trim() || DEFAULT_TITLE);
+      }, TITLE_SAVE_DEBOUNCE_MS);
+    }, { signal });
     const headerButtons = document.createElement("span");
     headerButtons.className = "wizascript-notepad-header-buttons";
-    header.append(title, headerButtons);
+    header.append(titleInput, headerButtons);
     const body = document.createElement("div");
     body.className = "wizascript-notepad-body";
     root.append(header, body);
@@ -4469,7 +4496,7 @@ Version: v${version}`;
       const rect = root.getBoundingClientRect();
       setSavedPosition2({ left: rect.left, top: rect.top });
     }, { signal });
-    return { root, header, body, headerButtons };
+    return { root, header, body, headerButtons, titleInput };
   }
 
   // packages/misc/notepad/canvas.js
@@ -4556,7 +4583,7 @@ Version: v${version}`;
       lastY = null;
       scheduleSave();
     }
-    function downloadAsPng() {
+    function downloadAsPng(filename = "notepad-doodle.png") {
       const flattened = document.createElement("canvas");
       flattened.width = CANVAS_WIDTH;
       flattened.height = CANVAS_HEIGHT;
@@ -4564,7 +4591,7 @@ Version: v${version}`;
       fctx.drawImage(backgroundCanvas, 0, 0);
       fctx.drawImage(inkCanvas, 0, 0);
       const link = document.createElement("a");
-      link.download = "notepad-doodle.png";
+      link.download = filename;
       link.href = flattened.toDataURL("image/png");
       link.click();
     }
@@ -4764,13 +4791,17 @@ Version: v${version}`;
   // packages/misc/notepad/index.js
   var DEFAULT_THICKNESS = 5;
   var mounted = null;
+  function sanitizeFilename(rawTitle) {
+    const cleaned = (rawTitle || "").trim().replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, " ").slice(0, 60);
+    return cleaned || "notepad-doodle";
+  }
   function showNotepad() {
     var _a;
     if (mounted) return;
     injectStyle();
     const controller = new AbortController();
     const { signal } = controller;
-    const { root, body, headerButtons } = buildNotepadShell(signal);
+    const { root, body, headerButtons, titleInput } = buildNotepadShell(signal);
     const surface = createDrawingSurface();
     const DEFAULT_PEN_STATE = { hue: 0, saturation: 0, lightness: 0.1, color: "rgb(26, 26, 26)" };
     const savedPen = (_a = getSavedPenColor()) != null ? _a : DEFAULT_PEN_STATE;
@@ -4904,7 +4935,9 @@ Version: v${version}`;
     clearBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
     clearBtn.addEventListener("click", () => surface.clear(), { signal });
     saveBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
-    saveBtn.addEventListener("click", () => surface.downloadAsPng(), { signal });
+    saveBtn.addEventListener("click", () => {
+      surface.downloadAsPng(`${sanitizeFilename(titleInput.value)}.png`);
+    }, { signal });
     closeBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
     closeBtn.addEventListener("click", () => hideNotepad(), { signal });
     mounted = { root, controller };
@@ -4921,7 +4954,8 @@ Version: v${version}`;
     clearSavedDrawing();
     clearSavedPenColor();
     clearRecentColors();
-    console.log("[Wizascript] Notepad forcibly reset - drawing, position, and colors cleared.");
+    clearSavedTitle();
+    console.log("[Wizascript] Notepad forcibly reset - drawing, position, colors, and title cleared.");
   }
   function injectStyle() {
     if (document.getElementById("wizascript-notepad-style")) return;
@@ -4933,7 +4967,17 @@ Version: v${version}`;
   var STYLE_CSS = `
 .wizascript-notepad {
   position: fixed;
-  z-index: 8;
+  /* Deliberately much higher than Deck Tracker's widgets (z-index 8).
+     Those spawn over open board space and rarely get dragged, so a
+     low z-index rarely collides with anything. The notepad is
+     user-draggable to ANY point on screen, including under native
+     Undercards chrome (menus, top bar, tooltips, etc.) that can sit
+     above z-index 8 in some screen regions - which silently eats
+     clicks on whatever notepad control happens to be underneath it,
+     while areas that aren't covered (e.g. the canvas) keep working
+     normally. A near-max z-index means the notepad wins that stacking
+     fight regardless of where it's dropped. */
+  z-index: 2147483000;
   background: #fdf6e3;
   border: 2px solid #8a7355;
   border-radius: 6px;
@@ -4960,6 +5004,24 @@ Version: v${version}`;
   background: rgba(255,255,255,0.2);
   border-radius: 3px;
   padding: 1px 5px;
+}
+.wizascript-notepad-title-input {
+  flex: 1;
+  min-width: 30px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  font-family: inherit;
+  padding: 1px 2px;
+  cursor: text;
+}
+.wizascript-notepad-title-input:hover,
+.wizascript-notepad-title-input:focus {
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
 }
 .wizascript-notepad-body {
   padding: 8px;

@@ -302,8 +302,14 @@ const STYLE_CSS = `
   padding: 1px 5px;
 }
 .wizascript-notepad-title-input {
-  flex: 1;
-  min-width: 30px;
+  /* Fixed rather than flex:1 - the header previously let the
+     focusable/drag-blocking area stretch all the way to the header
+     buttons, which ate into the space meant for dragging the notepad
+     around. ~72px roughly lines up with where "Erase" starts in the
+     toolbar below - plenty of room for a short name without
+     encroaching further. */
+  flex: none;
+  width: 72px;
   background: transparent;
   border: none;
   outline: none;
@@ -313,6 +319,7 @@ const STYLE_CSS = `
   font-family: inherit;
   padding: 1px 2px;
   cursor: text;
+  text-overflow: ellipsis;
 }
 .wizascript-notepad-title-input:hover,
 .wizascript-notepad-title-input:focus {

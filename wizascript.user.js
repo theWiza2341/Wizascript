@@ -1826,6 +1826,19 @@ Version: v${version}`;
     return { init, setControlsHidden };
   }
 
+  // packages/core/page-match.js
+  function normalizePath(pathname) {
+    const lower = pathname.toLowerCase();
+    return lower.length > 1 && lower.endsWith("/") ? lower.slice(0, -1) : lower;
+  }
+  function matchesPage(rules, pathname = location.pathname) {
+    const path = normalizePath(pathname);
+    const list = Array.isArray(rules) ? rules : [rules];
+    return list.some(
+      (rule) => typeof rule === "string" ? path === normalizePath(rule) : path.startsWith(rule.prefix.toLowerCase())
+    );
+  }
+
   // packages/patch-maker/index.js
   var FEATURE_VERSION = "0.1.0";
   function waitForMainContent(callback) {
@@ -1834,7 +1847,7 @@ Version: v${version}`;
     setTimeout(() => waitForMainContent(callback), 50);
   }
   function isPatchNotesPage() {
-    return location.pathname.toLowerCase().includes("gameupdates");
+    return matchesPage("/gameUpdates.jsp");
   }
   function initPatchMaker(plugin) {
     const settings = registerPatchMakerSettings(plugin);
@@ -4149,19 +4162,6 @@ Version: v${version}`;
   // packages/core/player-context.js
   function isSpectating() {
     return location.pathname.toLowerCase().includes("spectate");
-  }
-
-  // packages/core/page-match.js
-  function normalizePath(pathname) {
-    const lower = pathname.toLowerCase();
-    return lower.length > 1 && lower.endsWith("/") ? lower.slice(0, -1) : lower;
-  }
-  function matchesPage(rules, pathname = location.pathname) {
-    const path = normalizePath(pathname);
-    const list = Array.isArray(rules) ? rules : [rules];
-    return list.some(
-      (rule) => typeof rule === "string" ? path === normalizePath(rule) : path.startsWith(rule.prefix.toLowerCase())
-    );
   }
 
   // packages/deck-tracker/index.js

@@ -5,7 +5,7 @@ const path = require("path");
 const HEADER = `// ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.1.05
+// @version      1.2.0
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*

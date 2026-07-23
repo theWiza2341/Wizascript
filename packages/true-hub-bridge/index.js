@@ -6,8 +6,11 @@ import { loadDecks } from "./decks-api.js";
 // True Hub Bridge only makes sense on the Hub page - matches the
 // original standalone script's @match restriction, now enforced inside
 // the feature itself since the merged suite's @match is broad.
+
+import { matchesPage } from "../core/page-match.js";
+
 function isHubPage() {
-  return location.pathname.toLowerCase().includes("hub");
+  return matchesPage("/Hub");
 }
 
 export function initTrueHubBridge(plugin) {

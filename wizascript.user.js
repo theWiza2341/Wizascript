@@ -4352,6 +4352,8 @@ Version: v${version}`;
   // packages/misc/notepad/storage.js
   var POSITION_KEY = "wizascript.misc.notepad.position";
   var DRAWING_KEY = "wizascript.misc.notepad.drawing";
+  var PEN_COLOR_KEY = "wizascript.misc.notepad.penColor";
+  var RECENT_COLORS_KEY = "wizascript.misc.notepad.recentColors";
   function readJSON(key, fallback) {
     try {
       const raw = GM_getValue(key, null);
@@ -4389,6 +4391,30 @@ Version: v${version}`;
   function clearSavedDrawing() {
     try {
       GM_deleteValue(DRAWING_KEY);
+    } catch (e) {
+    }
+  }
+  function getSavedPenColor() {
+    return readJSON(PEN_COLOR_KEY, null);
+  }
+  function setSavedPenColor(state) {
+    writeJSON(PEN_COLOR_KEY, state);
+  }
+  function clearSavedPenColor() {
+    try {
+      GM_deleteValue(PEN_COLOR_KEY);
+    } catch (e) {
+    }
+  }
+  function getRecentColors() {
+    return readJSON(RECENT_COLORS_KEY, []);
+  }
+  function setRecentColors(list) {
+    writeJSON(RECENT_COLORS_KEY, list);
+  }
+  function clearRecentColors() {
+    try {
+      GM_deleteValue(RECENT_COLORS_KEY);
     } catch (e) {
     }
   }
@@ -4652,6 +4678,17 @@ Version: v${version}`;
     function currentColor() {
       return hslToRgbString(hue, saturation, lightness);
     }
+    function currentState() {
+      return { hue, saturation, lightness };
+    }
+    function setState(nextHue, nextSaturation, nextLightness) {
+      hue = nextHue;
+      saturation = nextSaturation;
+      lightness = nextLightness;
+      lightnessSlider.value = String(Math.round(lightness * 100));
+      updateIndicatorPosition();
+      notify();
+    }
     function notify() {
       const color = currentColor();
       preview.style.background = color;
@@ -4688,22 +4725,58 @@ Version: v${version}`;
     updateIndicatorPosition();
     notify();
     container.append(wheelWrapper, lightnessRow, preview);
-    return { element: container, getColor: currentColor };
+    return { element: container, getColor: currentColor, getState: currentState, setState };
+  }
+
+  // packages/misc/notepad/recent-colors.js
+  var MAX_RECENT = 5;
+  function recordRecentColor(entry) {
+    const existing = getRecentColors();
+    const deduped = existing.filter((c) => c.color !== entry.color);
+    const next = [entry, ...deduped].slice(0, MAX_RECENT);
+    setRecentColors(next);
+    return next;
+  }
+  function buildRecentColorsRow({ signal, onSelect }) {
+    const wrap = document.createElement("div");
+    wrap.className = "wizascript-notepad-recent-wrap";
+    const label = document.createElement("div");
+    label.className = "wizascript-notepad-side-label";
+    label.textContent = "Recent Colors";
+    const row = document.createElement("div");
+    row.className = "wizascript-notepad-recent-colors";
+    wrap.append(label, row);
+    function render(colors) {
+      row.innerHTML = "";
+      colors.forEach((entry) => {
+        const swatch = document.createElement("span");
+        swatch.className = "wizascript-notepad-recent-swatch";
+        swatch.style.background = entry.color;
+        swatch.title = entry.color;
+        swatch.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
+        swatch.addEventListener("click", () => onSelect(entry), { signal });
+        row.appendChild(swatch);
+      });
+    }
+    return { element: wrap, render };
   }
 
   // packages/misc/notepad/index.js
   var DEFAULT_THICKNESS = 5;
   var mounted = null;
   function showNotepad() {
+    var _a;
     if (mounted) return;
     injectStyle();
     const controller = new AbortController();
     const { signal } = controller;
     const { root, body, headerButtons } = buildNotepadShell(signal);
     const surface = createDrawingSurface();
+    const DEFAULT_PEN_STATE = { hue: 0, saturation: 0, lightness: 0.1, color: "rgb(26, 26, 26)" };
+    const savedPen = (_a = getSavedPenColor()) != null ? _a : DEFAULT_PEN_STATE;
     let currentTool = "draw";
     let currentThickness = DEFAULT_THICKNESS;
-    let currentPenColor = "rgb(26, 26, 26)";
+    let currentPenColor = savedPen.color;
     let pendingColor = currentPenColor;
     let drawing = false;
     surface.setStrokeColor(currentPenColor);
@@ -4744,9 +4817,9 @@ Version: v${version}`;
     colorLabel.textContent = "Color Picker";
     const picker = buildColorPicker({
       signal,
-      initialHue: 0,
-      initialSaturation: 0,
-      initialLightness: 0.1,
+      initialHue: savedPen.hue,
+      initialSaturation: savedPen.saturation,
+      initialLightness: savedPen.lightness,
       onChange: (color) => {
         pendingColor = color;
       }
@@ -4759,7 +4832,22 @@ Version: v${version}`;
     applyBgBtn.type = "button";
     applyBgBtn.className = "wizascript-notepad-apply-btn";
     applyBgBtn.textContent = "Apply Paper Color";
-    colorColumn.append(colorLabel, picker.element, applyPenBtn, applyBgBtn);
+    function applyPenColor(entry) {
+      currentPenColor = entry.color;
+      colorIndicator.style.background = entry.color;
+      surface.setStrokeColor(entry.color);
+      setSavedPenColor(entry);
+      recentColorsRow.render(recordRecentColor(entry));
+    }
+    const recentColorsRow = buildRecentColorsRow({
+      signal,
+      onSelect: (entry) => {
+        picker.setState(entry.hue, entry.saturation, entry.lightness);
+        applyPenColor(entry);
+      }
+    });
+    recentColorsRow.render(getRecentColors());
+    colorColumn.append(colorLabel, picker.element, applyPenBtn, applyBgBtn, recentColorsRow.element);
     body.append(mainColumn, colorColumn);
     document.body.appendChild(root);
     function selectTool(tool) {
@@ -4809,9 +4897,7 @@ Version: v${version}`;
     }, { signal });
     applyPenBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
     applyPenBtn.addEventListener("click", () => {
-      currentPenColor = pendingColor;
-      colorIndicator.style.background = pendingColor;
-      surface.setStrokeColor(pendingColor);
+      applyPenColor({ color: pendingColor, ...picker.getState() });
     }, { signal });
     applyBgBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
     applyBgBtn.addEventListener("click", () => surface.setBackgroundColor(pendingColor), { signal });
@@ -4833,7 +4919,9 @@ Version: v${version}`;
     hideNotepad();
     clearSavedPosition2();
     clearSavedDrawing();
-    console.log("[Wizascript] Notepad forcibly reset - drawing and position cleared.");
+    clearSavedPenColor();
+    clearRecentColors();
+    console.log("[Wizascript] Notepad forcibly reset - drawing, position, and colors cleared.");
   }
   function injectStyle() {
     if (document.getElementById("wizascript-notepad-style")) return;
@@ -5008,6 +5096,28 @@ Version: v${version}`;
   cursor: pointer;
   font-weight: bold;
   width: 100%;
+}
+.wizascript-notepad-recent-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  margin-top: 4px;
+}
+.wizascript-notepad-recent-colors {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+}
+.wizascript-notepad-recent-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.4);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.5);
+  cursor: pointer;
 }
 `;
 

@@ -4151,10 +4151,22 @@ Version: v${version}`;
     return location.pathname.toLowerCase().includes("spectate");
   }
 
+  // packages/core/page-match.js
+  function normalizePath(pathname) {
+    const lower = pathname.toLowerCase();
+    return lower.length > 1 && lower.endsWith("/") ? lower.slice(0, -1) : lower;
+  }
+  function matchesPage(rules, pathname = location.pathname) {
+    const path = normalizePath(pathname);
+    const list = Array.isArray(rules) ? rules : [rules];
+    return list.some(
+      (rule) => typeof rule === "string" ? path === normalizePath(rule) : path.startsWith(rule.prefix.toLowerCase())
+    );
+  }
+
   // packages/deck-tracker/index.js
   function isGamePage() {
-    const path = location.pathname.toLowerCase();
-    return path.includes("game") || path.includes("spectate");
+    return matchesPage(["/Game", { prefix: "/Spectate" }]);
   }
   function waitForAvatar(callback) {
     const existing = document.getElementById("yourAvatar");

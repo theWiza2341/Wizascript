@@ -15,9 +15,8 @@
 // slate every time.
 //
 // Public API (showNotepad/hideNotepad/forceResetNotepad) is unchanged
-// from the previous implementation, so packages/misc/index.js does
-// not need to change other than its import path - see the note at
-// the bottom of this file.
+// from the original single-file implementation - only its location
+// moved (packages/misc/notepad.js -> packages/misc/notepad/index.js).
 
 import { buildNotepadShell } from "./widget.js";
 import { createDrawingSurface } from "./canvas.js";
@@ -485,9 +484,3 @@ const STYLE_CSS = `
   cursor: pointer;
 }
 `;
-
-// NOTE: if packages/misc/index.js does `import { showNotepad, hideNotepad,
-// forceResetNotepad } from "./notepad.js"`, update that path to
-// "./notepad/index.js" (or "./notepad" if your bundler resolves
-// directory imports to index.js automatically - esbuild does this by
-// default, so "./notepad" alone should already work).

@@ -6,6 +6,8 @@ import { createPatchMakerOverlay } from "./overlay.js";
 
 const FEATURE_VERSION = "0.1.0";
 
+import { matchesPage } from "../core/page-match.js";
+
 function waitForMainContent(callback) {
   const existing = document.querySelector(".mainContent");
   if (existing) return callback(existing);
@@ -13,7 +15,7 @@ function waitForMainContent(callback) {
 }
 
 function isPatchNotesPage() {
-  return location.pathname.toLowerCase().includes("gameupdates");
+  return matchesPage("/gameUpdates.jsp");
 }
 
 export function initPatchMaker(plugin) {

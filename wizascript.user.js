@@ -4346,76 +4346,243 @@ Version: v${version}`;
       type: "boolean",
       default: false
     });
+    return { settings, enableNotepad };
+  }
+
+  // packages/misc/notepad/storage.js
+  var POSITION_KEY = "wizascript.misc.notepad.position";
+  var DRAWING_KEY = "wizascript.misc.notepad.drawing";
+  function readJSON(key, fallback) {
+    try {
+      const raw = GM_getValue(key, null);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) {
+      console.warn("[Notepad] Failed to read storage key", key, e);
+      return fallback;
+    }
+  }
+  function writeJSON(key, value) {
+    try {
+      GM_setValue(key, JSON.stringify(value));
+    } catch (e) {
+      console.warn("[Notepad] Failed to write storage key", key, e);
+    }
+  }
+  function getSavedPosition2() {
+    return readJSON(POSITION_KEY, null);
+  }
+  function setSavedPosition2(layout) {
+    writeJSON(POSITION_KEY, layout);
+  }
+  function clearSavedPosition2() {
+    try {
+      GM_deleteValue(POSITION_KEY);
+    } catch (e) {
+    }
+  }
+  function getSavedDrawing() {
+    return readJSON(DRAWING_KEY, null);
+  }
+  function setSavedDrawing(drawing) {
+    writeJSON(DRAWING_KEY, drawing);
+  }
+  function clearSavedDrawing() {
+    try {
+      GM_deleteValue(DRAWING_KEY);
+    } catch (e) {
+    }
+  }
+
+  // packages/misc/notepad/widget.js
+  var DEFAULT_RIGHT = 16;
+  var DEFAULT_BOTTOM = 16;
+  function buildNotepadShell(signal) {
+    const root = document.createElement("div");
+    root.className = "wizascript-notepad";
+    const savedLayout = getSavedPosition2();
+    if (savedLayout) {
+      root.style.left = savedLayout.left + "px";
+      root.style.top = savedLayout.top + "px";
+    } else {
+      root.style.right = DEFAULT_RIGHT + "px";
+      root.style.bottom = DEFAULT_BOTTOM + "px";
+    }
+    const header = document.createElement("div");
+    header.className = "wizascript-notepad-header";
+    const title = document.createElement("span");
+    title.textContent = "Notepad";
+    const headerButtons = document.createElement("span");
+    headerButtons.className = "wizascript-notepad-header-buttons";
+    header.append(title, headerButtons);
+    const body = document.createElement("div");
+    body.className = "wizascript-notepad-body";
+    root.append(header, body);
+    let dragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+    header.addEventListener("mousedown", (e) => {
+      if (e.button !== 0) return;
+      dragging = true;
+      const rect = root.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      header.style.cursor = "grabbing";
+      e.preventDefault();
+    }, { signal });
+    document.addEventListener("mousemove", (e) => {
+      if (!dragging) return;
+      root.style.left = e.clientX - offsetX + "px";
+      root.style.top = e.clientY - offsetY + "px";
+      root.style.right = "auto";
+      root.style.bottom = "auto";
+    }, { signal });
+    document.addEventListener("mouseup", () => {
+      if (!dragging) return;
+      dragging = false;
+      header.style.cursor = "grab";
+      const rect = root.getBoundingClientRect();
+      setSavedPosition2({ left: rect.left, top: rect.top });
+    }, { signal });
+    return { root, header, body, headerButtons };
+  }
+
+  // packages/misc/notepad/canvas.js
+  var CANVAS_WIDTH = 240;
+  var CANVAS_HEIGHT = 200;
+  var DEFAULT_BACKGROUND = "rgb(255, 254, 248)";
+  var SAVE_DEBOUNCE_MS = 400;
+  function createDrawingSurface() {
+    const wrapper = document.createElement("div");
+    wrapper.className = "wizascript-notepad-canvas-wrapper";
+    wrapper.style.width = CANVAS_WIDTH + "px";
+    wrapper.style.height = CANVAS_HEIGHT + "px";
+    const backgroundCanvas = document.createElement("canvas");
+    backgroundCanvas.width = CANVAS_WIDTH;
+    backgroundCanvas.height = CANVAS_HEIGHT;
+    backgroundCanvas.className = "wizascript-notepad-canvas wizascript-notepad-canvas-bg";
+    const inkCanvas = document.createElement("canvas");
+    inkCanvas.width = CANVAS_WIDTH;
+    inkCanvas.height = CANVAS_HEIGHT;
+    inkCanvas.className = "wizascript-notepad-canvas wizascript-notepad-canvas-ink";
+    const cursorIndicator = document.createElement("div");
+    cursorIndicator.className = "wizascript-notepad-cursor-indicator";
+    wrapper.append(backgroundCanvas, inkCanvas, cursorIndicator);
+    const bgCtx = backgroundCanvas.getContext("2d");
+    const inkCtx = inkCanvas.getContext("2d");
+    let backgroundColor = DEFAULT_BACKGROUND;
+    let strokeColor = "rgb(26, 26, 26)";
+    let saveTimer = null;
+    let lastX = null;
+    let lastY = null;
+    function paintBackground(color) {
+      backgroundColor = color;
+      bgCtx.fillStyle = color;
+      bgCtx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    }
+    function scheduleSave() {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        setSavedDrawing({
+          strokesDataUrl: inkCanvas.toDataURL("image/png"),
+          backgroundColor
+        });
+      }, SAVE_DEBOUNCE_MS);
+    }
+    function loadInitial() {
+      const saved = getSavedDrawing();
+      paintBackground((saved == null ? void 0 : saved.backgroundColor) || DEFAULT_BACKGROUND);
+      if (!(saved == null ? void 0 : saved.strokesDataUrl)) return;
+      const img = new Image();
+      img.onload = () => inkCtx.drawImage(img, 0, 0);
+      img.onerror = () => console.warn("[Notepad] Saved drawing failed to load - starting with a blank page.");
+      img.src = saved.strokesDataUrl;
+    }
+    loadInitial();
+    function clear() {
+      inkCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      scheduleSave();
+    }
+    function setBackgroundColor(color) {
+      if (color === backgroundColor) return;
+      paintBackground(color);
+      scheduleSave();
+    }
+    function strokeTo(x, y, { erase, size }) {
+      inkCtx.lineCap = "round";
+      inkCtx.lineJoin = "round";
+      inkCtx.lineWidth = erase ? size * 2.2 : size;
+      inkCtx.globalCompositeOperation = erase ? "destination-out" : "source-over";
+      inkCtx.strokeStyle = erase ? "rgba(0,0,0,1)" : strokeColor;
+      inkCtx.beginPath();
+      inkCtx.moveTo(lastX != null ? lastX : x, lastY != null ? lastY : y);
+      inkCtx.lineTo(x, y);
+      inkCtx.stroke();
+      lastX = x;
+      lastY = y;
+    }
+    function beginStroke(x, y, opts) {
+      lastX = null;
+      lastY = null;
+      strokeTo(x, y, opts);
+    }
+    function endStroke() {
+      lastX = null;
+      lastY = null;
+      scheduleSave();
+    }
+    function downloadAsPng() {
+      const flattened = document.createElement("canvas");
+      flattened.width = CANVAS_WIDTH;
+      flattened.height = CANVAS_HEIGHT;
+      const fctx = flattened.getContext("2d");
+      fctx.drawImage(backgroundCanvas, 0, 0);
+      fctx.drawImage(inkCanvas, 0, 0);
+      const link = document.createElement("a");
+      link.download = "notepad-doodle.png";
+      link.href = flattened.toDataURL("image/png");
+      link.click();
+    }
+    function getPointFromEvent(e) {
+      const rect = inkCanvas.getBoundingClientRect();
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    }
     return {
-      settings,
-      enableNotepad
+      wrapper,
+      inkCanvas,
+      cursorIndicator,
+      beginStroke,
+      strokeTo,
+      endStroke,
+      clear,
+      setBackgroundColor,
+      downloadAsPng,
+      getPointFromEvent,
+      setStrokeColor: (color) => {
+        strokeColor = color;
+      },
+      getBackgroundColor: () => backgroundColor
     };
   }
 
-  // packages/misc/notepad.js
-  var POSITION_STORAGE_KEY = "wizascript.misc.notepadPosition";
-  var DRAWING_STORAGE_KEY = "wizascript.misc.notepadDrawing";
-  var CANVAS_WIDTH = 240;
-  var CANVAS_HEIGHT = 200;
-  var DEFAULT_THICKNESS = 5;
-  var DEFAULT_BACKGROUND = "rgb(255, 254, 248)";
+  // packages/misc/notepad/color-wheel.js
   var WHEEL_SIZE = 96;
   var WHEEL_RADIUS = WHEEL_SIZE / 2;
   var WHEEL_FIXED_LIGHTNESS = 0.5;
-  var widgetEl = null;
-  function getSavedPosition2() {
-    try {
-      const raw = GM_getValue(POSITION_STORAGE_KEY, null);
-      return raw ? JSON.parse(raw) : null;
-    } catch (e) {
-      return null;
-    }
-  }
-  function setSavedPosition2(layout) {
-    try {
-      GM_setValue(POSITION_STORAGE_KEY, JSON.stringify(layout));
-    } catch (e) {
-    }
-  }
   function hslToRgbString(h, s, l) {
     const c = (1 - Math.abs(2 * l - 1)) * s;
     const x = c * (1 - Math.abs(h / 60 % 2 - 1));
     const m = l - c / 2;
     let r, g, b;
-    if (h < 60) {
-      r = c;
-      g = x;
-      b = 0;
-    } else if (h < 120) {
-      r = x;
-      g = c;
-      b = 0;
-    } else if (h < 180) {
-      r = 0;
-      g = c;
-      b = x;
-    } else if (h < 240) {
-      r = 0;
-      g = x;
-      b = c;
-    } else if (h < 300) {
-      r = x;
-      g = 0;
-      b = c;
-    } else {
-      r = c;
-      g = 0;
-      b = x;
-    }
+    if (h < 60) [r, g, b] = [c, x, 0];
+    else if (h < 120) [r, g, b] = [x, c, 0];
+    else if (h < 180) [r, g, b] = [0, c, x];
+    else if (h < 240) [r, g, b] = [0, x, c];
+    else if (h < 300) [r, g, b] = [x, 0, c];
+    else [r, g, b] = [c, 0, x];
     const R = Math.round((r + m) * 255);
     const G = Math.round((g + m) * 255);
     const B = Math.round((b + m) * 255);
     return `rgb(${R}, ${G}, ${B})`;
-  }
-  function parseRgbString(rgbString) {
-    const match = rgbString.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-    if (!match) return { r: 255, g: 255, b: 255 };
-    return { r: Number(match[1]), g: Number(match[2]), b: Number(match[3]) };
   }
   function drawColorWheel(canvas) {
     const ctx = canvas.getContext("2d");
@@ -4434,17 +4601,16 @@ Version: v${version}`;
         let angle = Math.atan2(dy, dx) * 180 / Math.PI;
         if (angle < 0) angle += 360;
         const saturation = Math.min(1, dist / WHEEL_RADIUS);
-        const rgbString = hslToRgbString(angle, saturation, WHEEL_FIXED_LIGHTNESS);
-        const rgb = parseRgbString(rgbString);
-        data[idx] = rgb.r;
-        data[idx + 1] = rgb.g;
-        data[idx + 2] = rgb.b;
+        const [r, g, b] = hslToRgbString(angle, saturation, WHEEL_FIXED_LIGHTNESS).match(/\d+/g).map(Number);
+        data[idx] = r;
+        data[idx + 1] = g;
+        data[idx + 2] = b;
         data[idx + 3] = 255;
       }
     }
     ctx.putImageData(imageData, 0, 0);
   }
-  function buildColorPicker({ initialHue = 0, initialSaturation = 1, initialLightness = 0.5, onChange }) {
+  function buildColorPicker({ signal, initialHue = 0, initialSaturation = 1, initialLightness = 0.5, onChange }) {
     let hue = initialHue;
     let saturation = initialSaturation;
     let lightness = initialLightness;
@@ -4462,19 +4628,19 @@ Version: v${version}`;
     wheelWrapper.append(wheelCanvas, indicator);
     const lightnessRow = document.createElement("div");
     lightnessRow.className = "wizascript-notepad-lightness-row";
-    const lightnessLabel = document.createElement("span");
-    lightnessLabel.className = "wizascript-notepad-lightness-label";
-    lightnessLabel.textContent = "Dark";
+    const darkLabel = document.createElement("span");
+    darkLabel.className = "wizascript-notepad-lightness-label";
+    darkLabel.textContent = "Dark";
     const lightnessSlider = document.createElement("input");
     lightnessSlider.type = "range";
     lightnessSlider.min = "0";
     lightnessSlider.max = "100";
     lightnessSlider.value = String(Math.round(lightness * 100));
     lightnessSlider.className = "wizascript-notepad-lightness-slider";
-    const lightnessLabelEnd = document.createElement("span");
-    lightnessLabelEnd.className = "wizascript-notepad-lightness-label";
-    lightnessLabelEnd.textContent = "Light";
-    lightnessRow.append(lightnessLabel, lightnessSlider, lightnessLabelEnd);
+    const lightLabel = document.createElement("span");
+    lightLabel.className = "wizascript-notepad-lightness-label";
+    lightLabel.textContent = "Light";
+    lightnessRow.append(darkLabel, lightnessSlider, lightLabel);
     const preview = document.createElement("div");
     preview.className = "wizascript-notepad-color-preview";
     function updateIndicatorPosition() {
@@ -4493,10 +4659,8 @@ Version: v${version}`;
     }
     function pickFromEvent(e) {
       const rect = wheelCanvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const dx = x - WHEEL_RADIUS;
-      const dy = y - WHEEL_RADIUS;
+      const dx = e.clientX - rect.left - WHEEL_RADIUS;
+      const dy = e.clientY - rect.top - WHEEL_RADIUS;
       const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist > WHEEL_RADIUS) return;
       let angle = Math.atan2(dy, dx) * 180 / Math.PI;
@@ -4510,28 +4674,175 @@ Version: v${version}`;
     wheelCanvas.addEventListener("mousedown", (e) => {
       picking = true;
       pickFromEvent(e);
-    });
+    }, { signal });
     document.addEventListener("mousemove", (e) => {
-      if (!picking) return;
-      pickFromEvent(e);
-    });
+      if (picking) pickFromEvent(e);
+    }, { signal });
     document.addEventListener("mouseup", () => {
       picking = false;
-    });
+    }, { signal });
     lightnessSlider.addEventListener("input", () => {
       lightness = Number(lightnessSlider.value) / 100;
       notify();
-    });
+    }, { signal });
     updateIndicatorPosition();
     notify();
     container.append(wheelWrapper, lightnessRow, preview);
     return { element: container, getColor: currentColor };
   }
+
+  // packages/misc/notepad/index.js
+  var DEFAULT_THICKNESS = 5;
+  var mounted = null;
+  function showNotepad() {
+    if (mounted) return;
+    injectStyle();
+    const controller = new AbortController();
+    const { signal } = controller;
+    const { root, body, headerButtons } = buildNotepadShell(signal);
+    const surface = createDrawingSurface();
+    let currentTool = "draw";
+    let currentThickness = DEFAULT_THICKNESS;
+    let currentPenColor = "rgb(26, 26, 26)";
+    let pendingColor = currentPenColor;
+    let drawing = false;
+    surface.setStrokeColor(currentPenColor);
+    const clearBtn = document.createElement("span");
+    clearBtn.textContent = "Clear";
+    const saveBtn = document.createElement("span");
+    saveBtn.textContent = "Save PNG";
+    const closeBtn = document.createElement("span");
+    closeBtn.textContent = "\xD7";
+    headerButtons.append(clearBtn, saveBtn, closeBtn);
+    const mainColumn = document.createElement("div");
+    mainColumn.className = "wizascript-notepad-main-column";
+    const toolbar = document.createElement("div");
+    toolbar.className = "wizascript-notepad-toolbar";
+    const drawBox = document.createElement("div");
+    drawBox.className = "wizascript-notepad-tool-box active";
+    drawBox.title = "Click to select this tool.";
+    const colorIndicator = document.createElement("span");
+    colorIndicator.className = "wizascript-notepad-color-indicator";
+    colorIndicator.style.background = currentPenColor;
+    drawBox.append("Draw", colorIndicator);
+    const eraseBox = document.createElement("div");
+    eraseBox.className = "wizascript-notepad-tool-box";
+    eraseBox.textContent = "Erase";
+    const sizeSlider = document.createElement("input");
+    sizeSlider.type = "range";
+    sizeSlider.className = "wizascript-notepad-size-slider";
+    sizeSlider.min = "1";
+    sizeSlider.max = "30";
+    sizeSlider.value = String(currentThickness);
+    sizeSlider.title = "Brush size";
+    toolbar.append(drawBox, eraseBox, sizeSlider);
+    mainColumn.append(toolbar, surface.wrapper);
+    const colorColumn = document.createElement("div");
+    colorColumn.className = "wizascript-notepad-side-column";
+    const colorLabel = document.createElement("div");
+    colorLabel.className = "wizascript-notepad-side-label";
+    colorLabel.textContent = "Color Picker";
+    const picker = buildColorPicker({
+      signal,
+      initialHue: 0,
+      initialSaturation: 0,
+      initialLightness: 0.1,
+      onChange: (color) => {
+        pendingColor = color;
+      }
+    });
+    const applyPenBtn = document.createElement("button");
+    applyPenBtn.type = "button";
+    applyPenBtn.className = "wizascript-notepad-apply-btn";
+    applyPenBtn.textContent = "Apply Pen Color";
+    const applyBgBtn = document.createElement("button");
+    applyBgBtn.type = "button";
+    applyBgBtn.className = "wizascript-notepad-apply-btn";
+    applyBgBtn.textContent = "Apply Paper Color";
+    colorColumn.append(colorLabel, picker.element, applyPenBtn, applyBgBtn);
+    body.append(mainColumn, colorColumn);
+    document.body.appendChild(root);
+    function selectTool(tool) {
+      currentTool = tool;
+      drawBox.classList.toggle("active", tool === "draw");
+      eraseBox.classList.toggle("active", tool === "erase");
+      updateCursorIndicatorSize();
+    }
+    function updateCursorIndicatorSize() {
+      const size = currentTool === "erase" ? currentThickness * 2.2 : currentThickness;
+      surface.cursorIndicator.style.width = size + "px";
+      surface.cursorIndicator.style.height = size + "px";
+    }
+    surface.inkCanvas.addEventListener("mousedown", (e) => {
+      if (e.button !== 0) return;
+      drawing = true;
+      const pt = surface.getPointFromEvent(e);
+      surface.beginStroke(pt.x, pt.y, { erase: currentTool === "erase", size: currentThickness });
+    }, { signal });
+    surface.inkCanvas.addEventListener("mouseenter", () => {
+      surface.cursorIndicator.style.display = "block";
+      updateCursorIndicatorSize();
+    }, { signal });
+    surface.inkCanvas.addEventListener("mouseleave", () => {
+      surface.cursorIndicator.style.display = "none";
+    }, { signal });
+    surface.inkCanvas.addEventListener("mousemove", (e) => {
+      const pt = surface.getPointFromEvent(e);
+      surface.cursorIndicator.style.left = pt.x + "px";
+      surface.cursorIndicator.style.top = pt.y + "px";
+    }, { signal });
+    document.addEventListener("mousemove", (e) => {
+      if (!drawing) return;
+      const pt = surface.getPointFromEvent(e);
+      surface.strokeTo(pt.x, pt.y, { erase: currentTool === "erase", size: currentThickness });
+    }, { signal });
+    document.addEventListener("mouseup", () => {
+      if (!drawing) return;
+      drawing = false;
+      surface.endStroke();
+    }, { signal });
+    drawBox.addEventListener("click", () => selectTool("draw"), { signal });
+    eraseBox.addEventListener("click", () => selectTool("erase"), { signal });
+    sizeSlider.addEventListener("input", () => {
+      currentThickness = Number(sizeSlider.value);
+      updateCursorIndicatorSize();
+    }, { signal });
+    applyPenBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
+    applyPenBtn.addEventListener("click", () => {
+      currentPenColor = pendingColor;
+      colorIndicator.style.background = pendingColor;
+      surface.setStrokeColor(pendingColor);
+    }, { signal });
+    applyBgBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
+    applyBgBtn.addEventListener("click", () => surface.setBackgroundColor(pendingColor), { signal });
+    clearBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
+    clearBtn.addEventListener("click", () => surface.clear(), { signal });
+    saveBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
+    saveBtn.addEventListener("click", () => surface.downloadAsPng(), { signal });
+    closeBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
+    closeBtn.addEventListener("click", () => hideNotepad(), { signal });
+    mounted = { root, controller };
+  }
+  function hideNotepad() {
+    if (!mounted) return;
+    mounted.controller.abort();
+    mounted.root.remove();
+    mounted = null;
+  }
+  function forceResetNotepad() {
+    hideNotepad();
+    clearSavedPosition2();
+    clearSavedDrawing();
+    console.log("[Wizascript] Notepad forcibly reset - drawing and position cleared.");
+  }
   function injectStyle() {
     if (document.getElementById("wizascript-notepad-style")) return;
     const style = document.createElement("style");
     style.id = "wizascript-notepad-style";
-    style.textContent = `
+    style.textContent = STYLE_CSS;
+    document.head.appendChild(style);
+  }
+  var STYLE_CSS = `
 .wizascript-notepad {
   position: fixed;
   z-index: 8;
@@ -4571,10 +4882,31 @@ Version: v${version}`;
   display: flex;
   flex-direction: column;
 }
+.wizascript-notepad-canvas-wrapper {
+  position: relative;
+}
 .wizascript-notepad-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
   border: 1px solid #d8cbb0;
   display: block;
-  cursor: crosshair !important;
+}
+.wizascript-notepad-canvas-bg {
+  pointer-events: none;
+}
+.wizascript-notepad-canvas-ink {
+  cursor: none;
+}
+.wizascript-notepad-cursor-indicator {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0,0,0,0.75);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.7);
+  transform: translate(-50%, -50%);
+  display: none;
+  z-index: 2;
 }
 .wizascript-notepad-toolbar {
   display: flex;
@@ -4629,8 +4961,8 @@ Version: v${version}`;
 }
 .wizascript-notepad-wheel-wrapper {
   position: relative;
-  width: ${WHEEL_SIZE}px;
-  height: ${WHEEL_SIZE}px;
+  width: 96px;
+  height: 96px;
 }
 .wizascript-notepad-wheel {
   border-radius: 50%;
@@ -4678,297 +5010,6 @@ Version: v${version}`;
   width: 100%;
 }
 `;
-    document.head.appendChild(style);
-  }
-  function saveDrawing(canvasEl) {
-    try {
-      GM_setValue(DRAWING_STORAGE_KEY, canvasEl.toDataURL("image/png"));
-    } catch (e) {
-    }
-  }
-  function downloadAsPng(canvasEl) {
-    const link = document.createElement("a");
-    link.download = "notepad-doodle.png";
-    link.href = canvasEl.toDataURL("image/png");
-    link.click();
-  }
-  function bindWidgetDrag(widget, header) {
-    let dragging = false;
-    let offsetX = 0;
-    let offsetY = 0;
-    header.addEventListener("mousedown", (e) => {
-      dragging = true;
-      const rect = widget.getBoundingClientRect();
-      offsetX = e.clientX - rect.left;
-      offsetY = e.clientY - rect.top;
-      header.style.cursor = "grabbing";
-    });
-    document.addEventListener("mousemove", (e) => {
-      if (!dragging) return;
-      widget.style.left = e.clientX - offsetX + "px";
-      widget.style.top = e.clientY - offsetY + "px";
-      widget.style.right = "auto";
-      widget.style.bottom = "auto";
-    });
-    document.addEventListener("mouseup", () => {
-      if (!dragging) return;
-      dragging = false;
-      header.style.cursor = "grab";
-      const rect = widget.getBoundingClientRect();
-      setSavedPosition2({ left: rect.left, top: rect.top });
-    });
-  }
-  function showNotepad() {
-    if (widgetEl) return;
-    injectStyle();
-    let currentTool = "draw";
-    let currentPenColor = "rgb(26, 26, 26)";
-    let backgroundColor = DEFAULT_BACKGROUND;
-    let pendingColor = "rgb(26, 26, 26)";
-    let currentThickness = DEFAULT_THICKNESS;
-    let drawing = false;
-    let lastX = null;
-    let lastY = null;
-    const widget = document.createElement("div");
-    widget.className = "wizascript-notepad";
-    const savedLayout = getSavedPosition2();
-    if (savedLayout) {
-      widget.style.left = savedLayout.left + "px";
-      widget.style.top = savedLayout.top + "px";
-    } else {
-      widget.style.right = "16px";
-      widget.style.bottom = "16px";
-    }
-    const header = document.createElement("div");
-    header.className = "wizascript-notepad-header";
-    header.innerHTML = `<span>Notepad</span>`;
-    const headerButtons = document.createElement("span");
-    headerButtons.className = "wizascript-notepad-header-buttons";
-    const clearBtn = document.createElement("span");
-    clearBtn.textContent = "Clear";
-    const saveBtn = document.createElement("span");
-    saveBtn.textContent = "Save PNG";
-    const closeBtn = document.createElement("span");
-    closeBtn.textContent = "\xD7";
-    headerButtons.append(clearBtn, saveBtn, closeBtn);
-    header.appendChild(headerButtons);
-    const body = document.createElement("div");
-    body.className = "wizascript-notepad-body";
-    const mainColumn = document.createElement("div");
-    mainColumn.className = "wizascript-notepad-main-column";
-    const toolbar = document.createElement("div");
-    toolbar.className = "wizascript-notepad-toolbar";
-    const drawBox = document.createElement("div");
-    drawBox.className = "wizascript-notepad-tool-box active";
-    drawBox.textContent = "Draw";
-    const colorIndicator = document.createElement("span");
-    colorIndicator.className = "wizascript-notepad-color-indicator";
-    colorIndicator.style.background = currentPenColor;
-    drawBox.appendChild(colorIndicator);
-    drawBox.title = "Click to select this tool.";
-    const eraseBox = document.createElement("div");
-    eraseBox.className = "wizascript-notepad-tool-box";
-    eraseBox.textContent = "Erase";
-    const sizeSlider = document.createElement("input");
-    sizeSlider.type = "range";
-    sizeSlider.className = "wizascript-notepad-size-slider";
-    sizeSlider.min = "1";
-    sizeSlider.max = "30";
-    sizeSlider.value = String(currentThickness);
-    sizeSlider.title = "Brush size";
-    toolbar.append(drawBox, eraseBox, sizeSlider);
-    const canvas = document.createElement("canvas");
-    canvas.className = "wizascript-notepad-canvas";
-    canvas.width = CANVAS_WIDTH;
-    canvas.height = CANVAS_HEIGHT;
-    const ctx = canvas.getContext("2d");
-    canvas.style.cursor = "none";
-    const canvasWrapper = document.createElement("div");
-    canvasWrapper.style.position = "relative";
-    canvasWrapper.style.width = CANVAS_WIDTH + "px";
-    canvasWrapper.style.height = CANVAS_HEIGHT + "px";
-    const cursorIndicator = document.createElement("div");
-    cursorIndicator.style.position = "absolute";
-    cursorIndicator.style.pointerEvents = "none";
-    cursorIndicator.style.borderRadius = "50%";
-    cursorIndicator.style.border = "1.5px solid rgba(0,0,0,0.75)";
-    cursorIndicator.style.boxShadow = "0 0 0 1px rgba(255,255,255,0.7)";
-    cursorIndicator.style.transform = "translate(-50%, -50%)";
-    cursorIndicator.style.display = "none";
-    canvasWrapper.append(canvas, cursorIndicator);
-    mainColumn.append(toolbar, canvasWrapper);
-    const colorColumn = document.createElement("div");
-    colorColumn.className = "wizascript-notepad-side-column";
-    const colorLabel = document.createElement("div");
-    colorLabel.className = "wizascript-notepad-side-label";
-    colorLabel.textContent = "Color Picker";
-    const sharedPicker = buildColorPicker({
-      initialHue: 0,
-      initialSaturation: 0,
-      initialLightness: 0.1,
-      onChange: (color) => {
-        pendingColor = color;
-      }
-    });
-    const applyPenBtn = document.createElement("button");
-    applyPenBtn.className = "wizascript-notepad-apply-btn";
-    applyPenBtn.textContent = "Apply Pen Color";
-    const applyBgBtn = document.createElement("button");
-    applyBgBtn.className = "wizascript-notepad-apply-btn";
-    applyBgBtn.textContent = "Apply Paper Color";
-    colorColumn.append(colorLabel, sharedPicker.element, applyPenBtn, applyBgBtn);
-    body.append(mainColumn, colorColumn);
-    widget.append(header, body);
-    document.body.appendChild(widget);
-    function paintBackground(color) {
-      ctx.fillStyle = color;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-    }
-    function changeBackground(newColor) {
-      if (newColor === backgroundColor) return;
-      const oldRgb = parseRgbString(backgroundColor);
-      const newRgb = parseRgbString(newColor);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const data = imageData.data;
-      const TOLERANCE = 40;
-      for (let i = 0; i < data.length; i += 4) {
-        const dr = Math.abs(data[i] - oldRgb.r);
-        const dg = Math.abs(data[i + 1] - oldRgb.g);
-        const db = Math.abs(data[i + 2] - oldRgb.b);
-        if (dr <= TOLERANCE && dg <= TOLERANCE && db <= TOLERANCE) {
-          data[i] = newRgb.r;
-          data[i + 1] = newRgb.g;
-          data[i + 2] = newRgb.b;
-        }
-      }
-      ctx.putImageData(imageData, 0, 0);
-      backgroundColor = newColor;
-      saveDrawing(canvas);
-    }
-    function loadDrawing() {
-      let saved;
-      try {
-        saved = GM_getValue(DRAWING_STORAGE_KEY, null);
-      } catch (e) {
-        saved = null;
-      }
-      if (!saved) {
-        paintBackground(backgroundColor);
-        return;
-      }
-      const img = new Image();
-      img.onload = () => {
-        ctx.drawImage(img, 0, 0);
-        const corner = ctx.getImageData(0, 0, 1, 1).data;
-        backgroundColor = `rgb(${corner[0]}, ${corner[1]}, ${corner[2]})`;
-      };
-      img.onerror = () => paintBackground(backgroundColor);
-      img.src = saved;
-    }
-    loadDrawing();
-    bindWidgetDrag(widget, header);
-    function selectTool(tool) {
-      currentTool = tool;
-      drawBox.classList.toggle("active", tool === "draw");
-      eraseBox.classList.toggle("active", tool === "erase");
-      updateCursorIndicatorSize();
-    }
-    function getCanvasPoint(e) {
-      const rect = canvas.getBoundingClientRect();
-      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    }
-    function useAt(x, y) {
-      const isErase = currentTool === "erase";
-      const size = isErase ? currentThickness * 2.2 : currentThickness;
-      ctx.lineWidth = size;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.strokeStyle = isErase ? backgroundColor : currentPenColor;
-      ctx.beginPath();
-      ctx.moveTo(lastX != null ? lastX : x, lastY != null ? lastY : y);
-      ctx.lineTo(x, y);
-      ctx.stroke();
-      lastX = x;
-      lastY = y;
-    }
-    canvas.addEventListener("mousedown", (e) => {
-      if (e.button !== 0) return;
-      drawing = true;
-      const pt = getCanvasPoint(e);
-      lastX = pt.x;
-      lastY = pt.y;
-      useAt(pt.x, pt.y);
-    });
-    function updateCursorIndicatorSize() {
-      const size = currentTool === "erase" ? currentThickness * 2.2 : currentThickness;
-      cursorIndicator.style.width = size + "px";
-      cursorIndicator.style.height = size + "px";
-    }
-    canvas.addEventListener("mouseenter", () => {
-      cursorIndicator.style.display = "block";
-      updateCursorIndicatorSize();
-    });
-    canvas.addEventListener("mouseleave", () => {
-      cursorIndicator.style.display = "none";
-    });
-    canvas.addEventListener("mousemove", (e) => {
-      const pt = getCanvasPoint(e);
-      cursorIndicator.style.left = pt.x + "px";
-      cursorIndicator.style.top = pt.y + "px";
-    });
-    document.addEventListener("mousemove", (e) => {
-      if (!drawing) return;
-      const pt = getCanvasPoint(e);
-      useAt(pt.x, pt.y);
-    });
-    document.addEventListener("mouseup", () => {
-      if (!drawing) return;
-      drawing = false;
-      lastX = null;
-      lastY = null;
-      saveDrawing(canvas);
-    });
-    drawBox.addEventListener("click", () => selectTool("draw"));
-    eraseBox.addEventListener("click", () => selectTool("erase"));
-    sizeSlider.addEventListener("input", () => {
-      currentThickness = Number(sizeSlider.value);
-      updateCursorIndicatorSize();
-    });
-    applyPenBtn.addEventListener("mousedown", (e) => e.stopPropagation());
-    applyPenBtn.addEventListener("click", () => {
-      currentPenColor = pendingColor;
-      colorIndicator.style.background = pendingColor;
-    });
-    applyBgBtn.addEventListener("mousedown", (e) => e.stopPropagation());
-    applyBgBtn.addEventListener("click", () => changeBackground(pendingColor));
-    clearBtn.addEventListener("mousedown", (e) => e.stopPropagation());
-    clearBtn.addEventListener("click", () => {
-      paintBackground(backgroundColor);
-      saveDrawing(canvas);
-    });
-    saveBtn.addEventListener("mousedown", (e) => e.stopPropagation());
-    saveBtn.addEventListener("click", () => downloadAsPng(canvas));
-    closeBtn.addEventListener("mousedown", (e) => e.stopPropagation());
-    closeBtn.addEventListener("click", () => hideNotepad());
-    widgetEl = widget;
-  }
-  function hideNotepad() {
-    if (!widgetEl) return;
-    widgetEl.remove();
-    widgetEl = null;
-  }
-  function forceResetNotepad() {
-    if (widgetEl) {
-      widgetEl.remove();
-      widgetEl = null;
-    }
-    try {
-      GM_deleteValue(DRAWING_STORAGE_KEY);
-      GM_deleteValue(POSITION_STORAGE_KEY);
-    } catch (e) {
-    }
-    console.log("[Wizascript] Notepad forcibly reset - drawing and position cleared.");
-  }
 
   // packages/misc/index.js
   function initMisc(plugin) {

@@ -2,7 +2,7 @@
 
 Wizascript is an all-in-one UnderScript plugin suite for [Undercards](https://undercards.net) — a single Tampermonkey userscript that combines several previously-separate plugins into one download, one plugin registration, and one settings tab.
 
-**Current version:** 1.1.04
+**Current version:** 1.1.05
 **Repository:** [theWiza2341/Wizascript](https://github.com/theWiza2341/Wizascript) (public)
 
 ## Compliance note
@@ -24,6 +24,9 @@ The core in-match feature. Adds a "+" button during games and while spectating, 
 - **Custom Tracker builder** — lets a player create their own named counter (optionally with a card sprite), and save it as a reusable preset.
 - Widgets support drag-to-reposition (position is remembered), favoriting, and optionally retaining an unclosed widget between matches — all via settings under the Deck Tracker category.
 
+### Notepad
+A small freeform drawing canvas, entirely disconnected from match data — click-and-drag drawing with pen and eraser tools, an adjustable brush size, an HSL color wheel for both pen and paper colors, and a row of your 4-5 most recently used pen colors for quickly switching back and forth. The notepad's name is editable in place and doubles as the filename when saving a doodle as a PNG. Position, drawing, colors, and name all persist between sessions. Lives under Misc settings behind an "Enable Notepad Overlay" toggle (off by default), and currently has no page restriction — available anywhere on undercards.net.
+
 ### bot/
 A small Node.js bot that scrapes deck codes and metadata from a Discord server and writes them to `bot/decks.json`, which True Hub Bridge reads. Runs both as a one-off full sync (`bot.js`) and an incremental sync (`new-only-sync.js`), automated via GitHub Actions.
 
@@ -31,11 +34,12 @@ A small Node.js bot that scrapes deck codes and metadata from a Discord server a
 
 ```
 packages/
-  core/            shared bootstrap, settings wrapper, page-window access
+  core/            shared bootstrap, settings wrapper, page-window access, page matching
   patch-maker/
   true-hub-bridge/
   deck-tracker/
-  misc/            in-progress features, not yet part of the stable feature set
+  misc/            small standalone features
+    notepad/       freeform drawing canvas (see Notepad above)
 bot/               deck-scraping bot + decks.json
 manifest.js        wires each package's init function together
 build.js            esbuild bundler + userscript header

@@ -2981,7 +2981,7 @@ Version: v${version}`;
 
   // packages/true-hub-bridge/index.js
   function isHubPage() {
-    return location.pathname.toLowerCase().includes("hub");
+    return matchesPage("/Hub");
   }
   function initTrueHubBridge(plugin) {
     const settings = registerTrueHubBridgeSettings(plugin);

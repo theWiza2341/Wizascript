@@ -1,6 +1,6 @@
 # Wizascript
 
-Wizascript is an all-in-one [UnderScript](https://github.com/UnderScript) plugin suite for [Undercards](https://undercards.net) — a single Tampermonkey userscript that combines several previously-separate plugins into one download, one plugin registration, and one settings tab.
+Wizascript is an all-in-one [UnderScript] plugin suite for [Undercards](https://undercards.net) — a single Tampermonkey userscript that combines several previously-separate plugins into one download, one plugin registration, and one settings tab.
 
 **Current version:** 1.1.04
 **Repository:** [theWiza2341/Wizascript](https://github.com/theWiza2341/Wizascript) (public)

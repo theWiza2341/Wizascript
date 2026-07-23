@@ -112,6 +112,23 @@ export function buildColorPicker({ signal, initialHue = 0, initialSaturation = 1
     return hslToRgbString(hue, saturation, lightness);
   }
 
+  function currentState() {
+    return { hue, saturation, lightness };
+  }
+
+  // Moves the wheel indicator and lightness slider to an exact
+  // hue/saturation/lightness and fires onChange, same as if the user
+  // had dragged there themselves. Used both to restore a saved pen
+  // color on mount and to jump to a recent-color swatch on click.
+  function setState(nextHue, nextSaturation, nextLightness) {
+    hue = nextHue;
+    saturation = nextSaturation;
+    lightness = nextLightness;
+    lightnessSlider.value = String(Math.round(lightness * 100));
+    updateIndicatorPosition();
+    notify();
+  }
+
   function notify() {
     const color = currentColor();
     preview.style.background = color;
@@ -151,5 +168,5 @@ export function buildColorPicker({ signal, initialHue = 0, initialSaturation = 1
   updateIndicatorPosition();
   notify();
   container.append(wheelWrapper, lightnessRow, preview);
-  return { element: container, getColor: currentColor };
+  return { element: container, getColor: currentColor, getState: currentState, setState };
 }

@@ -22,7 +22,12 @@
 import { buildNotepadShell } from "./widget.js";
 import { createDrawingSurface } from "./canvas.js";
 import { buildColorPicker } from "./color-wheel.js";
-import { clearSavedPosition, clearSavedDrawing } from "./storage.js";
+import {
+  clearSavedPosition, clearSavedDrawing,
+  getSavedPenColor, setSavedPenColor, clearSavedPenColor,
+  getRecentColors, clearRecentColors
+} from "./storage.js";
+import { recordRecentColor, buildRecentColorsRow } from "./recent-colors.js";
 
 const DEFAULT_THICKNESS = 5;
 
@@ -38,9 +43,12 @@ export function showNotepad() {
   const { root, body, headerButtons } = buildNotepadShell(signal);
   const surface = createDrawingSurface();
 
+  const DEFAULT_PEN_STATE = { hue: 0, saturation: 0, lightness: 0.1, color: "rgb(26, 26, 26)" };
+  const savedPen = getSavedPenColor() ?? DEFAULT_PEN_STATE;
+
   let currentTool = "draw"; // "draw" | "erase"
   let currentThickness = DEFAULT_THICKNESS;
-  let currentPenColor = "rgb(26, 26, 26)";
+  let currentPenColor = savedPen.color;
   let pendingColor = currentPenColor;
   let drawing = false;
   surface.setStrokeColor(currentPenColor);
@@ -92,9 +100,9 @@ export function showNotepad() {
 
   const picker = buildColorPicker({
     signal,
-    initialHue: 0,
-    initialSaturation: 0,
-    initialLightness: 0.1,
+    initialHue: savedPen.hue,
+    initialSaturation: savedPen.saturation,
+    initialLightness: savedPen.lightness,
     onChange: (color) => { pendingColor = color; }
   });
 
@@ -107,7 +115,28 @@ export function showNotepad() {
   applyBgBtn.className = "wizascript-notepad-apply-btn";
   applyBgBtn.textContent = "Apply Paper Color";
 
-  colorColumn.append(colorLabel, picker.element, applyPenBtn, applyBgBtn);
+  // Sets the active pen color (indicator, stroke color, persisted
+  // state, and the recent-colors list) from a single { color, hue,
+  // saturation, lightness } entry - shared by the "Apply Pen Color"
+  // button and clicking a recent swatch, so both paths stay in sync.
+  function applyPenColor(entry) {
+    currentPenColor = entry.color;
+    colorIndicator.style.background = entry.color;
+    surface.setStrokeColor(entry.color);
+    setSavedPenColor(entry);
+    recentColorsRow.render(recordRecentColor(entry));
+  }
+
+  const recentColorsRow = buildRecentColorsRow({
+    signal,
+    onSelect: (entry) => {
+      picker.setState(entry.hue, entry.saturation, entry.lightness);
+      applyPenColor(entry);
+    }
+  });
+  recentColorsRow.render(getRecentColors());
+
+  colorColumn.append(colorLabel, picker.element, applyPenBtn, applyBgBtn, recentColorsRow.element);
   body.append(mainColumn, colorColumn);
   document.body.appendChild(root);
 
@@ -170,9 +199,7 @@ export function showNotepad() {
 
   applyPenBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
   applyPenBtn.addEventListener("click", () => {
-    currentPenColor = pendingColor;
-    colorIndicator.style.background = pendingColor;
-    surface.setStrokeColor(pendingColor);
+    applyPenColor({ color: pendingColor, ...picker.getState() });
   }, { signal });
 
   applyBgBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
@@ -201,7 +228,9 @@ export function forceResetNotepad() {
   hideNotepad();
   clearSavedPosition();
   clearSavedDrawing();
-  console.log("[Wizascript] Notepad forcibly reset - drawing and position cleared.");
+  clearSavedPenColor();
+  clearRecentColors();
+  console.log("[Wizascript] Notepad forcibly reset - drawing, position, and colors cleared.");
 }
 
 function injectStyle() {
@@ -378,6 +407,28 @@ const STYLE_CSS = `
   cursor: pointer;
   font-weight: bold;
   width: 100%;
+}
+.wizascript-notepad-recent-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  margin-top: 4px;
+}
+.wizascript-notepad-recent-colors {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+}
+.wizascript-notepad-recent-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.4);
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.5);
+  cursor: pointer;
 }
 `;
 

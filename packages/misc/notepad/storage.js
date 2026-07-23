@@ -15,6 +15,8 @@
 
 const POSITION_KEY = "wizascript.misc.notepad.position";
 const DRAWING_KEY = "wizascript.misc.notepad.drawing";
+const PEN_COLOR_KEY = "wizascript.misc.notepad.penColor";
+const RECENT_COLORS_KEY = "wizascript.misc.notepad.recentColors";
 
 function readJSON(key, fallback) {
   try {
@@ -65,6 +67,46 @@ export function setSavedDrawing(drawing) {
 export function clearSavedDrawing() {
   try {
     GM_deleteValue(DRAWING_KEY);
+  } catch (e) {
+    // ignore - nothing to clear
+  }
+}
+
+// { hue, saturation, lightness, color } | null - hue/saturation/
+// lightness are stored alongside the resolved color string so the
+// wheel can be restored to the exact spot that produced it, rather
+// than re-deriving a (possibly different) wheel position from the
+// color alone.
+export function getSavedPenColor() {
+  return readJSON(PEN_COLOR_KEY, null);
+}
+
+export function setSavedPenColor(state) {
+  writeJSON(PEN_COLOR_KEY, state);
+}
+
+export function clearSavedPenColor() {
+  try {
+    GM_deleteValue(PEN_COLOR_KEY);
+  } catch (e) {
+    // ignore - nothing to clear
+  }
+}
+
+// [{ hue, saturation, lightness, color }, ...] most-recently-applied
+// first. Capping and dedup is the caller's responsibility (see
+// recent-colors.js) - this is just storage.
+export function getRecentColors() {
+  return readJSON(RECENT_COLORS_KEY, []);
+}
+
+export function setRecentColors(list) {
+  writeJSON(RECENT_COLORS_KEY, list);
+}
+
+export function clearRecentColors() {
+  try {
+    GM_deleteValue(RECENT_COLORS_KEY);
   } catch (e) {
     // ignore - nothing to clear
   }

@@ -10,10 +10,12 @@
 // un-removable `document` listeners on every show, which piled up
 // across repeated show/hide cycles instead of being replaced.
 
-import { getSavedPosition, setSavedPosition } from "./storage.js";
+import { getSavedPosition, setSavedPosition, getSavedTitle, setSavedTitle } from "./storage.js";
 
 const DEFAULT_RIGHT = 16;
 const DEFAULT_BOTTOM = 16;
+const DEFAULT_TITLE = "Notepad";
+const TITLE_SAVE_DEBOUNCE_MS = 400;
 
 export function buildNotepadShell(signal) {
   const root = document.createElement("div");
@@ -30,11 +32,34 @@ export function buildNotepadShell(signal) {
 
   const header = document.createElement("div");
   header.className = "wizascript-notepad-header";
-  const title = document.createElement("span");
-  title.textContent = "Notepad";
+
+  // Editable in place - doubles as both the on-screen label and the
+  // name used for the downloaded PNG. Kept visually inconspicuous
+  // (transparent, borderless, matches the header's own text styling)
+  // so it doesn't look like a form field until it's focused.
+  const titleInput = document.createElement("input");
+  titleInput.type = "text";
+  titleInput.className = "wizascript-notepad-title-input";
+  titleInput.maxLength = 60;
+  titleInput.spellcheck = false;
+  titleInput.value = getSavedTitle() || DEFAULT_TITLE;
+
+  // Same stopPropagation-on-mousedown pattern the header buttons use -
+  // otherwise every click into the field to edit it would also be
+  // read by the drag handler below as "start dragging the notepad".
+  titleInput.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
+
+  let titleSaveTimer = null;
+  titleInput.addEventListener("input", () => {
+    clearTimeout(titleSaveTimer);
+    titleSaveTimer = setTimeout(() => {
+      setSavedTitle(titleInput.value.trim() || DEFAULT_TITLE);
+    }, TITLE_SAVE_DEBOUNCE_MS);
+  }, { signal });
+
   const headerButtons = document.createElement("span");
   headerButtons.className = "wizascript-notepad-header-buttons";
-  header.append(title, headerButtons);
+  header.append(titleInput, headerButtons);
 
   const body = document.createElement("div");
   body.className = "wizascript-notepad-body";
@@ -71,5 +96,5 @@ export function buildNotepadShell(signal) {
     setSavedPosition({ left: rect.left, top: rect.top });
   }, { signal });
 
-  return { root, header, body, headerButtons };
+  return { root, header, body, headerButtons, titleInput };
 }

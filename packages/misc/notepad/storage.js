@@ -17,6 +17,7 @@ const POSITION_KEY = "wizascript.misc.notepad.position";
 const DRAWING_KEY = "wizascript.misc.notepad.drawing";
 const PEN_COLOR_KEY = "wizascript.misc.notepad.penColor";
 const RECENT_COLORS_KEY = "wizascript.misc.notepad.recentColors";
+const TITLE_KEY = "wizascript.misc.notepad.title";
 
 function readJSON(key, fallback) {
   try {
@@ -107,6 +108,24 @@ export function setRecentColors(list) {
 export function clearRecentColors() {
   try {
     GM_deleteValue(RECENT_COLORS_KEY);
+  } catch (e) {
+    // ignore - nothing to clear
+  }
+}
+
+// The user-editable name shown in the header and used as the
+// downloaded PNG's filename. string | null.
+export function getSavedTitle() {
+  return readJSON(TITLE_KEY, null);
+}
+
+export function setSavedTitle(title) {
+  writeJSON(TITLE_KEY, title);
+}
+
+export function clearSavedTitle() {
+  try {
+    GM_deleteValue(TITLE_KEY);
   } catch (e) {
     // ignore - nothing to clear
   }

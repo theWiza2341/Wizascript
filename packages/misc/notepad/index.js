@@ -25,13 +25,26 @@ import { buildColorPicker } from "./color-wheel.js";
 import {
   clearSavedPosition, clearSavedDrawing,
   getSavedPenColor, setSavedPenColor, clearSavedPenColor,
-  getRecentColors, clearRecentColors
+  getRecentColors, clearRecentColors,
+  clearSavedTitle
 } from "./storage.js";
 import { recordRecentColor, buildRecentColorsRow } from "./recent-colors.js";
 
 const DEFAULT_THICKNESS = 5;
 
 let mounted = null; // { root, controller } | null
+
+// Strips characters that are invalid (or awkward) in filenames across
+// Windows/macOS/Linux, collapses whitespace, and falls back to a
+// sensible default for an empty/whitespace-only title.
+function sanitizeFilename(rawTitle) {
+  const cleaned = (rawTitle || "")
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, "")
+    .replace(/\s+/g, " ")
+    .slice(0, 60);
+  return cleaned || "notepad-doodle";
+}
 
 export function showNotepad() {
   if (mounted) return;
@@ -40,7 +53,7 @@ export function showNotepad() {
   const controller = new AbortController();
   const { signal } = controller;
 
-  const { root, body, headerButtons } = buildNotepadShell(signal);
+  const { root, body, headerButtons, titleInput } = buildNotepadShell(signal);
   const surface = createDrawingSurface();
 
   const DEFAULT_PEN_STATE = { hue: 0, saturation: 0, lightness: 0.1, color: "rgb(26, 26, 26)" };
@@ -209,7 +222,12 @@ export function showNotepad() {
   clearBtn.addEventListener("click", () => surface.clear(), { signal });
 
   saveBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
-  saveBtn.addEventListener("click", () => surface.downloadAsPng(), { signal });
+  saveBtn.addEventListener("click", () => {
+    // Read the input's live value rather than the debounced/persisted
+    // one, so the exported filename always matches exactly what's
+    // currently typed, even mid-debounce.
+    surface.downloadAsPng(`${sanitizeFilename(titleInput.value)}.png`);
+  }, { signal });
 
   closeBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
   closeBtn.addEventListener("click", () => hideNotepad(), { signal });
@@ -230,7 +248,8 @@ export function forceResetNotepad() {
   clearSavedDrawing();
   clearSavedPenColor();
   clearRecentColors();
-  console.log("[Wizascript] Notepad forcibly reset - drawing, position, and colors cleared.");
+  clearSavedTitle();
+  console.log("[Wizascript] Notepad forcibly reset - drawing, position, colors, and title cleared.");
 }
 
 function injectStyle() {
@@ -244,7 +263,17 @@ function injectStyle() {
 const STYLE_CSS = `
 .wizascript-notepad {
   position: fixed;
-  z-index: 8;
+  /* Deliberately much higher than Deck Tracker's widgets (z-index 8).
+     Those spawn over open board space and rarely get dragged, so a
+     low z-index rarely collides with anything. The notepad is
+     user-draggable to ANY point on screen, including under native
+     Undercards chrome (menus, top bar, tooltips, etc.) that can sit
+     above z-index 8 in some screen regions - which silently eats
+     clicks on whatever notepad control happens to be underneath it,
+     while areas that aren't covered (e.g. the canvas) keep working
+     normally. A near-max z-index means the notepad wins that stacking
+     fight regardless of where it's dropped. */
+  z-index: 2147483000;
   background: #fdf6e3;
   border: 2px solid #8a7355;
   border-radius: 6px;
@@ -271,6 +300,24 @@ const STYLE_CSS = `
   background: rgba(255,255,255,0.2);
   border-radius: 3px;
   padding: 1px 5px;
+}
+.wizascript-notepad-title-input {
+  flex: 1;
+  min-width: 30px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-size: 12px;
+  font-weight: bold;
+  font-family: inherit;
+  padding: 1px 2px;
+  cursor: text;
+}
+.wizascript-notepad-title-input:hover,
+.wizascript-notepad-title-input:focus {
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
 }
 .wizascript-notepad-body {
   padding: 8px;

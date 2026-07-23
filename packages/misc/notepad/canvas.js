@@ -119,7 +119,7 @@ export function createDrawingSurface() {
     scheduleSave();
   }
 
-  function downloadAsPng() {
+  function downloadAsPng(filename = "notepad-doodle.png") {
     // Flatten both layers for the exported file - the on-screen split
     // is an implementation detail, not something that should show up
     // in a saved image.
@@ -130,7 +130,7 @@ export function createDrawingSurface() {
     fctx.drawImage(backgroundCanvas, 0, 0);
     fctx.drawImage(inkCanvas, 0, 0);
     const link = document.createElement("a");
-    link.download = "notepad-doodle.png";
+    link.download = filename;
     link.href = flattened.toDataURL("image/png");
     link.click();
   }

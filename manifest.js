@@ -21,5 +21,6 @@ bootstrap(plugin => {
   initPatchMaker(plugin);
   initTrueHubBridge(plugin);
   initDeckTracker(plugin);
+  initUcTv(plugin)
   initMisc(plugin);
 });

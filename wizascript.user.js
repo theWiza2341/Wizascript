@@ -6052,6 +6052,43 @@ Version: v${version}`;
   var keybindType = null;
   var typeRegistered = false;
   var registry = [];
+  var pendingRegistrations = [];
+  var readyListenerAttached = false;
+  var pollAttempts = 0;
+  var MAX_POLL_ATTEMPTS = 50;
+  var POLL_INTERVAL_MS = 100;
+  function isUnderscriptUtilsReady() {
+    return !!(window.underscript && window.underscript.utils && window.underscript.utils.SettingType);
+  }
+  function flushPending() {
+    if (!isUnderscriptUtilsReady() || !pendingRegistrations.length) return;
+    const queued = pendingRegistrations.splice(0);
+    queued.forEach((fn) => fn());
+  }
+  function pollForReady() {
+    if (isUnderscriptUtilsReady()) {
+      flushPending();
+      return;
+    }
+    pollAttempts++;
+    if (pollAttempts > MAX_POLL_ATTEMPTS) {
+      console.error("[Wizascript] Gave up waiting for window.underscript.utils - keybinds will not be registered this session.");
+      return;
+    }
+    setTimeout(pollForReady, POLL_INTERVAL_MS);
+  }
+  function whenReady(plugin, fn) {
+    if (isUnderscriptUtilsReady()) {
+      fn();
+      return;
+    }
+    pendingRegistrations.push(fn);
+    if (!readyListenerAttached) {
+      readyListenerAttached = true;
+      plugin.events.on("underscript:ready", flushPending);
+      pollForReady();
+    }
+  }
   var primaryHeld = false;
   var holdTimer = null;
   var comboFired = false;
@@ -6227,13 +6264,15 @@ Version: v${version}`;
       onPrimaryPress,
       onPrimaryRelease
     } = config;
-    ensureCore(plugin);
-    const setting = settings.add(key, {
-      name: `${name} - Primary + <key>`,
-      type: keybindType,
-      default: JSON.stringify([defaultCode, defaultDisplay])
+    whenReady(plugin, () => {
+      ensureCore(plugin);
+      const setting = settings.add(key, {
+        name: `${name} - Primary + <key>`,
+        type: keybindType,
+        default: JSON.stringify([defaultCode, defaultDisplay])
+      });
+      registry.push({ key, setting, defaultCode, scope, selector, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease });
     });
-    registry.push({ key, setting, defaultCode, scope, selector, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease });
   }
 
   // packages/misc/index.js

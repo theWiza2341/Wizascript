@@ -4373,9 +4373,807 @@ Version: v${version}`;
       DIVISION_SCORES[tier.name] = tierIndex * 10;
     }
   });
+  function divisionIconUrl(rank) {
+    return rank ? `/images/divisions/${rank}.png` : null;
+  }
+  function rankScore(rank) {
+    return rank && Object.prototype.hasOwnProperty.call(DIVISION_SCORES, rank) ? DIVISION_SCORES[rank] : null;
+  }
+  function minTierThresholdScore(tierName) {
+    const tier = DIVISION_TIERS.find((t) => t.name === tierName);
+    if (!tier) return null;
+    return tier.subTiers ? DIVISION_SCORES[`${tierName}_III`] : DIVISION_SCORES[tierName];
+  }
+
+  // packages/uc-tv/settings.js
+  var LOG = "[UC TV]";
+  var KNOWN_MODES = ["RANKED", "STANDARD", "CUSTOM", "CPU", "STORY"];
+  function titleCase(name) {
+    return name.split("_").map((w) => w.charAt(0) + w.slice(1).toLowerCase()).join(" ");
+  }
+  var settingsRef = null;
+  function setSettingsRef(ref) {
+    settingsRef = ref;
+  }
+  function registerUcTvSettings(plugin, divisionTiers) {
+    const settings = createFeatureSettings(plugin, "ucTv", "UC TV");
+    const enabled = settings.add("enabled", {
+      name: "Enable UC TV",
+      type: "boolean",
+      default: true,
+      page: "Spectate"
+    });
+    const debugLogs = settings.add("debugLogs", {
+      name: "Enable Debug Logs",
+      type: "boolean",
+      default: false,
+      page: "Spectate"
+    });
+    const FILTER_CATEGORY = "UC TV - Filter Settings";
+    const filteringEnabled = settings.add("filteringEnabled", {
+      name: "Enable Match Filtering",
+      type: "boolean",
+      default: true,
+      category: FILTER_CATEGORY,
+      page: "Spectate"
+    });
+    const modeToggles = {};
+    KNOWN_MODES.forEach((mode) => {
+      modeToggles[mode] = settings.add(`ignoreMode${mode}`, {
+        name: `Ignore ${titleCase(mode)} Matches?`,
+        type: "select",
+        data: [["Yes", "yes"], ["No", "no"]],
+        default: "no",
+        category: FILTER_CATEGORY,
+        page: "Spectate"
+      });
+    });
+    const minLevel = settings.add("minLevel", {
+      name: "Minimum Player Level",
+      type: "select",
+      data: [
+        ["No minimum", 0],
+        ["1", 1],
+        ["50", 50],
+        ["100", 100],
+        ["200", 200],
+        ["400", 400],
+        ["600", 600],
+        ["800", 800],
+        ["1000", 1e3]
+      ],
+      default: 0,
+      category: FILTER_CATEGORY,
+      page: "Spectate"
+    });
+    const levelFilterMode = settings.add("levelFilterMode", {
+      name: "Minimum Level Applies To",
+      type: "select",
+      data: [["Either player", "either"], ["Both players", "both"]],
+      default: "either",
+      category: FILTER_CATEGORY,
+      page: "Spectate"
+    });
+    const minRankTier = settings.add("minRankTier", {
+      name: "Minimum Ranked Mode Level",
+      type: "select",
+      data: divisionTiers.map((t) => [titleCase(t.name), t.name]),
+      default: "COPPER",
+      category: FILTER_CATEGORY,
+      page: "Spectate"
+    });
+    const rankFilterMode = settings.add("rankFilterMode", {
+      name: "Minimum Rank Applies To",
+      type: "select",
+      data: [["Either player", "either"], ["Both players", "both"]],
+      default: "either",
+      category: FILTER_CATEGORY,
+      page: "Spectate"
+    });
+    const autoMode = settings.add("autoMode", {
+      name: "Enable auto-mode when spectating",
+      type: "boolean",
+      default: false,
+      page: "Spectate"
+    });
+    const countdownSeconds = settings.add("countdownSeconds", {
+      name: "Auto-continue delay (seconds)",
+      type: "select",
+      data: Array.from({ length: 15 }, (_, i) => i + 1).map((n) => [`${n}`, n]),
+      default: 5,
+      page: "Spectate"
+    });
+    return {
+      enabled,
+      debugLogs,
+      filteringEnabled,
+      modeToggles,
+      minLevel,
+      levelFilterMode,
+      minRankTier,
+      rankFilterMode,
+      autoMode,
+      countdownSeconds
+    };
+  }
+  var CONFIG = {
+    get masterEnabled() {
+      return settingsRef ? settingsRef.enabled.value() : true;
+    },
+    get debugLogs() {
+      return settingsRef ? settingsRef.debugLogs.value() : false;
+    },
+    get filteringEnabled() {
+      return settingsRef ? settingsRef.filteringEnabled.value() : true;
+    },
+    get disabledModes() {
+      if (!settingsRef) return [];
+      return KNOWN_MODES.filter((mode) => settingsRef.modeToggles[mode].value() === "yes");
+    },
+    get minLevel() {
+      return settingsRef ? settingsRef.minLevel.value() : 0;
+    },
+    get levelFilterMode() {
+      return settingsRef ? settingsRef.levelFilterMode.value() : "either";
+    },
+    get minRankTier() {
+      return settingsRef ? settingsRef.minRankTier.value() : "COPPER";
+    },
+    get rankFilterMode() {
+      return settingsRef ? settingsRef.rankFilterMode.value() : "either";
+    },
+    get autoMode() {
+      return settingsRef ? settingsRef.autoMode.value() : false;
+    },
+    get countdownSeconds() {
+      return settingsRef ? settingsRef.countdownSeconds.value() : 5;
+    }
+  };
+  function logDebug(...args) {
+    if (CONFIG.debugLogs) console.log(LOG, ...args);
+  }
+  function dumpSettingsState() {
+    const snapshot = {
+      masterEnabled: CONFIG.masterEnabled,
+      debugLogs: CONFIG.debugLogs,
+      filteringEnabled: CONFIG.filteringEnabled,
+      disabledModes: CONFIG.disabledModes,
+      minLevel: CONFIG.minLevel,
+      levelFilterMode: CONFIG.levelFilterMode,
+      minRankTier: CONFIG.minRankTier,
+      rankFilterMode: CONFIG.rankFilterMode,
+      autoMode: CONFIG.autoMode,
+      countdownSeconds: CONFIG.countdownSeconds
+    };
+    console.log(`${LOG} [settings] Current live values:`, snapshot);
+    return snapshot;
+  }
+
+  // packages/uc-tv/game-list.js
+  var ONCLICK_RE = /Spectate\?gameId=(\d+)&playerId=(\d+)/;
+  function readMode(row) {
+    const cell = row.querySelector("td.home-match-time");
+    if (!cell) return null;
+    const extra = Array.from(cell.classList).find((c) => c !== "home-match-time");
+    return extra || null;
+  }
+  function readTimeText(row) {
+    const cell = row.querySelector("td.home-match-time");
+    return cell ? cell.textContent.trim() : null;
+  }
+  function parseElapsedSeconds(timeText) {
+    if (!timeText) return null;
+    const parts = timeText.split(":").map(Number);
+    if (parts.some((n) => Number.isNaN(n))) return null;
+    if (parts.length === 2) return parts[0] * 60 + parts[1];
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    return null;
+  }
+  function readPlayerInfoSpan(cell) {
+    return cell.querySelector(".playerInfo > span");
+  }
+  function readUsername(cell) {
+    const soulSpan = readPlayerInfoSpan(cell);
+    if (!soulSpan) return null;
+    const clone = soulSpan.cloneNode(true);
+    const nestedLevel = clone.querySelector("span");
+    if (nestedLevel) nestedLevel.remove();
+    const text = clone.textContent.replace(/\s+/g, " ").trim();
+    return text || null;
+  }
+  function readSoul(cell) {
+    const soulSpan = readPlayerInfoSpan(cell);
+    return soulSpan ? soulSpan.className.trim() || null : null;
+  }
+  function readDivision(cell) {
+    const span = cell.querySelector('span[data-i18n*="DIVISION"]');
+    if (!span) return null;
+    const raw = span.getAttribute("data-i18n") || "";
+    const match = raw.match(/DIVISION:([A-Z_]+)/);
+    return match ? match[1] : null;
+  }
+  function readPlayerCell(cell) {
+    const m = (cell.getAttribute("onclick") || "").match(ONCLICK_RE);
+    if (!m) return null;
+    const levelMatch = cell.textContent.match(/LV\s*(\d+)/);
+    const level = levelMatch ? parseInt(levelMatch[1], 10) : null;
+    return { gameId: m[1], playerId: m[2], level, rank: readDivision(cell) };
+  }
+  function readPlayerCellFull(cell) {
+    const m = (cell.getAttribute("onclick") || "").match(ONCLICK_RE);
+    if (!m) return null;
+    const levelMatch = cell.textContent.match(/LV\s*(\d+)/);
+    return {
+      gameId: m[1],
+      playerId: m[2],
+      username: readUsername(cell),
+      soul: readSoul(cell),
+      level: levelMatch ? parseInt(levelMatch[1], 10) : null,
+      // e.g. "EMERALD_III", "MASTER", or null if unranked/no badge.
+      rank: readDivision(cell)
+    };
+  }
+  function parseRow(row) {
+    const cells = Array.from(row.querySelectorAll("td.spectate-player"));
+    const players = cells.map(readPlayerCell).filter(Boolean);
+    if (!players.length) return null;
+    const mode = readMode(row);
+    const preferred = players.find((p) => p.level !== null) || players[0];
+    return {
+      gameId: players[0].gameId,
+      playerId: preferred.playerId,
+      mode,
+      time: readTimeText(row),
+      levels: players.map((p) => p.level),
+      // e.g. [580, null] for a CPU match
+      ranks: players.map((p) => p.rank)
+      // e.g. ["EMERALD_III", null]
+    };
+  }
+  function parseRowFull(row) {
+    const cells = Array.from(row.querySelectorAll("td.spectate-player"));
+    const players = cells.map(readPlayerCellFull).filter(Boolean);
+    if (!players.length) return null;
+    return {
+      gameId: players[0].gameId,
+      mode: readMode(row),
+      time: readTimeText(row),
+      players
+    };
+  }
+  async function fetchHomepageDoc() {
+    const res = await fetch("/", { credentials: "same-origin" });
+    if (!res.ok) throw new Error(`Homepage fetch failed: ${res.status}`);
+    const html = await res.text();
+    return new DOMParser().parseFromString(html, "text/html");
+  }
+  var ROW_SELECTOR = "table.spectateTable tbody tr, #liste table tbody tr";
+  async function fetchLiveGames() {
+    const doc = await fetchHomepageDoc();
+    const rows = Array.from(doc.querySelectorAll(ROW_SELECTOR));
+    return rows.map(parseRow).filter(Boolean);
+  }
+  async function fetchLiveGamesFull() {
+    const doc = await fetchHomepageDoc();
+    const rows = Array.from(doc.querySelectorAll(ROW_SELECTOR));
+    return rows.map(parseRowFull).filter(Boolean);
+  }
+
+  // packages/uc-tv/filters.js
+  function isModeAllowed(mode) {
+    if (!CONFIG.filteringEnabled) return true;
+    if (!mode) return true;
+    return !CONFIG.disabledModes.includes(mode);
+  }
+  function levelsPass(levels) {
+    if (!CONFIG.filteringEnabled) return true;
+    if (!CONFIG.minLevel || CONFIG.minLevel <= 0) return true;
+    if (CONFIG.levelFilterMode === "both") {
+      return levels.every((l) => l !== null && l >= CONFIG.minLevel);
+    }
+    return levels.some((l) => l !== null && l >= CONFIG.minLevel);
+  }
+  function rankMeetsMin(rank) {
+    if (!CONFIG.minRankTier || CONFIG.minRankTier === "COPPER") return true;
+    const threshold = minTierThresholdScore(CONFIG.minRankTier);
+    if (threshold === null) return true;
+    const score = rankScore(rank);
+    if (score === null) return false;
+    return score <= threshold;
+  }
+  function ranksPass(ranks, mode) {
+    if (!CONFIG.filteringEnabled) return true;
+    if (mode !== "RANKED") return true;
+    if (!CONFIG.minRankTier || CONFIG.minRankTier === "COPPER") return true;
+    if (CONFIG.rankFilterMode === "both") {
+      return ranks.every(rankMeetsMin);
+    }
+    return ranks.some(rankMeetsMin);
+  }
+  function applyFilters(games) {
+    let pool = games;
+    const modeAllowed = pool.filter((g) => isModeAllowed(g.mode));
+    if (modeAllowed.length) pool = modeAllowed;
+    if (CONFIG.minLevel > 0) {
+      const meetsLevel = pool.filter((g) => levelsPass(g.levels));
+      if (meetsLevel.length) pool = meetsLevel;
+    }
+    if (CONFIG.minRankTier) {
+      const meetsRank = pool.filter((g) => ranksPass(g.ranks, g.mode));
+      if (meetsRank.length) pool = meetsRank;
+    }
+    return pool;
+  }
+
+  // packages/uc-tv/countdown.js
+  var activeCancelFn = null;
+  function cancelActiveCountdown() {
+    if (activeCancelFn) activeCancelFn();
+  }
+  function showCountdown(plugin, seconds, onComplete) {
+    if (plugin && typeof plugin.toast === "function") {
+      showCountdownViaToast(plugin, seconds, onComplete);
+    } else {
+      console.warn(`${LOG} plugin.toast not available - falling back to a custom overlay.`);
+      showCountdownOverlay(seconds, onComplete);
+    }
+  }
+  function showCountdownViaToast(plugin, seconds, onComplete) {
+    let remaining = seconds;
+    const toast = plugin.toast({
+      title: "UC TV",
+      text: `Spectating a new match in ${remaining}s... (Cancel by holding Ctrl)`
+    });
+    function cancel() {
+      clearInterval(interval);
+      activeCancelFn = null;
+      if (toast && typeof toast.setText === "function") toast.setText("Auto-continue canceled.");
+      if (toast && typeof toast.close === "function") setTimeout(() => toast.close(), 1500);
+      logDebug("Auto-continue canceled - Ctrl held during countdown.");
+    }
+    activeCancelFn = cancel;
+    const interval = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(interval);
+        activeCancelFn = null;
+        if (toast && typeof toast.close === "function") toast.close();
+        onComplete();
+        return;
+      }
+      if (toast && typeof toast.setText === "function") {
+        toast.setText(`Spectating a new match in ${remaining}s... (Cancel by holding Ctrl)`);
+      }
+    }, 1e3);
+  }
+  function showCountdownOverlay(seconds, onComplete) {
+    const overlay = document.createElement("div");
+    overlay.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 999999;
+    background: rgba(20,20,20,0.9);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  `;
+    document.body.appendChild(overlay);
+    let remaining = seconds;
+    let canceled = false;
+    function cancel() {
+      if (canceled) return;
+      canceled = true;
+      activeCancelFn = null;
+      overlay.textContent = `${LOG} Auto-continue canceled.`;
+      setTimeout(() => overlay.remove(), 1500);
+    }
+    activeCancelFn = cancel;
+    (function tick() {
+      if (canceled) return;
+      overlay.textContent = `${LOG} Spectating a new match in ${remaining}s... (Cancel by holding Ctrl)`;
+      if (remaining <= 0) {
+        activeCancelFn = null;
+        overlay.remove();
+        onComplete();
+        return;
+      }
+      remaining -= 1;
+      setTimeout(tick, 1e3);
+    })();
+  }
 
   // packages/uc-tv/utils.js
+  function isTypingContext() {
+    const el = document.activeElement;
+    if (!el) return false;
+    const tag = el.tagName;
+    return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
+  }
   var SCRIPT_START = Date.now();
+  var NAV_COOLDOWN_MS = 1e3;
+  function navigationReady() {
+    return Date.now() - SCRIPT_START >= NAV_COOLDOWN_MS;
+  }
+
+  // packages/uc-tv/channel-switch.js
+  async function goToNextMatch(plugin) {
+    let games;
+    try {
+      games = await fetchLiveGames();
+    } catch (e) {
+      console.warn(`${LOG} Failed to fetch the live games list - staying put.`, e);
+      return;
+    }
+    const currentGameId = new URLSearchParams(location.search).get("gameId");
+    const candidates = games.filter((g) => g.gameId !== currentGameId);
+    const pool = applyFilters(candidates);
+    if (!pool.length) {
+      logDebug("No other live matches found right now - staying put.");
+      return;
+    }
+    const sorted = [...pool].sort((a, b) => {
+      const ta = parseElapsedSeconds(a.time);
+      const tb = parseElapsedSeconds(b.time);
+      if (ta === null && tb === null) return 0;
+      if (ta === null) return 1;
+      if (tb === null) return -1;
+      return ta - tb;
+    });
+    const next = sorted[0];
+    logDebug(`Chose gameId=${next.gameId}, playerId=${next.playerId}, elapsed=${next.time} (levels: ${next.levels.join(", ")}). ${pool.length} candidate(s) considered.`);
+    showCountdown(plugin, CONFIG.countdownSeconds, () => {
+      location.href = `/Spectate?gameId=${next.gameId}&playerId=${next.playerId}`;
+    });
+  }
+  var switching = false;
+  async function switchChannel(plugin, direction) {
+    if (switching) return;
+    if (!navigationReady()) return;
+    switching = true;
+    try {
+      let games;
+      try {
+        games = await fetchLiveGames();
+      } catch (e) {
+        console.warn(`${LOG} [channel] Failed to fetch live games:`, e);
+        return;
+      }
+      const pool = applyFilters(games);
+      if (!pool.length) {
+        logDebug("[channel] No games available to switch to.");
+        return;
+      }
+      const currentGameId = new URLSearchParams(location.search).get("gameId");
+      const currentIndex = pool.findIndex((g) => g.gameId === currentGameId);
+      let targetIndex;
+      if (currentIndex === -1) {
+        targetIndex = direction > 0 ? 0 : pool.length - 1;
+      } else {
+        targetIndex = ((currentIndex + direction) % pool.length + pool.length) % pool.length;
+      }
+      const target = pool[targetIndex];
+      logDebug(`[channel] Switching to gameId=${target.gameId} (slot ${targetIndex + 1}/${pool.length}).`);
+      if (plugin && typeof plugin.toast === "function") {
+        plugin.toast({ title: "UC TV", text: `Channel ${targetIndex + 1}/${pool.length}` });
+      }
+      location.href = `/Spectate?gameId=${target.gameId}&playerId=${target.playerId}`;
+    } finally {
+      switching = false;
+    }
+  }
+  function bindChannelKeybinds(plugin) {
+    document.addEventListener("keydown", (e) => {
+      if (!CONFIG.masterEnabled) return;
+      if (!e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      if (isTypingContext()) return;
+      e.preventDefault();
+      switchChannel(plugin, e.key === "ArrowRight" ? 1 : -1);
+    });
+  }
+
+  // packages/uc-tv/channel-guide.js
+  var SOUL_COLORS2 = {
+    DETERMINATION: "#ff4d4d",
+    BRAVERY: "#ffb03b",
+    JUSTICE: "#ffe75e",
+    KINDNESS: "#4ddb4d",
+    PATIENCE: "#4dd9e8",
+    INTEGRITY: "#4d7bff",
+    PERSEVERANCE: "#b366ff"
+  };
+  var MODE_COLORS = {
+    RANKED: "#4dd9e8",
+    STANDARD: "#7ee787",
+    CUSTOM: "#b366ff",
+    CPU: "#666666",
+    STORY: "#ffb03b"
+  };
+  var LEGEND_MODES = ["RANKED", "STANDARD", "CUSTOM", "CPU", "STORY"];
+  function soulColor(soul) {
+    return SOUL_COLORS2[soul] || "#cfd8e3";
+  }
+  function modeColor(mode) {
+    return MODE_COLORS[mode] || "#4dd9e8";
+  }
+  function jumpTo(plugin, gameId, playerId) {
+    if (!navigationReady()) {
+      if (plugin && typeof plugin.toast === "function") {
+        plugin.toast({ title: "UC TV", text: "Still loading - try again in a moment." });
+      }
+      return;
+    }
+    location.href = `/Spectate?gameId=${gameId}&playerId=${playerId}`;
+  }
+  var GUIDE_FONT = "12px 'DTM-Mono', monospace";
+  var GUIDE_MIN_WIDTH = 300;
+  var GUIDE_MAX_WIDTH = 480;
+  var GUIDE_VISIBLE_ROWS = 10;
+  var GUIDE_ROW_HEIGHT_PX = 30;
+  var GUIDE_CHROME_HEIGHT_PX = 70;
+  var GUIDE_POSITION = "bottom-right";
+  var RANK_ICON_WIDTH_PX = 14;
+  function estimateWidestRowWidth(list) {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    ctx.font = GUIDE_FONT;
+    let max = 0;
+    list.forEach((entry) => {
+      let text = "";
+      let iconWidth = 0;
+      entry.players.forEach((p, i) => {
+        if (i > 0) text += " vs ";
+        text += `\u2665 ${p.username || "?"}${p.level !== null ? ` LV ${p.level}` : ""}`;
+        if (entry.mode === "RANKED" && p.rank) iconWidth += RANK_ICON_WIDTH_PX;
+      });
+      text += `   ${entry.time || ""}`;
+      const width = ctx.measureText(text).width + iconWidth;
+      if (width > max) max = width;
+    });
+    return max;
+  }
+  var guideOverlay = null;
+  var guideLoading = false;
+  async function showChannelGuide(plugin) {
+    if (guideOverlay || guideLoading) return;
+    guideLoading = true;
+    let entries;
+    try {
+      entries = await fetchLiveGamesFull();
+    } catch (e) {
+      console.warn("[UC TV] [guide] Failed to fetch live games:", e);
+      guideLoading = false;
+      return;
+    }
+    const filtered = entries.filter(
+      (entry) => isModeAllowed(entry.mode) && levelsPass(entry.players.map((p) => p.level)) && ranksPass(entry.players.map((p) => p.rank), entry.mode)
+    );
+    const list = filtered.length ? filtered : entries;
+    const currentGameId = new URLSearchParams(location.search).get("gameId");
+    const targetWidth = Math.min(GUIDE_MAX_WIDTH, Math.max(GUIDE_MIN_WIDTH, estimateWidestRowWidth(list) + 55));
+    const targetHeight = GUIDE_VISIBLE_ROWS * GUIDE_ROW_HEIGHT_PX + GUIDE_CHROME_HEIGHT_PX;
+    const positionCSS = GUIDE_POSITION === "center-right" ? "top: 50%; right: 16px; transform: translateY(-50%);" : "bottom: 90px; right: 16px;";
+    const overlay = document.createElement("div");
+    overlay.id = "uctv-guide-overlay";
+    overlay.style.cssText = `
+    position: fixed;
+    ${positionCSS}
+    z-index: 999999;
+    width: ${targetWidth}px;
+    max-height: ${targetHeight}px;
+    overflow-y: auto;
+    background: rgba(5, 8, 16, 0.94);
+    border: 1px solid rgba(77, 217, 232, 0.4);
+    border-radius: 6px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.75);
+    font-family: 'DTM-Mono', monospace;
+    font-size: 12px;
+    color: #d7e6f2;
+    padding: 6px;
+  `;
+    const header = document.createElement("div");
+    header.textContent = `UC TV Guide - ${list.length} shown | release Ctrl to close`;
+    header.style.cssText = `
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    color: #4dd9e8;
+    padding: 4px 6px 8px;
+    border-bottom: 1px solid rgba(77,217,232,0.25);
+    margin-bottom: 4px;
+  `;
+    overlay.appendChild(header);
+    list.forEach((entry) => {
+      const isCurrent = entry.gameId === currentGameId;
+      const row = document.createElement("div");
+      row.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 6px;
+      margin-bottom: 2px;
+      border-left: 3px solid ${modeColor(entry.mode)};
+      background: ${isCurrent ? "rgba(77,217,232,0.12)" : "rgba(255,255,255,0.03)"};
+      border-radius: 2px;
+    `;
+      entry.players.forEach((p, i) => {
+        if (i > 0) {
+          const divider = document.createElement("span");
+          divider.textContent = "vs";
+          divider.style.cssText = "opacity:0.35; font-size:11px; flex-shrink:0;";
+          row.appendChild(divider);
+        }
+        const playerEl = document.createElement("span");
+        playerEl.style.cssText = `
+        flex: 0 1 auto;
+        max-width: 46%;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        cursor: pointer;
+      `;
+        const showRankIcon = entry.mode === "RANKED" && p.rank;
+        const rankIcon = document.createElement("img");
+        if (showRankIcon) {
+          rankIcon.src = divisionIconUrl(p.rank);
+          rankIcon.alt = p.rank;
+          rankIcon.title = p.rank.replace(/_/g, " ");
+          rankIcon.style.cssText = "height:12px; vertical-align:middle; margin-right:2px;";
+        }
+        const heart = document.createElement("span");
+        heart.textContent = "\u2665 ";
+        heart.style.color = soulColor(p.soul);
+        const name = document.createElement("span");
+        name.textContent = p.username || "?";
+        name.style.color = soulColor(p.soul);
+        name.style.fontWeight = "bold";
+        const lvl = document.createElement("span");
+        lvl.textContent = p.level !== null ? ` LV ${p.level}` : "";
+        lvl.style.cssText = "color:#6fa8ff; opacity:0.9;";
+        if (showRankIcon) playerEl.appendChild(rankIcon);
+        playerEl.append(heart, name, lvl);
+        playerEl.addEventListener("mouseenter", () => {
+          playerEl.style.textDecoration = "underline";
+        });
+        playerEl.addEventListener("mouseleave", () => {
+          playerEl.style.textDecoration = "none";
+        });
+        playerEl.addEventListener("click", () => {
+          logDebug(`[guide] Jumping to gameId=${entry.gameId}, playerId=${p.playerId}.`);
+          jumpTo(plugin, entry.gameId, p.playerId);
+        });
+        row.appendChild(playerEl);
+      });
+      const timeEl = document.createElement("span");
+      timeEl.textContent = entry.time || "";
+      timeEl.style.cssText = "color:#7dffb0; font-size:12px; flex-shrink:0; margin-left:4px;";
+      row.appendChild(timeEl);
+      overlay.appendChild(row);
+    });
+    const legend = document.createElement("div");
+    legend.style.cssText = `
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 8px 6px 4px;
+    margin-top: 4px;
+    border-top: 1px solid rgba(77,217,232,0.25);
+    font-size: 11px;
+  `;
+    LEGEND_MODES.forEach((mode) => {
+      const item = document.createElement("span");
+      item.style.cssText = "display:flex; align-items:center; gap:4px; opacity:0.85;";
+      const swatch = document.createElement("span");
+      swatch.style.cssText = `width:9px; height:9px; border-radius:2px; background:${MODE_COLORS[mode]}; flex-shrink:0;`;
+      const label = document.createElement("span");
+      label.textContent = mode;
+      item.append(swatch, label);
+      legend.appendChild(item);
+    });
+    overlay.appendChild(legend);
+    overlay.addEventListener("wheel", (e) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        overlay.scrollTop += e.deltaY;
+      }
+    }, { passive: false });
+    document.body.appendChild(overlay);
+    guideOverlay = overlay;
+    guideLoading = false;
+  }
+  function hideChannelGuide() {
+    if (guideOverlay) {
+      guideOverlay.remove();
+      guideOverlay = null;
+    }
+  }
+  var CTRL_HOLD_DELAY_MS = 250;
+  var ctrlHoldTimer = null;
+  function bindChannelGuideKeybinds(plugin) {
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Control") {
+        if (!CONFIG.masterEnabled) return;
+        if (isTypingContext()) return;
+        clearTimeout(ctrlHoldTimer);
+        ctrlHoldTimer = setTimeout(() => {
+          ctrlHoldTimer = null;
+          showChannelGuide(plugin);
+          cancelActiveCountdown();
+        }, CTRL_HOLD_DELAY_MS);
+        return;
+      }
+      if (e.ctrlKey && ctrlHoldTimer) {
+        clearTimeout(ctrlHoldTimer);
+        ctrlHoldTimer = null;
+      }
+    });
+    document.addEventListener("keyup", (e) => {
+      if (e.key === "Control") {
+        clearTimeout(ctrlHoldTimer);
+        ctrlHoldTimer = null;
+        hideChannelGuide();
+      }
+    });
+  }
+
+  // packages/uc-tv/debug.js
+  async function scopeActiveGames() {
+    let scoped;
+    try {
+      scoped = await fetchLiveGamesFull();
+    } catch (e) {
+      console.error(`${LOG} [scope] Failed to fetch homepage:`, e);
+      return [];
+    }
+    console.log(`${LOG} [scope] ${scoped.length} active game(s).`);
+    console.table(scoped.flatMap((g) => g.players.map((p) => ({
+      gameId: g.gameId,
+      mode: g.mode,
+      time: g.time,
+      playerId: p.playerId,
+      username: p.username,
+      soul: p.soul,
+      level: p.level,
+      rank: p.rank
+    }))));
+    return scoped;
+  }
+
+  // packages/uc-tv/index.js
+  function isSpectatePage() {
+    return matchesPage({ prefix: "/Spectate" });
+  }
+  function initUcTv(plugin) {
+    const settings = registerUcTvSettings(plugin, DIVISION_TIERS);
+    setSettingsRef(settings);
+    console.log("[UC TV] Settings registered.");
+    dumpSettingsState();
+    window.__ucTVScope = scopeActiveGames;
+    window.__ucTVSettings = dumpSettingsState;
+    if (!isSpectatePage()) return;
+    bindChannelKeybinds(plugin);
+    bindChannelGuideKeybinds(plugin);
+    logDebug("Ctrl+ArrowLeft/Right channel switching and hold-Ctrl channel guide active. 1s navigation cooldown after page load.");
+    let handled = false;
+    plugin.events.on("getResult", (data) => {
+      logDebug("getResult fired - match ended.", data);
+      if (handled) return;
+      handled = true;
+      if (!CONFIG.masterEnabled) {
+        logDebug("Enable UC TV is off - staying put.");
+        return;
+      }
+      if (!CONFIG.autoMode) {
+        logDebug("Auto-mode is off - staying put.");
+        return;
+      }
+      goToNextMatch(plugin);
+    });
+  }
 
   // packages/misc/settings.js
   function registerMiscSettings(plugin) {
@@ -5258,6 +6056,7 @@ Version: v${version}`;
     initPatchMaker(plugin);
     initTrueHubBridge(plugin);
     initDeckTracker(plugin);
+    initUcTv(plugin);
     initMisc(plugin);
   });
 })();

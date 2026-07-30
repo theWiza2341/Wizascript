@@ -3,8 +3,15 @@
 // Unlike the standalone prototype this was developed as, this package
 // does NOT register its own separate UnderScript plugin - it receives
 // the same shared `plugin` object every other Wizascript package
-// does, wired in by manifest.js/bootstrap.js. Page-gated to Spectate
-// pages via the same matchesPage() utility Deck Tracker uses.
+// does, wired in by manifest.js/bootstrap.js.
+//
+// Settings register unconditionally (site-wide), same as how
+// UnderScript's own settings are always reachable regardless of what
+// page you're on - so people can see/adjust what UC TV will do without
+// needing to be actively spectating. Everything ACTUAL (keybinds, the
+// getResult listener, the debug console commands) stays gated to
+// Spectate pages via the same matchesPage() utility Deck Tracker uses,
+// since none of it does anything meaningful anywhere else.
 
 import { matchesPage } from '../core/page-match.js';
 import { DIVISION_TIERS } from './divisions.js';
@@ -18,18 +25,17 @@ function isSpectatePage() {
 }
 
 export function initUcTv(plugin) {
-  if (!isSpectatePage()) return;
-
   const settings = registerUcTvSettings(plugin, DIVISION_TIERS);
   setSettingsRef(settings);
   console.log('[UC TV] Settings registered.');
   dumpSettingsState();
 
-  // Debug console commands - deliberately global (not gated behind
-  // any setting) so they're reachable regardless of whether something
-  // else is misbehaving.
+  // Debug console commands - available from anywhere, same as the
+  // settings themselves, not just while actively spectating.
   window.__ucTVScope = scopeActiveGames;
   window.__ucTVSettings = dumpSettingsState;
+
+  if (!isSpectatePage()) return;
 
   bindChannelKeybinds(plugin);
   bindChannelGuideKeybinds(plugin);

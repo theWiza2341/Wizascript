@@ -39,6 +39,63 @@ let keybindType = null;
 let typeRegistered = false;
 const registry = []; // { key, setting, defaultCode, scope, selector, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease }
 
+// window.underscript.plugin(...) becomes callable before
+// window.underscript.utils is populated - every other package's
+// settings.add() call works fine this early since none of them touch
+// .utils, but our custom SettingType is the first thing that does, so
+// we're the first to actually hit this gap. Queue registrations and
+// flush them once .utils genuinely exists, rather than assuming
+// readiness just because `plugin` itself was obtainable.
+const pendingRegistrations = [];
+let readyListenerAttached = false;
+let pollAttempts = 0;
+const MAX_POLL_ATTEMPTS = 50;
+const POLL_INTERVAL_MS = 100;
+
+function isUnderscriptUtilsReady() {
+  return !!(window.underscript && window.underscript.utils && window.underscript.utils.SettingType);
+}
+
+function flushPending() {
+  if (!isUnderscriptUtilsReady() || !pendingRegistrations.length) return;
+  const queued = pendingRegistrations.splice(0);
+  queued.forEach((fn) => fn());
+}
+
+function pollForReady() {
+  if (isUnderscriptUtilsReady()) {
+    flushPending();
+    return;
+  }
+  pollAttempts++;
+  if (pollAttempts > MAX_POLL_ATTEMPTS) {
+    console.error('[Wizascript] Gave up waiting for window.underscript.utils - keybinds will not be registered this session.');
+    return;
+  }
+  setTimeout(pollForReady, POLL_INTERVAL_MS);
+}
+
+// Runs fn now if window.underscript.utils is already populated,
+// otherwise queues it. The first caller to queue also sets up the
+// wait: `underscript:ready` is the same event Galascript's own code
+// waits on for this exact reason, used here as the fast path: if that
+// event already fired before we got a listener attached (a real
+// possibility, since we don't control when in the boot sequence a
+// given package first calls registerKeybind), the poll below is what
+// actually saves us rather than just being a defensive extra.
+function whenReady(plugin, fn) {
+  if (isUnderscriptUtilsReady()) {
+    fn();
+    return;
+  }
+  pendingRegistrations.push(fn);
+  if (!readyListenerAttached) {
+    readyListenerAttached = true;
+    plugin.events.on('underscript:ready', flushPending);
+    pollForReady();
+  }
+}
+
 let primaryHeld = false;
 let holdTimer = null;
 let comboFired = false; // true once a secondary key has matched during this hold, so onPrimaryAlone doesn't ALSO fire
@@ -248,15 +305,17 @@ export function registerKeybind(plugin, config) {
     onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease
   } = config;
 
-  ensureCore(plugin);
+  whenReady(plugin, () => {
+    ensureCore(plugin);
 
-  const setting = settings.add(key, {
-    name: `${name} - Primary + <key>`,
-    type: keybindType,
-    default: JSON.stringify([defaultCode, defaultDisplay])
+    const setting = settings.add(key, {
+      name: `${name} - Primary + <key>`,
+      type: keybindType,
+      default: JSON.stringify([defaultCode, defaultDisplay])
+    });
+
+    registry.push({ key, setting, defaultCode, scope, selector, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease });
   });
-
-  registry.push({ key, setting, defaultCode, scope, selector, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease });
 }
 
 // For UI that wants to display the current Primary key, e.g. a toast

@@ -603,21 +603,21 @@
 
   // packages/patch-maker/settings.js
   function registerPatchMakerSettings(plugin) {
-    const settings = createFeatureSettings(plugin, "patchmaker", "Patch Maker");
+    const settings2 = createFeatureSettings(plugin, "patchmaker", "Patch Maker");
     return {
-      settings,
-      enabled: settings.add("enabled", { name: "Enable Patch Maker", type: "boolean", default: true }),
-      debugLogging: settings.add("debugLogging", { name: "Enable debug logging", type: "boolean", default: false }),
-      hideControls: settings.add("hideControls", { name: "Hide Patch Maker controls", type: "boolean", default: false }),
-      cardHovers: settings.add("enableCardHovers", { name: "Enable card hovers", type: "boolean", default: true }),
-      language: settings.add("patchLanguage", {
+      settings: settings2,
+      enabled: settings2.add("enabled", { name: "Enable Patch Maker", type: "boolean", default: true }),
+      debugLogging: settings2.add("debugLogging", { name: "Enable debug logging", type: "boolean", default: false }),
+      hideControls: settings2.add("hideControls", { name: "Hide Patch Maker controls", type: "boolean", default: false }),
+      cardHovers: settings2.add("enableCardHovers", { name: "Enable card hovers", type: "boolean", default: true }),
+      language: settings2.add("patchLanguage", {
         name: "Select Language",
         type: "select",
         options: ["Auto / Default", "English", "French", "Spanish", "Portuguese", "Chinese", "Italian", "Polish", "German", "Russian"],
         default: "Auto / Default",
         onChange: () => location.reload()
       }),
-      openOnLoad: settings.add("openPatchNotesOnPageLoad", { name: "Auto-Load Patch Maker", type: "boolean", default: false })
+      openOnLoad: settings2.add("openPatchNotesOnPageLoad", { name: "Auto-Load Patch Maker", type: "boolean", default: false })
     };
   }
 
@@ -1850,17 +1850,17 @@ Version: v${version}`;
     return matchesPage("/gameUpdates.jsp");
   }
   function initPatchMaker(plugin) {
-    const settings = registerPatchMakerSettings(plugin);
-    if (!settings.enabled.value()) return;
+    const settings2 = registerPatchMakerSettings(plugin);
+    if (!settings2.enabled.value()) return;
     if (!isPatchNotesPage()) return;
     const logger = createLogger("PatchMaker");
     const originalWarn = logger.warn.bind(logger);
     const originalLog = logger.log.bind(logger);
     logger.log = (...args) => {
-      if (settings.debugLogging.value()) originalLog(...args);
+      if (settings2.debugLogging.value()) originalLog(...args);
     };
     logger.warn = (...args) => {
-      if (settings.debugLogging.value()) originalWarn(...args);
+      if (settings2.debugLogging.value()) originalWarn(...args);
     };
     let wordColors = { ...BASE_WORD_COLORS };
     let underlineTokens = [];
@@ -1870,14 +1870,14 @@ Version: v${version}`;
       version: FEATURE_VERSION,
       getWordColors: () => wordColors,
       getUnderlineTokens: () => underlineTokens,
-      getCardHoversEnabled: () => settings.cardHovers.value(),
+      getCardHoversEnabled: () => settings2.cardHovers.value(),
       getCardNameMap: () => cardNameMap,
-      getHideControlsEnabled: () => settings.hideControls.value(),
-      getOpenOnLoad: () => settings.openOnLoad.value()
+      getHideControlsEnabled: () => settings2.hideControls.value(),
+      getOpenOnLoad: () => settings2.openOnLoad.value()
     });
-    settings.hideControls.on((value) => overlay.setControlsHidden(value));
+    settings2.hideControls.on((value) => overlay.setControlsHidden(value));
     async function refreshLocalizedData() {
-      const languageLabel = settings.language.value();
+      const languageLabel = settings2.language.value();
       const { tokens, localizedColors } = await buildLocalizedFormattingData(languageLabel, BASE_WORD_COLORS);
       underlineTokens = tokens;
       wordColors = { ...BASE_WORD_COLORS, ...localizedColors };
@@ -1891,13 +1891,13 @@ Version: v${version}`;
 
   // packages/true-hub-bridge/settings.js
   function registerTrueHubBridgeSettings(plugin) {
-    const settings = createFeatureSettings(plugin, "truehubbridge", "True Hub Bridge");
+    const settings2 = createFeatureSettings(plugin, "truehubbridge", "True Hub Bridge");
     return {
-      settings,
+      settings: settings2,
       // Master toggle - lets the whole feature be turned off from within
       // Wizascript's settings, per the "one plugin, categories as boxes"
       // model the rest of the suite follows.
-      enabled: settings.add("enabled", {
+      enabled: settings2.add("enabled", {
         name: "Enable True Hub Bridge",
         type: "boolean",
         default: true
@@ -1905,17 +1905,17 @@ Version: v${version}`;
       // The original script had no debug-logging toggle at all (just
       // always-on console.log calls) - added here for consistency with
       // patch-maker, using the same working per-feature debug logger.
-      debugLogging: settings.add("debugLogging", {
+      debugLogging: settings2.add("debugLogging", {
         name: "Enable debug logging",
         type: "boolean",
         default: false
       }),
-      autoOpen: settings.add("autoOpenTrueHub", {
+      autoOpen: settings2.add("autoOpenTrueHub", {
         name: "Auto Open True Hub",
         type: "boolean",
         default: true
       }),
-      scrollPaging: settings.add("enableScrollPaging", {
+      scrollPaging: settings2.add("enableScrollPaging", {
         name: "Enable Scroll Paging",
         type: "boolean",
         default: true
@@ -2984,22 +2984,22 @@ Version: v${version}`;
     return matchesPage("/Hub");
   }
   function initTrueHubBridge(plugin) {
-    const settings = registerTrueHubBridgeSettings(plugin);
-    if (!settings.enabled.value()) return;
+    const settings2 = registerTrueHubBridgeSettings(plugin);
+    if (!settings2.enabled.value()) return;
     if (!isHubPage()) return;
     const logger = createLogger("TrueHubBridge");
     const originalWarn = logger.warn.bind(logger);
     const originalLog = logger.log.bind(logger);
     logger.log = (...args) => {
-      if (settings.debugLogging.value()) originalLog(...args);
+      if (settings2.debugLogging.value()) originalLog(...args);
     };
     logger.warn = (...args) => {
-      if (settings.debugLogging.value()) originalWarn(...args);
+      if (settings2.debugLogging.value()) originalWarn(...args);
     };
     const overlay = createTrueHubOverlay({
       logger,
-      getAutoOpen: () => settings.autoOpen.value(),
-      getScrollPaging: () => settings.scrollPaging.value()
+      getAutoOpen: () => settings2.autoOpen.value(),
+      getScrollPaging: () => settings2.scrollPaging.value()
     });
     loadDecks().then((decks) => {
       overlay.setDecks(decks);
@@ -3009,28 +3009,28 @@ Version: v${version}`;
 
   // packages/deck-tracker/settings.js
   function registerDeckTrackerSettings(plugin) {
-    const settings = createFeatureSettings(plugin, "decktracker", "Deck Tracker");
-    const enabled = settings.add("enabled", {
+    const settings2 = createFeatureSettings(plugin, "decktracker", "Deck Tracker");
+    const enabled = settings2.add("enabled", {
       name: "Enable Deck Tracker",
       type: "boolean",
       default: true
     });
-    const debugLogging = settings.add("debugLogging", {
+    const debugLogging = settings2.add("debugLogging", {
       name: "Enable debug logging",
       type: "boolean",
       default: false
     });
-    const retainUnclosedPresets = settings.add("retainUnclosedPresets", {
+    const retainUnclosedPresets = settings2.add("retainUnclosedPresets", {
       name: "Retain Unclosed Presets Between Matches",
       type: "boolean",
       default: false
     });
-    const allowFavoritedRetainedWhileSpectating = settings.add("allowFavoritedRetainedWhileSpectating", {
+    const allowFavoritedRetainedWhileSpectating = settings2.add("allowFavoritedRetainedWhileSpectating", {
       name: "Auto-load Favorited/Retained Presets While Spectating",
       type: "boolean",
       default: false
     });
-    const dimOpacity = settings.add("dimOpacity", {
+    const dimOpacity = settings2.add("dimOpacity", {
       name: "Tracker Button Dim Opacity",
       type: "slider",
       default: 0.4,
@@ -3039,7 +3039,7 @@ Version: v${version}`;
       step: 0.05
     });
     return {
-      settings,
+      settings: settings2,
       enabled,
       debugLogging,
       retainUnclosedPresets,
@@ -4174,19 +4174,19 @@ Version: v${version}`;
     setTimeout(() => waitForAvatar(callback), 100);
   }
   function initDeckTracker(plugin) {
-    const settings = registerDeckTrackerSettings(plugin);
-    if (!settings.enabled.value()) return;
+    const settings2 = registerDeckTrackerSettings(plugin);
+    if (!settings2.enabled.value()) return;
     if (!isGamePage()) return;
     const logger = createLogger("DeckTracker");
     const originalWarn = logger.warn.bind(logger);
     const originalLog = logger.log.bind(logger);
     logger.log = (...args) => {
-      if (settings.debugLogging.value()) originalLog(...args);
+      if (settings2.debugLogging.value()) originalLog(...args);
     };
     logger.warn = (...args) => {
-      if (settings.debugLogging.value()) originalWarn(...args);
+      if (settings2.debugLogging.value()) originalWarn(...args);
     };
-    setRetainEnabledGetter(() => settings.retainUnclosedPresets.value());
+    setRetainEnabledGetter(() => settings2.retainUnclosedPresets.value());
     registerBuiltInPresets();
     function handleAddPreset(id) {
       spawnPreset(id);
@@ -4294,7 +4294,7 @@ Version: v${version}`;
         const shouldDim = isBlockingModalOpen();
         if (shouldDim !== isDimmed) {
           isDimmed = shouldDim;
-          btn.style.opacity = shouldDim ? String(settings.dimOpacity.value()) : "1";
+          btn.style.opacity = shouldDim ? String(settings2.dimOpacity.value()) : "1";
           btn.style.pointerEvents = shouldDim ? "none" : "auto";
         }
       }, 250);
@@ -4320,7 +4320,7 @@ Version: v${version}`;
       }
     });
     function restoreFavoritedAndRetained() {
-      if (isSpectating() && !settings.allowFavoritedRetainedWhileSpectating.value()) return;
+      if (isSpectating() && !settings2.allowFavoritedRetainedWhileSpectating.value()) return;
       const favoritedIds = getFavoritedPresetIds();
       const spawnedFavorites = favoritedIds.filter((id) => spawnPreset(id) !== null);
       if (spawnedFavorites.length) {
@@ -4333,7 +4333,7 @@ Version: v${version}`;
           favoritedIds.filter((id) => !spawnedFavorites.includes(id))
         );
       }
-      if (settings.retainUnclosedPresets.value()) {
+      if (settings2.retainUnclosedPresets.value()) {
         const retainedIds = getRetainedPresetIds().filter((id) => !favoritedIds.includes(id));
         retainedIds.forEach((id) => spawnPreset(id));
         if (retainedIds.length) {
@@ -4396,26 +4396,26 @@ Version: v${version}`;
     settingsRef = ref;
   }
   function registerUcTvSettings(plugin, divisionTiers) {
-    const settings = createFeatureSettings(plugin, "ucTv", "UC TV");
-    const enabled = settings.add("enabled", {
+    const settings2 = createFeatureSettings(plugin, "ucTv", "UC TV");
+    const enabled = settings2.add("enabled", {
       name: "Enable UC TV",
       type: "boolean",
       default: true,
       page: "Spectate"
     });
-    const debugLogs = settings.add("debugLogs", {
+    const debugLogs = settings2.add("debugLogs", {
       name: "Enable Debug Logs",
       type: "boolean",
       default: false,
       page: "Spectate"
     });
-    const autoMode = settings.add("autoMode", {
+    const autoMode = settings2.add("autoMode", {
       name: "Enable auto-mode when spectating",
       type: "boolean",
       default: false,
       page: "Spectate"
     });
-    const countdownSeconds = settings.add("countdownSeconds", {
+    const countdownSeconds = settings2.add("countdownSeconds", {
       name: "Auto-continue delay (seconds)",
       type: "select",
       data: Array.from({ length: 15 }, (_, i) => i + 1).map((n) => [`${n}`, n]),
@@ -4437,7 +4437,7 @@ Version: v${version}`;
       };
     }
     const FILTER_CATEGORY = "UC TV - Filter Settings";
-    const filteringEnabled = settings.add("filteringEnabled", {
+    const filteringEnabled = settings2.add("filteringEnabled", {
       name: "Enable Match Filtering",
       type: "boolean",
       default: true,
@@ -4446,7 +4446,7 @@ Version: v${version}`;
     });
     const modeToggles = {};
     KNOWN_MODES.forEach((mode) => {
-      modeToggles[mode] = settings.add(`ignoreMode${mode}`, {
+      modeToggles[mode] = settings2.add(`ignoreMode${mode}`, {
         name: `Ignore ${titleCase(mode)} Matches?`,
         type: "select",
         data: [["Yes", "yes"], ["No", "no"]],
@@ -4455,7 +4455,7 @@ Version: v${version}`;
         page: "Spectate"
       });
     });
-    const minLevel = settings.add("minLevel", {
+    const minLevel = settings2.add("minLevel", {
       name: "Minimum Player Level",
       type: "select",
       data: [
@@ -4473,7 +4473,7 @@ Version: v${version}`;
       category: FILTER_CATEGORY,
       page: "Spectate"
     });
-    const levelFilterMode = settings.add("levelFilterMode", {
+    const levelFilterMode = settings2.add("levelFilterMode", {
       name: "Minimum Level Applies To",
       type: "select",
       data: [["Either player", "either"], ["Both players", "both"]],
@@ -4481,7 +4481,7 @@ Version: v${version}`;
       category: FILTER_CATEGORY,
       page: "Spectate"
     });
-    const minRankTier = settings.add("minRankTier", {
+    const minRankTier = settings2.add("minRankTier", {
       name: "Minimum Ranked Mode Level",
       type: "select",
       data: divisionTiers.map((t) => [titleCase(t.name), t.name]),
@@ -4489,7 +4489,7 @@ Version: v${version}`;
       category: FILTER_CATEGORY,
       page: "Spectate"
     });
-    const rankFilterMode = settings.add("rankFilterMode", {
+    const rankFilterMode = settings2.add("rankFilterMode", {
       name: "Minimum Rank Applies To",
       type: "select",
       data: [["Either player", "either"], ["Both players", "both"]],
@@ -5162,8 +5162,8 @@ Version: v${version}`;
     return matchesPage({ prefix: "/Spectate" });
   }
   function initUcTv(plugin) {
-    const settings = registerUcTvSettings(plugin, DIVISION_TIERS);
-    setSettingsRef(settings);
+    const settings2 = registerUcTvSettings(plugin, DIVISION_TIERS);
+    setSettingsRef(settings2);
     console.log("[UC TV] Settings registered.");
     dumpSettingsState();
     window.__ucTVScope = scopeActiveGames;
@@ -5191,13 +5191,13 @@ Version: v${version}`;
 
   // packages/misc/settings.js
   function registerMiscSettings(plugin) {
-    const settings = createFeatureSettings(plugin, "misc", "Miscellaneous");
-    const enableNotepad = settings.add("enableNotepad", {
+    const settings2 = createFeatureSettings(plugin, "misc", "Miscellaneous");
+    const enableNotepad = settings2.add("enableNotepad", {
       name: "Enable Notepad Overlay Option",
       type: "boolean",
       default: false
     });
-    return { settings, enableNotepad };
+    return { settings: settings2, enableNotepad };
   }
 
   // packages/misc/notepad/storage.js
@@ -6041,11 +6041,206 @@ Version: v${version}`;
 }
 `;
 
+  // packages/core/keybinds.js
+  var CATEGORY = "Keybinds";
+  var HOLD_DELAY_MS = 250;
+  var NATIVE_MODIFIERS = /* @__PURE__ */ new Set(["Control", "Shift", "Alt"]);
+  var DEFAULT_PRIMARY_CODE = "Control";
+  var DEFAULT_PRIMARY_DISPLAY = "Ctrl";
+  var settings = null;
+  var primaryKeySetting = null;
+  var keybindType = null;
+  var typeRegistered = false;
+  var registry = [];
+  var primaryHeld = false;
+  var holdTimer = null;
+  var comboFired = false;
+  function isTypingContext2() {
+    const el = document.activeElement;
+    if (!el) return false;
+    const tag = el.tagName;
+    return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
+  }
+  function ensureKeybindType() {
+    if (keybindType) return keybindType;
+    const $2 = window.$;
+    const underscript = window.underscript;
+    class WizascriptKeybindType extends underscript.utils.SettingType {
+      constructor() {
+        super("wizascriptKeybind");
+      }
+      value(val) {
+        if (typeof val !== "string") return val;
+        return JSON.parse(val);
+      }
+      default() {
+        return ["unbound", "unbound"];
+      }
+      element(value, update) {
+        return $2('<input type="button" class="wizascript-keybind">').val(value[1]).on("focus", function() {
+          const $kbd = $2(this);
+          let captured = false;
+          $kbd.addClass("listening");
+          $kbd.val("...?");
+          const capture = (e) => {
+            e.preventDefault();
+            const original = e.originalEvent || e;
+            let display, code;
+            if ("button" in original) {
+              code = original.button;
+              switch (original.button) {
+                case 0:
+                  display = "Left Click";
+                  break;
+                case 1:
+                  display = "Middle Click";
+                  break;
+                case 2:
+                  display = "Right Click";
+                  break;
+                default:
+                  display = `Mouse Button ${original.button}`;
+              }
+            } else if (original.key === "Escape") {
+              display = "unbound";
+              code = "unbound";
+            } else {
+              display = original.key.length === 1 ? original.key.toUpperCase() : original.key;
+              if (display === " ") display = "Space";
+              code = original.code;
+            }
+            $kbd.val(display);
+            update([code, display]);
+            $2(document).off("keydown", capture);
+            $2(document).off("mousedown", capture);
+            captured = true;
+            $kbd.blur();
+          };
+          $2(document).on("keydown", capture);
+          $2(document).on("mousedown", capture);
+          $kbd.on("blur", function() {
+            $kbd.removeClass("listening");
+            if (captured) return;
+            $2(document).off("keydown", capture);
+            $2(document).off("mousedown", capture);
+            $kbd.val(value[1]);
+          });
+        });
+      }
+      styles() {
+        return [
+          ".wizascript-keybind { font-size: 11px; height: 18px; background-color: black; color: white; border-radius: 3px; border: 1px solid #b4b4b4; }",
+          ".wizascript-keybind.listening { border: 1px solid #40E0D0; box-shadow: 0 0 4px #40E0D0; }"
+        ];
+      }
+    }
+    keybindType = new WizascriptKeybindType();
+    return keybindType;
+  }
+  function matchesCode(e, code, defaultCode) {
+    if (code === defaultCode && NATIVE_MODIFIERS.has(defaultCode)) {
+      return e.key === defaultCode;
+    }
+    return e.code === code;
+  }
+  function getPrimaryCode() {
+    if (!primaryKeySetting) return DEFAULT_PRIMARY_CODE;
+    const [code] = primaryKeySetting.value();
+    return code;
+  }
+  function matchesSetting(e, binding) {
+    const [code] = binding.setting.value();
+    return matchesCode(e, code, binding.defaultCode);
+  }
+  function bindGlobalListeners() {
+    document.addEventListener("keydown", (e) => {
+      const primaryCode = getPrimaryCode();
+      const isPrimary = matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE);
+      if (isPrimary) {
+        if (primaryHeld) return;
+        primaryHeld = true;
+        comboFired = false;
+        registry.forEach((b) => {
+          if (b.onPrimaryPress) b.onPrimaryPress(e);
+        });
+        clearTimeout(holdTimer);
+        holdTimer = setTimeout(() => {
+          if (comboFired) return;
+          if (isTypingContext2()) return;
+          registry.forEach((b) => {
+            if (b.scope === "global" && b.onPrimaryAlone) b.onPrimaryAlone(e);
+          });
+        }, HOLD_DELAY_MS);
+        return;
+      }
+      if (!primaryHeld) return;
+      clearTimeout(holdTimer);
+      for (const b of registry) {
+        if (!matchesSetting(e, b)) continue;
+        if (b.scope === "scoped") {
+          const active = document.activeElement;
+          if (!active || !active.matches(b.selector)) continue;
+        }
+        comboFired = true;
+        e.preventDefault();
+        b.onMatch(e);
+        break;
+      }
+    });
+    document.addEventListener("keyup", (e) => {
+      const primaryCode = getPrimaryCode();
+      if (matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE)) {
+        primaryHeld = false;
+        clearTimeout(holdTimer);
+        registry.forEach((b) => {
+          if (b.scope === "global" && b.onPrimaryRelease) b.onPrimaryRelease(e);
+        });
+      }
+    });
+  }
+  function ensureCore(plugin) {
+    if (settings) return;
+    settings = createFeatureSettings(plugin, "keybinds", CATEGORY);
+    const type = ensureKeybindType();
+    if (!typeRegistered) {
+      plugin.settings().addType(type);
+      typeRegistered = true;
+    }
+    primaryKeySetting = settings.add("primaryKey", {
+      name: "Primary Key",
+      note: 'Held down to activate "Primary + <key>" bindings below. Tap alone for actions that trigger on a simple press.',
+      type,
+      default: JSON.stringify([DEFAULT_PRIMARY_CODE, DEFAULT_PRIMARY_DISPLAY])
+    });
+    bindGlobalListeners();
+  }
+  function registerKeybind(plugin, config) {
+    const {
+      key,
+      name,
+      defaultCode,
+      defaultDisplay,
+      scope = "global",
+      selector,
+      onMatch,
+      onPrimaryAlone,
+      onPrimaryPress,
+      onPrimaryRelease
+    } = config;
+    ensureCore(plugin);
+    const setting = settings.add(key, {
+      name: `${name} - Primary + <key>`,
+      type: keybindType,
+      default: JSON.stringify([defaultCode, defaultDisplay])
+    });
+    registry.push({ key, setting, defaultCode, scope, selector, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease });
+  }
+
   // packages/misc/index.js
   function initMisc(plugin) {
-    const settings = registerMiscSettings(plugin);
+    const settings2 = registerMiscSettings(plugin);
     function syncNotepadVisibility() {
-      if (settings.enableNotepad.value()) {
+      if (settings2.enableNotepad.value()) {
         showNotepad();
       } else {
         hideNotepad();
@@ -6055,10 +6250,25 @@ Version: v${version}`;
     plugin.events.on("connect", () => {
       syncNotepadVisibility();
     });
-    document.addEventListener("keydown", (e) => {
-      if (e.ctrlKey && e.altKey && e.shiftKey && e.key.toLowerCase() === "n") {
+    registerKeybind(plugin, {
+      key: "toggleNotepad",
+      name: "Toggle Notepad",
+      defaultCode: "KeyO",
+      defaultDisplay: "O",
+      onMatch: () => {
+        const next = !settings2.enableNotepad.value();
+        settings2.enableNotepad.set(next);
+        syncNotepadVisibility();
+      }
+    });
+    registerKeybind(plugin, {
+      key: "resetNotepad",
+      name: "Reset Notepad",
+      defaultCode: "KeyN",
+      defaultDisplay: "N",
+      onMatch: () => {
         forceResetNotepad();
-        if (settings.enableNotepad.value()) {
+        if (settings2.enableNotepad.value()) {
           showNotepad();
         }
       }

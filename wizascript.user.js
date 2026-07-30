@@ -4409,6 +4409,33 @@ Version: v${version}`;
       default: false,
       page: "Spectate"
     });
+    const autoMode = settings.add("autoMode", {
+      name: "Enable auto-mode when spectating",
+      type: "boolean",
+      default: false,
+      page: "Spectate"
+    });
+    const countdownSeconds = settings.add("countdownSeconds", {
+      name: "Auto-continue delay (seconds)",
+      type: "select",
+      data: Array.from({ length: 15 }, (_, i) => i + 1).map((n) => [`${n}`, n]),
+      default: 5,
+      page: "Spectate"
+    });
+    if (!enabled.value()) {
+      return {
+        enabled,
+        debugLogs,
+        autoMode,
+        countdownSeconds,
+        filteringEnabled: null,
+        modeToggles: {},
+        minLevel: null,
+        levelFilterMode: null,
+        minRankTier: null,
+        rankFilterMode: null
+      };
+    }
     const FILTER_CATEGORY = "UC TV - Filter Settings";
     const filteringEnabled = settings.add("filteringEnabled", {
       name: "Enable Match Filtering",
@@ -4470,19 +4497,6 @@ Version: v${version}`;
       category: FILTER_CATEGORY,
       page: "Spectate"
     });
-    const autoMode = settings.add("autoMode", {
-      name: "Enable auto-mode when spectating",
-      type: "boolean",
-      default: false,
-      page: "Spectate"
-    });
-    const countdownSeconds = settings.add("countdownSeconds", {
-      name: "Auto-continue delay (seconds)",
-      type: "select",
-      data: Array.from({ length: 15 }, (_, i) => i + 1).map((n) => [`${n}`, n]),
-      default: 5,
-      page: "Spectate"
-    });
     return {
       enabled,
       debugLogs,
@@ -4501,32 +4515,32 @@ Version: v${version}`;
       return settingsRef ? settingsRef.enabled.value() : true;
     },
     get debugLogs() {
-      return settingsRef ? settingsRef.debugLogs.value() : false;
+      return settingsRef && settingsRef.debugLogs ? settingsRef.debugLogs.value() : false;
     },
     get filteringEnabled() {
-      return settingsRef ? settingsRef.filteringEnabled.value() : true;
+      return settingsRef && settingsRef.filteringEnabled ? settingsRef.filteringEnabled.value() : true;
     },
     get disabledModes() {
-      if (!settingsRef) return [];
-      return KNOWN_MODES.filter((mode) => settingsRef.modeToggles[mode].value() === "yes");
+      if (!settingsRef || !settingsRef.modeToggles) return [];
+      return KNOWN_MODES.filter((mode) => settingsRef.modeToggles[mode] && settingsRef.modeToggles[mode].value() === "yes");
     },
     get minLevel() {
-      return settingsRef ? settingsRef.minLevel.value() : 0;
+      return settingsRef && settingsRef.minLevel ? settingsRef.minLevel.value() : 0;
     },
     get levelFilterMode() {
-      return settingsRef ? settingsRef.levelFilterMode.value() : "either";
+      return settingsRef && settingsRef.levelFilterMode ? settingsRef.levelFilterMode.value() : "either";
     },
     get minRankTier() {
-      return settingsRef ? settingsRef.minRankTier.value() : "COPPER";
+      return settingsRef && settingsRef.minRankTier ? settingsRef.minRankTier.value() : "COPPER";
     },
     get rankFilterMode() {
-      return settingsRef ? settingsRef.rankFilterMode.value() : "either";
+      return settingsRef && settingsRef.rankFilterMode ? settingsRef.rankFilterMode.value() : "either";
     },
     get autoMode() {
-      return settingsRef ? settingsRef.autoMode.value() : false;
+      return settingsRef && settingsRef.autoMode ? settingsRef.autoMode.value() : false;
     },
     get countdownSeconds() {
-      return settingsRef ? settingsRef.countdownSeconds.value() : 5;
+      return settingsRef && settingsRef.countdownSeconds ? settingsRef.countdownSeconds.value() : 5;
     }
   };
   function logDebug(...args) {

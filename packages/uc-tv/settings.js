@@ -33,6 +33,36 @@ export function registerUcTvSettings(plugin, divisionTiers) {
     page: 'Spectate'
   });
 
+  const autoMode = settings.add('autoMode', {
+    name: 'Enable auto-mode when spectating',
+    type: 'boolean',
+    default: false,
+    page: 'Spectate'
+  });
+
+  const countdownSeconds = settings.add('countdownSeconds', {
+    name: 'Auto-continue delay (seconds)',
+    type: 'select',
+    data: Array.from({ length: 15 }, (_, i) => i + 1).map((n) => [`${n}`, n]),
+    default: 5,
+    page: 'Spectate'
+  });
+
+  // Only the Filter Settings category is conditional - filtering is
+  // meaningless without UC TV actually running, so it disappears when
+  // disabled. The base UC TV settings above always stay visible
+  // regardless, since Debug Logs/auto-mode/countdown aren't specific
+  // to filtering. This only skips *registering* the filter settings
+  // this pass - their stored values aren't touched, so re-enabling
+  // and reloading brings them back exactly as they were.
+  if (!enabled.value()) {
+    return {
+      enabled, debugLogs, autoMode, countdownSeconds,
+      filteringEnabled: null, modeToggles: {},
+      minLevel: null, levelFilterMode: null, minRankTier: null, rankFilterMode: null
+    };
+  }
+
   const FILTER_CATEGORY = 'UC TV - Filter Settings';
 
   // Registered first so it's the top entry within Filter Settings -
@@ -117,21 +147,6 @@ export function registerUcTvSettings(plugin, divisionTiers) {
     page: 'Spectate'
   });
 
-  const autoMode = settings.add('autoMode', {
-    name: 'Enable auto-mode when spectating',
-    type: 'boolean',
-    default: false,
-    page: 'Spectate'
-  });
-
-  const countdownSeconds = settings.add('countdownSeconds', {
-    name: 'Auto-continue delay (seconds)',
-    type: 'select',
-    data: Array.from({ length: 15 }, (_, i) => i + 1).map((n) => [`${n}`, n]),
-    default: 5,
-    page: 'Spectate'
-  });
-
   return {
     enabled, debugLogs, filteringEnabled, modeToggles,
     minLevel, levelFilterMode, minRankTier, rankFilterMode,
@@ -141,21 +156,28 @@ export function registerUcTvSettings(plugin, divisionTiers) {
 
 // Every CONFIG.xxx read throughout the package proxies to live
 // UnderScript settings once registered, falling back to sensible
-// defaults during the brief window before setSettingsRef() is called.
+// defaults both before setSettingsRef() is called AND when a given
+// setting was conditionally skipped (UC TV disabled - see
+// registerUcTvSettings). Guarding each property individually, not
+// just settingsRef as a whole, is what makes that safe: logDebug() in
+// particular reads CONFIG.debugLogs before anything checks
+// masterEnabled - though debugLogs itself always registers now, the
+// filter-related getters below (disabledModes/minLevel/minRankTier/
+// etc.) can genuinely be null while disabled, so they still need it.
 export const CONFIG = {
   get masterEnabled() { return settingsRef ? settingsRef.enabled.value() : true; },
-  get debugLogs() { return settingsRef ? settingsRef.debugLogs.value() : false; },
-  get filteringEnabled() { return settingsRef ? settingsRef.filteringEnabled.value() : true; },
+  get debugLogs() { return settingsRef && settingsRef.debugLogs ? settingsRef.debugLogs.value() : false; },
+  get filteringEnabled() { return settingsRef && settingsRef.filteringEnabled ? settingsRef.filteringEnabled.value() : true; },
   get disabledModes() {
-    if (!settingsRef) return [];
-    return KNOWN_MODES.filter((mode) => settingsRef.modeToggles[mode].value() === 'yes');
+    if (!settingsRef || !settingsRef.modeToggles) return [];
+    return KNOWN_MODES.filter((mode) => settingsRef.modeToggles[mode] && settingsRef.modeToggles[mode].value() === 'yes');
   },
-  get minLevel() { return settingsRef ? settingsRef.minLevel.value() : 0; },
-  get levelFilterMode() { return settingsRef ? settingsRef.levelFilterMode.value() : 'either'; },
-  get minRankTier() { return settingsRef ? settingsRef.minRankTier.value() : 'COPPER'; },
-  get rankFilterMode() { return settingsRef ? settingsRef.rankFilterMode.value() : 'either'; },
-  get autoMode() { return settingsRef ? settingsRef.autoMode.value() : false; },
-  get countdownSeconds() { return settingsRef ? settingsRef.countdownSeconds.value() : 5; }
+  get minLevel() { return settingsRef && settingsRef.minLevel ? settingsRef.minLevel.value() : 0; },
+  get levelFilterMode() { return settingsRef && settingsRef.levelFilterMode ? settingsRef.levelFilterMode.value() : 'either'; },
+  get minRankTier() { return settingsRef && settingsRef.minRankTier ? settingsRef.minRankTier.value() : 'COPPER'; },
+  get rankFilterMode() { return settingsRef && settingsRef.rankFilterMode ? settingsRef.rankFilterMode.value() : 'either'; },
+  get autoMode() { return settingsRef && settingsRef.autoMode ? settingsRef.autoMode.value() : false; },
+  get countdownSeconds() { return settingsRef && settingsRef.countdownSeconds ? settingsRef.countdownSeconds.value() : 5; }
 };
 
 export function logDebug(...args) {

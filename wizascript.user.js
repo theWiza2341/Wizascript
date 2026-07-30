@@ -2382,7 +2382,7 @@ Version: v${version}`;
       filteredDecks = [...allDecks];
       logger.log("data", "Decks loaded.", { count: allDecks.length });
     }
-    function applyFilters() {
+    function applyFilters2() {
       filteredDecks = filterDecks(allDecks, { activeSoulFilter, activeSearch, includeCards, excludeCards });
       currentPage = 1;
       renderPage();
@@ -2605,7 +2605,7 @@ Version: v${version}`;
           btnInclude.onclick = (e) => {
             e.stopPropagation();
             addCardToFilter(includeCards, excludeCards, card);
-            applyFilters();
+            applyFilters2();
             renderCardFilterTags();
             cardSearchInput.value = "";
             cardDropdown.style.display = "none";
@@ -2626,7 +2626,7 @@ Version: v${version}`;
           btnExclude.onclick = (e) => {
             e.stopPropagation();
             addCardToFilter(excludeCards, includeCards, card);
-            applyFilters();
+            applyFilters2();
             renderCardFilterTags();
             cardSearchInput.value = "";
             cardDropdown.style.display = "none";
@@ -2667,7 +2667,7 @@ Version: v${version}`;
         Object.assign(x.style, { cursor: "pointer", fontWeight: "bold", marginLeft: "2px", lineHeight: "1" });
         x.onclick = () => {
           removeCardFromFilter(list, card.id);
-          applyFilters();
+          applyFilters2();
           renderCardFilterTags();
         };
         tag.appendChild(x);
@@ -2723,7 +2723,7 @@ Version: v${version}`;
         soulSelect.addEventListener("change", () => {
           updateSoulClass();
           activeSoulFilter = soulSelect.value || null;
-          applyFilters();
+          applyFilters2();
         });
         leftControls.appendChild(soulSelect);
       }
@@ -2778,7 +2778,7 @@ Version: v${version}`;
       else originalDecks.insertAdjacentElement("beforebegin", nav);
       searchBox.addEventListener("input", () => {
         activeSearch = searchBox.value;
-        applyFilters();
+        applyFilters2();
       });
       btnPrev.onclick = () => {
         if (currentPage <= 1) return;
@@ -4349,6 +4349,33 @@ Version: v${version}`;
       restoreFavoritedAndRetained();
     });
   }
+
+  // packages/uc-tv/divisions.js
+  var DIVISION_TIERS = [
+    { name: "LEGEND", subTiers: false },
+    { name: "ULTIMATE_MASTER", subTiers: false },
+    { name: "HIGH_MASTER", subTiers: false },
+    { name: "MASTER", subTiers: false },
+    { name: "DIAMOND", subTiers: true },
+    { name: "EMERALD", subTiers: true },
+    { name: "GOLD", subTiers: true },
+    { name: "IRON", subTiers: true },
+    { name: "COPPER", subTiers: true }
+  ];
+  var DIVISION_SCORES = {};
+  var SUB_TIER_SCORE = { I: 0, II: 1, III: 2 };
+  DIVISION_TIERS.forEach((tier, tierIndex) => {
+    if (tier.subTiers) {
+      Object.keys(SUB_TIER_SCORE).forEach((numeral) => {
+        DIVISION_SCORES[`${tier.name}_${numeral}`] = tierIndex * 10 + SUB_TIER_SCORE[numeral];
+      });
+    } else {
+      DIVISION_SCORES[tier.name] = tierIndex * 10;
+    }
+  });
+
+  // packages/uc-tv/utils.js
+  var SCRIPT_START = Date.now();
 
   // packages/misc/settings.js
   function registerMiscSettings(plugin) {

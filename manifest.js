@@ -19,10 +19,10 @@ import { initMisc } from "./packages/misc/index.js";
 // not gated behind deck-tracker's isGamePage() check.
 
 bootstrap(plugin => {
-  initDeckTracker(plugin);
-  initMisc(plugin);
   initPatchMaker(plugin);
   initTrueHubBridge(plugin);
+  initDeckTracker(plugin);
   initUcTv(plugin);
+  initMisc(plugin);
   flushKeybindRegistrations(); // must come after all of the above
 });

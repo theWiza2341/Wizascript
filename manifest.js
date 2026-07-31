@@ -1,4 +1,5 @@
 import { bootstrap } from "./packages/core/bootstrap.js";
+import { flushKeybindRegistrations } from "./packages/core/keybinds.js";
 import { initPatchMaker } from "./packages/patch-maker/index.js";
 import { initTrueHubBridge } from "./packages/true-hub-bridge/index.js";
 import { initDeckTracker } from "./packages/deck-tracker/index.js";
@@ -18,9 +19,10 @@ import { initMisc } from "./packages/misc/index.js";
 // not gated behind deck-tracker's isGamePage() check.
 
 bootstrap(plugin => {
+  initDeckTracker(plugin);
+  initMisc(plugin);
   initPatchMaker(plugin);
   initTrueHubBridge(plugin);
-  initDeckTracker(plugin);
-  initUcTv(plugin)
-  initMisc(plugin);
+  initUcTv(plugin);
+  flushKeybindRegistrations(); // must come after all of the above
 });

@@ -59,31 +59,858 @@
     tryBootstrap();
   }
 
-  // packages/core/debug-logger.js
-  function createLogger(featureName, initialCategories = {}) {
-    const enabled = { ...initialCategories };
-    function tag(category) {
-      return category ? `[${featureName}:${category}]` : `[${featureName}]`;
+  // packages/core/settings.js
+  function createFeatureSettings(plugin, featureName, categoryLabel) {
+    const settingsApi = plugin.settings();
+    const registered = {};
+    function add(key, config) {
+      const setting = settingsApi.add({
+        ...config,
+        key: `${featureName}.${key}`,
+        category: config.category || categoryLabel
+      });
+      registered[key] = setting;
+      return setting;
     }
-    function isEnabled(category) {
-      return !category || enabled[category] !== false;
+    function value(key) {
+      return registered[key].value();
     }
+    return { add, value };
+  }
+
+  // packages/patch-maker/settings.js
+  function registerPatchMakerSettings(plugin) {
+    const settings2 = createFeatureSettings(plugin, "patchmaker", "Patch Maker");
     return {
-      setCategory(category, isEnabled2) {
-        enabled[category] = isEnabled2;
-      },
-      log(category, ...args) {
-        if (!isEnabled(category)) return;
-        console.log(tag(category), ...args);
-      },
-      warn(category, ...args) {
-        if (!isEnabled(category)) return;
-        console.warn(tag(category), ...args);
-      },
-      error(category, ...args) {
-        console.error(tag(category), ...args);
-      }
+      settings: settings2,
+      enabled: settings2.add("enabled", { name: "Enable Patch Maker", type: "boolean", default: true }),
+      debugLogging: settings2.add("debugLogging", { name: "Enable debug logging", type: "boolean", default: false }),
+      hideControls: settings2.add("hideControls", { name: "Hide Patch Maker controls", type: "boolean", default: false }),
+      cardHovers: settings2.add("enableCardHovers", { name: "Enable card hovers", type: "boolean", default: true }),
+      language: settings2.add("patchLanguage", {
+        name: "Select Language",
+        type: "select",
+        options: ["Auto / Default", "English", "French", "Spanish", "Portuguese", "Chinese", "Italian", "Polish", "German", "Russian"],
+        default: "Auto / Default",
+        onChange: () => location.reload()
+      }),
+      openOnLoad: settings2.add("openPatchNotesOnPageLoad", { name: "Auto-Load Patch Maker", type: "boolean", default: false })
     };
+  }
+
+  // packages/patch-maker/new-cards.js
+  var TARGET_W = 176;
+  var TARGET_H = 246;
+  var FIELDMARKER_WATERMARK_CROP_PX = 14;
+  function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+  function loadImageFromDataURL(dataUrl) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+  }
+  async function normalizeCardImage(dataUrl) {
+    const img = await loadImageFromDataURL(dataUrl);
+    if (img.naturalWidth === TARGET_W && img.naturalHeight === TARGET_H) {
+      return dataUrl;
+    }
+    let sx = 0, sy = 0, sw = img.naturalWidth, sh = img.naturalHeight;
+    if (img.naturalWidth === 163 && img.naturalHeight >= 250) {
+      sh = Math.max(1, img.naturalHeight - FIELDMARKER_WATERMARK_CROP_PX);
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = TARGET_W;
+    canvas.height = TARGET_H;
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, TARGET_W, TARGET_H);
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, TARGET_W, TARGET_H);
+    return canvas.toDataURL("image/png");
+  }
+  function createNewCardsFeature({ isViewerMode: isViewerMode2, saveState }) {
+    function ensureCardAddTile(section) {
+      const gallery = section.querySelector(".uc-card-gallery");
+      if (!gallery) return null;
+      let addTile = gallery.querySelector(":scope > .uc-card-add-tile");
+      if (addTile) {
+        gallery.appendChild(addTile);
+        return addTile;
+      }
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = "image/*";
+      fileInput.multiple = true;
+      fileInput.style.display = "none";
+      addTile = document.createElement("div");
+      addTile.className = "uc-card-add-tile";
+      const addBtn = document.createElement("button");
+      addBtn.className = "uc-card-add-btn";
+      addBtn.textContent = "+";
+      addBtn.title = "Add card image";
+      addBtn.onclick = () => {
+        if (isViewerMode2()) return;
+        fileInput.click();
+      };
+      fileInput.addEventListener("change", async (e) => {
+        const files = [...e.target.files || []];
+        if (!files.length) return;
+        for (const file of files) {
+          if (!file.type.startsWith("image/")) continue;
+          const dataUrl = await readFileAsDataURL(file);
+          const normalized = await normalizeCardImage(dataUrl);
+          addCardImage(section, normalized, file.name || "Card image");
+        }
+        fileInput.value = "";
+        ensureCardAddTile(section);
+        saveState();
+      });
+      addTile.appendChild(addBtn);
+      addTile.appendChild(fileInput);
+      gallery.appendChild(addTile);
+      return addTile;
+    }
+    function addCardImage(section, src, name = "Card image") {
+      const gallery = section.querySelector(".uc-card-gallery");
+      if (!gallery) return null;
+      ensureCardAddTile(section);
+      const item = document.createElement("div");
+      item.className = "uc-card-item";
+      item.tabIndex = 0;
+      item.dataset.src = src;
+      item.dataset.name = name;
+      const frame = document.createElement("div");
+      frame.className = "uc-card-frame";
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = name;
+      frame.appendChild(img);
+      item.appendChild(frame);
+      const delBtn = document.createElement("button");
+      delBtn.className = "uc-card-del";
+      delBtn.textContent = "\u2212";
+      delBtn.title = "Remove card image";
+      delBtn.onclick = (e) => {
+        if (isViewerMode2()) return;
+        e.stopPropagation();
+        item.remove();
+        ensureCardAddTile(section);
+        saveState();
+      };
+      item.appendChild(delBtn);
+      const addTile = gallery.querySelector(":scope > .uc-card-add-tile");
+      if (addTile) gallery.insertBefore(item, addTile);
+      else gallery.appendChild(item);
+      ensureCardAddTile(section);
+      return item;
+    }
+    function moveCardItem(item, dir) {
+      const gallery = item.parentElement;
+      if (!gallery) return;
+      const items = [...gallery.querySelectorAll(":scope > .uc-card-item")];
+      const idx = items.indexOf(item);
+      if (idx < 0 || items.length <= 1) return;
+      const newIdx = (idx + dir + items.length) % items.length;
+      const target = items[newIdx];
+      if (dir < 0) {
+        if (idx === 0) gallery.appendChild(item);
+        else gallery.insertBefore(item, target);
+      } else {
+        if (idx === items.length - 1) gallery.insertBefore(item, items[0]);
+        else gallery.insertBefore(item, target.nextElementSibling);
+      }
+      ensureCardAddTile(gallery.parentElement);
+      saveState();
+      setTimeout(() => item.focus(), 0);
+    }
+    function createSection(container) {
+      const p = document.createElement("p");
+      p.className = "uc-new-cards-header";
+      const label = document.createElement("span");
+      label.textContent = "New cards";
+      p.appendChild(label);
+      const section = document.createElement("div");
+      section.className = "uc-card-section";
+      const gallery = document.createElement("div");
+      gallery.className = "uc-card-gallery";
+      section.appendChild(gallery);
+      const collapseBtn = document.createElement("button");
+      collapseBtn.className = "uc-collapse-btn";
+      collapseBtn.textContent = "\u2212";
+      collapseBtn.onclick = () => {
+        if (isViewerMode2()) return;
+        const collapsed = section.style.display === "none";
+        section.style.display = collapsed ? "" : "none";
+        collapseBtn.textContent = collapsed ? "\u2212" : "+";
+        saveState();
+      };
+      p.appendChild(collapseBtn);
+      container.appendChild(p);
+      container.appendChild(section);
+      ensureCardAddTile(section);
+      return { p, section, gallery };
+    }
+    function collectState(container) {
+      const header = container.querySelector("p.uc-new-cards-header");
+      const section = header ? header.nextElementSibling : null;
+      if (!header || !section) return { collapsed: false, cards: [] };
+      return {
+        collapsed: section.style.display === "none",
+        cards: [...section.querySelectorAll(".uc-card-item")].map((item) => ({
+          src: item.dataset.src || "",
+          name: item.dataset.name || "Card image"
+        })).filter((card) => card.src)
+      };
+    }
+    function restoreState(container, newCards) {
+      const header = container.querySelector("p.uc-new-cards-header");
+      const section = header ? header.nextElementSibling : null;
+      if (!header || !section) return;
+      const btn = header.querySelector(".uc-collapse-btn");
+      section.style.display = newCards && newCards.collapsed ? "none" : "";
+      if (btn) btn.textContent = newCards && newCards.collapsed ? "+" : "\u2212";
+      const gallery = section.querySelector(".uc-card-gallery");
+      if (gallery) gallery.innerHTML = "";
+      ensureCardAddTile(section);
+      (newCards && newCards.cards || []).forEach((card) => {
+        if (card && card.src) addCardImage(section, card.src, card.name || "Card image");
+      });
+      ensureCardAddTile(section);
+    }
+    return { createSection, collectState, restoreState, moveCardItem };
+  }
+
+  // packages/core/keybinds.js
+  var CATEGORY = "Keybinds";
+  var HOLD_DELAY_MS = 250;
+  var NATIVE_MODIFIERS = /* @__PURE__ */ new Set(["Control", "Shift", "Alt"]);
+  var DEFAULT_PRIMARY_CODE = "Control";
+  var PRIMARY_KEY = "primaryKey";
+  var GM_PREFIX = "wizascript.keybinds.";
+  var ID_PREFIX = "underscript.plugin.Wizascript.keybinds.";
+  function storageKey(bindingKey) {
+    return `${GM_PREFIX}${bindingKey}`;
+  }
+  function readCode(bindingKey, defaultCode) {
+    return GM_getValue(storageKey(bindingKey), defaultCode);
+  }
+  function writeCode(bindingKey, code) {
+    GM_setValue(storageKey(bindingKey), code);
+  }
+  var DISPLAY_OVERRIDES = {
+    Control: "Ctrl",
+    Shift: "Shift",
+    Alt: "Alt",
+    Meta: "Meta",
+    ArrowUp: "Up Arrow",
+    ArrowDown: "Down Arrow",
+    ArrowLeft: "Left Arrow",
+    ArrowRight: "Right Arrow",
+    Space: "Space",
+    Escape: "Esc",
+    Comma: ",",
+    Period: ".",
+    unbound: "Unbound"
+  };
+  function codeToDisplay(code) {
+    if (!code) return "Unbound";
+    if (DISPLAY_OVERRIDES[code]) return DISPLAY_OVERRIDES[code];
+    if (/^Key[A-Z]$/.test(code)) return code.slice(3);
+    if (/^Digit[0-9]$/.test(code)) return code.slice(5);
+    return code;
+  }
+  var settings = null;
+  var registry = [];
+  var bindingDefaults = /* @__PURE__ */ new Map();
+  var observerStarted = false;
+  function isTypingContext() {
+    const el = document.activeElement;
+    if (!el) return false;
+    const tag = el.tagName;
+    return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
+  }
+  function enhanceInput(el, bindingKey, defaultCode) {
+    el.setAttribute("data-wizascript-keybind-enhanced", "true");
+    el.readOnly = true;
+    Object.assign(el.style, {
+      cursor: "pointer",
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      el.value = codeToDisplay(readCode(bindingKey, defaultCode));
+    }
+    refreshDisplay();
+    el.addEventListener("focus", () => {
+      el.style.border = "1px solid #40E0D0";
+      el.style.boxShadow = "0 0 4px #40E0D0";
+      el.value = "...?";
+      function capture(e) {
+        e.preventDefault();
+        const code = e.key === "Escape" ? "unbound" : e.code;
+        writeCode(bindingKey, code);
+        document.removeEventListener("keydown", capture, true);
+        el.blur();
+      }
+      document.addEventListener("keydown", capture, true);
+      el.addEventListener("blur", function onBlur() {
+        el.style.border = "1px solid #b4b4b4";
+        el.style.boxShadow = "none";
+        document.removeEventListener("keydown", capture, true);
+        refreshDisplay();
+        el.removeEventListener("blur", onBlur);
+      });
+    });
+  }
+  function startObserver() {
+    if (observerStarted) return;
+    observerStarted = true;
+    const observer = new MutationObserver(() => {
+      if (!bindingDefaults.size) return;
+      document.querySelectorAll(`input[id^="${ID_PREFIX}"]:not([data-wizascript-keybind-enhanced])`).forEach((el) => {
+        const bindingKey = el.id.slice(ID_PREFIX.length);
+        if (!bindingDefaults.has(bindingKey)) return;
+        enhanceInput(el, bindingKey, bindingDefaults.get(bindingKey));
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+  function matchesCode(e, code, defaultCode) {
+    if (code === defaultCode && NATIVE_MODIFIERS.has(defaultCode)) {
+      return e.key === defaultCode;
+    }
+    return e.code === code;
+  }
+  function getPrimaryCode() {
+    return readCode(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
+  }
+  function matchesSetting(e, binding) {
+    const code = readCode(binding.key, binding.defaultCode);
+    return matchesCode(e, code, binding.defaultCode);
+  }
+  var primaryHeld = false;
+  var holdTimer = null;
+  var comboFired = false;
+  function bindGlobalListeners() {
+    document.addEventListener("keydown", (e) => {
+      const primaryCode = getPrimaryCode();
+      const isPrimary = matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE);
+      if (isPrimary) {
+        if (primaryHeld) return;
+        primaryHeld = true;
+        comboFired = false;
+        registry.forEach((b) => {
+          if (b.onPrimaryPress) b.onPrimaryPress(e);
+        });
+        clearTimeout(holdTimer);
+        holdTimer = setTimeout(() => {
+          if (comboFired) return;
+          if (isTypingContext()) return;
+          registry.forEach((b) => {
+            if (b.scope === "global" && b.onPrimaryAlone) b.onPrimaryAlone(e);
+          });
+        }, HOLD_DELAY_MS);
+        return;
+      }
+      if (!primaryHeld) return;
+      clearTimeout(holdTimer);
+      for (const b of registry) {
+        if (!b.onMatch) continue;
+        if (!matchesSetting(e, b)) continue;
+        if (b.guardTypingContext && isTypingContext()) continue;
+        if (b.scope === "scoped") {
+          const active = document.activeElement;
+          if (!active || !active.matches(b.selector)) continue;
+        }
+        comboFired = true;
+        e.preventDefault();
+        b.onMatch(e);
+        break;
+      }
+    });
+    document.addEventListener("keyup", (e) => {
+      const primaryCode = getPrimaryCode();
+      if (matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE)) {
+        primaryHeld = false;
+        clearTimeout(holdTimer);
+        registry.forEach((b) => {
+          if (b.scope === "global" && b.onPrimaryRelease) b.onPrimaryRelease(e);
+        });
+      }
+    });
+  }
+  function ensureCore(plugin) {
+    if (settings) return;
+    settings = createFeatureSettings(plugin, "keybinds", CATEGORY);
+    startObserver();
+    bindGlobalListeners();
+    settings.add(PRIMARY_KEY, {
+      name: "Primary Key",
+      note: "Click to remap. Hold for combos below, or tap alone.",
+      type: "text",
+      default: DEFAULT_PRIMARY_CODE
+    });
+    bindingDefaults.set(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
+  }
+  function registerKeybind(plugin, config) {
+    const {
+      key,
+      name,
+      defaultCode,
+      scope = "global",
+      selector,
+      guardTypingContext = false,
+      onMatch,
+      onPrimaryAlone,
+      onPrimaryPress,
+      onPrimaryRelease
+    } = config;
+    ensureCore(plugin);
+    if (onMatch) {
+      settings.add(key, {
+        name: `${name} - Primary + <key>`,
+        type: "text",
+        default: defaultCode
+      });
+      bindingDefaults.set(key, defaultCode);
+    }
+    registry.push({ key, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease });
+  }
+  function getPrimaryKeyDisplay() {
+    return codeToDisplay(getPrimaryCode());
+  }
+  function isRegisteredKeybindEvent(e) {
+    const primaryCode = getPrimaryCode();
+    if (matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE)) return true;
+    if (!primaryHeld) return false;
+    return registry.some((b) => b.onMatch && matchesSetting(e, b));
+  }
+
+  // packages/patch-maker/input-blocker.js
+  function isEditingOverlayField() {
+    const ae = document.activeElement;
+    return !!(ae && (ae.classList.contains("uc-li-text") || ae.classList.contains("uc-section-label") || ae.tagName === "H2" && ae.getAttribute("contenteditable") === "true"));
+  }
+  function isViewerMode() {
+    const overlay = document.getElementById("uc-patch-overlay");
+    return !!(overlay && overlay.classList.contains("viewer-mode"));
+  }
+  function inputBlocker(e) {
+    if (!isEditingOverlayField() || isViewerMode()) return;
+    if (isRegisteredKeybindEvent(e)) return;
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    if (e.key === "Escape" || e.key === "Enter") {
+      e.preventDefault();
+      if (e.key === "Enter") document.activeElement.blur();
+    }
+  }
+  function enableInputBlocker() {
+    window.addEventListener("keydown", inputBlocker, true);
+    window.addEventListener("keyup", inputBlocker, true);
+    document.addEventListener("keydown", inputBlocker, true);
+    document.addEventListener("keyup", inputBlocker, true);
+  }
+  function disableInputBlocker() {
+    window.removeEventListener("keydown", inputBlocker, true);
+    window.removeEventListener("keyup", inputBlocker, true);
+    document.removeEventListener("keydown", inputBlocker, true);
+    document.removeEventListener("keyup", inputBlocker, true);
+  }
+
+  // packages/patch-maker/formatting.js
+  var BASE_WORD_COLORS = {
+    ATK: "#f0003c",
+    HP: "#0dd000",
+    cost: "#00d0ff",
+    DMG: "#ffcc00",
+    DETERMINATION: "red",
+    PATIENCE: "#41fcff",
+    BRAVERY: "#fca500",
+    INTEGRITY: "#0064ff",
+    PERSEVERANCE: "#d535d9",
+    KINDNESS: "#00c000",
+    JUSTICE: "#ffff00",
+    MONSTER: "#ffffff",
+    TOKEN: "#00c800",
+    BASE: "gray",
+    COMMON: "#fff",
+    RARE: "#00b8ff",
+    EPIC: "#d535d9",
+    LEGENDARY: "gold",
+    DT: "red",
+    COST: "#00d0ff",
+    G: "gold",
+    KR: "#d535d9"
+  };
+  var CARD_REF_REGEX = /\{([^{}]+?)\}/g;
+  var UL_OPEN = "__UC_UL_OPEN__";
+  var UL_CLOSE = "__UC_UL_CLOSE__";
+  function escapeRegExp(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+  function escapeHtml(str) {
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function sanitizeText(str) {
+    return str ? str.replace(/\s+/g, " ").trim() : "";
+  }
+  function insertUnderlineMarkers(text, underlineTokens) {
+    let result = text;
+    underlineTokens.forEach((token) => {
+      const re = new RegExp(`(^|[^A-Za-z0-9])(${escapeRegExp(token)})(?=([^A-Za-z0-9]|$))`, "g");
+      result = result.replace(re, (m, pre, word) => pre + UL_OPEN + word + UL_CLOSE);
+    });
+    return result;
+  }
+  var CASE_SENSITIVE_COLOR_WORDS = /* @__PURE__ */ new Set(["BASE", "COMMON", "RARE", "EPIC", "LEGENDARY", "TOKEN"]);
+  function applyColorWords(seg, wordColors) {
+    const allKeys = Object.keys(wordColors).filter(Boolean);
+    const caseSensitiveKeys = allKeys.filter((k) => CASE_SENSITIVE_COLOR_WORDS.has(k));
+    const caseInsensitiveKeys = allKeys.filter((k) => !CASE_SENSITIVE_COLOR_WORDS.has(k));
+    if (caseSensitiveKeys.length) {
+      const pattern = caseSensitiveKeys.sort((a, b) => b.length - a.length).map(escapeRegExp).join("|");
+      const regex = new RegExp(`(^|[^\\p{L}\\p{N}_])(${pattern})(?=([^\\p{L}\\p{N}_]|$))`, "gu");
+      seg = seg.replace(regex, (match, pre, word) => {
+        const c = wordColors[word];
+        return c ? `${pre}<span style="color:${c};">${word}</span>` : match;
+      });
+    }
+    if (caseInsensitiveKeys.length) {
+      const pattern = caseInsensitiveKeys.sort((a, b) => b.length - a.length).map(escapeRegExp).join("|");
+      const regex = new RegExp(`(^|[^\\p{L}\\p{N}_])(${pattern})(?=([^\\p{L}\\p{N}_]|$))`, "giu");
+      seg = seg.replace(regex, (match, pre, word) => {
+        const c = wordColors[word] || wordColors[word.toUpperCase()] || wordColors[word.toLowerCase()];
+        return c ? `${pre}<span style="color:${c};">${word}</span>` : match;
+      });
+    }
+    return seg;
+  }
+  function applyCardFormatting(seg, wordColors) {
+    const cardColor = wordColors.PATIENCE || "#41fcff";
+    return seg.replace(CARD_REF_REGEX, (match, inner) => {
+      const cleaned = inner.replace(new RegExp(UL_OPEN, "g"), "").replace(new RegExp(UL_CLOSE, "g"), "").replace(/<[^>]*>/g, "").trim();
+      return `<span class="uc-card-ref" style="color:${cardColor};">${escapeHtml(cleaned)}</span>`;
+    });
+  }
+  function applyStatFormatting(seg, wordColors) {
+    const statPattern = /(?<!\d)([+-]?)(\d+)\/([+-]?)(\d+)(?:\/([+-]?)(\d+))?(?=[^\d/]|$)/g;
+    return seg.replace(statPattern, (match, s1, a, s2, b, s3, c) => {
+      if (c !== void 0) {
+        return `${s1}<span style="color:${wordColors.cost}">${a}</span>/${s2}<span style="color:${wordColors.ATK}">${b}</span>/${s3}<span style="color:${wordColors.HP}">${c}</span>`;
+      }
+      return `${s1}<span style="color:${wordColors.ATK}">${a}</span>/${s2}<span style="color:${wordColors.HP}">${b}</span>`;
+    });
+  }
+  function formatSegments(work, wordColors, underlineTokens) {
+    const parts = [];
+    const re = /_(.+?)_/g;
+    let last = 0, m;
+    while ((m = re.exec(work)) !== null) {
+      if (m.index > last) parts.push({ text: work.slice(last, m.index), manual: false });
+      parts.push({ text: m[1], manual: true });
+      last = m.index + m[0].length;
+    }
+    if (last < work.length) parts.push({ text: work.slice(last), manual: false });
+    return parts.map((part) => {
+      let seg = part.text;
+      if (part.manual) {
+        return `<span style="text-decoration:underline;">${escapeHtml(seg.trim())}</span>`;
+      }
+      seg = insertUnderlineMarkers(seg, underlineTokens);
+      seg = escapeHtml(seg);
+      seg = applyColorWords(seg, wordColors);
+      seg = applyCardFormatting(seg, wordColors);
+      seg = applyStatFormatting(seg, wordColors);
+      return seg.replace(new RegExp(UL_OPEN, "g"), `<span style="text-decoration:underline;">`).replace(new RegExp(UL_CLOSE, "g"), `</span>`);
+    }).join("");
+  }
+  function extractSkipTokens(text) {
+    const skipped = [];
+    const work = text.replace(/\\([A-Za-z0-9\-]+)/g, (m, word) => {
+      const idx = skipped.length;
+      skipped.push(word);
+      return `UCSK${idx}Z`;
+    });
+    return { work, skipped };
+  }
+  function formatSwitchInner(rawText, wordColors, underlineTokens) {
+    if (!rawText) return "";
+    return formatSegments(rawText, wordColors, underlineTokens);
+  }
+  function formatLine(rawText, wordColors, underlineTokens) {
+    if (!rawText) return "";
+    const skipData = extractSkipTokens(rawText);
+    let work = skipData.work;
+    const switchBlocks = [];
+    work = work.replace(/\[\[([^\]]+)\]\]/g, (match, inner) => {
+      const idx = switchBlocks.length;
+      switchBlocks.push(inner);
+      return `UCXSW${idx}Y`;
+    });
+    let formatted = formatSegments(work, wordColors, underlineTokens);
+    let switchIndex = 0;
+    formatted = formatted.replace(/UCXSW(\d+)Y/g, (match, idxStr) => {
+      const innerHtml = formatSwitchInner(switchBlocks[Number(idxStr)] || "", wordColors, underlineTokens);
+      const bgColor = switchIndex % 2 === 0 ? "rgba(0, 255, 255, 0.4)" : "rgba(255, 0, 0, 0.4)";
+      switchIndex++;
+      return `<span style="background-color:${bgColor};">${innerHtml}</span>`;
+    });
+    formatted = formatted.replace(/UCSK(\d+)Z/g, (m, idx) => escapeHtml(skipData.skipped[Number(idx)] || ""));
+    return formatted;
+  }
+
+  // packages/patch-maker/styles.js
+  var PATCH_MAKER_CSS = `
+html, body { overflow-x: hidden !important; }
+
+#uc-patch-overlay {
+  min-height: 100vh;
+  max-width: 100vw;
+  overflow-y: visible !important;
+  overflow-x: visible !important;
+}
+#uc-patch-overlay > div { overflow-x: visible !important; }
+
+#uc-patch-overlay li.buff   { border-left: 3px solid #00c800; }
+#uc-patch-overlay li.rework { border-left: 3px solid gold; }
+#uc-patch-overlay li.nerf   { border-left: 3px solid red; }
+#uc-patch-overlay li.other  { border-left: 3px solid gray; }
+#uc-patch-overlay li.none   { border-left: none !important; }
+
+#uc-patch-overlay.editor-mode p  { background-color: rgba(255, 255, 0, 0.10); }
+#uc-patch-overlay.editor-mode li { background-color: rgba(173,216,230,0.12); }
+
+#uc-patch-overlay li {
+  padding-left: 5px;
+  border-radius: 3px;
+  position: relative;
+  margin: 10px 0;
+  list-style-type: disc;
+  font-size: 14px;
+}
+
+#uc-patch-overlay ul {
+  margin-top: 0;
+  margin-bottom: 10px;
+  padding-left: 40px;
+  list-style-position: outside;
+}
+
+#uc-patch-overlay p { position: relative; font-size: 14px; }
+
+#uc-patch-overlay .uc-li-text:focus { outline: none; }
+#uc-patch-overlay li:focus-within {
+  outline: 2px solid white;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+#uc-patch-overlay .uc-collapse-btn {
+  position: absolute;
+  right: -38px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  background-color: #0099cc;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  opacity: 0.9;
+}
+
+#uc-patch-overlay .uc-section-del {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 3px;
+  color: white;
+  cursor: pointer;
+  opacity: 0.9;
+  right: -64px;
+  background-color: #e74c3c;
+}
+
+#uc-patch-overlay .uc-section-label:focus {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+#uc-patch-overlay .uc-add-section-row {
+  margin: 0 0 10px 0;
+  background-color: rgba(255, 255, 0, 0.10);
+  padding: 0 6px;
+  border-radius: 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 24px;
+}
+
+#uc-patch-overlay .uc-add-section-btn {
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  padding: 0;
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+#uc-patch-overlay .uc-card-section {
+  margin: 8px 0 28px 0;
+}
+
+#uc-patch-overlay .uc-card-toolbar {
+  display: none;
+}
+
+#uc-patch-overlay .uc-card-add-tile {
+  width: 176px;
+  height: 246px;
+  background-color: rgba(255, 255, 0, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+}
+
+#uc-patch-overlay .uc-card-add-btn {
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  padding: 0;
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+#uc-patch-overlay .uc-card-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: flex-start;
+  min-height: 246px;
+}
+
+#uc-patch-overlay .uc-card-item {
+  position: relative;
+  display: inline-block;
+  outline: none;
+}
+
+#uc-patch-overlay .uc-card-item:focus {
+  outline: 2px solid white;
+  outline-offset: 3px;
+}
+
+#uc-patch-overlay .uc-card-frame {
+  width: 176px;
+  height: 246px;
+  overflow: hidden;
+  background: #000;
+}
+
+#uc-patch-overlay .uc-card-frame img {
+  width: 176px;
+  height: 246px;
+  display: block;
+  image-rendering: auto;
+}
+
+#uc-patch-overlay .uc-card-del {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background-color: #e74c3c;
+  color: white;
+  cursor: pointer;
+  text-align: center;
+  opacity: 0.95;
+}
+
+#uc-patch-overlay .uc-li-add,
+#uc-patch-overlay .uc-li-del {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 3px;
+  color: white;
+  cursor: pointer;
+  text-align: center;
+  opacity: 0.9;
+}
+
+#uc-patch-overlay .uc-li-add { right: -38px; background-color: #2ecc71; }
+#uc-patch-overlay .uc-li-del { right: -64px; background-color: #e74c3c; }
+#uc-patch-overlay .uc-li-del:disabled {
+  background-color: #777;
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+#uc-patch-overlay.viewer-mode .uc-li-add,
+#uc-patch-overlay.viewer-mode .uc-li-del,
+#uc-patch-overlay.viewer-mode .uc-collapse-btn,
+#uc-patch-overlay.viewer-mode .uc-section-del,
+#uc-patch-overlay.viewer-mode .uc-add-section-row,
+#uc-patch-overlay.viewer-mode .uc-card-toolbar,
+#uc-patch-overlay.viewer-mode .uc-card-del,
+#uc-patch-overlay.viewer-mode .uc-card-add-tile,
+#uc-patch-overlay.viewer-mode .uc-card-add-btn {
+  display: none !important;
+}
+#uc-patch-overlay.viewer-mode p,
+#uc-patch-overlay.viewer-mode li {
+  background-color: transparent !important;
+}
+
+.uc-skip { all: unset; }
+`;
+  function injectPatchMakerStyle() {
+    if (document.getElementById("uc-patch-maker-style")) return;
+    const style = document.createElement("style");
+    style.id = "uc-patch-maker-style";
+    style.textContent = PATCH_MAKER_CSS;
+    document.head.appendChild(style);
   }
 
   // packages/core/card-data.js
@@ -440,662 +1267,6 @@
     return true;
   }
 
-  // packages/patch-maker/formatting.js
-  var BASE_WORD_COLORS = {
-    ATK: "#f0003c",
-    HP: "#0dd000",
-    cost: "#00d0ff",
-    DMG: "#ffcc00",
-    DETERMINATION: "red",
-    PATIENCE: "#41fcff",
-    BRAVERY: "#fca500",
-    INTEGRITY: "#0064ff",
-    PERSEVERANCE: "#d535d9",
-    KINDNESS: "#00c000",
-    JUSTICE: "#ffff00",
-    MONSTER: "#ffffff",
-    TOKEN: "#00c800",
-    BASE: "gray",
-    COMMON: "#fff",
-    RARE: "#00b8ff",
-    EPIC: "#d535d9",
-    LEGENDARY: "gold",
-    DT: "red",
-    COST: "#00d0ff",
-    G: "gold",
-    KR: "#d535d9"
-  };
-  var CARD_REF_REGEX = /\{([^{}]+?)\}/g;
-  var UL_OPEN = "__UC_UL_OPEN__";
-  var UL_CLOSE = "__UC_UL_CLOSE__";
-  function escapeRegExp(str) {
-    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  }
-  function escapeHtml(str) {
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-  }
-  function sanitizeText(str) {
-    return str ? str.replace(/\s+/g, " ").trim() : "";
-  }
-  function insertUnderlineMarkers(text, underlineTokens) {
-    let result = text;
-    underlineTokens.forEach((token) => {
-      const re = new RegExp(`(^|[^A-Za-z0-9])(${escapeRegExp(token)})(?=([^A-Za-z0-9]|$))`, "g");
-      result = result.replace(re, (m, pre, word) => pre + UL_OPEN + word + UL_CLOSE);
-    });
-    return result;
-  }
-  var CASE_SENSITIVE_COLOR_WORDS = /* @__PURE__ */ new Set(["BASE", "COMMON", "RARE", "EPIC", "LEGENDARY", "TOKEN"]);
-  function applyColorWords(seg, wordColors) {
-    const allKeys = Object.keys(wordColors).filter(Boolean);
-    const caseSensitiveKeys = allKeys.filter((k) => CASE_SENSITIVE_COLOR_WORDS.has(k));
-    const caseInsensitiveKeys = allKeys.filter((k) => !CASE_SENSITIVE_COLOR_WORDS.has(k));
-    if (caseSensitiveKeys.length) {
-      const pattern = caseSensitiveKeys.sort((a, b) => b.length - a.length).map(escapeRegExp).join("|");
-      const regex = new RegExp(`(^|[^\\p{L}\\p{N}_])(${pattern})(?=([^\\p{L}\\p{N}_]|$))`, "gu");
-      seg = seg.replace(regex, (match, pre, word) => {
-        const c = wordColors[word];
-        return c ? `${pre}<span style="color:${c};">${word}</span>` : match;
-      });
-    }
-    if (caseInsensitiveKeys.length) {
-      const pattern = caseInsensitiveKeys.sort((a, b) => b.length - a.length).map(escapeRegExp).join("|");
-      const regex = new RegExp(`(^|[^\\p{L}\\p{N}_])(${pattern})(?=([^\\p{L}\\p{N}_]|$))`, "giu");
-      seg = seg.replace(regex, (match, pre, word) => {
-        const c = wordColors[word] || wordColors[word.toUpperCase()] || wordColors[word.toLowerCase()];
-        return c ? `${pre}<span style="color:${c};">${word}</span>` : match;
-      });
-    }
-    return seg;
-  }
-  function applyCardFormatting(seg, wordColors) {
-    const cardColor = wordColors.PATIENCE || "#41fcff";
-    return seg.replace(CARD_REF_REGEX, (match, inner) => {
-      const cleaned = inner.replace(new RegExp(UL_OPEN, "g"), "").replace(new RegExp(UL_CLOSE, "g"), "").replace(/<[^>]*>/g, "").trim();
-      return `<span class="uc-card-ref" style="color:${cardColor};">${escapeHtml(cleaned)}</span>`;
-    });
-  }
-  function applyStatFormatting(seg, wordColors) {
-    const statPattern = /(?<!\d)([+-]?)(\d+)\/([+-]?)(\d+)(?:\/([+-]?)(\d+))?(?=[^\d/]|$)/g;
-    return seg.replace(statPattern, (match, s1, a, s2, b, s3, c) => {
-      if (c !== void 0) {
-        return `${s1}<span style="color:${wordColors.cost}">${a}</span>/${s2}<span style="color:${wordColors.ATK}">${b}</span>/${s3}<span style="color:${wordColors.HP}">${c}</span>`;
-      }
-      return `${s1}<span style="color:${wordColors.ATK}">${a}</span>/${s2}<span style="color:${wordColors.HP}">${b}</span>`;
-    });
-  }
-  function formatSegments(work, wordColors, underlineTokens) {
-    const parts = [];
-    const re = /_(.+?)_/g;
-    let last = 0, m;
-    while ((m = re.exec(work)) !== null) {
-      if (m.index > last) parts.push({ text: work.slice(last, m.index), manual: false });
-      parts.push({ text: m[1], manual: true });
-      last = m.index + m[0].length;
-    }
-    if (last < work.length) parts.push({ text: work.slice(last), manual: false });
-    return parts.map((part) => {
-      let seg = part.text;
-      if (part.manual) {
-        return `<span style="text-decoration:underline;">${escapeHtml(seg.trim())}</span>`;
-      }
-      seg = insertUnderlineMarkers(seg, underlineTokens);
-      seg = escapeHtml(seg);
-      seg = applyColorWords(seg, wordColors);
-      seg = applyCardFormatting(seg, wordColors);
-      seg = applyStatFormatting(seg, wordColors);
-      return seg.replace(new RegExp(UL_OPEN, "g"), `<span style="text-decoration:underline;">`).replace(new RegExp(UL_CLOSE, "g"), `</span>`);
-    }).join("");
-  }
-  function extractSkipTokens(text) {
-    const skipped = [];
-    const work = text.replace(/\\([A-Za-z0-9\-]+)/g, (m, word) => {
-      const idx = skipped.length;
-      skipped.push(word);
-      return `UCSK${idx}Z`;
-    });
-    return { work, skipped };
-  }
-  function formatSwitchInner(rawText, wordColors, underlineTokens) {
-    if (!rawText) return "";
-    return formatSegments(rawText, wordColors, underlineTokens);
-  }
-  function formatLine(rawText, wordColors, underlineTokens) {
-    if (!rawText) return "";
-    const skipData = extractSkipTokens(rawText);
-    let work = skipData.work;
-    const switchBlocks = [];
-    work = work.replace(/\[\[([^\]]+)\]\]/g, (match, inner) => {
-      const idx = switchBlocks.length;
-      switchBlocks.push(inner);
-      return `UCXSW${idx}Y`;
-    });
-    let formatted = formatSegments(work, wordColors, underlineTokens);
-    let switchIndex = 0;
-    formatted = formatted.replace(/UCXSW(\d+)Y/g, (match, idxStr) => {
-      const innerHtml = formatSwitchInner(switchBlocks[Number(idxStr)] || "", wordColors, underlineTokens);
-      const bgColor = switchIndex % 2 === 0 ? "rgba(0, 255, 255, 0.4)" : "rgba(255, 0, 0, 0.4)";
-      switchIndex++;
-      return `<span style="background-color:${bgColor};">${innerHtml}</span>`;
-    });
-    formatted = formatted.replace(/UCSK(\d+)Z/g, (m, idx) => escapeHtml(skipData.skipped[Number(idx)] || ""));
-    return formatted;
-  }
-
-  // packages/core/settings.js
-  function createFeatureSettings(plugin, featureName, categoryLabel) {
-    const settingsApi = plugin.settings();
-    const registered = {};
-    function add(key, config) {
-      const setting = settingsApi.add({
-        ...config,
-        key: `${featureName}.${key}`,
-        category: config.category || categoryLabel
-      });
-      registered[key] = setting;
-      return setting;
-    }
-    function value(key) {
-      return registered[key].value();
-    }
-    return { add, value };
-  }
-
-  // packages/patch-maker/settings.js
-  function registerPatchMakerSettings(plugin) {
-    const settings2 = createFeatureSettings(plugin, "patchmaker", "Patch Maker");
-    return {
-      settings: settings2,
-      enabled: settings2.add("enabled", { name: "Enable Patch Maker", type: "boolean", default: true }),
-      debugLogging: settings2.add("debugLogging", { name: "Enable debug logging", type: "boolean", default: false }),
-      hideControls: settings2.add("hideControls", { name: "Hide Patch Maker controls", type: "boolean", default: false }),
-      cardHovers: settings2.add("enableCardHovers", { name: "Enable card hovers", type: "boolean", default: true }),
-      language: settings2.add("patchLanguage", {
-        name: "Select Language",
-        type: "select",
-        options: ["Auto / Default", "English", "French", "Spanish", "Portuguese", "Chinese", "Italian", "Polish", "German", "Russian"],
-        default: "Auto / Default",
-        onChange: () => location.reload()
-      }),
-      openOnLoad: settings2.add("openPatchNotesOnPageLoad", { name: "Auto-Load Patch Maker", type: "boolean", default: false })
-    };
-  }
-
-  // packages/patch-maker/styles.js
-  var PATCH_MAKER_CSS = `
-html, body { overflow-x: hidden !important; }
-
-#uc-patch-overlay {
-  min-height: 100vh;
-  max-width: 100vw;
-  overflow-y: visible !important;
-  overflow-x: visible !important;
-}
-#uc-patch-overlay > div { overflow-x: visible !important; }
-
-#uc-patch-overlay li.buff   { border-left: 3px solid #00c800; }
-#uc-patch-overlay li.rework { border-left: 3px solid gold; }
-#uc-patch-overlay li.nerf   { border-left: 3px solid red; }
-#uc-patch-overlay li.other  { border-left: 3px solid gray; }
-#uc-patch-overlay li.none   { border-left: none !important; }
-
-#uc-patch-overlay.editor-mode p  { background-color: rgba(255, 255, 0, 0.10); }
-#uc-patch-overlay.editor-mode li { background-color: rgba(173,216,230,0.12); }
-
-#uc-patch-overlay li {
-  padding-left: 5px;
-  border-radius: 3px;
-  position: relative;
-  margin: 10px 0;
-  list-style-type: disc;
-  font-size: 14px;
-}
-
-#uc-patch-overlay ul {
-  margin-top: 0;
-  margin-bottom: 10px;
-  padding-left: 40px;
-  list-style-position: outside;
-}
-
-#uc-patch-overlay p { position: relative; font-size: 14px; }
-
-#uc-patch-overlay .uc-li-text:focus { outline: none; }
-#uc-patch-overlay li:focus-within {
-  outline: 2px solid white;
-  outline-offset: 3px;
-  border-radius: 4px;
-}
-
-#uc-patch-overlay .uc-collapse-btn {
-  position: absolute;
-  right: -38px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
-  background-color: #0099cc;
-  color: white;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  opacity: 0.9;
-}
-
-#uc-patch-overlay .uc-section-del {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
-  border: none;
-  border-radius: 3px;
-  color: white;
-  cursor: pointer;
-  opacity: 0.9;
-  right: -64px;
-  background-color: #e74c3c;
-}
-
-#uc-patch-overlay .uc-section-label:focus {
-  outline: 2px solid white;
-  outline-offset: 2px;
-}
-
-#uc-patch-overlay .uc-add-section-row {
-  margin: 0 0 10px 0;
-  background-color: rgba(255, 255, 0, 0.10);
-  padding: 0 6px;
-  border-radius: 3px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 24px;
-}
-
-#uc-patch-overlay .uc-add-section-btn {
-  width: 20px;
-  height: 20px;
-  line-height: 20px;
-  padding: 0;
-  background-color: #2ecc71;
-  color: white;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  text-align: center;
-  font-size: 14px;
-  font-weight: bold;
-}
-
-#uc-patch-overlay .uc-card-section {
-  margin: 8px 0 28px 0;
-}
-
-#uc-patch-overlay .uc-card-toolbar {
-  display: none;
-}
-
-#uc-patch-overlay .uc-card-add-tile {
-  width: 176px;
-  height: 246px;
-  background-color: rgba(255, 255, 0, 0.10);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 3px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-sizing: border-box;
-  flex: 0 0 auto;
-}
-
-#uc-patch-overlay .uc-card-add-btn {
-  width: 20px;
-  height: 20px;
-  line-height: 20px;
-  padding: 0;
-  background-color: #2ecc71;
-  color: white;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  text-align: center;
-  font-size: 14px;
-  font-weight: bold;
-}
-
-#uc-patch-overlay .uc-card-gallery {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  align-items: flex-start;
-  min-height: 246px;
-}
-
-#uc-patch-overlay .uc-card-item {
-  position: relative;
-  display: inline-block;
-  outline: none;
-}
-
-#uc-patch-overlay .uc-card-item:focus {
-  outline: 2px solid white;
-  outline-offset: 3px;
-}
-
-#uc-patch-overlay .uc-card-frame {
-  width: 176px;
-  height: 246px;
-  overflow: hidden;
-  background: #000;
-}
-
-#uc-patch-overlay .uc-card-frame img {
-  width: 176px;
-  height: 246px;
-  display: block;
-  image-rendering: auto;
-}
-
-#uc-patch-overlay .uc-card-del {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 20px;
-  height: 20px;
-  line-height: 20px;
-  padding: 0;
-  border: none;
-  border-radius: 3px;
-  background-color: #e74c3c;
-  color: white;
-  cursor: pointer;
-  text-align: center;
-  opacity: 0.95;
-}
-
-#uc-patch-overlay .uc-li-add,
-#uc-patch-overlay .uc-li-del {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
-  border: none;
-  border-radius: 3px;
-  color: white;
-  cursor: pointer;
-  text-align: center;
-  opacity: 0.9;
-}
-
-#uc-patch-overlay .uc-li-add { right: -38px; background-color: #2ecc71; }
-#uc-patch-overlay .uc-li-del { right: -64px; background-color: #e74c3c; }
-#uc-patch-overlay .uc-li-del:disabled {
-  background-color: #777;
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-#uc-patch-overlay.viewer-mode .uc-li-add,
-#uc-patch-overlay.viewer-mode .uc-li-del,
-#uc-patch-overlay.viewer-mode .uc-collapse-btn,
-#uc-patch-overlay.viewer-mode .uc-section-del,
-#uc-patch-overlay.viewer-mode .uc-add-section-row,
-#uc-patch-overlay.viewer-mode .uc-card-toolbar,
-#uc-patch-overlay.viewer-mode .uc-card-del,
-#uc-patch-overlay.viewer-mode .uc-card-add-tile,
-#uc-patch-overlay.viewer-mode .uc-card-add-btn {
-  display: none !important;
-}
-#uc-patch-overlay.viewer-mode p,
-#uc-patch-overlay.viewer-mode li {
-  background-color: transparent !important;
-}
-
-.uc-skip { all: unset; }
-`;
-  function injectPatchMakerStyle() {
-    if (document.getElementById("uc-patch-maker-style")) return;
-    const style = document.createElement("style");
-    style.id = "uc-patch-maker-style";
-    style.textContent = PATCH_MAKER_CSS;
-    document.head.appendChild(style);
-  }
-
-  // packages/patch-maker/input-blocker.js
-  function isEditingOverlayField() {
-    const ae = document.activeElement;
-    return !!(ae && (ae.classList.contains("uc-li-text") || ae.classList.contains("uc-section-label") || ae.tagName === "H2" && ae.getAttribute("contenteditable") === "true"));
-  }
-  function isViewerMode() {
-    const overlay = document.getElementById("uc-patch-overlay");
-    return !!(overlay && overlay.classList.contains("viewer-mode"));
-  }
-  function inputBlocker(e) {
-    if (!isEditingOverlayField() || isViewerMode()) return;
-    const isOwnShortcut = !e.altKey && !e.metaKey && (e.ctrlKey || e.shiftKey) && (e.key === "ArrowUp" || e.key === "ArrowDown");
-    if (isOwnShortcut) return;
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    if (e.key === "Escape" || e.key === "Enter") {
-      e.preventDefault();
-      if (e.key === "Enter") document.activeElement.blur();
-    }
-  }
-  function enableInputBlocker() {
-    window.addEventListener("keydown", inputBlocker, true);
-    window.addEventListener("keyup", inputBlocker, true);
-    document.addEventListener("keydown", inputBlocker, true);
-    document.addEventListener("keyup", inputBlocker, true);
-  }
-  function disableInputBlocker() {
-    window.removeEventListener("keydown", inputBlocker, true);
-    window.removeEventListener("keyup", inputBlocker, true);
-    document.removeEventListener("keydown", inputBlocker, true);
-    document.removeEventListener("keyup", inputBlocker, true);
-  }
-
-  // packages/patch-maker/new-cards.js
-  var TARGET_W = 176;
-  var TARGET_H = 246;
-  var FIELDMARKER_WATERMARK_CROP_PX = 14;
-  function readFileAsDataURL(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(file);
-    });
-  }
-  function loadImageFromDataURL(dataUrl) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-      img.src = dataUrl;
-    });
-  }
-  async function normalizeCardImage(dataUrl) {
-    const img = await loadImageFromDataURL(dataUrl);
-    if (img.naturalWidth === TARGET_W && img.naturalHeight === TARGET_H) {
-      return dataUrl;
-    }
-    let sx = 0, sy = 0, sw = img.naturalWidth, sh = img.naturalHeight;
-    if (img.naturalWidth === 163 && img.naturalHeight >= 250) {
-      sh = Math.max(1, img.naturalHeight - FIELDMARKER_WATERMARK_CROP_PX);
-    }
-    const canvas = document.createElement("canvas");
-    canvas.width = TARGET_W;
-    canvas.height = TARGET_H;
-    const ctx = canvas.getContext("2d");
-    ctx.imageSmoothingEnabled = false;
-    ctx.clearRect(0, 0, TARGET_W, TARGET_H);
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, TARGET_W, TARGET_H);
-    return canvas.toDataURL("image/png");
-  }
-  function createNewCardsFeature({ isViewerMode: isViewerMode2, saveState }) {
-    function ensureCardAddTile(section) {
-      const gallery = section.querySelector(".uc-card-gallery");
-      if (!gallery) return null;
-      let addTile = gallery.querySelector(":scope > .uc-card-add-tile");
-      if (addTile) {
-        gallery.appendChild(addTile);
-        return addTile;
-      }
-      const fileInput = document.createElement("input");
-      fileInput.type = "file";
-      fileInput.accept = "image/*";
-      fileInput.multiple = true;
-      fileInput.style.display = "none";
-      addTile = document.createElement("div");
-      addTile.className = "uc-card-add-tile";
-      const addBtn = document.createElement("button");
-      addBtn.className = "uc-card-add-btn";
-      addBtn.textContent = "+";
-      addBtn.title = "Add card image";
-      addBtn.onclick = () => {
-        if (isViewerMode2()) return;
-        fileInput.click();
-      };
-      fileInput.addEventListener("change", async (e) => {
-        const files = [...e.target.files || []];
-        if (!files.length) return;
-        for (const file of files) {
-          if (!file.type.startsWith("image/")) continue;
-          const dataUrl = await readFileAsDataURL(file);
-          const normalized = await normalizeCardImage(dataUrl);
-          addCardImage(section, normalized, file.name || "Card image");
-        }
-        fileInput.value = "";
-        ensureCardAddTile(section);
-        saveState();
-      });
-      addTile.appendChild(addBtn);
-      addTile.appendChild(fileInput);
-      gallery.appendChild(addTile);
-      return addTile;
-    }
-    function addCardImage(section, src, name = "Card image") {
-      const gallery = section.querySelector(".uc-card-gallery");
-      if (!gallery) return null;
-      ensureCardAddTile(section);
-      const item = document.createElement("div");
-      item.className = "uc-card-item";
-      item.tabIndex = 0;
-      item.dataset.src = src;
-      item.dataset.name = name;
-      const frame = document.createElement("div");
-      frame.className = "uc-card-frame";
-      const img = document.createElement("img");
-      img.src = src;
-      img.alt = name;
-      frame.appendChild(img);
-      item.appendChild(frame);
-      const delBtn = document.createElement("button");
-      delBtn.className = "uc-card-del";
-      delBtn.textContent = "\u2212";
-      delBtn.title = "Remove card image";
-      delBtn.onclick = (e) => {
-        if (isViewerMode2()) return;
-        e.stopPropagation();
-        item.remove();
-        ensureCardAddTile(section);
-        saveState();
-      };
-      item.appendChild(delBtn);
-      item.addEventListener("keydown", (e) => {
-        if (isViewerMode2()) return;
-        const dir = e.key === "ArrowUp" ? -1 : e.key === "ArrowDown" ? 1 : 0;
-        const isMove = e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey && dir;
-        if (!isMove) return;
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        moveCardItem(item, dir);
-      }, true);
-      const addTile = gallery.querySelector(":scope > .uc-card-add-tile");
-      if (addTile) gallery.insertBefore(item, addTile);
-      else gallery.appendChild(item);
-      ensureCardAddTile(section);
-      return item;
-    }
-    function moveCardItem(item, dir) {
-      const gallery = item.parentElement;
-      if (!gallery) return;
-      const items = [...gallery.querySelectorAll(":scope > .uc-card-item")];
-      const idx = items.indexOf(item);
-      if (idx < 0 || items.length <= 1) return;
-      const newIdx = (idx + dir + items.length) % items.length;
-      const target = items[newIdx];
-      if (dir < 0) {
-        if (idx === 0) gallery.appendChild(item);
-        else gallery.insertBefore(item, target);
-      } else {
-        if (idx === items.length - 1) gallery.insertBefore(item, items[0]);
-        else gallery.insertBefore(item, target.nextElementSibling);
-      }
-      ensureCardAddTile(gallery.parentElement);
-      saveState();
-      setTimeout(() => item.focus(), 0);
-    }
-    function createSection(container) {
-      const p = document.createElement("p");
-      p.className = "uc-new-cards-header";
-      const label = document.createElement("span");
-      label.textContent = "New cards";
-      p.appendChild(label);
-      const section = document.createElement("div");
-      section.className = "uc-card-section";
-      const gallery = document.createElement("div");
-      gallery.className = "uc-card-gallery";
-      section.appendChild(gallery);
-      const collapseBtn = document.createElement("button");
-      collapseBtn.className = "uc-collapse-btn";
-      collapseBtn.textContent = "\u2212";
-      collapseBtn.onclick = () => {
-        if (isViewerMode2()) return;
-        const collapsed = section.style.display === "none";
-        section.style.display = collapsed ? "" : "none";
-        collapseBtn.textContent = collapsed ? "\u2212" : "+";
-        saveState();
-      };
-      p.appendChild(collapseBtn);
-      container.appendChild(p);
-      container.appendChild(section);
-      ensureCardAddTile(section);
-      return { p, section, gallery };
-    }
-    function collectState(container) {
-      const header = container.querySelector("p.uc-new-cards-header");
-      const section = header ? header.nextElementSibling : null;
-      if (!header || !section) return { collapsed: false, cards: [] };
-      return {
-        collapsed: section.style.display === "none",
-        cards: [...section.querySelectorAll(".uc-card-item")].map((item) => ({
-          src: item.dataset.src || "",
-          name: item.dataset.name || "Card image"
-        })).filter((card) => card.src)
-      };
-    }
-    function restoreState(container, newCards) {
-      const header = container.querySelector("p.uc-new-cards-header");
-      const section = header ? header.nextElementSibling : null;
-      if (!header || !section) return;
-      const btn = header.querySelector(".uc-collapse-btn");
-      section.style.display = newCards && newCards.collapsed ? "none" : "";
-      if (btn) btn.textContent = newCards && newCards.collapsed ? "+" : "\u2212";
-      const gallery = section.querySelector(".uc-card-gallery");
-      if (gallery) gallery.innerHTML = "";
-      ensureCardAddTile(section);
-      (newCards && newCards.cards || []).forEach((card) => {
-        if (card && card.src) addCardImage(section, card.src, card.name || "Card image");
-      });
-      ensureCardAddTile(section);
-    }
-    return { createSection, collectState, restoreState };
-  }
-
   // packages/patch-maker/overlay.js
   var STATE_KEY = "wizascript.patchmaker.state.v1";
   var cycleOrder = ["none", "other", "buff", "rework", "nerf"];
@@ -1136,16 +1307,17 @@ Each entry needs a category:
 \u2022 None (EMPTY)
 
 
-<u><b>Category Shortcuts</b></u>
-\u2022 Ctrl  + Up / Down   \u2192 Change class type
-\u2022 Shift + Up / Down   \u2192 Move entry up/down in section
+<u><b>Category & Move Shortcuts</b></u>
+These are all remappable in Wizascript's Keybinds settings - defaults shown below:
+\u2022 Primary + , / .   \u2192 Change class type
+\u2022 Primary + Up / Down   \u2192 Move entry up/down in section
 
 
 <u><b>Custom Balance Sections</b></u>
 \u2022 Green + Button \u2013 Add a new custom balance section
 \u2022 Red - Button - Remove custom balance section (Double Click Required)
 \u2022 Click a section name to select it
-\u2022 Shift + Up / Down \u2013 Move selected section up/down
+\u2022 Primary + Up / Down \u2013 Move selected section up/down (remappable)
 
 
 <u><b>Automatic Highlighting</b></u>
@@ -1192,6 +1364,7 @@ Viewer Mode:
 Version: v${version}`;
   }
   function createPatchMakerOverlay({
+    plugin,
     logger,
     getWordColors,
     getUnderlineTokens,
@@ -1338,7 +1511,6 @@ Version: v${version}`;
         disableInputBlocker();
       });
       span.addEventListener("keydown", (e) => {
-        if (handleShortcut(e)) return;
         if (overlay.classList.contains("viewer-mode")) return;
         if (e.key === "Enter") {
           e.preventDefault();
@@ -1385,7 +1557,6 @@ Version: v${version}`;
         disableInputBlocker();
       });
       labelEl.addEventListener("keydown", (e) => {
-        if (handleShortcut(e)) return;
         if (!isCustom) return;
         if (e.key === "Enter") {
           e.preventDefault();
@@ -1498,36 +1669,94 @@ Version: v${version}`;
       li.classList.add(cycleOrder[newIdx]);
       saveState();
     }
-    function handleShortcut(e) {
-      if (overlay.classList.contains("viewer-mode")) return false;
-      if (e.altKey || e.metaKey) return false;
-      const dir = e.key === "ArrowUp" ? -1 : e.key === "ArrowDown" ? 1 : 0;
-      if (!dir || !e.ctrlKey && !e.shiftKey) return false;
-      const active = document.activeElement;
-      if (!active) return false;
-      if (active.classList.contains("uc-li-text")) {
-        const li = active.closest("li");
-        if (!li) return false;
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        if (e.ctrlKey && !e.shiftKey) cycleCategory(li, dir);
-        if (e.shiftKey && !e.ctrlKey) moveLi(li, dir);
-        return true;
+    registerKeybind(plugin, {
+      key: "cycleCategoryUp",
+      name: "Cycle Entry Category Up",
+      defaultCode: "Comma",
+      scope: "scoped",
+      selector: ".uc-li-text",
+      onMatch: () => {
+        const li = document.activeElement.closest("li");
+        if (li) cycleCategory(li, -1);
       }
-      if (active.classList.contains("uc-section-label") && e.shiftKey && !e.ctrlKey) {
-        const p = active.closest("p.uc-section-header");
-        if (!p) return false;
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        moveSection(p, dir);
+    });
+    registerKeybind(plugin, {
+      key: "cycleCategoryDown",
+      name: "Cycle Entry Category Down",
+      defaultCode: "Period",
+      scope: "scoped",
+      selector: ".uc-li-text",
+      onMatch: () => {
+        const li = document.activeElement.closest("li");
+        if (li) cycleCategory(li, 1);
+      }
+    });
+    registerKeybind(plugin, {
+      key: "moveEntryUp",
+      name: "Move Entry Up",
+      defaultCode: "ArrowUp",
+      scope: "scoped",
+      selector: ".uc-li-text",
+      onMatch: () => {
+        const li = document.activeElement.closest("li");
+        if (li) moveLi(li, -1);
+      }
+    });
+    registerKeybind(plugin, {
+      key: "moveEntryDown",
+      name: "Move Entry Down",
+      defaultCode: "ArrowDown",
+      scope: "scoped",
+      selector: ".uc-li-text",
+      onMatch: () => {
+        const li = document.activeElement.closest("li");
+        if (li) moveLi(li, 1);
+      }
+    });
+    registerKeybind(plugin, {
+      key: "moveSectionUp",
+      name: "Move Balance Section Up",
+      defaultCode: "ArrowUp",
+      scope: "scoped",
+      selector: ".uc-section-label",
+      onMatch: () => {
+        const p = document.activeElement.closest("p.uc-section-header");
+        if (!p) return;
+        moveSection(p, -1);
         const label = p.querySelector(".uc-section-label");
         if (label) setTimeout(() => label.focus(), 0);
-        return true;
       }
-      return false;
-    }
+    });
+    registerKeybind(plugin, {
+      key: "moveSectionDown",
+      name: "Move Balance Section Down",
+      defaultCode: "ArrowDown",
+      scope: "scoped",
+      selector: ".uc-section-label",
+      onMatch: () => {
+        const p = document.activeElement.closest("p.uc-section-header");
+        if (!p) return;
+        moveSection(p, 1);
+        const label = p.querySelector(".uc-section-label");
+        if (label) setTimeout(() => label.focus(), 0);
+      }
+    });
+    registerKeybind(plugin, {
+      key: "moveCardUp",
+      name: "Move Card Up",
+      defaultCode: "ArrowUp",
+      scope: "scoped",
+      selector: ".uc-card-item",
+      onMatch: () => newCards.moveCardItem(document.activeElement, -1)
+    });
+    registerKeybind(plugin, {
+      key: "moveCardDown",
+      name: "Move Card Down",
+      defaultCode: "ArrowDown",
+      scope: "scoped",
+      selector: ".uc-card-item",
+      onMatch: () => newCards.moveCardItem(document.activeElement, 1)
+    });
     function bindCardHovers() {
       if (!getCardHoversEnabled()) return;
       const cardNameMap = getCardNameMap();
@@ -1826,6 +2055,33 @@ Version: v${version}`;
     return { init, setControlsHidden };
   }
 
+  // packages/core/debug-logger.js
+  function createLogger(featureName, initialCategories = {}) {
+    const enabled = { ...initialCategories };
+    function tag(category) {
+      return category ? `[${featureName}:${category}]` : `[${featureName}]`;
+    }
+    function isEnabled(category) {
+      return !category || enabled[category] !== false;
+    }
+    return {
+      setCategory(category, isEnabled2) {
+        enabled[category] = isEnabled2;
+      },
+      log(category, ...args) {
+        if (!isEnabled(category)) return;
+        console.log(tag(category), ...args);
+      },
+      warn(category, ...args) {
+        if (!isEnabled(category)) return;
+        console.warn(tag(category), ...args);
+      },
+      error(category, ...args) {
+        console.error(tag(category), ...args);
+      }
+    };
+  }
+
   // packages/core/page-match.js
   function normalizePath(pathname) {
     const lower = pathname.toLowerCase();
@@ -1866,6 +2122,10 @@ Version: v${version}`;
     let underlineTokens = [];
     let cardNameMap = /* @__PURE__ */ new Map();
     const overlay = createPatchMakerOverlay({
+      // The only change from before - plugin is now passed through so
+      // the overlay can register its own keybinds via the shared
+      // registry, instead of the old fixed Ctrl/Shift+Arrow handling.
+      plugin,
       logger,
       version: FEATURE_VERSION,
       getWordColors: () => wordColors,
@@ -4717,207 +4977,6 @@ Version: v${version}`;
       if (meetsRank.length) pool = meetsRank;
     }
     return pool;
-  }
-
-  // packages/core/keybinds.js
-  var CATEGORY = "Keybinds";
-  var HOLD_DELAY_MS = 250;
-  var NATIVE_MODIFIERS = /* @__PURE__ */ new Set(["Control", "Shift", "Alt"]);
-  var DEFAULT_PRIMARY_CODE = "Control";
-  var PRIMARY_KEY = "primaryKey";
-  var GM_PREFIX = "wizascript.keybinds.";
-  var ID_PREFIX = "underscript.plugin.Wizascript.keybinds.";
-  function storageKey(bindingKey) {
-    return `${GM_PREFIX}${bindingKey}`;
-  }
-  function readCode(bindingKey, defaultCode) {
-    return GM_getValue(storageKey(bindingKey), defaultCode);
-  }
-  function writeCode(bindingKey, code) {
-    GM_setValue(storageKey(bindingKey), code);
-  }
-  var DISPLAY_OVERRIDES = {
-    Control: "Ctrl",
-    Shift: "Shift",
-    Alt: "Alt",
-    Meta: "Meta",
-    ArrowUp: "Up Arrow",
-    ArrowDown: "Down Arrow",
-    ArrowLeft: "Left Arrow",
-    ArrowRight: "Right Arrow",
-    Space: "Space",
-    Escape: "Esc",
-    unbound: "Unbound"
-  };
-  function codeToDisplay(code) {
-    if (!code) return "Unbound";
-    if (DISPLAY_OVERRIDES[code]) return DISPLAY_OVERRIDES[code];
-    if (/^Key[A-Z]$/.test(code)) return code.slice(3);
-    if (/^Digit[0-9]$/.test(code)) return code.slice(5);
-    return code;
-  }
-  var settings = null;
-  var registry = [];
-  var bindingDefaults = /* @__PURE__ */ new Map();
-  var observerStarted = false;
-  function isTypingContext() {
-    const el = document.activeElement;
-    if (!el) return false;
-    const tag = el.tagName;
-    return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
-  }
-  function enhanceInput(el, bindingKey, defaultCode) {
-    el.setAttribute("data-wizascript-keybind-enhanced", "true");
-    el.readOnly = true;
-    Object.assign(el.style, {
-      cursor: "pointer",
-      backgroundColor: "black",
-      color: "white",
-      border: "1px solid #b4b4b4",
-      borderRadius: "3px",
-      textAlign: "center"
-    });
-    function refreshDisplay() {
-      el.value = codeToDisplay(readCode(bindingKey, defaultCode));
-    }
-    refreshDisplay();
-    el.addEventListener("focus", () => {
-      el.style.border = "1px solid #40E0D0";
-      el.style.boxShadow = "0 0 4px #40E0D0";
-      el.value = "...?";
-      function capture(e) {
-        e.preventDefault();
-        const code = e.key === "Escape" ? "unbound" : e.code;
-        writeCode(bindingKey, code);
-        document.removeEventListener("keydown", capture, true);
-        el.blur();
-      }
-      document.addEventListener("keydown", capture, true);
-      el.addEventListener("blur", function onBlur() {
-        el.style.border = "1px solid #b4b4b4";
-        el.style.boxShadow = "none";
-        document.removeEventListener("keydown", capture, true);
-        refreshDisplay();
-        el.removeEventListener("blur", onBlur);
-      });
-    });
-  }
-  function startObserver() {
-    if (observerStarted) return;
-    observerStarted = true;
-    const observer = new MutationObserver(() => {
-      if (!bindingDefaults.size) return;
-      document.querySelectorAll(`input[id^="${ID_PREFIX}"]:not([data-wizascript-keybind-enhanced])`).forEach((el) => {
-        const bindingKey = el.id.slice(ID_PREFIX.length);
-        if (!bindingDefaults.has(bindingKey)) return;
-        enhanceInput(el, bindingKey, bindingDefaults.get(bindingKey));
-      });
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-  }
-  function matchesCode(e, code, defaultCode) {
-    if (code === defaultCode && NATIVE_MODIFIERS.has(defaultCode)) {
-      return e.key === defaultCode;
-    }
-    return e.code === code;
-  }
-  function getPrimaryCode() {
-    return readCode(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
-  }
-  function matchesSetting(e, binding) {
-    const code = readCode(binding.key, binding.defaultCode);
-    return matchesCode(e, code, binding.defaultCode);
-  }
-  var primaryHeld = false;
-  var holdTimer = null;
-  var comboFired = false;
-  function bindGlobalListeners() {
-    document.addEventListener("keydown", (e) => {
-      const primaryCode = getPrimaryCode();
-      const isPrimary = matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE);
-      if (isPrimary) {
-        if (primaryHeld) return;
-        primaryHeld = true;
-        comboFired = false;
-        registry.forEach((b) => {
-          if (b.onPrimaryPress) b.onPrimaryPress(e);
-        });
-        clearTimeout(holdTimer);
-        holdTimer = setTimeout(() => {
-          if (comboFired) return;
-          if (isTypingContext()) return;
-          registry.forEach((b) => {
-            if (b.scope === "global" && b.onPrimaryAlone) b.onPrimaryAlone(e);
-          });
-        }, HOLD_DELAY_MS);
-        return;
-      }
-      if (!primaryHeld) return;
-      clearTimeout(holdTimer);
-      for (const b of registry) {
-        if (!b.onMatch) continue;
-        if (!matchesSetting(e, b)) continue;
-        if (b.guardTypingContext && isTypingContext()) continue;
-        if (b.scope === "scoped") {
-          const active = document.activeElement;
-          if (!active || !active.matches(b.selector)) continue;
-        }
-        comboFired = true;
-        e.preventDefault();
-        b.onMatch(e);
-        break;
-      }
-    });
-    document.addEventListener("keyup", (e) => {
-      const primaryCode = getPrimaryCode();
-      if (matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE)) {
-        primaryHeld = false;
-        clearTimeout(holdTimer);
-        registry.forEach((b) => {
-          if (b.scope === "global" && b.onPrimaryRelease) b.onPrimaryRelease(e);
-        });
-      }
-    });
-  }
-  function ensureCore(plugin) {
-    if (settings) return;
-    settings = createFeatureSettings(plugin, "keybinds", CATEGORY);
-    startObserver();
-    bindGlobalListeners();
-    settings.add(PRIMARY_KEY, {
-      name: "Primary Key",
-      note: 'Click, then press a key. Held down to activate "Primary + <key>" bindings below. Tap alone for actions that trigger on a simple press.',
-      type: "text",
-      default: DEFAULT_PRIMARY_CODE
-    });
-    bindingDefaults.set(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
-  }
-  function registerKeybind(plugin, config) {
-    const {
-      key,
-      name,
-      defaultCode,
-      scope = "global",
-      selector,
-      guardTypingContext = false,
-      onMatch,
-      onPrimaryAlone,
-      onPrimaryPress,
-      onPrimaryRelease
-    } = config;
-    ensureCore(plugin);
-    if (onMatch) {
-      settings.add(key, {
-        name: `${name} - Primary + <key>`,
-        type: "text",
-        default: defaultCode
-      });
-      bindingDefaults.set(key, defaultCode);
-    }
-    registry.push({ key, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease });
-  }
-  function getPrimaryKeyDisplay() {
-    return codeToDisplay(getPrimaryCode());
   }
 
   // packages/uc-tv/countdown.js

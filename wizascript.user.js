@@ -4719,6 +4719,207 @@ Version: v${version}`;
     return pool;
   }
 
+  // packages/core/keybinds.js
+  var CATEGORY = "Keybinds";
+  var HOLD_DELAY_MS = 250;
+  var NATIVE_MODIFIERS = /* @__PURE__ */ new Set(["Control", "Shift", "Alt"]);
+  var DEFAULT_PRIMARY_CODE = "Control";
+  var PRIMARY_KEY = "primaryKey";
+  var GM_PREFIX = "wizascript.keybinds.";
+  var ID_PREFIX = "underscript.plugin.Wizascript.keybinds.";
+  function storageKey(bindingKey) {
+    return `${GM_PREFIX}${bindingKey}`;
+  }
+  function readCode(bindingKey, defaultCode) {
+    return GM_getValue(storageKey(bindingKey), defaultCode);
+  }
+  function writeCode(bindingKey, code) {
+    GM_setValue(storageKey(bindingKey), code);
+  }
+  var DISPLAY_OVERRIDES = {
+    Control: "Ctrl",
+    Shift: "Shift",
+    Alt: "Alt",
+    Meta: "Meta",
+    ArrowUp: "Up Arrow",
+    ArrowDown: "Down Arrow",
+    ArrowLeft: "Left Arrow",
+    ArrowRight: "Right Arrow",
+    Space: "Space",
+    Escape: "Esc",
+    unbound: "Unbound"
+  };
+  function codeToDisplay(code) {
+    if (!code) return "Unbound";
+    if (DISPLAY_OVERRIDES[code]) return DISPLAY_OVERRIDES[code];
+    if (/^Key[A-Z]$/.test(code)) return code.slice(3);
+    if (/^Digit[0-9]$/.test(code)) return code.slice(5);
+    return code;
+  }
+  var settings = null;
+  var registry = [];
+  var bindingDefaults = /* @__PURE__ */ new Map();
+  var observerStarted = false;
+  function isTypingContext() {
+    const el = document.activeElement;
+    if (!el) return false;
+    const tag = el.tagName;
+    return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
+  }
+  function enhanceInput(el, bindingKey, defaultCode) {
+    el.setAttribute("data-wizascript-keybind-enhanced", "true");
+    el.readOnly = true;
+    Object.assign(el.style, {
+      cursor: "pointer",
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      el.value = codeToDisplay(readCode(bindingKey, defaultCode));
+    }
+    refreshDisplay();
+    el.addEventListener("focus", () => {
+      el.style.border = "1px solid #40E0D0";
+      el.style.boxShadow = "0 0 4px #40E0D0";
+      el.value = "...?";
+      function capture(e) {
+        e.preventDefault();
+        const code = e.key === "Escape" ? "unbound" : e.code;
+        writeCode(bindingKey, code);
+        document.removeEventListener("keydown", capture, true);
+        el.blur();
+      }
+      document.addEventListener("keydown", capture, true);
+      el.addEventListener("blur", function onBlur() {
+        el.style.border = "1px solid #b4b4b4";
+        el.style.boxShadow = "none";
+        document.removeEventListener("keydown", capture, true);
+        refreshDisplay();
+        el.removeEventListener("blur", onBlur);
+      });
+    });
+  }
+  function startObserver() {
+    if (observerStarted) return;
+    observerStarted = true;
+    const observer = new MutationObserver(() => {
+      if (!bindingDefaults.size) return;
+      document.querySelectorAll(`input[id^="${ID_PREFIX}"]:not([data-wizascript-keybind-enhanced])`).forEach((el) => {
+        const bindingKey = el.id.slice(ID_PREFIX.length);
+        if (!bindingDefaults.has(bindingKey)) return;
+        enhanceInput(el, bindingKey, bindingDefaults.get(bindingKey));
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+  function matchesCode(e, code, defaultCode) {
+    if (code === defaultCode && NATIVE_MODIFIERS.has(defaultCode)) {
+      return e.key === defaultCode;
+    }
+    return e.code === code;
+  }
+  function getPrimaryCode() {
+    return readCode(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
+  }
+  function matchesSetting(e, binding) {
+    const code = readCode(binding.key, binding.defaultCode);
+    return matchesCode(e, code, binding.defaultCode);
+  }
+  var primaryHeld = false;
+  var holdTimer = null;
+  var comboFired = false;
+  function bindGlobalListeners() {
+    document.addEventListener("keydown", (e) => {
+      const primaryCode = getPrimaryCode();
+      const isPrimary = matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE);
+      if (isPrimary) {
+        if (primaryHeld) return;
+        primaryHeld = true;
+        comboFired = false;
+        registry.forEach((b) => {
+          if (b.onPrimaryPress) b.onPrimaryPress(e);
+        });
+        clearTimeout(holdTimer);
+        holdTimer = setTimeout(() => {
+          if (comboFired) return;
+          if (isTypingContext()) return;
+          registry.forEach((b) => {
+            if (b.scope === "global" && b.onPrimaryAlone) b.onPrimaryAlone(e);
+          });
+        }, HOLD_DELAY_MS);
+        return;
+      }
+      if (!primaryHeld) return;
+      clearTimeout(holdTimer);
+      for (const b of registry) {
+        if (!b.onMatch) continue;
+        if (!matchesSetting(e, b)) continue;
+        if (b.guardTypingContext && isTypingContext()) continue;
+        if (b.scope === "scoped") {
+          const active = document.activeElement;
+          if (!active || !active.matches(b.selector)) continue;
+        }
+        comboFired = true;
+        e.preventDefault();
+        b.onMatch(e);
+        break;
+      }
+    });
+    document.addEventListener("keyup", (e) => {
+      const primaryCode = getPrimaryCode();
+      if (matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE)) {
+        primaryHeld = false;
+        clearTimeout(holdTimer);
+        registry.forEach((b) => {
+          if (b.scope === "global" && b.onPrimaryRelease) b.onPrimaryRelease(e);
+        });
+      }
+    });
+  }
+  function ensureCore(plugin) {
+    if (settings) return;
+    settings = createFeatureSettings(plugin, "keybinds", CATEGORY);
+    startObserver();
+    bindGlobalListeners();
+    settings.add(PRIMARY_KEY, {
+      name: "Primary Key",
+      note: 'Click, then press a key. Held down to activate "Primary + <key>" bindings below. Tap alone for actions that trigger on a simple press.',
+      type: "text",
+      default: DEFAULT_PRIMARY_CODE
+    });
+    bindingDefaults.set(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
+  }
+  function registerKeybind(plugin, config) {
+    const {
+      key,
+      name,
+      defaultCode,
+      scope = "global",
+      selector,
+      guardTypingContext = false,
+      onMatch,
+      onPrimaryAlone,
+      onPrimaryPress,
+      onPrimaryRelease
+    } = config;
+    ensureCore(plugin);
+    if (onMatch) {
+      settings.add(key, {
+        name: `${name} - Primary + <key>`,
+        type: "text",
+        default: defaultCode
+      });
+      bindingDefaults.set(key, defaultCode);
+    }
+    registry.push({ key, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease });
+  }
+  function getPrimaryKeyDisplay() {
+    return codeToDisplay(getPrimaryCode());
+  }
+
   // packages/uc-tv/countdown.js
   var activeCancelFn = null;
   function cancelActiveCountdown() {
@@ -4732,18 +4933,21 @@ Version: v${version}`;
       showCountdownOverlay(seconds, onComplete);
     }
   }
+  function cancelHint() {
+    return `Cancel by pressing ${getPrimaryKeyDisplay()}`;
+  }
   function showCountdownViaToast(plugin, seconds, onComplete) {
     let remaining = seconds;
     const toast = plugin.toast({
       title: "UC TV",
-      text: `Spectating a new match in ${remaining}s... (Cancel by holding Ctrl)`
+      text: `Spectating a new match in ${remaining}s... (${cancelHint()})`
     });
     function cancel() {
       clearInterval(interval);
       activeCancelFn = null;
       if (toast && typeof toast.setText === "function") toast.setText("Auto-continue canceled.");
       if (toast && typeof toast.close === "function") setTimeout(() => toast.close(), 1500);
-      logDebug("Auto-continue canceled - Ctrl held during countdown.");
+      logDebug("Auto-continue canceled - Primary pressed during countdown.");
     }
     activeCancelFn = cancel;
     const interval = setInterval(() => {
@@ -4756,7 +4960,7 @@ Version: v${version}`;
         return;
       }
       if (toast && typeof toast.setText === "function") {
-        toast.setText(`Spectating a new match in ${remaining}s... (Cancel by holding Ctrl)`);
+        toast.setText(`Spectating a new match in ${remaining}s... (${cancelHint()})`);
       }
     }, 1e3);
   }
@@ -4788,7 +4992,7 @@ Version: v${version}`;
     activeCancelFn = cancel;
     (function tick() {
       if (canceled) return;
-      overlay.textContent = `${LOG} Spectating a new match in ${remaining}s... (Cancel by holding Ctrl)`;
+      overlay.textContent = `${LOG} Spectating a new match in ${remaining}s... (${cancelHint()})`;
       if (remaining <= 0) {
         activeCancelFn = null;
         overlay.remove();
@@ -4801,12 +5005,6 @@ Version: v${version}`;
   }
 
   // packages/uc-tv/utils.js
-  function isTypingContext() {
-    const el = document.activeElement;
-    if (!el) return false;
-    const tag = el.tagName;
-    return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
-  }
   var SCRIPT_START = Date.now();
   var NAV_COOLDOWN_MS = 1e3;
   function navigationReady() {
@@ -4880,13 +5078,31 @@ Version: v${version}`;
     }
   }
   function bindChannelKeybinds(plugin) {
-    document.addEventListener("keydown", (e) => {
-      if (!CONFIG.masterEnabled) return;
-      if (!e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
-      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-      if (isTypingContext()) return;
-      e.preventDefault();
-      switchChannel(plugin, e.key === "ArrowRight" ? 1 : -1);
+    registerKeybind(plugin, {
+      key: "previousChannel",
+      name: "Previous Channel",
+      defaultCode: "ArrowLeft",
+      scope: "global",
+      // Ctrl+Left/Right is a native "jump a word" shortcut while typing
+      // (e.g. in chat) - guarding this specifically preserves that,
+      // unlike Patch Maker's shortcuts, which deliberately need to fire
+      // while a text field is focused.
+      guardTypingContext: true,
+      onMatch: () => {
+        if (!CONFIG.masterEnabled) return;
+        switchChannel(plugin, -1);
+      }
+    });
+    registerKeybind(plugin, {
+      key: "nextChannel",
+      name: "Next Channel",
+      defaultCode: "ArrowRight",
+      scope: "global",
+      guardTypingContext: true,
+      onMatch: () => {
+        if (!CONFIG.masterEnabled) return;
+        switchChannel(plugin, 1);
+      }
     });
   }
 
@@ -4990,7 +5206,7 @@ Version: v${version}`;
     padding: 6px;
   `;
     const header = document.createElement("div");
-    header.textContent = `UC TV Guide - ${list.length} shown | release Ctrl to close`;
+    header.textContent = `UC TV Guide - ${list.length} shown | release ${getPrimaryKeyDisplay()} to close`;
     header.style.cssText = `
     font-size: 12px;
     letter-spacing: 0.5px;
@@ -5105,30 +5321,24 @@ Version: v${version}`;
       guideOverlay = null;
     }
   }
-  var CTRL_HOLD_DELAY_MS = 250;
-  var ctrlHoldTimer = null;
   function bindChannelGuideKeybinds(plugin) {
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Control") {
+    registerKeybind(plugin, {
+      key: "channelGuide",
+      name: "Open Channel Guide",
+      scope: "global",
+      // Fires the instant Primary goes down, not gated behind
+      // confirming a hold first - this is what makes a simple tap
+      // cancel the auto-continue countdown, rather than needing to hold
+      // Primary the same way opening the guide does.
+      onPrimaryPress: () => {
         if (!CONFIG.masterEnabled) return;
-        if (isTypingContext()) return;
-        clearTimeout(ctrlHoldTimer);
-        ctrlHoldTimer = setTimeout(() => {
-          ctrlHoldTimer = null;
-          showChannelGuide(plugin);
-          cancelActiveCountdown();
-        }, CTRL_HOLD_DELAY_MS);
-        return;
-      }
-      if (e.ctrlKey && ctrlHoldTimer) {
-        clearTimeout(ctrlHoldTimer);
-        ctrlHoldTimer = null;
-      }
-    });
-    document.addEventListener("keyup", (e) => {
-      if (e.key === "Control") {
-        clearTimeout(ctrlHoldTimer);
-        ctrlHoldTimer = null;
+        cancelActiveCountdown();
+      },
+      onPrimaryAlone: () => {
+        if (!CONFIG.masterEnabled) return;
+        showChannelGuide(plugin);
+      },
+      onPrimaryRelease: () => {
         hideChannelGuide();
       }
     });
@@ -5171,7 +5381,7 @@ Version: v${version}`;
     if (!isSpectatePage()) return;
     bindChannelKeybinds(plugin);
     bindChannelGuideKeybinds(plugin);
-    logDebug("Ctrl+ArrowLeft/Right channel switching and hold-Ctrl channel guide active. 1s navigation cooldown after page load.");
+    logDebug("Channel switching and channel guide keybinds active (see the Keybinds settings category). 1s navigation cooldown after page load.");
     let handled = false;
     plugin.events.on("getResult", (data) => {
       logDebug("getResult fired - match ended.", data);
@@ -6040,199 +6250,6 @@ Version: v${version}`;
   cursor: pointer;
 }
 `;
-
-  // packages/core/keybinds.js
-  var CATEGORY = "Keybinds";
-  var HOLD_DELAY_MS = 250;
-  var NATIVE_MODIFIERS = /* @__PURE__ */ new Set(["Control", "Shift", "Alt"]);
-  var DEFAULT_PRIMARY_CODE = "Control";
-  var PRIMARY_KEY = "primaryKey";
-  var GM_PREFIX = "wizascript.keybinds.";
-  var ID_PREFIX = "underscript.plugin.Wizascript.keybinds.";
-  function storageKey(bindingKey) {
-    return `${GM_PREFIX}${bindingKey}`;
-  }
-  function readCode(bindingKey, defaultCode) {
-    return GM_getValue(storageKey(bindingKey), defaultCode);
-  }
-  function writeCode(bindingKey, code) {
-    GM_setValue(storageKey(bindingKey), code);
-  }
-  var DISPLAY_OVERRIDES = {
-    Control: "Ctrl",
-    Shift: "Shift",
-    Alt: "Alt",
-    Meta: "Meta",
-    ArrowUp: "Up Arrow",
-    ArrowDown: "Down Arrow",
-    ArrowLeft: "Left Arrow",
-    ArrowRight: "Right Arrow",
-    Space: "Space",
-    Escape: "Esc",
-    unbound: "Unbound"
-  };
-  function codeToDisplay(code) {
-    if (!code) return "Unbound";
-    if (DISPLAY_OVERRIDES[code]) return DISPLAY_OVERRIDES[code];
-    if (/^Key[A-Z]$/.test(code)) return code.slice(3);
-    if (/^Digit[0-9]$/.test(code)) return code.slice(5);
-    return code;
-  }
-  var settings = null;
-  var registry = [];
-  var bindingDefaults = /* @__PURE__ */ new Map();
-  var observerStarted = false;
-  function isTypingContext2() {
-    const el = document.activeElement;
-    if (!el) return false;
-    const tag = el.tagName;
-    return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
-  }
-  function enhanceInput(el, bindingKey, defaultCode) {
-    el.setAttribute("data-wizascript-keybind-enhanced", "true");
-    el.readOnly = true;
-    Object.assign(el.style, {
-      cursor: "pointer",
-      backgroundColor: "black",
-      color: "white",
-      border: "1px solid #b4b4b4",
-      borderRadius: "3px",
-      textAlign: "center"
-    });
-    function refreshDisplay() {
-      el.value = codeToDisplay(readCode(bindingKey, defaultCode));
-    }
-    refreshDisplay();
-    el.addEventListener("focus", () => {
-      el.style.border = "1px solid #40E0D0";
-      el.style.boxShadow = "0 0 4px #40E0D0";
-      el.value = "...?";
-      function capture(e) {
-        e.preventDefault();
-        const code = e.key === "Escape" ? "unbound" : e.code;
-        writeCode(bindingKey, code);
-        document.removeEventListener("keydown", capture, true);
-        el.blur();
-      }
-      document.addEventListener("keydown", capture, true);
-      el.addEventListener("blur", function onBlur() {
-        el.style.border = "1px solid #b4b4b4";
-        el.style.boxShadow = "none";
-        document.removeEventListener("keydown", capture, true);
-        refreshDisplay();
-        el.removeEventListener("blur", onBlur);
-      });
-    });
-  }
-  function startObserver() {
-    if (observerStarted) return;
-    observerStarted = true;
-    const observer = new MutationObserver(() => {
-      if (!bindingDefaults.size) return;
-      document.querySelectorAll(`input[id^="${ID_PREFIX}"]:not([data-wizascript-keybind-enhanced])`).forEach((el) => {
-        const bindingKey = el.id.slice(ID_PREFIX.length);
-        if (!bindingDefaults.has(bindingKey)) return;
-        enhanceInput(el, bindingKey, bindingDefaults.get(bindingKey));
-      });
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-  }
-  function matchesCode(e, code, defaultCode) {
-    if (code === defaultCode && NATIVE_MODIFIERS.has(defaultCode)) {
-      return e.key === defaultCode;
-    }
-    return e.code === code;
-  }
-  function getPrimaryCode() {
-    return readCode(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
-  }
-  function matchesSetting(e, binding) {
-    const code = readCode(binding.key, binding.defaultCode);
-    return matchesCode(e, code, binding.defaultCode);
-  }
-  var primaryHeld = false;
-  var holdTimer = null;
-  var comboFired = false;
-  function bindGlobalListeners() {
-    document.addEventListener("keydown", (e) => {
-      const primaryCode = getPrimaryCode();
-      const isPrimary = matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE);
-      if (isPrimary) {
-        if (primaryHeld) return;
-        primaryHeld = true;
-        comboFired = false;
-        registry.forEach((b) => {
-          if (b.onPrimaryPress) b.onPrimaryPress(e);
-        });
-        clearTimeout(holdTimer);
-        holdTimer = setTimeout(() => {
-          if (comboFired) return;
-          if (isTypingContext2()) return;
-          registry.forEach((b) => {
-            if (b.scope === "global" && b.onPrimaryAlone) b.onPrimaryAlone(e);
-          });
-        }, HOLD_DELAY_MS);
-        return;
-      }
-      if (!primaryHeld) return;
-      clearTimeout(holdTimer);
-      for (const b of registry) {
-        if (!matchesSetting(e, b)) continue;
-        if (b.scope === "scoped") {
-          const active = document.activeElement;
-          if (!active || !active.matches(b.selector)) continue;
-        }
-        comboFired = true;
-        e.preventDefault();
-        b.onMatch(e);
-        break;
-      }
-    });
-    document.addEventListener("keyup", (e) => {
-      const primaryCode = getPrimaryCode();
-      if (matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE)) {
-        primaryHeld = false;
-        clearTimeout(holdTimer);
-        registry.forEach((b) => {
-          if (b.scope === "global" && b.onPrimaryRelease) b.onPrimaryRelease(e);
-        });
-      }
-    });
-  }
-  function ensureCore(plugin) {
-    if (settings) return;
-    settings = createFeatureSettings(plugin, "keybinds", CATEGORY);
-    startObserver();
-    bindGlobalListeners();
-    settings.add(PRIMARY_KEY, {
-      name: "Primary Key",
-      note: 'Click, then press a key. Held down to activate "Primary + <key>" bindings below. Tap alone for actions that trigger on a simple press.',
-      type: "text",
-      default: DEFAULT_PRIMARY_CODE
-    });
-    bindingDefaults.set(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
-  }
-  function registerKeybind(plugin, config) {
-    const {
-      key,
-      name,
-      defaultCode,
-      scope = "global",
-      selector,
-      onMatch,
-      onPrimaryAlone,
-      onPrimaryPress,
-      onPrimaryRelease
-    } = config;
-    ensureCore(plugin);
-    settings.add(key, {
-      name: `${name} - Primary + <key>`,
-      type: "text",
-      default: defaultCode
-    });
-    bindingDefaults.set(key, defaultCode);
-    registry.push({ key, defaultCode, scope, selector, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease });
-  }
 
   // packages/misc/index.js
   function initMisc(plugin) {

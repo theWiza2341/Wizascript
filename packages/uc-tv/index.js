@@ -5,13 +5,18 @@
 // the same shared `plugin` object every other Wizascript package
 // does, wired in by manifest.js/bootstrap.js.
 //
-// Settings register unconditionally (site-wide), same as how
-// UnderScript's own settings are always reachable regardless of what
-// page you're on - so people can see/adjust what UC TV will do without
-// needing to be actively spectating. Everything ACTUAL (keybinds, the
-// getResult listener, the debug console commands) stays gated to
-// Spectate pages via the same matchesPage() utility Deck Tracker uses,
-// since none of it does anything meaningful anywhere else.
+// Settings (including keybinds) register unconditionally (site-wide),
+// same as how UnderScript's own settings are always reachable
+// regardless of what page you're on - so people can see/adjust what
+// UC TV will do, and remap its keybinds, without needing to be
+// actively spectating. This applies even while "Enable UC TV" itself
+// is off - unlike the Filter Settings category (which only makes
+// sense once UC TV is actually running), keybinds are just
+// preferences and stay visible/editable 24/7 regardless of either
+// page or enabled state. Only the ACTUAL effect of pressing a
+// keybind - and the getResult auto-continue listener - stay gated to
+// Spectate pages, since neither does anything meaningful anywhere
+// else.
 
 import { matchesPage } from '../core/page-match.js';
 import { DIVISION_TIERS } from './divisions.js';
@@ -35,11 +40,15 @@ export function initUcTv(plugin) {
   window.__ucTVScope = scopeActiveGames;
   window.__ucTVSettings = dumpSettingsState;
 
-  if (!isSpectatePage()) return;
-
+  // Registers the actual keybind settings unconditionally - each
+  // binding checks internally whether it's on a Spectate page before
+  // doing anything, so the settings stay visible/remappable
+  // everywhere while pressing them stays a no-op elsewhere.
   bindChannelKeybinds(plugin);
   bindChannelGuideKeybinds(plugin);
-  logDebug('Channel switching and channel guide keybinds active (see the Keybinds settings category). 1s navigation cooldown after page load.');
+  logDebug('Channel switching and channel guide keybinds registered (see the Keybinds settings category).');
+
+  if (!isSpectatePage()) return;
 
   let handled = false; // guards against getResult firing more than once per page load
   plugin.events.on('getResult', (data) => {

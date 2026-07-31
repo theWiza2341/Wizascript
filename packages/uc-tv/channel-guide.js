@@ -7,6 +7,11 @@ import { divisionIconUrl } from './divisions.js';
 import { cancelActiveCountdown } from './countdown.js';
 import { navigationReady } from './utils.js';
 import { registerKeybind, getPrimaryKeyDisplay } from '../core/keybinds.js';
+import { matchesPage } from '../core/page-match.js';
+
+function isSpectatePage() {
+  return matchesPage({ prefix: '/Spectate' });
+}
 
 // Undertale's canonical soul colors - these are real, well-known
 // values, not a guess at Undercards' specific palette. The soul class
@@ -293,14 +298,17 @@ export function bindChannelGuideKeybinds(plugin) {
     // cancel the auto-continue countdown, rather than needing to hold
     // Primary the same way opening the guide does.
     onPrimaryPress: () => {
+      if (!isSpectatePage()) return; // registered site-wide, but only does anything while spectating
       if (!CONFIG.masterEnabled) return;
       cancelActiveCountdown();
     },
     onPrimaryAlone: () => {
+      if (!isSpectatePage()) return;
       if (!CONFIG.masterEnabled) return;
       showChannelGuide(plugin);
     },
     onPrimaryRelease: () => {
+      if (!isSpectatePage()) return;
       hideChannelGuide();
     }
   });

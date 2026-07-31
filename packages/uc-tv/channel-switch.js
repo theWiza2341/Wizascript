@@ -6,6 +6,11 @@ import { applyFilters } from './filters.js';
 import { showCountdown } from './countdown.js';
 import { navigationReady } from './utils.js';
 import { registerKeybind } from '../core/keybinds.js';
+import { matchesPage } from '../core/page-match.js';
+
+function isSpectatePage() {
+  return matchesPage({ prefix: '/Spectate' });
+}
 
 export async function goToNextMatch(plugin) {
   let games;
@@ -103,6 +108,7 @@ export function bindChannelKeybinds(plugin) {
     // while a text field is focused.
     guardTypingContext: true,
     onMatch: () => {
+      if (!isSpectatePage()) return; // registered site-wide, but only does anything while spectating
       if (!CONFIG.masterEnabled) return;
       switchChannel(plugin, -1);
     }
@@ -114,6 +120,7 @@ export function bindChannelKeybinds(plugin) {
     scope: 'global',
     guardTypingContext: true,
     onMatch: () => {
+      if (!isSpectatePage()) return;
       if (!CONFIG.masterEnabled) return;
       switchChannel(plugin, 1);
     }

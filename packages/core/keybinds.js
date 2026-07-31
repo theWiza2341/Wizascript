@@ -78,6 +78,8 @@ function codeToDisplay(code) {
 let settings = null;
 const registry = []; // { key, defaultCode, scope, selector, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease }
 const bindingDefaults = new Map(); // key -> defaultCode, for the observer to match against
+const dividerKeys = new Set(); // keys the observer should style as a group divider, not a capture widget
+const seenPackageLabels = new Set(); // which packageLabels already have a divider inserted
 let observerStarted = false;
 
 function isTypingContext() {
@@ -131,13 +133,35 @@ function enhanceInput(el, bindingKey, defaultCode) {
   });
 }
 
+// Purely visual, read-only, unfocusable - a group header within the
+// single flat Keybinds list, distinguishing it from the real
+// click-to-capture inputs enhanceInput() styles.
+function enhanceDivider(el) {
+  el.setAttribute('data-wizascript-keybind-enhanced', 'true');
+  el.readOnly = true;
+  el.tabIndex = -1;
+  Object.assign(el.style, {
+    backgroundColor: 'transparent',
+    border: 'none',
+    borderBottom: '1px solid #666',
+    color: '#8ab4f8',
+    fontWeight: 'bold',
+    cursor: 'default',
+    pointerEvents: 'none'
+  });
+}
+
 function startObserver() {
   if (observerStarted) return;
   observerStarted = true;
   const observer = new MutationObserver(() => {
-    if (!bindingDefaults.size) return; // cheap bail once there's nothing left to look for
+    if (!bindingDefaults.size && !dividerKeys.size) return; // cheap bail once there's nothing left to look for
     document.querySelectorAll(`input[id^="${ID_PREFIX}"]:not([data-wizascript-keybind-enhanced])`).forEach((el) => {
       const bindingKey = el.id.slice(ID_PREFIX.length);
+      if (dividerKeys.has(bindingKey)) {
+        enhanceDivider(el);
+        return;
+      }
       if (!bindingDefaults.has(bindingKey)) return;
       enhanceInput(el, bindingKey, bindingDefaults.get(bindingKey));
     });
@@ -258,6 +282,23 @@ export function registerKeybind(plugin, config) {
   } = config;
 
   ensureCore(plugin);
+
+  // Auto-inserts a one-time visual divider the first time we see a
+  // new package's label, so its bindings stay visually grouped in the
+  // single flat Keybinds list. Happens regardless of whether THIS
+  // particular call has a secondary-key setting of its own (a
+  // press/alone/release-only binding still deserves its group header
+  // if it's the first one registered for its package).
+  if (packageLabel && !seenPackageLabels.has(packageLabel)) {
+    seenPackageLabels.add(packageLabel);
+    const dividerKey = `__divider_${packageLabel.replace(/\s+/g, '_')}`;
+    settings.add(dividerKey, {
+      name: `\u2014 ${packageLabel} \u2014`,
+      type: 'text',
+      default: ''
+    });
+    dividerKeys.add(dividerKey);
+  }
 
   // Only register a secondary-key setting if there's actually a combo
   // to bind it to - a pure "tap/hold Primary alone" binding (like the

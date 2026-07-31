@@ -1,13 +1,14 @@
 // packages/uc-tv/countdown.js
 
 import { LOG, logDebug } from './settings.js';
+import { getPrimaryKeyDisplay } from '../core/keybinds.js';
 
 let activeCancelFn = null;
 
-// Called from channel-guide.js's Ctrl-hold handler - a genuine hold
-// (not a Ctrl+<key> combo) cancels any active auto-continue
-// countdown, since "open the guide to pick manually" and "cancel the
-// auto-pick" are the same underlying intent.
+// Called from channel-guide.js's onPrimaryPress hook - a tap of
+// Primary cancels any active auto-continue countdown, since "open the
+// guide to pick manually" and "cancel the auto-pick" are the same
+// underlying intent.
 export function cancelActiveCountdown() {
   if (activeCancelFn) activeCancelFn();
 }
@@ -19,6 +20,10 @@ export function showCountdown(plugin, seconds, onComplete) {
     console.warn(`${LOG} plugin.toast not available - falling back to a custom overlay.`);
     showCountdownOverlay(seconds, onComplete);
   }
+}
+
+function cancelHint() {
+  return `Cancel by pressing ${getPrimaryKeyDisplay()}`;
 }
 
 // Uses UnderScript's own toast system (the same one that shows the
@@ -34,7 +39,7 @@ function showCountdownViaToast(plugin, seconds, onComplete) {
   let remaining = seconds;
   const toast = plugin.toast({
     title: 'UC TV',
-    text: `Spectating a new match in ${remaining}s... (Cancel by holding Ctrl)`
+    text: `Spectating a new match in ${remaining}s... (${cancelHint()})`
   });
 
   function cancel() {
@@ -42,7 +47,7 @@ function showCountdownViaToast(plugin, seconds, onComplete) {
     activeCancelFn = null;
     if (toast && typeof toast.setText === 'function') toast.setText('Auto-continue canceled.');
     if (toast && typeof toast.close === 'function') setTimeout(() => toast.close(), 1500);
-    logDebug('Auto-continue canceled - Ctrl held during countdown.');
+    logDebug('Auto-continue canceled - Primary pressed during countdown.');
   }
   activeCancelFn = cancel;
 
@@ -56,7 +61,7 @@ function showCountdownViaToast(plugin, seconds, onComplete) {
       return;
     }
     if (toast && typeof toast.setText === 'function') {
-      toast.setText(`Spectating a new match in ${remaining}s... (Cancel by holding Ctrl)`);
+      toast.setText(`Spectating a new match in ${remaining}s... (${cancelHint()})`);
     }
   }, 1000);
 }
@@ -93,7 +98,7 @@ function showCountdownOverlay(seconds, onComplete) {
 
   (function tick() {
     if (canceled) return;
-    overlay.textContent = `${LOG} Spectating a new match in ${remaining}s... (Cancel by holding Ctrl)`;
+    overlay.textContent = `${LOG} Spectating a new match in ${remaining}s... (${cancelHint()})`;
     if (remaining <= 0) {
       activeCancelFn = null;
       overlay.remove();

@@ -5,7 +5,8 @@ import { fetchLiveGamesFull } from './game-list.js';
 import { isModeAllowed, levelsPass, ranksPass } from './filters.js';
 import { divisionIconUrl } from './divisions.js';
 import { cancelActiveCountdown } from './countdown.js';
-import { isTypingContext, navigationReady } from './utils.js';
+import { navigationReady } from './utils.js';
+import { registerKeybind, getPrimaryKeyDisplay } from '../core/keybinds.js';
 
 // Undertale's canonical soul colors - these are real, well-known
 // values, not a guess at Undercards' specific palette. The soul class
@@ -140,7 +141,7 @@ async function showChannelGuide(plugin) {
   `;
 
   const header = document.createElement('div');
-  header.textContent = `UC TV Guide - ${list.length} shown | release Ctrl to close`;
+  header.textContent = `UC TV Guide - ${list.length} shown | release ${getPrimaryKeyDisplay()} to close`;
   header.style.cssText = `
     font-size: 12px;
     letter-spacing: 0.5px;
@@ -279,44 +280,27 @@ function hideChannelGuide() {
   }
 }
 
-// Ctrl alone (held, not part of a combo) opens the guide. This can't
-// just react to Ctrl's own keydown immediately - every single
-// Ctrl+<key> shortcut (copy, paste, find, our own Ctrl+Arrow, etc.)
-// necessarily fires Ctrl's keydown a moment before the real key, so
-// an instant trigger would flash the guide open on all of them. A
-// short delay that gets canceled the moment any other key follows
-// while Ctrl is down distinguishes "holding Ctrl alone" from "the
-// start of a shortcut" without needing to guess in advance.
-const CTRL_HOLD_DELAY_MS = 250;
-let ctrlHoldTimer = null;
-
 export function bindChannelGuideKeybinds(plugin) {
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Control') {
+  // No secondary key involved - this is purely about Primary alone,
+  // so no defaultCode/onMatch here (registerKeybind skips creating a
+  // "Primary + <key>" setting entry when onMatch is omitted).
+  registerKeybind(plugin, {
+    key: 'channelGuide',
+    name: 'Open Channel Guide',
+    scope: 'global',
+    // Fires the instant Primary goes down, not gated behind
+    // confirming a hold first - this is what makes a simple tap
+    // cancel the auto-continue countdown, rather than needing to hold
+    // Primary the same way opening the guide does.
+    onPrimaryPress: () => {
       if (!CONFIG.masterEnabled) return;
-      if (isTypingContext()) return; // Ctrl+A/C/V/Z are common while composing chat
-      clearTimeout(ctrlHoldTimer);
-      ctrlHoldTimer = setTimeout(() => {
-        ctrlHoldTimer = null;
-        showChannelGuide(plugin);
-        // A genuine Ctrl hold also cancels any active auto-continue
-        // countdown - opening the guide to manually pick a match and
-        // canceling the auto-pick are the same underlying intent.
-        cancelActiveCountdown();
-      }, CTRL_HOLD_DELAY_MS);
-      return;
-    }
-    if (e.ctrlKey && ctrlHoldTimer) {
-      // A real key followed Ctrl within the delay window - this is a
-      // shortcut combo, not a hold. Cancel the pending guide.
-      clearTimeout(ctrlHoldTimer);
-      ctrlHoldTimer = null;
-    }
-  });
-  document.addEventListener('keyup', (e) => {
-    if (e.key === 'Control') {
-      clearTimeout(ctrlHoldTimer);
-      ctrlHoldTimer = null;
+      cancelActiveCountdown();
+    },
+    onPrimaryAlone: () => {
+      if (!CONFIG.masterEnabled) return;
+      showChannelGuide(plugin);
+    },
+    onPrimaryRelease: () => {
       hideChannelGuide();
     }
   });

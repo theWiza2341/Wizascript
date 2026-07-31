@@ -191,8 +191,14 @@ function bindGlobalListeners() {
     if (!primaryHeld) return;
     clearTimeout(holdTimer);
 
+    // First match wins - mirrors Galascript's own documented
+    // conflict-resolution rule ("if bound to multiple actions, the
+    // highest setting takes priority") rather than firing every
+    // binding that happens to share the same key.
     for (const b of registry) {
+      if (!b.onMatch) continue; // press/alone/release-only binding - nothing to match here
       if (!matchesSetting(e, b)) continue;
+      if (b.guardTypingContext && isTypingContext()) continue;
       if (b.scope === 'scoped') {
         const active = document.activeElement;
         if (!active || !active.matches(b.selector)) continue;
@@ -246,19 +252,26 @@ export function registerKeybind(plugin, config) {
   const {
     key, name, defaultCode,
     scope = 'global', selector,
+    guardTypingContext = false,
     onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease
   } = config;
 
   ensureCore(plugin);
 
-  settings.add(key, {
-    name: `${name} - Primary + <key>`,
-    type: 'text',
-    default: defaultCode
-  });
-  bindingDefaults.set(key, defaultCode);
+  // Only register a secondary-key setting if there's actually a combo
+  // to bind it to - a pure "tap/hold Primary alone" binding (like the
+  // channel guide) has nothing meaningful to put in a "Primary + <key>"
+  // field, and showing one anyway would be actively misleading.
+  if (onMatch) {
+    settings.add(key, {
+      name: `${name} - Primary + <key>`,
+      type: 'text',
+      default: defaultCode
+    });
+    bindingDefaults.set(key, defaultCode);
+  }
 
-  registry.push({ key, defaultCode, scope, selector, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease });
+  registry.push({ key, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease });
 }
 
 // For UI that wants to display the current Primary key, e.g. a toast

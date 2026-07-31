@@ -39,7 +39,7 @@ export function initUcTv(plugin) {
 
   bindChannelKeybinds(plugin);
   bindChannelGuideKeybinds(plugin);
-  logDebug('Ctrl+ArrowLeft/Right channel switching and hold-Ctrl channel guide active. 1s navigation cooldown after page load.');
+  logDebug('Channel switching and channel guide keybinds active (see the Keybinds settings category). 1s navigation cooldown after page load.');
 
   let handled = false; // guards against getResult firing more than once per page load
   plugin.events.on('getResult', (data) => {

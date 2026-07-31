@@ -4,7 +4,8 @@ import { LOG, CONFIG, logDebug } from './settings.js';
 import { fetchLiveGames, parseElapsedSeconds } from './game-list.js';
 import { applyFilters } from './filters.js';
 import { showCountdown } from './countdown.js';
-import { isTypingContext, navigationReady } from './utils.js';
+import { navigationReady } from './utils.js';
+import { registerKeybind } from '../core/keybinds.js';
 
 export async function goToNextMatch(plugin) {
   let games;
@@ -91,12 +92,30 @@ async function switchChannel(plugin, direction) {
 }
 
 export function bindChannelKeybinds(plugin) {
-  document.addEventListener('keydown', (e) => {
-    if (!CONFIG.masterEnabled) return;
-    if (!e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
-    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-    if (isTypingContext()) return; // don't hijack cursor movement while typing (e.g. in chat)
-    e.preventDefault();
-    switchChannel(plugin, e.key === 'ArrowRight' ? 1 : -1);
+  registerKeybind(plugin, {
+    key: 'previousChannel',
+    name: 'Previous Channel',
+    defaultCode: 'ArrowLeft',
+    scope: 'global',
+    // Ctrl+Left/Right is a native "jump a word" shortcut while typing
+    // (e.g. in chat) - guarding this specifically preserves that,
+    // unlike Patch Maker's shortcuts, which deliberately need to fire
+    // while a text field is focused.
+    guardTypingContext: true,
+    onMatch: () => {
+      if (!CONFIG.masterEnabled) return;
+      switchChannel(plugin, -1);
+    }
+  });
+  registerKeybind(plugin, {
+    key: 'nextChannel',
+    name: 'Next Channel',
+    defaultCode: 'ArrowRight',
+    scope: 'global',
+    guardTypingContext: true,
+    onMatch: () => {
+      if (!CONFIG.masterEnabled) return;
+      switchChannel(plugin, 1);
+    }
   });
 }

@@ -330,6 +330,8 @@
   var settings = null;
   var registry = [];
   var bindingDefaults = /* @__PURE__ */ new Map();
+  var dividerKeys = /* @__PURE__ */ new Set();
+  var seenPackageLabels = /* @__PURE__ */ new Set();
   var observerStarted = false;
   function isTypingContext() {
     const el = document.activeElement;
@@ -373,13 +375,31 @@
       });
     });
   }
+  function enhanceDivider(el) {
+    el.setAttribute("data-wizascript-keybind-enhanced", "true");
+    el.readOnly = true;
+    el.tabIndex = -1;
+    Object.assign(el.style, {
+      backgroundColor: "transparent",
+      border: "none",
+      borderBottom: "1px solid #666",
+      color: "#8ab4f8",
+      fontWeight: "bold",
+      cursor: "default",
+      pointerEvents: "none"
+    });
+  }
   function startObserver() {
     if (observerStarted) return;
     observerStarted = true;
     const observer = new MutationObserver(() => {
-      if (!bindingDefaults.size) return;
+      if (!bindingDefaults.size && !dividerKeys.size) return;
       document.querySelectorAll(`input[id^="${ID_PREFIX}"]:not([data-wizascript-keybind-enhanced])`).forEach((el) => {
         const bindingKey = el.id.slice(ID_PREFIX.length);
+        if (dividerKeys.has(bindingKey)) {
+          enhanceDivider(el);
+          return;
+        }
         if (!bindingDefaults.has(bindingKey)) return;
         enhanceInput(el, bindingKey, bindingDefaults.get(bindingKey));
       });
@@ -471,15 +491,27 @@
       scope = "global",
       selector,
       guardTypingContext = false,
+      packageLabel,
       onMatch,
       onPrimaryAlone,
       onPrimaryPress,
       onPrimaryRelease
     } = config;
     ensureCore(plugin);
+    if (packageLabel && !seenPackageLabels.has(packageLabel)) {
+      seenPackageLabels.add(packageLabel);
+      const dividerKey = `__divider_${packageLabel.replace(/\s+/g, "_")}`;
+      settings.add(dividerKey, {
+        name: `\u2014 ${packageLabel} \u2014`,
+        type: "text",
+        default: ""
+      });
+      dividerKeys.add(dividerKey);
+    }
     if (onMatch) {
+      const label = packageLabel ? `[${packageLabel}] ${name}` : name;
       settings.add(key, {
-        name: `${name} - Primary + <key>`,
+        name: `${label} - Primary + <key>`,
         type: "text",
         default: defaultCode
       });
@@ -1669,7 +1701,8 @@ Version: v${version}`;
       li.classList.add(cycleOrder[newIdx]);
       saveState();
     }
-    registerKeybind(plugin, {
+    const register = (config) => registerKeybind(plugin, { ...config, packageLabel: "Patch Maker" });
+    register({
       key: "cycleCategoryUp",
       name: "Cycle Entry Category Up",
       defaultCode: "Comma",
@@ -1680,7 +1713,7 @@ Version: v${version}`;
         if (li) cycleCategory(li, -1);
       }
     });
-    registerKeybind(plugin, {
+    register({
       key: "cycleCategoryDown",
       name: "Cycle Entry Category Down",
       defaultCode: "Period",
@@ -1691,7 +1724,7 @@ Version: v${version}`;
         if (li) cycleCategory(li, 1);
       }
     });
-    registerKeybind(plugin, {
+    register({
       key: "moveEntryUp",
       name: "Move Entry Up",
       defaultCode: "ArrowUp",
@@ -1702,7 +1735,7 @@ Version: v${version}`;
         if (li) moveLi(li, -1);
       }
     });
-    registerKeybind(plugin, {
+    register({
       key: "moveEntryDown",
       name: "Move Entry Down",
       defaultCode: "ArrowDown",
@@ -1713,7 +1746,7 @@ Version: v${version}`;
         if (li) moveLi(li, 1);
       }
     });
-    registerKeybind(plugin, {
+    register({
       key: "moveSectionUp",
       name: "Move Balance Section Up",
       defaultCode: "ArrowUp",
@@ -1727,7 +1760,7 @@ Version: v${version}`;
         if (label) setTimeout(() => label.focus(), 0);
       }
     });
-    registerKeybind(plugin, {
+    register({
       key: "moveSectionDown",
       name: "Move Balance Section Down",
       defaultCode: "ArrowDown",
@@ -1741,7 +1774,7 @@ Version: v${version}`;
         if (label) setTimeout(() => label.focus(), 0);
       }
     });
-    registerKeybind(plugin, {
+    register({
       key: "moveCardUp",
       name: "Move Card Up",
       defaultCode: "ArrowUp",
@@ -1749,7 +1782,7 @@ Version: v${version}`;
       selector: ".uc-card-item",
       onMatch: () => newCards.moveCardItem(document.activeElement, -1)
     });
-    registerKeybind(plugin, {
+    register({
       key: "moveCardDown",
       name: "Move Card Down",
       defaultCode: "ArrowDown",
@@ -2107,8 +2140,6 @@ Version: v${version}`;
   }
   function initPatchMaker(plugin) {
     const settings2 = registerPatchMakerSettings(plugin);
-    if (!settings2.enabled.value()) return;
-    if (!isPatchNotesPage()) return;
     const logger = createLogger("PatchMaker");
     const originalWarn = logger.warn.bind(logger);
     const originalLog = logger.log.bind(logger);
@@ -2122,9 +2153,6 @@ Version: v${version}`;
     let underlineTokens = [];
     let cardNameMap = /* @__PURE__ */ new Map();
     const overlay = createPatchMakerOverlay({
-      // The only change from before - plugin is now passed through so
-      // the overlay can register its own keybinds via the shared
-      // registry, instead of the old fixed Ctrl/Shift+Arrow handling.
       plugin,
       logger,
       version: FEATURE_VERSION,
@@ -2136,6 +2164,8 @@ Version: v${version}`;
       getOpenOnLoad: () => settings2.openOnLoad.value()
     });
     settings2.hideControls.on((value) => overlay.setControlsHidden(value));
+    if (!settings2.enabled.value()) return;
+    if (!isPatchNotesPage()) return;
     async function refreshLocalizedData() {
       const languageLabel = settings2.language.value();
       const { tokens, localizedColors } = await buildLocalizedFormattingData(languageLabel, BASE_WORD_COLORS);
@@ -5145,6 +5175,7 @@ Version: v${version}`;
       name: "Previous Channel",
       defaultCode: "ArrowLeft",
       scope: "global",
+      packageLabel: "UC TV",
       // Ctrl+Left/Right is a native "jump a word" shortcut while typing
       // (e.g. in chat) - guarding this specifically preserves that,
       // unlike Patch Maker's shortcuts, which deliberately need to fire
@@ -5161,6 +5192,7 @@ Version: v${version}`;
       name: "Next Channel",
       defaultCode: "ArrowRight",
       scope: "global",
+      packageLabel: "UC TV",
       guardTypingContext: true,
       onMatch: () => {
         if (!isSpectatePage()) return;
@@ -5393,6 +5425,7 @@ Version: v${version}`;
       key: "channelGuide",
       name: "Open Channel Guide",
       scope: "global",
+      packageLabel: "UC TV",
       // Fires the instant Primary goes down, not gated behind
       // confirming a hold first - this is what makes a simple tap
       // cancel the auto-continue countdown, rather than needing to hold
@@ -6339,7 +6372,7 @@ Version: v${version}`;
       key: "toggleNotepad",
       name: "Toggle Notepad",
       defaultCode: "KeyO",
-      defaultDisplay: "O",
+      packageLabel: "Notepad",
       onMatch: () => {
         const next = !settings2.enableNotepad.value();
         settings2.enableNotepad.set(next);
@@ -6350,7 +6383,7 @@ Version: v${version}`;
       key: "resetNotepad",
       name: "Reset Notepad",
       defaultCode: "KeyN",
-      defaultDisplay: "N",
+      packageLabel: "Notepad",
       onMatch: () => {
         forceResetNotepad();
         if (settings2.enableNotepad.value()) {

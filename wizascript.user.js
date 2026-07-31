@@ -5935,6 +5935,21 @@ Version: v${version}`;
       notifyHistoryChange();
       return true;
     }
+    function resetAll() {
+      while (layers.length > 1) {
+        const removed = layers.pop();
+        removed.canvas.remove();
+      }
+      layers[0].ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      activeLayerIndex = 1;
+      paintBackground(DEFAULT_BACKGROUND);
+      undoStack = [];
+      redoStack = [];
+      clearTimeout(saveTimer);
+      clearSavedDrawing();
+      notifyLayersChange();
+      notifyHistoryChange();
+    }
     function clear() {
       pushUndoSnapshot();
       activeCtx().clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -6013,6 +6028,7 @@ Version: v${version}`;
       endStroke,
       clear,
       fill,
+      resetAll,
       undo,
       redo,
       setOnHistoryChange: (cb) => {
@@ -6419,7 +6435,19 @@ Version: v${version}`;
       redoBtn.classList.toggle("wizascript-notepad-history-btn-disabled", !canRedo);
     });
     clearBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
-    clearBtn.addEventListener("click", () => surface.clear(), { signal });
+    clearBtn.addEventListener("click", () => {
+      surface.resetAll();
+      renderLayerButtons();
+      currentPenColor = DEFAULT_PEN_STATE.color;
+      colorIndicator.style.background = currentPenColor;
+      surface.setStrokeColor(currentPenColor);
+      picker.setState(DEFAULT_PEN_STATE.hue, DEFAULT_PEN_STATE.saturation, DEFAULT_PEN_STATE.lightness);
+      clearSavedPenColor();
+      clearRecentColors();
+      recentColorsRow.render([]);
+      titleInput.value = DEFAULT_TITLE;
+      clearSavedTitle();
+    }, { signal });
     saveBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
     saveBtn.addEventListener("click", () => {
       surface.downloadAsPng(`${sanitizeFilename(titleInput.value)}.png`);

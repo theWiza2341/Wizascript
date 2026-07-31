@@ -1769,7 +1769,7 @@ Version: v${version}`;
       li.classList.add(cycleOrder[newIdx]);
       saveState();
     }
-    const register = (config) => registerKeybind(plugin, { ...config, packageLabel: "Patch Maker" });
+    const register = (config) => registerKeybind(plugin, { ...config, packageLabel: "Patch Maker", guardTypingContext: false });
     register({
       key: "cycleCategoryUp",
       name: "Cycle Entry Category Up",
@@ -4729,7 +4729,11 @@ Version: v${version}`;
           logger.log("hud", "Add-tracker button repositioned by drag.", { left: rect.left, top: rect.top });
         }
       });
-      btn.addEventListener("dblclick", () => {
+      btn.addEventListener("mousedown", (e) => {
+        if (e.button === 1) e.preventDefault();
+      });
+      btn.addEventListener("auxclick", (e) => {
+        if (e.button !== 1) return;
         hasCustomPosition = false;
         clearSavedButtonPosition();
         reposition();

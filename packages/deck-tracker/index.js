@@ -301,7 +301,16 @@ export function initDeckTracker(plugin) {
       }
     });
 
-    btn.addEventListener("dblclick", () => {
+    // Middle-click, not double-click - the first click of a would-be
+    // double-click already fires the normal onclick handler below and
+    // opens the picker before a second click could ever register as a
+    // reset. auxclick (not click) is what actually fires for the
+    // middle button in every major browser.
+    btn.addEventListener("mousedown", (e) => {
+      if (e.button === 1) e.preventDefault(); // stop the browser's own middle-click autoscroll mode from kicking in
+    });
+    btn.addEventListener("auxclick", (e) => {
+      if (e.button !== 1) return;
       hasCustomPosition = false;
       clearSavedButtonPosition();
       reposition(); // snaps back to avatar-relative immediately rather than waiting for the next sync tick

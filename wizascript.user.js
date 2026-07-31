@@ -6409,11 +6409,11 @@ Version: v${version}`;
 
   // manifest.js
   bootstrap((plugin) => {
-    initDeckTracker(plugin);
-    initMisc(plugin);
     initPatchMaker(plugin);
     initTrueHubBridge(plugin);
+    initDeckTracker(plugin);
     initUcTv(plugin);
+    initMisc(plugin);
     flushKeybindRegistrations();
   });
 })();

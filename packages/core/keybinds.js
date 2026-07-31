@@ -189,6 +189,10 @@ let primaryHeld = false;
 let holdTimer = null;
 let comboFired = false; // true once a secondary key has matched during this hold, so onPrimaryAlone doesn't ALSO fire
 
+const DOUBLE_TAP_WINDOW_MS = 400;
+let tapCount = 0;
+let lastTapTime = 0;
+
 function bindGlobalListeners() {
   document.addEventListener('keydown', (e) => {
     const primaryCode = getPrimaryCode();
@@ -199,14 +203,36 @@ function bindGlobalListeners() {
       primaryHeld = true;
       comboFired = false;
 
-      registry.forEach((b) => { if (b.onPrimaryPress) b.onPrimaryPress(e); });
+      // Double-tap detection - measured press-to-press (matching
+      // double-click conventions), not tied to release timing at all,
+      // since a "tap" here just means "Primary went down again soon
+      // after it last went down." Resets after firing so a 3rd rapid
+      // tap starts a fresh pair rather than re-triggering immediately.
+      const now = Date.now();
+      tapCount = (now - lastTapTime <= DOUBLE_TAP_WINDOW_MS) ? tapCount + 1 : 1;
+      lastTapTime = now;
+      if (tapCount === 2) {
+        tapCount = 0;
+        registry.forEach((b) => {
+          if (b.scope !== 'global' || !b.onPrimaryDoubleTap) return;
+          if (b.guardTypingContext && isTypingContext()) return;
+          b.onPrimaryDoubleTap(e);
+        });
+      }
+
+      registry.forEach((b) => {
+        if (!b.onPrimaryPress) return;
+        if (b.guardTypingContext && isTypingContext()) return;
+        b.onPrimaryPress(e);
+      });
 
       clearTimeout(holdTimer);
       holdTimer = setTimeout(() => {
         if (comboFired) return;
-        if (isTypingContext()) return;
         registry.forEach((b) => {
-          if (b.scope === 'global' && b.onPrimaryAlone) b.onPrimaryAlone(e);
+          if (b.scope !== 'global' || !b.onPrimaryAlone) return;
+          if (b.guardTypingContext && isTypingContext()) return;
+          b.onPrimaryAlone(e);
         });
       }, HOLD_DELAY_MS);
       return;
@@ -239,10 +265,16 @@ function bindGlobalListeners() {
     if (matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE)) {
       primaryHeld = false;
       clearTimeout(holdTimer);
-      registry.forEach((b) => { if (b.scope === 'global' && b.onPrimaryRelease) b.onPrimaryRelease(e); });
+      registry.forEach((b) => {
+        if (b.scope !== 'global' || !b.onPrimaryRelease) return;
+        if (b.guardTypingContext && isTypingContext()) return;
+        b.onPrimaryRelease(e);
+      });
     }
   });
 }
+
+let primaryKeySetting = null; // captured for .show() - see the General/open-settings binding below
 
 function ensureCore(plugin) {
   if (settings) return;
@@ -251,14 +283,56 @@ function ensureCore(plugin) {
   startObserver();
   bindGlobalListeners();
 
-  settings.add(PRIMARY_KEY, {
+  primaryKeySetting = settings.add(PRIMARY_KEY, {
     name: 'Primary Key',
     note: 'Click to remap. Hold for combos below, or tap alone.',
     type: 'text',
     default: DEFAULT_PRIMARY_CODE
   });
   bindingDefaults.set(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
+
+  // "General" - registered directly here (not through any specific
+  // package's own registerKeybind calls) so it always lands right
+  // under Primary Key, before any package's own divider. Double Tap
+  // Primary has no secondary key to remap (it's not a "Primary +
+  // <key>" combo at all), so there's no capture-widget setting for
+  // it - just an informational row, reusing the same read-only
+  // divider styling. Uses the registry's default guardTypingContext
+  // (true) like everything except Patch Maker, so it stays inert
+  // while typing in chat or editing a Patch Maker field, same as
+  // nearly everything else.
+  const generalDividerKey = '__divider_General';
+  settings.add(generalDividerKey, {
+    name: '\u2014 General \u2014',
+    type: 'text',
+    default: ''
+  });
+  dividerKeys.add(generalDividerKey);
+
+  const openSettingsInfoKey = '__info_openSettings';
+  settings.add(openSettingsInfoKey, {
+    name: 'Double Tap Primary \u2192 Open Wizascript Settings',
+    type: 'text',
+    default: ''
+  });
+  dividerKeys.add(openSettingsInfoKey);
+
+  registry.push({
+    key: 'openWizascriptSettings',
+    scope: 'global',
+    guardTypingContext: true,
+    onPrimaryDoubleTap: () => {
+      if (primaryKeySetting && typeof primaryKeySetting.show === 'function') {
+        primaryKeySetting.show();
+      } else {
+        console.warn('[Wizascript] Could not open the settings panel - .show() is unavailable on this setting.');
+      }
+    }
+  });
 }
+
+const pendingRegistrations = []; // queued registerKeybind() calls, held until flushKeybindRegistrations() runs
+let autoFlushScheduled = false;
 
 // The only thing a consuming package needs to call.
 //
@@ -268,21 +342,20 @@ function ensureCore(plugin) {
 //   defaultCode    - shipped default e.code, e.g. 'ArrowRight'
 //   scope          - 'global' (default) | 'scoped'
 //   selector       - required if scope is 'scoped'
+//   packageLabel   - drives the one-time group divider (e.g. 'UC TV')
 //   onMatch        - (e) => void, fires when Primary+secondary matches
 //   onPrimaryAlone   - (e) => void, global-only: Primary held alone past the hold delay
 //   onPrimaryPress   - (e) => void, global-only: fires immediately on Primary keydown
 //   onPrimaryRelease - (e) => void, global-only: fires on Primary keyup
-const pendingRegistrations = []; // queued registerKeybind() calls, held until flushKeybindRegistrations() runs
-
-// Packages call this exactly as before - nothing about a package's
-// own registerKeybind() call sites needs to change. Internally, the
-// actual registration is deferred until flushKeybindRegistrations()
-// runs (once, at the very end of manifest.js's bootstrap sequence) -
-// this is what lets the whole "Keybinds" category land after every
-// other package's own settings have already registered, rather than
-// wherever the FIRST package to call this happens to land it.
-let autoFlushScheduled = false;
-
+//   onPrimaryDoubleTap - (e) => void, global-only: fires on a second Primary press within 400ms of the first
+//
+// Registration is deferred, not immediate - nothing about a package's
+// own registerKeybind() call sites needs to change for that. The
+// actual work happens once flushKeybindRegistrations() runs (see
+// manifest.js), which is what lets the whole "Keybinds" category land
+// after every other package's own settings have already registered,
+// rather than wherever the FIRST package to call this happens to
+// land it.
 export function registerKeybind(plugin, config) {
   pendingRegistrations.push({ plugin, config });
 
@@ -317,9 +390,16 @@ function registerKeybindNow(plugin, config) {
   const {
     key, name, defaultCode,
     scope = 'global', selector,
-    guardTypingContext = false,
+    // Defaults to true (ignore keybinds while focused in a text field/
+    // contenteditable, e.g. chat) - this is what almost every package
+    // wants, since a bare Primary+<key> shouldn't fire while someone's
+    // just typing and happens to hit a key that collides with a
+    // binding. Patch Maker is the one deliberate exception, since its
+    // own bindings specifically need to fire while focused on its own
+    // contenteditable elements - it opts out explicitly per binding.
+    guardTypingContext = true,
     packageLabel,
-    onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease
+    onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease, onPrimaryDoubleTap
   } = config;
 
   ensureCore(plugin);
@@ -359,7 +439,7 @@ function registerKeybindNow(plugin, config) {
     bindingDefaults.set(key, defaultCode);
   }
 
-  registry.push({ key, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease });
+  registry.push({ key, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease, onPrimaryDoubleTap });
 }
 
 // For UI that wants to display the current Primary key, e.g. a toast

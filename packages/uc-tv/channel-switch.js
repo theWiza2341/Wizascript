@@ -103,11 +103,11 @@ export function bindChannelKeybinds(plugin) {
     defaultCode: 'ArrowLeft',
     scope: 'global',
     packageLabel: 'UC TV',
-    // Ctrl+Left/Right is a native "jump a word" shortcut while typing
-    // (e.g. in chat) - guarding this specifically preserves that,
-    // unlike Patch Maker's shortcuts, which deliberately need to fire
-    // while a text field is focused.
-    guardTypingContext: true,
+    // Relies on guardTypingContext's default (true) - Ctrl+Left/Right
+    // is a native "jump a word" shortcut while typing (e.g. in chat),
+    // and this default preserves that. Unlike Patch Maker's own
+    // shortcuts, which deliberately opt OUT of this default since they
+    // need to fire while a text field is focused.
     onMatch: () => {
       if (!isSpectatePage()) return; // registered site-wide, but only does anything while spectating
       if (!CONFIG.masterEnabled) return;
@@ -120,7 +120,6 @@ export function bindChannelKeybinds(plugin) {
     defaultCode: 'ArrowRight',
     scope: 'global',
     packageLabel: 'UC TV',
-    guardTypingContext: true,
     onMatch: () => {
       if (!isSpectatePage()) return;
       if (!CONFIG.masterEnabled) return;

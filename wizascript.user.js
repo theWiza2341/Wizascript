@@ -4531,6 +4531,22 @@ Version: v${version}`;
     if (existing) return callback(existing);
     setTimeout(() => waitForAvatar(callback), 100);
   }
+  var BUTTON_POSITION_KEY = "wizascript.deckTracker.buttonPosition";
+  function getSavedButtonPosition() {
+    const raw = GM_getValue(BUTTON_POSITION_KEY, null);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+  function setSavedButtonPosition(pos) {
+    GM_setValue(BUTTON_POSITION_KEY, JSON.stringify(pos));
+  }
+  function clearSavedButtonPosition() {
+    GM_deleteValue(BUTTON_POSITION_KEY);
+  }
   function initDeckTracker(plugin) {
     const settings2 = registerDeckTrackerSettings(plugin);
     if (!settings2.enabled.value()) return;
@@ -4579,6 +4595,7 @@ Version: v${version}`;
       const btn = document.createElement("button");
       btn.textContent = "+";
       btn.id = "dt-add-tracker-button";
+      btn.title = "Click to add a tracker. Drag to reposition (double-click to reset to the default spot).";
       Object.assign(btn.style, {
         position: "fixed",
         zIndex: 8,
@@ -4588,7 +4605,7 @@ Version: v${version}`;
         background: "#2ecc71",
         color: "white",
         border: "none",
-        cursor: "pointer",
+        cursor: "grab",
         fontSize: "20px",
         fontWeight: "bold",
         lineHeight: "1",
@@ -4598,7 +4615,9 @@ Version: v${version}`;
       });
       document.body.appendChild(btn);
       let revealed = false;
+      let hasCustomPosition = false;
       function reposition() {
+        if (hasCustomPosition) return true;
         const rect = avatar.getBoundingClientRect();
         if (rect.width === 0 && rect.height === 0) return false;
         const btnRect = btn.getBoundingClientRect();
@@ -4637,7 +4656,16 @@ Version: v${version}`;
         }
         requestAnimationFrame(check);
       }
-      tryReveal();
+      const savedPosition = getSavedButtonPosition();
+      if (savedPosition) {
+        hasCustomPosition = true;
+        btn.style.left = savedPosition.left + "px";
+        btn.style.top = savedPosition.top + "px";
+        revealed = true;
+        btn.style.opacity = "1";
+      } else {
+        tryReveal();
+      }
       function isUnderScriptMenuOpen() {
         const menu = document.querySelector('.menu-content[role="Menu"]');
         return menu !== null && menu.offsetParent !== null;
@@ -4658,12 +4686,64 @@ Version: v${version}`;
       }, 250);
       window.addEventListener("resize", reposition);
       window.addEventListener("scroll", reposition, { passive: true, capture: true });
-      btn.onclick = () => openPresetPicker({
-        onAddPreset: handleAddPreset,
-        onCreateAdHoc: handleCreateAdHoc,
-        onCloseWidget: handleCloseWidget,
-        onDeletePreset: handleDeletePreset
+      const DRAG_THRESHOLD_PX = 4;
+      const BTN_SIZE = 34;
+      const VIEWPORT_MARGIN = 10;
+      let dragging = false;
+      let dragMoved = false;
+      let dragOffsetX = 0;
+      let dragOffsetY = 0;
+      btn.addEventListener("mousedown", (e) => {
+        if (e.button !== 0) return;
+        dragging = true;
+        dragMoved = false;
+        const rect = btn.getBoundingClientRect();
+        dragOffsetX = e.clientX - rect.left;
+        dragOffsetY = e.clientY - rect.top;
+        btn.style.cursor = "grabbing";
+        e.preventDefault();
       });
+      window.addEventListener("mousemove", (e) => {
+        if (!dragging) return;
+        let newLeft = e.clientX - dragOffsetX;
+        let newTop = e.clientY - dragOffsetY;
+        if (!dragMoved) {
+          const dx = Math.abs(newLeft - parseFloat(btn.style.left || "0"));
+          const dy = Math.abs(newTop - parseFloat(btn.style.top || "0"));
+          if (dx > DRAG_THRESHOLD_PX || dy > DRAG_THRESHOLD_PX) dragMoved = true;
+        }
+        if (!dragMoved) return;
+        hasCustomPosition = true;
+        newLeft = Math.min(Math.max(newLeft, VIEWPORT_MARGIN - BTN_SIZE), window.innerWidth - VIEWPORT_MARGIN);
+        newTop = Math.min(Math.max(newTop, VIEWPORT_MARGIN - BTN_SIZE), window.innerHeight - VIEWPORT_MARGIN);
+        btn.style.left = newLeft + "px";
+        btn.style.top = newTop + "px";
+      });
+      window.addEventListener("mouseup", () => {
+        if (!dragging) return;
+        dragging = false;
+        btn.style.cursor = "grab";
+        if (dragMoved) {
+          const rect = btn.getBoundingClientRect();
+          setSavedButtonPosition({ left: rect.left, top: rect.top });
+          logger.log("hud", "Add-tracker button repositioned by drag.", { left: rect.left, top: rect.top });
+        }
+      });
+      btn.addEventListener("dblclick", () => {
+        hasCustomPosition = false;
+        clearSavedButtonPosition();
+        reposition();
+        logger.log("hud", "Add-tracker button position reset to the default (avatar-relative) spot.");
+      });
+      btn.onclick = () => {
+        if (dragMoved) return;
+        openPresetPicker({
+          onAddPreset: handleAddPreset,
+          onCreateAdHoc: handleCreateAdHoc,
+          onCloseWidget: handleCloseWidget,
+          onDeletePreset: handleDeletePreset
+        });
+      };
       return btn;
     }
     let trackerButton = null;

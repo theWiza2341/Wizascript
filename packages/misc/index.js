@@ -1,7 +1,7 @@
 // packages/misc/index.js
 
 import { registerMiscSettings } from "./settings.js";
-import { showNotepad, hideNotepad, forceResetNotepad } from "./notepad/index.js";
+import { showNotepad, hideNotepad, forceResetNotepad, undoNotepad, redoNotepad } from "./notepad/index.js";
 import { registerKeybind } from "../core/keybinds.js";
 
 export function initMisc(plugin) {
@@ -50,5 +50,23 @@ export function initMisc(plugin) {
         showNotepad();
       }
     }
+  });
+
+  // Defaults land on Ctrl+Z/Ctrl+Y with the shipped Primary key -
+  // matches the muscle memory almost everyone already has from other
+  // software, for free.
+  registerKeybind(plugin, {
+    key: "undoNotepad",
+    name: "Undo Drawing",
+    defaultCode: "KeyZ",
+    packageLabel: "Notepad",
+    onMatch: () => undoNotepad()
+  });
+  registerKeybind(plugin, {
+    key: "redoNotepad",
+    name: "Redo Drawing",
+    defaultCode: "KeyY",
+    packageLabel: "Notepad",
+    onMatch: () => redoNotepad()
   });
 }

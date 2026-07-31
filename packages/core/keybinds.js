@@ -272,7 +272,48 @@ function ensureCore(plugin) {
 //   onPrimaryAlone   - (e) => void, global-only: Primary held alone past the hold delay
 //   onPrimaryPress   - (e) => void, global-only: fires immediately on Primary keydown
 //   onPrimaryRelease - (e) => void, global-only: fires on Primary keyup
+const pendingRegistrations = []; // queued registerKeybind() calls, held until flushKeybindRegistrations() runs
+
+// Packages call this exactly as before - nothing about a package's
+// own registerKeybind() call sites needs to change. Internally, the
+// actual registration is deferred until flushKeybindRegistrations()
+// runs (once, at the very end of manifest.js's bootstrap sequence) -
+// this is what lets the whole "Keybinds" category land after every
+// other package's own settings have already registered, rather than
+// wherever the FIRST package to call this happens to land it.
+let autoFlushScheduled = false;
+
 export function registerKeybind(plugin, config) {
+  pendingRegistrations.push({ plugin, config });
+
+  // Safety net: if manifest.js's explicit flushKeybindRegistrations()
+  // call is ever missing (the same class of mistake as a forgotten
+  // initX(plugin) call in bootstrap()), this would otherwise fail
+  // completely silently - esbuild tree-shakes the whole registration
+  // path out since nothing reachable calls it, so nothing would even
+  // show up in the bundle, let alone throw an error. Scheduling a
+  // flush on the next tick after the FIRST registerKeybind() call
+  // means it still works even without the explicit call - a real
+  // flush() call happening synchronously (as manifest.js should do)
+  // simply empties the queue first, making this a no-op then.
+  if (!autoFlushScheduled) {
+    autoFlushScheduled = true;
+    setTimeout(() => {
+      if (pendingRegistrations.length) flushKeybindRegistrations();
+    }, 0);
+  }
+}
+
+// Called once, after every package's init() has already run - see
+// manifest.js. Registers everything queued above, in the order it was
+// queued (which is itself just each package's own call order, so
+// Cycle Category Up still lands before Cycle Category Down, etc.).
+export function flushKeybindRegistrations() {
+  const queued = pendingRegistrations.splice(0);
+  queued.forEach(({ plugin, config }) => registerKeybindNow(plugin, config));
+}
+
+function registerKeybindNow(plugin, config) {
   const {
     key, name, defaultCode,
     scope = 'global', selector,
@@ -305,14 +346,13 @@ export function registerKeybind(plugin, config) {
   // channel guide) has nothing meaningful to put in a "Primary + <key>"
   // field, and showing one anyway would be actively misleading.
   if (onMatch) {
-    // packageLabel prefixes the display name (e.g. "[UC TV] Next
-    // Channel") so a single flat Keybinds list stays scannable as
-    // more packages add their own bindings - every package is
-    // expected to pass this now, but it's optional so a caller that
-    // somehow doesn't know its own name yet doesn't hard-fail.
-    const label = packageLabel ? `[${packageLabel}] ${name}` : name;
+    // packageLabel still drives the group divider above (see
+    // registerKeybind's divider-insertion block), but no longer
+    // prefixes the individual name - the divider already makes the
+    // grouping visually clear, and the extra "[Package] " text was
+    // pushing longer names onto a second line in the panel.
     settings.add(key, {
-      name: `${label} - Primary + <key>`,
+      name: `${name} - Primary + <key>`,
       type: 'text',
       default: defaultCode
     });

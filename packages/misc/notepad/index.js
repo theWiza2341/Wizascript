@@ -116,6 +116,55 @@ export function showNotepad() {
   toolbar.append(drawBox, eraseBox, fillBox, sizeSlider);
   mainColumn.append(toolbar, surface.wrapper);
 
+  // ---- layers column ----
+  const layersColumn = document.createElement("div");
+  layersColumn.className = "wizascript-notepad-layers-column";
+
+  // Rebuilds the whole column from scratch against the surface's
+  // current layer count/active index - simplest correct way to keep
+  // the buttons in sync, and cheap enough at a maximum of 6 buttons.
+  function renderLayerButtons() {
+    layersColumn.innerHTML = "";
+    const count = surface.getLayerCount();
+    const active = surface.getActiveLayer();
+
+    for (let n = 1; n <= count; n++) {
+      const btn = document.createElement("div");
+      btn.className = "wizascript-notepad-layer-btn" + (n === active ? " active" : "");
+      btn.textContent = String(n);
+      btn.title = n === count && n > 1
+        ? "Click to work on this layer. Double-click to remove it (this layer only, since it's the topmost)."
+        : "Click to work on this layer.";
+      btn.addEventListener("click", () => {
+        surface.setActiveLayer(n);
+        renderLayerButtons();
+      }, { signal });
+      // Only the current topmost layer can be removed (a stack pop) -
+      // double-click matches Patch Maker's own convention for
+      // destructive, non-undoable actions.
+      if (n === count && n > 1) {
+        btn.addEventListener("dblclick", () => {
+          surface.removeLayer();
+          renderLayerButtons();
+        }, { signal });
+      }
+      layersColumn.appendChild(btn);
+    }
+
+    if (count < 6) {
+      const addBtn = document.createElement("div");
+      addBtn.className = "wizascript-notepad-layer-add-btn";
+      addBtn.textContent = "+";
+      addBtn.title = "Add a new layer on top (up to 6 total).";
+      addBtn.addEventListener("click", () => {
+        surface.addLayer();
+        renderLayerButtons();
+      }, { signal });
+      layersColumn.appendChild(addBtn);
+    }
+  }
+  renderLayerButtons();
+
   // ---- color column ----
   const colorColumn = document.createElement("div");
   colorColumn.className = "wizascript-notepad-side-column";
@@ -162,7 +211,7 @@ export function showNotepad() {
   recentColorsRow.render(getRecentColors());
 
   colorColumn.append(colorLabel, picker.element, applyPenBtn, applyBgBtn, recentColorsRow.element);
-  body.append(mainColumn, colorColumn);
+  body.append(mainColumn, layersColumn, colorColumn);
   document.body.appendChild(root);
 
   // ---- tool selection ----
@@ -367,14 +416,14 @@ const STYLE_CSS = `
   cursor: default;
 }
 .wizascript-notepad-title-input {
-  /* Fixed rather than flex:1 - the header previously let the
-     focusable/drag-blocking area stretch all the way to the header
-     buttons, which ate into the space meant for dragging the notepad
-     around. ~72px roughly lines up with where "Erase" starts in the
-     toolbar below - plenty of room for a short name without
-     encroaching further. */
+  /* Widened generously (was 72px) - longer names were getting cut
+     off with the old width, and it's easier to trim this back later
+     if it turns out too roomy than to keep nudging it up in small
+     increments. The whole notepad widens to fit, same as it already
+     does to fit the canvas+sidebar body - this isn't a fixed-width
+     header fighting a fixed-width body, it's just a wider header. */
   flex: none;
-  width: 72px;
+  width: 180px;
   background: transparent;
   border: none;
   outline: none;
@@ -411,6 +460,9 @@ const STYLE_CSS = `
   display: block;
 }
 .wizascript-notepad-canvas-bg {
+  pointer-events: none;
+}
+.wizascript-notepad-canvas-layer {
   pointer-events: none;
 }
 .wizascript-notepad-canvas-ink {
@@ -466,6 +518,46 @@ const STYLE_CSS = `
 .wizascript-notepad-size-slider {
   flex: 1;
   min-width: 50px;
+}
+.wizascript-notepad-layers-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-top: 2px;
+}
+.wizascript-notepad-layer-btn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #8a7355;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #5a4a35;
+  background: #efe4cf;
+  cursor: pointer;
+}
+.wizascript-notepad-layer-btn.active {
+  background: #d4a017;
+  color: #fff;
+  border-color: #a97e0f;
+}
+.wizascript-notepad-layer-add-btn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #8a7355;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: bold;
+  color: #8a7355;
+  background: transparent;
+  cursor: pointer;
 }
 .wizascript-notepad-side-column {
   display: flex;

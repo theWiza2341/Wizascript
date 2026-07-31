@@ -41,6 +41,7 @@ export function floodFillPixels(data, width, height, startX, startY, fillRgb, to
   const stack = [x0, y0];
   visited[y0 * width + x0] = 1;
   let filledAny = false;
+  const filledCoords = []; // needed for the seam-fix dilation pass below
 
   while (stack.length) {
     const y = stack.pop();
@@ -48,6 +49,7 @@ export function floodFillPixels(data, width, height, startX, startY, fillRgb, to
     const i = idx(x, y);
     data[i] = fr; data[i + 1] = fg; data[i + 2] = fb; data[i + 3] = fa;
     filledAny = true;
+    filledCoords.push(x, y);
 
     if (x > 0) tryPush(x - 1, y);
     if (x < width - 1) tryPush(x + 1, y);
@@ -61,6 +63,36 @@ export function floodFillPixels(data, width, height, startX, startY, fillRgb, to
     if (!matchesStart(idx(nx, ny))) return;
     visited[vIdx] = 1;
     stack.push(nx, ny);
+  }
+
+  // Seam fix: anti-aliased stroke edges have partial alpha (neither
+  // fully transparent like the enclosed space, nor fully opaque like
+  // the stroke's core), so they fall outside matchesStart()'s
+  // tolerance and are left unfilled - a thin sliver of background
+  // visible right where the fill meets the boundary. This pass grows
+  // the filled region by one pixel, but ONLY into neighbors that are
+  // partially transparent (0 < alpha < 255) - the signature of an
+  // anti-aliased edge - so it closes that seam without bleeding into
+  // solid, fully-opaque ink of a different color.
+  if (filledAny) {
+    for (let n = 0; n < filledCoords.length; n += 2) {
+      const x = filledCoords[n], y = filledCoords[n + 1];
+      growIntoSeam(x - 1, y);
+      growIntoSeam(x + 1, y);
+      growIntoSeam(x, y - 1);
+      growIntoSeam(x, y + 1);
+    }
+  }
+
+  function growIntoSeam(nx, ny) {
+    if (nx < 0 || ny < 0 || nx >= width || ny >= height) return;
+    const vIdx = ny * width + nx;
+    if (visited[vIdx]) return; // already filled by the main pass
+    const i = idx(nx, ny);
+    const alpha = data[i + 3];
+    if (alpha <= 0 || alpha >= 255) return; // not a partial-alpha seam pixel
+    data[i] = fr; data[i + 1] = fg; data[i + 2] = fb; data[i + 3] = fa;
+    visited[vIdx] = 1;
   }
 
   return filledAny;

@@ -5695,6 +5695,7 @@ Version: v${version}`;
     const stack = [x0, y0];
     visited[y0 * width + x0] = 1;
     let filledAny = false;
+    const filledCoords = [];
     while (stack.length) {
       const y = stack.pop();
       const x = stack.pop();
@@ -5704,6 +5705,7 @@ Version: v${version}`;
       data[i + 2] = fb;
       data[i + 3] = fa;
       filledAny = true;
+      filledCoords.push(x, y);
       if (x > 0) tryPush(x - 1, y);
       if (x < width - 1) tryPush(x + 1, y);
       if (y > 0) tryPush(x, y - 1);
@@ -5716,6 +5718,28 @@ Version: v${version}`;
       visited[vIdx] = 1;
       stack.push(nx, ny);
     }
+    if (filledAny) {
+      for (let n = 0; n < filledCoords.length; n += 2) {
+        const x = filledCoords[n], y = filledCoords[n + 1];
+        growIntoSeam(x - 1, y);
+        growIntoSeam(x + 1, y);
+        growIntoSeam(x, y - 1);
+        growIntoSeam(x, y + 1);
+      }
+    }
+    function growIntoSeam(nx, ny) {
+      if (nx < 0 || ny < 0 || nx >= width || ny >= height) return;
+      const vIdx = ny * width + nx;
+      if (visited[vIdx]) return;
+      const i = idx(nx, ny);
+      const alpha = data[i + 3];
+      if (alpha <= 0 || alpha >= 255) return;
+      data[i] = fr;
+      data[i + 1] = fg;
+      data[i + 2] = fb;
+      data[i + 3] = fa;
+      visited[vIdx] = 1;
+    }
     return filledAny;
   }
 
@@ -5724,6 +5748,7 @@ Version: v${version}`;
   var CANVAS_HEIGHT = 200;
   var DEFAULT_BACKGROUND = "rgb(255, 254, 248)";
   var SAVE_DEBOUNCE_MS = 400;
+  var MAX_LAYERS = 6;
   var MAX_HISTORY = 8;
   function resolveColorToRgb(cssColor) {
     const probe = document.createElement("canvas");
@@ -5744,69 +5769,145 @@ Version: v${version}`;
     backgroundCanvas.width = CANVAS_WIDTH;
     backgroundCanvas.height = CANVAS_HEIGHT;
     backgroundCanvas.className = "wizascript-notepad-canvas wizascript-notepad-canvas-bg";
-    const inkCanvas = document.createElement("canvas");
-    inkCanvas.width = CANVAS_WIDTH;
-    inkCanvas.height = CANVAS_HEIGHT;
-    inkCanvas.className = "wizascript-notepad-canvas wizascript-notepad-canvas-ink";
+    wrapper.appendChild(backgroundCanvas);
+    const bgCtx = backgroundCanvas.getContext("2d");
+    const interactionCanvas = document.createElement("canvas");
+    interactionCanvas.width = CANVAS_WIDTH;
+    interactionCanvas.height = CANVAS_HEIGHT;
+    interactionCanvas.className = "wizascript-notepad-canvas wizascript-notepad-canvas-ink";
     const cursorIndicator = document.createElement("div");
     cursorIndicator.className = "wizascript-notepad-cursor-indicator";
-    wrapper.append(backgroundCanvas, inkCanvas, cursorIndicator);
-    const bgCtx = backgroundCanvas.getContext("2d");
-    const inkCtx = inkCanvas.getContext("2d");
     let backgroundColor = DEFAULT_BACKGROUND;
     let strokeColor = "rgb(26, 26, 26)";
     let saveTimer = null;
     let lastX = null;
     let lastY = null;
+    const layers = [];
+    let activeLayerIndex = 1;
+    let onLayersChange = null;
+    function notifyLayersChange() {
+      if (onLayersChange) onLayersChange(layers.length, activeLayerIndex);
+    }
+    function createLayerCanvas() {
+      const canvas = document.createElement("canvas");
+      canvas.width = CANVAS_WIDTH;
+      canvas.height = CANVAS_HEIGHT;
+      canvas.className = "wizascript-notepad-canvas wizascript-notepad-canvas-layer";
+      return canvas;
+    }
+    function insertLayerCanvas(canvas) {
+      const insertBefore = interactionCanvas.isConnected ? interactionCanvas : null;
+      wrapper.insertBefore(canvas, insertBefore);
+    }
+    function addLayerInternal() {
+      const canvas = createLayerCanvas();
+      insertLayerCanvas(canvas);
+      layers.push({ canvas, ctx: canvas.getContext("2d") });
+      return layers[layers.length - 1];
+    }
+    function addLayer() {
+      if (layers.length >= MAX_LAYERS) return false;
+      addLayerInternal();
+      activeLayerIndex = layers.length;
+      scheduleSave();
+      notifyLayersChange();
+      return true;
+    }
+    function removeLayer() {
+      if (layers.length <= 1) return false;
+      const removed = layers.pop();
+      removed.canvas.remove();
+      if (activeLayerIndex > layers.length) activeLayerIndex = layers.length;
+      scheduleSave();
+      notifyLayersChange();
+      return true;
+    }
+    function setActiveLayer(layerNum) {
+      if (layerNum < 1 || layerNum > layers.length) return;
+      activeLayerIndex = layerNum;
+      notifyLayersChange();
+    }
+    function getActiveLayer() {
+      return activeLayerIndex;
+    }
+    function getLayerCount() {
+      return layers.length;
+    }
+    function activeCtx() {
+      return layers[activeLayerIndex - 1].ctx;
+    }
+    function setOnLayersChange(cb) {
+      onLayersChange = cb;
+    }
     function paintBackground(color) {
       backgroundColor = color;
       bgCtx.fillStyle = color;
       bgCtx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     }
+    function snapshotState() {
+      return {
+        layers: layers.map((l) => l.canvas.toDataURL("image/png")),
+        backgroundColor
+      };
+    }
     function scheduleSave() {
       clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
-        setSavedDrawing({
-          strokesDataUrl: inkCanvas.toDataURL("image/png"),
-          backgroundColor
-        });
+        setSavedDrawing(snapshotState());
       }, SAVE_DEBOUNCE_MS);
+    }
+    function loadLayerContent(ctx, dataUrl) {
+      return new Promise((resolve) => {
+        if (!dataUrl) {
+          resolve();
+          return;
+        }
+        const img = new Image();
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0);
+          resolve();
+        };
+        img.onerror = () => {
+          console.warn("[Notepad] A saved layer failed to load - leaving it blank.");
+          resolve();
+        };
+        img.src = dataUrl;
+      });
     }
     function loadInitial() {
       const saved = getSavedDrawing();
       paintBackground((saved == null ? void 0 : saved.backgroundColor) || DEFAULT_BACKGROUND);
-      if (!(saved == null ? void 0 : saved.strokesDataUrl)) return;
-      const img = new Image();
-      img.onload = () => inkCtx.drawImage(img, 0, 0);
-      img.onerror = () => console.warn("[Notepad] Saved drawing failed to load - starting with a blank page.");
-      img.src = saved.strokesDataUrl;
+      const savedLayerUrls = (saved == null ? void 0 : saved.layers) || ((saved == null ? void 0 : saved.strokesDataUrl) ? [saved.strokesDataUrl] : [null]);
+      const count = Math.max(1, Math.min(MAX_LAYERS, savedLayerUrls.length));
+      for (let i = 0; i < count; i++) {
+        addLayerInternal();
+      }
+      activeLayerIndex = Math.min((saved == null ? void 0 : saved.activeLayerIndex) || 1, layers.length);
+      return Promise.all(layers.map((l, i) => loadLayerContent(l.ctx, savedLayerUrls[i])));
     }
-    loadInitial();
+    const initialLoad = loadInitial();
+    wrapper.append(interactionCanvas, cursorIndicator);
     let undoStack = [];
     let redoStack = [];
     let onHistoryChange = null;
     let restoreGeneration = 0;
-    function snapshotState() {
-      return { strokesDataUrl: inkCanvas.toDataURL("image/png"), backgroundColor };
-    }
     function notifyHistoryChange() {
       if (onHistoryChange) onHistoryChange(undoStack.length > 0, redoStack.length > 0);
     }
-    function restoreState(state) {
+    async function restoreState(state) {
       const myGeneration = ++restoreGeneration;
       paintBackground(state.backgroundColor);
-      inkCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-      if (!state.strokesDataUrl) {
-        scheduleSave();
-        return;
+      while (layers.length < state.layers.length) addLayerInternal();
+      while (layers.length > state.layers.length) {
+        const removed = layers.pop();
+        removed.canvas.remove();
       }
-      const img = new Image();
-      img.onload = () => {
-        if (myGeneration !== restoreGeneration) return;
-        inkCtx.drawImage(img, 0, 0);
-        scheduleSave();
-      };
-      img.src = state.strokesDataUrl;
+      if (activeLayerIndex > layers.length) activeLayerIndex = layers.length || 1;
+      layers.forEach((l) => l.ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT));
+      await Promise.all(layers.map((l, i) => loadLayerContent(l.ctx, state.layers[i])));
+      if (myGeneration !== restoreGeneration) return;
+      scheduleSave();
+      notifyLayersChange();
     }
     function pushUndoSnapshot() {
       undoStack.push(snapshotState());
@@ -5836,7 +5937,7 @@ Version: v${version}`;
     }
     function clear() {
       pushUndoSnapshot();
-      inkCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      activeCtx().clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
       scheduleSave();
     }
     function setBackgroundColor(color) {
@@ -5846,15 +5947,16 @@ Version: v${version}`;
       scheduleSave();
     }
     function strokeTo(x, y, { erase, size }) {
-      inkCtx.lineCap = "round";
-      inkCtx.lineJoin = "round";
-      inkCtx.lineWidth = erase ? size * 2.2 : size;
-      inkCtx.globalCompositeOperation = erase ? "destination-out" : "source-over";
-      inkCtx.strokeStyle = erase ? "rgba(0,0,0,1)" : strokeColor;
-      inkCtx.beginPath();
-      inkCtx.moveTo(lastX != null ? lastX : x, lastY != null ? lastY : y);
-      inkCtx.lineTo(x, y);
-      inkCtx.stroke();
+      const ctx = activeCtx();
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.lineWidth = erase ? size * 2.2 : size;
+      ctx.globalCompositeOperation = erase ? "destination-out" : "source-over";
+      ctx.strokeStyle = erase ? "rgba(0,0,0,1)" : strokeColor;
+      ctx.beginPath();
+      ctx.moveTo(lastX != null ? lastX : x, lastY != null ? lastY : y);
+      ctx.lineTo(x, y);
+      ctx.stroke();
       lastX = x;
       lastY = y;
     }
@@ -5871,15 +5973,16 @@ Version: v${version}`;
     }
     function fill(x, y) {
       pushUndoSnapshot();
+      const ctx = activeCtx();
       const fillRgb = resolveColorToRgb(strokeColor);
-      const imageData = inkCtx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      const imageData = ctx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
       const changed = floodFillPixels(imageData.data, CANVAS_WIDTH, CANVAS_HEIGHT, x, y, fillRgb);
       if (!changed) {
         undoStack.pop();
         notifyHistoryChange();
         return;
       }
-      inkCtx.putImageData(imageData, 0, 0);
+      ctx.putImageData(imageData, 0, 0);
       scheduleSave();
     }
     function downloadAsPng(filename = "notepad-doodle.png") {
@@ -5888,20 +5991,23 @@ Version: v${version}`;
       flattened.height = CANVAS_HEIGHT;
       const fctx = flattened.getContext("2d");
       fctx.drawImage(backgroundCanvas, 0, 0);
-      fctx.drawImage(inkCanvas, 0, 0);
+      layers.forEach((l) => fctx.drawImage(l.canvas, 0, 0));
       const link = document.createElement("a");
       link.download = filename;
       link.href = flattened.toDataURL("image/png");
       link.click();
     }
     function getPointFromEvent(e) {
-      const rect = inkCanvas.getBoundingClientRect();
+      const rect = interactionCanvas.getBoundingClientRect();
       return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     }
     return {
       wrapper,
-      inkCanvas,
+      inkCanvas: interactionCanvas,
+      // kept as `inkCanvas` for index.js's existing mouse-listener wiring
       cursorIndicator,
+      ready: initialLoad,
+      // resolves once any saved layers have finished loading
       beginStroke,
       strokeTo,
       endStroke,
@@ -5918,7 +6024,13 @@ Version: v${version}`;
       setStrokeColor: (color) => {
         strokeColor = color;
       },
-      getBackgroundColor: () => backgroundColor
+      getBackgroundColor: () => backgroundColor,
+      addLayer,
+      removeLayer,
+      setActiveLayer,
+      getActiveLayer,
+      getLayerCount,
+      setOnLayersChange
     };
   }
 
@@ -6158,6 +6270,42 @@ Version: v${version}`;
     sizeSlider.title = "Brush size";
     toolbar.append(drawBox, eraseBox, fillBox, sizeSlider);
     mainColumn.append(toolbar, surface.wrapper);
+    const layersColumn = document.createElement("div");
+    layersColumn.className = "wizascript-notepad-layers-column";
+    function renderLayerButtons() {
+      layersColumn.innerHTML = "";
+      const count = surface.getLayerCount();
+      const active = surface.getActiveLayer();
+      for (let n = 1; n <= count; n++) {
+        const btn = document.createElement("div");
+        btn.className = "wizascript-notepad-layer-btn" + (n === active ? " active" : "");
+        btn.textContent = String(n);
+        btn.title = n === count && n > 1 ? "Click to work on this layer. Double-click to remove it (this layer only, since it's the topmost)." : "Click to work on this layer.";
+        btn.addEventListener("click", () => {
+          surface.setActiveLayer(n);
+          renderLayerButtons();
+        }, { signal });
+        if (n === count && n > 1) {
+          btn.addEventListener("dblclick", () => {
+            surface.removeLayer();
+            renderLayerButtons();
+          }, { signal });
+        }
+        layersColumn.appendChild(btn);
+      }
+      if (count < 6) {
+        const addBtn = document.createElement("div");
+        addBtn.className = "wizascript-notepad-layer-add-btn";
+        addBtn.textContent = "+";
+        addBtn.title = "Add a new layer on top (up to 6 total).";
+        addBtn.addEventListener("click", () => {
+          surface.addLayer();
+          renderLayerButtons();
+        }, { signal });
+        layersColumn.appendChild(addBtn);
+      }
+    }
+    renderLayerButtons();
     const colorColumn = document.createElement("div");
     colorColumn.className = "wizascript-notepad-side-column";
     const colorLabel = document.createElement("div");
@@ -6196,7 +6344,7 @@ Version: v${version}`;
     });
     recentColorsRow.render(getRecentColors());
     colorColumn.append(colorLabel, picker.element, applyPenBtn, applyBgBtn, recentColorsRow.element);
-    body.append(mainColumn, colorColumn);
+    body.append(mainColumn, layersColumn, colorColumn);
     document.body.appendChild(root);
     function selectTool(tool) {
       currentTool = tool;
@@ -6360,14 +6508,14 @@ Version: v${version}`;
   cursor: default;
 }
 .wizascript-notepad-title-input {
-  /* Fixed rather than flex:1 - the header previously let the
-     focusable/drag-blocking area stretch all the way to the header
-     buttons, which ate into the space meant for dragging the notepad
-     around. ~72px roughly lines up with where "Erase" starts in the
-     toolbar below - plenty of room for a short name without
-     encroaching further. */
+  /* Widened generously (was 72px) - longer names were getting cut
+     off with the old width, and it's easier to trim this back later
+     if it turns out too roomy than to keep nudging it up in small
+     increments. The whole notepad widens to fit, same as it already
+     does to fit the canvas+sidebar body - this isn't a fixed-width
+     header fighting a fixed-width body, it's just a wider header. */
   flex: none;
-  width: 72px;
+  width: 180px;
   background: transparent;
   border: none;
   outline: none;
@@ -6404,6 +6552,9 @@ Version: v${version}`;
   display: block;
 }
 .wizascript-notepad-canvas-bg {
+  pointer-events: none;
+}
+.wizascript-notepad-canvas-layer {
   pointer-events: none;
 }
 .wizascript-notepad-canvas-ink {
@@ -6459,6 +6610,46 @@ Version: v${version}`;
 .wizascript-notepad-size-slider {
   flex: 1;
   min-width: 50px;
+}
+.wizascript-notepad-layers-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-top: 2px;
+}
+.wizascript-notepad-layer-btn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #8a7355;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #5a4a35;
+  background: #efe4cf;
+  cursor: pointer;
+}
+.wizascript-notepad-layer-btn.active {
+  background: #d4a017;
+  color: #fff;
+  border-color: #a97e0f;
+}
+.wizascript-notepad-layer-add-btn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #8a7355;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: bold;
+  color: #8a7355;
+  background: transparent;
+  cursor: pointer;
 }
 .wizascript-notepad-side-column {
   display: flex;

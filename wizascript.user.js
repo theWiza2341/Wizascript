@@ -6046,133 +6046,96 @@ Version: v${version}`;
   var HOLD_DELAY_MS = 250;
   var NATIVE_MODIFIERS = /* @__PURE__ */ new Set(["Control", "Shift", "Alt"]);
   var DEFAULT_PRIMARY_CODE = "Control";
-  var DEFAULT_PRIMARY_DISPLAY = "Ctrl";
+  var PRIMARY_KEY = "primaryKey";
+  var GM_PREFIX = "wizascript.keybinds.";
+  var ID_PREFIX = "underscript.plugin.Wizascript.keybinds.";
+  function storageKey(bindingKey) {
+    return `${GM_PREFIX}${bindingKey}`;
+  }
+  function readCode(bindingKey, defaultCode) {
+    return GM_getValue(storageKey(bindingKey), defaultCode);
+  }
+  function writeCode(bindingKey, code) {
+    GM_setValue(storageKey(bindingKey), code);
+  }
+  var DISPLAY_OVERRIDES = {
+    Control: "Ctrl",
+    Shift: "Shift",
+    Alt: "Alt",
+    Meta: "Meta",
+    ArrowUp: "Up Arrow",
+    ArrowDown: "Down Arrow",
+    ArrowLeft: "Left Arrow",
+    ArrowRight: "Right Arrow",
+    Space: "Space",
+    Escape: "Esc",
+    unbound: "Unbound"
+  };
+  function codeToDisplay(code) {
+    if (!code) return "Unbound";
+    if (DISPLAY_OVERRIDES[code]) return DISPLAY_OVERRIDES[code];
+    if (/^Key[A-Z]$/.test(code)) return code.slice(3);
+    if (/^Digit[0-9]$/.test(code)) return code.slice(5);
+    return code;
+  }
   var settings = null;
-  var primaryKeySetting = null;
-  var keybindType = null;
-  var typeRegistered = false;
   var registry = [];
-  var pendingRegistrations = [];
-  var readyListenerAttached = false;
-  var pollAttempts = 0;
-  var MAX_POLL_ATTEMPTS = 50;
-  var POLL_INTERVAL_MS = 100;
-  function isUnderscriptUtilsReady() {
-    return !!(window.underscript && window.underscript.utils && window.underscript.utils.SettingType);
-  }
-  function flushPending() {
-    if (!isUnderscriptUtilsReady() || !pendingRegistrations.length) return;
-    const queued = pendingRegistrations.splice(0);
-    queued.forEach((fn) => fn());
-  }
-  function pollForReady() {
-    if (isUnderscriptUtilsReady()) {
-      flushPending();
-      return;
-    }
-    pollAttempts++;
-    if (pollAttempts > MAX_POLL_ATTEMPTS) {
-      console.error("[Wizascript] Gave up waiting for window.underscript.utils - keybinds will not be registered this session.");
-      return;
-    }
-    setTimeout(pollForReady, POLL_INTERVAL_MS);
-  }
-  function whenReady(plugin, fn) {
-    if (isUnderscriptUtilsReady()) {
-      fn();
-      return;
-    }
-    pendingRegistrations.push(fn);
-    if (!readyListenerAttached) {
-      readyListenerAttached = true;
-      plugin.events.on("underscript:ready", flushPending);
-      pollForReady();
-    }
-  }
-  var primaryHeld = false;
-  var holdTimer = null;
-  var comboFired = false;
+  var bindingDefaults = /* @__PURE__ */ new Map();
+  var observerStarted = false;
   function isTypingContext2() {
     const el = document.activeElement;
     if (!el) return false;
     const tag = el.tagName;
     return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
   }
-  function ensureKeybindType() {
-    if (keybindType) return keybindType;
-    const $2 = window.$;
-    const underscript = window.underscript;
-    class WizascriptKeybindType extends underscript.utils.SettingType {
-      constructor() {
-        super("wizascriptKeybind");
-      }
-      value(val) {
-        if (typeof val !== "string") return val;
-        return JSON.parse(val);
-      }
-      default() {
-        return ["unbound", "unbound"];
-      }
-      element(value, update) {
-        return $2('<input type="button" class="wizascript-keybind">').val(value[1]).on("focus", function() {
-          const $kbd = $2(this);
-          let captured = false;
-          $kbd.addClass("listening");
-          $kbd.val("...?");
-          const capture = (e) => {
-            e.preventDefault();
-            const original = e.originalEvent || e;
-            let display, code;
-            if ("button" in original) {
-              code = original.button;
-              switch (original.button) {
-                case 0:
-                  display = "Left Click";
-                  break;
-                case 1:
-                  display = "Middle Click";
-                  break;
-                case 2:
-                  display = "Right Click";
-                  break;
-                default:
-                  display = `Mouse Button ${original.button}`;
-              }
-            } else if (original.key === "Escape") {
-              display = "unbound";
-              code = "unbound";
-            } else {
-              display = original.key.length === 1 ? original.key.toUpperCase() : original.key;
-              if (display === " ") display = "Space";
-              code = original.code;
-            }
-            $kbd.val(display);
-            update([code, display]);
-            $2(document).off("keydown", capture);
-            $2(document).off("mousedown", capture);
-            captured = true;
-            $kbd.blur();
-          };
-          $2(document).on("keydown", capture);
-          $2(document).on("mousedown", capture);
-          $kbd.on("blur", function() {
-            $kbd.removeClass("listening");
-            if (captured) return;
-            $2(document).off("keydown", capture);
-            $2(document).off("mousedown", capture);
-            $kbd.val(value[1]);
-          });
-        });
-      }
-      styles() {
-        return [
-          ".wizascript-keybind { font-size: 11px; height: 18px; background-color: black; color: white; border-radius: 3px; border: 1px solid #b4b4b4; }",
-          ".wizascript-keybind.listening { border: 1px solid #40E0D0; box-shadow: 0 0 4px #40E0D0; }"
-        ];
-      }
+  function enhanceInput(el, bindingKey, defaultCode) {
+    el.setAttribute("data-wizascript-keybind-enhanced", "true");
+    el.readOnly = true;
+    Object.assign(el.style, {
+      cursor: "pointer",
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      el.value = codeToDisplay(readCode(bindingKey, defaultCode));
     }
-    keybindType = new WizascriptKeybindType();
-    return keybindType;
+    refreshDisplay();
+    el.addEventListener("focus", () => {
+      el.style.border = "1px solid #40E0D0";
+      el.style.boxShadow = "0 0 4px #40E0D0";
+      el.value = "...?";
+      function capture(e) {
+        e.preventDefault();
+        const code = e.key === "Escape" ? "unbound" : e.code;
+        writeCode(bindingKey, code);
+        document.removeEventListener("keydown", capture, true);
+        el.blur();
+      }
+      document.addEventListener("keydown", capture, true);
+      el.addEventListener("blur", function onBlur() {
+        el.style.border = "1px solid #b4b4b4";
+        el.style.boxShadow = "none";
+        document.removeEventListener("keydown", capture, true);
+        refreshDisplay();
+        el.removeEventListener("blur", onBlur);
+      });
+    });
+  }
+  function startObserver() {
+    if (observerStarted) return;
+    observerStarted = true;
+    const observer = new MutationObserver(() => {
+      if (!bindingDefaults.size) return;
+      document.querySelectorAll(`input[id^="${ID_PREFIX}"]:not([data-wizascript-keybind-enhanced])`).forEach((el) => {
+        const bindingKey = el.id.slice(ID_PREFIX.length);
+        if (!bindingDefaults.has(bindingKey)) return;
+        enhanceInput(el, bindingKey, bindingDefaults.get(bindingKey));
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
   }
   function matchesCode(e, code, defaultCode) {
     if (code === defaultCode && NATIVE_MODIFIERS.has(defaultCode)) {
@@ -6181,14 +6144,15 @@ Version: v${version}`;
     return e.code === code;
   }
   function getPrimaryCode() {
-    if (!primaryKeySetting) return DEFAULT_PRIMARY_CODE;
-    const [code] = primaryKeySetting.value();
-    return code;
+    return readCode(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
   }
   function matchesSetting(e, binding) {
-    const [code] = binding.setting.value();
+    const code = readCode(binding.key, binding.defaultCode);
     return matchesCode(e, code, binding.defaultCode);
   }
+  var primaryHeld = false;
+  var holdTimer = null;
+  var comboFired = false;
   function bindGlobalListeners() {
     document.addEventListener("keydown", (e) => {
       const primaryCode = getPrimaryCode();
@@ -6238,25 +6202,21 @@ Version: v${version}`;
   function ensureCore(plugin) {
     if (settings) return;
     settings = createFeatureSettings(plugin, "keybinds", CATEGORY);
-    const type = ensureKeybindType();
-    if (!typeRegistered) {
-      plugin.settings().addType(type);
-      typeRegistered = true;
-    }
-    primaryKeySetting = settings.add("primaryKey", {
-      name: "Primary Key",
-      note: 'Held down to activate "Primary + <key>" bindings below. Tap alone for actions that trigger on a simple press.',
-      type,
-      default: JSON.stringify([DEFAULT_PRIMARY_CODE, DEFAULT_PRIMARY_DISPLAY])
-    });
+    startObserver();
     bindGlobalListeners();
+    settings.add(PRIMARY_KEY, {
+      name: "Primary Key",
+      note: 'Click, then press a key. Held down to activate "Primary + <key>" bindings below. Tap alone for actions that trigger on a simple press.',
+      type: "text",
+      default: DEFAULT_PRIMARY_CODE
+    });
+    bindingDefaults.set(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
   }
   function registerKeybind(plugin, config) {
     const {
       key,
       name,
       defaultCode,
-      defaultDisplay,
       scope = "global",
       selector,
       onMatch,
@@ -6264,15 +6224,14 @@ Version: v${version}`;
       onPrimaryPress,
       onPrimaryRelease
     } = config;
-    whenReady(plugin, () => {
-      ensureCore(plugin);
-      const setting = settings.add(key, {
-        name: `${name} - Primary + <key>`,
-        type: keybindType,
-        default: JSON.stringify([defaultCode, defaultDisplay])
-      });
-      registry.push({ key, setting, defaultCode, scope, selector, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease });
+    ensureCore(plugin);
+    settings.add(key, {
+      name: `${name} - Primary + <key>`,
+      type: "text",
+      default: defaultCode
     });
+    bindingDefaults.set(key, defaultCode);
+    registry.push({ key, defaultCode, scope, selector, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease });
   }
 
   // packages/misc/index.js

@@ -5012,6 +5012,9 @@ Version: v${version}`;
   }
 
   // packages/uc-tv/channel-switch.js
+  function isSpectatePage() {
+    return matchesPage({ prefix: "/Spectate" });
+  }
   async function goToNextMatch(plugin) {
     let games;
     try {
@@ -5089,6 +5092,7 @@ Version: v${version}`;
       // while a text field is focused.
       guardTypingContext: true,
       onMatch: () => {
+        if (!isSpectatePage()) return;
         if (!CONFIG.masterEnabled) return;
         switchChannel(plugin, -1);
       }
@@ -5100,6 +5104,7 @@ Version: v${version}`;
       scope: "global",
       guardTypingContext: true,
       onMatch: () => {
+        if (!isSpectatePage()) return;
         if (!CONFIG.masterEnabled) return;
         switchChannel(plugin, 1);
       }
@@ -5107,6 +5112,9 @@ Version: v${version}`;
   }
 
   // packages/uc-tv/channel-guide.js
+  function isSpectatePage2() {
+    return matchesPage({ prefix: "/Spectate" });
+  }
   var SOUL_COLORS2 = {
     DETERMINATION: "#ff4d4d",
     BRAVERY: "#ffb03b",
@@ -5331,14 +5339,17 @@ Version: v${version}`;
       // cancel the auto-continue countdown, rather than needing to hold
       // Primary the same way opening the guide does.
       onPrimaryPress: () => {
+        if (!isSpectatePage2()) return;
         if (!CONFIG.masterEnabled) return;
         cancelActiveCountdown();
       },
       onPrimaryAlone: () => {
+        if (!isSpectatePage2()) return;
         if (!CONFIG.masterEnabled) return;
         showChannelGuide(plugin);
       },
       onPrimaryRelease: () => {
+        if (!isSpectatePage2()) return;
         hideChannelGuide();
       }
     });
@@ -5368,7 +5379,7 @@ Version: v${version}`;
   }
 
   // packages/uc-tv/index.js
-  function isSpectatePage() {
+  function isSpectatePage3() {
     return matchesPage({ prefix: "/Spectate" });
   }
   function initUcTv(plugin) {
@@ -5378,10 +5389,10 @@ Version: v${version}`;
     dumpSettingsState();
     window.__ucTVScope = scopeActiveGames;
     window.__ucTVSettings = dumpSettingsState;
-    if (!isSpectatePage()) return;
     bindChannelKeybinds(plugin);
     bindChannelGuideKeybinds(plugin);
-    logDebug("Channel switching and channel guide keybinds active (see the Keybinds settings category). 1s navigation cooldown after page load.");
+    logDebug("Channel switching and channel guide keybinds registered (see the Keybinds settings category).");
+    if (!isSpectatePage3()) return;
     let handled = false;
     plugin.events.on("getResult", (data) => {
       logDebug("getResult fired - match ended.", data);

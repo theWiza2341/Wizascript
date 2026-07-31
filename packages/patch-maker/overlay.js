@@ -429,7 +429,12 @@ export function createPatchMakerOverlay({
   //
   // Small local wrapper so "Patch Maker" doesn't need repeating on
   // every one of the 8 calls below.
-  const register = (config) => registerKeybind(plugin, { ...config, packageLabel: 'Patch Maker' });
+  // Explicitly opts out of the registry's default typing-context
+  // guard (which is on for nearly everything else) - these bindings
+  // are all scoped to Patch Maker's own contenteditable elements, so
+  // they specifically NEED to fire while that element has focus,
+  // unlike almost every other package's keybinds.
+  const register = (config) => registerKeybind(plugin, { ...config, packageLabel: 'Patch Maker', guardTypingContext: false });
 
   register({
     key: "cycleCategoryUp",

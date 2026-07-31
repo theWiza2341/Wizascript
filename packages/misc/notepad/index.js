@@ -18,7 +18,7 @@
 // from the original single-file implementation - only its location
 // moved (packages/misc/notepad.js -> packages/misc/notepad/index.js).
 
-import { buildNotepadShell } from "./widget.js";
+import { buildNotepadShell, DEFAULT_TITLE } from "./widget.js";
 import { createDrawingSurface } from "./canvas.js";
 import { buildColorPicker } from "./color-wheel.js";
 import {
@@ -311,7 +311,27 @@ export function showNotepad() {
   });
 
   clearBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
-  clearBtn.addEventListener("click", () => surface.clear(), { signal });
+  clearBtn.addEventListener("click", () => {
+    // Mirrors forceResetNotepad's scope (drawing across every layer,
+    // paper color, pen color, recent colors, title) minus position -
+    // updates the already-mounted notepad in place rather than
+    // tearing the whole thing down and rebuilding it, which is what a
+    // full hide+show would otherwise require.
+    surface.resetAll();
+    renderLayerButtons();
+
+    currentPenColor = DEFAULT_PEN_STATE.color;
+    colorIndicator.style.background = currentPenColor;
+    surface.setStrokeColor(currentPenColor);
+    picker.setState(DEFAULT_PEN_STATE.hue, DEFAULT_PEN_STATE.saturation, DEFAULT_PEN_STATE.lightness);
+    clearSavedPenColor();
+
+    clearRecentColors();
+    recentColorsRow.render([]);
+
+    titleInput.value = DEFAULT_TITLE;
+    clearSavedTitle();
+  }, { signal });
 
   saveBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
   saveBtn.addEventListener("click", () => {

@@ -16,7 +16,7 @@
 // your most-recently-added layer at a time. Layer 1 can never be
 // removed.
 
-import { getSavedDrawing, setSavedDrawing } from "./storage.js";
+import { getSavedDrawing, setSavedDrawing, clearSavedDrawing } from "./storage.js";
 import { floodFillPixels } from "./flood-fill.js";
 
 const CANVAS_WIDTH = 240;
@@ -291,6 +291,31 @@ export function createDrawingSurface() {
     return true;
   }
 
+  // The comprehensive "Clear" reset - collapses back to exactly one
+  // blank layer at the default background color, matching what a
+  // freshly-reset notepad looks like on its next load, but applied to
+  // the live, already-mounted canvas immediately. Not undo-able (same
+  // as forceResetNotepad isn't) - wipes the undo/redo history outright
+  // rather than pushing one more snapshot onto a stack that's about to
+  // be cleared anyway. Also clears the persisted drawing entirely
+  // (not just the live canvas), so a reload afterward doesn't bring
+  // the old content back.
+  function resetAll() {
+    while (layers.length > 1) {
+      const removed = layers.pop();
+      removed.canvas.remove();
+    }
+    layers[0].ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    activeLayerIndex = 1;
+    paintBackground(DEFAULT_BACKGROUND);
+    undoStack = [];
+    redoStack = [];
+    clearTimeout(saveTimer);
+    clearSavedDrawing();
+    notifyLayersChange();
+    notifyHistoryChange();
+  }
+
   // ---- drawing ----
   function clear() {
     pushUndoSnapshot();
@@ -392,6 +417,7 @@ export function createDrawingSurface() {
     endStroke,
     clear,
     fill,
+    resetAll,
     undo,
     redo,
     setOnHistoryChange: (cb) => { onHistoryChange = cb; },

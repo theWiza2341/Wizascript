@@ -5677,11 +5677,64 @@ Version: v${version}`;
     return { root, header, body, headerButtons, titleInput };
   }
 
+  // packages/misc/notepad/flood-fill.js
+  function floodFillPixels(data, width, height, startX, startY, fillRgb, tolerance = 24) {
+    const x0 = Math.floor(startX);
+    const y0 = Math.floor(startY);
+    if (x0 < 0 || y0 < 0 || x0 >= width || y0 >= height) return false;
+    const idx = (x, y) => (y * width + x) * 4;
+    const startI = idx(x0, y0);
+    const startR = data[startI], startG = data[startI + 1], startB = data[startI + 2], startA = data[startI + 3];
+    const [fr, fg, fb] = fillRgb;
+    const fa = 255;
+    if (startR === fr && startG === fg && startB === fb && startA === fa) return false;
+    function matchesStart(i) {
+      return Math.abs(data[i] - startR) <= tolerance && Math.abs(data[i + 1] - startG) <= tolerance && Math.abs(data[i + 2] - startB) <= tolerance && Math.abs(data[i + 3] - startA) <= tolerance;
+    }
+    const visited = new Uint8Array(width * height);
+    const stack = [x0, y0];
+    visited[y0 * width + x0] = 1;
+    let filledAny = false;
+    while (stack.length) {
+      const y = stack.pop();
+      const x = stack.pop();
+      const i = idx(x, y);
+      data[i] = fr;
+      data[i + 1] = fg;
+      data[i + 2] = fb;
+      data[i + 3] = fa;
+      filledAny = true;
+      if (x > 0) tryPush(x - 1, y);
+      if (x < width - 1) tryPush(x + 1, y);
+      if (y > 0) tryPush(x, y - 1);
+      if (y < height - 1) tryPush(x, y + 1);
+    }
+    function tryPush(nx, ny) {
+      const vIdx = ny * width + nx;
+      if (visited[vIdx]) return;
+      if (!matchesStart(idx(nx, ny))) return;
+      visited[vIdx] = 1;
+      stack.push(nx, ny);
+    }
+    return filledAny;
+  }
+
   // packages/misc/notepad/canvas.js
   var CANVAS_WIDTH = 240;
   var CANVAS_HEIGHT = 200;
   var DEFAULT_BACKGROUND = "rgb(255, 254, 248)";
   var SAVE_DEBOUNCE_MS = 400;
+  var MAX_HISTORY = 8;
+  function resolveColorToRgb(cssColor) {
+    const probe = document.createElement("canvas");
+    probe.width = 1;
+    probe.height = 1;
+    const pctx = probe.getContext("2d");
+    pctx.fillStyle = cssColor;
+    pctx.fillRect(0, 0, 1, 1);
+    const [r, g, b] = pctx.getImageData(0, 0, 1, 1).data;
+    return [r, g, b];
+  }
   function createDrawingSurface() {
     const wrapper = document.createElement("div");
     wrapper.className = "wizascript-notepad-canvas-wrapper";
@@ -5729,12 +5782,66 @@ Version: v${version}`;
       img.src = saved.strokesDataUrl;
     }
     loadInitial();
+    let undoStack = [];
+    let redoStack = [];
+    let onHistoryChange = null;
+    let restoreGeneration = 0;
+    function snapshotState() {
+      return { strokesDataUrl: inkCanvas.toDataURL("image/png"), backgroundColor };
+    }
+    function notifyHistoryChange() {
+      if (onHistoryChange) onHistoryChange(undoStack.length > 0, redoStack.length > 0);
+    }
+    function restoreState(state) {
+      const myGeneration = ++restoreGeneration;
+      paintBackground(state.backgroundColor);
+      inkCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      if (!state.strokesDataUrl) {
+        scheduleSave();
+        return;
+      }
+      const img = new Image();
+      img.onload = () => {
+        if (myGeneration !== restoreGeneration) return;
+        inkCtx.drawImage(img, 0, 0);
+        scheduleSave();
+      };
+      img.src = state.strokesDataUrl;
+    }
+    function pushUndoSnapshot() {
+      undoStack.push(snapshotState());
+      if (undoStack.length > MAX_HISTORY) undoStack.shift();
+      redoStack = [];
+      notifyHistoryChange();
+    }
+    function undo() {
+      if (!undoStack.length) return false;
+      const current = snapshotState();
+      const previous = undoStack.pop();
+      redoStack.push(current);
+      if (redoStack.length > MAX_HISTORY) redoStack.shift();
+      restoreState(previous);
+      notifyHistoryChange();
+      return true;
+    }
+    function redo() {
+      if (!redoStack.length) return false;
+      const current = snapshotState();
+      const next = redoStack.pop();
+      undoStack.push(current);
+      if (undoStack.length > MAX_HISTORY) undoStack.shift();
+      restoreState(next);
+      notifyHistoryChange();
+      return true;
+    }
     function clear() {
+      pushUndoSnapshot();
       inkCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
       scheduleSave();
     }
     function setBackgroundColor(color) {
       if (color === backgroundColor) return;
+      pushUndoSnapshot();
       paintBackground(color);
       scheduleSave();
     }
@@ -5752,6 +5859,7 @@ Version: v${version}`;
       lastY = y;
     }
     function beginStroke(x, y, opts) {
+      pushUndoSnapshot();
       lastX = null;
       lastY = null;
       strokeTo(x, y, opts);
@@ -5759,6 +5867,19 @@ Version: v${version}`;
     function endStroke() {
       lastX = null;
       lastY = null;
+      scheduleSave();
+    }
+    function fill(x, y) {
+      pushUndoSnapshot();
+      const fillRgb = resolveColorToRgb(strokeColor);
+      const imageData = inkCtx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      const changed = floodFillPixels(imageData.data, CANVAS_WIDTH, CANVAS_HEIGHT, x, y, fillRgb);
+      if (!changed) {
+        undoStack.pop();
+        notifyHistoryChange();
+        return;
+      }
+      inkCtx.putImageData(imageData, 0, 0);
       scheduleSave();
     }
     function downloadAsPng(filename = "notepad-doodle.png") {
@@ -5785,6 +5906,12 @@ Version: v${version}`;
       strokeTo,
       endStroke,
       clear,
+      fill,
+      undo,
+      redo,
+      setOnHistoryChange: (cb) => {
+        onHistoryChange = cb;
+      },
       setBackgroundColor,
       downloadAsPng,
       getPointFromEvent,
@@ -5989,13 +6116,21 @@ Version: v${version}`;
     let pendingColor = currentPenColor;
     let drawing = false;
     surface.setStrokeColor(currentPenColor);
+    const undoBtn = document.createElement("span");
+    undoBtn.textContent = "\u21B6";
+    undoBtn.title = "Undo";
+    undoBtn.classList.add("wizascript-notepad-history-btn");
+    const redoBtn = document.createElement("span");
+    redoBtn.textContent = "\u21B7";
+    redoBtn.title = "Redo";
+    redoBtn.classList.add("wizascript-notepad-history-btn");
     const clearBtn = document.createElement("span");
     clearBtn.textContent = "Clear";
     const saveBtn = document.createElement("span");
     saveBtn.textContent = "Save PNG";
     const closeBtn = document.createElement("span");
     closeBtn.textContent = "\xD7";
-    headerButtons.append(clearBtn, saveBtn, closeBtn);
+    headerButtons.append(undoBtn, redoBtn, clearBtn, saveBtn, closeBtn);
     const mainColumn = document.createElement("div");
     mainColumn.className = "wizascript-notepad-main-column";
     const toolbar = document.createElement("div");
@@ -6010,6 +6145,10 @@ Version: v${version}`;
     const eraseBox = document.createElement("div");
     eraseBox.className = "wizascript-notepad-tool-box";
     eraseBox.textContent = "Erase";
+    const fillBox = document.createElement("div");
+    fillBox.className = "wizascript-notepad-tool-box";
+    fillBox.textContent = "Fill";
+    fillBox.title = "Click inside an enclosed area to fill it with the current pen color.";
     const sizeSlider = document.createElement("input");
     sizeSlider.type = "range";
     sizeSlider.className = "wizascript-notepad-size-slider";
@@ -6017,7 +6156,7 @@ Version: v${version}`;
     sizeSlider.max = "30";
     sizeSlider.value = String(currentThickness);
     sizeSlider.title = "Brush size";
-    toolbar.append(drawBox, eraseBox, sizeSlider);
+    toolbar.append(drawBox, eraseBox, fillBox, sizeSlider);
     mainColumn.append(toolbar, surface.wrapper);
     const colorColumn = document.createElement("div");
     colorColumn.className = "wizascript-notepad-side-column";
@@ -6063,17 +6202,27 @@ Version: v${version}`;
       currentTool = tool;
       drawBox.classList.toggle("active", tool === "draw");
       eraseBox.classList.toggle("active", tool === "erase");
+      fillBox.classList.toggle("active", tool === "fill");
+      surface.inkCanvas.classList.toggle("wizascript-notepad-canvas-ink-fill-tool", tool === "fill");
       updateCursorIndicatorSize();
     }
     function updateCursorIndicatorSize() {
+      if (currentTool === "fill") {
+        surface.cursorIndicator.style.display = "none";
+        return;
+      }
       const size = currentTool === "erase" ? currentThickness * 2.2 : currentThickness;
       surface.cursorIndicator.style.width = size + "px";
       surface.cursorIndicator.style.height = size + "px";
     }
     surface.inkCanvas.addEventListener("mousedown", (e) => {
       if (e.button !== 0) return;
-      drawing = true;
       const pt = surface.getPointFromEvent(e);
+      if (currentTool === "fill") {
+        surface.fill(pt.x, pt.y);
+        return;
+      }
+      drawing = true;
       surface.beginStroke(pt.x, pt.y, { erase: currentTool === "erase", size: currentThickness });
     }, { signal });
     surface.inkCanvas.addEventListener("mouseenter", () => {
@@ -6100,6 +6249,7 @@ Version: v${version}`;
     }, { signal });
     drawBox.addEventListener("click", () => selectTool("draw"), { signal });
     eraseBox.addEventListener("click", () => selectTool("erase"), { signal });
+    fillBox.addEventListener("click", () => selectTool("fill"), { signal });
     sizeSlider.addEventListener("input", () => {
       currentThickness = Number(sizeSlider.value);
       updateCursorIndicatorSize();
@@ -6110,6 +6260,16 @@ Version: v${version}`;
     }, { signal });
     applyBgBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
     applyBgBtn.addEventListener("click", () => surface.setBackgroundColor(pendingColor), { signal });
+    undoBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
+    undoBtn.addEventListener("click", () => surface.undo(), { signal });
+    redoBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
+    redoBtn.addEventListener("click", () => surface.redo(), { signal });
+    undoBtn.classList.add("wizascript-notepad-history-btn-disabled");
+    redoBtn.classList.add("wizascript-notepad-history-btn-disabled");
+    surface.setOnHistoryChange((canUndo, canRedo) => {
+      undoBtn.classList.toggle("wizascript-notepad-history-btn-disabled", !canUndo);
+      redoBtn.classList.toggle("wizascript-notepad-history-btn-disabled", !canRedo);
+    });
     clearBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
     clearBtn.addEventListener("click", () => surface.clear(), { signal });
     saveBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
@@ -6118,13 +6278,21 @@ Version: v${version}`;
     }, { signal });
     closeBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
     closeBtn.addEventListener("click", () => hideNotepad(), { signal });
-    mounted = { root, controller };
+    mounted = { root, controller, surface };
   }
   function hideNotepad() {
     if (!mounted) return;
     mounted.controller.abort();
     mounted.root.remove();
     mounted = null;
+  }
+  function undoNotepad() {
+    if (!mounted) return;
+    mounted.surface.undo();
+  }
+  function redoNotepad() {
+    if (!mounted) return;
+    mounted.surface.redo();
   }
   function forceResetNotepad() {
     hideNotepad();
@@ -6183,6 +6351,14 @@ Version: v${version}`;
   border-radius: 3px;
   padding: 1px 5px;
 }
+.wizascript-notepad-history-btn {
+  font-weight: bold;
+}
+.wizascript-notepad-history-btn-disabled {
+  opacity: 0.35;
+  pointer-events: none;
+  cursor: default;
+}
 .wizascript-notepad-title-input {
   /* Fixed rather than flex:1 - the header previously let the
      focusable/drag-blocking area stretch all the way to the header
@@ -6232,6 +6408,13 @@ Version: v${version}`;
 }
 .wizascript-notepad-canvas-ink {
   cursor: none;
+}
+.wizascript-notepad-canvas-ink-fill-tool {
+  /* Fill has no brush-size indicator (see updateCursorIndicatorSize) -
+     fall back to a real visible cursor so the click point stays
+     visible, instead of the invisible cursor draw/erase rely on their
+     own circular indicator to replace. */
+  cursor: crosshair;
 }
 .wizascript-notepad-cursor-indicator {
   position: absolute;
@@ -6404,6 +6587,20 @@ Version: v${version}`;
           showNotepad();
         }
       }
+    });
+    registerKeybind(plugin, {
+      key: "undoNotepad",
+      name: "Undo Drawing",
+      defaultCode: "KeyZ",
+      packageLabel: "Notepad",
+      onMatch: () => undoNotepad()
+    });
+    registerKeybind(plugin, {
+      key: "redoNotepad",
+      name: "Redo Drawing",
+      defaultCode: "KeyY",
+      packageLabel: "Notepad",
+      onMatch: () => redoNotepad()
     });
   }
 

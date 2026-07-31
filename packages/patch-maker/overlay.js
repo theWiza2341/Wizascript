@@ -426,7 +426,12 @@ export function createPatchMakerOverlay({
   // than one shared "Move" entry, since they're conceptually distinct
   // actions to the person configuring them even though the resulting
   // behavior (move up/down in a list) is similar.
-  registerKeybind(plugin, {
+  //
+  // Small local wrapper so "Patch Maker" doesn't need repeating on
+  // every one of the 8 calls below.
+  const register = (config) => registerKeybind(plugin, { ...config, packageLabel: 'Patch Maker' });
+
+  register({
     key: "cycleCategoryUp",
     name: "Cycle Entry Category Up",
     defaultCode: "Comma",
@@ -437,7 +442,7 @@ export function createPatchMakerOverlay({
       if (li) cycleCategory(li, -1);
     }
   });
-  registerKeybind(plugin, {
+  register({
     key: "cycleCategoryDown",
     name: "Cycle Entry Category Down",
     defaultCode: "Period",
@@ -448,7 +453,7 @@ export function createPatchMakerOverlay({
       if (li) cycleCategory(li, 1);
     }
   });
-  registerKeybind(plugin, {
+  register({
     key: "moveEntryUp",
     name: "Move Entry Up",
     defaultCode: "ArrowUp",
@@ -459,7 +464,7 @@ export function createPatchMakerOverlay({
       if (li) moveLi(li, -1);
     }
   });
-  registerKeybind(plugin, {
+  register({
     key: "moveEntryDown",
     name: "Move Entry Down",
     defaultCode: "ArrowDown",
@@ -470,7 +475,7 @@ export function createPatchMakerOverlay({
       if (li) moveLi(li, 1);
     }
   });
-  registerKeybind(plugin, {
+  register({
     key: "moveSectionUp",
     name: "Move Balance Section Up",
     defaultCode: "ArrowUp",
@@ -484,7 +489,7 @@ export function createPatchMakerOverlay({
       if (label) setTimeout(() => label.focus(), 0);
     }
   });
-  registerKeybind(plugin, {
+  register({
     key: "moveSectionDown",
     name: "Move Balance Section Down",
     defaultCode: "ArrowDown",
@@ -498,7 +503,7 @@ export function createPatchMakerOverlay({
       if (label) setTimeout(() => label.focus(), 0);
     }
   });
-  registerKeybind(plugin, {
+  register({
     key: "moveCardUp",
     name: "Move Card Up",
     defaultCode: "ArrowUp",
@@ -506,7 +511,7 @@ export function createPatchMakerOverlay({
     selector: ".uc-card-item",
     onMatch: () => newCards.moveCardItem(document.activeElement, -1)
   });
-  registerKeybind(plugin, {
+  register({
     key: "moveCardDown",
     name: "Move Card Down",
     defaultCode: "ArrowDown",

@@ -20,8 +20,6 @@ function isPatchNotesPage() {
 
 export function initPatchMaker(plugin) {
   const settings = registerPatchMakerSettings(plugin);
-  if (!settings.enabled.value()) return;
-  if (!isPatchNotesPage()) return;
   const logger = createLogger("PatchMaker");
   const originalWarn = logger.warn.bind(logger);
   const originalLog = logger.log.bind(logger);
@@ -34,10 +32,16 @@ export function initPatchMaker(plugin) {
   let wordColors = { ...BASE_WORD_COLORS };
   let underlineTokens = [];
   let cardNameMap = new Map();
+
+  // createPatchMakerOverlay() itself is cheap - it only defines
+  // closures, creates the newCards feature, and registers keybinds;
+  // none of that touches the page DOM. Calling it unconditionally
+  // (before the enabled/page checks below) is what makes the keybind
+  // settings register site-wide and stay visible/remappable even
+  // while "Enable Patch Maker" is off, matching how every other
+  // package's keybinds already work - only the actual DOM-building
+  // (.init(), below) needs to stay gated to the real Patch Notes page.
   const overlay = createPatchMakerOverlay({
-    // The only change from before - plugin is now passed through so
-    // the overlay can register its own keybinds via the shared
-    // registry, instead of the old fixed Ctrl/Shift+Arrow handling.
     plugin,
     logger,
     version: FEATURE_VERSION,
@@ -49,6 +53,10 @@ export function initPatchMaker(plugin) {
     getOpenOnLoad: () => settings.openOnLoad.value()
   });
   settings.hideControls.on((value) => overlay.setControlsHidden(value));
+
+  if (!settings.enabled.value()) return;
+  if (!isPatchNotesPage()) return;
+
   async function refreshLocalizedData() {
     const languageLabel = settings.language.value();
     const { tokens, localizedColors } = await buildLocalizedFormattingData(languageLabel, BASE_WORD_COLORS);

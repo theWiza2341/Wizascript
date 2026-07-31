@@ -29,7 +29,7 @@ export function initMisc(plugin) {
     key: "toggleNotepad",
     name: "Toggle Notepad",
     defaultCode: "KeyO",
-    defaultDisplay: "O",
+    packageLabel: "Notepad",
     onMatch: () => {
       const next = !settings.enableNotepad.value();
       settings.enableNotepad.set(next);
@@ -43,7 +43,7 @@ export function initMisc(plugin) {
     key: "resetNotepad",
     name: "Reset Notepad",
     defaultCode: "KeyN",
-    defaultDisplay: "N",
+    packageLabel: "Notepad",
     onMatch: () => {
       forceResetNotepad();
       if (settings.enableNotepad.value()) {

@@ -293,6 +293,7 @@ export function bindChannelGuideKeybinds(plugin) {
     key: 'channelGuide',
     name: 'Open Channel Guide',
     scope: 'global',
+    packageLabel: 'UC TV',
     // Fires the instant Primary goes down, not gated behind
     // confirming a hold first - this is what makes a simple tap
     // cancel the auto-continue countdown, rather than needing to hold

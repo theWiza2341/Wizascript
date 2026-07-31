@@ -253,6 +253,7 @@ export function registerKeybind(plugin, config) {
     key, name, defaultCode,
     scope = 'global', selector,
     guardTypingContext = false,
+    packageLabel,
     onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease
   } = config;
 
@@ -263,8 +264,14 @@ export function registerKeybind(plugin, config) {
   // channel guide) has nothing meaningful to put in a "Primary + <key>"
   // field, and showing one anyway would be actively misleading.
   if (onMatch) {
+    // packageLabel prefixes the display name (e.g. "[UC TV] Next
+    // Channel") so a single flat Keybinds list stays scannable as
+    // more packages add their own bindings - every package is
+    // expected to pass this now, but it's optional so a caller that
+    // somehow doesn't know its own name yet doesn't hard-fail.
+    const label = packageLabel ? `[${packageLabel}] ${name}` : name;
     settings.add(key, {
-      name: `${name} - Primary + <key>`,
+      name: `${label} - Primary + <key>`,
       type: 'text',
       default: defaultCode
     });

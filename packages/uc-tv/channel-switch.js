@@ -102,6 +102,7 @@ export function bindChannelKeybinds(plugin) {
     name: 'Previous Channel',
     defaultCode: 'ArrowLeft',
     scope: 'global',
+    packageLabel: 'UC TV',
     // Ctrl+Left/Right is a native "jump a word" shortcut while typing
     // (e.g. in chat) - guarding this specifically preserves that,
     // unlike Patch Maker's shortcuts, which deliberately need to fire
@@ -118,6 +119,7 @@ export function bindChannelKeybinds(plugin) {
     name: 'Next Channel',
     defaultCode: 'ArrowRight',
     scope: 'global',
+    packageLabel: 'UC TV',
     guardTypingContext: true,
     onMatch: () => {
       if (!isSpectatePage()) return;

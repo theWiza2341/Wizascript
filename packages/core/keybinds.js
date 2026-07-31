@@ -65,7 +65,7 @@ function writeCode(bindingKey, code) {
 const DISPLAY_OVERRIDES = {
   Control: 'Ctrl', Shift: 'Shift', Alt: 'Alt', Meta: 'Meta',
   ArrowUp: 'Up Arrow', ArrowDown: 'Down Arrow', ArrowLeft: 'Left Arrow', ArrowRight: 'Right Arrow',
-  Space: 'Space', Escape: 'Esc', unbound: 'Unbound'
+  Space: 'Space', Escape: 'Esc', Comma: ',', Period: '.', unbound: 'Unbound'
 };
 function codeToDisplay(code) {
   if (!code) return 'Unbound';
@@ -229,7 +229,7 @@ function ensureCore(plugin) {
 
   settings.add(PRIMARY_KEY, {
     name: 'Primary Key',
-    note: 'Click, then press a key. Held down to activate "Primary + <key>" bindings below. Tap alone for actions that trigger on a simple press.',
+    note: 'Click to remap. Hold for combos below, or tap alone.',
     type: 'text',
     default: DEFAULT_PRIMARY_CODE
   });
@@ -279,4 +279,18 @@ export function registerKeybind(plugin, config) {
 // hardcode "Ctrl", since Primary can be remapped.
 export function getPrimaryKeyDisplay() {
   return codeToDisplay(getPrimaryCode());
+}
+
+// For carve-outs elsewhere that stop most keys from propagating while
+// something is focused (e.g. Patch Maker's own input-blocker, which
+// otherwise swallows nearly everything while editing an overlay
+// field) - lets that code defer to whatever's actually registered
+// right now, including user remaps, instead of hardcoding specific
+// key checks that would silently go stale the moment a binding gets
+// remapped away from its shipped default.
+export function isRegisteredKeybindEvent(e) {
+  const primaryCode = getPrimaryCode();
+  if (matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE)) return true;
+  if (!primaryHeld) return false;
+  return registry.some((b) => b.onMatch && matchesSetting(e, b));
 }

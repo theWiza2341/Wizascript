@@ -78,6 +78,261 @@
     return { add, value };
   }
 
+  // packages/core/keybinds.js
+  var CATEGORY = "Keybinds";
+  var HOLD_DELAY_MS = 250;
+  var NATIVE_MODIFIERS = /* @__PURE__ */ new Set(["Control", "Shift", "Alt"]);
+  var DEFAULT_PRIMARY_CODE = "Control";
+  var PRIMARY_KEY = "primaryKey";
+  var GM_PREFIX = "wizascript.keybinds.";
+  var ID_PREFIX = "underscript.plugin.Wizascript.keybinds.";
+  function storageKey(bindingKey) {
+    return `${GM_PREFIX}${bindingKey}`;
+  }
+  function readCode(bindingKey, defaultCode) {
+    return GM_getValue(storageKey(bindingKey), defaultCode);
+  }
+  function writeCode(bindingKey, code) {
+    GM_setValue(storageKey(bindingKey), code);
+  }
+  var DISPLAY_OVERRIDES = {
+    Control: "Ctrl",
+    Shift: "Shift",
+    Alt: "Alt",
+    Meta: "Meta",
+    ArrowUp: "Up Arrow",
+    ArrowDown: "Down Arrow",
+    ArrowLeft: "Left Arrow",
+    ArrowRight: "Right Arrow",
+    Space: "Space",
+    Escape: "Esc",
+    Comma: ",",
+    Period: ".",
+    unbound: "Unbound"
+  };
+  function codeToDisplay(code) {
+    if (!code) return "Unbound";
+    if (DISPLAY_OVERRIDES[code]) return DISPLAY_OVERRIDES[code];
+    if (/^Key[A-Z]$/.test(code)) return code.slice(3);
+    if (/^Digit[0-9]$/.test(code)) return code.slice(5);
+    return code;
+  }
+  var settings = null;
+  var registry = [];
+  var bindingDefaults = /* @__PURE__ */ new Map();
+  var dividerKeys = /* @__PURE__ */ new Set();
+  var seenPackageLabels = /* @__PURE__ */ new Set();
+  var observerStarted = false;
+  function isTypingContext() {
+    const el = document.activeElement;
+    if (!el) return false;
+    const tag = el.tagName;
+    return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
+  }
+  function enhanceInput(el, bindingKey, defaultCode) {
+    el.setAttribute("data-wizascript-keybind-enhanced", "true");
+    el.readOnly = true;
+    Object.assign(el.style, {
+      cursor: "pointer",
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      el.value = codeToDisplay(readCode(bindingKey, defaultCode));
+    }
+    refreshDisplay();
+    el.addEventListener("focus", () => {
+      el.style.border = "1px solid #40E0D0";
+      el.style.boxShadow = "0 0 4px #40E0D0";
+      el.value = "...?";
+      function capture(e) {
+        e.preventDefault();
+        const code = e.key === "Escape" ? "unbound" : e.code;
+        writeCode(bindingKey, code);
+        document.removeEventListener("keydown", capture, true);
+        el.blur();
+      }
+      document.addEventListener("keydown", capture, true);
+      el.addEventListener("blur", function onBlur() {
+        el.style.border = "1px solid #b4b4b4";
+        el.style.boxShadow = "none";
+        document.removeEventListener("keydown", capture, true);
+        refreshDisplay();
+        el.removeEventListener("blur", onBlur);
+      });
+    });
+  }
+  function enhanceDivider(el) {
+    el.setAttribute("data-wizascript-keybind-enhanced", "true");
+    el.readOnly = true;
+    el.tabIndex = -1;
+    Object.assign(el.style, {
+      backgroundColor: "transparent",
+      border: "none",
+      borderBottom: "1px solid #666",
+      color: "#8ab4f8",
+      fontWeight: "bold",
+      cursor: "default",
+      pointerEvents: "none"
+    });
+  }
+  function startObserver() {
+    if (observerStarted) return;
+    observerStarted = true;
+    const observer = new MutationObserver(() => {
+      if (!bindingDefaults.size && !dividerKeys.size) return;
+      document.querySelectorAll(`input[id^="${ID_PREFIX}"]:not([data-wizascript-keybind-enhanced])`).forEach((el) => {
+        const bindingKey = el.id.slice(ID_PREFIX.length);
+        if (dividerKeys.has(bindingKey)) {
+          enhanceDivider(el);
+          return;
+        }
+        if (!bindingDefaults.has(bindingKey)) return;
+        enhanceInput(el, bindingKey, bindingDefaults.get(bindingKey));
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+  function matchesCode(e, code, defaultCode) {
+    if (code === defaultCode && NATIVE_MODIFIERS.has(defaultCode)) {
+      return e.key === defaultCode;
+    }
+    return e.code === code;
+  }
+  function getPrimaryCode() {
+    return readCode(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
+  }
+  function matchesSetting(e, binding) {
+    const code = readCode(binding.key, binding.defaultCode);
+    return matchesCode(e, code, binding.defaultCode);
+  }
+  var primaryHeld = false;
+  var holdTimer = null;
+  var comboFired = false;
+  function bindGlobalListeners() {
+    document.addEventListener("keydown", (e) => {
+      const primaryCode = getPrimaryCode();
+      const isPrimary = matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE);
+      if (isPrimary) {
+        if (primaryHeld) return;
+        primaryHeld = true;
+        comboFired = false;
+        registry.forEach((b) => {
+          if (b.onPrimaryPress) b.onPrimaryPress(e);
+        });
+        clearTimeout(holdTimer);
+        holdTimer = setTimeout(() => {
+          if (comboFired) return;
+          if (isTypingContext()) return;
+          registry.forEach((b) => {
+            if (b.scope === "global" && b.onPrimaryAlone) b.onPrimaryAlone(e);
+          });
+        }, HOLD_DELAY_MS);
+        return;
+      }
+      if (!primaryHeld) return;
+      clearTimeout(holdTimer);
+      for (const b of registry) {
+        if (!b.onMatch) continue;
+        if (!matchesSetting(e, b)) continue;
+        if (b.guardTypingContext && isTypingContext()) continue;
+        if (b.scope === "scoped") {
+          const active = document.activeElement;
+          if (!active || !active.matches(b.selector)) continue;
+        }
+        comboFired = true;
+        e.preventDefault();
+        b.onMatch(e);
+        break;
+      }
+    });
+    document.addEventListener("keyup", (e) => {
+      const primaryCode = getPrimaryCode();
+      if (matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE)) {
+        primaryHeld = false;
+        clearTimeout(holdTimer);
+        registry.forEach((b) => {
+          if (b.scope === "global" && b.onPrimaryRelease) b.onPrimaryRelease(e);
+        });
+      }
+    });
+  }
+  function ensureCore(plugin) {
+    if (settings) return;
+    settings = createFeatureSettings(plugin, "keybinds", CATEGORY);
+    startObserver();
+    bindGlobalListeners();
+    settings.add(PRIMARY_KEY, {
+      name: "Primary Key",
+      note: "Click to remap. Hold for combos below, or tap alone.",
+      type: "text",
+      default: DEFAULT_PRIMARY_CODE
+    });
+    bindingDefaults.set(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
+  }
+  var pendingRegistrations = [];
+  var autoFlushScheduled = false;
+  function registerKeybind(plugin, config) {
+    pendingRegistrations.push({ plugin, config });
+    if (!autoFlushScheduled) {
+      autoFlushScheduled = true;
+      setTimeout(() => {
+        if (pendingRegistrations.length) flushKeybindRegistrations();
+      }, 0);
+    }
+  }
+  function flushKeybindRegistrations() {
+    const queued = pendingRegistrations.splice(0);
+    queued.forEach(({ plugin, config }) => registerKeybindNow(plugin, config));
+  }
+  function registerKeybindNow(plugin, config) {
+    const {
+      key,
+      name,
+      defaultCode,
+      scope = "global",
+      selector,
+      guardTypingContext = false,
+      packageLabel,
+      onMatch,
+      onPrimaryAlone,
+      onPrimaryPress,
+      onPrimaryRelease
+    } = config;
+    ensureCore(plugin);
+    if (packageLabel && !seenPackageLabels.has(packageLabel)) {
+      seenPackageLabels.add(packageLabel);
+      const dividerKey = `__divider_${packageLabel.replace(/\s+/g, "_")}`;
+      settings.add(dividerKey, {
+        name: `\u2014 ${packageLabel} \u2014`,
+        type: "text",
+        default: ""
+      });
+      dividerKeys.add(dividerKey);
+    }
+    if (onMatch) {
+      settings.add(key, {
+        name: `${name} - Primary + <key>`,
+        type: "text",
+        default: defaultCode
+      });
+      bindingDefaults.set(key, defaultCode);
+    }
+    registry.push({ key, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease });
+  }
+  function getPrimaryKeyDisplay() {
+    return codeToDisplay(getPrimaryCode());
+  }
+  function isRegisteredKeybindEvent(e) {
+    const primaryCode = getPrimaryCode();
+    if (matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE)) return true;
+    if (!primaryHeld) return false;
+    return registry.some((b) => b.onMatch && matchesSetting(e, b));
+  }
+
   // packages/patch-maker/settings.js
   function registerPatchMakerSettings(plugin) {
     const settings2 = createFeatureSettings(plugin, "patchmaker", "Patch Maker");
@@ -286,247 +541,6 @@
       ensureCardAddTile(section);
     }
     return { createSection, collectState, restoreState, moveCardItem };
-  }
-
-  // packages/core/keybinds.js
-  var CATEGORY = "Keybinds";
-  var HOLD_DELAY_MS = 250;
-  var NATIVE_MODIFIERS = /* @__PURE__ */ new Set(["Control", "Shift", "Alt"]);
-  var DEFAULT_PRIMARY_CODE = "Control";
-  var PRIMARY_KEY = "primaryKey";
-  var GM_PREFIX = "wizascript.keybinds.";
-  var ID_PREFIX = "underscript.plugin.Wizascript.keybinds.";
-  function storageKey(bindingKey) {
-    return `${GM_PREFIX}${bindingKey}`;
-  }
-  function readCode(bindingKey, defaultCode) {
-    return GM_getValue(storageKey(bindingKey), defaultCode);
-  }
-  function writeCode(bindingKey, code) {
-    GM_setValue(storageKey(bindingKey), code);
-  }
-  var DISPLAY_OVERRIDES = {
-    Control: "Ctrl",
-    Shift: "Shift",
-    Alt: "Alt",
-    Meta: "Meta",
-    ArrowUp: "Up Arrow",
-    ArrowDown: "Down Arrow",
-    ArrowLeft: "Left Arrow",
-    ArrowRight: "Right Arrow",
-    Space: "Space",
-    Escape: "Esc",
-    Comma: ",",
-    Period: ".",
-    unbound: "Unbound"
-  };
-  function codeToDisplay(code) {
-    if (!code) return "Unbound";
-    if (DISPLAY_OVERRIDES[code]) return DISPLAY_OVERRIDES[code];
-    if (/^Key[A-Z]$/.test(code)) return code.slice(3);
-    if (/^Digit[0-9]$/.test(code)) return code.slice(5);
-    return code;
-  }
-  var settings = null;
-  var registry = [];
-  var bindingDefaults = /* @__PURE__ */ new Map();
-  var dividerKeys = /* @__PURE__ */ new Set();
-  var seenPackageLabels = /* @__PURE__ */ new Set();
-  var observerStarted = false;
-  function isTypingContext() {
-    const el = document.activeElement;
-    if (!el) return false;
-    const tag = el.tagName;
-    return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
-  }
-  function enhanceInput(el, bindingKey, defaultCode) {
-    el.setAttribute("data-wizascript-keybind-enhanced", "true");
-    el.readOnly = true;
-    Object.assign(el.style, {
-      cursor: "pointer",
-      backgroundColor: "black",
-      color: "white",
-      border: "1px solid #b4b4b4",
-      borderRadius: "3px",
-      textAlign: "center"
-    });
-    function refreshDisplay() {
-      el.value = codeToDisplay(readCode(bindingKey, defaultCode));
-    }
-    refreshDisplay();
-    el.addEventListener("focus", () => {
-      el.style.border = "1px solid #40E0D0";
-      el.style.boxShadow = "0 0 4px #40E0D0";
-      el.value = "...?";
-      function capture(e) {
-        e.preventDefault();
-        const code = e.key === "Escape" ? "unbound" : e.code;
-        writeCode(bindingKey, code);
-        document.removeEventListener("keydown", capture, true);
-        el.blur();
-      }
-      document.addEventListener("keydown", capture, true);
-      el.addEventListener("blur", function onBlur() {
-        el.style.border = "1px solid #b4b4b4";
-        el.style.boxShadow = "none";
-        document.removeEventListener("keydown", capture, true);
-        refreshDisplay();
-        el.removeEventListener("blur", onBlur);
-      });
-    });
-  }
-  function enhanceDivider(el) {
-    el.setAttribute("data-wizascript-keybind-enhanced", "true");
-    el.readOnly = true;
-    el.tabIndex = -1;
-    Object.assign(el.style, {
-      backgroundColor: "transparent",
-      border: "none",
-      borderBottom: "1px solid #666",
-      color: "#8ab4f8",
-      fontWeight: "bold",
-      cursor: "default",
-      pointerEvents: "none"
-    });
-  }
-  function startObserver() {
-    if (observerStarted) return;
-    observerStarted = true;
-    const observer = new MutationObserver(() => {
-      if (!bindingDefaults.size && !dividerKeys.size) return;
-      document.querySelectorAll(`input[id^="${ID_PREFIX}"]:not([data-wizascript-keybind-enhanced])`).forEach((el) => {
-        const bindingKey = el.id.slice(ID_PREFIX.length);
-        if (dividerKeys.has(bindingKey)) {
-          enhanceDivider(el);
-          return;
-        }
-        if (!bindingDefaults.has(bindingKey)) return;
-        enhanceInput(el, bindingKey, bindingDefaults.get(bindingKey));
-      });
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-  }
-  function matchesCode(e, code, defaultCode) {
-    if (code === defaultCode && NATIVE_MODIFIERS.has(defaultCode)) {
-      return e.key === defaultCode;
-    }
-    return e.code === code;
-  }
-  function getPrimaryCode() {
-    return readCode(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
-  }
-  function matchesSetting(e, binding) {
-    const code = readCode(binding.key, binding.defaultCode);
-    return matchesCode(e, code, binding.defaultCode);
-  }
-  var primaryHeld = false;
-  var holdTimer = null;
-  var comboFired = false;
-  function bindGlobalListeners() {
-    document.addEventListener("keydown", (e) => {
-      const primaryCode = getPrimaryCode();
-      const isPrimary = matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE);
-      if (isPrimary) {
-        if (primaryHeld) return;
-        primaryHeld = true;
-        comboFired = false;
-        registry.forEach((b) => {
-          if (b.onPrimaryPress) b.onPrimaryPress(e);
-        });
-        clearTimeout(holdTimer);
-        holdTimer = setTimeout(() => {
-          if (comboFired) return;
-          if (isTypingContext()) return;
-          registry.forEach((b) => {
-            if (b.scope === "global" && b.onPrimaryAlone) b.onPrimaryAlone(e);
-          });
-        }, HOLD_DELAY_MS);
-        return;
-      }
-      if (!primaryHeld) return;
-      clearTimeout(holdTimer);
-      for (const b of registry) {
-        if (!b.onMatch) continue;
-        if (!matchesSetting(e, b)) continue;
-        if (b.guardTypingContext && isTypingContext()) continue;
-        if (b.scope === "scoped") {
-          const active = document.activeElement;
-          if (!active || !active.matches(b.selector)) continue;
-        }
-        comboFired = true;
-        e.preventDefault();
-        b.onMatch(e);
-        break;
-      }
-    });
-    document.addEventListener("keyup", (e) => {
-      const primaryCode = getPrimaryCode();
-      if (matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE)) {
-        primaryHeld = false;
-        clearTimeout(holdTimer);
-        registry.forEach((b) => {
-          if (b.scope === "global" && b.onPrimaryRelease) b.onPrimaryRelease(e);
-        });
-      }
-    });
-  }
-  function ensureCore(plugin) {
-    if (settings) return;
-    settings = createFeatureSettings(plugin, "keybinds", CATEGORY);
-    startObserver();
-    bindGlobalListeners();
-    settings.add(PRIMARY_KEY, {
-      name: "Primary Key",
-      note: "Click to remap. Hold for combos below, or tap alone.",
-      type: "text",
-      default: DEFAULT_PRIMARY_CODE
-    });
-    bindingDefaults.set(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
-  }
-  function registerKeybind(plugin, config) {
-    const {
-      key,
-      name,
-      defaultCode,
-      scope = "global",
-      selector,
-      guardTypingContext = false,
-      packageLabel,
-      onMatch,
-      onPrimaryAlone,
-      onPrimaryPress,
-      onPrimaryRelease
-    } = config;
-    ensureCore(plugin);
-    if (packageLabel && !seenPackageLabels.has(packageLabel)) {
-      seenPackageLabels.add(packageLabel);
-      const dividerKey = `__divider_${packageLabel.replace(/\s+/g, "_")}`;
-      settings.add(dividerKey, {
-        name: `\u2014 ${packageLabel} \u2014`,
-        type: "text",
-        default: ""
-      });
-      dividerKeys.add(dividerKey);
-    }
-    if (onMatch) {
-      const label = packageLabel ? `[${packageLabel}] ${name}` : name;
-      settings.add(key, {
-        name: `${label} - Primary + <key>`,
-        type: "text",
-        default: defaultCode
-      });
-      bindingDefaults.set(key, defaultCode);
-    }
-    registry.push({ key, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease });
-  }
-  function getPrimaryKeyDisplay() {
-    return codeToDisplay(getPrimaryCode());
-  }
-  function isRegisteredKeybindEvent(e) {
-    const primaryCode = getPrimaryCode();
-    if (matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE)) return true;
-    if (!primaryHeld) return false;
-    return registry.some((b) => b.onMatch && matchesSetting(e, b));
   }
 
   // packages/patch-maker/input-blocker.js
@@ -6395,10 +6409,11 @@ Version: v${version}`;
 
   // manifest.js
   bootstrap((plugin) => {
+    initDeckTracker(plugin);
+    initMisc(plugin);
     initPatchMaker(plugin);
     initTrueHubBridge(plugin);
-    initDeckTracker(plugin);
     initUcTv(plugin);
-    initMisc(plugin);
+    flushKeybindRegistrations();
   });
 })();

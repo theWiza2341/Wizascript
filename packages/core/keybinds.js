@@ -15,15 +15,26 @@
 //     selector (Patch Maker's entry/section/card-tile shortcuts,
 //     which mean different things depending on what's focused).
 //
-// Primary can be freely remapped through the same capture widget
-// Galascript's own keybind setting type uses (click, press a key,
-// done). While a binding is still at its shipped default AND that
-// default is a native modifier (Control/Shift/Alt), matching uses
-// e.key rather than e.code - side-independent, so remapping this
-// system in doesn't suddenly break someone who happens to use their
-// right Ctrl key. The moment a binding is actually customized through
-// the widget, matching switches to the exact e.code it captured,
-// same as Galascript's real behavior for a genuinely custom bind.
+// STORAGE: real persistence is via GM_getValue/GM_setValue directly -
+// the same mechanism Notepad's own storage layer already uses. Each
+// binding also registers a plain, ordinary `type: 'text'` UnderScript
+// setting, but purely to get a real <input> rendered in the right
+// settings tab/category with a predictable ID
+// (underscript.plugin.Wizascript.keybinds.<key>, confirmed via direct
+// inspection) - we don't depend on UnderScript's own read/write of
+// that input actually persisting correctly. A MutationObserver finds
+// that input once it renders and turns it into a click-to-capture
+// widget (readonly, styled, listens for the next keypress) - the same
+// technique Galascript's own leGrandeObserver uses to attach custom
+// behavior to specific setting IDs once they appear in the DOM.
+//
+// Primary can be freely remapped through that capture widget. While a
+// binding is still at its shipped default AND that default is a
+// native modifier (Control/Shift/Alt), matching uses e.key rather
+// than e.code - side-independent, so shipping this doesn't suddenly
+// break someone who happens to use their right Ctrl key. The moment a
+// binding is actually customized, matching switches to the exact
+// e.code captured.
 
 import { createFeatureSettings } from './settings.js';
 
@@ -31,74 +42,43 @@ const CATEGORY = 'Keybinds';
 const HOLD_DELAY_MS = 250;
 const NATIVE_MODIFIERS = new Set(['Control', 'Shift', 'Alt']);
 const DEFAULT_PRIMARY_CODE = 'Control';
-const DEFAULT_PRIMARY_DISPLAY = 'Ctrl';
+const PRIMARY_KEY = 'primaryKey';
+
+const GM_PREFIX = 'wizascript.keybinds.';
+const ID_PREFIX = 'underscript.plugin.Wizascript.keybinds.';
+
+function storageKey(bindingKey) {
+  return `${GM_PREFIX}${bindingKey}`;
+}
+
+function readCode(bindingKey, defaultCode) {
+  return GM_getValue(storageKey(bindingKey), defaultCode);
+}
+
+function writeCode(bindingKey, code) {
+  GM_setValue(storageKey(bindingKey), code);
+}
+
+// No separate stored display string - just the raw code, with a
+// small formatter to make it readable. One less thing that could
+// drift out of sync with the underlying value.
+const DISPLAY_OVERRIDES = {
+  Control: 'Ctrl', Shift: 'Shift', Alt: 'Alt', Meta: 'Meta',
+  ArrowUp: 'Up Arrow', ArrowDown: 'Down Arrow', ArrowLeft: 'Left Arrow', ArrowRight: 'Right Arrow',
+  Space: 'Space', Escape: 'Esc', unbound: 'Unbound'
+};
+function codeToDisplay(code) {
+  if (!code) return 'Unbound';
+  if (DISPLAY_OVERRIDES[code]) return DISPLAY_OVERRIDES[code];
+  if (/^Key[A-Z]$/.test(code)) return code.slice(3);
+  if (/^Digit[0-9]$/.test(code)) return code.slice(5);
+  return code;
+}
 
 let settings = null;
-let primaryKeySetting = null;
-let keybindType = null;
-let typeRegistered = false;
-const registry = []; // { key, setting, defaultCode, scope, selector, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease }
-
-// window.underscript.plugin(...) becomes callable before
-// window.underscript.utils is populated - every other package's
-// settings.add() call works fine this early since none of them touch
-// .utils, but our custom SettingType is the first thing that does, so
-// we're the first to actually hit this gap. Queue registrations and
-// flush them once .utils genuinely exists, rather than assuming
-// readiness just because `plugin` itself was obtainable.
-const pendingRegistrations = [];
-let readyListenerAttached = false;
-let pollAttempts = 0;
-const MAX_POLL_ATTEMPTS = 50;
-const POLL_INTERVAL_MS = 100;
-
-function isUnderscriptUtilsReady() {
-  return !!(window.underscript && window.underscript.utils && window.underscript.utils.SettingType);
-}
-
-function flushPending() {
-  if (!isUnderscriptUtilsReady() || !pendingRegistrations.length) return;
-  const queued = pendingRegistrations.splice(0);
-  queued.forEach((fn) => fn());
-}
-
-function pollForReady() {
-  if (isUnderscriptUtilsReady()) {
-    flushPending();
-    return;
-  }
-  pollAttempts++;
-  if (pollAttempts > MAX_POLL_ATTEMPTS) {
-    console.error('[Wizascript] Gave up waiting for window.underscript.utils - keybinds will not be registered this session.');
-    return;
-  }
-  setTimeout(pollForReady, POLL_INTERVAL_MS);
-}
-
-// Runs fn now if window.underscript.utils is already populated,
-// otherwise queues it. The first caller to queue also sets up the
-// wait: `underscript:ready` is the same event Galascript's own code
-// waits on for this exact reason, used here as the fast path: if that
-// event already fired before we got a listener attached (a real
-// possibility, since we don't control when in the boot sequence a
-// given package first calls registerKeybind), the poll below is what
-// actually saves us rather than just being a defensive extra.
-function whenReady(plugin, fn) {
-  if (isUnderscriptUtilsReady()) {
-    fn();
-    return;
-  }
-  pendingRegistrations.push(fn);
-  if (!readyListenerAttached) {
-    readyListenerAttached = true;
-    plugin.events.on('underscript:ready', flushPending);
-    pollForReady();
-  }
-}
-
-let primaryHeld = false;
-let holdTimer = null;
-let comboFired = false; // true once a secondary key has matched during this hold, so onPrimaryAlone doesn't ALSO fire
+const registry = []; // { key, defaultCode, scope, selector, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease }
+const bindingDefaults = new Map(); // key -> defaultCode, for the observer to match against
+let observerStarted = false;
 
 function isTypingContext() {
   const el = document.activeElement;
@@ -107,82 +87,62 @@ function isTypingContext() {
   return tag === 'INPUT' || tag === 'TEXTAREA' || el.isContentEditable;
 }
 
-// A custom settings-panel widget, adapted from Galascript's own
-// keybindSetting (a real, working UnderScript SettingType): click to
-// focus, next keydown/mousedown captures that key/button, Escape
-// unbinds, blurring without capturing reverts the display.
-function ensureKeybindType() {
-  if (keybindType) return keybindType;
-  const $ = window.$;
-  const underscript = window.underscript;
+// Turns one plain UnderScript text-setting <input> into a click-to-
+// capture widget. Readonly (not directly typable), styled to look
+// like a button, focus starts listening for the next keydown.
+function enhanceInput(el, bindingKey, defaultCode) {
+  el.setAttribute('data-wizascript-keybind-enhanced', 'true');
+  el.readOnly = true;
+  Object.assign(el.style, {
+    cursor: 'pointer',
+    backgroundColor: 'black',
+    color: 'white',
+    border: '1px solid #b4b4b4',
+    borderRadius: '3px',
+    textAlign: 'center'
+  });
 
-  class WizascriptKeybindType extends underscript.utils.SettingType {
-    constructor() {
-      super('wizascriptKeybind');
-    }
-    value(val) {
-      if (typeof val !== 'string') return val;
-      return JSON.parse(val);
-    }
-    default() {
-      return ['unbound', 'unbound'];
-    }
-    element(value, update) {
-      return $('<input type="button" class="wizascript-keybind">')
-        .val(value[1])
-        .on('focus', function () {
-          const $kbd = $(this);
-          let captured = false;
-          $kbd.addClass('listening');
-          $kbd.val('...?');
-          const capture = (e) => {
-            e.preventDefault();
-            const original = e.originalEvent || e;
-            let display, code;
-            if ('button' in original) {
-              code = original.button;
-              switch (original.button) {
-                case 0: display = 'Left Click'; break;
-                case 1: display = 'Middle Click'; break;
-                case 2: display = 'Right Click'; break;
-                default: display = `Mouse Button ${original.button}`;
-              }
-            } else if (original.key === 'Escape') {
-              display = 'unbound';
-              code = 'unbound';
-            } else {
-              display = original.key.length === 1 ? original.key.toUpperCase() : original.key;
-              if (display === ' ') display = 'Space';
-              code = original.code;
-            }
-            $kbd.val(display);
-            update([code, display]);
-            $(document).off('keydown', capture);
-            $(document).off('mousedown', capture);
-            captured = true;
-            $kbd.blur();
-          };
-          $(document).on('keydown', capture);
-          $(document).on('mousedown', capture);
-          $kbd.on('blur', function () {
-            $kbd.removeClass('listening');
-            if (captured) return;
-            $(document).off('keydown', capture);
-            $(document).off('mousedown', capture);
-            $kbd.val(value[1]);
-          });
-        });
-    }
-    styles() {
-      return [
-        '.wizascript-keybind { font-size: 11px; height: 18px; background-color: black; color: white; border-radius: 3px; border: 1px solid #b4b4b4; }',
-        '.wizascript-keybind.listening { border: 1px solid #40E0D0; box-shadow: 0 0 4px #40E0D0; }'
-      ];
-    }
+  function refreshDisplay() {
+    el.value = codeToDisplay(readCode(bindingKey, defaultCode));
   }
+  refreshDisplay();
 
-  keybindType = new WizascriptKeybindType();
-  return keybindType;
+  el.addEventListener('focus', () => {
+    el.style.border = '1px solid #40E0D0';
+    el.style.boxShadow = '0 0 4px #40E0D0';
+    el.value = '...?';
+
+    function capture(e) {
+      e.preventDefault();
+      const code = e.key === 'Escape' ? 'unbound' : e.code;
+      writeCode(bindingKey, code);
+      document.removeEventListener('keydown', capture, true);
+      el.blur();
+    }
+    document.addEventListener('keydown', capture, true);
+
+    el.addEventListener('blur', function onBlur() {
+      el.style.border = '1px solid #b4b4b4';
+      el.style.boxShadow = 'none';
+      document.removeEventListener('keydown', capture, true);
+      refreshDisplay();
+      el.removeEventListener('blur', onBlur);
+    });
+  });
+}
+
+function startObserver() {
+  if (observerStarted) return;
+  observerStarted = true;
+  const observer = new MutationObserver(() => {
+    if (!bindingDefaults.size) return; // cheap bail once there's nothing left to look for
+    document.querySelectorAll(`input[id^="${ID_PREFIX}"]:not([data-wizascript-keybind-enhanced])`).forEach((el) => {
+      const bindingKey = el.id.slice(ID_PREFIX.length);
+      if (!bindingDefaults.has(bindingKey)) return;
+      enhanceInput(el, bindingKey, bindingDefaults.get(bindingKey));
+    });
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
 }
 
 function matchesCode(e, code, defaultCode) {
@@ -193,21 +153,17 @@ function matchesCode(e, code, defaultCode) {
 }
 
 function getPrimaryCode() {
-  if (!primaryKeySetting) return DEFAULT_PRIMARY_CODE;
-  const [code] = primaryKeySetting.value();
-  return code;
-}
-
-function getPrimaryDisplay() {
-  if (!primaryKeySetting) return DEFAULT_PRIMARY_DISPLAY;
-  const [, display] = primaryKeySetting.value();
-  return display;
+  return readCode(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
 }
 
 function matchesSetting(e, binding) {
-  const [code] = binding.setting.value();
+  const code = readCode(binding.key, binding.defaultCode);
   return matchesCode(e, code, binding.defaultCode);
 }
+
+let primaryHeld = false;
+let holdTimer = null;
+let comboFired = false; // true once a secondary key has matched during this hold, so onPrimaryAlone doesn't ALSO fire
 
 function bindGlobalListeners() {
   document.addEventListener('keydown', (e) => {
@@ -219,15 +175,12 @@ function bindGlobalListeners() {
       primaryHeld = true;
       comboFired = false;
 
-      // Fires immediately and unconditionally, not gated behind
-      // confirming a hold first - this is what makes "tap to cancel"
-      // work for things like the auto-continue countdown.
       registry.forEach((b) => { if (b.onPrimaryPress) b.onPrimaryPress(e); });
 
       clearTimeout(holdTimer);
       holdTimer = setTimeout(() => {
-        if (comboFired) return; // a secondary key already matched during this hold
-        if (isTypingContext()) return; // only the alone-case needs this guard - a full combo is deliberate enough not to
+        if (comboFired) return;
+        if (isTypingContext()) return;
         registry.forEach((b) => {
           if (b.scope === 'global' && b.onPrimaryAlone) b.onPrimaryAlone(e);
         });
@@ -235,13 +188,9 @@ function bindGlobalListeners() {
       return;
     }
 
-    if (!primaryHeld) return; // secondary keys only matter while Primary is down
-    clearTimeout(holdTimer); // any second key cancels the hold-alone disambiguation, combo or not
+    if (!primaryHeld) return;
+    clearTimeout(holdTimer);
 
-    // First match wins - mirrors Galascript's own documented
-    // conflict-resolution rule ("if bound to multiple actions, the
-    // highest setting takes priority") rather than firing every
-    // binding that happens to share the same key.
     for (const b of registry) {
       if (!matchesSetting(e, b)) continue;
       if (b.scope === 'scoped') {
@@ -269,20 +218,16 @@ function ensureCore(plugin) {
   if (settings) return;
   settings = createFeatureSettings(plugin, 'keybinds', CATEGORY);
 
-  const type = ensureKeybindType();
-  if (!typeRegistered) {
-    plugin.settings().addType(type);
-    typeRegistered = true;
-  }
-
-  primaryKeySetting = settings.add('primaryKey', {
-    name: 'Primary Key',
-    note: 'Held down to activate "Primary + <key>" bindings below. Tap alone for actions that trigger on a simple press.',
-    type,
-    default: JSON.stringify([DEFAULT_PRIMARY_CODE, DEFAULT_PRIMARY_DISPLAY])
-  });
-
+  startObserver();
   bindGlobalListeners();
+
+  settings.add(PRIMARY_KEY, {
+    name: 'Primary Key',
+    note: 'Click, then press a key. Held down to activate "Primary + <key>" bindings below. Tap alone for actions that trigger on a simple press.',
+    type: 'text',
+    default: DEFAULT_PRIMARY_CODE
+  });
+  bindingDefaults.set(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
 }
 
 // The only thing a consuming package needs to call.
@@ -291,7 +236,6 @@ function ensureCore(plugin) {
 //   key            - unique per-binding string, e.g. 'nextChannel'
 //   name           - label WITHOUT the "Primary + " suffix, added automatically
 //   defaultCode    - shipped default e.code, e.g. 'ArrowRight'
-//   defaultDisplay - shipped default display text, e.g. 'Right Arrow'
 //   scope          - 'global' (default) | 'scoped'
 //   selector       - required if scope is 'scoped'
 //   onMatch        - (e) => void, fires when Primary+secondary matches
@@ -300,27 +244,26 @@ function ensureCore(plugin) {
 //   onPrimaryRelease - (e) => void, global-only: fires on Primary keyup
 export function registerKeybind(plugin, config) {
   const {
-    key, name, defaultCode, defaultDisplay,
+    key, name, defaultCode,
     scope = 'global', selector,
     onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease
   } = config;
 
-  whenReady(plugin, () => {
-    ensureCore(plugin);
+  ensureCore(plugin);
 
-    const setting = settings.add(key, {
-      name: `${name} - Primary + <key>`,
-      type: keybindType,
-      default: JSON.stringify([defaultCode, defaultDisplay])
-    });
-
-    registry.push({ key, setting, defaultCode, scope, selector, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease });
+  settings.add(key, {
+    name: `${name} - Primary + <key>`,
+    type: 'text',
+    default: defaultCode
   });
+  bindingDefaults.set(key, defaultCode);
+
+  registry.push({ key, defaultCode, scope, selector, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease });
 }
 
 // For UI that wants to display the current Primary key, e.g. a toast
 // saying "Cancel by holding Ctrl" - should read this live rather than
 // hardcode "Ctrl", since Primary can be remapped.
 export function getPrimaryKeyDisplay() {
-  return getPrimaryDisplay();
+  return codeToDisplay(getPrimaryCode());
 }

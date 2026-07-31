@@ -212,6 +212,9 @@
   var primaryHeld = false;
   var holdTimer = null;
   var comboFired = false;
+  var DOUBLE_TAP_WINDOW_MS = 400;
+  var tapCount = 0;
+  var lastTapTime = 0;
   function bindGlobalListeners() {
     document.addEventListener("keydown", (e) => {
       const primaryCode = getPrimaryCode();
@@ -220,15 +223,29 @@
         if (primaryHeld) return;
         primaryHeld = true;
         comboFired = false;
+        const now = Date.now();
+        tapCount = now - lastTapTime <= DOUBLE_TAP_WINDOW_MS ? tapCount + 1 : 1;
+        lastTapTime = now;
+        if (tapCount === 2) {
+          tapCount = 0;
+          registry.forEach((b) => {
+            if (b.scope !== "global" || !b.onPrimaryDoubleTap) return;
+            if (b.guardTypingContext && isTypingContext()) return;
+            b.onPrimaryDoubleTap(e);
+          });
+        }
         registry.forEach((b) => {
-          if (b.onPrimaryPress) b.onPrimaryPress(e);
+          if (!b.onPrimaryPress) return;
+          if (b.guardTypingContext && isTypingContext()) return;
+          b.onPrimaryPress(e);
         });
         clearTimeout(holdTimer);
         holdTimer = setTimeout(() => {
           if (comboFired) return;
-          if (isTypingContext()) return;
           registry.forEach((b) => {
-            if (b.scope === "global" && b.onPrimaryAlone) b.onPrimaryAlone(e);
+            if (b.scope !== "global" || !b.onPrimaryAlone) return;
+            if (b.guardTypingContext && isTypingContext()) return;
+            b.onPrimaryAlone(e);
           });
         }, HOLD_DELAY_MS);
         return;
@@ -255,23 +272,52 @@
         primaryHeld = false;
         clearTimeout(holdTimer);
         registry.forEach((b) => {
-          if (b.scope === "global" && b.onPrimaryRelease) b.onPrimaryRelease(e);
+          if (b.scope !== "global" || !b.onPrimaryRelease) return;
+          if (b.guardTypingContext && isTypingContext()) return;
+          b.onPrimaryRelease(e);
         });
       }
     });
   }
+  var primaryKeySetting = null;
   function ensureCore(plugin) {
     if (settings) return;
     settings = createFeatureSettings(plugin, "keybinds", CATEGORY);
     startObserver();
     bindGlobalListeners();
-    settings.add(PRIMARY_KEY, {
+    primaryKeySetting = settings.add(PRIMARY_KEY, {
       name: "Primary Key",
       note: "Click to remap. Hold for combos below, or tap alone.",
       type: "text",
       default: DEFAULT_PRIMARY_CODE
     });
     bindingDefaults.set(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
+    const generalDividerKey = "__divider_General";
+    settings.add(generalDividerKey, {
+      name: "\u2014 General \u2014",
+      type: "text",
+      default: ""
+    });
+    dividerKeys.add(generalDividerKey);
+    const openSettingsInfoKey = "__info_openSettings";
+    settings.add(openSettingsInfoKey, {
+      name: "Double Tap Primary \u2192 Open Wizascript Settings",
+      type: "text",
+      default: ""
+    });
+    dividerKeys.add(openSettingsInfoKey);
+    registry.push({
+      key: "openWizascriptSettings",
+      scope: "global",
+      guardTypingContext: true,
+      onPrimaryDoubleTap: () => {
+        if (primaryKeySetting && typeof primaryKeySetting.show === "function") {
+          primaryKeySetting.show();
+        } else {
+          console.warn("[Wizascript] Could not open the settings panel - .show() is unavailable on this setting.");
+        }
+      }
+    });
   }
   var pendingRegistrations = [];
   var autoFlushScheduled = false;
@@ -295,12 +341,20 @@
       defaultCode,
       scope = "global",
       selector,
-      guardTypingContext = false,
+      // Defaults to true (ignore keybinds while focused in a text field/
+      // contenteditable, e.g. chat) - this is what almost every package
+      // wants, since a bare Primary+<key> shouldn't fire while someone's
+      // just typing and happens to hit a key that collides with a
+      // binding. Patch Maker is the one deliberate exception, since its
+      // own bindings specifically need to fire while focused on its own
+      // contenteditable elements - it opts out explicitly per binding.
+      guardTypingContext = true,
       packageLabel,
       onMatch,
       onPrimaryAlone,
       onPrimaryPress,
-      onPrimaryRelease
+      onPrimaryRelease,
+      onPrimaryDoubleTap
     } = config;
     ensureCore(plugin);
     if (packageLabel && !seenPackageLabels.has(packageLabel)) {
@@ -321,7 +375,7 @@
       });
       bindingDefaults.set(key, defaultCode);
     }
-    registry.push({ key, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease });
+    registry.push({ key, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease, onPrimaryDoubleTap });
   }
   function getPrimaryKeyDisplay() {
     return codeToDisplay(getPrimaryCode());
@@ -5190,11 +5244,11 @@ Version: v${version}`;
       defaultCode: "ArrowLeft",
       scope: "global",
       packageLabel: "UC TV",
-      // Ctrl+Left/Right is a native "jump a word" shortcut while typing
-      // (e.g. in chat) - guarding this specifically preserves that,
-      // unlike Patch Maker's shortcuts, which deliberately need to fire
-      // while a text field is focused.
-      guardTypingContext: true,
+      // Relies on guardTypingContext's default (true) - Ctrl+Left/Right
+      // is a native "jump a word" shortcut while typing (e.g. in chat),
+      // and this default preserves that. Unlike Patch Maker's own
+      // shortcuts, which deliberately opt OUT of this default since they
+      // need to fire while a text field is focused.
       onMatch: () => {
         if (!isSpectatePage()) return;
         if (!CONFIG.masterEnabled) return;
@@ -5207,7 +5261,6 @@ Version: v${version}`;
       defaultCode: "ArrowRight",
       scope: "global",
       packageLabel: "UC TV",
-      guardTypingContext: true,
       onMatch: () => {
         if (!isSpectatePage()) return;
         if (!CONFIG.masterEnabled) return;

@@ -23,6 +23,32 @@ function waitForAvatar(callback) {
   setTimeout(() => waitForAvatar(callback), 100);
 }
 
+// The "+" button auto-positions relative to the avatar by default (see
+// tryReveal()/reposition() below), but that's a fixed assumption about
+// what's nearby - a later UC update is free to put something new in
+// that exact spot, as already happened once. Letting the user drag it
+// somewhere else and remembering that choice sidesteps needing to
+// chase every future UI change that might land there. Same
+// GM_getValue/GM_setValue persistence Notepad's own widget position
+// already uses.
+const BUTTON_POSITION_KEY = "wizascript.deckTracker.buttonPosition";
+
+function getSavedButtonPosition() {
+  const raw = GM_getValue(BUTTON_POSITION_KEY, null);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+function setSavedButtonPosition(pos) {
+  GM_setValue(BUTTON_POSITION_KEY, JSON.stringify(pos));
+}
+function clearSavedButtonPosition() {
+  GM_deleteValue(BUTTON_POSITION_KEY);
+}
+
 export function initDeckTracker(plugin) {
   const settings = registerDeckTrackerSettings(plugin);
 
@@ -78,17 +104,24 @@ export function initDeckTracker(plugin) {
     const btn = document.createElement("button");
     btn.textContent = "+";
     btn.id = "dt-add-tracker-button";
+    btn.title = "Click to add a tracker. Drag to reposition (double-click to reset to the default spot).";
     Object.assign(btn.style, {
       position: "fixed", zIndex: 8, width: "34px", height: "34px", borderRadius: "4px",
-      background: "#2ecc71", color: "white", border: "none", cursor: "pointer",
+      background: "#2ecc71", color: "white", border: "none", cursor: "grab",
       fontSize: "20px", fontWeight: "bold", lineHeight: "1", boxShadow: "0 1px 4px rgba(0,0,0,0.5)",
       opacity: "0" // hidden until we've confirmed a real position - see tryReveal() below
     });
     document.body.appendChild(btn);
 
     let revealed = false;
+    // Once true, the avatar-relative auto-positioning below (tryReveal/
+    // reposition/the resize+scroll listeners/the sync interval) all
+    // stop touching left/top - the user's own placement takes over
+    // entirely until they double-click to reset it.
+    let hasCustomPosition = false;
 
     function reposition() {
+      if (hasCustomPosition) return true; // user has taken over positioning - leave it alone
       const rect = avatar.getBoundingClientRect();
       if (rect.width === 0 && rect.height === 0) return false; // avatar not laid out yet
       const btnRect = btn.getBoundingClientRect();
@@ -153,7 +186,17 @@ export function initDeckTracker(plugin) {
 
       requestAnimationFrame(check);
     }
-    tryReveal();
+
+    const savedPosition = getSavedButtonPosition();
+    if (savedPosition) {
+      hasCustomPosition = true;
+      btn.style.left = savedPosition.left + "px";
+      btn.style.top = savedPosition.top + "px";
+      revealed = true;
+      btn.style.opacity = "1";
+    } else {
+      tryReveal();
+    }
 
     // Once revealed, a lightweight ongoing sync handles any later
     // shifts (window resize, other UI changing nearby) without relying
@@ -200,17 +243,94 @@ export function initDeckTracker(plugin) {
     // window itself, since the scroll event doesn't bubble by default.
     window.addEventListener("scroll", reposition, { passive: true, capture: true });
 
+    // Drag-and-drop repositioning - mirrors Notepad's own header-drag
+    // pattern (widget.js), including using getBoundingClientRect() to
+    // capture the drop position and GM_setValue to persist it. A small
+    // movement threshold distinguishes an actual drag from a plain
+    // click, so the button's normal click-to-open behavior keeps
+    // working when it's just clicked rather than dragged.
+    const DRAG_THRESHOLD_PX = 4;
+    const BTN_SIZE = 34; // matches the fixed width/height set above
+    const VIEWPORT_MARGIN = 10; // keep at least this much of the button reachable on-screen
+    let dragging = false;
+    let dragMoved = false;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+
+    btn.addEventListener("mousedown", (e) => {
+      if (e.button !== 0) return;
+      dragging = true;
+      dragMoved = false;
+      const rect = btn.getBoundingClientRect();
+      dragOffsetX = e.clientX - rect.left;
+      dragOffsetY = e.clientY - rect.top;
+      btn.style.cursor = "grabbing";
+      e.preventDefault(); // avoid native text-selection/drag-ghost while dragging
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      if (!dragging) return;
+      let newLeft = e.clientX - dragOffsetX;
+      let newTop = e.clientY - dragOffsetY;
+
+      if (!dragMoved) {
+        const dx = Math.abs(newLeft - parseFloat(btn.style.left || "0"));
+        const dy = Math.abs(newTop - parseFloat(btn.style.top || "0"));
+        if (dx > DRAG_THRESHOLD_PX || dy > DRAG_THRESHOLD_PX) dragMoved = true;
+      }
+      if (!dragMoved) return;
+
+      hasCustomPosition = true;
+      // Small enough (34x34) that dragging it fully off-screen would
+      // make it unreachable with no way back except clearing storage
+      // manually - clamped so some part of it always stays reachable.
+      newLeft = Math.min(Math.max(newLeft, VIEWPORT_MARGIN - BTN_SIZE), window.innerWidth - VIEWPORT_MARGIN);
+      newTop = Math.min(Math.max(newTop, VIEWPORT_MARGIN - BTN_SIZE), window.innerHeight - VIEWPORT_MARGIN);
+      btn.style.left = newLeft + "px";
+      btn.style.top = newTop + "px";
+    });
+
+    window.addEventListener("mouseup", () => {
+      if (!dragging) return;
+      dragging = false;
+      btn.style.cursor = "grab";
+      if (dragMoved) {
+        const rect = btn.getBoundingClientRect();
+        setSavedButtonPosition({ left: rect.left, top: rect.top });
+        logger.log("hud", "Add-tracker button repositioned by drag.", { left: rect.left, top: rect.top });
+      }
+    });
+
+    // Middle-click, not double-click - the first click of a would-be
+    // double-click already fires the normal onclick handler below and
+    // opens the picker before a second click could ever register as a
+    // reset. auxclick (not click) is what actually fires for the
+    // middle button in every major browser.
+    btn.addEventListener("mousedown", (e) => {
+      if (e.button === 1) e.preventDefault(); // stop the browser's own middle-click autoscroll mode from kicking in
+    });
+    btn.addEventListener("auxclick", (e) => {
+      if (e.button !== 1) return;
+      hasCustomPosition = false;
+      clearSavedButtonPosition();
+      reposition(); // snaps back to avatar-relative immediately rather than waiting for the next sync tick
+      logger.log("hud", "Add-tracker button position reset to the default (avatar-relative) spot.");
+    });
+
     // KNOWN FOLLOW-UP (not fixed here): UC's modal-dimming overlay
     // doesn't hide this button, since our z-index sits above it. Left
     // as-is until we know exactly which class/element the game uses
     // for that dimming state - flagged during live testing, not
     // forgotten.
-    btn.onclick = () => openPresetPicker({
-      onAddPreset: handleAddPreset,
-      onCreateAdHoc: handleCreateAdHoc,
-      onCloseWidget: handleCloseWidget,
-      onDeletePreset: handleDeletePreset
-    });
+    btn.onclick = () => {
+      if (dragMoved) return; // just finished a drag, not a genuine click - don't also open the picker
+      openPresetPicker({
+        onAddPreset: handleAddPreset,
+        onCreateAdHoc: handleCreateAdHoc,
+        onCloseWidget: handleCloseWidget,
+        onDeletePreset: handleDeletePreset
+      });
+    };
 
     return btn;
   }

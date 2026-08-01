@@ -18,7 +18,7 @@
 // from the original single-file implementation - only its location
 // moved (packages/misc/notepad.js -> packages/misc/notepad/index.js).
 
-import { buildNotepadShell } from "./widget.js";
+import { buildNotepadShell, DEFAULT_TITLE } from "./widget.js";
 import { createDrawingSurface } from "./canvas.js";
 import { buildColorPicker } from "./color-wheel.js";
 import {
@@ -66,13 +66,21 @@ export function showNotepad() {
   surface.setStrokeColor(currentPenColor);
 
   // ---- header buttons ----
+  const undoBtn = document.createElement("span");
+  undoBtn.textContent = "\u21B6"; // undo arrow glyph
+  undoBtn.title = "Undo";
+  undoBtn.classList.add("wizascript-notepad-history-btn");
+  const redoBtn = document.createElement("span");
+  redoBtn.textContent = "\u21B7"; // redo arrow glyph
+  redoBtn.title = "Redo";
+  redoBtn.classList.add("wizascript-notepad-history-btn");
   const clearBtn = document.createElement("span");
   clearBtn.textContent = "Clear";
   const saveBtn = document.createElement("span");
   saveBtn.textContent = "Save PNG";
   const closeBtn = document.createElement("span");
   closeBtn.textContent = "\u00D7";
-  headerButtons.append(clearBtn, saveBtn, closeBtn);
+  headerButtons.append(undoBtn, redoBtn, clearBtn, saveBtn, closeBtn);
 
   // ---- toolbar ----
   const mainColumn = document.createElement("div");
@@ -92,6 +100,11 @@ export function showNotepad() {
   eraseBox.className = "wizascript-notepad-tool-box";
   eraseBox.textContent = "Erase";
 
+  const fillBox = document.createElement("div");
+  fillBox.className = "wizascript-notepad-tool-box";
+  fillBox.textContent = "Fill";
+  fillBox.title = "Click inside an enclosed area to fill it with the current pen color.";
+
   const sizeSlider = document.createElement("input");
   sizeSlider.type = "range";
   sizeSlider.className = "wizascript-notepad-size-slider";
@@ -100,8 +113,57 @@ export function showNotepad() {
   sizeSlider.value = String(currentThickness);
   sizeSlider.title = "Brush size";
 
-  toolbar.append(drawBox, eraseBox, sizeSlider);
+  toolbar.append(drawBox, eraseBox, fillBox, sizeSlider);
   mainColumn.append(toolbar, surface.wrapper);
+
+  // ---- layers column ----
+  const layersColumn = document.createElement("div");
+  layersColumn.className = "wizascript-notepad-layers-column";
+
+  // Rebuilds the whole column from scratch against the surface's
+  // current layer count/active index - simplest correct way to keep
+  // the buttons in sync, and cheap enough at a maximum of 6 buttons.
+  function renderLayerButtons() {
+    layersColumn.innerHTML = "";
+    const count = surface.getLayerCount();
+    const active = surface.getActiveLayer();
+
+    for (let n = 1; n <= count; n++) {
+      const btn = document.createElement("div");
+      btn.className = "wizascript-notepad-layer-btn" + (n === active ? " active" : "");
+      btn.textContent = String(n);
+      btn.title = n === count && n > 1
+        ? "Click to work on this layer. Double-click to remove it (this layer only, since it's the topmost)."
+        : "Click to work on this layer.";
+      btn.addEventListener("click", () => {
+        surface.setActiveLayer(n);
+        renderLayerButtons();
+      }, { signal });
+      // Only the current topmost layer can be removed (a stack pop) -
+      // double-click matches Patch Maker's own convention for
+      // destructive, non-undoable actions.
+      if (n === count && n > 1) {
+        btn.addEventListener("dblclick", () => {
+          surface.removeLayer();
+          renderLayerButtons();
+        }, { signal });
+      }
+      layersColumn.appendChild(btn);
+    }
+
+    if (count < 6) {
+      const addBtn = document.createElement("div");
+      addBtn.className = "wizascript-notepad-layer-add-btn";
+      addBtn.textContent = "+";
+      addBtn.title = "Add a new layer on top (up to 6 total).";
+      addBtn.addEventListener("click", () => {
+        surface.addLayer();
+        renderLayerButtons();
+      }, { signal });
+      layersColumn.appendChild(addBtn);
+    }
+  }
+  renderLayerButtons();
 
   // ---- color column ----
   const colorColumn = document.createElement("div");
@@ -149,7 +211,7 @@ export function showNotepad() {
   recentColorsRow.render(getRecentColors());
 
   colorColumn.append(colorLabel, picker.element, applyPenBtn, applyBgBtn, recentColorsRow.element);
-  body.append(mainColumn, colorColumn);
+  body.append(mainColumn, layersColumn, colorColumn);
   document.body.appendChild(root);
 
   // ---- tool selection ----
@@ -157,10 +219,20 @@ export function showNotepad() {
     currentTool = tool;
     drawBox.classList.toggle("active", tool === "draw");
     eraseBox.classList.toggle("active", tool === "erase");
+    fillBox.classList.toggle("active", tool === "fill");
+    surface.inkCanvas.classList.toggle("wizascript-notepad-canvas-ink-fill-tool", tool === "fill");
     updateCursorIndicatorSize();
   }
 
   function updateCursorIndicatorSize() {
+    // Fill has no brush size - hide the circular size indicator and
+    // fall back to a normal visible cursor (see the CSS class toggled
+    // above) so the click point stays visible instead of vanishing
+    // under the same custom-cursor treatment draw/erase use.
+    if (currentTool === "fill") {
+      surface.cursorIndicator.style.display = "none";
+      return;
+    }
     const size = currentTool === "erase" ? currentThickness * 2.2 : currentThickness;
     surface.cursorIndicator.style.width = size + "px";
     surface.cursorIndicator.style.height = size + "px";
@@ -169,8 +241,12 @@ export function showNotepad() {
   // ---- drawing interactions ----
   surface.inkCanvas.addEventListener("mousedown", (e) => {
     if (e.button !== 0) return;
-    drawing = true;
     const pt = surface.getPointFromEvent(e);
+    if (currentTool === "fill") {
+      surface.fill(pt.x, pt.y); // single click, not a drag - no stroke to begin
+      return;
+    }
+    drawing = true;
     surface.beginStroke(pt.x, pt.y, { erase: currentTool === "erase", size: currentThickness });
   }, { signal });
 
@@ -204,6 +280,7 @@ export function showNotepad() {
   // ---- toolbar / buttons ----
   drawBox.addEventListener("click", () => selectTool("draw"), { signal });
   eraseBox.addEventListener("click", () => selectTool("erase"), { signal });
+  fillBox.addEventListener("click", () => selectTool("fill"), { signal });
   sizeSlider.addEventListener("input", () => {
     currentThickness = Number(sizeSlider.value);
     updateCursorIndicatorSize();
@@ -217,8 +294,44 @@ export function showNotepad() {
   applyBgBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
   applyBgBtn.addEventListener("click", () => surface.setBackgroundColor(pendingColor), { signal });
 
+  undoBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
+  undoBtn.addEventListener("click", () => surface.undo(), { signal });
+
+  redoBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
+  redoBtn.addEventListener("click", () => surface.redo(), { signal });
+
+  // Both start disabled (a fresh mount always has empty undo/redo
+  // history, even if there's a previously-saved drawing already
+  // loaded onto the canvas - there's nothing to step back TO yet).
+  undoBtn.classList.add("wizascript-notepad-history-btn-disabled");
+  redoBtn.classList.add("wizascript-notepad-history-btn-disabled");
+  surface.setOnHistoryChange((canUndo, canRedo) => {
+    undoBtn.classList.toggle("wizascript-notepad-history-btn-disabled", !canUndo);
+    redoBtn.classList.toggle("wizascript-notepad-history-btn-disabled", !canRedo);
+  });
+
   clearBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
-  clearBtn.addEventListener("click", () => surface.clear(), { signal });
+  clearBtn.addEventListener("click", () => {
+    // Mirrors forceResetNotepad's scope (drawing across every layer,
+    // paper color, pen color, recent colors, title) minus position -
+    // updates the already-mounted notepad in place rather than
+    // tearing the whole thing down and rebuilding it, which is what a
+    // full hide+show would otherwise require.
+    surface.resetAll();
+    renderLayerButtons();
+
+    currentPenColor = DEFAULT_PEN_STATE.color;
+    colorIndicator.style.background = currentPenColor;
+    surface.setStrokeColor(currentPenColor);
+    picker.setState(DEFAULT_PEN_STATE.hue, DEFAULT_PEN_STATE.saturation, DEFAULT_PEN_STATE.lightness);
+    clearSavedPenColor();
+
+    clearRecentColors();
+    recentColorsRow.render([]);
+
+    titleInput.value = DEFAULT_TITLE;
+    clearSavedTitle();
+  }, { signal });
 
   saveBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
   saveBtn.addEventListener("click", () => {
@@ -231,7 +344,7 @@ export function showNotepad() {
   closeBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
   closeBtn.addEventListener("click", () => hideNotepad(), { signal });
 
-  mounted = { root, controller };
+  mounted = { root, controller, surface };
 }
 
 export function hideNotepad() {
@@ -239,6 +352,20 @@ export function hideNotepad() {
   mounted.controller.abort(); // removes every listener bound in showNotepad(), in one shot
   mounted.root.remove();
   mounted = null;
+}
+
+// Both are no-ops if the notepad isn't currently open - used by the
+// Undo Drawing / Redo Drawing keybinds registered in misc/index.js,
+// which (like every other package's keybinds) register site-wide but
+// only do anything meaningful when there's actually a notepad to act on.
+export function undoNotepad() {
+  if (!mounted) return;
+  mounted.surface.undo();
+}
+
+export function redoNotepad() {
+  if (!mounted) return;
+  mounted.surface.redo();
 }
 
 export function forceResetNotepad() {
@@ -300,15 +427,23 @@ const STYLE_CSS = `
   border-radius: 3px;
   padding: 1px 5px;
 }
+.wizascript-notepad-history-btn {
+  font-weight: bold;
+}
+.wizascript-notepad-history-btn-disabled {
+  opacity: 0.35;
+  pointer-events: none;
+  cursor: default;
+}
 .wizascript-notepad-title-input {
-  /* Fixed rather than flex:1 - the header previously let the
-     focusable/drag-blocking area stretch all the way to the header
-     buttons, which ate into the space meant for dragging the notepad
-     around. ~72px roughly lines up with where "Erase" starts in the
-     toolbar below - plenty of room for a short name without
-     encroaching further. */
+  /* Widened generously (was 72px) - longer names were getting cut
+     off with the old width, and it's easier to trim this back later
+     if it turns out too roomy than to keep nudging it up in small
+     increments. The whole notepad widens to fit, same as it already
+     does to fit the canvas+sidebar body - this isn't a fixed-width
+     header fighting a fixed-width body, it's just a wider header. */
   flex: none;
-  width: 72px;
+  width: 180px;
   background: transparent;
   border: none;
   outline: none;
@@ -347,8 +482,18 @@ const STYLE_CSS = `
 .wizascript-notepad-canvas-bg {
   pointer-events: none;
 }
+.wizascript-notepad-canvas-layer {
+  pointer-events: none;
+}
 .wizascript-notepad-canvas-ink {
   cursor: none;
+}
+.wizascript-notepad-canvas-ink-fill-tool {
+  /* Fill has no brush-size indicator (see updateCursorIndicatorSize) -
+     fall back to a real visible cursor so the click point stays
+     visible, instead of the invisible cursor draw/erase rely on their
+     own circular indicator to replace. */
+  cursor: crosshair;
 }
 .wizascript-notepad-cursor-indicator {
   position: absolute;
@@ -393,6 +538,46 @@ const STYLE_CSS = `
 .wizascript-notepad-size-slider {
   flex: 1;
   min-width: 50px;
+}
+.wizascript-notepad-layers-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-top: 2px;
+}
+.wizascript-notepad-layer-btn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #8a7355;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #5a4a35;
+  background: #efe4cf;
+  cursor: pointer;
+}
+.wizascript-notepad-layer-btn.active {
+  background: #d4a017;
+  color: #fff;
+  border-color: #a97e0f;
+}
+.wizascript-notepad-layer-add-btn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #8a7355;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: bold;
+  color: #8a7355;
+  background: transparent;
+  cursor: pointer;
 }
 .wizascript-notepad-side-column {
   display: flex;

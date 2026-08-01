@@ -1,7 +1,9 @@
 import { bootstrap } from "./packages/core/bootstrap.js";
+import { flushKeybindRegistrations } from "./packages/core/keybinds.js";
 import { initPatchMaker } from "./packages/patch-maker/index.js";
 import { initTrueHubBridge } from "./packages/true-hub-bridge/index.js";
 import { initDeckTracker } from "./packages/deck-tracker/index.js";
+import { initUcTv } from "./packages/uc-tv/index.js";
 import { initMisc } from "./packages/misc/index.js";
 
 // NOTE: Doom Reminder (both "Classic" chat-ping and "Evil" clickbait-
@@ -20,5 +22,7 @@ bootstrap(plugin => {
   initPatchMaker(plugin);
   initTrueHubBridge(plugin);
   initDeckTracker(plugin);
+  initUcTv(plugin);
   initMisc(plugin);
+  flushKeybindRegistrations(); // must come after all of the above
 });

@@ -14,7 +14,7 @@ import { getSavedPosition, setSavedPosition, getSavedTitle, setSavedTitle } from
 
 const DEFAULT_RIGHT = 16;
 const DEFAULT_BOTTOM = 16;
-const DEFAULT_TITLE = "Notepad";
+export const DEFAULT_TITLE = "Notepad";
 const TITLE_SAVE_DEBOUNCE_MS = 400;
 
 export function buildNotepadShell(signal) {

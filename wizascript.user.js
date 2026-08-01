@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.2.0
+// @version      1.3.1
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "1.2.0";
+  var SUITE_VERSION = "1.3.1";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -59,31 +59,958 @@
     tryBootstrap();
   }
 
-  // packages/core/debug-logger.js
-  function createLogger(featureName, initialCategories = {}) {
-    const enabled = { ...initialCategories };
-    function tag(category) {
-      return category ? `[${featureName}:${category}]` : `[${featureName}]`;
+  // packages/core/settings.js
+  function createFeatureSettings(plugin, featureName, categoryLabel) {
+    const settingsApi = plugin.settings();
+    const registered = {};
+    function add(key, config) {
+      const setting = settingsApi.add({
+        ...config,
+        key: `${featureName}.${key}`,
+        category: config.category || categoryLabel
+      });
+      registered[key] = setting;
+      return setting;
     }
-    function isEnabled(category) {
-      return !category || enabled[category] !== false;
+    function value(key) {
+      return registered[key].value();
     }
-    return {
-      setCategory(category, isEnabled2) {
-        enabled[category] = isEnabled2;
-      },
-      log(category, ...args) {
-        if (!isEnabled(category)) return;
-        console.log(tag(category), ...args);
-      },
-      warn(category, ...args) {
-        if (!isEnabled(category)) return;
-        console.warn(tag(category), ...args);
-      },
-      error(category, ...args) {
-        console.error(tag(category), ...args);
+    return { add, value };
+  }
+
+  // packages/core/keybinds.js
+  var CATEGORY = "Keybinds";
+  var HOLD_DELAY_MS = 250;
+  var NATIVE_MODIFIERS = /* @__PURE__ */ new Set(["Control", "Shift", "Alt"]);
+  var DEFAULT_PRIMARY_CODE = "Control";
+  var PRIMARY_KEY = "primaryKey";
+  var GM_PREFIX = "wizascript.keybinds.";
+  var ID_PREFIX = "underscript.plugin.Wizascript.keybinds.";
+  function storageKey(bindingKey) {
+    return `${GM_PREFIX}${bindingKey}`;
+  }
+  function readCode(bindingKey, defaultCode) {
+    return GM_getValue(storageKey(bindingKey), defaultCode);
+  }
+  function writeCode(bindingKey, code) {
+    GM_setValue(storageKey(bindingKey), code);
+  }
+  var DISPLAY_OVERRIDES = {
+    Control: "Ctrl",
+    Shift: "Shift",
+    Alt: "Alt",
+    Meta: "Meta",
+    ArrowUp: "Up Arrow",
+    ArrowDown: "Down Arrow",
+    ArrowLeft: "Left Arrow",
+    ArrowRight: "Right Arrow",
+    Space: "Space",
+    Escape: "Esc",
+    Comma: ",",
+    Period: ".",
+    unbound: "Unbound"
+  };
+  function codeToDisplay(code) {
+    if (!code) return "Unbound";
+    if (DISPLAY_OVERRIDES[code]) return DISPLAY_OVERRIDES[code];
+    if (/^Key[A-Z]$/.test(code)) return code.slice(3);
+    if (/^Digit[0-9]$/.test(code)) return code.slice(5);
+    return code;
+  }
+  var settings = null;
+  var registry = [];
+  var bindingDefaults = /* @__PURE__ */ new Map();
+  var dividerKeys = /* @__PURE__ */ new Set();
+  var seenPackageLabels = /* @__PURE__ */ new Set();
+  var observerStarted = false;
+  function isTypingContext() {
+    const el = document.activeElement;
+    if (!el) return false;
+    const tag = el.tagName;
+    return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
+  }
+  function enhanceInput(el, bindingKey, defaultCode) {
+    el.setAttribute("data-wizascript-keybind-enhanced", "true");
+    el.readOnly = true;
+    Object.assign(el.style, {
+      cursor: "pointer",
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      el.value = codeToDisplay(readCode(bindingKey, defaultCode));
+    }
+    refreshDisplay();
+    el.addEventListener("focus", () => {
+      el.style.border = "1px solid #40E0D0";
+      el.style.boxShadow = "0 0 4px #40E0D0";
+      el.value = "...?";
+      function capture(e) {
+        e.preventDefault();
+        const code = e.key === "Escape" ? "unbound" : e.code;
+        writeCode(bindingKey, code);
+        document.removeEventListener("keydown", capture, true);
+        el.blur();
       }
+      document.addEventListener("keydown", capture, true);
+      el.addEventListener("blur", function onBlur() {
+        el.style.border = "1px solid #b4b4b4";
+        el.style.boxShadow = "none";
+        document.removeEventListener("keydown", capture, true);
+        refreshDisplay();
+        el.removeEventListener("blur", onBlur);
+      });
+    });
+  }
+  function enhanceDivider(el) {
+    el.setAttribute("data-wizascript-keybind-enhanced", "true");
+    el.readOnly = true;
+    el.tabIndex = -1;
+    Object.assign(el.style, {
+      backgroundColor: "transparent",
+      border: "none",
+      borderBottom: "1px solid #666",
+      color: "#8ab4f8",
+      fontWeight: "bold",
+      cursor: "default",
+      pointerEvents: "none"
+    });
+  }
+  function startObserver() {
+    if (observerStarted) return;
+    observerStarted = true;
+    const observer = new MutationObserver(() => {
+      if (!bindingDefaults.size && !dividerKeys.size) return;
+      document.querySelectorAll(`input[id^="${ID_PREFIX}"]:not([data-wizascript-keybind-enhanced])`).forEach((el) => {
+        const bindingKey = el.id.slice(ID_PREFIX.length);
+        if (dividerKeys.has(bindingKey)) {
+          enhanceDivider(el);
+          return;
+        }
+        if (!bindingDefaults.has(bindingKey)) return;
+        enhanceInput(el, bindingKey, bindingDefaults.get(bindingKey));
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+  function matchesCode(e, code, defaultCode) {
+    if (code === defaultCode && NATIVE_MODIFIERS.has(defaultCode)) {
+      return e.key === defaultCode;
+    }
+    return e.code === code;
+  }
+  function getPrimaryCode() {
+    return readCode(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
+  }
+  function matchesSetting(e, binding) {
+    const code = readCode(binding.key, binding.defaultCode);
+    return matchesCode(e, code, binding.defaultCode);
+  }
+  var primaryHeld = false;
+  var holdTimer = null;
+  var comboFired = false;
+  var DOUBLE_TAP_WINDOW_MS = 400;
+  var tapCount = 0;
+  var lastTapTime = 0;
+  function bindGlobalListeners() {
+    document.addEventListener("keydown", (e) => {
+      const primaryCode = getPrimaryCode();
+      const isPrimary = matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE);
+      if (isPrimary) {
+        if (primaryHeld) return;
+        primaryHeld = true;
+        comboFired = false;
+        const now = Date.now();
+        tapCount = now - lastTapTime <= DOUBLE_TAP_WINDOW_MS ? tapCount + 1 : 1;
+        lastTapTime = now;
+        if (tapCount === 2) {
+          tapCount = 0;
+          registry.forEach((b) => {
+            if (b.scope !== "global" || !b.onPrimaryDoubleTap) return;
+            if (b.guardTypingContext && isTypingContext()) return;
+            b.onPrimaryDoubleTap(e);
+          });
+        }
+        registry.forEach((b) => {
+          if (!b.onPrimaryPress) return;
+          if (b.guardTypingContext && isTypingContext()) return;
+          b.onPrimaryPress(e);
+        });
+        clearTimeout(holdTimer);
+        holdTimer = setTimeout(() => {
+          if (comboFired) return;
+          registry.forEach((b) => {
+            if (b.scope !== "global" || !b.onPrimaryAlone) return;
+            if (b.guardTypingContext && isTypingContext()) return;
+            b.onPrimaryAlone(e);
+          });
+        }, HOLD_DELAY_MS);
+        return;
+      }
+      if (!primaryHeld) return;
+      clearTimeout(holdTimer);
+      for (const b of registry) {
+        if (!b.onMatch) continue;
+        if (!matchesSetting(e, b)) continue;
+        if (b.guardTypingContext && isTypingContext()) continue;
+        if (b.scope === "scoped") {
+          const active = document.activeElement;
+          if (!active || !active.matches(b.selector)) continue;
+        }
+        comboFired = true;
+        e.preventDefault();
+        b.onMatch(e);
+        break;
+      }
+    });
+    document.addEventListener("keyup", (e) => {
+      const primaryCode = getPrimaryCode();
+      if (matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE)) {
+        primaryHeld = false;
+        clearTimeout(holdTimer);
+        registry.forEach((b) => {
+          if (b.scope !== "global" || !b.onPrimaryRelease) return;
+          if (b.guardTypingContext && isTypingContext()) return;
+          b.onPrimaryRelease(e);
+        });
+      }
+    });
+  }
+  var primaryKeySetting = null;
+  function ensureCore(plugin) {
+    if (settings) return;
+    settings = createFeatureSettings(plugin, "keybinds", CATEGORY);
+    startObserver();
+    bindGlobalListeners();
+    primaryKeySetting = settings.add(PRIMARY_KEY, {
+      name: "Primary Key",
+      note: "Click to remap. Hold for combos below, or tap alone.",
+      type: "text",
+      default: DEFAULT_PRIMARY_CODE
+    });
+    bindingDefaults.set(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
+    const generalDividerKey = "__divider_General";
+    settings.add(generalDividerKey, {
+      name: "\u2014 General \u2014",
+      type: "text",
+      default: ""
+    });
+    dividerKeys.add(generalDividerKey);
+    const openSettingsInfoKey = "__info_openSettings";
+    settings.add(openSettingsInfoKey, {
+      name: "Double Tap Primary \u2192 Open Wizascript Settings",
+      type: "text",
+      default: ""
+    });
+    dividerKeys.add(openSettingsInfoKey);
+    registry.push({
+      key: "openWizascriptSettings",
+      scope: "global",
+      guardTypingContext: true,
+      onPrimaryDoubleTap: () => {
+        if (primaryKeySetting && typeof primaryKeySetting.show === "function") {
+          primaryKeySetting.show();
+        } else {
+          console.warn("[Wizascript] Could not open the settings panel - .show() is unavailable on this setting.");
+        }
+      }
+    });
+  }
+  var pendingRegistrations = [];
+  var autoFlushScheduled = false;
+  function registerKeybind(plugin, config) {
+    pendingRegistrations.push({ plugin, config });
+    if (!autoFlushScheduled) {
+      autoFlushScheduled = true;
+      setTimeout(() => {
+        if (pendingRegistrations.length) flushKeybindRegistrations();
+      }, 0);
+    }
+  }
+  function flushKeybindRegistrations() {
+    const queued = pendingRegistrations.splice(0);
+    queued.forEach(({ plugin, config }) => registerKeybindNow(plugin, config));
+  }
+  function registerKeybindNow(plugin, config) {
+    const {
+      key,
+      name,
+      defaultCode,
+      scope = "global",
+      selector,
+      // Defaults to true (ignore keybinds while focused in a text field/
+      // contenteditable, e.g. chat) - this is what almost every package
+      // wants, since a bare Primary+<key> shouldn't fire while someone's
+      // just typing and happens to hit a key that collides with a
+      // binding. Patch Maker is the one deliberate exception, since its
+      // own bindings specifically need to fire while focused on its own
+      // contenteditable elements - it opts out explicitly per binding.
+      guardTypingContext = true,
+      packageLabel,
+      onMatch,
+      onPrimaryAlone,
+      onPrimaryPress,
+      onPrimaryRelease,
+      onPrimaryDoubleTap
+    } = config;
+    ensureCore(plugin);
+    if (packageLabel && !seenPackageLabels.has(packageLabel)) {
+      seenPackageLabels.add(packageLabel);
+      const dividerKey = `__divider_${packageLabel.replace(/\s+/g, "_")}`;
+      settings.add(dividerKey, {
+        name: `\u2014 ${packageLabel} \u2014`,
+        type: "text",
+        default: ""
+      });
+      dividerKeys.add(dividerKey);
+    }
+    if (onMatch) {
+      settings.add(key, {
+        name: `${name} - Primary + <key>`,
+        type: "text",
+        default: defaultCode
+      });
+      bindingDefaults.set(key, defaultCode);
+    }
+    registry.push({ key, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease, onPrimaryDoubleTap });
+  }
+  function getPrimaryKeyDisplay() {
+    return codeToDisplay(getPrimaryCode());
+  }
+  function isRegisteredKeybindEvent(e) {
+    const primaryCode = getPrimaryCode();
+    if (matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE)) return true;
+    if (!primaryHeld) return false;
+    return registry.some((b) => b.onMatch && matchesSetting(e, b));
+  }
+
+  // packages/patch-maker/settings.js
+  function registerPatchMakerSettings(plugin) {
+    const settings2 = createFeatureSettings(plugin, "patchmaker", "Patch Maker");
+    return {
+      settings: settings2,
+      enabled: settings2.add("enabled", { name: "Enable Patch Maker", type: "boolean", default: true }),
+      debugLogging: settings2.add("debugLogging", { name: "Enable debug logging", type: "boolean", default: false }),
+      hideControls: settings2.add("hideControls", { name: "Hide Patch Maker controls", type: "boolean", default: false }),
+      cardHovers: settings2.add("enableCardHovers", { name: "Enable card hovers", type: "boolean", default: true }),
+      language: settings2.add("patchLanguage", {
+        name: "Select Language",
+        type: "select",
+        options: ["Auto / Default", "English", "French", "Spanish", "Portuguese", "Chinese", "Italian", "Polish", "German", "Russian"],
+        default: "Auto / Default",
+        onChange: () => location.reload()
+      }),
+      openOnLoad: settings2.add("openPatchNotesOnPageLoad", { name: "Auto-Load Patch Maker", type: "boolean", default: false })
     };
+  }
+
+  // packages/patch-maker/new-cards.js
+  var TARGET_W = 176;
+  var TARGET_H = 246;
+  var FIELDMARKER_WATERMARK_CROP_PX = 14;
+  function readFileAsDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+  }
+  function loadImageFromDataURL(dataUrl) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+  }
+  async function normalizeCardImage(dataUrl) {
+    const img = await loadImageFromDataURL(dataUrl);
+    if (img.naturalWidth === TARGET_W && img.naturalHeight === TARGET_H) {
+      return dataUrl;
+    }
+    let sx = 0, sy = 0, sw = img.naturalWidth, sh = img.naturalHeight;
+    if (img.naturalWidth === 163 && img.naturalHeight >= 250) {
+      sh = Math.max(1, img.naturalHeight - FIELDMARKER_WATERMARK_CROP_PX);
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = TARGET_W;
+    canvas.height = TARGET_H;
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, TARGET_W, TARGET_H);
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, TARGET_W, TARGET_H);
+    return canvas.toDataURL("image/png");
+  }
+  function createNewCardsFeature({ isViewerMode: isViewerMode2, saveState }) {
+    function ensureCardAddTile(section) {
+      const gallery = section.querySelector(".uc-card-gallery");
+      if (!gallery) return null;
+      let addTile = gallery.querySelector(":scope > .uc-card-add-tile");
+      if (addTile) {
+        gallery.appendChild(addTile);
+        return addTile;
+      }
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = "image/*";
+      fileInput.multiple = true;
+      fileInput.style.display = "none";
+      addTile = document.createElement("div");
+      addTile.className = "uc-card-add-tile";
+      const addBtn = document.createElement("button");
+      addBtn.className = "uc-card-add-btn";
+      addBtn.textContent = "+";
+      addBtn.title = "Add card image";
+      addBtn.onclick = () => {
+        if (isViewerMode2()) return;
+        fileInput.click();
+      };
+      fileInput.addEventListener("change", async (e) => {
+        const files = [...e.target.files || []];
+        if (!files.length) return;
+        for (const file of files) {
+          if (!file.type.startsWith("image/")) continue;
+          const dataUrl = await readFileAsDataURL(file);
+          const normalized = await normalizeCardImage(dataUrl);
+          addCardImage(section, normalized, file.name || "Card image");
+        }
+        fileInput.value = "";
+        ensureCardAddTile(section);
+        saveState();
+      });
+      addTile.appendChild(addBtn);
+      addTile.appendChild(fileInput);
+      gallery.appendChild(addTile);
+      return addTile;
+    }
+    function addCardImage(section, src, name = "Card image") {
+      const gallery = section.querySelector(".uc-card-gallery");
+      if (!gallery) return null;
+      ensureCardAddTile(section);
+      const item = document.createElement("div");
+      item.className = "uc-card-item";
+      item.tabIndex = 0;
+      item.dataset.src = src;
+      item.dataset.name = name;
+      const frame = document.createElement("div");
+      frame.className = "uc-card-frame";
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = name;
+      frame.appendChild(img);
+      item.appendChild(frame);
+      const delBtn = document.createElement("button");
+      delBtn.className = "uc-card-del";
+      delBtn.textContent = "\u2212";
+      delBtn.title = "Remove card image";
+      delBtn.onclick = (e) => {
+        if (isViewerMode2()) return;
+        e.stopPropagation();
+        item.remove();
+        ensureCardAddTile(section);
+        saveState();
+      };
+      item.appendChild(delBtn);
+      const addTile = gallery.querySelector(":scope > .uc-card-add-tile");
+      if (addTile) gallery.insertBefore(item, addTile);
+      else gallery.appendChild(item);
+      ensureCardAddTile(section);
+      return item;
+    }
+    function moveCardItem(item, dir) {
+      const gallery = item.parentElement;
+      if (!gallery) return;
+      const items = [...gallery.querySelectorAll(":scope > .uc-card-item")];
+      const idx = items.indexOf(item);
+      if (idx < 0 || items.length <= 1) return;
+      const newIdx = (idx + dir + items.length) % items.length;
+      const target = items[newIdx];
+      if (dir < 0) {
+        if (idx === 0) gallery.appendChild(item);
+        else gallery.insertBefore(item, target);
+      } else {
+        if (idx === items.length - 1) gallery.insertBefore(item, items[0]);
+        else gallery.insertBefore(item, target.nextElementSibling);
+      }
+      ensureCardAddTile(gallery.parentElement);
+      saveState();
+      setTimeout(() => item.focus(), 0);
+    }
+    function createSection(container) {
+      const p = document.createElement("p");
+      p.className = "uc-new-cards-header";
+      const label = document.createElement("span");
+      label.textContent = "New cards";
+      p.appendChild(label);
+      const section = document.createElement("div");
+      section.className = "uc-card-section";
+      const gallery = document.createElement("div");
+      gallery.className = "uc-card-gallery";
+      section.appendChild(gallery);
+      const collapseBtn = document.createElement("button");
+      collapseBtn.className = "uc-collapse-btn";
+      collapseBtn.textContent = "\u2212";
+      collapseBtn.onclick = () => {
+        if (isViewerMode2()) return;
+        const collapsed = section.style.display === "none";
+        section.style.display = collapsed ? "" : "none";
+        collapseBtn.textContent = collapsed ? "\u2212" : "+";
+        saveState();
+      };
+      p.appendChild(collapseBtn);
+      container.appendChild(p);
+      container.appendChild(section);
+      ensureCardAddTile(section);
+      return { p, section, gallery };
+    }
+    function collectState(container) {
+      const header = container.querySelector("p.uc-new-cards-header");
+      const section = header ? header.nextElementSibling : null;
+      if (!header || !section) return { collapsed: false, cards: [] };
+      return {
+        collapsed: section.style.display === "none",
+        cards: [...section.querySelectorAll(".uc-card-item")].map((item) => ({
+          src: item.dataset.src || "",
+          name: item.dataset.name || "Card image"
+        })).filter((card) => card.src)
+      };
+    }
+    function restoreState(container, newCards) {
+      const header = container.querySelector("p.uc-new-cards-header");
+      const section = header ? header.nextElementSibling : null;
+      if (!header || !section) return;
+      const btn = header.querySelector(".uc-collapse-btn");
+      section.style.display = newCards && newCards.collapsed ? "none" : "";
+      if (btn) btn.textContent = newCards && newCards.collapsed ? "+" : "\u2212";
+      const gallery = section.querySelector(".uc-card-gallery");
+      if (gallery) gallery.innerHTML = "";
+      ensureCardAddTile(section);
+      (newCards && newCards.cards || []).forEach((card) => {
+        if (card && card.src) addCardImage(section, card.src, card.name || "Card image");
+      });
+      ensureCardAddTile(section);
+    }
+    return { createSection, collectState, restoreState, moveCardItem };
+  }
+
+  // packages/patch-maker/input-blocker.js
+  function isEditingOverlayField() {
+    const ae = document.activeElement;
+    return !!(ae && (ae.classList.contains("uc-li-text") || ae.classList.contains("uc-section-label") || ae.tagName === "H2" && ae.getAttribute("contenteditable") === "true"));
+  }
+  function isViewerMode() {
+    const overlay = document.getElementById("uc-patch-overlay");
+    return !!(overlay && overlay.classList.contains("viewer-mode"));
+  }
+  function inputBlocker(e) {
+    if (!isEditingOverlayField() || isViewerMode()) return;
+    if (isRegisteredKeybindEvent(e)) return;
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    if (e.key === "Escape" || e.key === "Enter") {
+      e.preventDefault();
+      if (e.key === "Enter") document.activeElement.blur();
+    }
+  }
+  function enableInputBlocker() {
+    window.addEventListener("keydown", inputBlocker, true);
+    window.addEventListener("keyup", inputBlocker, true);
+    document.addEventListener("keydown", inputBlocker, true);
+    document.addEventListener("keyup", inputBlocker, true);
+  }
+  function disableInputBlocker() {
+    window.removeEventListener("keydown", inputBlocker, true);
+    window.removeEventListener("keyup", inputBlocker, true);
+    document.removeEventListener("keydown", inputBlocker, true);
+    document.removeEventListener("keyup", inputBlocker, true);
+  }
+
+  // packages/patch-maker/formatting.js
+  var BASE_WORD_COLORS = {
+    ATK: "#f0003c",
+    HP: "#0dd000",
+    cost: "#00d0ff",
+    DMG: "#ffcc00",
+    DETERMINATION: "red",
+    PATIENCE: "#41fcff",
+    BRAVERY: "#fca500",
+    INTEGRITY: "#0064ff",
+    PERSEVERANCE: "#d535d9",
+    KINDNESS: "#00c000",
+    JUSTICE: "#ffff00",
+    MONSTER: "#ffffff",
+    TOKEN: "#00c800",
+    BASE: "gray",
+    COMMON: "#fff",
+    RARE: "#00b8ff",
+    EPIC: "#d535d9",
+    LEGENDARY: "gold",
+    DT: "red",
+    COST: "#00d0ff",
+    G: "gold",
+    KR: "#d535d9"
+  };
+  var CARD_REF_REGEX = /\{([^{}]+?)\}/g;
+  var UL_OPEN = "__UC_UL_OPEN__";
+  var UL_CLOSE = "__UC_UL_CLOSE__";
+  function escapeRegExp(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+  function escapeHtml(str) {
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+  function sanitizeText(str) {
+    return str ? str.replace(/\s+/g, " ").trim() : "";
+  }
+  function insertUnderlineMarkers(text, underlineTokens) {
+    let result = text;
+    underlineTokens.forEach((token) => {
+      const re = new RegExp(`(^|[^A-Za-z0-9])(${escapeRegExp(token)})(?=([^A-Za-z0-9]|$))`, "g");
+      result = result.replace(re, (m, pre, word) => pre + UL_OPEN + word + UL_CLOSE);
+    });
+    return result;
+  }
+  var CASE_SENSITIVE_COLOR_WORDS = /* @__PURE__ */ new Set(["BASE", "COMMON", "RARE", "EPIC", "LEGENDARY", "TOKEN"]);
+  function applyColorWords(seg, wordColors) {
+    const allKeys = Object.keys(wordColors).filter(Boolean);
+    const caseSensitiveKeys = allKeys.filter((k) => CASE_SENSITIVE_COLOR_WORDS.has(k));
+    const caseInsensitiveKeys = allKeys.filter((k) => !CASE_SENSITIVE_COLOR_WORDS.has(k));
+    if (caseSensitiveKeys.length) {
+      const pattern = caseSensitiveKeys.sort((a, b) => b.length - a.length).map(escapeRegExp).join("|");
+      const regex = new RegExp(`(^|[^\\p{L}\\p{N}_])(${pattern})(?=([^\\p{L}\\p{N}_]|$))`, "gu");
+      seg = seg.replace(regex, (match, pre, word) => {
+        const c = wordColors[word];
+        return c ? `${pre}<span style="color:${c};">${word}</span>` : match;
+      });
+    }
+    if (caseInsensitiveKeys.length) {
+      const pattern = caseInsensitiveKeys.sort((a, b) => b.length - a.length).map(escapeRegExp).join("|");
+      const regex = new RegExp(`(^|[^\\p{L}\\p{N}_])(${pattern})(?=([^\\p{L}\\p{N}_]|$))`, "giu");
+      seg = seg.replace(regex, (match, pre, word) => {
+        const c = wordColors[word] || wordColors[word.toUpperCase()] || wordColors[word.toLowerCase()];
+        return c ? `${pre}<span style="color:${c};">${word}</span>` : match;
+      });
+    }
+    return seg;
+  }
+  function applyCardFormatting(seg, wordColors) {
+    const cardColor = wordColors.PATIENCE || "#41fcff";
+    return seg.replace(CARD_REF_REGEX, (match, inner) => {
+      const cleaned = inner.replace(new RegExp(UL_OPEN, "g"), "").replace(new RegExp(UL_CLOSE, "g"), "").replace(/<[^>]*>/g, "").trim();
+      return `<span class="uc-card-ref" style="color:${cardColor};">${escapeHtml(cleaned)}</span>`;
+    });
+  }
+  function applyStatFormatting(seg, wordColors) {
+    const statPattern = /(?<!\d)([+-]?)(\d+)\/([+-]?)(\d+)(?:\/([+-]?)(\d+))?(?=[^\d/]|$)/g;
+    return seg.replace(statPattern, (match, s1, a, s2, b, s3, c) => {
+      if (c !== void 0) {
+        return `${s1}<span style="color:${wordColors.cost}">${a}</span>/${s2}<span style="color:${wordColors.ATK}">${b}</span>/${s3}<span style="color:${wordColors.HP}">${c}</span>`;
+      }
+      return `${s1}<span style="color:${wordColors.ATK}">${a}</span>/${s2}<span style="color:${wordColors.HP}">${b}</span>`;
+    });
+  }
+  function formatSegments(work, wordColors, underlineTokens) {
+    const parts = [];
+    const re = /_(.+?)_/g;
+    let last = 0, m;
+    while ((m = re.exec(work)) !== null) {
+      if (m.index > last) parts.push({ text: work.slice(last, m.index), manual: false });
+      parts.push({ text: m[1], manual: true });
+      last = m.index + m[0].length;
+    }
+    if (last < work.length) parts.push({ text: work.slice(last), manual: false });
+    return parts.map((part) => {
+      let seg = part.text;
+      if (part.manual) {
+        return `<span style="text-decoration:underline;">${escapeHtml(seg.trim())}</span>`;
+      }
+      seg = insertUnderlineMarkers(seg, underlineTokens);
+      seg = escapeHtml(seg);
+      seg = applyColorWords(seg, wordColors);
+      seg = applyCardFormatting(seg, wordColors);
+      seg = applyStatFormatting(seg, wordColors);
+      return seg.replace(new RegExp(UL_OPEN, "g"), `<span style="text-decoration:underline;">`).replace(new RegExp(UL_CLOSE, "g"), `</span>`);
+    }).join("");
+  }
+  function extractSkipTokens(text) {
+    const skipped = [];
+    const work = text.replace(/\\([A-Za-z0-9\-]+)/g, (m, word) => {
+      const idx = skipped.length;
+      skipped.push(word);
+      return `UCSK${idx}Z`;
+    });
+    return { work, skipped };
+  }
+  function formatSwitchInner(rawText, wordColors, underlineTokens) {
+    if (!rawText) return "";
+    return formatSegments(rawText, wordColors, underlineTokens);
+  }
+  function formatLine(rawText, wordColors, underlineTokens) {
+    if (!rawText) return "";
+    const skipData = extractSkipTokens(rawText);
+    let work = skipData.work;
+    const switchBlocks = [];
+    work = work.replace(/\[\[([^\]]+)\]\]/g, (match, inner) => {
+      const idx = switchBlocks.length;
+      switchBlocks.push(inner);
+      return `UCXSW${idx}Y`;
+    });
+    let formatted = formatSegments(work, wordColors, underlineTokens);
+    let switchIndex = 0;
+    formatted = formatted.replace(/UCXSW(\d+)Y/g, (match, idxStr) => {
+      const innerHtml = formatSwitchInner(switchBlocks[Number(idxStr)] || "", wordColors, underlineTokens);
+      const bgColor = switchIndex % 2 === 0 ? "rgba(0, 255, 255, 0.4)" : "rgba(255, 0, 0, 0.4)";
+      switchIndex++;
+      return `<span style="background-color:${bgColor};">${innerHtml}</span>`;
+    });
+    formatted = formatted.replace(/UCSK(\d+)Z/g, (m, idx) => escapeHtml(skipData.skipped[Number(idx)] || ""));
+    return formatted;
+  }
+
+  // packages/patch-maker/styles.js
+  var PATCH_MAKER_CSS = `
+html, body { overflow-x: hidden !important; }
+
+#uc-patch-overlay {
+  min-height: 100vh;
+  max-width: 100vw;
+  overflow-y: visible !important;
+  overflow-x: visible !important;
+}
+#uc-patch-overlay > div { overflow-x: visible !important; }
+
+#uc-patch-overlay li.buff   { border-left: 3px solid #00c800; }
+#uc-patch-overlay li.rework { border-left: 3px solid gold; }
+#uc-patch-overlay li.nerf   { border-left: 3px solid red; }
+#uc-patch-overlay li.other  { border-left: 3px solid gray; }
+#uc-patch-overlay li.none   { border-left: none !important; }
+
+#uc-patch-overlay.editor-mode p  { background-color: rgba(255, 255, 0, 0.10); }
+#uc-patch-overlay.editor-mode li { background-color: rgba(173,216,230,0.12); }
+
+#uc-patch-overlay li {
+  padding-left: 5px;
+  border-radius: 3px;
+  position: relative;
+  margin: 10px 0;
+  list-style-type: disc;
+  font-size: 14px;
+}
+
+#uc-patch-overlay ul {
+  margin-top: 0;
+  margin-bottom: 10px;
+  padding-left: 40px;
+  list-style-position: outside;
+}
+
+#uc-patch-overlay p { position: relative; font-size: 14px; }
+
+#uc-patch-overlay .uc-li-text:focus { outline: none; }
+#uc-patch-overlay li:focus-within {
+  outline: 2px solid white;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+#uc-patch-overlay .uc-collapse-btn {
+  position: absolute;
+  right: -38px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  background-color: #0099cc;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  opacity: 0.9;
+}
+
+#uc-patch-overlay .uc-section-del {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 3px;
+  color: white;
+  cursor: pointer;
+  opacity: 0.9;
+  right: -64px;
+  background-color: #e74c3c;
+}
+
+#uc-patch-overlay .uc-section-label:focus {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+#uc-patch-overlay .uc-add-section-row {
+  margin: 0 0 10px 0;
+  background-color: rgba(255, 255, 0, 0.10);
+  padding: 0 6px;
+  border-radius: 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 24px;
+}
+
+#uc-patch-overlay .uc-add-section-btn {
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  padding: 0;
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+#uc-patch-overlay .uc-card-section {
+  margin: 8px 0 28px 0;
+}
+
+#uc-patch-overlay .uc-card-toolbar {
+  display: none;
+}
+
+#uc-patch-overlay .uc-card-add-tile {
+  width: 176px;
+  height: 246px;
+  background-color: rgba(255, 255, 0, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+}
+
+#uc-patch-overlay .uc-card-add-btn {
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  padding: 0;
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+#uc-patch-overlay .uc-card-gallery {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: flex-start;
+  min-height: 246px;
+}
+
+#uc-patch-overlay .uc-card-item {
+  position: relative;
+  display: inline-block;
+  outline: none;
+}
+
+#uc-patch-overlay .uc-card-item:focus {
+  outline: 2px solid white;
+  outline-offset: 3px;
+}
+
+#uc-patch-overlay .uc-card-frame {
+  width: 176px;
+  height: 246px;
+  overflow: hidden;
+  background: #000;
+}
+
+#uc-patch-overlay .uc-card-frame img {
+  width: 176px;
+  height: 246px;
+  display: block;
+  image-rendering: auto;
+}
+
+#uc-patch-overlay .uc-card-del {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background-color: #e74c3c;
+  color: white;
+  cursor: pointer;
+  text-align: center;
+  opacity: 0.95;
+}
+
+#uc-patch-overlay .uc-li-add,
+#uc-patch-overlay .uc-li-del {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 3px;
+  color: white;
+  cursor: pointer;
+  text-align: center;
+  opacity: 0.9;
+}
+
+#uc-patch-overlay .uc-li-add { right: -38px; background-color: #2ecc71; }
+#uc-patch-overlay .uc-li-del { right: -64px; background-color: #e74c3c; }
+#uc-patch-overlay .uc-li-del:disabled {
+  background-color: #777;
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+#uc-patch-overlay.viewer-mode .uc-li-add,
+#uc-patch-overlay.viewer-mode .uc-li-del,
+#uc-patch-overlay.viewer-mode .uc-collapse-btn,
+#uc-patch-overlay.viewer-mode .uc-section-del,
+#uc-patch-overlay.viewer-mode .uc-add-section-row,
+#uc-patch-overlay.viewer-mode .uc-card-toolbar,
+#uc-patch-overlay.viewer-mode .uc-card-del,
+#uc-patch-overlay.viewer-mode .uc-card-add-tile,
+#uc-patch-overlay.viewer-mode .uc-card-add-btn {
+  display: none !important;
+}
+#uc-patch-overlay.viewer-mode p,
+#uc-patch-overlay.viewer-mode li {
+  background-color: transparent !important;
+}
+
+.uc-skip { all: unset; }
+`;
+  function injectPatchMakerStyle() {
+    if (document.getElementById("uc-patch-maker-style")) return;
+    const style = document.createElement("style");
+    style.id = "uc-patch-maker-style";
+    style.textContent = PATCH_MAKER_CSS;
+    document.head.appendChild(style);
   }
 
   // packages/core/card-data.js
@@ -440,662 +1367,6 @@
     return true;
   }
 
-  // packages/patch-maker/formatting.js
-  var BASE_WORD_COLORS = {
-    ATK: "#f0003c",
-    HP: "#0dd000",
-    cost: "#00d0ff",
-    DMG: "#ffcc00",
-    DETERMINATION: "red",
-    PATIENCE: "#41fcff",
-    BRAVERY: "#fca500",
-    INTEGRITY: "#0064ff",
-    PERSEVERANCE: "#d535d9",
-    KINDNESS: "#00c000",
-    JUSTICE: "#ffff00",
-    MONSTER: "#ffffff",
-    TOKEN: "#00c800",
-    BASE: "gray",
-    COMMON: "#fff",
-    RARE: "#00b8ff",
-    EPIC: "#d535d9",
-    LEGENDARY: "gold",
-    DT: "red",
-    COST: "#00d0ff",
-    G: "gold",
-    KR: "#d535d9"
-  };
-  var CARD_REF_REGEX = /\{([^{}]+?)\}/g;
-  var UL_OPEN = "__UC_UL_OPEN__";
-  var UL_CLOSE = "__UC_UL_CLOSE__";
-  function escapeRegExp(str) {
-    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  }
-  function escapeHtml(str) {
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-  }
-  function sanitizeText(str) {
-    return str ? str.replace(/\s+/g, " ").trim() : "";
-  }
-  function insertUnderlineMarkers(text, underlineTokens) {
-    let result = text;
-    underlineTokens.forEach((token) => {
-      const re = new RegExp(`(^|[^A-Za-z0-9])(${escapeRegExp(token)})(?=([^A-Za-z0-9]|$))`, "g");
-      result = result.replace(re, (m, pre, word) => pre + UL_OPEN + word + UL_CLOSE);
-    });
-    return result;
-  }
-  var CASE_SENSITIVE_COLOR_WORDS = /* @__PURE__ */ new Set(["BASE", "COMMON", "RARE", "EPIC", "LEGENDARY", "TOKEN"]);
-  function applyColorWords(seg, wordColors) {
-    const allKeys = Object.keys(wordColors).filter(Boolean);
-    const caseSensitiveKeys = allKeys.filter((k) => CASE_SENSITIVE_COLOR_WORDS.has(k));
-    const caseInsensitiveKeys = allKeys.filter((k) => !CASE_SENSITIVE_COLOR_WORDS.has(k));
-    if (caseSensitiveKeys.length) {
-      const pattern = caseSensitiveKeys.sort((a, b) => b.length - a.length).map(escapeRegExp).join("|");
-      const regex = new RegExp(`(^|[^\\p{L}\\p{N}_])(${pattern})(?=([^\\p{L}\\p{N}_]|$))`, "gu");
-      seg = seg.replace(regex, (match, pre, word) => {
-        const c = wordColors[word];
-        return c ? `${pre}<span style="color:${c};">${word}</span>` : match;
-      });
-    }
-    if (caseInsensitiveKeys.length) {
-      const pattern = caseInsensitiveKeys.sort((a, b) => b.length - a.length).map(escapeRegExp).join("|");
-      const regex = new RegExp(`(^|[^\\p{L}\\p{N}_])(${pattern})(?=([^\\p{L}\\p{N}_]|$))`, "giu");
-      seg = seg.replace(regex, (match, pre, word) => {
-        const c = wordColors[word] || wordColors[word.toUpperCase()] || wordColors[word.toLowerCase()];
-        return c ? `${pre}<span style="color:${c};">${word}</span>` : match;
-      });
-    }
-    return seg;
-  }
-  function applyCardFormatting(seg, wordColors) {
-    const cardColor = wordColors.PATIENCE || "#41fcff";
-    return seg.replace(CARD_REF_REGEX, (match, inner) => {
-      const cleaned = inner.replace(new RegExp(UL_OPEN, "g"), "").replace(new RegExp(UL_CLOSE, "g"), "").replace(/<[^>]*>/g, "").trim();
-      return `<span class="uc-card-ref" style="color:${cardColor};">${escapeHtml(cleaned)}</span>`;
-    });
-  }
-  function applyStatFormatting(seg, wordColors) {
-    const statPattern = /(?<!\d)([+-]?)(\d+)\/([+-]?)(\d+)(?:\/([+-]?)(\d+))?(?=[^\d/]|$)/g;
-    return seg.replace(statPattern, (match, s1, a, s2, b, s3, c) => {
-      if (c !== void 0) {
-        return `${s1}<span style="color:${wordColors.cost}">${a}</span>/${s2}<span style="color:${wordColors.ATK}">${b}</span>/${s3}<span style="color:${wordColors.HP}">${c}</span>`;
-      }
-      return `${s1}<span style="color:${wordColors.ATK}">${a}</span>/${s2}<span style="color:${wordColors.HP}">${b}</span>`;
-    });
-  }
-  function formatSegments(work, wordColors, underlineTokens) {
-    const parts = [];
-    const re = /_(.+?)_/g;
-    let last = 0, m;
-    while ((m = re.exec(work)) !== null) {
-      if (m.index > last) parts.push({ text: work.slice(last, m.index), manual: false });
-      parts.push({ text: m[1], manual: true });
-      last = m.index + m[0].length;
-    }
-    if (last < work.length) parts.push({ text: work.slice(last), manual: false });
-    return parts.map((part) => {
-      let seg = part.text;
-      if (part.manual) {
-        return `<span style="text-decoration:underline;">${escapeHtml(seg.trim())}</span>`;
-      }
-      seg = insertUnderlineMarkers(seg, underlineTokens);
-      seg = escapeHtml(seg);
-      seg = applyColorWords(seg, wordColors);
-      seg = applyCardFormatting(seg, wordColors);
-      seg = applyStatFormatting(seg, wordColors);
-      return seg.replace(new RegExp(UL_OPEN, "g"), `<span style="text-decoration:underline;">`).replace(new RegExp(UL_CLOSE, "g"), `</span>`);
-    }).join("");
-  }
-  function extractSkipTokens(text) {
-    const skipped = [];
-    const work = text.replace(/\\([A-Za-z0-9\-]+)/g, (m, word) => {
-      const idx = skipped.length;
-      skipped.push(word);
-      return `UCSK${idx}Z`;
-    });
-    return { work, skipped };
-  }
-  function formatSwitchInner(rawText, wordColors, underlineTokens) {
-    if (!rawText) return "";
-    return formatSegments(rawText, wordColors, underlineTokens);
-  }
-  function formatLine(rawText, wordColors, underlineTokens) {
-    if (!rawText) return "";
-    const skipData = extractSkipTokens(rawText);
-    let work = skipData.work;
-    const switchBlocks = [];
-    work = work.replace(/\[\[([^\]]+)\]\]/g, (match, inner) => {
-      const idx = switchBlocks.length;
-      switchBlocks.push(inner);
-      return `UCXSW${idx}Y`;
-    });
-    let formatted = formatSegments(work, wordColors, underlineTokens);
-    let switchIndex = 0;
-    formatted = formatted.replace(/UCXSW(\d+)Y/g, (match, idxStr) => {
-      const innerHtml = formatSwitchInner(switchBlocks[Number(idxStr)] || "", wordColors, underlineTokens);
-      const bgColor = switchIndex % 2 === 0 ? "rgba(0, 255, 255, 0.4)" : "rgba(255, 0, 0, 0.4)";
-      switchIndex++;
-      return `<span style="background-color:${bgColor};">${innerHtml}</span>`;
-    });
-    formatted = formatted.replace(/UCSK(\d+)Z/g, (m, idx) => escapeHtml(skipData.skipped[Number(idx)] || ""));
-    return formatted;
-  }
-
-  // packages/core/settings.js
-  function createFeatureSettings(plugin, featureName, categoryLabel) {
-    const settingsApi = plugin.settings();
-    const registered = {};
-    function add(key, config) {
-      const setting = settingsApi.add({
-        ...config,
-        key: `${featureName}.${key}`,
-        category: config.category || categoryLabel
-      });
-      registered[key] = setting;
-      return setting;
-    }
-    function value(key) {
-      return registered[key].value();
-    }
-    return { add, value };
-  }
-
-  // packages/patch-maker/settings.js
-  function registerPatchMakerSettings(plugin) {
-    const settings = createFeatureSettings(plugin, "patchmaker", "Patch Maker");
-    return {
-      settings,
-      enabled: settings.add("enabled", { name: "Enable Patch Maker", type: "boolean", default: true }),
-      debugLogging: settings.add("debugLogging", { name: "Enable debug logging", type: "boolean", default: false }),
-      hideControls: settings.add("hideControls", { name: "Hide Patch Maker controls", type: "boolean", default: false }),
-      cardHovers: settings.add("enableCardHovers", { name: "Enable card hovers", type: "boolean", default: true }),
-      language: settings.add("patchLanguage", {
-        name: "Select Language",
-        type: "select",
-        options: ["Auto / Default", "English", "French", "Spanish", "Portuguese", "Chinese", "Italian", "Polish", "German", "Russian"],
-        default: "Auto / Default",
-        onChange: () => location.reload()
-      }),
-      openOnLoad: settings.add("openPatchNotesOnPageLoad", { name: "Auto-Load Patch Maker", type: "boolean", default: false })
-    };
-  }
-
-  // packages/patch-maker/styles.js
-  var PATCH_MAKER_CSS = `
-html, body { overflow-x: hidden !important; }
-
-#uc-patch-overlay {
-  min-height: 100vh;
-  max-width: 100vw;
-  overflow-y: visible !important;
-  overflow-x: visible !important;
-}
-#uc-patch-overlay > div { overflow-x: visible !important; }
-
-#uc-patch-overlay li.buff   { border-left: 3px solid #00c800; }
-#uc-patch-overlay li.rework { border-left: 3px solid gold; }
-#uc-patch-overlay li.nerf   { border-left: 3px solid red; }
-#uc-patch-overlay li.other  { border-left: 3px solid gray; }
-#uc-patch-overlay li.none   { border-left: none !important; }
-
-#uc-patch-overlay.editor-mode p  { background-color: rgba(255, 255, 0, 0.10); }
-#uc-patch-overlay.editor-mode li { background-color: rgba(173,216,230,0.12); }
-
-#uc-patch-overlay li {
-  padding-left: 5px;
-  border-radius: 3px;
-  position: relative;
-  margin: 10px 0;
-  list-style-type: disc;
-  font-size: 14px;
-}
-
-#uc-patch-overlay ul {
-  margin-top: 0;
-  margin-bottom: 10px;
-  padding-left: 40px;
-  list-style-position: outside;
-}
-
-#uc-patch-overlay p { position: relative; font-size: 14px; }
-
-#uc-patch-overlay .uc-li-text:focus { outline: none; }
-#uc-patch-overlay li:focus-within {
-  outline: 2px solid white;
-  outline-offset: 3px;
-  border-radius: 4px;
-}
-
-#uc-patch-overlay .uc-collapse-btn {
-  position: absolute;
-  right: -38px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
-  background-color: #0099cc;
-  color: white;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  opacity: 0.9;
-}
-
-#uc-patch-overlay .uc-section-del {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
-  border: none;
-  border-radius: 3px;
-  color: white;
-  cursor: pointer;
-  opacity: 0.9;
-  right: -64px;
-  background-color: #e74c3c;
-}
-
-#uc-patch-overlay .uc-section-label:focus {
-  outline: 2px solid white;
-  outline-offset: 2px;
-}
-
-#uc-patch-overlay .uc-add-section-row {
-  margin: 0 0 10px 0;
-  background-color: rgba(255, 255, 0, 0.10);
-  padding: 0 6px;
-  border-radius: 3px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 24px;
-}
-
-#uc-patch-overlay .uc-add-section-btn {
-  width: 20px;
-  height: 20px;
-  line-height: 20px;
-  padding: 0;
-  background-color: #2ecc71;
-  color: white;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  text-align: center;
-  font-size: 14px;
-  font-weight: bold;
-}
-
-#uc-patch-overlay .uc-card-section {
-  margin: 8px 0 28px 0;
-}
-
-#uc-patch-overlay .uc-card-toolbar {
-  display: none;
-}
-
-#uc-patch-overlay .uc-card-add-tile {
-  width: 176px;
-  height: 246px;
-  background-color: rgba(255, 255, 0, 0.10);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 3px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-sizing: border-box;
-  flex: 0 0 auto;
-}
-
-#uc-patch-overlay .uc-card-add-btn {
-  width: 20px;
-  height: 20px;
-  line-height: 20px;
-  padding: 0;
-  background-color: #2ecc71;
-  color: white;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  text-align: center;
-  font-size: 14px;
-  font-weight: bold;
-}
-
-#uc-patch-overlay .uc-card-gallery {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  align-items: flex-start;
-  min-height: 246px;
-}
-
-#uc-patch-overlay .uc-card-item {
-  position: relative;
-  display: inline-block;
-  outline: none;
-}
-
-#uc-patch-overlay .uc-card-item:focus {
-  outline: 2px solid white;
-  outline-offset: 3px;
-}
-
-#uc-patch-overlay .uc-card-frame {
-  width: 176px;
-  height: 246px;
-  overflow: hidden;
-  background: #000;
-}
-
-#uc-patch-overlay .uc-card-frame img {
-  width: 176px;
-  height: 246px;
-  display: block;
-  image-rendering: auto;
-}
-
-#uc-patch-overlay .uc-card-del {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 20px;
-  height: 20px;
-  line-height: 20px;
-  padding: 0;
-  border: none;
-  border-radius: 3px;
-  background-color: #e74c3c;
-  color: white;
-  cursor: pointer;
-  text-align: center;
-  opacity: 0.95;
-}
-
-#uc-patch-overlay .uc-li-add,
-#uc-patch-overlay .uc-li-del {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
-  border: none;
-  border-radius: 3px;
-  color: white;
-  cursor: pointer;
-  text-align: center;
-  opacity: 0.9;
-}
-
-#uc-patch-overlay .uc-li-add { right: -38px; background-color: #2ecc71; }
-#uc-patch-overlay .uc-li-del { right: -64px; background-color: #e74c3c; }
-#uc-patch-overlay .uc-li-del:disabled {
-  background-color: #777;
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-#uc-patch-overlay.viewer-mode .uc-li-add,
-#uc-patch-overlay.viewer-mode .uc-li-del,
-#uc-patch-overlay.viewer-mode .uc-collapse-btn,
-#uc-patch-overlay.viewer-mode .uc-section-del,
-#uc-patch-overlay.viewer-mode .uc-add-section-row,
-#uc-patch-overlay.viewer-mode .uc-card-toolbar,
-#uc-patch-overlay.viewer-mode .uc-card-del,
-#uc-patch-overlay.viewer-mode .uc-card-add-tile,
-#uc-patch-overlay.viewer-mode .uc-card-add-btn {
-  display: none !important;
-}
-#uc-patch-overlay.viewer-mode p,
-#uc-patch-overlay.viewer-mode li {
-  background-color: transparent !important;
-}
-
-.uc-skip { all: unset; }
-`;
-  function injectPatchMakerStyle() {
-    if (document.getElementById("uc-patch-maker-style")) return;
-    const style = document.createElement("style");
-    style.id = "uc-patch-maker-style";
-    style.textContent = PATCH_MAKER_CSS;
-    document.head.appendChild(style);
-  }
-
-  // packages/patch-maker/input-blocker.js
-  function isEditingOverlayField() {
-    const ae = document.activeElement;
-    return !!(ae && (ae.classList.contains("uc-li-text") || ae.classList.contains("uc-section-label") || ae.tagName === "H2" && ae.getAttribute("contenteditable") === "true"));
-  }
-  function isViewerMode() {
-    const overlay = document.getElementById("uc-patch-overlay");
-    return !!(overlay && overlay.classList.contains("viewer-mode"));
-  }
-  function inputBlocker(e) {
-    if (!isEditingOverlayField() || isViewerMode()) return;
-    const isOwnShortcut = !e.altKey && !e.metaKey && (e.ctrlKey || e.shiftKey) && (e.key === "ArrowUp" || e.key === "ArrowDown");
-    if (isOwnShortcut) return;
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    if (e.key === "Escape" || e.key === "Enter") {
-      e.preventDefault();
-      if (e.key === "Enter") document.activeElement.blur();
-    }
-  }
-  function enableInputBlocker() {
-    window.addEventListener("keydown", inputBlocker, true);
-    window.addEventListener("keyup", inputBlocker, true);
-    document.addEventListener("keydown", inputBlocker, true);
-    document.addEventListener("keyup", inputBlocker, true);
-  }
-  function disableInputBlocker() {
-    window.removeEventListener("keydown", inputBlocker, true);
-    window.removeEventListener("keyup", inputBlocker, true);
-    document.removeEventListener("keydown", inputBlocker, true);
-    document.removeEventListener("keyup", inputBlocker, true);
-  }
-
-  // packages/patch-maker/new-cards.js
-  var TARGET_W = 176;
-  var TARGET_H = 246;
-  var FIELDMARKER_WATERMARK_CROP_PX = 14;
-  function readFileAsDataURL(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(file);
-    });
-  }
-  function loadImageFromDataURL(dataUrl) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-      img.src = dataUrl;
-    });
-  }
-  async function normalizeCardImage(dataUrl) {
-    const img = await loadImageFromDataURL(dataUrl);
-    if (img.naturalWidth === TARGET_W && img.naturalHeight === TARGET_H) {
-      return dataUrl;
-    }
-    let sx = 0, sy = 0, sw = img.naturalWidth, sh = img.naturalHeight;
-    if (img.naturalWidth === 163 && img.naturalHeight >= 250) {
-      sh = Math.max(1, img.naturalHeight - FIELDMARKER_WATERMARK_CROP_PX);
-    }
-    const canvas = document.createElement("canvas");
-    canvas.width = TARGET_W;
-    canvas.height = TARGET_H;
-    const ctx = canvas.getContext("2d");
-    ctx.imageSmoothingEnabled = false;
-    ctx.clearRect(0, 0, TARGET_W, TARGET_H);
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, TARGET_W, TARGET_H);
-    return canvas.toDataURL("image/png");
-  }
-  function createNewCardsFeature({ isViewerMode: isViewerMode2, saveState }) {
-    function ensureCardAddTile(section) {
-      const gallery = section.querySelector(".uc-card-gallery");
-      if (!gallery) return null;
-      let addTile = gallery.querySelector(":scope > .uc-card-add-tile");
-      if (addTile) {
-        gallery.appendChild(addTile);
-        return addTile;
-      }
-      const fileInput = document.createElement("input");
-      fileInput.type = "file";
-      fileInput.accept = "image/*";
-      fileInput.multiple = true;
-      fileInput.style.display = "none";
-      addTile = document.createElement("div");
-      addTile.className = "uc-card-add-tile";
-      const addBtn = document.createElement("button");
-      addBtn.className = "uc-card-add-btn";
-      addBtn.textContent = "+";
-      addBtn.title = "Add card image";
-      addBtn.onclick = () => {
-        if (isViewerMode2()) return;
-        fileInput.click();
-      };
-      fileInput.addEventListener("change", async (e) => {
-        const files = [...e.target.files || []];
-        if (!files.length) return;
-        for (const file of files) {
-          if (!file.type.startsWith("image/")) continue;
-          const dataUrl = await readFileAsDataURL(file);
-          const normalized = await normalizeCardImage(dataUrl);
-          addCardImage(section, normalized, file.name || "Card image");
-        }
-        fileInput.value = "";
-        ensureCardAddTile(section);
-        saveState();
-      });
-      addTile.appendChild(addBtn);
-      addTile.appendChild(fileInput);
-      gallery.appendChild(addTile);
-      return addTile;
-    }
-    function addCardImage(section, src, name = "Card image") {
-      const gallery = section.querySelector(".uc-card-gallery");
-      if (!gallery) return null;
-      ensureCardAddTile(section);
-      const item = document.createElement("div");
-      item.className = "uc-card-item";
-      item.tabIndex = 0;
-      item.dataset.src = src;
-      item.dataset.name = name;
-      const frame = document.createElement("div");
-      frame.className = "uc-card-frame";
-      const img = document.createElement("img");
-      img.src = src;
-      img.alt = name;
-      frame.appendChild(img);
-      item.appendChild(frame);
-      const delBtn = document.createElement("button");
-      delBtn.className = "uc-card-del";
-      delBtn.textContent = "\u2212";
-      delBtn.title = "Remove card image";
-      delBtn.onclick = (e) => {
-        if (isViewerMode2()) return;
-        e.stopPropagation();
-        item.remove();
-        ensureCardAddTile(section);
-        saveState();
-      };
-      item.appendChild(delBtn);
-      item.addEventListener("keydown", (e) => {
-        if (isViewerMode2()) return;
-        const dir = e.key === "ArrowUp" ? -1 : e.key === "ArrowDown" ? 1 : 0;
-        const isMove = e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey && dir;
-        if (!isMove) return;
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        moveCardItem(item, dir);
-      }, true);
-      const addTile = gallery.querySelector(":scope > .uc-card-add-tile");
-      if (addTile) gallery.insertBefore(item, addTile);
-      else gallery.appendChild(item);
-      ensureCardAddTile(section);
-      return item;
-    }
-    function moveCardItem(item, dir) {
-      const gallery = item.parentElement;
-      if (!gallery) return;
-      const items = [...gallery.querySelectorAll(":scope > .uc-card-item")];
-      const idx = items.indexOf(item);
-      if (idx < 0 || items.length <= 1) return;
-      const newIdx = (idx + dir + items.length) % items.length;
-      const target = items[newIdx];
-      if (dir < 0) {
-        if (idx === 0) gallery.appendChild(item);
-        else gallery.insertBefore(item, target);
-      } else {
-        if (idx === items.length - 1) gallery.insertBefore(item, items[0]);
-        else gallery.insertBefore(item, target.nextElementSibling);
-      }
-      ensureCardAddTile(gallery.parentElement);
-      saveState();
-      setTimeout(() => item.focus(), 0);
-    }
-    function createSection(container) {
-      const p = document.createElement("p");
-      p.className = "uc-new-cards-header";
-      const label = document.createElement("span");
-      label.textContent = "New cards";
-      p.appendChild(label);
-      const section = document.createElement("div");
-      section.className = "uc-card-section";
-      const gallery = document.createElement("div");
-      gallery.className = "uc-card-gallery";
-      section.appendChild(gallery);
-      const collapseBtn = document.createElement("button");
-      collapseBtn.className = "uc-collapse-btn";
-      collapseBtn.textContent = "\u2212";
-      collapseBtn.onclick = () => {
-        if (isViewerMode2()) return;
-        const collapsed = section.style.display === "none";
-        section.style.display = collapsed ? "" : "none";
-        collapseBtn.textContent = collapsed ? "\u2212" : "+";
-        saveState();
-      };
-      p.appendChild(collapseBtn);
-      container.appendChild(p);
-      container.appendChild(section);
-      ensureCardAddTile(section);
-      return { p, section, gallery };
-    }
-    function collectState(container) {
-      const header = container.querySelector("p.uc-new-cards-header");
-      const section = header ? header.nextElementSibling : null;
-      if (!header || !section) return { collapsed: false, cards: [] };
-      return {
-        collapsed: section.style.display === "none",
-        cards: [...section.querySelectorAll(".uc-card-item")].map((item) => ({
-          src: item.dataset.src || "",
-          name: item.dataset.name || "Card image"
-        })).filter((card) => card.src)
-      };
-    }
-    function restoreState(container, newCards) {
-      const header = container.querySelector("p.uc-new-cards-header");
-      const section = header ? header.nextElementSibling : null;
-      if (!header || !section) return;
-      const btn = header.querySelector(".uc-collapse-btn");
-      section.style.display = newCards && newCards.collapsed ? "none" : "";
-      if (btn) btn.textContent = newCards && newCards.collapsed ? "+" : "\u2212";
-      const gallery = section.querySelector(".uc-card-gallery");
-      if (gallery) gallery.innerHTML = "";
-      ensureCardAddTile(section);
-      (newCards && newCards.cards || []).forEach((card) => {
-        if (card && card.src) addCardImage(section, card.src, card.name || "Card image");
-      });
-      ensureCardAddTile(section);
-    }
-    return { createSection, collectState, restoreState };
-  }
-
   // packages/patch-maker/overlay.js
   var STATE_KEY = "wizascript.patchmaker.state.v1";
   var cycleOrder = ["none", "other", "buff", "rework", "nerf"];
@@ -1136,16 +1407,17 @@ Each entry needs a category:
 \u2022 None (EMPTY)
 
 
-<u><b>Category Shortcuts</b></u>
-\u2022 Ctrl  + Up / Down   \u2192 Change class type
-\u2022 Shift + Up / Down   \u2192 Move entry up/down in section
+<u><b>Category & Move Shortcuts</b></u>
+These are all remappable in Wizascript's Keybinds settings - defaults shown below:
+\u2022 Primary + , / .   \u2192 Change class type
+\u2022 Primary + Up / Down   \u2192 Move entry up/down in section
 
 
 <u><b>Custom Balance Sections</b></u>
 \u2022 Green + Button \u2013 Add a new custom balance section
 \u2022 Red - Button - Remove custom balance section (Double Click Required)
 \u2022 Click a section name to select it
-\u2022 Shift + Up / Down \u2013 Move selected section up/down
+\u2022 Primary + Up / Down \u2013 Move selected section up/down (remappable)
 
 
 <u><b>Automatic Highlighting</b></u>
@@ -1192,6 +1464,7 @@ Viewer Mode:
 Version: v${version}`;
   }
   function createPatchMakerOverlay({
+    plugin,
     logger,
     getWordColors,
     getUnderlineTokens,
@@ -1338,7 +1611,6 @@ Version: v${version}`;
         disableInputBlocker();
       });
       span.addEventListener("keydown", (e) => {
-        if (handleShortcut(e)) return;
         if (overlay.classList.contains("viewer-mode")) return;
         if (e.key === "Enter") {
           e.preventDefault();
@@ -1385,7 +1657,6 @@ Version: v${version}`;
         disableInputBlocker();
       });
       labelEl.addEventListener("keydown", (e) => {
-        if (handleShortcut(e)) return;
         if (!isCustom) return;
         if (e.key === "Enter") {
           e.preventDefault();
@@ -1498,36 +1769,95 @@ Version: v${version}`;
       li.classList.add(cycleOrder[newIdx]);
       saveState();
     }
-    function handleShortcut(e) {
-      if (overlay.classList.contains("viewer-mode")) return false;
-      if (e.altKey || e.metaKey) return false;
-      const dir = e.key === "ArrowUp" ? -1 : e.key === "ArrowDown" ? 1 : 0;
-      if (!dir || !e.ctrlKey && !e.shiftKey) return false;
-      const active = document.activeElement;
-      if (!active) return false;
-      if (active.classList.contains("uc-li-text")) {
-        const li = active.closest("li");
-        if (!li) return false;
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        if (e.ctrlKey && !e.shiftKey) cycleCategory(li, dir);
-        if (e.shiftKey && !e.ctrlKey) moveLi(li, dir);
-        return true;
+    const register = (config) => registerKeybind(plugin, { ...config, packageLabel: "Patch Maker", guardTypingContext: false });
+    register({
+      key: "cycleCategoryUp",
+      name: "Cycle Entry Category Up",
+      defaultCode: "Comma",
+      scope: "scoped",
+      selector: ".uc-li-text",
+      onMatch: () => {
+        const li = document.activeElement.closest("li");
+        if (li) cycleCategory(li, -1);
       }
-      if (active.classList.contains("uc-section-label") && e.shiftKey && !e.ctrlKey) {
-        const p = active.closest("p.uc-section-header");
-        if (!p) return false;
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        moveSection(p, dir);
+    });
+    register({
+      key: "cycleCategoryDown",
+      name: "Cycle Entry Category Down",
+      defaultCode: "Period",
+      scope: "scoped",
+      selector: ".uc-li-text",
+      onMatch: () => {
+        const li = document.activeElement.closest("li");
+        if (li) cycleCategory(li, 1);
+      }
+    });
+    register({
+      key: "moveEntryUp",
+      name: "Move Entry Up",
+      defaultCode: "ArrowUp",
+      scope: "scoped",
+      selector: ".uc-li-text",
+      onMatch: () => {
+        const li = document.activeElement.closest("li");
+        if (li) moveLi(li, -1);
+      }
+    });
+    register({
+      key: "moveEntryDown",
+      name: "Move Entry Down",
+      defaultCode: "ArrowDown",
+      scope: "scoped",
+      selector: ".uc-li-text",
+      onMatch: () => {
+        const li = document.activeElement.closest("li");
+        if (li) moveLi(li, 1);
+      }
+    });
+    register({
+      key: "moveSectionUp",
+      name: "Move Balance Section Up",
+      defaultCode: "ArrowUp",
+      scope: "scoped",
+      selector: ".uc-section-label",
+      onMatch: () => {
+        const p = document.activeElement.closest("p.uc-section-header");
+        if (!p) return;
+        moveSection(p, -1);
         const label = p.querySelector(".uc-section-label");
         if (label) setTimeout(() => label.focus(), 0);
-        return true;
       }
-      return false;
-    }
+    });
+    register({
+      key: "moveSectionDown",
+      name: "Move Balance Section Down",
+      defaultCode: "ArrowDown",
+      scope: "scoped",
+      selector: ".uc-section-label",
+      onMatch: () => {
+        const p = document.activeElement.closest("p.uc-section-header");
+        if (!p) return;
+        moveSection(p, 1);
+        const label = p.querySelector(".uc-section-label");
+        if (label) setTimeout(() => label.focus(), 0);
+      }
+    });
+    register({
+      key: "moveCardUp",
+      name: "Move Card Up",
+      defaultCode: "ArrowUp",
+      scope: "scoped",
+      selector: ".uc-card-item",
+      onMatch: () => newCards.moveCardItem(document.activeElement, -1)
+    });
+    register({
+      key: "moveCardDown",
+      name: "Move Card Down",
+      defaultCode: "ArrowDown",
+      scope: "scoped",
+      selector: ".uc-card-item",
+      onMatch: () => newCards.moveCardItem(document.activeElement, 1)
+    });
     function bindCardHovers() {
       if (!getCardHoversEnabled()) return;
       const cardNameMap = getCardNameMap();
@@ -1826,6 +2156,33 @@ Version: v${version}`;
     return { init, setControlsHidden };
   }
 
+  // packages/core/debug-logger.js
+  function createLogger(featureName, initialCategories = {}) {
+    const enabled = { ...initialCategories };
+    function tag(category) {
+      return category ? `[${featureName}:${category}]` : `[${featureName}]`;
+    }
+    function isEnabled(category) {
+      return !category || enabled[category] !== false;
+    }
+    return {
+      setCategory(category, isEnabled2) {
+        enabled[category] = isEnabled2;
+      },
+      log(category, ...args) {
+        if (!isEnabled(category)) return;
+        console.log(tag(category), ...args);
+      },
+      warn(category, ...args) {
+        if (!isEnabled(category)) return;
+        console.warn(tag(category), ...args);
+      },
+      error(category, ...args) {
+        console.error(tag(category), ...args);
+      }
+    };
+  }
+
   // packages/core/page-match.js
   function normalizePath(pathname) {
     const lower = pathname.toLowerCase();
@@ -1850,34 +2207,35 @@ Version: v${version}`;
     return matchesPage("/gameUpdates.jsp");
   }
   function initPatchMaker(plugin) {
-    const settings = registerPatchMakerSettings(plugin);
-    if (!settings.enabled.value()) return;
-    if (!isPatchNotesPage()) return;
+    const settings2 = registerPatchMakerSettings(plugin);
     const logger = createLogger("PatchMaker");
     const originalWarn = logger.warn.bind(logger);
     const originalLog = logger.log.bind(logger);
     logger.log = (...args) => {
-      if (settings.debugLogging.value()) originalLog(...args);
+      if (settings2.debugLogging.value()) originalLog(...args);
     };
     logger.warn = (...args) => {
-      if (settings.debugLogging.value()) originalWarn(...args);
+      if (settings2.debugLogging.value()) originalWarn(...args);
     };
     let wordColors = { ...BASE_WORD_COLORS };
     let underlineTokens = [];
     let cardNameMap = /* @__PURE__ */ new Map();
     const overlay = createPatchMakerOverlay({
+      plugin,
       logger,
       version: FEATURE_VERSION,
       getWordColors: () => wordColors,
       getUnderlineTokens: () => underlineTokens,
-      getCardHoversEnabled: () => settings.cardHovers.value(),
+      getCardHoversEnabled: () => settings2.cardHovers.value(),
       getCardNameMap: () => cardNameMap,
-      getHideControlsEnabled: () => settings.hideControls.value(),
-      getOpenOnLoad: () => settings.openOnLoad.value()
+      getHideControlsEnabled: () => settings2.hideControls.value(),
+      getOpenOnLoad: () => settings2.openOnLoad.value()
     });
-    settings.hideControls.on((value) => overlay.setControlsHidden(value));
+    settings2.hideControls.on((value) => overlay.setControlsHidden(value));
+    if (!settings2.enabled.value()) return;
+    if (!isPatchNotesPage()) return;
     async function refreshLocalizedData() {
-      const languageLabel = settings.language.value();
+      const languageLabel = settings2.language.value();
       const { tokens, localizedColors } = await buildLocalizedFormattingData(languageLabel, BASE_WORD_COLORS);
       underlineTokens = tokens;
       wordColors = { ...BASE_WORD_COLORS, ...localizedColors };
@@ -1891,13 +2249,13 @@ Version: v${version}`;
 
   // packages/true-hub-bridge/settings.js
   function registerTrueHubBridgeSettings(plugin) {
-    const settings = createFeatureSettings(plugin, "truehubbridge", "True Hub Bridge");
+    const settings2 = createFeatureSettings(plugin, "truehubbridge", "True Hub Bridge");
     return {
-      settings,
+      settings: settings2,
       // Master toggle - lets the whole feature be turned off from within
       // Wizascript's settings, per the "one plugin, categories as boxes"
       // model the rest of the suite follows.
-      enabled: settings.add("enabled", {
+      enabled: settings2.add("enabled", {
         name: "Enable True Hub Bridge",
         type: "boolean",
         default: true
@@ -1905,17 +2263,17 @@ Version: v${version}`;
       // The original script had no debug-logging toggle at all (just
       // always-on console.log calls) - added here for consistency with
       // patch-maker, using the same working per-feature debug logger.
-      debugLogging: settings.add("debugLogging", {
+      debugLogging: settings2.add("debugLogging", {
         name: "Enable debug logging",
         type: "boolean",
         default: false
       }),
-      autoOpen: settings.add("autoOpenTrueHub", {
+      autoOpen: settings2.add("autoOpenTrueHub", {
         name: "Auto Open True Hub",
         type: "boolean",
         default: true
       }),
-      scrollPaging: settings.add("enableScrollPaging", {
+      scrollPaging: settings2.add("enableScrollPaging", {
         name: "Enable Scroll Paging",
         type: "boolean",
         default: true
@@ -2382,7 +2740,7 @@ Version: v${version}`;
       filteredDecks = [...allDecks];
       logger.log("data", "Decks loaded.", { count: allDecks.length });
     }
-    function applyFilters() {
+    function applyFilters2() {
       filteredDecks = filterDecks(allDecks, { activeSoulFilter, activeSearch, includeCards, excludeCards });
       currentPage = 1;
       renderPage();
@@ -2605,7 +2963,7 @@ Version: v${version}`;
           btnInclude.onclick = (e) => {
             e.stopPropagation();
             addCardToFilter(includeCards, excludeCards, card);
-            applyFilters();
+            applyFilters2();
             renderCardFilterTags();
             cardSearchInput.value = "";
             cardDropdown.style.display = "none";
@@ -2626,7 +2984,7 @@ Version: v${version}`;
           btnExclude.onclick = (e) => {
             e.stopPropagation();
             addCardToFilter(excludeCards, includeCards, card);
-            applyFilters();
+            applyFilters2();
             renderCardFilterTags();
             cardSearchInput.value = "";
             cardDropdown.style.display = "none";
@@ -2667,7 +3025,7 @@ Version: v${version}`;
         Object.assign(x.style, { cursor: "pointer", fontWeight: "bold", marginLeft: "2px", lineHeight: "1" });
         x.onclick = () => {
           removeCardFromFilter(list, card.id);
-          applyFilters();
+          applyFilters2();
           renderCardFilterTags();
         };
         tag.appendChild(x);
@@ -2723,7 +3081,7 @@ Version: v${version}`;
         soulSelect.addEventListener("change", () => {
           updateSoulClass();
           activeSoulFilter = soulSelect.value || null;
-          applyFilters();
+          applyFilters2();
         });
         leftControls.appendChild(soulSelect);
       }
@@ -2778,7 +3136,7 @@ Version: v${version}`;
       else originalDecks.insertAdjacentElement("beforebegin", nav);
       searchBox.addEventListener("input", () => {
         activeSearch = searchBox.value;
-        applyFilters();
+        applyFilters2();
       });
       btnPrev.onclick = () => {
         if (currentPage <= 1) return;
@@ -2984,22 +3342,22 @@ Version: v${version}`;
     return matchesPage("/Hub");
   }
   function initTrueHubBridge(plugin) {
-    const settings = registerTrueHubBridgeSettings(plugin);
-    if (!settings.enabled.value()) return;
+    const settings2 = registerTrueHubBridgeSettings(plugin);
+    if (!settings2.enabled.value()) return;
     if (!isHubPage()) return;
     const logger = createLogger("TrueHubBridge");
     const originalWarn = logger.warn.bind(logger);
     const originalLog = logger.log.bind(logger);
     logger.log = (...args) => {
-      if (settings.debugLogging.value()) originalLog(...args);
+      if (settings2.debugLogging.value()) originalLog(...args);
     };
     logger.warn = (...args) => {
-      if (settings.debugLogging.value()) originalWarn(...args);
+      if (settings2.debugLogging.value()) originalWarn(...args);
     };
     const overlay = createTrueHubOverlay({
       logger,
-      getAutoOpen: () => settings.autoOpen.value(),
-      getScrollPaging: () => settings.scrollPaging.value()
+      getAutoOpen: () => settings2.autoOpen.value(),
+      getScrollPaging: () => settings2.scrollPaging.value()
     });
     loadDecks().then((decks) => {
       overlay.setDecks(decks);
@@ -3009,28 +3367,28 @@ Version: v${version}`;
 
   // packages/deck-tracker/settings.js
   function registerDeckTrackerSettings(plugin) {
-    const settings = createFeatureSettings(plugin, "decktracker", "Deck Tracker");
-    const enabled = settings.add("enabled", {
+    const settings2 = createFeatureSettings(plugin, "decktracker", "Deck Tracker");
+    const enabled = settings2.add("enabled", {
       name: "Enable Deck Tracker",
       type: "boolean",
       default: true
     });
-    const debugLogging = settings.add("debugLogging", {
+    const debugLogging = settings2.add("debugLogging", {
       name: "Enable debug logging",
       type: "boolean",
       default: false
     });
-    const retainUnclosedPresets = settings.add("retainUnclosedPresets", {
+    const retainUnclosedPresets = settings2.add("retainUnclosedPresets", {
       name: "Retain Unclosed Presets Between Matches",
       type: "boolean",
       default: false
     });
-    const allowFavoritedRetainedWhileSpectating = settings.add("allowFavoritedRetainedWhileSpectating", {
+    const allowFavoritedRetainedWhileSpectating = settings2.add("allowFavoritedRetainedWhileSpectating", {
       name: "Auto-load Favorited/Retained Presets While Spectating",
       type: "boolean",
       default: false
     });
-    const dimOpacity = settings.add("dimOpacity", {
+    const dimOpacity = settings2.add("dimOpacity", {
       name: "Tracker Button Dim Opacity",
       type: "slider",
       default: 0.4,
@@ -3039,7 +3397,7 @@ Version: v${version}`;
       step: 0.05
     });
     return {
-      settings,
+      settings: settings2,
       enabled,
       debugLogging,
       retainUnclosedPresets,
@@ -4173,20 +4531,36 @@ Version: v${version}`;
     if (existing) return callback(existing);
     setTimeout(() => waitForAvatar(callback), 100);
   }
+  var BUTTON_POSITION_KEY = "wizascript.deckTracker.buttonPosition";
+  function getSavedButtonPosition() {
+    const raw = GM_getValue(BUTTON_POSITION_KEY, null);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }
+  function setSavedButtonPosition(pos) {
+    GM_setValue(BUTTON_POSITION_KEY, JSON.stringify(pos));
+  }
+  function clearSavedButtonPosition() {
+    GM_deleteValue(BUTTON_POSITION_KEY);
+  }
   function initDeckTracker(plugin) {
-    const settings = registerDeckTrackerSettings(plugin);
-    if (!settings.enabled.value()) return;
+    const settings2 = registerDeckTrackerSettings(plugin);
+    if (!settings2.enabled.value()) return;
     if (!isGamePage()) return;
     const logger = createLogger("DeckTracker");
     const originalWarn = logger.warn.bind(logger);
     const originalLog = logger.log.bind(logger);
     logger.log = (...args) => {
-      if (settings.debugLogging.value()) originalLog(...args);
+      if (settings2.debugLogging.value()) originalLog(...args);
     };
     logger.warn = (...args) => {
-      if (settings.debugLogging.value()) originalWarn(...args);
+      if (settings2.debugLogging.value()) originalWarn(...args);
     };
-    setRetainEnabledGetter(() => settings.retainUnclosedPresets.value());
+    setRetainEnabledGetter(() => settings2.retainUnclosedPresets.value());
     registerBuiltInPresets();
     function handleAddPreset(id) {
       spawnPreset(id);
@@ -4221,6 +4595,7 @@ Version: v${version}`;
       const btn = document.createElement("button");
       btn.textContent = "+";
       btn.id = "dt-add-tracker-button";
+      btn.title = "Click to add a tracker. Drag to reposition (double-click to reset to the default spot).";
       Object.assign(btn.style, {
         position: "fixed",
         zIndex: 8,
@@ -4230,7 +4605,7 @@ Version: v${version}`;
         background: "#2ecc71",
         color: "white",
         border: "none",
-        cursor: "pointer",
+        cursor: "grab",
         fontSize: "20px",
         fontWeight: "bold",
         lineHeight: "1",
@@ -4240,7 +4615,9 @@ Version: v${version}`;
       });
       document.body.appendChild(btn);
       let revealed = false;
+      let hasCustomPosition = false;
       function reposition() {
+        if (hasCustomPosition) return true;
         const rect = avatar.getBoundingClientRect();
         if (rect.width === 0 && rect.height === 0) return false;
         const btnRect = btn.getBoundingClientRect();
@@ -4279,7 +4656,16 @@ Version: v${version}`;
         }
         requestAnimationFrame(check);
       }
-      tryReveal();
+      const savedPosition = getSavedButtonPosition();
+      if (savedPosition) {
+        hasCustomPosition = true;
+        btn.style.left = savedPosition.left + "px";
+        btn.style.top = savedPosition.top + "px";
+        revealed = true;
+        btn.style.opacity = "1";
+      } else {
+        tryReveal();
+      }
       function isUnderScriptMenuOpen() {
         const menu = document.querySelector('.menu-content[role="Menu"]');
         return menu !== null && menu.offsetParent !== null;
@@ -4294,18 +4680,74 @@ Version: v${version}`;
         const shouldDim = isBlockingModalOpen();
         if (shouldDim !== isDimmed) {
           isDimmed = shouldDim;
-          btn.style.opacity = shouldDim ? String(settings.dimOpacity.value()) : "1";
+          btn.style.opacity = shouldDim ? String(settings2.dimOpacity.value()) : "1";
           btn.style.pointerEvents = shouldDim ? "none" : "auto";
         }
       }, 250);
       window.addEventListener("resize", reposition);
       window.addEventListener("scroll", reposition, { passive: true, capture: true });
-      btn.onclick = () => openPresetPicker({
-        onAddPreset: handleAddPreset,
-        onCreateAdHoc: handleCreateAdHoc,
-        onCloseWidget: handleCloseWidget,
-        onDeletePreset: handleDeletePreset
+      const DRAG_THRESHOLD_PX = 4;
+      const BTN_SIZE = 34;
+      const VIEWPORT_MARGIN = 10;
+      let dragging = false;
+      let dragMoved = false;
+      let dragOffsetX = 0;
+      let dragOffsetY = 0;
+      btn.addEventListener("mousedown", (e) => {
+        if (e.button !== 0) return;
+        dragging = true;
+        dragMoved = false;
+        const rect = btn.getBoundingClientRect();
+        dragOffsetX = e.clientX - rect.left;
+        dragOffsetY = e.clientY - rect.top;
+        btn.style.cursor = "grabbing";
+        e.preventDefault();
       });
+      window.addEventListener("mousemove", (e) => {
+        if (!dragging) return;
+        let newLeft = e.clientX - dragOffsetX;
+        let newTop = e.clientY - dragOffsetY;
+        if (!dragMoved) {
+          const dx = Math.abs(newLeft - parseFloat(btn.style.left || "0"));
+          const dy = Math.abs(newTop - parseFloat(btn.style.top || "0"));
+          if (dx > DRAG_THRESHOLD_PX || dy > DRAG_THRESHOLD_PX) dragMoved = true;
+        }
+        if (!dragMoved) return;
+        hasCustomPosition = true;
+        newLeft = Math.min(Math.max(newLeft, VIEWPORT_MARGIN - BTN_SIZE), window.innerWidth - VIEWPORT_MARGIN);
+        newTop = Math.min(Math.max(newTop, VIEWPORT_MARGIN - BTN_SIZE), window.innerHeight - VIEWPORT_MARGIN);
+        btn.style.left = newLeft + "px";
+        btn.style.top = newTop + "px";
+      });
+      window.addEventListener("mouseup", () => {
+        if (!dragging) return;
+        dragging = false;
+        btn.style.cursor = "grab";
+        if (dragMoved) {
+          const rect = btn.getBoundingClientRect();
+          setSavedButtonPosition({ left: rect.left, top: rect.top });
+          logger.log("hud", "Add-tracker button repositioned by drag.", { left: rect.left, top: rect.top });
+        }
+      });
+      btn.addEventListener("mousedown", (e) => {
+        if (e.button === 1) e.preventDefault();
+      });
+      btn.addEventListener("auxclick", (e) => {
+        if (e.button !== 1) return;
+        hasCustomPosition = false;
+        clearSavedButtonPosition();
+        reposition();
+        logger.log("hud", "Add-tracker button position reset to the default (avatar-relative) spot.");
+      });
+      btn.onclick = () => {
+        if (dragMoved) return;
+        openPresetPicker({
+          onAddPreset: handleAddPreset,
+          onCreateAdHoc: handleCreateAdHoc,
+          onCloseWidget: handleCloseWidget,
+          onDeletePreset: handleDeletePreset
+        });
+      };
       return btn;
     }
     let trackerButton = null;
@@ -4320,7 +4762,7 @@ Version: v${version}`;
       }
     });
     function restoreFavoritedAndRetained() {
-      if (isSpectating() && !settings.allowFavoritedRetainedWhileSpectating.value()) return;
+      if (isSpectating() && !settings2.allowFavoritedRetainedWhileSpectating.value()) return;
       const favoritedIds = getFavoritedPresetIds();
       const spawnedFavorites = favoritedIds.filter((id) => spawnPreset(id) !== null);
       if (spawnedFavorites.length) {
@@ -4333,7 +4775,7 @@ Version: v${version}`;
           favoritedIds.filter((id) => !spawnedFavorites.includes(id))
         );
       }
-      if (settings.retainUnclosedPresets.value()) {
+      if (settings2.retainUnclosedPresets.value()) {
         const retainedIds = getRetainedPresetIds().filter((id) => !favoritedIds.includes(id));
         retainedIds.forEach((id) => spawnPreset(id));
         if (retainedIds.length) {
@@ -4350,15 +4792,875 @@ Version: v${version}`;
     });
   }
 
+  // packages/uc-tv/divisions.js
+  var DIVISION_TIERS = [
+    { name: "LEGEND", subTiers: false },
+    { name: "ULTIMATE_MASTER", subTiers: false },
+    { name: "HIGH_MASTER", subTiers: false },
+    { name: "MASTER", subTiers: false },
+    { name: "DIAMOND", subTiers: true },
+    { name: "EMERALD", subTiers: true },
+    { name: "GOLD", subTiers: true },
+    { name: "IRON", subTiers: true },
+    { name: "COPPER", subTiers: true }
+  ];
+  var DIVISION_SCORES = {};
+  var SUB_TIER_SCORE = { I: 0, II: 1, III: 2 };
+  DIVISION_TIERS.forEach((tier, tierIndex) => {
+    if (tier.subTiers) {
+      Object.keys(SUB_TIER_SCORE).forEach((numeral) => {
+        DIVISION_SCORES[`${tier.name}_${numeral}`] = tierIndex * 10 + SUB_TIER_SCORE[numeral];
+      });
+    } else {
+      DIVISION_SCORES[tier.name] = tierIndex * 10;
+    }
+  });
+  function divisionIconUrl(rank) {
+    return rank ? `/images/divisions/${rank}.png` : null;
+  }
+  function rankScore(rank) {
+    return rank && Object.prototype.hasOwnProperty.call(DIVISION_SCORES, rank) ? DIVISION_SCORES[rank] : null;
+  }
+  function minTierThresholdScore(tierName) {
+    const tier = DIVISION_TIERS.find((t) => t.name === tierName);
+    if (!tier) return null;
+    return tier.subTiers ? DIVISION_SCORES[`${tierName}_III`] : DIVISION_SCORES[tierName];
+  }
+
+  // packages/uc-tv/settings.js
+  var LOG = "[UC TV]";
+  var KNOWN_MODES = ["RANKED", "STANDARD", "CUSTOM", "CPU", "STORY"];
+  function titleCase(name) {
+    return name.split("_").map((w) => w.charAt(0) + w.slice(1).toLowerCase()).join(" ");
+  }
+  var settingsRef = null;
+  function setSettingsRef(ref) {
+    settingsRef = ref;
+  }
+  function registerUcTvSettings(plugin, divisionTiers) {
+    const settings2 = createFeatureSettings(plugin, "ucTv", "UC TV");
+    const enabled = settings2.add("enabled", {
+      name: "Enable UC TV",
+      type: "boolean",
+      default: true,
+      page: "Spectate"
+    });
+    const debugLogs = settings2.add("debugLogs", {
+      name: "Enable Debug Logs",
+      type: "boolean",
+      default: false,
+      page: "Spectate"
+    });
+    const autoMode = settings2.add("autoMode", {
+      name: "Enable auto-mode when spectating",
+      type: "boolean",
+      default: false,
+      page: "Spectate"
+    });
+    const countdownSeconds = settings2.add("countdownSeconds", {
+      name: "Auto-continue delay (seconds)",
+      type: "select",
+      data: Array.from({ length: 15 }, (_, i) => i + 1).map((n) => [`${n}`, n]),
+      default: 5,
+      page: "Spectate"
+    });
+    if (!enabled.value()) {
+      return {
+        enabled,
+        debugLogs,
+        autoMode,
+        countdownSeconds,
+        filteringEnabled: null,
+        modeToggles: {},
+        minLevel: null,
+        levelFilterMode: null,
+        minRankTier: null,
+        rankFilterMode: null
+      };
+    }
+    const FILTER_CATEGORY = "UC TV - Filter Settings";
+    const filteringEnabled = settings2.add("filteringEnabled", {
+      name: "Enable Match Filtering",
+      type: "boolean",
+      default: true,
+      category: FILTER_CATEGORY,
+      page: "Spectate"
+    });
+    const modeToggles = {};
+    KNOWN_MODES.forEach((mode) => {
+      modeToggles[mode] = settings2.add(`ignoreMode${mode}`, {
+        name: `Ignore ${titleCase(mode)} Matches?`,
+        type: "select",
+        data: [["Yes", "yes"], ["No", "no"]],
+        default: "no",
+        category: FILTER_CATEGORY,
+        page: "Spectate"
+      });
+    });
+    const minLevel = settings2.add("minLevel", {
+      name: "Minimum Player Level",
+      type: "select",
+      data: [
+        ["No minimum", 0],
+        ["1", 1],
+        ["50", 50],
+        ["100", 100],
+        ["200", 200],
+        ["400", 400],
+        ["600", 600],
+        ["800", 800],
+        ["1000", 1e3]
+      ],
+      default: 0,
+      category: FILTER_CATEGORY,
+      page: "Spectate"
+    });
+    const levelFilterMode = settings2.add("levelFilterMode", {
+      name: "Minimum Level Applies To",
+      type: "select",
+      data: [["Either player", "either"], ["Both players", "both"]],
+      default: "either",
+      category: FILTER_CATEGORY,
+      page: "Spectate"
+    });
+    const minRankTier = settings2.add("minRankTier", {
+      name: "Minimum Ranked Mode Level",
+      type: "select",
+      data: divisionTiers.map((t) => [titleCase(t.name), t.name]),
+      default: "COPPER",
+      category: FILTER_CATEGORY,
+      page: "Spectate"
+    });
+    const rankFilterMode = settings2.add("rankFilterMode", {
+      name: "Minimum Rank Applies To",
+      type: "select",
+      data: [["Either player", "either"], ["Both players", "both"]],
+      default: "either",
+      category: FILTER_CATEGORY,
+      page: "Spectate"
+    });
+    return {
+      enabled,
+      debugLogs,
+      filteringEnabled,
+      modeToggles,
+      minLevel,
+      levelFilterMode,
+      minRankTier,
+      rankFilterMode,
+      autoMode,
+      countdownSeconds
+    };
+  }
+  var CONFIG = {
+    get masterEnabled() {
+      return settingsRef ? settingsRef.enabled.value() : true;
+    },
+    get debugLogs() {
+      return settingsRef && settingsRef.debugLogs ? settingsRef.debugLogs.value() : false;
+    },
+    get filteringEnabled() {
+      return settingsRef && settingsRef.filteringEnabled ? settingsRef.filteringEnabled.value() : true;
+    },
+    get disabledModes() {
+      if (!settingsRef || !settingsRef.modeToggles) return [];
+      return KNOWN_MODES.filter((mode) => settingsRef.modeToggles[mode] && settingsRef.modeToggles[mode].value() === "yes");
+    },
+    get minLevel() {
+      return settingsRef && settingsRef.minLevel ? settingsRef.minLevel.value() : 0;
+    },
+    get levelFilterMode() {
+      return settingsRef && settingsRef.levelFilterMode ? settingsRef.levelFilterMode.value() : "either";
+    },
+    get minRankTier() {
+      return settingsRef && settingsRef.minRankTier ? settingsRef.minRankTier.value() : "COPPER";
+    },
+    get rankFilterMode() {
+      return settingsRef && settingsRef.rankFilterMode ? settingsRef.rankFilterMode.value() : "either";
+    },
+    get autoMode() {
+      return settingsRef && settingsRef.autoMode ? settingsRef.autoMode.value() : false;
+    },
+    get countdownSeconds() {
+      return settingsRef && settingsRef.countdownSeconds ? settingsRef.countdownSeconds.value() : 5;
+    }
+  };
+  function logDebug(...args) {
+    if (CONFIG.debugLogs) console.log(LOG, ...args);
+  }
+  function dumpSettingsState() {
+    const snapshot = {
+      masterEnabled: CONFIG.masterEnabled,
+      debugLogs: CONFIG.debugLogs,
+      filteringEnabled: CONFIG.filteringEnabled,
+      disabledModes: CONFIG.disabledModes,
+      minLevel: CONFIG.minLevel,
+      levelFilterMode: CONFIG.levelFilterMode,
+      minRankTier: CONFIG.minRankTier,
+      rankFilterMode: CONFIG.rankFilterMode,
+      autoMode: CONFIG.autoMode,
+      countdownSeconds: CONFIG.countdownSeconds
+    };
+    console.log(`${LOG} [settings] Current live values:`, snapshot);
+    return snapshot;
+  }
+
+  // packages/uc-tv/game-list.js
+  var ONCLICK_RE = /Spectate\?gameId=(\d+)&playerId=(\d+)/;
+  function readMode(row) {
+    const cell = row.querySelector("td.home-match-time");
+    if (!cell) return null;
+    const extra = Array.from(cell.classList).find((c) => c !== "home-match-time");
+    return extra || null;
+  }
+  function readTimeText(row) {
+    const cell = row.querySelector("td.home-match-time");
+    return cell ? cell.textContent.trim() : null;
+  }
+  function parseElapsedSeconds(timeText) {
+    if (!timeText) return null;
+    const parts = timeText.split(":").map(Number);
+    if (parts.some((n) => Number.isNaN(n))) return null;
+    if (parts.length === 2) return parts[0] * 60 + parts[1];
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    return null;
+  }
+  function readPlayerInfoSpan(cell) {
+    return cell.querySelector(".playerInfo > span");
+  }
+  function readUsername(cell) {
+    const soulSpan = readPlayerInfoSpan(cell);
+    if (!soulSpan) return null;
+    const clone = soulSpan.cloneNode(true);
+    const nestedLevel = clone.querySelector("span");
+    if (nestedLevel) nestedLevel.remove();
+    const text = clone.textContent.replace(/\s+/g, " ").trim();
+    return text || null;
+  }
+  function readSoul(cell) {
+    const soulSpan = readPlayerInfoSpan(cell);
+    return soulSpan ? soulSpan.className.trim() || null : null;
+  }
+  function readDivision(cell) {
+    const span = cell.querySelector('span[data-i18n*="DIVISION"]');
+    if (!span) return null;
+    const raw = span.getAttribute("data-i18n") || "";
+    const match = raw.match(/DIVISION:([A-Z_]+)/);
+    return match ? match[1] : null;
+  }
+  function readPlayerCell(cell) {
+    const m = (cell.getAttribute("onclick") || "").match(ONCLICK_RE);
+    if (!m) return null;
+    const levelMatch = cell.textContent.match(/LV\s*(\d+)/);
+    const level = levelMatch ? parseInt(levelMatch[1], 10) : null;
+    return { gameId: m[1], playerId: m[2], level, rank: readDivision(cell) };
+  }
+  function readPlayerCellFull(cell) {
+    const m = (cell.getAttribute("onclick") || "").match(ONCLICK_RE);
+    if (!m) return null;
+    const levelMatch = cell.textContent.match(/LV\s*(\d+)/);
+    return {
+      gameId: m[1],
+      playerId: m[2],
+      username: readUsername(cell),
+      soul: readSoul(cell),
+      level: levelMatch ? parseInt(levelMatch[1], 10) : null,
+      // e.g. "EMERALD_III", "MASTER", or null if unranked/no badge.
+      rank: readDivision(cell)
+    };
+  }
+  function parseRow(row) {
+    const cells = Array.from(row.querySelectorAll("td.spectate-player"));
+    const players = cells.map(readPlayerCell).filter(Boolean);
+    if (!players.length) return null;
+    const mode = readMode(row);
+    const preferred = players.find((p) => p.level !== null) || players[0];
+    return {
+      gameId: players[0].gameId,
+      playerId: preferred.playerId,
+      mode,
+      time: readTimeText(row),
+      levels: players.map((p) => p.level),
+      // e.g. [580, null] for a CPU match
+      ranks: players.map((p) => p.rank)
+      // e.g. ["EMERALD_III", null]
+    };
+  }
+  function parseRowFull(row) {
+    const cells = Array.from(row.querySelectorAll("td.spectate-player"));
+    const players = cells.map(readPlayerCellFull).filter(Boolean);
+    if (!players.length) return null;
+    return {
+      gameId: players[0].gameId,
+      mode: readMode(row),
+      time: readTimeText(row),
+      players
+    };
+  }
+  async function fetchHomepageDoc() {
+    const res = await fetch("/", { credentials: "same-origin" });
+    if (!res.ok) throw new Error(`Homepage fetch failed: ${res.status}`);
+    const html = await res.text();
+    return new DOMParser().parseFromString(html, "text/html");
+  }
+  var ROW_SELECTOR = "table.spectateTable tbody tr, #liste table tbody tr";
+  async function fetchLiveGames() {
+    const doc = await fetchHomepageDoc();
+    const rows = Array.from(doc.querySelectorAll(ROW_SELECTOR));
+    return rows.map(parseRow).filter(Boolean);
+  }
+  async function fetchLiveGamesFull() {
+    const doc = await fetchHomepageDoc();
+    const rows = Array.from(doc.querySelectorAll(ROW_SELECTOR));
+    return rows.map(parseRowFull).filter(Boolean);
+  }
+
+  // packages/uc-tv/filters.js
+  function isModeAllowed(mode) {
+    if (!CONFIG.filteringEnabled) return true;
+    if (!mode) return true;
+    return !CONFIG.disabledModes.includes(mode);
+  }
+  function levelsPass(levels) {
+    if (!CONFIG.filteringEnabled) return true;
+    if (!CONFIG.minLevel || CONFIG.minLevel <= 0) return true;
+    if (CONFIG.levelFilterMode === "both") {
+      return levels.every((l) => l !== null && l >= CONFIG.minLevel);
+    }
+    return levels.some((l) => l !== null && l >= CONFIG.minLevel);
+  }
+  function rankMeetsMin(rank) {
+    if (!CONFIG.minRankTier || CONFIG.minRankTier === "COPPER") return true;
+    const threshold = minTierThresholdScore(CONFIG.minRankTier);
+    if (threshold === null) return true;
+    const score = rankScore(rank);
+    if (score === null) return false;
+    return score <= threshold;
+  }
+  function ranksPass(ranks, mode) {
+    if (!CONFIG.filteringEnabled) return true;
+    if (mode !== "RANKED") return true;
+    if (!CONFIG.minRankTier || CONFIG.minRankTier === "COPPER") return true;
+    if (CONFIG.rankFilterMode === "both") {
+      return ranks.every(rankMeetsMin);
+    }
+    return ranks.some(rankMeetsMin);
+  }
+  function applyFilters(games) {
+    let pool = games;
+    const modeAllowed = pool.filter((g) => isModeAllowed(g.mode));
+    if (modeAllowed.length) pool = modeAllowed;
+    if (CONFIG.minLevel > 0) {
+      const meetsLevel = pool.filter((g) => levelsPass(g.levels));
+      if (meetsLevel.length) pool = meetsLevel;
+    }
+    if (CONFIG.minRankTier) {
+      const meetsRank = pool.filter((g) => ranksPass(g.ranks, g.mode));
+      if (meetsRank.length) pool = meetsRank;
+    }
+    return pool;
+  }
+
+  // packages/uc-tv/countdown.js
+  var activeCancelFn = null;
+  function cancelActiveCountdown() {
+    if (activeCancelFn) activeCancelFn();
+  }
+  function showCountdown(plugin, seconds, onComplete) {
+    if (plugin && typeof plugin.toast === "function") {
+      showCountdownViaToast(plugin, seconds, onComplete);
+    } else {
+      console.warn(`${LOG} plugin.toast not available - falling back to a custom overlay.`);
+      showCountdownOverlay(seconds, onComplete);
+    }
+  }
+  function cancelHint() {
+    return `Cancel by pressing ${getPrimaryKeyDisplay()}`;
+  }
+  function showCountdownViaToast(plugin, seconds, onComplete) {
+    let remaining = seconds;
+    const toast = plugin.toast({
+      title: "UC TV",
+      text: `Spectating a new match in ${remaining}s... (${cancelHint()})`
+    });
+    function cancel() {
+      clearInterval(interval);
+      activeCancelFn = null;
+      if (toast && typeof toast.setText === "function") toast.setText("Auto-continue canceled.");
+      if (toast && typeof toast.close === "function") setTimeout(() => toast.close(), 1500);
+      logDebug("Auto-continue canceled - Primary pressed during countdown.");
+    }
+    activeCancelFn = cancel;
+    const interval = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(interval);
+        activeCancelFn = null;
+        if (toast && typeof toast.close === "function") toast.close();
+        onComplete();
+        return;
+      }
+      if (toast && typeof toast.setText === "function") {
+        toast.setText(`Spectating a new match in ${remaining}s... (${cancelHint()})`);
+      }
+    }, 1e3);
+  }
+  function showCountdownOverlay(seconds, onComplete) {
+    const overlay = document.createElement("div");
+    overlay.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 999999;
+    background: rgba(20,20,20,0.9);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  `;
+    document.body.appendChild(overlay);
+    let remaining = seconds;
+    let canceled = false;
+    function cancel() {
+      if (canceled) return;
+      canceled = true;
+      activeCancelFn = null;
+      overlay.textContent = `${LOG} Auto-continue canceled.`;
+      setTimeout(() => overlay.remove(), 1500);
+    }
+    activeCancelFn = cancel;
+    (function tick() {
+      if (canceled) return;
+      overlay.textContent = `${LOG} Spectating a new match in ${remaining}s... (${cancelHint()})`;
+      if (remaining <= 0) {
+        activeCancelFn = null;
+        overlay.remove();
+        onComplete();
+        return;
+      }
+      remaining -= 1;
+      setTimeout(tick, 1e3);
+    })();
+  }
+
+  // packages/uc-tv/utils.js
+  var SCRIPT_START = Date.now();
+  var NAV_COOLDOWN_MS = 1e3;
+  function navigationReady() {
+    return Date.now() - SCRIPT_START >= NAV_COOLDOWN_MS;
+  }
+
+  // packages/uc-tv/channel-switch.js
+  function isSpectatePage() {
+    return matchesPage({ prefix: "/Spectate" });
+  }
+  async function goToNextMatch(plugin) {
+    let games;
+    try {
+      games = await fetchLiveGames();
+    } catch (e) {
+      console.warn(`${LOG} Failed to fetch the live games list - staying put.`, e);
+      return;
+    }
+    const currentGameId = new URLSearchParams(location.search).get("gameId");
+    const candidates = games.filter((g) => g.gameId !== currentGameId);
+    const pool = applyFilters(candidates);
+    if (!pool.length) {
+      logDebug("No other live matches found right now - staying put.");
+      return;
+    }
+    const sorted = [...pool].sort((a, b) => {
+      const ta = parseElapsedSeconds(a.time);
+      const tb = parseElapsedSeconds(b.time);
+      if (ta === null && tb === null) return 0;
+      if (ta === null) return 1;
+      if (tb === null) return -1;
+      return ta - tb;
+    });
+    const next = sorted[0];
+    logDebug(`Chose gameId=${next.gameId}, playerId=${next.playerId}, elapsed=${next.time} (levels: ${next.levels.join(", ")}). ${pool.length} candidate(s) considered.`);
+    showCountdown(plugin, CONFIG.countdownSeconds, () => {
+      location.href = `/Spectate?gameId=${next.gameId}&playerId=${next.playerId}`;
+    });
+  }
+  var switching = false;
+  async function switchChannel(plugin, direction) {
+    if (switching) return;
+    if (!navigationReady()) return;
+    switching = true;
+    try {
+      let games;
+      try {
+        games = await fetchLiveGames();
+      } catch (e) {
+        console.warn(`${LOG} [channel] Failed to fetch live games:`, e);
+        return;
+      }
+      const pool = applyFilters(games);
+      if (!pool.length) {
+        logDebug("[channel] No games available to switch to.");
+        return;
+      }
+      const currentGameId = new URLSearchParams(location.search).get("gameId");
+      const currentIndex = pool.findIndex((g) => g.gameId === currentGameId);
+      let targetIndex;
+      if (currentIndex === -1) {
+        targetIndex = direction > 0 ? 0 : pool.length - 1;
+      } else {
+        targetIndex = ((currentIndex + direction) % pool.length + pool.length) % pool.length;
+      }
+      const target = pool[targetIndex];
+      logDebug(`[channel] Switching to gameId=${target.gameId} (slot ${targetIndex + 1}/${pool.length}).`);
+      if (plugin && typeof plugin.toast === "function") {
+        plugin.toast({ title: "UC TV", text: `Channel ${targetIndex + 1}/${pool.length}` });
+      }
+      location.href = `/Spectate?gameId=${target.gameId}&playerId=${target.playerId}`;
+    } finally {
+      switching = false;
+    }
+  }
+  function bindChannelKeybinds(plugin) {
+    registerKeybind(plugin, {
+      key: "previousChannel",
+      name: "Previous Channel",
+      defaultCode: "ArrowLeft",
+      scope: "global",
+      packageLabel: "UC TV",
+      // Relies on guardTypingContext's default (true) - Ctrl+Left/Right
+      // is a native "jump a word" shortcut while typing (e.g. in chat),
+      // and this default preserves that. Unlike Patch Maker's own
+      // shortcuts, which deliberately opt OUT of this default since they
+      // need to fire while a text field is focused.
+      onMatch: () => {
+        if (!isSpectatePage()) return;
+        if (!CONFIG.masterEnabled) return;
+        switchChannel(plugin, -1);
+      }
+    });
+    registerKeybind(plugin, {
+      key: "nextChannel",
+      name: "Next Channel",
+      defaultCode: "ArrowRight",
+      scope: "global",
+      packageLabel: "UC TV",
+      onMatch: () => {
+        if (!isSpectatePage()) return;
+        if (!CONFIG.masterEnabled) return;
+        switchChannel(plugin, 1);
+      }
+    });
+  }
+
+  // packages/uc-tv/channel-guide.js
+  function isSpectatePage2() {
+    return matchesPage({ prefix: "/Spectate" });
+  }
+  var SOUL_COLORS2 = {
+    DETERMINATION: "#ff4d4d",
+    BRAVERY: "#ffb03b",
+    JUSTICE: "#ffe75e",
+    KINDNESS: "#4ddb4d",
+    PATIENCE: "#4dd9e8",
+    INTEGRITY: "#4d7bff",
+    PERSEVERANCE: "#b366ff"
+  };
+  var MODE_COLORS = {
+    RANKED: "#4dd9e8",
+    STANDARD: "#7ee787",
+    CUSTOM: "#b366ff",
+    CPU: "#666666",
+    STORY: "#ffb03b"
+  };
+  var LEGEND_MODES = ["RANKED", "STANDARD", "CUSTOM", "CPU", "STORY"];
+  function soulColor(soul) {
+    return SOUL_COLORS2[soul] || "#cfd8e3";
+  }
+  function modeColor(mode) {
+    return MODE_COLORS[mode] || "#4dd9e8";
+  }
+  function jumpTo(plugin, gameId, playerId) {
+    if (!navigationReady()) {
+      if (plugin && typeof plugin.toast === "function") {
+        plugin.toast({ title: "UC TV", text: "Still loading - try again in a moment." });
+      }
+      return;
+    }
+    location.href = `/Spectate?gameId=${gameId}&playerId=${playerId}`;
+  }
+  var GUIDE_FONT = "12px 'DTM-Mono', monospace";
+  var GUIDE_MIN_WIDTH = 300;
+  var GUIDE_MAX_WIDTH = 480;
+  var GUIDE_VISIBLE_ROWS = 10;
+  var GUIDE_ROW_HEIGHT_PX = 30;
+  var GUIDE_CHROME_HEIGHT_PX = 70;
+  var GUIDE_POSITION = "bottom-right";
+  var RANK_ICON_WIDTH_PX = 14;
+  function estimateWidestRowWidth(list) {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    ctx.font = GUIDE_FONT;
+    let max = 0;
+    list.forEach((entry) => {
+      let text = "";
+      let iconWidth = 0;
+      entry.players.forEach((p, i) => {
+        if (i > 0) text += " vs ";
+        text += `\u2665 ${p.username || "?"}${p.level !== null ? ` LV ${p.level}` : ""}`;
+        if (entry.mode === "RANKED" && p.rank) iconWidth += RANK_ICON_WIDTH_PX;
+      });
+      text += `   ${entry.time || ""}`;
+      const width = ctx.measureText(text).width + iconWidth;
+      if (width > max) max = width;
+    });
+    return max;
+  }
+  var guideOverlay = null;
+  var guideLoading = false;
+  async function showChannelGuide(plugin) {
+    if (guideOverlay || guideLoading) return;
+    guideLoading = true;
+    let entries;
+    try {
+      entries = await fetchLiveGamesFull();
+    } catch (e) {
+      console.warn("[UC TV] [guide] Failed to fetch live games:", e);
+      guideLoading = false;
+      return;
+    }
+    const filtered = entries.filter(
+      (entry) => isModeAllowed(entry.mode) && levelsPass(entry.players.map((p) => p.level)) && ranksPass(entry.players.map((p) => p.rank), entry.mode)
+    );
+    const list = filtered.length ? filtered : entries;
+    const currentGameId = new URLSearchParams(location.search).get("gameId");
+    const targetWidth = Math.min(GUIDE_MAX_WIDTH, Math.max(GUIDE_MIN_WIDTH, estimateWidestRowWidth(list) + 55));
+    const targetHeight = GUIDE_VISIBLE_ROWS * GUIDE_ROW_HEIGHT_PX + GUIDE_CHROME_HEIGHT_PX;
+    const positionCSS = GUIDE_POSITION === "center-right" ? "top: 50%; right: 16px; transform: translateY(-50%);" : "bottom: 90px; right: 16px;";
+    const overlay = document.createElement("div");
+    overlay.id = "uctv-guide-overlay";
+    overlay.style.cssText = `
+    position: fixed;
+    ${positionCSS}
+    z-index: 999999;
+    width: ${targetWidth}px;
+    max-height: ${targetHeight}px;
+    overflow-y: auto;
+    background: rgba(5, 8, 16, 0.94);
+    border: 1px solid rgba(77, 217, 232, 0.4);
+    border-radius: 6px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.75);
+    font-family: 'DTM-Mono', monospace;
+    font-size: 12px;
+    color: #d7e6f2;
+    padding: 6px;
+  `;
+    const header = document.createElement("div");
+    header.textContent = `UC TV Guide - ${list.length} shown | release ${getPrimaryKeyDisplay()} to close`;
+    header.style.cssText = `
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    color: #4dd9e8;
+    padding: 4px 6px 8px;
+    border-bottom: 1px solid rgba(77,217,232,0.25);
+    margin-bottom: 4px;
+  `;
+    overlay.appendChild(header);
+    list.forEach((entry) => {
+      const isCurrent = entry.gameId === currentGameId;
+      const row = document.createElement("div");
+      row.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 6px;
+      margin-bottom: 2px;
+      border-left: 3px solid ${modeColor(entry.mode)};
+      background: ${isCurrent ? "rgba(77,217,232,0.12)" : "rgba(255,255,255,0.03)"};
+      border-radius: 2px;
+    `;
+      entry.players.forEach((p, i) => {
+        if (i > 0) {
+          const divider = document.createElement("span");
+          divider.textContent = "vs";
+          divider.style.cssText = "opacity:0.35; font-size:11px; flex-shrink:0;";
+          row.appendChild(divider);
+        }
+        const playerEl = document.createElement("span");
+        playerEl.style.cssText = `
+        flex: 0 1 auto;
+        max-width: 46%;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        cursor: pointer;
+      `;
+        const showRankIcon = entry.mode === "RANKED" && p.rank;
+        const rankIcon = document.createElement("img");
+        if (showRankIcon) {
+          rankIcon.src = divisionIconUrl(p.rank);
+          rankIcon.alt = p.rank;
+          rankIcon.title = p.rank.replace(/_/g, " ");
+          rankIcon.style.cssText = "height:12px; vertical-align:middle; margin-right:2px;";
+        }
+        const heart = document.createElement("span");
+        heart.textContent = "\u2665 ";
+        heart.style.color = soulColor(p.soul);
+        const name = document.createElement("span");
+        name.textContent = p.username || "?";
+        name.style.color = soulColor(p.soul);
+        name.style.fontWeight = "bold";
+        const lvl = document.createElement("span");
+        lvl.textContent = p.level !== null ? ` LV ${p.level}` : "";
+        lvl.style.cssText = "color:#6fa8ff; opacity:0.9;";
+        if (showRankIcon) playerEl.appendChild(rankIcon);
+        playerEl.append(heart, name, lvl);
+        playerEl.addEventListener("mouseenter", () => {
+          playerEl.style.textDecoration = "underline";
+        });
+        playerEl.addEventListener("mouseleave", () => {
+          playerEl.style.textDecoration = "none";
+        });
+        playerEl.addEventListener("click", () => {
+          logDebug(`[guide] Jumping to gameId=${entry.gameId}, playerId=${p.playerId}.`);
+          jumpTo(plugin, entry.gameId, p.playerId);
+        });
+        row.appendChild(playerEl);
+      });
+      const timeEl = document.createElement("span");
+      timeEl.textContent = entry.time || "";
+      timeEl.style.cssText = "color:#7dffb0; font-size:12px; flex-shrink:0; margin-left:4px;";
+      row.appendChild(timeEl);
+      overlay.appendChild(row);
+    });
+    const legend = document.createElement("div");
+    legend.style.cssText = `
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 8px 6px 4px;
+    margin-top: 4px;
+    border-top: 1px solid rgba(77,217,232,0.25);
+    font-size: 11px;
+  `;
+    LEGEND_MODES.forEach((mode) => {
+      const item = document.createElement("span");
+      item.style.cssText = "display:flex; align-items:center; gap:4px; opacity:0.85;";
+      const swatch = document.createElement("span");
+      swatch.style.cssText = `width:9px; height:9px; border-radius:2px; background:${MODE_COLORS[mode]}; flex-shrink:0;`;
+      const label = document.createElement("span");
+      label.textContent = mode;
+      item.append(swatch, label);
+      legend.appendChild(item);
+    });
+    overlay.appendChild(legend);
+    overlay.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+      overlay.scrollTop += delta;
+    }, { passive: false });
+    document.body.appendChild(overlay);
+    guideOverlay = overlay;
+    guideLoading = false;
+  }
+  function hideChannelGuide() {
+    if (guideOverlay) {
+      guideOverlay.remove();
+      guideOverlay = null;
+    }
+  }
+  function bindChannelGuideKeybinds(plugin) {
+    registerKeybind(plugin, {
+      key: "channelGuide",
+      name: "Open Channel Guide",
+      scope: "global",
+      packageLabel: "UC TV",
+      // Fires the instant Primary goes down, not gated behind
+      // confirming a hold first - this is what makes a simple tap
+      // cancel the auto-continue countdown, rather than needing to hold
+      // Primary the same way opening the guide does.
+      onPrimaryPress: () => {
+        if (!isSpectatePage2()) return;
+        if (!CONFIG.masterEnabled) return;
+        cancelActiveCountdown();
+      },
+      onPrimaryAlone: () => {
+        if (!isSpectatePage2()) return;
+        if (!CONFIG.masterEnabled) return;
+        showChannelGuide(plugin);
+      },
+      onPrimaryRelease: () => {
+        if (!isSpectatePage2()) return;
+        hideChannelGuide();
+      }
+    });
+  }
+
+  // packages/uc-tv/debug.js
+  async function scopeActiveGames() {
+    let scoped;
+    try {
+      scoped = await fetchLiveGamesFull();
+    } catch (e) {
+      console.error(`${LOG} [scope] Failed to fetch homepage:`, e);
+      return [];
+    }
+    console.log(`${LOG} [scope] ${scoped.length} active game(s).`);
+    console.table(scoped.flatMap((g) => g.players.map((p) => ({
+      gameId: g.gameId,
+      mode: g.mode,
+      time: g.time,
+      playerId: p.playerId,
+      username: p.username,
+      soul: p.soul,
+      level: p.level,
+      rank: p.rank
+    }))));
+    return scoped;
+  }
+
+  // packages/uc-tv/index.js
+  function isSpectatePage3() {
+    return matchesPage({ prefix: "/Spectate" });
+  }
+  function initUcTv(plugin) {
+    const settings2 = registerUcTvSettings(plugin, DIVISION_TIERS);
+    setSettingsRef(settings2);
+    console.log("[UC TV] Settings registered.");
+    dumpSettingsState();
+    window.__ucTVScope = scopeActiveGames;
+    window.__ucTVSettings = dumpSettingsState;
+    bindChannelKeybinds(plugin);
+    bindChannelGuideKeybinds(plugin);
+    logDebug("Channel switching and channel guide keybinds registered (see the Keybinds settings category).");
+    if (!isSpectatePage3()) return;
+    let handled = false;
+    plugin.events.on("getResult", (data) => {
+      logDebug("getResult fired - match ended.", data);
+      if (handled) return;
+      handled = true;
+      if (!CONFIG.masterEnabled) {
+        logDebug("Enable UC TV is off - staying put.");
+        return;
+      }
+      if (!CONFIG.autoMode) {
+        logDebug("Auto-mode is off - staying put.");
+        return;
+      }
+      goToNextMatch(plugin);
+    });
+  }
+
   // packages/misc/settings.js
   function registerMiscSettings(plugin) {
-    const settings = createFeatureSettings(plugin, "misc", "Miscellaneous");
-    const enableNotepad = settings.add("enableNotepad", {
+    const settings2 = createFeatureSettings(plugin, "misc", "Miscellaneous");
+    const enableNotepad = settings2.add("enableNotepad", {
       name: "Enable Notepad Overlay Option",
       type: "boolean",
       default: false
     });
-    return { settings, enableNotepad };
+    return { settings: settings2, enableNotepad };
   }
 
   // packages/misc/notepad/storage.js
@@ -4511,11 +5813,89 @@ Version: v${version}`;
     return { root, header, body, headerButtons, titleInput };
   }
 
+  // packages/misc/notepad/flood-fill.js
+  function floodFillPixels(data, width, height, startX, startY, fillRgb, tolerance = 24) {
+    const x0 = Math.floor(startX);
+    const y0 = Math.floor(startY);
+    if (x0 < 0 || y0 < 0 || x0 >= width || y0 >= height) return false;
+    const idx = (x, y) => (y * width + x) * 4;
+    const startI = idx(x0, y0);
+    const startR = data[startI], startG = data[startI + 1], startB = data[startI + 2], startA = data[startI + 3];
+    const [fr, fg, fb] = fillRgb;
+    const fa = 255;
+    if (startR === fr && startG === fg && startB === fb && startA === fa) return false;
+    function matchesStart(i) {
+      return Math.abs(data[i] - startR) <= tolerance && Math.abs(data[i + 1] - startG) <= tolerance && Math.abs(data[i + 2] - startB) <= tolerance && Math.abs(data[i + 3] - startA) <= tolerance;
+    }
+    const visited = new Uint8Array(width * height);
+    const stack = [x0, y0];
+    visited[y0 * width + x0] = 1;
+    let filledAny = false;
+    const filledCoords = [];
+    while (stack.length) {
+      const y = stack.pop();
+      const x = stack.pop();
+      const i = idx(x, y);
+      data[i] = fr;
+      data[i + 1] = fg;
+      data[i + 2] = fb;
+      data[i + 3] = fa;
+      filledAny = true;
+      filledCoords.push(x, y);
+      if (x > 0) tryPush(x - 1, y);
+      if (x < width - 1) tryPush(x + 1, y);
+      if (y > 0) tryPush(x, y - 1);
+      if (y < height - 1) tryPush(x, y + 1);
+    }
+    function tryPush(nx, ny) {
+      const vIdx = ny * width + nx;
+      if (visited[vIdx]) return;
+      if (!matchesStart(idx(nx, ny))) return;
+      visited[vIdx] = 1;
+      stack.push(nx, ny);
+    }
+    if (filledAny) {
+      for (let n = 0; n < filledCoords.length; n += 2) {
+        const x = filledCoords[n], y = filledCoords[n + 1];
+        growIntoSeam(x - 1, y);
+        growIntoSeam(x + 1, y);
+        growIntoSeam(x, y - 1);
+        growIntoSeam(x, y + 1);
+      }
+    }
+    function growIntoSeam(nx, ny) {
+      if (nx < 0 || ny < 0 || nx >= width || ny >= height) return;
+      const vIdx = ny * width + nx;
+      if (visited[vIdx]) return;
+      const i = idx(nx, ny);
+      const alpha = data[i + 3];
+      if (alpha <= 0 || alpha >= 255) return;
+      data[i] = fr;
+      data[i + 1] = fg;
+      data[i + 2] = fb;
+      data[i + 3] = fa;
+      visited[vIdx] = 1;
+    }
+    return filledAny;
+  }
+
   // packages/misc/notepad/canvas.js
   var CANVAS_WIDTH = 240;
   var CANVAS_HEIGHT = 200;
   var DEFAULT_BACKGROUND = "rgb(255, 254, 248)";
   var SAVE_DEBOUNCE_MS = 400;
+  var MAX_LAYERS = 6;
+  var MAX_HISTORY = 8;
+  function resolveColorToRgb(cssColor) {
+    const probe = document.createElement("canvas");
+    probe.width = 1;
+    probe.height = 1;
+    const pctx = probe.getContext("2d");
+    pctx.fillStyle = cssColor;
+    pctx.fillRect(0, 0, 1, 1);
+    const [r, g, b] = pctx.getImageData(0, 0, 1, 1).data;
+    return [r, g, b];
+  }
   function createDrawingSurface() {
     const wrapper = document.createElement("div");
     wrapper.className = "wizascript-notepad-canvas-wrapper";
@@ -4525,67 +5905,214 @@ Version: v${version}`;
     backgroundCanvas.width = CANVAS_WIDTH;
     backgroundCanvas.height = CANVAS_HEIGHT;
     backgroundCanvas.className = "wizascript-notepad-canvas wizascript-notepad-canvas-bg";
-    const inkCanvas = document.createElement("canvas");
-    inkCanvas.width = CANVAS_WIDTH;
-    inkCanvas.height = CANVAS_HEIGHT;
-    inkCanvas.className = "wizascript-notepad-canvas wizascript-notepad-canvas-ink";
+    wrapper.appendChild(backgroundCanvas);
+    const bgCtx = backgroundCanvas.getContext("2d");
+    const interactionCanvas = document.createElement("canvas");
+    interactionCanvas.width = CANVAS_WIDTH;
+    interactionCanvas.height = CANVAS_HEIGHT;
+    interactionCanvas.className = "wizascript-notepad-canvas wizascript-notepad-canvas-ink";
     const cursorIndicator = document.createElement("div");
     cursorIndicator.className = "wizascript-notepad-cursor-indicator";
-    wrapper.append(backgroundCanvas, inkCanvas, cursorIndicator);
-    const bgCtx = backgroundCanvas.getContext("2d");
-    const inkCtx = inkCanvas.getContext("2d");
     let backgroundColor = DEFAULT_BACKGROUND;
     let strokeColor = "rgb(26, 26, 26)";
     let saveTimer = null;
     let lastX = null;
     let lastY = null;
+    const layers = [];
+    let activeLayerIndex = 1;
+    let onLayersChange = null;
+    function notifyLayersChange() {
+      if (onLayersChange) onLayersChange(layers.length, activeLayerIndex);
+    }
+    function createLayerCanvas() {
+      const canvas = document.createElement("canvas");
+      canvas.width = CANVAS_WIDTH;
+      canvas.height = CANVAS_HEIGHT;
+      canvas.className = "wizascript-notepad-canvas wizascript-notepad-canvas-layer";
+      return canvas;
+    }
+    function insertLayerCanvas(canvas) {
+      const insertBefore = interactionCanvas.isConnected ? interactionCanvas : null;
+      wrapper.insertBefore(canvas, insertBefore);
+    }
+    function addLayerInternal() {
+      const canvas = createLayerCanvas();
+      insertLayerCanvas(canvas);
+      layers.push({ canvas, ctx: canvas.getContext("2d") });
+      return layers[layers.length - 1];
+    }
+    function addLayer() {
+      if (layers.length >= MAX_LAYERS) return false;
+      addLayerInternal();
+      activeLayerIndex = layers.length;
+      scheduleSave();
+      notifyLayersChange();
+      return true;
+    }
+    function removeLayer() {
+      if (layers.length <= 1) return false;
+      const removed = layers.pop();
+      removed.canvas.remove();
+      if (activeLayerIndex > layers.length) activeLayerIndex = layers.length;
+      scheduleSave();
+      notifyLayersChange();
+      return true;
+    }
+    function setActiveLayer(layerNum) {
+      if (layerNum < 1 || layerNum > layers.length) return;
+      activeLayerIndex = layerNum;
+      notifyLayersChange();
+    }
+    function getActiveLayer() {
+      return activeLayerIndex;
+    }
+    function getLayerCount() {
+      return layers.length;
+    }
+    function activeCtx() {
+      return layers[activeLayerIndex - 1].ctx;
+    }
+    function setOnLayersChange(cb) {
+      onLayersChange = cb;
+    }
     function paintBackground(color) {
       backgroundColor = color;
       bgCtx.fillStyle = color;
       bgCtx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     }
+    function snapshotState() {
+      return {
+        layers: layers.map((l) => l.canvas.toDataURL("image/png")),
+        backgroundColor
+      };
+    }
     function scheduleSave() {
       clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
-        setSavedDrawing({
-          strokesDataUrl: inkCanvas.toDataURL("image/png"),
-          backgroundColor
-        });
+        setSavedDrawing(snapshotState());
       }, SAVE_DEBOUNCE_MS);
+    }
+    function loadLayerContent(ctx, dataUrl) {
+      return new Promise((resolve) => {
+        if (!dataUrl) {
+          resolve();
+          return;
+        }
+        const img = new Image();
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0);
+          resolve();
+        };
+        img.onerror = () => {
+          console.warn("[Notepad] A saved layer failed to load - leaving it blank.");
+          resolve();
+        };
+        img.src = dataUrl;
+      });
     }
     function loadInitial() {
       const saved = getSavedDrawing();
       paintBackground((saved == null ? void 0 : saved.backgroundColor) || DEFAULT_BACKGROUND);
-      if (!(saved == null ? void 0 : saved.strokesDataUrl)) return;
-      const img = new Image();
-      img.onload = () => inkCtx.drawImage(img, 0, 0);
-      img.onerror = () => console.warn("[Notepad] Saved drawing failed to load - starting with a blank page.");
-      img.src = saved.strokesDataUrl;
+      const savedLayerUrls = (saved == null ? void 0 : saved.layers) || ((saved == null ? void 0 : saved.strokesDataUrl) ? [saved.strokesDataUrl] : [null]);
+      const count = Math.max(1, Math.min(MAX_LAYERS, savedLayerUrls.length));
+      for (let i = 0; i < count; i++) {
+        addLayerInternal();
+      }
+      activeLayerIndex = Math.min((saved == null ? void 0 : saved.activeLayerIndex) || 1, layers.length);
+      return Promise.all(layers.map((l, i) => loadLayerContent(l.ctx, savedLayerUrls[i])));
     }
-    loadInitial();
+    const initialLoad = loadInitial();
+    wrapper.append(interactionCanvas, cursorIndicator);
+    let undoStack = [];
+    let redoStack = [];
+    let onHistoryChange = null;
+    let restoreGeneration = 0;
+    function notifyHistoryChange() {
+      if (onHistoryChange) onHistoryChange(undoStack.length > 0, redoStack.length > 0);
+    }
+    async function restoreState(state) {
+      const myGeneration = ++restoreGeneration;
+      paintBackground(state.backgroundColor);
+      while (layers.length < state.layers.length) addLayerInternal();
+      while (layers.length > state.layers.length) {
+        const removed = layers.pop();
+        removed.canvas.remove();
+      }
+      if (activeLayerIndex > layers.length) activeLayerIndex = layers.length || 1;
+      layers.forEach((l) => l.ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT));
+      await Promise.all(layers.map((l, i) => loadLayerContent(l.ctx, state.layers[i])));
+      if (myGeneration !== restoreGeneration) return;
+      scheduleSave();
+      notifyLayersChange();
+    }
+    function pushUndoSnapshot() {
+      undoStack.push(snapshotState());
+      if (undoStack.length > MAX_HISTORY) undoStack.shift();
+      redoStack = [];
+      notifyHistoryChange();
+    }
+    function undo() {
+      if (!undoStack.length) return false;
+      const current = snapshotState();
+      const previous = undoStack.pop();
+      redoStack.push(current);
+      if (redoStack.length > MAX_HISTORY) redoStack.shift();
+      restoreState(previous);
+      notifyHistoryChange();
+      return true;
+    }
+    function redo() {
+      if (!redoStack.length) return false;
+      const current = snapshotState();
+      const next = redoStack.pop();
+      undoStack.push(current);
+      if (undoStack.length > MAX_HISTORY) undoStack.shift();
+      restoreState(next);
+      notifyHistoryChange();
+      return true;
+    }
+    function resetAll() {
+      while (layers.length > 1) {
+        const removed = layers.pop();
+        removed.canvas.remove();
+      }
+      layers[0].ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      activeLayerIndex = 1;
+      paintBackground(DEFAULT_BACKGROUND);
+      undoStack = [];
+      redoStack = [];
+      clearTimeout(saveTimer);
+      clearSavedDrawing();
+      notifyLayersChange();
+      notifyHistoryChange();
+    }
     function clear() {
-      inkCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      pushUndoSnapshot();
+      activeCtx().clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
       scheduleSave();
     }
     function setBackgroundColor(color) {
       if (color === backgroundColor) return;
+      pushUndoSnapshot();
       paintBackground(color);
       scheduleSave();
     }
     function strokeTo(x, y, { erase, size }) {
-      inkCtx.lineCap = "round";
-      inkCtx.lineJoin = "round";
-      inkCtx.lineWidth = erase ? size * 2.2 : size;
-      inkCtx.globalCompositeOperation = erase ? "destination-out" : "source-over";
-      inkCtx.strokeStyle = erase ? "rgba(0,0,0,1)" : strokeColor;
-      inkCtx.beginPath();
-      inkCtx.moveTo(lastX != null ? lastX : x, lastY != null ? lastY : y);
-      inkCtx.lineTo(x, y);
-      inkCtx.stroke();
+      const ctx = activeCtx();
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.lineWidth = erase ? size * 2.2 : size;
+      ctx.globalCompositeOperation = erase ? "destination-out" : "source-over";
+      ctx.strokeStyle = erase ? "rgba(0,0,0,1)" : strokeColor;
+      ctx.beginPath();
+      ctx.moveTo(lastX != null ? lastX : x, lastY != null ? lastY : y);
+      ctx.lineTo(x, y);
+      ctx.stroke();
       lastX = x;
       lastY = y;
     }
     function beginStroke(x, y, opts) {
+      pushUndoSnapshot();
       lastX = null;
       lastY = null;
       strokeTo(x, y, opts);
@@ -4595,37 +6122,67 @@ Version: v${version}`;
       lastY = null;
       scheduleSave();
     }
+    function fill(x, y) {
+      pushUndoSnapshot();
+      const ctx = activeCtx();
+      const fillRgb = resolveColorToRgb(strokeColor);
+      const imageData = ctx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      const changed = floodFillPixels(imageData.data, CANVAS_WIDTH, CANVAS_HEIGHT, x, y, fillRgb);
+      if (!changed) {
+        undoStack.pop();
+        notifyHistoryChange();
+        return;
+      }
+      ctx.putImageData(imageData, 0, 0);
+      scheduleSave();
+    }
     function downloadAsPng(filename = "notepad-doodle.png") {
       const flattened = document.createElement("canvas");
       flattened.width = CANVAS_WIDTH;
       flattened.height = CANVAS_HEIGHT;
       const fctx = flattened.getContext("2d");
       fctx.drawImage(backgroundCanvas, 0, 0);
-      fctx.drawImage(inkCanvas, 0, 0);
+      layers.forEach((l) => fctx.drawImage(l.canvas, 0, 0));
       const link = document.createElement("a");
       link.download = filename;
       link.href = flattened.toDataURL("image/png");
       link.click();
     }
     function getPointFromEvent(e) {
-      const rect = inkCanvas.getBoundingClientRect();
+      const rect = interactionCanvas.getBoundingClientRect();
       return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     }
     return {
       wrapper,
-      inkCanvas,
+      inkCanvas: interactionCanvas,
+      // kept as `inkCanvas` for index.js's existing mouse-listener wiring
       cursorIndicator,
+      ready: initialLoad,
+      // resolves once any saved layers have finished loading
       beginStroke,
       strokeTo,
       endStroke,
       clear,
+      fill,
+      resetAll,
+      undo,
+      redo,
+      setOnHistoryChange: (cb) => {
+        onHistoryChange = cb;
+      },
       setBackgroundColor,
       downloadAsPng,
       getPointFromEvent,
       setStrokeColor: (color) => {
         strokeColor = color;
       },
-      getBackgroundColor: () => backgroundColor
+      getBackgroundColor: () => backgroundColor,
+      addLayer,
+      removeLayer,
+      setActiveLayer,
+      getActiveLayer,
+      getLayerCount,
+      setOnLayersChange
     };
   }
 
@@ -4823,13 +6380,21 @@ Version: v${version}`;
     let pendingColor = currentPenColor;
     let drawing = false;
     surface.setStrokeColor(currentPenColor);
+    const undoBtn = document.createElement("span");
+    undoBtn.textContent = "\u21B6";
+    undoBtn.title = "Undo";
+    undoBtn.classList.add("wizascript-notepad-history-btn");
+    const redoBtn = document.createElement("span");
+    redoBtn.textContent = "\u21B7";
+    redoBtn.title = "Redo";
+    redoBtn.classList.add("wizascript-notepad-history-btn");
     const clearBtn = document.createElement("span");
     clearBtn.textContent = "Clear";
     const saveBtn = document.createElement("span");
     saveBtn.textContent = "Save PNG";
     const closeBtn = document.createElement("span");
     closeBtn.textContent = "\xD7";
-    headerButtons.append(clearBtn, saveBtn, closeBtn);
+    headerButtons.append(undoBtn, redoBtn, clearBtn, saveBtn, closeBtn);
     const mainColumn = document.createElement("div");
     mainColumn.className = "wizascript-notepad-main-column";
     const toolbar = document.createElement("div");
@@ -4844,6 +6409,10 @@ Version: v${version}`;
     const eraseBox = document.createElement("div");
     eraseBox.className = "wizascript-notepad-tool-box";
     eraseBox.textContent = "Erase";
+    const fillBox = document.createElement("div");
+    fillBox.className = "wizascript-notepad-tool-box";
+    fillBox.textContent = "Fill";
+    fillBox.title = "Click inside an enclosed area to fill it with the current pen color.";
     const sizeSlider = document.createElement("input");
     sizeSlider.type = "range";
     sizeSlider.className = "wizascript-notepad-size-slider";
@@ -4851,8 +6420,44 @@ Version: v${version}`;
     sizeSlider.max = "30";
     sizeSlider.value = String(currentThickness);
     sizeSlider.title = "Brush size";
-    toolbar.append(drawBox, eraseBox, sizeSlider);
+    toolbar.append(drawBox, eraseBox, fillBox, sizeSlider);
     mainColumn.append(toolbar, surface.wrapper);
+    const layersColumn = document.createElement("div");
+    layersColumn.className = "wizascript-notepad-layers-column";
+    function renderLayerButtons() {
+      layersColumn.innerHTML = "";
+      const count = surface.getLayerCount();
+      const active = surface.getActiveLayer();
+      for (let n = 1; n <= count; n++) {
+        const btn = document.createElement("div");
+        btn.className = "wizascript-notepad-layer-btn" + (n === active ? " active" : "");
+        btn.textContent = String(n);
+        btn.title = n === count && n > 1 ? "Click to work on this layer. Double-click to remove it (this layer only, since it's the topmost)." : "Click to work on this layer.";
+        btn.addEventListener("click", () => {
+          surface.setActiveLayer(n);
+          renderLayerButtons();
+        }, { signal });
+        if (n === count && n > 1) {
+          btn.addEventListener("dblclick", () => {
+            surface.removeLayer();
+            renderLayerButtons();
+          }, { signal });
+        }
+        layersColumn.appendChild(btn);
+      }
+      if (count < 6) {
+        const addBtn = document.createElement("div");
+        addBtn.className = "wizascript-notepad-layer-add-btn";
+        addBtn.textContent = "+";
+        addBtn.title = "Add a new layer on top (up to 6 total).";
+        addBtn.addEventListener("click", () => {
+          surface.addLayer();
+          renderLayerButtons();
+        }, { signal });
+        layersColumn.appendChild(addBtn);
+      }
+    }
+    renderLayerButtons();
     const colorColumn = document.createElement("div");
     colorColumn.className = "wizascript-notepad-side-column";
     const colorLabel = document.createElement("div");
@@ -4891,23 +6496,33 @@ Version: v${version}`;
     });
     recentColorsRow.render(getRecentColors());
     colorColumn.append(colorLabel, picker.element, applyPenBtn, applyBgBtn, recentColorsRow.element);
-    body.append(mainColumn, colorColumn);
+    body.append(mainColumn, layersColumn, colorColumn);
     document.body.appendChild(root);
     function selectTool(tool) {
       currentTool = tool;
       drawBox.classList.toggle("active", tool === "draw");
       eraseBox.classList.toggle("active", tool === "erase");
+      fillBox.classList.toggle("active", tool === "fill");
+      surface.inkCanvas.classList.toggle("wizascript-notepad-canvas-ink-fill-tool", tool === "fill");
       updateCursorIndicatorSize();
     }
     function updateCursorIndicatorSize() {
+      if (currentTool === "fill") {
+        surface.cursorIndicator.style.display = "none";
+        return;
+      }
       const size = currentTool === "erase" ? currentThickness * 2.2 : currentThickness;
       surface.cursorIndicator.style.width = size + "px";
       surface.cursorIndicator.style.height = size + "px";
     }
     surface.inkCanvas.addEventListener("mousedown", (e) => {
       if (e.button !== 0) return;
-      drawing = true;
       const pt = surface.getPointFromEvent(e);
+      if (currentTool === "fill") {
+        surface.fill(pt.x, pt.y);
+        return;
+      }
+      drawing = true;
       surface.beginStroke(pt.x, pt.y, { erase: currentTool === "erase", size: currentThickness });
     }, { signal });
     surface.inkCanvas.addEventListener("mouseenter", () => {
@@ -4934,6 +6549,7 @@ Version: v${version}`;
     }, { signal });
     drawBox.addEventListener("click", () => selectTool("draw"), { signal });
     eraseBox.addEventListener("click", () => selectTool("erase"), { signal });
+    fillBox.addEventListener("click", () => selectTool("fill"), { signal });
     sizeSlider.addEventListener("input", () => {
       currentThickness = Number(sizeSlider.value);
       updateCursorIndicatorSize();
@@ -4944,21 +6560,51 @@ Version: v${version}`;
     }, { signal });
     applyBgBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
     applyBgBtn.addEventListener("click", () => surface.setBackgroundColor(pendingColor), { signal });
+    undoBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
+    undoBtn.addEventListener("click", () => surface.undo(), { signal });
+    redoBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
+    redoBtn.addEventListener("click", () => surface.redo(), { signal });
+    undoBtn.classList.add("wizascript-notepad-history-btn-disabled");
+    redoBtn.classList.add("wizascript-notepad-history-btn-disabled");
+    surface.setOnHistoryChange((canUndo, canRedo) => {
+      undoBtn.classList.toggle("wizascript-notepad-history-btn-disabled", !canUndo);
+      redoBtn.classList.toggle("wizascript-notepad-history-btn-disabled", !canRedo);
+    });
     clearBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
-    clearBtn.addEventListener("click", () => surface.clear(), { signal });
+    clearBtn.addEventListener("click", () => {
+      surface.resetAll();
+      renderLayerButtons();
+      currentPenColor = DEFAULT_PEN_STATE.color;
+      colorIndicator.style.background = currentPenColor;
+      surface.setStrokeColor(currentPenColor);
+      picker.setState(DEFAULT_PEN_STATE.hue, DEFAULT_PEN_STATE.saturation, DEFAULT_PEN_STATE.lightness);
+      clearSavedPenColor();
+      clearRecentColors();
+      recentColorsRow.render([]);
+      titleInput.value = DEFAULT_TITLE;
+      clearSavedTitle();
+    }, { signal });
     saveBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
     saveBtn.addEventListener("click", () => {
       surface.downloadAsPng(`${sanitizeFilename(titleInput.value)}.png`);
     }, { signal });
     closeBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
     closeBtn.addEventListener("click", () => hideNotepad(), { signal });
-    mounted = { root, controller };
+    mounted = { root, controller, surface };
   }
   function hideNotepad() {
     if (!mounted) return;
     mounted.controller.abort();
     mounted.root.remove();
     mounted = null;
+  }
+  function undoNotepad() {
+    if (!mounted) return;
+    mounted.surface.undo();
+  }
+  function redoNotepad() {
+    if (!mounted) return;
+    mounted.surface.redo();
   }
   function forceResetNotepad() {
     hideNotepad();
@@ -5017,15 +6663,23 @@ Version: v${version}`;
   border-radius: 3px;
   padding: 1px 5px;
 }
+.wizascript-notepad-history-btn {
+  font-weight: bold;
+}
+.wizascript-notepad-history-btn-disabled {
+  opacity: 0.35;
+  pointer-events: none;
+  cursor: default;
+}
 .wizascript-notepad-title-input {
-  /* Fixed rather than flex:1 - the header previously let the
-     focusable/drag-blocking area stretch all the way to the header
-     buttons, which ate into the space meant for dragging the notepad
-     around. ~72px roughly lines up with where "Erase" starts in the
-     toolbar below - plenty of room for a short name without
-     encroaching further. */
+  /* Widened generously (was 72px) - longer names were getting cut
+     off with the old width, and it's easier to trim this back later
+     if it turns out too roomy than to keep nudging it up in small
+     increments. The whole notepad widens to fit, same as it already
+     does to fit the canvas+sidebar body - this isn't a fixed-width
+     header fighting a fixed-width body, it's just a wider header. */
   flex: none;
-  width: 72px;
+  width: 180px;
   background: transparent;
   border: none;
   outline: none;
@@ -5064,8 +6718,18 @@ Version: v${version}`;
 .wizascript-notepad-canvas-bg {
   pointer-events: none;
 }
+.wizascript-notepad-canvas-layer {
+  pointer-events: none;
+}
 .wizascript-notepad-canvas-ink {
   cursor: none;
+}
+.wizascript-notepad-canvas-ink-fill-tool {
+  /* Fill has no brush-size indicator (see updateCursorIndicatorSize) -
+     fall back to a real visible cursor so the click point stays
+     visible, instead of the invisible cursor draw/erase rely on their
+     own circular indicator to replace. */
+  cursor: crosshair;
 }
 .wizascript-notepad-cursor-indicator {
   position: absolute;
@@ -5110,6 +6774,46 @@ Version: v${version}`;
 .wizascript-notepad-size-slider {
   flex: 1;
   min-width: 50px;
+}
+.wizascript-notepad-layers-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-top: 2px;
+}
+.wizascript-notepad-layer-btn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #8a7355;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #5a4a35;
+  background: #efe4cf;
+  cursor: pointer;
+}
+.wizascript-notepad-layer-btn.active {
+  background: #d4a017;
+  color: #fff;
+  border-color: #a97e0f;
+}
+.wizascript-notepad-layer-add-btn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #8a7355;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: bold;
+  color: #8a7355;
+  background: transparent;
+  cursor: pointer;
 }
 .wizascript-notepad-side-column {
   display: flex;
@@ -5204,9 +6908,9 @@ Version: v${version}`;
 
   // packages/misc/index.js
   function initMisc(plugin) {
-    const settings = registerMiscSettings(plugin);
+    const settings2 = registerMiscSettings(plugin);
     function syncNotepadVisibility() {
-      if (settings.enableNotepad.value()) {
+      if (settings2.enableNotepad.value()) {
         showNotepad();
       } else {
         hideNotepad();
@@ -5216,13 +6920,42 @@ Version: v${version}`;
     plugin.events.on("connect", () => {
       syncNotepadVisibility();
     });
-    document.addEventListener("keydown", (e) => {
-      if (e.ctrlKey && e.altKey && e.shiftKey && e.key.toLowerCase() === "n") {
+    registerKeybind(plugin, {
+      key: "toggleNotepad",
+      name: "Toggle Notepad",
+      defaultCode: "KeyO",
+      packageLabel: "Notepad",
+      onMatch: () => {
+        const next = !settings2.enableNotepad.value();
+        settings2.enableNotepad.set(next);
+        syncNotepadVisibility();
+      }
+    });
+    registerKeybind(plugin, {
+      key: "resetNotepad",
+      name: "Reset Notepad",
+      defaultCode: "KeyN",
+      packageLabel: "Notepad",
+      onMatch: () => {
         forceResetNotepad();
-        if (settings.enableNotepad.value()) {
+        if (settings2.enableNotepad.value()) {
           showNotepad();
         }
       }
+    });
+    registerKeybind(plugin, {
+      key: "undoNotepad",
+      name: "Undo Drawing",
+      defaultCode: "KeyZ",
+      packageLabel: "Notepad",
+      onMatch: () => undoNotepad()
+    });
+    registerKeybind(plugin, {
+      key: "redoNotepad",
+      name: "Redo Drawing",
+      defaultCode: "KeyY",
+      packageLabel: "Notepad",
+      onMatch: () => redoNotepad()
     });
   }
 
@@ -5231,6 +6964,8 @@ Version: v${version}`;
     initPatchMaker(plugin);
     initTrueHubBridge(plugin);
     initDeckTracker(plugin);
+    initUcTv(plugin);
     initMisc(plugin);
+    flushKeybindRegistrations();
   });
 })();

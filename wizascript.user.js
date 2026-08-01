@@ -5556,10 +5556,9 @@ Version: v${version}`;
     });
     overlay.appendChild(legend);
     overlay.addEventListener("wheel", (e) => {
-      if (e.ctrlKey) {
-        e.preventDefault();
-        overlay.scrollTop += e.deltaY;
-      }
+      e.preventDefault();
+      const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+      overlay.scrollTop += delta;
     }, { passive: false });
     document.body.appendChild(overlay);
     guideOverlay = overlay;

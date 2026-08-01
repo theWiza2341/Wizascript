@@ -260,17 +260,27 @@ async function showChannelGuide(plugin) {
   });
   overlay.appendChild(legend);
 
-  // Ctrl+scroll normally zooms the whole page - suppress that only
-  // while actually hovering this overlay (this listener lives and
-  // dies with the overlay element itself, so nothing needs manual
-  // focus/blur tracking) and drive the scroll manually, since a
-  // browser treats a ctrl-held wheel event purely as a zoom gesture
-  // and won't fall back to scrolling once that's prevented.
+  // Ctrl+scroll normally zooms the whole page - suppress that and
+  // drive the scroll manually instead. Not conditioned on e.ctrlKey
+  // specifically: the guide only ever exists while Primary is held
+  // (releasing it closes the guide), so any wheel event received here
+  // is inherently "the user wants to scroll this panel," regardless
+  // of whether Primary is currently mapped to Ctrl or something else -
+  // checking e.ctrlKey directly would silently stop working the
+  // moment someone remaps Primary away from Ctrl.
   overlay.addEventListener('wheel', (e) => {
-    if (e.ctrlKey) {
-      e.preventDefault();
-      overlay.scrollTop += e.deltaY;
-    }
+    e.preventDefault();
+    // Most browsers reinterpret certain held modifiers (Shift being
+    // the best-known case) as a horizontal-scroll gesture - deltaY
+    // ends up near-zero and the actual scroll amount reports on
+    // deltaX instead, even though the physical gesture was still a
+    // normal vertical wheel roll. Since Primary is user-remappable and
+    // could end up being exactly one of those keys, reading whichever
+    // axis actually carries a nonzero delta keeps this working
+    // regardless of what Primary happens to be bound to, rather than
+    // silently going dead the moment someone remaps it to the "wrong" key.
+    const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+    overlay.scrollTop += delta;
   }, { passive: false });
 
   document.body.appendChild(overlay);

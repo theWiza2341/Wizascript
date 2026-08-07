@@ -4710,6 +4710,19 @@
       },
       "notes": "hotfix justice\n\n20-0 from 1820 to the 1900's",
       "publishedAt": "2026-08-06T17:04:08.398Z"
+    },
+    {
+      "messageId": "1535105737263546409",
+      "season": "s121",
+      "channel": "petal speedrun",
+      "author": "mustardz_",
+      "deckCode": "eyJzb3VsIjoiQlJBVkVSWSIsImNhcmRJZHMiOls0NTQsNDU0LDQ1NCw3LDcsNyw2MTcsNjE3LDYxNyw3OSwxMTUsMTE1LDExNSw1MTgsMzExLDMxMSw1MSw1MSw1MSw4NTcsODU3LDcxMCw4MjgsNTAzLDU2NF0sImFydGlmYWN0SWRzIjpbNzVdfQ==",
+      "record": {
+        "wins": 17,
+        "losses": 3
+      },
+      "notes": "petal-speedrun\n17-3 played from 1820 to 1875 (elo gain and loss is brutal...)\n\ni stole like 60% of the deck from lucky, thanks!\n\nso this is normally where i tell you how to play the deck but i actually don't want this running around ladder and this is mainly for archival purposes so figure it out yourself! i believe in you don't worry :)\n\nlosses are too my own skill issue\n\n \n\n \n\n \n\ncreator: <@713526471523827752>",
+      "publishedAt": "2026-08-07T02:02:08.649Z"
     }
   ]
 }

@@ -5,6 +5,7 @@ import { initTrueHubBridge } from "./packages/true-hub-bridge/index.js";
 import { initDeckTracker } from "./packages/deck-tracker/index.js";
 import { initUcTv } from "./packages/uc-tv/index.js";
 import { initMisc } from "./packages/misc/index.js";
+import { initController } from "./packages/controller/index.js";
 
 // NOTE: Doom Reminder (both "Classic" chat-ping and "Evil" clickbait-
 // overlay modes) has been removed entirely - confirmed by UC
@@ -24,5 +25,6 @@ bootstrap(plugin => {
   initDeckTracker(plugin);
   initUcTv(plugin);
   initMisc(plugin);
+  initController(plugin);
   flushKeybindRegistrations(); // must come after all of the above
 });

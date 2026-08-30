@@ -6959,6 +6959,2905 @@ Version: v${version}`;
     });
   }
 
+  // packages/controller/gamepad.js
+  var pressIndicator = document.createElement("div");
+  Object.assign(pressIndicator.style, {
+    position: "fixed",
+    top: "16px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    zIndex: 2147483647,
+    background: "rgba(0,150,0,0.92)",
+    color: "#fff",
+    font: 'bold 22px -apple-system, "Segoe UI", sans-serif',
+    padding: "10px 22px",
+    borderRadius: "10px",
+    pointerEvents: "none",
+    boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+    display: "none",
+    textAlign: "center"
+  });
+  var pressIndicatorHideTimer = null;
+  function showPressIndicator(text) {
+    pressIndicator.textContent = text;
+    pressIndicator.style.display = "block";
+    if (pressIndicatorHideTimer) clearTimeout(pressIndicatorHideTimer);
+    pressIndicatorHideTimer = setTimeout(() => {
+      pressIndicator.style.display = "none";
+    }, 1e3);
+  }
+  var hidConnectBtn = document.createElement("button");
+  hidConnectBtn.textContent = "\u{1F3AE} Connect Controller (WebHID)";
+  Object.assign(hidConnectBtn.style, {
+    position: "fixed",
+    top: "16px",
+    right: "16px",
+    zIndex: 2147483647,
+    padding: "8px 14px",
+    borderRadius: "8px",
+    border: "none",
+    background: "#2a6",
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: "13px",
+    cursor: "pointer",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.4)"
+  });
+  hidConnectBtn.addEventListener("click", () => {
+    connectWebHidController();
+  });
+  var BUTTON_LABELS = {
+    0: "\u2715",
+    1: "\u25CB",
+    2: "\u25A1",
+    3: "\u25B3",
+    4: "L1",
+    5: "R1",
+    6: "L2",
+    7: "R2",
+    8: "Select",
+    9: "Start",
+    10: "L3",
+    11: "R3",
+    12: "D-Up",
+    13: "D-Down",
+    14: "D-Left",
+    15: "D-Right",
+    16: "Home",
+    17: "Touchpad"
+  };
+  var BUTTON_LABELS_NINTENDO = {
+    0: "B",
+    1: "A",
+    2: "Y",
+    3: "X",
+    4: "L",
+    5: "R",
+    6: "ZL",
+    7: "ZR",
+    8: "-",
+    9: "+",
+    10: "L3",
+    11: "R3",
+    12: "D-Up",
+    13: "D-Down",
+    14: "D-Left",
+    15: "D-Right",
+    16: "Home",
+    17: "Capture"
+  };
+  function activeButtonLabelTable() {
+    return hidDevice ? BUTTON_LABELS_NINTENDO : BUTTON_LABELS;
+  }
+  function btnLabel(idx) {
+    return activeButtonLabelTable()[idx] || "Button " + idx;
+  }
+  function buttonToDisplay(idx) {
+    if (idx === null || idx === void 0) return "Unbound";
+    return btnLabel(idx);
+  }
+  var AXIS_CALIBRATION = /* @__PURE__ */ new Map();
+  var AXIS_STABLE_FRAMES_NEEDED = 90;
+  var AXIS_JITTER_EPS = 0.02;
+  function getCalibratedAxes(pad) {
+    let cal = AXIS_CALIBRATION.get(pad.id);
+    if (!cal) {
+      cal = {
+        baseline: pad.axes.map(() => 0),
+        lastRaw: pad.axes.slice(),
+        stableFrames: pad.axes.map(() => 0)
+      };
+      AXIS_CALIBRATION.set(pad.id, cal);
+    }
+    pad.axes.forEach((v, i) => {
+      const prev = cal.lastRaw[i] !== void 0 ? cal.lastRaw[i] : v;
+      if (Math.abs(v - prev) < AXIS_JITTER_EPS) {
+        cal.stableFrames[i] = (cal.stableFrames[i] || 0) + 1;
+      } else {
+        cal.stableFrames[i] = 0;
+      }
+      cal.lastRaw[i] = v;
+      if (cal.stableFrames[i] === AXIS_STABLE_FRAMES_NEEDED && Math.abs(v - (cal.baseline[i] || 0)) > AXIS_JITTER_EPS) {
+        cal.baseline[i] = v;
+        console.log(`[Wizascript Controller] axis ${i} on "${pad.id}" recalibrated to neutral=${v.toFixed(3)} after holding steady for ~1.5s`);
+      }
+    });
+    return pad.axes.map((v, i) => Math.max(-1, Math.min(1, v - (cal.baseline[i] || 0))));
+  }
+  var WEBHID_VENDOR_ID = 1406;
+  var hidDevice = null;
+  var hidState = { axes: [0, 0, 0, 0], hat: 8, raw1: 0, raw2: 0 };
+  var lastLoggedHidBits = { raw1: 0, raw2: 0 };
+  function decodeHidReport(dataView) {
+    if (dataView.byteLength < 11) return;
+    const raw1 = dataView.getUint8(0);
+    const raw2 = dataView.getUint8(1);
+    const hat = dataView.getUint8(2);
+    const lh = dataView.getUint16(3, true);
+    const lv = dataView.getUint16(5, true);
+    const rh = dataView.getUint16(7, true);
+    const rv = dataView.getUint16(9, true);
+    const norm = (v) => Math.max(-1, Math.min(1, (v - 32768) / 32768));
+    hidState.axes = [norm(lh), norm(lv), norm(rh), norm(rv)];
+    hidState.hat = hat;
+    hidState.raw1 = raw1;
+    hidState.raw2 = raw2;
+    for (let bit = 0; bit < 8; bit++) {
+      const mask = 1 << bit;
+      const wasR1 = !!(lastLoggedHidBits.raw1 & mask), isR1 = !!(raw1 & mask);
+      if (wasR1 !== isR1) {
+        console.log(`[Wizascript Controller] WebHID raw bit B1.0x${mask.toString(16).padStart(2, "0")} -> ${isR1 ? "DOWN" : "UP"}`);
+        if (isR1) showPressIndicator(`\u{1F3AE} WebHID B1.0x${mask.toString(16).padStart(2, "0")} pressed`);
+      }
+      const wasR2 = !!(lastLoggedHidBits.raw2 & mask), isR2 = !!(raw2 & mask);
+      if (wasR2 !== isR2) {
+        console.log(`[Wizascript Controller] WebHID raw bit B2.0x${mask.toString(16).padStart(2, "0")} -> ${isR2 ? "DOWN" : "UP"}`);
+        if (isR2) showPressIndicator(`\u{1F3AE} WebHID B2.0x${mask.toString(16).padStart(2, "0")} pressed`);
+      }
+    }
+    lastLoggedHidBits.raw1 = raw1;
+    lastLoggedHidBits.raw2 = raw2;
+  }
+  function handleHidInputReport(event) {
+    if (event.reportId !== 63) return;
+    decodeHidReport(event.data);
+  }
+  async function openHidDevice(device) {
+    if (hidDevice) {
+      console.log("[Wizascript Controller] WebHID device already connected, ignoring duplicate open call.");
+      return;
+    }
+    try {
+      if (!device.opened) await device.open();
+      device.addEventListener("inputreport", handleHidInputReport);
+      hidDevice = device;
+      console.log("[Wizascript Controller] WebHID device opened:", device.productName || device.vendorId + ":" + device.productId);
+      hidConnectBtn.textContent = "\u{1F3AE} Controller Connected";
+      hidConnectBtn.disabled = true;
+      hidConnectBtn.style.background = "#555";
+      hidConnectBtn.style.cursor = "default";
+    } catch (e) {
+      console.log("[Wizascript Controller] WebHID open failed:", e);
+    }
+  }
+  async function connectWebHidController() {
+    if (!navigator.hid) {
+      console.log("[Wizascript Controller] navigator.hid is not available in this browser/context - WebHID cannot be used.");
+      return;
+    }
+    try {
+      const devices = await navigator.hid.requestDevice({ filters: [{ vendorId: WEBHID_VENDOR_ID }] });
+      if (!devices.length) {
+        console.log("[Wizascript Controller] WebHID device picker closed with no selection.");
+        return;
+      }
+      await openHidDevice(devices[0]);
+    } catch (e) {
+      console.log("[Wizascript Controller] WebHID requestDevice failed:", e);
+    }
+  }
+  (async function tryAutoReconnectWebHid() {
+    if (!navigator.hid) return;
+    try {
+      const devices = await navigator.hid.getDevices();
+      const match = devices.find((d) => d.vendorId === WEBHID_VENDOR_ID);
+      if (match) await openHidDevice(match);
+    } catch (e) {
+      console.log("[Wizascript Controller] WebHID auto-reconnect check failed:", e);
+    }
+  })();
+  function getMergedGamepad() {
+    let rawPads = Array.from(navigator.getGamepads()).filter((p) => p);
+    if (hidDevice) {
+      const vidHex = hidDevice.vendorId.toString(16).padStart(4, "0");
+      const pidHex = hidDevice.productId.toString(16).padStart(4, "0");
+      rawPads = rawPads.filter((p) => {
+        const id = (p.id || "").toLowerCase();
+        const isSameDevice = id.includes(vidHex) && id.includes(pidHex);
+        if (isSameDevice) console.log("[Wizascript Controller] excluding native Gamepad-API entry for the WebHID-connected device from the merge (buttons unreliable over Bluetooth):", p.id);
+        return !isSameDevice;
+      });
+    }
+    if (hidDevice) {
+      const hidButtons = new Array(18).fill(null).map(() => ({ pressed: false, value: 0 }));
+      const hat = hidState.hat;
+      hidButtons[12] = { pressed: hat === 0 || hat === 1 || hat === 7, value: 0 };
+      hidButtons[15] = { pressed: hat === 1 || hat === 2 || hat === 3, value: 0 };
+      hidButtons[13] = { pressed: hat === 3 || hat === 4 || hat === 5, value: 0 };
+      hidButtons[14] = { pressed: hat === 5 || hat === 6 || hat === 7, value: 0 };
+      const r1 = hidState.raw1, r2 = hidState.raw2;
+      hidButtons[0] = { pressed: !!(r1 & 1), value: 0 };
+      hidButtons[1] = { pressed: !!(r1 & 2), value: 0 };
+      hidButtons[2] = { pressed: !!(r1 & 4), value: 0 };
+      hidButtons[3] = { pressed: !!(r1 & 8), value: 0 };
+      hidButtons[4] = { pressed: !!(r1 & 16), value: r1 & 16 ? 1 : 0 };
+      hidButtons[5] = { pressed: !!(r1 & 32), value: r1 & 32 ? 1 : 0 };
+      hidButtons[6] = { pressed: !!(r1 & 64), value: r1 & 64 ? 1 : 0 };
+      hidButtons[7] = { pressed: !!(r1 & 128), value: r1 & 128 ? 1 : 0 };
+      hidButtons[8] = { pressed: !!(r2 & 1), value: 0 };
+      hidButtons[9] = { pressed: !!(r2 & 2), value: 0 };
+      hidButtons[10] = { pressed: !!(r2 & 4), value: 0 };
+      hidButtons[11] = { pressed: !!(r2 & 8), value: 0 };
+      hidButtons[16] = { pressed: !!(r2 & 16), value: 0 };
+      hidButtons[17] = { pressed: !!(r2 & 32), value: 0 };
+      rawPads.push({ id: "WebHID Switch Pro Controller", buttons: hidButtons, axes: hidState.axes.slice() });
+    }
+    if (!rawPads.length) return null;
+    const pads = rawPads.map((p) => ({ id: p.id, buttons: p.buttons, axes: getCalibratedAxes(p) }));
+    if (pads.length === 1) return pads[0];
+    const buttonCount = Math.max(...pads.map((p) => p.buttons.length));
+    const axesCount = Math.max(...pads.map((p) => p.axes.length));
+    const buttons = [];
+    for (let i = 0; i < buttonCount; i++) {
+      let pressed = false, value = 0;
+      for (const p of pads) {
+        const b = p.buttons[i];
+        if (!b) continue;
+        if (b.pressed) pressed = true;
+        if (b.value > value) value = b.value;
+      }
+      buttons.push({ pressed, value });
+    }
+    const axes = [];
+    for (let i = 0; i < axesCount; i++) {
+      let best = 0;
+      for (const p of pads) {
+        const v = p.axes[i];
+        if (v === void 0) continue;
+        if (Math.abs(v) > Math.abs(best)) best = v;
+      }
+      axes.push(best);
+    }
+    return { buttons, axes, _mergedFrom: pads.map((p) => p.id) };
+  }
+  window.addEventListener("gamepadconnected", (e) => {
+    console.log("[Wizascript Controller] gamepadconnected:", {
+      index: e.gamepad.index,
+      id: e.gamepad.id,
+      mapping: e.gamepad.mapping,
+      buttons: e.gamepad.buttons.length,
+      axes: e.gamepad.axes.length
+    });
+  });
+  window.addEventListener("gamepaddisconnected", (e) => {
+    console.log("[Wizascript Controller] gamepaddisconnected:", { index: e.gamepad.index, id: e.gamepad.id });
+  });
+  var lastLoggedRawSnapshot = /* @__PURE__ */ new Map();
+  function rawSnapshotsEqual(a, b) {
+    if (!a || !b) return false;
+    if (a.pressedIdx.length !== b.pressedIdx.length) return false;
+    for (let i = 0; i < a.pressedIdx.length; i++) if (a.pressedIdx[i] !== b.pressedIdx[i]) return false;
+    if (a.axes.length !== b.axes.length) return false;
+    for (let i = 0; i < a.axes.length; i++) if (Math.abs(a.axes[i] - b.axes[i]) > 0.03) return false;
+    return true;
+  }
+  function logRawGamepadStateIfChanged() {
+    const pads = Array.from(navigator.getGamepads()).filter((p) => p);
+    if (!pads.length) return;
+    pads.forEach((p) => {
+      const pressedIdx = p.buttons.map((b, i) => b.pressed ? i : null).filter((i) => i !== null);
+      const snapshot = { pressedIdx, axes: p.axes.slice() };
+      const prev = lastLoggedRawSnapshot.get(p.id);
+      if (rawSnapshotsEqual(prev, snapshot)) return;
+      lastLoggedRawSnapshot.set(p.id, snapshot);
+      console.log(`[Wizascript Controller] raw gamepad[${p.index}] "${p.id}" mapping="${p.mapping}" pressed=[${pressedIdx.join(",")}] axes=[${p.axes.map((v) => v.toFixed(2)).join(",")}]`);
+    });
+  }
+  var lastMergedButtonState = [];
+  var lastUsingControllerLogged = null;
+  var lastAnyStickState = false;
+  function logMergedInputEdges(gp, usingControllerNow, anyStickNow) {
+    if (lastUsingControllerLogged !== usingControllerNow) {
+      lastUsingControllerLogged = usingControllerNow;
+      console.log(`[Wizascript Controller] usingController -> ${usingControllerNow}`);
+    }
+    gp.buttons.forEach((b, i) => {
+      const was = !!lastMergedButtonState[i];
+      const is = !!(b && b.pressed);
+      if (was !== is) {
+        console.log(`[Wizascript Controller] MERGED button ${i} (${buttonToDisplay(i)}) -> ${is ? "DOWN" : "UP"}`);
+        if (is) showPressIndicator("\u{1F3AE} " + buttonToDisplay(i) + " pressed");
+      }
+      lastMergedButtonState[i] = is;
+    });
+    if (!!anyStickNow !== lastAnyStickState) {
+      lastAnyStickState = !!anyStickNow;
+      if (lastAnyStickState) showPressIndicator("\u{1F579} Stick moved");
+    }
+  }
+
+  // packages/controller/storage.js
+  var GM_PREFIX2 = "wizascript.controller.";
+  function csGet(key, fallback) {
+    try {
+      const v = GM_getValue(GM_PREFIX2 + key, null);
+      return v === null || v === void 0 ? fallback : v;
+    } catch (e) {
+      console.warn("[Wizascript Controller] GM_getValue failed, falling back to default:", e);
+      return fallback;
+    }
+  }
+  function csSet(key, value) {
+    try {
+      GM_setValue(GM_PREFIX2 + key, value);
+    } catch (e) {
+      console.warn("[Wizascript Controller] GM_setValue failed, binding will not persist:", e);
+    }
+  }
+  var PRESET_COUNT = 3;
+  var DEFAULT_PRESET_NAME_PREFIX = "Preset ";
+  function getActivePreset() {
+    const raw = csGet("activePreset", "1");
+    const n = parseInt(raw, 10);
+    return Number.isNaN(n) || n < 1 || n > PRESET_COUNT ? 1 : n;
+  }
+  function setActivePreset(n) {
+    csSet("activePreset", String(n));
+  }
+  function getPresetName(n) {
+    return csGet("presetName." + n, DEFAULT_PRESET_NAME_PREFIX + n);
+  }
+  function setPresetName(n, name) {
+    const trimmed = (name || "").trim();
+    csSet("presetName." + n, trimmed === "" ? DEFAULT_PRESET_NAME_PREFIX + n : trimmed);
+  }
+  function presetKey(rawKey) {
+    return "preset" + getActivePreset() + "." + rawKey;
+  }
+  function migrateFlatBindingsToPresetOne(controllerActionKeys, hardwareShortcutKeys) {
+    if (csGet("migratedToPresetsV056", null) !== null) return;
+    const migrate = (rawKey) => {
+      const oldVal = csGet(rawKey, null);
+      if (oldVal === null) return;
+      const newKey = "preset1." + rawKey;
+      if (csGet(newKey, null) !== null) return;
+      csSet(newKey, oldVal);
+    };
+    migrate("keybinds.__primary");
+    controllerActionKeys.forEach((key) => migrate("keybinds." + key));
+    hardwareShortcutKeys.forEach((key) => migrate("shortcuts." + key));
+    csSet("migratedToPresetsV056", "true");
+    console.log("[Wizascript Controller] migrated any pre-preset-system bindings into Preset 1.");
+  }
+
+  // packages/controller/settings.js
+  var CONTROLLER_ACTIONS = [
+    { key: "previousChannel", name: "Previous Channel", packageLabel: "UC TV", context: "channelSwitch", defaultButton: 14, dispatch: { code: "ArrowLeft", key: "ArrowLeft" } },
+    { key: "nextChannel", name: "Next Channel", packageLabel: "UC TV", context: "channelSwitch", defaultButton: 15, dispatch: { code: "ArrowRight", key: "ArrowRight" } },
+    { key: "toggleNotepad", name: "Toggle Notepad", packageLabel: "Notepad", context: "always", defaultButton: 3, dispatch: { code: "KeyO", key: "o" } },
+    { key: "resetNotepad", name: "Reset Notepad", packageLabel: "Notepad", context: "always", defaultButton: 2, dispatch: { code: "KeyN", key: "n" } },
+    { key: "undoNotepad", name: "Undo Drawing", packageLabel: "Notepad", context: "default", defaultButton: 13, dispatch: { code: "KeyZ", key: "z" } },
+    { key: "redoNotepad", name: "Redo Drawing", packageLabel: "Notepad", context: "default", defaultButton: 12, dispatch: { code: "KeyY", key: "y" } },
+    { key: "moveEntryUp", name: "Move Entry Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
+    { key: "moveEntryDown", name: "Move Entry Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
+    { key: "moveSectionUp", name: "Move Balance Section Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
+    { key: "moveSectionDown", name: "Move Balance Section Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
+    { key: "moveCardUp", name: "Move Card Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
+    { key: "moveCardDown", name: "Move Card Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } }
+  ];
+  var CONTROLLER_ACTIONS_BY_KEY = {};
+  CONTROLLER_ACTIONS.forEach((a) => {
+    CONTROLLER_ACTIONS_BY_KEY[a.key] = a;
+  });
+  var HARDWARE_SHORTCUT_ACTIONS = [
+    { key: "openSettings", name: "Open Settings" },
+    { key: "yourDustpile", name: "Check Your Dustpile" },
+    { key: "opponentDustpile", name: "Check Opponent's Dustpile" },
+    { key: "endTurn", name: "End Turn" },
+    { key: "openWizascriptSettings", name: "Open Wizascript Settings" },
+    { key: "concede", name: "Concede" },
+    { key: "goHome", name: "Go to Home Page" }
+  ];
+  var HARDWARE_SHORTCUT_DEFAULTS = {
+    openSettings: 9,
+    yourDustpile: 10,
+    opponentDustpile: 11,
+    endTurn: 17,
+    openWizascriptSettings: 7,
+    concede: 8,
+    goHome: 16
+  };
+  var HARDWARE_SHORTCUT_ACTIONS_BY_KEY = {};
+  HARDWARE_SHORTCUT_ACTIONS.forEach((a) => {
+    HARDWARE_SHORTCUT_ACTIONS_BY_KEY[a.key] = a;
+  });
+  var DEFAULT_PRIMARY_BUTTON = 4;
+  function getControllerPrimaryButton() {
+    const raw = csGet(presetKey("keybinds.__primary"), String(DEFAULT_PRIMARY_BUTTON));
+    if (raw === "unbound") return null;
+    const n = parseInt(raw, 10);
+    return Number.isNaN(n) ? DEFAULT_PRIMARY_BUTTON : n;
+  }
+  function setControllerPrimaryButton(idxOrNull) {
+    csSet(presetKey("keybinds.__primary"), idxOrNull === null ? "unbound" : String(idxOrNull));
+  }
+  function getBoundButton(actionKey) {
+    const action = CONTROLLER_ACTIONS_BY_KEY[actionKey];
+    const raw = csGet(presetKey("keybinds." + actionKey), String(action.defaultButton));
+    if (raw === "unbound") return null;
+    const n = parseInt(raw, 10);
+    return Number.isNaN(n) ? action.defaultButton : n;
+  }
+  function setBoundButton(actionKey, idxOrNull) {
+    csSet(presetKey("keybinds." + actionKey), idxOrNull === null ? "unbound" : String(idxOrNull));
+  }
+  function getBoundShortcutButton(actionKey) {
+    const defaultButton = HARDWARE_SHORTCUT_DEFAULTS[actionKey];
+    const raw = csGet(presetKey("shortcuts." + actionKey), String(defaultButton));
+    if (raw === "unbound") return null;
+    const n = parseInt(raw, 10);
+    return Number.isNaN(n) ? defaultButton : n;
+  }
+  function setBoundShortcutButton(actionKey, idxOrNull) {
+    csSet(presetKey("shortcuts." + actionKey), idxOrNull === null ? "unbound" : String(idxOrNull));
+  }
+  var controllerEnabledSetting = null;
+  function isControllerSupportEnabled() {
+    if (!controllerEnabledSetting || typeof controllerEnabledSetting.value !== "function") return true;
+    try {
+      const v = controllerEnabledSetting.value();
+      return v === void 0 || v === null ? true : !!v;
+    } catch (e) {
+      return true;
+    }
+  }
+  var controllerCaptureActive = false;
+  function isControllerCaptureActive() {
+    return controllerCaptureActive;
+  }
+  var boundInputRefreshers = [];
+  function enhanceControllerDivider(el) {
+    el.setAttribute("data-wc-enhanced", "true");
+    el.readOnly = true;
+    el.tabIndex = -1;
+    Object.assign(el.style, {
+      backgroundColor: "transparent",
+      border: "none",
+      borderBottom: "1px solid #666",
+      color: "#8ab4f8",
+      fontWeight: "bold",
+      cursor: "default",
+      pointerEvents: "none"
+    });
+  }
+  function enhanceControllerCaptureInput(el, readBound, writeBound) {
+    el.setAttribute("data-wc-enhanced", "true");
+    el.readOnly = true;
+    Object.assign(el.style, {
+      cursor: "pointer",
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      el.value = buttonToDisplay(readBound());
+    }
+    refreshDisplay();
+    boundInputRefreshers.push(refreshDisplay);
+    el.addEventListener("focus", () => {
+      el.style.border = "1px solid #40E0D0";
+      el.style.boxShadow = "0 0 4px #40E0D0";
+      el.value = "Press a button...";
+      controllerCaptureActive = true;
+      let cancelled = false;
+      let ignoreUntilReleased = /* @__PURE__ */ new Set();
+      const gp0 = getMergedGamepad();
+      if (gp0) gp0.buttons.forEach((b, i) => {
+        if (b && b.pressed) ignoreUntilReleased.add(i);
+      });
+      function captureFrame() {
+        if (cancelled) return;
+        const gp = getMergedGamepad();
+        if (gp) {
+          gp.buttons.forEach((b, i) => {
+            if (!b) return;
+            if (!b.pressed) {
+              ignoreUntilReleased.delete(i);
+              return;
+            }
+            if (ignoreUntilReleased.has(i)) return;
+            finishCapture(i);
+          });
+        }
+        if (!cancelled) requestAnimationFrame(captureFrame);
+      }
+      function finishCapture(idx) {
+        if (cancelled) return;
+        cancelled = true;
+        writeBound(idx);
+        el.blur();
+      }
+      function onEscape(e) {
+        if (e.key === "Escape") {
+          cancelled = true;
+          writeBound(null);
+          document.removeEventListener("keydown", onEscape, true);
+          el.blur();
+        }
+      }
+      document.addEventListener("keydown", onEscape, true);
+      requestAnimationFrame(captureFrame);
+      el.addEventListener("blur", function onBlur() {
+        cancelled = true;
+        controllerCaptureActive = false;
+        el.style.border = "1px solid #b4b4b4";
+        el.style.boxShadow = "none";
+        document.removeEventListener("keydown", onEscape, true);
+        refreshDisplay();
+        el.removeEventListener("blur", onBlur);
+      });
+    });
+  }
+  function enhancePresetSelector(el) {
+    el.setAttribute("data-wc-enhanced", "true");
+    el.readOnly = true;
+    el.tabIndex = 0;
+    Object.assign(el.style, {
+      cursor: "pointer",
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      el.value = getPresetName(getActivePreset());
+    }
+    refreshDisplay();
+    boundInputRefreshers.push(refreshDisplay);
+    let menuEl = null;
+    function onOutsideClick(e) {
+      if (menuEl && !menuEl.contains(e.target) && e.target !== el) closeMenu();
+    }
+    function onEscape(e) {
+      if (e.key === "Escape") closeMenu();
+    }
+    function closeMenu() {
+      if (!menuEl) return;
+      menuEl.remove();
+      menuEl = null;
+      document.removeEventListener("mousedown", onOutsideClick, true);
+      document.removeEventListener("keydown", onEscape, true);
+    }
+    function openMenu() {
+      if (menuEl) {
+        closeMenu();
+        return;
+      }
+      const rect = el.getBoundingClientRect();
+      menuEl = document.createElement("div");
+      Object.assign(menuEl.style, {
+        position: "fixed",
+        left: rect.left + "px",
+        top: rect.bottom + 2 + "px",
+        width: Math.max(rect.width, 140) + "px",
+        background: "#111",
+        border: "1px solid #40E0D0",
+        borderRadius: "3px",
+        zIndex: 2147483647,
+        overflow: "hidden",
+        fontFamily: "inherit"
+      });
+      for (let n = 1; n <= PRESET_COUNT; n++) {
+        const isActive = n === getActivePreset();
+        const row = document.createElement("div");
+        row.textContent = getPresetName(n) + (isActive ? "  \u2713" : "");
+        Object.assign(row.style, {
+          padding: "6px 10px",
+          cursor: "pointer",
+          color: "white",
+          background: isActive ? "#333" : "transparent"
+        });
+        row.addEventListener("mouseenter", () => {
+          row.style.background = "#40E0D0";
+          row.style.color = "black";
+        });
+        row.addEventListener("mouseleave", () => {
+          row.style.background = isActive ? "#333" : "transparent";
+          row.style.color = "white";
+        });
+        row.addEventListener("click", () => {
+          setActivePreset(n);
+          closeMenu();
+          boundInputRefreshers.forEach((fn) => fn());
+          console.log("[Wizascript Controller] switched to preset", n, "(" + getPresetName(n) + ")");
+        });
+        menuEl.appendChild(row);
+      }
+      document.body.appendChild(menuEl);
+      document.addEventListener("mousedown", onOutsideClick, true);
+      document.addEventListener("keydown", onEscape, true);
+    }
+    el.addEventListener("click", openMenu);
+  }
+  function enhancePresetNameInput(el) {
+    el.setAttribute("data-wc-enhanced", "true");
+    el.readOnly = false;
+    Object.assign(el.style, {
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      if (document.activeElement !== el) el.value = getPresetName(getActivePreset());
+    }
+    refreshDisplay();
+    boundInputRefreshers.push(refreshDisplay);
+    function commit() {
+      setPresetName(getActivePreset(), el.value);
+      boundInputRefreshers.forEach((fn) => fn());
+    }
+    el.addEventListener("blur", commit);
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") el.blur();
+    });
+  }
+  var controllerObserverStarted = false;
+  function startControllerKeybindObserver(idPrefix) {
+    if (controllerObserverStarted) return;
+    controllerObserverStarted = true;
+    let everFoundOne = false;
+    const observer = new MutationObserver(() => {
+      const matches = document.querySelectorAll(`input[id^="${idPrefix}"]:not([data-wc-enhanced])`);
+      matches.forEach((el) => {
+        everFoundOne = true;
+        const bindingKey = el.id.slice(idPrefix.length);
+        if (bindingKey.startsWith("__divider_") || bindingKey.startsWith("__info_")) {
+          enhanceControllerDivider(el);
+          return;
+        }
+        if (bindingKey === "presetSelector") {
+          enhancePresetSelector(el);
+          return;
+        }
+        if (bindingKey === "presetName") {
+          enhancePresetNameInput(el);
+          return;
+        }
+        if (bindingKey === "controllerPrimary") {
+          enhanceControllerCaptureInput(el, () => getControllerPrimaryButton(), (v) => setControllerPrimaryButton(v));
+          return;
+        }
+        if (CONTROLLER_ACTIONS_BY_KEY[bindingKey]) {
+          enhanceControllerCaptureInput(el, () => getBoundButton(bindingKey), (v) => setBoundButton(bindingKey, v));
+          return;
+        }
+        if (bindingKey.startsWith("shortcut_")) {
+          const shortcutKey = bindingKey.slice("shortcut_".length);
+          if (HARDWARE_SHORTCUT_ACTIONS_BY_KEY[shortcutKey]) {
+            enhanceControllerCaptureInput(el, () => getBoundShortcutButton(shortcutKey), (v) => setBoundShortcutButton(shortcutKey, v));
+            return;
+          }
+        }
+        el.setAttribute("data-wc-enhanced", "true");
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    setTimeout(() => {
+      if (!everFoundOne) {
+        console.warn('[Wizascript Controller] never found any "Keybinds - Controller" <input> elements to enhance after 15s - either the category never rendered, or the assumed id pattern (' + idPrefix + "<key>) is wrong.");
+      }
+    }, 15e3);
+  }
+  function registerControllerSettings(plugin) {
+    migrateFlatBindingsToPresetOne(
+      CONTROLLER_ACTIONS.map((a) => a.key),
+      HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key)
+    );
+    const CATEGORY2 = "Keybinds - Controller";
+    const settings2 = createFeatureSettings(plugin, "controller", CATEGORY2);
+    settings2.add("presetSelector", {
+      name: "Settings Preset",
+      note: "Click to switch presets \u2014 each one remembers its own bindings independently.",
+      type: "text",
+      default: getPresetName(getActivePreset())
+    });
+    settings2.add("presetName", {
+      name: "Preset Name",
+      note: "Renames whichever preset is currently selected above.",
+      type: "text",
+      default: getPresetName(getActivePreset())
+    });
+    settings2.add("__divider_top", { name: "\u2014 \u2014 \u2014", type: "text", default: "" });
+    controllerEnabledSetting = settings2.add("enabled", {
+      name: "Enable Controller Support",
+      note: "Off by default to save CPU. Turn on before configuring anything below.",
+      type: "boolean",
+      default: false
+    });
+    settings2.add("controllerPrimary", {
+      name: "Controller Primary",
+      note: "Click to remap. Hold for combos below, same as Wizascript's own Primary Key.",
+      type: "text",
+      default: buttonToDisplay(DEFAULT_PRIMARY_BUTTON)
+    });
+    settings2.add("__divider_General", { name: "\u2014 General \u2014", type: "text", default: "" });
+    settings2.add("__info_openSettings", { name: "Double Tap Controller Primary \u2192 Open Wizascript Settings", type: "text", default: "" });
+    const seenLabels = /* @__PURE__ */ new Set();
+    CONTROLLER_ACTIONS.forEach((action) => {
+      if (!seenLabels.has(action.packageLabel)) {
+        seenLabels.add(action.packageLabel);
+        settings2.add("__divider_" + action.packageLabel.replace(/\s+/g, "_"), {
+          name: "\u2014 <b>" + action.packageLabel + "</b> \u2014",
+          type: "text",
+          default: ""
+        });
+      }
+      settings2.add(action.key, {
+        name: action.name + " - Primary + <button>",
+        type: "text",
+        default: buttonToDisplay(action.defaultButton)
+      });
+    });
+    settings2.add("__divider_HardwareShortcuts", { name: "\u2014 Hardware Shortcuts (no Primary needed) \u2014", type: "text", default: "" });
+    settings2.add("__info_hardwareShortcuts", { name: "These fire on a single button press, no Controller Primary hold required.", type: "text", default: "" });
+    HARDWARE_SHORTCUT_ACTIONS.forEach((action) => {
+      settings2.add("shortcut_" + action.key, {
+        name: action.name,
+        type: "text",
+        default: buttonToDisplay(HARDWARE_SHORTCUT_DEFAULTS[action.key])
+      });
+    });
+    console.log('[Wizascript Controller] controller keybind settings registered under "Keybinds - Controller".');
+    startControllerKeybindObserver("underscript.plugin.Wizascript.controller.");
+  }
+
+  // packages/controller/index.js
+  function initController(plugin) {
+    const DEFAULT_HIGHLIGHT_COLOR = "#3ea6ff";
+    const DEFAULT_HIGHLIGHT_THICKNESS = 4;
+    function getHighlightColor() {
+      return DEFAULT_HIGHLIGHT_COLOR;
+    }
+    function getHighlightThickness() {
+      return DEFAULT_HIGHLIGHT_THICKNESS;
+    }
+    function cursorRestingDisplay() {
+      return "block";
+    }
+    const KEY_PAGES = {
+      letters: [
+        ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+        ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
+        ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
+        ["z", "x", "c", "v", "b", "n", "m", ",", "."],
+        ["\u2423"]
+      ],
+      symbols: [
+        ["!", "?", '"', "'", "#", "%", "(", ")", "/", "\\"],
+        ["-", "_", ",", ".", ":", ";", "*", "+", "=", "&"],
+        ["<", ">", "@", "[", "]", "{", "}", "^", "`", "|"],
+        ["$", "\u20AC"],
+        ["\u2423"]
+      ]
+    };
+    function displayLabel(label, shift) {
+      if (label === "\u2423") return "SPACE";
+      return shift ? label.toUpperCase() : label;
+    }
+    function keyInfo(ch) {
+      if (ch === " ") return { code: "Space", keyCode: 32 };
+      if (ch === ",") return { code: "Comma", keyCode: 188 };
+      if (ch === ".") return { code: "Period", keyCode: 190 };
+      if (/[a-z]/i.test(ch)) return { code: "Key" + ch.toUpperCase(), keyCode: ch.toUpperCase().charCodeAt(0) };
+      if (/[0-9]/.test(ch)) return { code: "Digit" + ch, keyCode: ch.charCodeAt(0) };
+      return { code: "", keyCode: ch.charCodeAt(0) };
+    }
+    function positionPanelNear(panel, target) {
+      const rect = target.getBoundingClientRect();
+      const w = panel.offsetWidth, h = panel.offsetHeight;
+      let left = rect.left;
+      let top = rect.bottom + 8;
+      if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+      if (left < 8) left = 8;
+      if (top + h > window.innerHeight - 8) {
+        top = rect.top - h - 8;
+        if (top < 8) top = 8;
+      }
+      panel.style.left = left + "px";
+      panel.style.top = top + "px";
+    }
+    const cursor = document.createElement("div");
+    Object.assign(cursor.style, {
+      position: "fixed",
+      width: "18px",
+      height: "18px",
+      borderRadius: "50%",
+      background: "rgba(255,0,0,0.85)",
+      border: "2px solid white",
+      zIndex: 2147483647,
+      pointerEvents: "none",
+      left: "0px",
+      top: "0px",
+      transform: "translate(-50%,-50%)",
+      display: "none"
+    });
+    const hud = document.createElement("div");
+    Object.assign(hud.style, {
+      position: "fixed",
+      left: "8px",
+      bottom: "8px",
+      zIndex: 2147483647,
+      background: "rgba(0,0,0,0.6)",
+      color: "#0f0",
+      font: "12px monospace",
+      padding: "4px 8px",
+      borderRadius: "4px",
+      pointerEvents: "none",
+      whiteSpace: "pre"
+    });
+    const OSK_THEMES = {
+      dark: { panelBg: "#1c1c1c", panelBorder: "1px solid rgba(255,255,255,0.15)", panelShadow: "0 4px 16px rgba(0,0,0,0.6)", hintColor: "#999", closeBg: "#3a3a3a" },
+      light: { panelBg: "#f2f2f4", panelBorder: "none", panelShadow: "0 8px 24px rgba(0,0,0,0.35)", hintColor: "#666", closeBg: "#333" }
+    };
+    const OSK_THEME_NAME = "dark";
+    const oskTheme = OSK_THEMES[OSK_THEME_NAME];
+    const oskEl = document.createElement("div");
+    Object.assign(oskEl.style, {
+      position: "fixed",
+      zIndex: 2147483647,
+      background: oskTheme.panelBg,
+      padding: "16px 14px 10px",
+      borderRadius: "14px",
+      display: "none",
+      font: '15px -apple-system, "Segoe UI", sans-serif',
+      pointerEvents: "none",
+      border: oskTheme.panelBorder,
+      boxShadow: oskTheme.panelShadow
+    });
+    const oskClose = document.createElement("div");
+    Object.assign(oskClose.style, {
+      position: "absolute",
+      top: "8px",
+      right: "8px",
+      width: "20px",
+      height: "20px",
+      borderRadius: "50%",
+      background: oskTheme.closeBg,
+      color: "#fff",
+      fontSize: "12px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center"
+    });
+    oskClose.textContent = "\u2715";
+    oskEl.appendChild(oskClose);
+    const oskGrid = document.createElement("div");
+    oskEl.appendChild(oskGrid);
+    let oskRowEls = [];
+    function buildGrid(rows) {
+      oskGrid.innerHTML = "";
+      oskRowEls = [];
+      rows.forEach((row) => {
+        const rowEl = document.createElement("div");
+        Object.assign(rowEl.style, { display: "flex", justifyContent: "center", marginBottom: "5px" });
+        const keyEls = [];
+        row.forEach((label) => {
+          const keyEl = document.createElement("div");
+          keyEl.textContent = displayLabel(label, oskShift);
+          const wide = label === "\u2423";
+          Object.assign(keyEl.style, {
+            minWidth: wide ? "220px" : "34px",
+            height: "34px",
+            margin: "3px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "#232326",
+            color: "#fff",
+            borderRadius: "8px",
+            border: "2px solid transparent",
+            fontWeight: "600",
+            fontSize: "14px"
+          });
+          rowEl.appendChild(keyEl);
+          keyEls.push(keyEl);
+        });
+        oskGrid.appendChild(rowEl);
+        oskRowEls.push(keyEls);
+      });
+    }
+    const oskHint = document.createElement("div");
+    Object.assign(oskHint.style, {
+      marginTop: "4px",
+      fontSize: "11px",
+      color: oskTheme.hintColor,
+      textAlign: "center"
+    });
+    oskHint.textContent = "\u25A1 backspace   L1 shift   L3 symbols   \u25B3 space   L2/R2 caret (\xD72=edge)   R3 send   R1 pause   \u25CB close   \u2715 type";
+    oskEl.appendChild(oskHint);
+    const selectEl = document.createElement("div");
+    Object.assign(selectEl.style, {
+      position: "fixed",
+      zIndex: 2147483647,
+      background: "#000",
+      padding: "2px",
+      borderRadius: "4px",
+      display: "none",
+      font: "inherit",
+      fontSize: "14px",
+      pointerEvents: "none",
+      border: "1px solid #ccc",
+      boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
+      minWidth: "160px",
+      maxHeight: "320px",
+      overflowY: "auto",
+      overflowX: "hidden"
+    });
+    let selectRowEls = [];
+    function renderSelectOptions() {
+      selectEl.innerHTML = "";
+      selectRowEls = [];
+      selectOptions.forEach((opt) => {
+        const rowEl = document.createElement("div");
+        rowEl.textContent = opt.text || opt.value;
+        const optCs = getComputedStyle(opt);
+        const bg = optCs.backgroundColor;
+        Object.assign(rowEl.style, {
+          padding: "6px 10px",
+          margin: "0",
+          borderRadius: "0",
+          background: bg && bg !== "rgba(0, 0, 0, 0)" ? bg : "transparent",
+          color: optCs.color || "#fff",
+          border: "none",
+          fontSize: "inherit",
+          fontFamily: "inherit"
+        });
+        selectEl.appendChild(rowEl);
+        selectRowEls.push(rowEl);
+      });
+      const hint = document.createElement("div");
+      Object.assign(hint.style, {
+        marginTop: "2px",
+        padding: "4px 10px 2px",
+        fontSize: "11px",
+        color: "#888",
+        textAlign: "center",
+        borderTop: "1px solid rgba(255,255,255,0.12)"
+      });
+      hint.textContent = "\u2715 confirm   \u25CB cancel";
+      selectEl.appendChild(hint);
+    }
+    function updateSelectHighlight() {
+      selectRowEls.forEach((el, i) => {
+        const active = i === selectIndex;
+        el.style.boxShadow = active ? "inset 0 0 0 999px rgba(255,255,255,0.18)" : "none";
+      });
+    }
+    function mount() {
+      if (!document.body) {
+        requestAnimationFrame(mount);
+        return;
+      }
+      document.body.appendChild(hud);
+      document.body.appendChild(pressIndicator);
+      document.body.appendChild(hidConnectBtn);
+      document.body.appendChild(oskEl);
+      document.body.appendChild(selectEl);
+      document.body.appendChild(cursor);
+    }
+    mount();
+    registerControllerSettings(plugin);
+    let navInputMethod = "stick";
+    const GROUP_DEFS = [
+      { name: "navbar", containerSelectors: ["nav", ".navbar", ".navbar-nav", "header nav"], itemSelector: "a" },
+      { name: "footbar", containerSelectors: ["footer", ".footer", ".footer-nav"], itemSelector: "a" }
+    ];
+    function buildGroup(def) {
+      for (const sel of def.containerSelectors) {
+        const container = document.querySelector(sel);
+        if (!container) continue;
+        const items = Array.from(container.querySelectorAll(def.itemSelector)).filter((el) => el.offsetParent !== null);
+        if (items.length) {
+          console.log(`[Wizascript Controller] group "${def.name}" found via "${sel}": ${items.length} items`);
+          return { name: def.name, container, items };
+        }
+      }
+      console.log(`[Wizascript Controller] group "${def.name}" NOT found`);
+      return null;
+    }
+    const navbarGroup = buildGroup(GROUP_DEFS[0]);
+    const footbarGroup = buildGroup(GROUP_DEFS[1]);
+    const chromeStates = [
+      ...navbarGroup ? [{ type: "group", group: navbarGroup }] : [],
+      { type: "neutral" },
+      ...footbarGroup ? [{ type: "group", group: footbarGroup }] : []
+    ];
+    let chromeIndex = chromeStates.findIndex((s) => s.type === "neutral");
+    const itemIndexByGroupName = {};
+    let matchPhase = "hand";
+    let matchSubState = "hand-nav";
+    let pendingAttacker = null;
+    let handItems = [];
+    let handIndex = 0;
+    let placingCard = null;
+    let placingGrid = null;
+    let placingRow = 0, placingCol = 0;
+    let resolveGrid = null;
+    let resolveRow = 0, resolveCol = 0;
+    let resolveKind = null;
+    let boardItems = [];
+    let boardIndex = 0;
+    let mulliganGrid = null;
+    let mulliganRow = 0, mulliganCol = 0;
+    function queryHandCards() {
+      const host = document.getElementById("handCards");
+      if (!host) return [];
+      let els = Array.from(host.querySelectorAll(".card"));
+      if (!els.length) els = Array.from(host.children);
+      return els.filter((el) => el.offsetParent !== null);
+    }
+    function queryBoardMonsterCards() {
+      const slots = Array.from(document.querySelectorAll(".droppableMonster.slot, .droppableMonster"));
+      const cards = slots.map((s) => s.querySelector(".card")).filter((c) => c && c.offsetParent !== null);
+      if (!cards.length) return [];
+      const rows = buildRowGrid(cards);
+      if (!rows.length) return [];
+      let bestRow = rows[0], bestTop = -Infinity;
+      for (const row of rows) {
+        const avgTop = row.reduce((sum, el) => sum + el.getBoundingClientRect().top, 0) / row.length;
+        if (avgTop > bestTop) {
+          bestTop = avgTop;
+          bestRow = row;
+        }
+      }
+      return bestRow;
+    }
+    function elArraysEqual(a, b) {
+      if (a.length !== b.length) return false;
+      const setA = new Set(a);
+      for (const el of b) if (!setA.has(el)) return false;
+      return true;
+    }
+    function buildRowGrid(els, rowTolerance = 28) {
+      const withRect = els.map((el) => ({ el, r: el.getBoundingClientRect() })).sort((a, b) => a.r.top - b.r.top);
+      const rows = [];
+      for (const item of withRect) {
+        let row = rows.find((r) => Math.abs(r.top - item.r.top) <= rowTolerance);
+        if (!row) {
+          row = { top: item.r.top, items: [] };
+          rows.push(row);
+        }
+        row.items.push(item);
+      }
+      rows.forEach((r) => r.items.sort((a, b) => a.r.left - b.r.left));
+      return rows.map((r) => r.items.map((i) => i.el));
+    }
+    function gridFlat(grid) {
+      return grid ? grid.flat() : [];
+    }
+    let placingOrigin = null;
+    function beginCardDrag(card) {
+      pendingAttacker = null;
+      const r = card.getBoundingClientRect();
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      placingOrigin = { x: cx, y: cy };
+      fire(card, "pointerdown", PointerEvent, cx, cy, 0, 1);
+      fire(card, "mousedown", MouseEvent, cx, cy, 0, 1);
+      const liftY = cy - 40;
+      fire(card, "pointermove", PointerEvent, cx, liftY, 0, 1);
+      fire(card, "mousemove", MouseEvent, cx, liftY, 0, 1);
+      placingCard = card;
+      placingGrid = null;
+      matchPhase = "placing";
+      console.log("[Wizascript Controller] card drag started", card);
+    }
+    function cancelPlacingDrag(reason) {
+      const card = placingCard;
+      const origin = placingOrigin || { x: -9999, y: -9999 };
+      fire(document.body, "pointermove", PointerEvent, origin.x, origin.y, 0, 1);
+      fire(document.body, "mousemove", MouseEvent, origin.x, origin.y, 0, 1);
+      fire(document.body, "pointerup", PointerEvent, origin.x, origin.y, 0, 0);
+      fire(document.body, "mouseup", MouseEvent, origin.x, origin.y, 0, 0);
+      if (window.jQuery) {
+        window.jQuery(card).stop(true, true);
+        window.jQuery(".ui-draggable-dragging").stop(true, true);
+      }
+      console.log("[Wizascript Controller] card drag cancelled via", reason);
+      placingCard = null;
+      placingGrid = null;
+      placingOrigin = null;
+      matchPhase = "hand";
+      refreshHighlight();
+    }
+    let modalGrid = null, modalRow = 0, modalCol = 0, modalKind = null;
+    let modalPane = "categories";
+    let categoryItems = [], categoryIndex = 0;
+    let fieldGrid = null, fieldRow = 0, fieldCol = 0;
+    let lastKnownActiveCategoryIdx = -1;
+    const MODAL_ITEM_SELECTOR = 'button, input:not([type="hidden"]):not(.tabButton), select, a[href], .card, li[role="button"], .tabLabel';
+    function queryModalRoot() {
+      const dialog = document.querySelector(".bootstrap-dialog");
+      if (dialog && !document.querySelector(".mulligan")) {
+        const tabbedRoot = dialog.querySelector(".tabbedView.left");
+        return tabbedRoot ? { root: dialog, kind: "tabbed", tabbedRoot } : { root: dialog, kind: "plain" };
+      }
+      const menu = document.querySelector(".menu-backdrop");
+      if (menu && getComputedStyle(menu).display !== "none") return { root: menu, kind: "menu" };
+      return null;
+    }
+    function queryModalItems(root) {
+      return Array.from(root.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el) => el.offsetParent !== null);
+    }
+    function queryScrollableListItems(root) {
+      const scrollable = findScrollableDescendant(root);
+      if (!scrollable) return [];
+      const items = [];
+      Array.from(scrollable.children).forEach((row) => {
+        if (row.tagName !== "DIV") return;
+        Array.from(row.children).filter((c) => c.tagName === "SPAN").forEach((s) => items.push(s));
+      });
+      return items.filter((el) => el.offsetParent !== null);
+    }
+    function queryCategoryItems(tabbedRoot) {
+      return Array.from(tabbedRoot.querySelectorAll(":scope > .tabLabel")).filter((el) => el.offsetParent !== null).sort((a, b) => {
+        const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+        if (Math.abs(ra.top - rb.top) > 2) return ra.top - rb.top;
+        return ra.left - rb.left;
+      });
+    }
+    function queryActiveTabContent(tabbedRoot) {
+      return Array.from(tabbedRoot.querySelectorAll(":scope > .tabContent")).find((el) => el.offsetParent !== null) || null;
+    }
+    function queryFieldRows(root) {
+      const flexRows = Array.from(root.querySelectorAll(".flex-start")).filter((row) => row.offsetParent !== null).map((row) => Array.from(row.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el) => el.offsetParent !== null)).filter((items) => items.length);
+      const bareLabels = Array.from(root.querySelectorAll(".tabLabel")).filter((el) => el.offsetParent !== null).map((el) => [el]);
+      const rows = [...bareLabels, ...flexRows];
+      if (rows.length) return rows;
+      return buildRowGrid(queryModalItems(root));
+    }
+    function enterCategory() {
+      const cat = categoryItems[categoryIndex];
+      if (!cat) return;
+      triggerElementClick(cat);
+      modalPane = "fields";
+      fieldGrid = null;
+      fieldRow = 0;
+      fieldCol = 0;
+    }
+    function findModalDismissButton(root) {
+      const byAttr = root.querySelector('[data-dismiss="modal"], .close');
+      if (byAttr) return byAttr;
+      const buttons = Array.from(root.querySelectorAll("button"));
+      return buttons.find((b) => /close|cancel|^no$/i.test((b.textContent || "").trim())) || null;
+    }
+    let activeSubmenu = null;
+    let currentHighlightedEl = null;
+    function findDropdownMenuNear(toggleEl) {
+      const wrap = toggleEl.closest(".dropdown, .btn-group, li");
+      if (!wrap) return [];
+      return Array.from(wrap.querySelectorAll(".dropdown-menu a")).filter((a) => a.offsetParent !== null);
+    }
+    function currentFocusedEl() {
+      if (mulliganGrid && mulliganGrid.length) {
+        return (mulliganGrid[mulliganRow] || [])[mulliganCol] || null;
+      }
+      if (modalKind === "tabbed") {
+        if (modalPane === "categories") return categoryItems[categoryIndex] || null;
+        return (fieldGrid && fieldGrid[fieldRow] || [])[fieldCol] || null;
+      }
+      if (modalGrid && modalGrid.length) {
+        return (modalGrid[modalRow] || [])[modalCol] || null;
+      }
+      if (matchPhase === "placing" && placingGrid && placingGrid.length) {
+        return (placingGrid[placingRow] || [])[placingCol] || null;
+      }
+      if (matchPhase === "resolve" && resolveGrid && resolveGrid.length) {
+        return (resolveGrid[resolveRow] || [])[resolveCol] || null;
+      }
+      if (document.getElementById("handCards") && matchSubState === "board-nav" && boardItems.length) {
+        return boardItems[boardIndex] || null;
+      }
+      if (document.getElementById("handCards") && matchSubState === "hand-nav" && handItems.length) {
+        return handItems[handIndex] || null;
+      }
+      if (activeSubmenu) return activeSubmenu.items[activeSubmenu.index] || null;
+      const state = chromeStates[chromeIndex];
+      if (!state || state.type !== "group") return null;
+      const g = state.group;
+      const idx = itemIndexByGroupName[g.name] || 0;
+      return g.items[idx] || null;
+    }
+    function setHighlight(el) {
+      if (!el) return;
+      el.style.outline = `${getHighlightThickness()}px solid ${getHighlightColor()}`;
+      el.style.outlineOffset = "2px";
+    }
+    function clearHighlight(el) {
+      if (!el) return;
+      el.style.outline = "";
+      el.style.outlineOffset = "";
+    }
+    function refreshHighlight() {
+      if (navInputMethod !== "dpad") {
+        if (currentHighlightedEl) {
+          clearHighlight(currentHighlightedEl);
+          currentHighlightedEl = null;
+        }
+        return;
+      }
+      const el = currentFocusedEl();
+      if (el === currentHighlightedEl) return;
+      if (currentHighlightedEl) clearHighlight(currentHighlightedEl);
+      if (el) setHighlight(el);
+      currentHighlightedEl = el;
+    }
+    function isTextInput(el) {
+      if (!el) return false;
+      if (el.readOnly) return false;
+      if (el.tagName === "TEXTAREA") return true;
+      if (el.tagName === "INPUT") {
+        const type = (el.type || "text").toLowerCase();
+        return ["text", "search", "email", "url", "tel", "password", "number"].includes(type);
+      }
+      return !!el.isContentEditable;
+    }
+    function isSlider(el) {
+      return !!el && el.tagName === "INPUT" && (el.type || "").toLowerCase() === "range";
+    }
+    function isNativeSelect(el) {
+      return !!el && el.tagName === "SELECT";
+    }
+    function placeCaretAtPoint(el, cx, cy) {
+      if (!el || !el.isContentEditable) return;
+      let range = null;
+      if (document.caretRangeFromPoint) {
+        range = document.caretRangeFromPoint(cx, cy);
+      } else if (document.caretPositionFromPoint) {
+        const pos = document.caretPositionFromPoint(cx, cy);
+        if (pos) {
+          range = document.createRange();
+          range.setStart(pos.offsetNode, pos.offset);
+          range.collapse(true);
+        }
+      }
+      if (range && el.contains(range.startContainer)) {
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        console.log("[Wizascript Controller] caret repositioned in", el, "at", cx, cy);
+      }
+    }
+    function firstTextNode(el) {
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      return walker.nextNode();
+    }
+    function lastTextNode(el) {
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      let last = null, node;
+      while (node = walker.nextNode()) last = node;
+      return last;
+    }
+    function setOskCaretEdge(toStart) {
+      if (!oskTarget) return;
+      if (oskTarget.isContentEditable) {
+        const node = toStart ? firstTextNode(oskTarget) : lastTextNode(oskTarget);
+        const range = document.createRange();
+        if (node) range.setStart(node, toStart ? 0 : node.textContent.length);
+        else range.selectNodeContents(oskTarget);
+        range.collapse(true);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } else {
+        const pos = toStart ? 0 : oskTarget.value.length;
+        oskTarget.setSelectionRange(pos, pos);
+        scrollFieldToCaret(oskTarget);
+      }
+    }
+    function stepOskCaret(dir) {
+      if (!oskTarget) return;
+      if (oskTarget.isContentEditable) {
+        const sel = window.getSelection();
+        if (!sel.rangeCount || !oskTarget.contains(sel.anchorNode)) {
+          setOskCaretEdge(dir < 0);
+          return;
+        }
+        sel.modify("move", dir < 0 ? "left" : "right", "character");
+        if (!oskTarget.contains(sel.focusNode)) setOskCaretEdge(dir < 0);
+      } else {
+        const cur = oskTarget.selectionStart == null ? oskTarget.value.length : oskTarget.selectionStart;
+        const next = Math.max(0, Math.min(oskTarget.value.length, cur + dir));
+        oskTarget.setSelectionRange(next, next);
+        scrollFieldToCaret(oskTarget);
+      }
+    }
+    let oskOpen = false, oskTarget = null, oskRow = 0, oskCol = 0, oskShift = false, oskPage = "letters";
+    let oskPaused = false;
+    let lastL2TapTime = 0, lastR2TapTime = 0;
+    const DOUBLE_TAP_WINDOW_MS2 = 400;
+    let activeRows = KEY_PAGES.letters;
+    buildGrid(activeRows);
+    function renderOskLabels() {
+      activeRows.forEach((row, r) => row.forEach((label, c) => {
+        oskRowEls[r][c].textContent = displayLabel(label, oskShift);
+      }));
+    }
+    function updateOskHighlight() {
+      activeRows.forEach((row, r) => row.forEach((label, c) => {
+        const active = r === oskRow && c === oskCol;
+        oskRowEls[r][c].style.border = active ? "2px solid #0f0" : "2px solid transparent";
+        oskRowEls[r][c].style.background = active ? "#0a4d0a" : "#232326";
+      }));
+    }
+    function openOsk(target) {
+      oskTarget = target;
+      target.focus();
+      oskOpen = true;
+      oskPaused = false;
+      oskRow = 0;
+      oskCol = 0;
+      oskShift = false;
+      oskPage = "letters";
+      activeRows = KEY_PAGES.letters;
+      buildGrid(activeRows);
+      oskEl.style.display = "block";
+      positionPanelNear(oskEl, target);
+      cursor.style.display = "block";
+      updateOskHighlight();
+      console.log("[Wizascript Controller] OSK opened for", target);
+    }
+    function closeOsk() {
+      oskOpen = false;
+      oskPaused = false;
+      oskEl.style.display = "none";
+      if (oskTarget) oskTarget.blur();
+      oskTarget = null;
+      console.log("[Wizascript Controller] OSK closed");
+    }
+    function dispatchEnterKey(el) {
+      el.focus();
+      const scope = el.closest("form") || el.closest(".chat-box") || el.parentElement;
+      const submitEl = scope && scope.querySelector('input[type="submit"]');
+      if (submitEl) {
+        submitEl.click();
+        return;
+      }
+      const opts = { bubbles: true, cancelable: true, key: "Enter", code: "Enter", keyCode: 13, which: 13, view: window };
+      el.dispatchEvent(new KeyboardEvent("keydown", opts));
+      el.dispatchEvent(new KeyboardEvent("keypress", opts));
+      el.dispatchEvent(new KeyboardEvent("keyup", opts));
+    }
+    let scrollMirrorEl = null;
+    function measureTextWidth(el, text) {
+      if (!scrollMirrorEl) {
+        scrollMirrorEl = document.createElement("span");
+        Object.assign(scrollMirrorEl.style, {
+          position: "absolute",
+          visibility: "hidden",
+          whiteSpace: "pre",
+          top: "-9999px",
+          left: "-9999px"
+        });
+        document.body.appendChild(scrollMirrorEl);
+      }
+      const cs = getComputedStyle(el);
+      scrollMirrorEl.style.font = cs.font;
+      scrollMirrorEl.style.letterSpacing = cs.letterSpacing;
+      scrollMirrorEl.style.textTransform = cs.textTransform;
+      scrollMirrorEl.textContent = text;
+      return scrollMirrorEl.getBoundingClientRect().width;
+    }
+    function scrollFieldToCaret(el) {
+      if (!el || el.isContentEditable) return;
+      if (typeof el.selectionEnd !== "number") return;
+      const pos = el.selectionEnd;
+      const caretX = measureTextWidth(el, el.value.slice(0, pos));
+      const visibleWidth = el.clientWidth;
+      const margin = 12;
+      if (caretX - el.scrollLeft > visibleWidth - margin) {
+        el.scrollLeft = caretX - visibleWidth + margin;
+      } else if (caretX - el.scrollLeft < margin) {
+        el.scrollLeft = Math.max(0, caretX - margin);
+      }
+    }
+    function typeChar(el, ch) {
+      el.focus();
+      const info = keyInfo(ch);
+      const base = { bubbles: true, cancelable: true, key: ch, code: info.code, keyCode: info.keyCode, which: info.keyCode, view: window };
+      el.dispatchEvent(new KeyboardEvent("keydown", base));
+      el.dispatchEvent(new KeyboardEvent("keypress", base));
+      document.execCommand("insertText", false, ch);
+      el.dispatchEvent(new KeyboardEvent("keyup", base));
+      scrollFieldToCaret(el);
+    }
+    function typeBackspace(el) {
+      el.focus();
+      const base = { bubbles: true, cancelable: true, key: "Backspace", code: "Backspace", keyCode: 8, which: 8, view: window };
+      el.dispatchEvent(new KeyboardEvent("keydown", base));
+      document.execCommand("delete");
+      el.dispatchEvent(new KeyboardEvent("keyup", base));
+      scrollFieldToCaret(el);
+    }
+    function pressKey(label) {
+      if (!oskTarget) return;
+      if (label === "\u2423") {
+        typeChar(oskTarget, " ");
+        return;
+      }
+      const ch = oskShift ? label.toUpperCase() : label;
+      typeChar(oskTarget, ch);
+    }
+    let sliderTarget = null;
+    const nativeValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+    function openSlider(el) {
+      sliderTarget = el;
+      setHighlight(el);
+      cursor.style.display = "none";
+      console.log("[Wizascript Controller] slider focused", el, "value=", el.value, "min=", el.min, "max=", el.max, "step=", el.step);
+    }
+    function closeSlider() {
+      if (sliderTarget) clearHighlight(sliderTarget);
+      sliderTarget = null;
+    }
+    function adjustSlider(dir) {
+      if (!sliderTarget) return;
+      const el = sliderTarget;
+      const step = parseFloat(el.step) || 1;
+      const min = el.min !== "" ? parseFloat(el.min) : -Infinity;
+      const max = el.max !== "" ? parseFloat(el.max) : Infinity;
+      let val = parseFloat(el.value) || 0;
+      val = Math.max(min, Math.min(max, val + dir * step));
+      nativeValueSetter.call(el, String(val));
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    function setSliderValueFromPointer(el, clientX) {
+      const rect = el.getBoundingClientRect();
+      if (!rect.width) return;
+      const min = el.min !== "" ? parseFloat(el.min) : 0;
+      const max = el.max !== "" ? parseFloat(el.max) : 100;
+      const step = parseFloat(el.step) || 1;
+      let frac = (clientX - rect.left) / rect.width;
+      frac = Math.max(0, Math.min(1, frac));
+      let val = min + frac * (max - min);
+      val = Math.round(val / step) * step;
+      val = Math.max(min, Math.min(max, val));
+      nativeValueSetter.call(el, String(val));
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    let selectTarget = null, selectOptions = [], selectIndex = 0;
+    function openSelectPicker(el) {
+      selectTarget = el;
+      selectOptions = Array.from(el.options);
+      selectIndex = Math.max(0, selectOptions.findIndex((o) => o.selected));
+      const selCs = getComputedStyle(el);
+      const selBg = selCs.backgroundColor;
+      selectEl.style.background = selBg && selBg !== "rgba(0, 0, 0, 0)" ? selBg : "#000";
+      selectEl.style.border = `${selCs.borderTopWidth} ${selCs.borderTopStyle} ${selCs.borderTopColor}`;
+      selectEl.style.borderRadius = selCs.borderRadius;
+      selectEl.style.fontFamily = selCs.fontFamily;
+      selectEl.style.fontSize = selCs.fontSize;
+      renderSelectOptions();
+      selectEl.style.display = "block";
+      positionPanelNear(selectEl, el);
+      updateSelectHighlight();
+      cursor.style.display = "block";
+      console.log("[Wizascript Controller] select picker opened", el, selectOptions.map((o) => o.text));
+    }
+    function closeSelectPicker() {
+      selectEl.style.display = "none";
+      selectTarget = null;
+    }
+    function confirmSelectPicker() {
+      if (!selectTarget) return;
+      const opt = selectOptions[selectIndex];
+      if (opt) {
+        selectTarget.value = opt.value;
+        selectTarget.dispatchEvent(new Event("input", { bubbles: true }));
+        selectTarget.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      closeSelectPicker();
+    }
+    function activateHighlighted(button) {
+      const el = currentFocusedEl();
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+      if (isPatchMakerResetButton(el)) {
+        activatePatchMakerResetButton(el, cx, cy);
+        return;
+      }
+      dispatchClick(el, cx, cy, button === 2 ? 2 : 0);
+      if (isNativeSelect(el)) {
+        openSelectPicker(el);
+        return;
+      }
+      if (isSlider(el)) {
+        openSlider(el);
+        return;
+      }
+      if (el.matches && el.matches(".uc-section-label, .uc-card-item")) {
+        el.focus();
+        return;
+      }
+      if (el.readOnly && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) {
+        el.focus();
+        return;
+      }
+      if (isTextInput(el)) {
+        openOsk(el);
+        if (el.isContentEditable) placeCaretAtPoint(el, cx, cy);
+        return;
+      }
+      if (!activeSubmenu && el.classList.contains("dropdown-toggle")) {
+        const items = findDropdownMenuNear(el);
+        if (items.length) {
+          activeSubmenu = { toggle: el, items, index: 0 };
+          refreshHighlight();
+        }
+      }
+    }
+    function closeSubmenu() {
+      if (!activeSubmenu) return;
+      const toggle = activeSubmenu.toggle;
+      activeSubmenu = null;
+      const rect = toggle.getBoundingClientRect();
+      dispatchClick(toggle, rect.left + rect.width / 2, rect.top + rect.height / 2, 0);
+      refreshHighlight();
+    }
+    let x = window.innerWidth / 2, y = window.innerHeight / 2;
+    let usingController = false;
+    const BASE_SPEED = 24;
+    const WHEEL_DELTA = 100;
+    function dz(v) {
+      return Math.abs(v) < 0.15 ? 0 : v;
+    }
+    function findRealScrollable(el) {
+      let node = el;
+      while (node && node !== document.documentElement) {
+        const cs = getComputedStyle(node);
+        if (/(auto|scroll)/.test(cs.overflowY) && node.scrollHeight > node.clientHeight) return node;
+        node = node.parentElement;
+      }
+      const root = document.scrollingElement || document.documentElement;
+      if (root && root.scrollHeight > root.clientHeight) return root;
+      return null;
+    }
+    function findScrollableDescendant(root) {
+      if (!root) return null;
+      const all = root.querySelectorAll("*");
+      for (const node of all) {
+        const cs = getComputedStyle(node);
+        if (/(auto|scroll)/.test(cs.overflowY) && node.scrollHeight > node.clientHeight) return node;
+      }
+      return null;
+    }
+    function fire(el, type, ctor, clientX, clientY, button, buttons) {
+      const opts = {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        clientX,
+        clientY,
+        button: button || 0,
+        buttons: buttons || 0
+      };
+      if (ctor === PointerEvent) {
+        opts.pointerId = 1;
+        opts.isPrimary = true;
+        opts.pointerType = "mouse";
+      }
+      el.dispatchEvent(new ctor(type, opts));
+    }
+    function dispatchClick(el, cx, cy, button) {
+      if (button === 2) {
+        fire(el, "pointerdown", PointerEvent, cx, cy, 2, 2);
+        fire(el, "mousedown", MouseEvent, cx, cy, 2, 2);
+        fire(el, "pointerup", PointerEvent, cx, cy, 2, 0);
+        fire(el, "mouseup", MouseEvent, cx, cy, 2, 0);
+        fire(el, "contextmenu", MouseEvent, cx, cy, 2, 0);
+        return;
+      }
+      fire(el, "pointerdown", PointerEvent, cx, cy, 0, 1);
+      fire(el, "mousedown", MouseEvent, cx, cy, 0, 1);
+      fire(el, "pointerup", PointerEvent, cx, cy, 0, 0);
+      fire(el, "mouseup", MouseEvent, cx, cy, 0, 0);
+      fire(el, "click", MouseEvent, cx, cy, 0, 0);
+    }
+    function isPatchMakerResetButton(el) {
+      return !!el && el.tagName === "BUTTON" && el.textContent && el.textContent.trim() === "Reset Data";
+    }
+    let lastResetBtnPressTime = 0;
+    function activatePatchMakerResetButton(el, cx, cy) {
+      const now = performance.now();
+      const isConfirmPress = now - lastResetBtnPressTime < DOUBLE_TAP_WINDOW_MS2;
+      const detail = isConfirmPress ? 2 : 1;
+      fire(el, "pointerdown", PointerEvent, cx, cy, 0, 1);
+      fire(el, "mousedown", MouseEvent, cx, cy, 0, 1);
+      fire(el, "pointerup", PointerEvent, cx, cy, 0, 0);
+      fire(el, "mouseup", MouseEvent, cx, cy, 0, 0);
+      el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window, clientX: cx, clientY: cy, button: 0, buttons: 0, detail }));
+      lastResetBtnPressTime = isConfirmPress ? 0 : now;
+      console.log("[Wizascript Controller] Reset Data pressed, detail =", detail, isConfirmPress ? "(confirmed - resetting)" : "(press again to confirm)");
+    }
+    function triggerElementClick(el) {
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      dispatchClick(el, r.left + r.width / 2, r.top + r.height / 2, 0);
+    }
+    function triggerConcede() {
+      const menu = document.querySelector(".menu-backdrop");
+      const wasMenuOpen = !!(menu && getComputedStyle(menu).display !== "none");
+      document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
+      let attempts2 = 0;
+      const MAX_ATTEMPTS = 30;
+      (function poll() {
+        const items = Array.from(document.querySelectorAll('.menu-body li[role="button"]'));
+        const surrenderLi = items.find((li) => /surrender/i.test((li.textContent || "").trim()));
+        if (surrenderLi) {
+          triggerElementClick(surrenderLi);
+          console.log("[Wizascript Controller] concede: used Underscript's own Surrender menu entry");
+          return;
+        }
+        attempts2++;
+        if (attempts2 < MAX_ATTEMPTS) {
+          requestAnimationFrame(poll);
+          return;
+        }
+        console.log("[Wizascript Controller] concede: no Surrender entry found in Underscript's menu, falling back to the native flow");
+        if (!wasMenuOpen) document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
+        triggerConcedeNative();
+      })();
+    }
+    function triggerConcedeNative() {
+      const existing = document.querySelector('.btn-danger[onclick*="askSurrender"]');
+      if (existing) {
+        triggerElementClick(existing);
+        return;
+      }
+      const configBtn = document.getElementById("btn-config");
+      if (!configBtn) {
+        console.log("[Wizascript Controller] concede: settings button not found (not in a match?)");
+        return;
+      }
+      triggerElementClick(configBtn);
+      let attempts2 = 0;
+      const MAX_ATTEMPTS = 30;
+      (function poll() {
+        const btn = document.querySelector('.btn-danger[onclick*="askSurrender"]');
+        if (btn) {
+          triggerElementClick(btn);
+          return;
+        }
+        attempts2++;
+        if (attempts2 < MAX_ATTEMPTS) requestAnimationFrame(poll);
+        else console.log("[Wizascript Controller] concede: gave up waiting for the surrender button after opening settings");
+      })();
+    }
+    const drag = { left: null, right: null };
+    function beginPress(side, button) {
+      cursor.style.display = "none";
+      const hitEl = document.elementFromPoint(x, y);
+      cursor.style.display = "block";
+      if (!hitEl) return;
+      drag[side] = { downEl: hitEl };
+      if (button === 2) {
+        fire(hitEl, "pointerdown", PointerEvent, x, y, 2, 2);
+        fire(hitEl, "mousedown", MouseEvent, x, y, 2, 2);
+      } else {
+        fire(hitEl, "pointerdown", PointerEvent, x, y, 0, 1);
+        fire(hitEl, "mousedown", MouseEvent, x, y, 0, 1);
+      }
+    }
+    function continuePress(side, button) {
+      if (!drag[side]) return;
+      cursor.style.display = "none";
+      const hitEl = document.elementFromPoint(x, y);
+      cursor.style.display = "block";
+      if (!hitEl) return;
+      if (button === 2) {
+        fire(hitEl, "pointermove", PointerEvent, x, y, 2, 2);
+        fire(hitEl, "mousemove", MouseEvent, x, y, 2, 2);
+      } else {
+        fire(hitEl, "pointermove", PointerEvent, x, y, 0, 1);
+        fire(hitEl, "mousemove", MouseEvent, x, y, 0, 1);
+      }
+    }
+    function endPress(side, button) {
+      const state = drag[side];
+      drag[side] = null;
+      if (!state) return;
+      cursor.style.display = "none";
+      const hitEl = document.elementFromPoint(x, y);
+      cursor.style.display = "block";
+      if (!hitEl) return;
+      if (button === 2) {
+        fire(hitEl, "pointerup", PointerEvent, x, y, 2, 0);
+        fire(hitEl, "mouseup", MouseEvent, x, y, 2, 0);
+        if (hitEl === state.downEl) fire(hitEl, "contextmenu", MouseEvent, x, y, 2, 0);
+      } else {
+        fire(hitEl, "pointerup", PointerEvent, x, y, 0, 0);
+        fire(hitEl, "mouseup", MouseEvent, x, y, 0, 0);
+        if (hitEl === state.downEl) fire(hitEl, "click", MouseEvent, x, y, 0, 0);
+      }
+    }
+    function collectHoverRules() {
+      const rules = [];
+      for (const sheet of document.styleSheets) {
+        let cssRules;
+        try {
+          cssRules = sheet.cssRules;
+        } catch (e) {
+          continue;
+        }
+        if (!cssRules) continue;
+        for (const rule of cssRules) {
+          if (!rule.selectorText || !rule.selectorText.includes(":hover")) continue;
+          for (const part of rule.selectorText.split(",")) {
+            const trimmed = part.trim();
+            if (!trimmed.includes(":hover")) continue;
+            const base = trimmed.replace(/:hover/g, "").trim();
+            if (base) rules.push({ selector: base, style: rule.style });
+          }
+        }
+      }
+      return rules;
+    }
+    const hoverRules = collectHoverRules();
+    const hoverStyleMap = /* @__PURE__ */ new Map();
+    function resolveHoverStyle(el) {
+      const finalProps = /* @__PURE__ */ new Map();
+      for (const { selector, style } of hoverRules) {
+        try {
+          if (!el.matches(selector)) continue;
+        } catch (e) {
+          continue;
+        }
+        for (let i = 0; i < style.length; i++) {
+          const prop = style[i];
+          finalProps.set(prop, [style.getPropertyValue(prop), style.getPropertyPriority(prop)]);
+        }
+      }
+      if (!finalProps.size) return;
+      const originalProps = Array.from(finalProps.keys()).map((prop) => [prop, el.style.getPropertyValue(prop), el.style.getPropertyPriority(prop)]);
+      hoverStyleMap.set(el, {
+        finalProps: Array.from(finalProps.entries()).map(([p, [v, pr]]) => [p, v, pr]),
+        originalProps
+      });
+    }
+    [navbarGroup, footbarGroup].filter(Boolean).forEach((g) => {
+      g.container.querySelectorAll("a").forEach((item) => {
+        resolveHoverStyle(item);
+        item.querySelectorAll("img").forEach(resolveHoverStyle);
+      });
+    });
+    console.log(`[Wizascript Controller] resolved hover styles for ${hoverStyleMap.size} curated element(s)`);
+    function findHoverTarget(el) {
+      if (!el) return null;
+      if (hoverStyleMap.has(el)) return el;
+      const link = el.closest && el.closest("a");
+      if (link && hoverStyleMap.has(link)) return link;
+      return null;
+    }
+    function applyCuratedHover(el) {
+      const entry = hoverStyleMap.get(el);
+      if (!entry) return;
+      for (const [prop, val, pr] of entry.finalProps) el.style.setProperty(prop, val, pr);
+    }
+    function revertCuratedHover(el) {
+      const entry = hoverStyleMap.get(el);
+      if (!entry) return;
+      for (const [prop, val, pr] of entry.originalProps) {
+        if (val) el.style.setProperty(prop, val, pr);
+        else el.style.removeProperty(prop);
+      }
+    }
+    let hoverActiveEl = null;
+    function setHoverTarget(target) {
+      if (target === hoverActiveEl) return;
+      if (hoverActiveEl) revertCuratedHover(hoverActiveEl);
+      if (target) applyCuratedHover(target);
+      hoverActiveEl = target;
+    }
+    let lastHitEl = null;
+    function updateHover(el, cx, cy) {
+      if (el !== lastHitEl) {
+        if (lastHitEl) {
+          fire(lastHitEl, "pointerout", PointerEvent, cx, cy, 0, 0);
+          fire(lastHitEl, "mouseout", MouseEvent, cx, cy, 0, 0);
+          fire(lastHitEl, "pointerleave", PointerEvent, cx, cy, 0, 0);
+          fire(lastHitEl, "mouseleave", MouseEvent, cx, cy, 0, 0);
+        }
+        if (el) {
+          fire(el, "pointerover", PointerEvent, cx, cy, 0, 0);
+          fire(el, "mouseover", MouseEvent, cx, cy, 0, 0);
+          fire(el, "pointerenter", PointerEvent, cx, cy, 0, 0);
+          fire(el, "mouseenter", MouseEvent, cx, cy, 0, 0);
+        }
+        lastHitEl = el;
+      }
+      if (el) {
+        fire(el, "pointermove", PointerEvent, cx, cy, 0, 0);
+        fire(el, "mousemove", MouseEvent, cx, cy, 0, 0);
+      }
+      const focused = currentFocusedEl();
+      setHoverTarget(findHoverTarget(focused || el));
+    }
+    document.addEventListener("mousemove", (e) => {
+      if (!e.isTrusted) return;
+      if (usingController) {
+        console.log("[Wizascript Controller] real mouse movement detected -> forcing usingController OFF");
+      }
+      usingController = false;
+      document.documentElement.style.cursor = "";
+      cursor.style.display = "none";
+      if (currentHighlightedEl) {
+        clearHighlight(currentHighlightedEl);
+        currentHighlightedEl = null;
+      }
+    }, true);
+    let dpadHeld = { up: false, down: false, left: false, right: false };
+    let btnHeld = {};
+    let shortcutBtnHeld = {};
+    let shortcutHeldByAction = {};
+    function shortcutJustPressed(btnFn, actionKey) {
+      const boundBtn = getBoundShortcutButton(actionKey);
+      const isDown = boundBtn !== null && !!btnFn(boundBtn);
+      const wasDown = !!shortcutHeldByAction[actionKey];
+      shortcutHeldByAction[actionKey] = isDown;
+      return isDown && !wasDown;
+    }
+    let keybindRelayHeld = { primary: false, left: false, right: false, up: false, down: false, 0: false, actions: {} };
+    let primaryHoldHadAction = false;
+    let guideSelectedIndex = -1, guideSelectedEl = null;
+    let leftHeldSince = 0, rightHeldSince = 0, lastPageTurnTime = 0;
+    let dpadText = "";
+    function openWizascriptSettings() {
+      const base = { key: "Control", code: "ControlLeft", keyCode: 17, which: 17, bubbles: true };
+      document.dispatchEvent(new KeyboardEvent("keydown", base));
+      requestAnimationFrame(() => {
+        document.dispatchEvent(new KeyboardEvent("keyup", base));
+        requestAnimationFrame(() => {
+          document.dispatchEvent(new KeyboardEvent("keydown", base));
+          requestAnimationFrame(() => {
+            document.dispatchEvent(new KeyboardEvent("keyup", base));
+          });
+        });
+      });
+      console.log("[Wizascript Controller] relayed a real Primary (Control) double-tap for Wizascript settings");
+    }
+    function frame() {
+      try {
+        if (!isControllerSupportEnabled()) {
+          if (usingController) {
+            usingController = false;
+            document.documentElement.style.cursor = "";
+            cursor.style.display = "none";
+            if (oskOpen) closeOsk();
+          }
+          return;
+        }
+        logRawGamepadStateIfChanged();
+        const gp = getMergedGamepad();
+        if (!gp) return;
+        const lx = dz(gp.axes[0]), ly = dz(gp.axes[1]);
+        const rx = dz(gp.axes[2]), ry = dz(gp.axes[3]);
+        const up = gp.buttons[12] && gp.buttons[12].pressed;
+        const down = gp.buttons[13] && gp.buttons[13].pressed;
+        const left = gp.buttons[14] && gp.buttons[14].pressed;
+        const right = gp.buttons[15] && gp.buttons[15].pressed;
+        const btn = (i) => gp.buttons[i] && gp.buttons[i].pressed;
+        const anyStick = lx || ly || rx || ry;
+        const anyButton = gp.buttons.some((b) => b.pressed);
+        if (anyStick) navInputMethod = "stick";
+        else if (up || down || left || right) navInputMethod = "dpad";
+        if (anyStick || anyButton) {
+          if (!usingController) {
+            usingController = true;
+            document.documentElement.style.cursor = "none";
+            if (!oskOpen && !sliderTarget && !selectTarget) cursor.style.display = cursorRestingDisplay();
+          }
+        }
+        logMergedInputEdges(gp, usingController, anyStick);
+        if (!usingController) return;
+        if (btn(5) && !shortcutBtnHeld[5]) {
+          if (oskOpen) {
+            oskPaused = !oskPaused;
+            oskEl.style.display = oskPaused ? "none" : "block";
+            if (!oskPaused && oskTarget) {
+              positionPanelNear(oskEl, oskTarget);
+              updateOskHighlight();
+            }
+            console.log("[Wizascript Controller] OSK", oskPaused ? "paused" : "resumed");
+          } else {
+            document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
+          }
+        }
+        if (btn(1) && !shortcutBtnHeld[1] && oskOpen && oskPaused) closeOsk();
+        if (shortcutJustPressed(btn, "openSettings")) triggerElementClick(document.getElementById("btn-config"));
+        if (shortcutJustPressed(btn, "yourDustpile") && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(true)"]'));
+        if (shortcutJustPressed(btn, "opponentDustpile") && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(false)"]'));
+        if (shortcutJustPressed(btn, "endTurn")) triggerElementClick(document.getElementById("endTurnBtn"));
+        if (shortcutJustPressed(btn, "openWizascriptSettings") && !oskOpen) openWizascriptSettings();
+        if (shortcutJustPressed(btn, "concede")) triggerConcede();
+        if (shortcutJustPressed(btn, "goHome")) window.location.href = "https://undercards.net/";
+        shortcutBtnHeld = { 1: btn(1), 5: btn(5) };
+        if (!oskOpen || oskPaused) {
+          const primaryBtn = getControllerPrimaryButton();
+          const l1Down = primaryBtn !== null && btn(primaryBtn) || oskOpen && oskPaused;
+          const viaPause = oskOpen && oskPaused;
+          const primaryBase = { key: "Control", code: "ControlLeft", keyCode: 17, which: 17, bubbles: true };
+          if (l1Down) {
+            if (!keybindRelayHeld.primary) {
+              document.dispatchEvent(new KeyboardEvent("keydown", primaryBase));
+              primaryHoldHadAction = false;
+            }
+            const relaySecondary = (code, key) => {
+              const opts = { key, code, bubbles: true };
+              document.dispatchEvent(new KeyboardEvent("keydown", opts));
+              document.dispatchEvent(new KeyboardEvent("keyup", opts));
+            };
+            const guideElForContext = document.getElementById("uctv-guide-overlay");
+            const pmFocusForContext = document.activeElement;
+            const inPatchMakerFieldForContext = !guideElForContext && !!(pmFocusForContext && pmFocusForContext.matches && pmFocusForContext.matches(".uc-li-text, .uc-section-label, .uc-card-item"));
+            const nextActionHeld = {};
+            const codesFiredThisFrame = /* @__PURE__ */ new Set();
+            CONTROLLER_ACTIONS.forEach((action) => {
+              let applies;
+              if (action.context === "always") applies = true;
+              else if (action.context === "channelSwitch") applies = !inPatchMakerFieldForContext;
+              else if (action.context === "patchMaker") applies = inPatchMakerFieldForContext;
+              else applies = !guideElForContext && !inPatchMakerFieldForContext;
+              const boundBtn = applies ? getBoundButton(action.key) : null;
+              const isDown = boundBtn !== null && btn(boundBtn);
+              nextActionHeld[action.key] = isDown;
+              if (isDown && !keybindRelayHeld.actions[action.key]) {
+                const sig = action.dispatch.code;
+                if (!codesFiredThisFrame.has(sig)) {
+                  codesFiredThisFrame.add(sig);
+                  relaySecondary(action.dispatch.code, action.dispatch.key);
+                  primaryHoldHadAction = true;
+                }
+              }
+            });
+            keybindRelayHeld.actions = nextActionHeld;
+            const guideEl = guideElForContext;
+            if (guideEl) {
+              const entries = Array.from(guideEl.querySelectorAll("span")).filter((el) => el.style.cursor === "pointer");
+              if (!entries.length) {
+                guideSelectedIndex = -1;
+                guideSelectedEl = null;
+              } else {
+                if (guideSelectedIndex < 0 || guideSelectedIndex >= entries.length) guideSelectedIndex = 0;
+                if (up && !keybindRelayHeld.up) guideSelectedIndex = Math.max(0, guideSelectedIndex - 1);
+                if (down && !keybindRelayHeld.down) guideSelectedIndex = Math.min(entries.length - 1, guideSelectedIndex + 1);
+                const sel = entries[guideSelectedIndex];
+                if (sel !== guideSelectedEl) {
+                  if (guideSelectedEl) guideSelectedEl.dispatchEvent(new MouseEvent("mouseleave", { bubbles: true }));
+                  sel.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+                  sel.scrollIntoView({ block: "nearest" });
+                  guideSelectedEl = sel;
+                }
+                if (btn(0) && !keybindRelayHeld[0]) sel.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+              }
+              hud.textContent = `UC TV Guide (${viaPause ? "OSK paused" : "L1 held"})
+match ${entries.length ? guideSelectedIndex + 1 : 0}/${entries.length}
+\u2191/\u2193 select   ${btnLabel(0)} jump   \u2190/\u2192 channel (remap in Settings)${viaPause ? "   R1: resume typing" : ""}`;
+            } else {
+              guideSelectedIndex = -1;
+              guideSelectedEl = null;
+              if (inPatchMakerFieldForContext) {
+                hud.textContent = `Patch Maker (${viaPause ? "OSK paused" : "L1 held"})
+tap Primary alone = cycle category   move entry-section-card \u2014 see Settings > Keybinds - Controller${viaPause ? `
+R1: resume typing   ${btnLabel(1)}: close` : ""}`;
+              } else {
+                hud.textContent = `Wizascript keybind relay (${viaPause ? "OSK paused" : "L1 held"})
+channel / notepad redo-undo-toggle-reset \u2014 see Settings > Keybinds - Controller${viaPause ? `
+R1: resume typing   ${btnLabel(1)}: close` : ""}`;
+              }
+            }
+            keybindRelayHeld.primary = true;
+            keybindRelayHeld.left = left;
+            keybindRelayHeld.right = right;
+            keybindRelayHeld.up = up;
+            keybindRelayHeld.down = down;
+            keybindRelayHeld[0] = btn(0);
+            return;
+          } else if (keybindRelayHeld.primary) {
+            if (!primaryHoldHadAction) {
+              const tapFocusEl = document.activeElement;
+              if (tapFocusEl && tapFocusEl.matches && tapFocusEl.matches(".uc-li-text")) {
+                const li = tapFocusEl.closest("li");
+                if (li) {
+                  const PATCH_MAKER_CYCLE_ORDER = ["none", "other", "buff", "rework", "nerf"];
+                  const curIdx = PATCH_MAKER_CYCLE_ORDER.findIndex((c) => li.classList.contains(c));
+                  const nextCat = PATCH_MAKER_CYCLE_ORDER[((curIdx === -1 ? 0 : curIdx) + 1) % PATCH_MAKER_CYCLE_ORDER.length];
+                  li.classList.remove(...PATCH_MAKER_CYCLE_ORDER);
+                  li.classList.add(nextCat);
+                  let savedRange = null;
+                  const sel = window.getSelection();
+                  if (sel && sel.rangeCount > 0) savedRange = sel.getRangeAt(0).cloneRange();
+                  tapFocusEl.blur();
+                  tapFocusEl.focus();
+                  if (savedRange) {
+                    try {
+                      const sel2 = window.getSelection();
+                      sel2.removeAllRanges();
+                      sel2.addRange(savedRange);
+                    } catch (e) {
+                    }
+                  }
+                  console.log('[Wizascript Controller] Patch Maker: bare Controller Primary tap - cycled entry category directly to "' + nextCat + '"');
+                }
+              }
+            }
+            document.dispatchEvent(new KeyboardEvent("keyup", primaryBase));
+            guideSelectedIndex = -1;
+            guideSelectedEl = null;
+          }
+          keybindRelayHeld = { primary: false, left: false, right: false, up: false, down: false, 0: false, actions: {} };
+          primaryHoldHadAction = false;
+        }
+        if (!oskOpen && !sliderTarget && !selectTarget && btn(0)) {
+          cursor.style.display = "none";
+          const notepadHitEl = document.elementFromPoint(x, y);
+          cursor.style.display = "block";
+          if (notepadHitEl && isSlider(notepadHitEl) && notepadHitEl.closest(".wizascript-notepad")) {
+            openSlider(notepadHitEl);
+            return;
+          }
+        }
+        if (oskOpen && !oskPaused) {
+          const oskSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
+          x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * oskSpeedMult));
+          y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * oskSpeedMult));
+          cursor.style.left = x + "px";
+          cursor.style.top = y + "px";
+          cursor.style.display = "block";
+          if (lx || ly) {
+            hoverKey:
+              for (let r = 0; r < oskRowEls.length; r++) {
+                for (let c = 0; c < oskRowEls[r].length; c++) {
+                  const kr = oskRowEls[r][c].getBoundingClientRect();
+                  if (x >= kr.left && x <= kr.right && y >= kr.top && y <= kr.bottom) {
+                    if (oskRow !== r || oskCol !== c) {
+                      oskRow = r;
+                      oskCol = c;
+                      updateOskHighlight();
+                    }
+                    break hoverKey;
+                  }
+                }
+              }
+          }
+          const row = activeRows[oskRow];
+          if (up && !dpadHeld.up) {
+            oskRow = Math.max(0, oskRow - 1);
+            oskCol = Math.min(oskCol, activeRows[oskRow].length - 1);
+            updateOskHighlight();
+          }
+          if (down && !dpadHeld.down) {
+            oskRow = Math.min(activeRows.length - 1, oskRow + 1);
+            oskCol = Math.min(oskCol, activeRows[oskRow].length - 1);
+            updateOskHighlight();
+          }
+          if (left && !dpadHeld.left) {
+            oskCol = (oskCol - 1 + row.length) % row.length;
+            updateOskHighlight();
+          }
+          if (right && !dpadHeld.right) {
+            oskCol = (oskCol + 1) % row.length;
+            updateOskHighlight();
+          }
+          dpadHeld = { up, down, left, right };
+          if (btn(0) && !btnHeld[0]) pressKey(activeRows[oskRow][oskCol]);
+          if (btn(2) && !btnHeld[2] && oskTarget) typeBackspace(oskTarget);
+          if (btn(3) && !btnHeld[3] && oskTarget) typeChar(oskTarget, " ");
+          if (btn(4) && !btnHeld[4]) {
+            oskShift = !oskShift;
+            renderOskLabels();
+          }
+          if (btn(6) && !btnHeld[6]) {
+            const now = performance.now();
+            if (now - lastL2TapTime < DOUBLE_TAP_WINDOW_MS2) setOskCaretEdge(true);
+            else stepOskCaret(-1);
+            lastL2TapTime = now;
+          }
+          if (btn(7) && !btnHeld[7]) {
+            const now = performance.now();
+            if (now - lastR2TapTime < DOUBLE_TAP_WINDOW_MS2) setOskCaretEdge(false);
+            else stepOskCaret(1);
+            lastR2TapTime = now;
+          }
+          if (btn(10) && !btnHeld[10]) {
+            oskPage = oskPage === "letters" ? "symbols" : "letters";
+            activeRows = KEY_PAGES[oskPage];
+            buildGrid(activeRows);
+            oskRow = 0;
+            oskCol = 0;
+            if (oskTarget) positionPanelNear(oskEl, oskTarget);
+            updateOskHighlight();
+          }
+          if (btn(11) && !btnHeld[11] && oskTarget) dispatchEnterKey(oskTarget);
+          if (btn(1) && !btnHeld[1]) closeOsk();
+          btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3), 4: btn(4), 6: btn(6), 7: btn(7), 10: btn(10), 11: btn(11) };
+          hud.textContent = `on-screen keyboard [${oskPage}]
+row ${oskRow + 1}/${activeRows.length} col ${oskCol + 1}/${row.length}${oskShift ? " [SHIFT]" : ""}`;
+          return;
+        }
+        if (selectTarget) {
+          const selSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
+          x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * selSpeedMult));
+          y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * selSpeedMult));
+          cursor.style.left = x + "px";
+          cursor.style.top = y + "px";
+          cursor.style.display = "block";
+          if (lx || ly) {
+            for (let i = 0; i < selectRowEls.length; i++) {
+              const rr = selectRowEls[i].getBoundingClientRect();
+              if (x >= rr.left && x <= rr.right && y >= rr.top && y <= rr.bottom) {
+                if (selectIndex !== i) {
+                  selectIndex = i;
+                  updateSelectHighlight();
+                }
+                break;
+              }
+            }
+          }
+          if (ry !== 0) selectEl.scrollTop += ry * 20;
+          if (up && !dpadHeld.up) {
+            selectIndex = Math.max(0, selectIndex - 1);
+            updateSelectHighlight();
+            selectRowEls[selectIndex].scrollIntoView({ block: "nearest" });
+          }
+          if (down && !dpadHeld.down) {
+            selectIndex = Math.min(selectOptions.length - 1, selectIndex + 1);
+            updateSelectHighlight();
+            selectRowEls[selectIndex].scrollIntoView({ block: "nearest" });
+          }
+          dpadHeld = { up, down, left, right };
+          if (btn(0) && !btnHeld[0]) confirmSelectPicker();
+          if (btn(1) && !btnHeld[1]) {
+            closeSelectPicker();
+            btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+            return;
+          }
+          btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+          hud.textContent = `select list
+${selectOptions[selectIndex] ? selectOptions[selectIndex].text : ""}
+D-Pad/cursor: browse   ${btnLabel(0)} confirm   ${btnLabel(1)} cancel`;
+          return;
+        }
+        if (sliderTarget) {
+          const speedMult2 = Math.max(0.3, Math.min(3, 1 - rx * 2));
+          x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * speedMult2));
+          y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * speedMult2));
+          cursor.style.left = x + "px";
+          cursor.style.top = y + "px";
+          const now = performance.now();
+          const REPEAT_INITIAL_DELAY = 400, REPEAT_INTERVAL = 120;
+          if (left) {
+            if (!dpadHeld.left) {
+              leftHeldSince = now;
+              adjustSlider(-1);
+              lastPageTurnTime = now;
+            } else if (now - leftHeldSince > REPEAT_INITIAL_DELAY && now - lastPageTurnTime > REPEAT_INTERVAL) {
+              adjustSlider(-1);
+              lastPageTurnTime = now;
+            }
+          } else leftHeldSince = 0;
+          if (right) {
+            if (!dpadHeld.right) {
+              rightHeldSince = now;
+              adjustSlider(1);
+              lastPageTurnTime = now;
+            } else if (now - rightHeldSince > REPEAT_INITIAL_DELAY && now - lastPageTurnTime > REPEAT_INTERVAL) {
+              adjustSlider(1);
+              lastPageTurnTime = now;
+            }
+          } else rightHeldSince = 0;
+          dpadHeld = { up, down, left, right };
+          if (btn(0)) {
+            cursor.style.display = "block";
+            setSliderValueFromPointer(sliderTarget, x);
+          } else {
+            cursor.style.display = "none";
+          }
+          if (btn(1) && !btnHeld[1]) {
+            closeSlider();
+            btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+            return;
+          }
+          btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+          hud.textContent = `slider focused
+value: ${sliderTarget.value}
+left/right = fine-tune   ${btnLabel(0)} hold = drag   ${btnLabel(1)} = done`;
+          return;
+        }
+        const mulliganHost = document.querySelector(".mulligan");
+        if (!mulliganHost && mulliganGrid) {
+          mulliganGrid = null;
+          refreshHighlight();
+        }
+        if (mulliganHost) {
+          const mulSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
+          x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * mulSpeedMult));
+          y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * mulSpeedMult));
+          cursor.style.left = x + "px";
+          cursor.style.top = y + "px";
+          cursor.style.display = cursorRestingDisplay();
+          const mulliganCards = Array.from(mulliganHost.querySelectorAll(":scope > .card")).filter((el) => el.offsetParent !== null);
+          const confirmBtn = document.querySelector(".bootstrap-dialog-footer-buttons .btn-primary") || document.querySelector(".modal-footer .btn-primary");
+          const mulliganItems = confirmBtn ? [...mulliganCards, confirmBtn] : mulliganCards;
+          if (!mulliganItems.length) {
+            hud.textContent = "mulligan (nothing navigable found)";
+            return;
+          }
+          if (!mulliganGrid || !elArraysEqual(gridFlat(mulliganGrid), mulliganItems)) {
+            mulliganGrid = buildRowGrid(mulliganItems);
+            mulliganRow = 0;
+            mulliganCol = 0;
+          }
+          mulliganRow = Math.min(mulliganRow, mulliganGrid.length - 1);
+          mulliganCol = Math.min(mulliganCol, mulliganGrid[mulliganRow].length - 1);
+          if (lx || ly) {
+            hoverMulligan:
+              for (let r = 0; r < mulliganGrid.length; r++) {
+                for (let c = 0; c < mulliganGrid[r].length; c++) {
+                  const rr = mulliganGrid[r][c].getBoundingClientRect();
+                  if (x >= rr.left && x <= rr.right && y >= rr.top && y <= rr.bottom) {
+                    mulliganRow = r;
+                    mulliganCol = c;
+                    break hoverMulligan;
+                  }
+                }
+              }
+          }
+          if (ry !== 0) {
+            const scrollable = findRealScrollable(mulliganGrid[mulliganRow][mulliganCol] || mulliganItems[0]);
+            if (scrollable) scrollable.scrollTop += ry * 30;
+          }
+          if (up && !dpadHeld.up) mulliganRow = Math.max(0, mulliganRow - 1);
+          if (down && !dpadHeld.down) mulliganRow = Math.min(mulliganGrid.length - 1, mulliganRow + 1);
+          mulliganCol = Math.min(mulliganCol, mulliganGrid[mulliganRow].length - 1);
+          if (left && !dpadHeld.left) mulliganCol = (mulliganCol - 1 + mulliganGrid[mulliganRow].length) % mulliganGrid[mulliganRow].length;
+          if (right && !dpadHeld.right) mulliganCol = (mulliganCol + 1) % mulliganGrid[mulliganRow].length;
+          if (up && !dpadHeld.up || down && !dpadHeld.down || left && !dpadHeld.left || right && !dpadHeld.right) {
+            const selEl = mulliganGrid[mulliganRow][mulliganCol];
+            if (selEl) selEl.scrollIntoView({ block: "nearest", inline: "nearest" });
+          }
+          dpadHeld = { up, down, left, right };
+          refreshHighlight();
+          if (navInputMethod !== "dpad") {
+            updateHover(mulliganGrid[mulliganRow][mulliganCol], x, y);
+          }
+          if (btn(0) && !btnHeld[0]) {
+            const el = mulliganGrid[mulliganRow][mulliganCol];
+            const r = el.getBoundingClientRect();
+            dispatchClick(el, r.left + r.width / 2, r.top + r.height / 2, 0);
+            console.log("[Wizascript Controller] mulligan item clicked", el);
+          }
+          btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+          const focusedIsConfirm = mulliganGrid[mulliganRow][mulliganCol] === confirmBtn;
+          hud.textContent = `mulligan
+row ${mulliganRow + 1}/${mulliganGrid.length}, col ${mulliganCol + 1}/${mulliganGrid[mulliganRow].length}
+${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
+          return;
+        }
+        const modalInfo = queryModalRoot();
+        if (!modalInfo && modalKind) {
+          modalGrid = null;
+          modalKind = null;
+          modalPane = "categories";
+          categoryItems = [];
+          categoryIndex = 0;
+          fieldGrid = null;
+          fieldRow = 0;
+          fieldCol = 0;
+          refreshHighlight();
+        }
+        if (modalInfo && modalInfo.kind !== "tabbed" && modalKind === "tabbed") {
+          modalPane = "categories";
+          categoryItems = [];
+          categoryIndex = 0;
+          fieldGrid = null;
+          fieldRow = 0;
+          fieldCol = 0;
+        }
+        if (modalInfo && modalInfo.kind === "tabbed" && modalKind !== "tabbed") {
+          modalPane = "categories";
+          fieldGrid = null;
+          fieldRow = 0;
+          fieldCol = 0;
+          lastKnownActiveCategoryIdx = -1;
+        }
+        if (modalInfo) {
+          const { root, kind } = modalInfo;
+          modalKind = kind;
+          const modSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
+          x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * modSpeedMult));
+          y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * modSpeedMult));
+          cursor.style.left = x + "px";
+          cursor.style.top = y + "px";
+          cursor.style.display = cursorRestingDisplay();
+          if (kind === "tabbed") {
+            const { tabbedRoot } = modalInfo;
+            const liveCategories = queryCategoryItems(tabbedRoot);
+            if (!elArraysEqual(categoryItems, liveCategories)) {
+              const prevCat = categoryItems[categoryIndex];
+              categoryItems = liveCategories;
+              const keep = prevCat ? categoryItems.indexOf(prevCat) : -1;
+              categoryIndex = keep >= 0 ? keep : Math.min(categoryIndex, Math.max(0, categoryItems.length - 1));
+            }
+            if (categoryItems.length) {
+              const activeIdx = categoryItems.findIndex((label) => {
+                const radio = label.previousElementSibling;
+                return radio && radio.tagName === "INPUT" && radio.checked;
+              });
+              if (activeIdx >= 0) {
+                if (activeIdx !== lastKnownActiveCategoryIdx) categoryIndex = activeIdx;
+                lastKnownActiveCategoryIdx = activeIdx;
+              }
+            }
+            const activeContent = queryActiveTabContent(tabbedRoot);
+            const liveFieldRows = activeContent ? queryFieldRows(activeContent) : [];
+            const liveFieldsFlat = liveFieldRows.flat();
+            if (!fieldGrid || !elArraysEqual(gridFlat(fieldGrid), liveFieldsFlat)) {
+              fieldGrid = liveFieldRows;
+              fieldRow = 0;
+              fieldCol = 0;
+            }
+            if (fieldGrid.length) {
+              fieldRow = Math.min(fieldRow, fieldGrid.length - 1);
+              fieldCol = Math.min(fieldCol, fieldGrid[fieldRow].length - 1);
+            }
+            if (lx || ly) {
+              if (modalPane === "categories") {
+                for (let i = 0; i < categoryItems.length; i++) {
+                  const rr = categoryItems[i].getBoundingClientRect();
+                  if (x >= rr.left && x <= rr.right && y >= rr.top && y <= rr.bottom) {
+                    categoryIndex = i;
+                    break;
+                  }
+                }
+              } else {
+                hoverField:
+                  for (let r = 0; r < fieldGrid.length; r++) {
+                    for (let c = 0; c < fieldGrid[r].length; c++) {
+                      const rr = fieldGrid[r][c].getBoundingClientRect();
+                      if (x >= rr.left && x <= rr.right && y >= rr.top && y <= rr.bottom) {
+                        fieldRow = r;
+                        fieldCol = c;
+                        break hoverField;
+                      }
+                    }
+                  }
+              }
+            }
+            if (ry !== 0) {
+              const scrollEl = modalPane === "categories" ? categoryItems[categoryIndex] : (fieldGrid[fieldRow] || [])[fieldCol];
+              const scrollable = findRealScrollable(scrollEl || activeContent || root);
+              if (scrollable) scrollable.scrollTop += ry * 30;
+            }
+            if (modalPane === "categories") {
+              if (up && !dpadHeld.up && categoryItems.length) categoryIndex = Math.max(0, categoryIndex - 1);
+              if (down && !dpadHeld.down && categoryItems.length) categoryIndex = Math.min(categoryItems.length - 1, categoryIndex + 1);
+              if (right && !dpadHeld.right) enterCategory();
+              dpadHeld = { up, down, left, right };
+              refreshHighlight();
+              if (btn(0) && !btnHeld[0]) enterCategory();
+              if (btn(1) && !btnHeld[1]) {
+                const dismiss = findModalDismissButton(root);
+                if (dismiss) triggerElementClick(dismiss);
+                else document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
+              }
+              btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+              hud.textContent = `settings: categories (${categoryItems.length ? categoryIndex + 1 : 0}/${categoryItems.length})
+${btnLabel(0)}/\u2192 open category   ${btnLabel(1)} close dialog`;
+            } else {
+              if (!isControllerCaptureActive()) {
+                if (fieldGrid.length) {
+                  if (up && !dpadHeld.up) fieldRow = Math.max(0, fieldRow - 1);
+                  if (down && !dpadHeld.down) fieldRow = Math.min(fieldGrid.length - 1, fieldRow + 1);
+                  fieldCol = Math.min(fieldCol, fieldGrid[fieldRow].length - 1);
+                  if (right && !dpadHeld.right) fieldCol = Math.min(fieldGrid[fieldRow].length - 1, fieldCol + 1);
+                  if (left && !dpadHeld.left) {
+                    if (fieldCol > 0) fieldCol -= 1;
+                    else modalPane = "categories";
+                  }
+                  if (up && !dpadHeld.up || down && !dpadHeld.down || left && !dpadHeld.left || right && !dpadHeld.right) {
+                    const selEl = fieldGrid[fieldRow] && fieldGrid[fieldRow][fieldCol];
+                    if (selEl) selEl.scrollIntoView({ block: "nearest", inline: "nearest" });
+                  }
+                } else if (left && !dpadHeld.left) {
+                  modalPane = "categories";
+                }
+              }
+              dpadHeld = { up, down, left, right };
+              refreshHighlight();
+              if (!isControllerCaptureActive()) {
+                if (btn(0) && !btnHeld[0]) activateHighlighted(0);
+                if (btn(3) && !btnHeld[3]) activateHighlighted(2);
+                if (btn(1) && !btnHeld[1]) modalPane = "categories";
+              }
+              btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+              const fieldPos = fieldGrid.length ? `row ${fieldRow + 1}/${fieldGrid.length}, col ${fieldCol + 1}/${fieldGrid[fieldRow].length}` : "(empty)";
+              hud.textContent = `settings: fields ${fieldPos}
+${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   \u2190/${btnLabel(1)} back to categories`;
+            }
+            return;
+          }
+          const modalItems = kind === "plain" ? [...queryModalItems(root), ...queryScrollableListItems(root)] : queryModalItems(root);
+          if (!modalItems.length) {
+            hud.textContent = `${kind === "menu" ? "underscript menu" : "dialog"} (nothing navigable found)`;
+            return;
+          }
+          if (!modalGrid || !elArraysEqual(gridFlat(modalGrid), modalItems)) {
+            modalGrid = kind === "menu" ? modalItems.map((el) => [el]) : buildRowGrid(modalItems);
+            modalRow = 0;
+            modalCol = 0;
+          }
+          modalRow = Math.min(modalRow, modalGrid.length - 1);
+          modalCol = Math.min(modalCol, modalGrid[modalRow].length - 1);
+          if (lx || ly) {
+            hoverModal:
+              for (let r = 0; r < modalGrid.length; r++) {
+                for (let c = 0; c < modalGrid[r].length; c++) {
+                  const rr = modalGrid[r][c].getBoundingClientRect();
+                  if (x >= rr.left && x <= rr.right && y >= rr.top && y <= rr.bottom) {
+                    modalRow = r;
+                    modalCol = c;
+                    break hoverModal;
+                  }
+                }
+              }
+          }
+          if (ry !== 0) {
+            const scrollable = findRealScrollable(modalGrid[modalRow][modalCol] || modalItems[0]) || findScrollableDescendant(root);
+            if (scrollable) scrollable.scrollTop += ry * 30;
+          }
+          if (up && !dpadHeld.up) modalRow = Math.max(0, modalRow - 1);
+          if (down && !dpadHeld.down) modalRow = Math.min(modalGrid.length - 1, modalRow + 1);
+          modalCol = Math.min(modalCol, modalGrid[modalRow].length - 1);
+          if (left && !dpadHeld.left) modalCol = (modalCol - 1 + modalGrid[modalRow].length) % modalGrid[modalRow].length;
+          if (right && !dpadHeld.right) modalCol = (modalCol + 1) % modalGrid[modalRow].length;
+          if (up && !dpadHeld.up || down && !dpadHeld.down || left && !dpadHeld.left || right && !dpadHeld.right) {
+            const selEl = modalGrid[modalRow][modalCol];
+            if (selEl) selEl.scrollIntoView({ block: "nearest", inline: "nearest" });
+          }
+          dpadHeld = { up, down, left, right };
+          refreshHighlight();
+          if (btn(0) && !btnHeld[0]) activateHighlighted(0);
+          if (btn(3) && !btnHeld[3]) activateHighlighted(2);
+          if (btn(1) && !btnHeld[1]) {
+            if (kind === "menu") {
+              document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
+            } else {
+              const dismiss = findModalDismissButton(root);
+              if (dismiss) triggerElementClick(dismiss);
+              else document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
+            }
+          }
+          btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+          hud.textContent = `${kind === "menu" ? "underscript menu" : "dialog"}
+row ${modalRow + 1}/${modalGrid.length}, col ${modalCol + 1}/${modalGrid[modalRow].length}
+${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   ${btnLabel(1)} close`;
+          return;
+        }
+        const handHost = document.getElementById("handCards");
+        if (!handHost && matchPhase !== "hand") {
+          matchPhase = "hand";
+          placingGrid = null;
+          placingCard = null;
+          resolveGrid = null;
+          matchSubState = "hand-nav";
+          pendingAttacker = null;
+        }
+        if (handHost) {
+          const mSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
+          x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * mSpeedMult));
+          y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * mSpeedMult));
+          cursor.style.left = x + "px";
+          cursor.style.top = y + "px";
+          cursor.style.display = cursorRestingDisplay();
+          if (matchPhase === "placing" && anyStick) {
+            cancelPlacingDrag("stick movement");
+            matchSubState = "neutral";
+            hud.textContent = "placement cancelled (stick moved)";
+            return;
+          }
+          if (matchPhase === "placing") {
+            const activeEls = Array.from(document.querySelectorAll(".ui-droppable-active"));
+            if (!activeEls.length) {
+              matchPhase = "hand";
+              refreshHighlight();
+            } else {
+              if (!placingGrid || !elArraysEqual(gridFlat(placingGrid), activeEls)) {
+                placingGrid = buildRowGrid(activeEls);
+                placingRow = 0;
+                placingCol = 0;
+              }
+              placingRow = Math.min(placingRow, placingGrid.length - 1);
+              placingCol = Math.min(placingCol, placingGrid[placingRow].length - 1);
+              if (lx || ly) {
+                hoverSlot:
+                  for (let r = 0; r < placingGrid.length; r++) {
+                    for (let c = 0; c < placingGrid[r].length; c++) {
+                      const rr = placingGrid[r][c].getBoundingClientRect();
+                      if (x >= rr.left && x <= rr.right && y >= rr.top && y <= rr.bottom) {
+                        placingRow = r;
+                        placingCol = c;
+                        break hoverSlot;
+                      }
+                    }
+                  }
+              }
+              if (up && !dpadHeld.up) placingRow = Math.max(0, placingRow - 1);
+              if (down && !dpadHeld.down) placingRow = Math.min(placingGrid.length - 1, placingRow + 1);
+              placingCol = Math.min(placingCol, placingGrid[placingRow].length - 1);
+              if (left && !dpadHeld.left) placingCol = (placingCol - 1 + placingGrid[placingRow].length) % placingGrid[placingRow].length;
+              if (right && !dpadHeld.right) placingCol = (placingCol + 1) % placingGrid[placingRow].length;
+              dpadHeld = { up, down, left, right };
+              refreshHighlight();
+              const targetSlot = placingGrid[placingRow][placingCol];
+              const tr = targetSlot.getBoundingClientRect();
+              const tcx = tr.left + tr.width / 2, tcy = tr.top + tr.height / 2;
+              fire(targetSlot, "pointermove", PointerEvent, tcx, tcy, 0, 1);
+              fire(targetSlot, "mousemove", MouseEvent, tcx, tcy, 0, 1);
+              if (btn(0) && !btnHeld[0]) {
+                fire(targetSlot, "pointerup", PointerEvent, tcx, tcy, 0, 0);
+                fire(targetSlot, "mouseup", MouseEvent, tcx, tcy, 0, 0);
+                console.log("[Wizascript Controller] card dropped on", targetSlot);
+                placingCard = null;
+                placingGrid = null;
+                matchPhase = "hand";
+                refreshHighlight();
+              } else if (btn(1) && !btnHeld[1]) {
+                cancelPlacingDrag("circle button");
+              }
+              btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+              hud.textContent = `placing card
+slot row ${placingRow + 1}/${placingGrid.length}, col ${placingCol + 1}/${placingGrid[placingRow].length}
+${btnLabel(0)} drop here   ${btnLabel(1)} cancel`;
+              return;
+            }
+          }
+          const choiceEls = Array.from(document.querySelectorAll(".select-card-option.target"));
+          const targetEls = choiceEls.length ? [] : Array.from(document.querySelectorAll(".target:not(.select-card-option)"));
+          const resolveEls = choiceEls.length ? choiceEls : targetEls;
+          if (resolveEls.length) {
+            matchPhase = "resolve";
+            resolveKind = choiceEls.length ? "choice" : "target";
+            if (!resolveGrid || !elArraysEqual(gridFlat(resolveGrid), resolveEls)) {
+              resolveGrid = buildRowGrid(resolveEls);
+              resolveRow = 0;
+              resolveCol = 0;
+            }
+            resolveRow = Math.min(resolveRow, resolveGrid.length - 1);
+            resolveCol = Math.min(resolveCol, resolveGrid[resolveRow].length - 1);
+            if (lx || ly) {
+              hoverTarget:
+                for (let r = 0; r < resolveGrid.length; r++) {
+                  for (let c = 0; c < resolveGrid[r].length; c++) {
+                    const rr = resolveGrid[r][c].getBoundingClientRect();
+                    if (x >= rr.left && x <= rr.right && y >= rr.top && y <= rr.bottom) {
+                      resolveRow = r;
+                      resolveCol = c;
+                      break hoverTarget;
+                    }
+                  }
+                }
+            }
+            if (ry !== 0) {
+              const scrollable = findRealScrollable(resolveGrid[resolveRow][resolveCol] || resolveEls[0]);
+              if (scrollable) scrollable.scrollTop += ry * 30;
+            }
+            if (up && !dpadHeld.up) resolveRow = Math.max(0, resolveRow - 1);
+            if (down && !dpadHeld.down) resolveRow = Math.min(resolveGrid.length - 1, resolveRow + 1);
+            resolveCol = Math.min(resolveCol, resolveGrid[resolveRow].length - 1);
+            if (left && !dpadHeld.left) resolveCol = (resolveCol - 1 + resolveGrid[resolveRow].length) % resolveGrid[resolveRow].length;
+            if (right && !dpadHeld.right) resolveCol = (resolveCol + 1) % resolveGrid[resolveRow].length;
+            if (up && !dpadHeld.up || down && !dpadHeld.down || left && !dpadHeld.left || right && !dpadHeld.right) {
+              const selEl = resolveGrid[resolveRow][resolveCol];
+              if (selEl) selEl.scrollIntoView({ block: "nearest", inline: "nearest" });
+            }
+            dpadHeld = { up, down, left, right };
+            refreshHighlight();
+            if (navInputMethod !== "dpad") {
+              updateHover(resolveGrid[resolveRow][resolveCol], x, y);
+            }
+            if (btn(0) && !btnHeld[0]) {
+              if (navInputMethod === "dpad") {
+                const el = resolveGrid[resolveRow][resolveCol];
+                const r = el.getBoundingClientRect();
+                dispatchClick(el, r.left + r.width / 2, r.top + r.height / 2, 0);
+                console.log("[Wizascript Controller] resolve target confirmed (d-pad)", el);
+              } else {
+                cursor.style.display = "none";
+                const hitEl2 = document.elementFromPoint(x, y);
+                cursor.style.display = cursorRestingDisplay();
+                if (hitEl2) {
+                  dispatchClick(hitEl2, x, y, 0);
+                  console.log("[Wizascript Controller] resolve target confirmed (cursor, real hit-test)", hitEl2);
+                }
+              }
+            }
+            if (resolveKind === "target" && btn(1) && !btnHeld[1]) {
+              if (pendingAttacker) {
+                const r = pendingAttacker.getBoundingClientRect();
+                dispatchClick(pendingAttacker, r.left + r.width / 2, r.top + r.height / 2, 0);
+                console.log("[Wizascript Controller] attack cancelled via Circle (re-clicked attacker)", pendingAttacker);
+              } else {
+                console.log("[Wizascript Controller] Circle pressed during target-resolve with no known attacker (likely a spell/effect target, not an attack) - no action taken");
+              }
+            }
+            btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+            hud.textContent = `${resolveKind === "choice" ? "choose one" : "select target"}
+row ${resolveRow + 1}/${resolveGrid.length}, col ${resolveCol + 1}/${resolveGrid[resolveRow].length}
+${btnLabel(0)} confirm${resolveKind === "target" ? `   ${btnLabel(1)} cancel attack` : ""}`;
+            return;
+          } else if (matchPhase === "resolve") {
+            matchPhase = "hand";
+            resolveGrid = null;
+            matchSubState = "hand-nav";
+            pendingAttacker = null;
+            refreshHighlight();
+          }
+          const liveHand = queryHandCards();
+          if (!elArraysEqual(handItems, liveHand)) {
+            const prevCard = handItems[handIndex];
+            handItems = liveHand;
+            const keep = prevCard ? handItems.indexOf(prevCard) : -1;
+            handIndex = keep >= 0 ? keep : Math.min(handIndex, Math.max(0, handItems.length - 1));
+          }
+          if (anyStick && (matchSubState === "hand-nav" || matchSubState === "board-nav")) matchSubState = "neutral";
+          if (matchSubState === "hand-nav" && handItems.length) {
+            if (left && !dpadHeld.left) handIndex = (handIndex - 1 + handItems.length) % handItems.length;
+            if (right && !dpadHeld.right) handIndex = (handIndex + 1) % handItems.length;
+            if (up && !dpadHeld.up) matchSubState = "board-nav";
+            dpadHeld = { up, down, left, right };
+            refreshHighlight();
+            if (btn(0) && !btnHeld[0]) {
+              const card = handItems[handIndex];
+              if (card && card.classList.contains("canPlay")) {
+                beginCardDrag(card);
+              } else {
+                console.log("[Wizascript Controller] card not playable, ignoring", card);
+              }
+            }
+            if (btn(1) && !btnHeld[1]) matchSubState = "neutral";
+            btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+            hud.textContent = `hand (${handIndex + 1}/${handItems.length})
+${btnLabel(0)} play   \u2191 board   ${btnLabel(1)} free cursor`;
+          } else if (matchSubState === "board-nav") {
+            const liveBoard = queryBoardMonsterCards();
+            if (!elArraysEqual(boardItems, liveBoard)) {
+              const prevMonster = boardItems[boardIndex];
+              boardItems = liveBoard;
+              const keep = prevMonster ? boardItems.indexOf(prevMonster) : -1;
+              boardIndex = keep >= 0 ? keep : Math.min(boardIndex, Math.max(0, boardItems.length - 1));
+            }
+            if (left && !dpadHeld.left && boardItems.length) boardIndex = (boardIndex - 1 + boardItems.length) % boardItems.length;
+            if (right && !dpadHeld.right && boardItems.length) boardIndex = (boardIndex + 1) % boardItems.length;
+            if (down && !dpadHeld.down) matchSubState = "hand-nav";
+            if (btn(1) && !btnHeld[1]) matchSubState = "hand-nav";
+            dpadHeld = { up, down, left, right };
+            refreshHighlight();
+            if (btn(0) && !btnHeld[0]) {
+              const monster = boardItems[boardIndex];
+              if (monster) {
+                const r = monster.getBoundingClientRect();
+                dispatchClick(monster, r.left + r.width / 2, r.top + r.height / 2, 0);
+                pendingAttacker = monster;
+                console.log("[Wizascript Controller] monster clicked to select as attacker", monster);
+              }
+            }
+            btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+            hud.textContent = `board (${boardItems.length ? boardIndex + 1 : 0}/${boardItems.length})
+${btnLabel(0)} select attacker   \u2193/${btnLabel(1)} hand`;
+          } else {
+            refreshHighlight();
+            if (up && !dpadHeld.up && handItems.length) matchSubState = "hand-nav";
+            dpadHeld = { up, down, left, right };
+            if (btn(0) && !btnHeld[0]) {
+              cursor.style.display = "none";
+              const hitEl2 = document.elementFromPoint(x, y);
+              cursor.style.display = "block";
+              if (hitEl2) beginPress("left", 0);
+            } else if (btn(0) && drag.left) {
+              continuePress("left", 0);
+            } else if (!btn(0) && drag.left) {
+              endPress("left", 0);
+            }
+            if (btn(3) && !btnHeld[3]) {
+              cursor.style.display = "none";
+              const hitEl2 = document.elementFromPoint(x, y);
+              cursor.style.display = "block";
+              if (hitEl2) beginPress("right", 2);
+            } else if (btn(3) && drag.right) {
+              continuePress("right", 2);
+            } else if (!btn(3) && drag.right) {
+              endPress("right", 2);
+            }
+            btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+            cursor.style.display = "none";
+            const hoverEl = document.elementFromPoint(x, y);
+            cursor.style.display = cursorRestingDisplay();
+            updateHover(hoverEl, x, y);
+            hud.textContent = `free cursor (in match)
+\u2191 = hand nav (${handItems.length} cards)   ${btnLabel(3)} inspect`;
+          }
+          return;
+        }
+        const speedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
+        x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * speedMult));
+        y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * speedMult));
+        cursor.style.left = x + "px";
+        cursor.style.top = y + "px";
+        if (ry !== 0) {
+          cursor.style.display = "none";
+          const under = document.elementFromPoint(x, y);
+          cursor.style.display = "block";
+          const scrollable = findRealScrollable(under || document.body);
+          if (scrollable) scrollable.scrollTop += ry * 30;
+        }
+        if (anyStick) {
+          if (activeSubmenu) closeSubmenu();
+          if (chromeStates[chromeIndex] && chromeStates[chromeIndex].type === "group") {
+            chromeIndex = chromeStates.findIndex((s) => s.type === "neutral");
+            refreshHighlight();
+          }
+        }
+        const state = chromeStates[chromeIndex];
+        if (activeSubmenu) {
+          if (up && !dpadHeld.up) {
+            activeSubmenu.index = (activeSubmenu.index - 1 + activeSubmenu.items.length) % activeSubmenu.items.length;
+            refreshHighlight();
+          }
+          if (down && !dpadHeld.down) {
+            activeSubmenu.index = (activeSubmenu.index + 1) % activeSubmenu.items.length;
+            refreshHighlight();
+          }
+          dpadText = `submenu (${activeSubmenu.index + 1}/${activeSubmenu.items.length})`;
+        } else if (state && state.type === "group") {
+          if (up && !dpadHeld.up) {
+            chromeIndex = Math.max(0, chromeIndex - 1);
+            refreshHighlight();
+          }
+          if (down && !dpadHeld.down) {
+            chromeIndex = Math.min(chromeStates.length - 1, chromeIndex + 1);
+            refreshHighlight();
+          }
+          const g = state.group;
+          if (left && !dpadHeld.left) {
+            itemIndexByGroupName[g.name] = ((itemIndexByGroupName[g.name] || 0) - 1 + g.items.length) % g.items.length;
+            refreshHighlight();
+          }
+          if (right && !dpadHeld.right) {
+            itemIndexByGroupName[g.name] = ((itemIndexByGroupName[g.name] || 0) + 1) % g.items.length;
+            refreshHighlight();
+          }
+          dpadText = `${g.name} (${(itemIndexByGroupName[g.name] || 0) + 1}/${g.items.length})`;
+        } else {
+          let tryPageTurn = function(dir) {
+            cursor.style.display = "none";
+            const under = document.elementFromPoint(x, y);
+            cursor.style.display = "block";
+            if (under) {
+              under.dispatchEvent(new WheelEvent("wheel", {
+                bubbles: true,
+                cancelable: true,
+                clientX: x,
+                clientY: y,
+                deltaY: dir * WHEEL_DELTA,
+                deltaMode: 0
+              }));
+            }
+            lastPageTurnTime = now;
+          };
+          if (up && !dpadHeld.up) {
+            chromeIndex = Math.max(0, chromeIndex - 1);
+            refreshHighlight();
+          }
+          if (down && !dpadHeld.down) {
+            chromeIndex = Math.min(chromeStates.length - 1, chromeIndex + 1);
+            refreshHighlight();
+          }
+          const now = performance.now();
+          const REPEAT_INITIAL_DELAY = 400, REPEAT_INTERVAL = 150;
+          if (left) {
+            if (!dpadHeld.left) {
+              leftHeldSince = now;
+              tryPageTurn(-1);
+            } else if (now - leftHeldSince > REPEAT_INITIAL_DELAY && now - lastPageTurnTime > REPEAT_INTERVAL) tryPageTurn(-1);
+          } else leftHeldSince = 0;
+          if (right) {
+            if (!dpadHeld.right) {
+              rightHeldSince = now;
+              tryPageTurn(1);
+            } else if (now - rightHeldSince > REPEAT_INITIAL_DELAY && now - lastPageTurnTime > REPEAT_INTERVAL) tryPageTurn(1);
+          } else rightHeldSince = 0;
+          dpadText = "neutral (left/right = page turn, hold to repeat)";
+        }
+        dpadHeld = { up, down, left, right };
+        if (btn(0) && !btnHeld[0]) {
+          if (currentFocusedEl()) {
+            activateHighlighted(0);
+          } else {
+            cursor.style.display = "none";
+            const hitEl2 = document.elementFromPoint(x, y);
+            cursor.style.display = "block";
+            if (hitEl2) {
+              if (isNativeSelect(hitEl2)) openSelectPicker(hitEl2);
+              else if (isSlider(hitEl2)) openSlider(hitEl2);
+              else if (isPatchMakerResetButton(hitEl2)) activatePatchMakerResetButton(hitEl2, x, y);
+              else if (hitEl2.readOnly && (hitEl2.tagName === "INPUT" || hitEl2.tagName === "TEXTAREA")) {
+                dispatchClick(hitEl2, x, y, 0);
+                hitEl2.focus();
+              } else if (isTextInput(hitEl2)) {
+                dispatchClick(hitEl2, x, y, 0);
+                openOsk(hitEl2);
+                if (hitEl2.isContentEditable) placeCaretAtPoint(hitEl2, x, y);
+              } else if (hitEl2.matches && hitEl2.matches(".uc-section-label, .uc-card-item")) {
+                dispatchClick(hitEl2, x, y, 0);
+                hitEl2.focus();
+              } else beginPress("left", 0);
+            }
+          }
+        } else if (btn(0) && drag.left) {
+          continuePress("left", 0);
+        } else if (!btn(0) && drag.left) {
+          endPress("left", 0);
+        }
+        if (btn(3) && !btnHeld[3]) {
+          if (currentFocusedEl()) {
+            activateHighlighted(2);
+          } else {
+            cursor.style.display = "none";
+            const hitEl2 = document.elementFromPoint(x, y);
+            cursor.style.display = "block";
+            if (hitEl2) beginPress("right", 2);
+          }
+        } else if (btn(3) && drag.right) {
+          continuePress("right", 2);
+        } else if (!btn(3) && drag.right) {
+          endPress("right", 2);
+        }
+        if (btn(1) && !btnHeld[1]) closeSubmenu();
+        btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+        cursor.style.display = "none";
+        const hitEl = document.elementFromPoint(x, y);
+        cursor.style.display = cursorRestingDisplay();
+        updateHover(hitEl, x, y);
+        hud.textContent = `controller active
+${dpadText}
+chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
+      } catch (err) {
+        console.error("[Wizascript Controller] frame() error, loop continues:", err);
+      } finally {
+        requestAnimationFrame(frame);
+      }
+    }
+    refreshHighlight();
+    requestAnimationFrame(frame);
+  }
+
   // manifest.js
   bootstrap((plugin) => {
     initPatchMaker(plugin);
@@ -6966,6 +9865,7 @@ Version: v${version}`;
     initDeckTracker(plugin);
     initUcTv(plugin);
     initMisc(plugin);
+    initController(plugin);
     flushKeybindRegistrations();
   });
 })();

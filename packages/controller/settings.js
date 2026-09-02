@@ -1,20 +1,23 @@
 // packages/controller/settings.js
 //
 // Registers the "Keybinds - Controller" settings category and everything
-// needed to remap a gamepad button to a Wizascript action: the preset
-// selector/name widgets, the master "Enable Controller Support" toggle,
-// and one capture ("Press a button...") widget per remappable binding.
-// Mirrors packages/core/keybinds.js's own MutationObserver + click-to-
-// capture pattern, but captures a GAMEPAD BUTTON instead of a keyboard
-// key, so it can't reuse that registry directly - these are a genuinely
-// different kind of input to capture and persist.
+// needed to remap a gamepad button (or, as of this round, a keyboard key -
+// see enhanceControllerCaptureInput's keydown-as-capture support) to a
+// Wizascript action: the preset selector/name widgets, the master "Enable
+// Controller Support" toggle, and one capture ("Press a button or key...")
+// widget per remappable binding. Mirrors packages/core/keybinds.js's own
+// MutationObserver + click-to-capture pattern, but captures a raw gamepad
+// button or keyboard code rather than reading through Wizascript's own
+// Primary-relative keybind model, so it can't reuse that registry
+// directly - these are a genuinely different kind of input to capture and
+// persist.
 
 import { createFeatureSettings } from '../core/settings.js';
 import {
   PRESET_COUNT, getActivePreset, setActivePreset, getPresetName, setPresetName,
   presetKey, migrateFlatBindingsToPresetOne, resetPresetBindings, csGet, csSet
 } from './storage.js';
-import { getMergedGamepad, buttonToDisplay, connectWebHidController, isHidConnected } from './gamepad.js';
+import { getMergedGamepad, buttonToDisplay, bindingToDisplay, connectWebHidController, isHidConnected } from './gamepad.js';
 
 // One entry per real Wizascript keybind this package's Primary+<button>
 // relay dispatches (see actions.js). `context` decides which subset of
@@ -73,14 +76,32 @@ HARDWARE_SHORTCUT_ACTIONS.forEach((a) => { HARDWARE_SHORTCUT_ACTIONS_BY_KEY[a.ke
 
 export const DEFAULT_PRIMARY_BUTTON = 4; // L1
 
-export function getControllerPrimaryButton() {
-  const raw = csGet(presetKey('keybinds.__primary'), String(DEFAULT_PRIMARY_BUTTON));
-  if (raw === 'unbound') return null;
-  const n = parseInt(raw, 10);
-  return Number.isNaN(n) ? DEFAULT_PRIMARY_BUTTON : n;
+// A bound "input" is one of: null (unbound), a number (gamepad button
+// index - the only shape that ever existed before this round), or
+// { type: 'key', code } (a real keyboard KeyboardEvent.code, captured via
+// enhanceControllerCaptureInput's new keydown-as-capture support below).
+// Encoded as a plain string either way, so every value already persisted
+// from before keyboard capture existed keeps decoding exactly as it
+// always has - 'unbound' -> null, a bare number -> that button index -
+// with 'kb:<code>' as the one new shape layered on top.
+function encodeBoundInput(value) {
+  if (value === null || value === undefined) return 'unbound';
+  if (typeof value === 'number') return String(value);
+  if (value && value.type === 'key') return 'kb:' + value.code;
+  return 'unbound';
 }
-export function setControllerPrimaryButton(idxOrNull) {
-  csSet(presetKey('keybinds.__primary'), idxOrNull === null ? 'unbound' : String(idxOrNull));
+function decodeBoundInput(raw, defaultValue) {
+  if (raw === 'unbound') return null;
+  if (typeof raw === 'string' && raw.indexOf('kb:') === 0) return { type: 'key', code: raw.slice(3) };
+  const n = parseInt(raw, 10);
+  return Number.isNaN(n) ? defaultValue : n;
+}
+
+export function getControllerPrimaryButton() {
+  return decodeBoundInput(csGet(presetKey('keybinds.__primary'), String(DEFAULT_PRIMARY_BUTTON)), DEFAULT_PRIMARY_BUTTON);
+}
+export function setControllerPrimaryButton(value) {
+  csSet(presetKey('keybinds.__primary'), encodeBoundInput(value));
 }
 
 // UC TV channel guide - a SEPARATE hold button from Controller Primary
@@ -95,34 +116,25 @@ export function setControllerPrimaryButton(idxOrNull) {
 // is fully inert until a player deliberately binds it, exactly like
 // Controller Primary itself already behaves when unbound.
 export function getChannelGuideButton() {
-  const raw = csGet(presetKey('keybinds.__channelGuide'), 'unbound');
-  if (raw === 'unbound') return null;
-  const n = parseInt(raw, 10);
-  return Number.isNaN(n) ? null : n;
+  return decodeBoundInput(csGet(presetKey('keybinds.__channelGuide'), 'unbound'), null);
 }
-export function setChannelGuideButton(idxOrNull) {
-  csSet(presetKey('keybinds.__channelGuide'), idxOrNull === null ? 'unbound' : String(idxOrNull));
+export function setChannelGuideButton(value) {
+  csSet(presetKey('keybinds.__channelGuide'), encodeBoundInput(value));
 }
 
 export function getBoundButton(actionKey) {
   const action = CONTROLLER_ACTIONS_BY_KEY[actionKey];
-  const raw = csGet(presetKey('keybinds.' + actionKey), String(action.defaultButton));
-  if (raw === 'unbound') return null;
-  const n = parseInt(raw, 10);
-  return Number.isNaN(n) ? action.defaultButton : n;
+  return decodeBoundInput(csGet(presetKey('keybinds.' + actionKey), String(action.defaultButton)), action.defaultButton);
 }
-export function setBoundButton(actionKey, idxOrNull) {
-  csSet(presetKey('keybinds.' + actionKey), idxOrNull === null ? 'unbound' : String(idxOrNull));
+export function setBoundButton(actionKey, value) {
+  csSet(presetKey('keybinds.' + actionKey), encodeBoundInput(value));
 }
 export function getBoundShortcutButton(actionKey) {
   const defaultButton = HARDWARE_SHORTCUT_DEFAULTS[actionKey];
-  const raw = csGet(presetKey('shortcuts.' + actionKey), String(defaultButton));
-  if (raw === 'unbound') return null;
-  const n = parseInt(raw, 10);
-  return Number.isNaN(n) ? defaultButton : n;
+  return decodeBoundInput(csGet(presetKey('shortcuts.' + actionKey), String(defaultButton)), defaultButton);
 }
-export function setBoundShortcutButton(actionKey, idxOrNull) {
-  csSet(presetKey('shortcuts.' + actionKey), idxOrNull === null ? 'unbound' : String(idxOrNull));
+export function setBoundShortcutButton(actionKey, value) {
+  csSet(presetKey('shortcuts.' + actionKey), encodeBoundInput(value));
 }
 
 // Master toggle. Lives under "Miscellaneous" now, not this package's own
@@ -279,7 +291,7 @@ function enhanceControllerCaptureInput(el, readBound, writeBound) {
   });
 
   function refreshDisplay() {
-    el.value = buttonToDisplay(readBound());
+    el.value = bindingToDisplay(readBound());
   }
   refreshDisplay();
   boundInputRefreshers.push(refreshDisplay);
@@ -287,7 +299,7 @@ function enhanceControllerCaptureInput(el, readBound, writeBound) {
   el.addEventListener('focus', () => {
     el.style.border = '1px solid #40E0D0';
     el.style.boxShadow = '0 0 4px #40E0D0';
-    el.value = 'Press a button...';
+    el.value = 'Press a button or key...';
     controllerCaptureActive = true;
 
     // Gamepad API has no "buttondown" event to listen for the way a real
@@ -314,21 +326,49 @@ function enhanceControllerCaptureInput(el, readBound, writeBound) {
       }
       if (!cancelled) requestAnimationFrame(captureFrame);
     }
-    function finishCapture(idx) {
+    function finishCapture(value) {
       if (cancelled) return;
       cancelled = true;
-      writeBound(idx);
+      writeBound(value);
+      cleanup();
       el.blur();
     }
-    function onEscape(e) {
+    // EXPERIMENTAL: a real keyboard keydown is now also accepted as a way
+    // to fill this same binding slot, alongside a gamepad button - added
+    // so a device whose remapped inputs only ever reach the page as
+    // synthetic keyboard events (e.g. a Steam Controller back paddle
+    // remapped through Steam Input) can still be bound here directly,
+    // without needing a dedicated Wizascript action for every possible
+    // input. Escape is still reserved for unbinding, exactly as before -
+    // it can never itself become a binding. A bare modifier tap (Shift/
+    // Control/Alt/Meta alone, with no other key) is ignored outright,
+    // since it's far more likely to be part of some other combo the
+    // player didn't mean to capture here than a deliberate binding.
+    // Controller input is meant to win when both arrive around the same
+    // instant: if a real gamepad button is ALSO physically down the
+    // moment a keydown lands, this listener steps aside and lets
+    // captureFrame's own poll (at most one animation frame later) capture
+    // it as a controller button instead.
+    function onKeydown(e) {
+      if (cancelled) return;
       if (e.key === 'Escape') {
+        e.preventDefault();
         cancelled = true;
         writeBound(null);
-        document.removeEventListener('keydown', onEscape, true);
+        cleanup();
         el.blur();
+        return;
       }
+      if (e.key === 'Shift' || e.key === 'Control' || e.key === 'Alt' || e.key === 'Meta') return;
+      const gpNow = getMergedGamepad();
+      if (gpNow && gpNow.buttons.some((b) => b && b.pressed)) return; // let the controller win this frame
+      e.preventDefault();
+      finishCapture({ type: 'key', code: e.code });
     }
-    document.addEventListener('keydown', onEscape, true);
+    function cleanup() {
+      document.removeEventListener('keydown', onKeydown, true);
+    }
+    document.addEventListener('keydown', onKeydown, true);
     requestAnimationFrame(captureFrame);
 
     el.addEventListener('blur', function onBlur() {
@@ -336,7 +376,7 @@ function enhanceControllerCaptureInput(el, readBound, writeBound) {
       controllerCaptureActive = false;
       el.style.border = '1px solid #b4b4b4';
       el.style.boxShadow = 'none';
-      document.removeEventListener('keydown', onEscape, true);
+      cleanup();
       refreshDisplay();
       el.removeEventListener('blur', onBlur);
     });

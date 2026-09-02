@@ -99,6 +99,24 @@ export function setHudPosition(left, top) {
   csSet('debugHudPosition', JSON.stringify({ left, top }));
 }
 
+// Cursor speed sensitivity, in [-1, 1] with 0 = default (1x) speed -
+// reworked from a live, momentary right-stick hold into a persisted dial
+// (see index.js's "cursor sensitivity dial" section) so it behaves like a
+// TV remote's volume setting: adjust it, let go, and it stays wherever you
+// left it. Same reasoning as the debug HUD position above - this is a
+// personal comfort setting, not a per-preset keybind, so it's deliberately
+// NOT preset-namespaced via presetKey() and stays put across preset
+// switches too.
+export function getCursorSensitivity() {
+  const raw = csGet('cursorSensitivity', null);
+  if (raw === null) return 0;
+  const n = parseFloat(raw);
+  return Number.isNaN(n) ? 0 : Math.max(-1, Math.min(1, n));
+}
+export function setCursorSensitivity(v) {
+  csSet('cursorSensitivity', String(Math.max(-1, Math.min(1, v))));
+}
+
 export function migrateFlatBindingsToPresetOne(controllerActionKeys, hardwareShortcutKeys) {
   if (csGet('migratedToPresetsV056', null) !== null) return;
   const migrate = (rawKey) => {

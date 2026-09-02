@@ -88,6 +88,29 @@ export function buttonToDisplay(idx) {
   return btnLabel(idx);
 }
 
+// Human-readable label for a real keyboard KeyboardEvent.code - used when
+// a binding was captured from a keydown instead of a gamepad button (see
+// settings.js's enhanceControllerCaptureInput). Strips the generic "Key"/
+// "Digit" prefixes the browser uses (KeyF -> F, Digit1 -> 1); everything
+// else (F1-F24, ArrowUp, Space, etc.) already reads fine as-is.
+function prettifyKeyCode(code) {
+  if (code.startsWith('Key') && code.length === 4) return code.slice(3);
+  if (code.startsWith('Digit') && code.length === 6) return code.slice(5);
+  return code;
+}
+
+// A bound "input" is now one of three shapes (see storage.js's
+// encodeBoundInput/decodeBoundInput in settings.js): null (unbound), a
+// gamepad button index (number), or a keyboard binding
+// ({ type: 'key', code }). This is the one place that turns any of the
+// three into the label a capture widget actually shows.
+export function bindingToDisplay(value) {
+  if (value === null || value === undefined) return 'Unbound';
+  if (typeof value === 'number') return btnLabel(value);
+  if (value && value.type === 'key') return 'Key: ' + prettifyKeyCode(value.code);
+  return 'Unbound';
+}
+
 // ---------- per-pad axis auto-recentering ----------
 // Some pads (confirmed live with a Switch Pro Controller over Bluetooth,
 // which self-identifies generically as "Wireless Gamepad" rather than

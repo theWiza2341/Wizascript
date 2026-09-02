@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.4.0
+// @version      1.3.1
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "1.4.0";
+  var SUITE_VERSION = "1.3.1";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -7057,6 +7057,17 @@ Version: v${version}`;
     if (idx === null || idx === void 0) return "Unbound";
     return btnLabel(idx);
   }
+  function prettifyKeyCode(code) {
+    if (code.startsWith("Key") && code.length === 4) return code.slice(3);
+    if (code.startsWith("Digit") && code.length === 6) return code.slice(5);
+    return code;
+  }
+  function bindingToDisplay(value) {
+    if (value === null || value === void 0) return "Unbound";
+    if (typeof value === "number") return btnLabel(value);
+    if (value && value.type === "key") return "Key: " + prettifyKeyCode(value.code);
+    return "Unbound";
+  }
   var AXIS_CALIBRATION = /* @__PURE__ */ new Map();
   var AXIS_STABLE_FRAMES_NEEDED = 90;
   var AXIS_JITTER_EPS = 0.02;
@@ -7345,6 +7356,15 @@ Version: v${version}`;
   function setHudPosition(left, top) {
     csSet("debugHudPosition", JSON.stringify({ left, top }));
   }
+  function getCursorSensitivity() {
+    const raw = csGet("cursorSensitivity", null);
+    if (raw === null) return 0;
+    const n = parseFloat(raw);
+    return Number.isNaN(n) ? 0 : Math.max(-1, Math.min(1, n));
+  }
+  function setCursorSensitivity(v) {
+    csSet("cursorSensitivity", String(Math.max(-1, Math.min(1, v))));
+  }
   function migrateFlatBindingsToPresetOne(controllerActionKeys, hardwareShortcutKeys) {
     if (csGet("migratedToPresetsV056", null) !== null) return;
     const migrate = (rawKey) => {
@@ -7419,43 +7439,43 @@ Version: v${version}`;
     HARDWARE_SHORTCUT_ACTIONS_BY_KEY[a.key] = a;
   });
   var DEFAULT_PRIMARY_BUTTON = 4;
-  function getControllerPrimaryButton() {
-    const raw = csGet(presetKey("keybinds.__primary"), String(DEFAULT_PRIMARY_BUTTON));
-    if (raw === "unbound") return null;
-    const n = parseInt(raw, 10);
-    return Number.isNaN(n) ? DEFAULT_PRIMARY_BUTTON : n;
+  function encodeBoundInput(value) {
+    if (value === null || value === void 0) return "unbound";
+    if (typeof value === "number") return String(value);
+    if (value && value.type === "key") return "kb:" + value.code;
+    return "unbound";
   }
-  function setControllerPrimaryButton(idxOrNull) {
-    csSet(presetKey("keybinds.__primary"), idxOrNull === null ? "unbound" : String(idxOrNull));
+  function decodeBoundInput(raw, defaultValue) {
+    if (raw === "unbound") return null;
+    if (typeof raw === "string" && raw.indexOf("kb:") === 0) return { type: "key", code: raw.slice(3) };
+    const n = parseInt(raw, 10);
+    return Number.isNaN(n) ? defaultValue : n;
+  }
+  function getControllerPrimaryButton() {
+    return decodeBoundInput(csGet(presetKey("keybinds.__primary"), String(DEFAULT_PRIMARY_BUTTON)), DEFAULT_PRIMARY_BUTTON);
+  }
+  function setControllerPrimaryButton(value) {
+    csSet(presetKey("keybinds.__primary"), encodeBoundInput(value));
   }
   function getChannelGuideButton() {
-    const raw = csGet(presetKey("keybinds.__channelGuide"), "unbound");
-    if (raw === "unbound") return null;
-    const n = parseInt(raw, 10);
-    return Number.isNaN(n) ? null : n;
+    return decodeBoundInput(csGet(presetKey("keybinds.__channelGuide"), "unbound"), null);
   }
-  function setChannelGuideButton(idxOrNull) {
-    csSet(presetKey("keybinds.__channelGuide"), idxOrNull === null ? "unbound" : String(idxOrNull));
+  function setChannelGuideButton(value) {
+    csSet(presetKey("keybinds.__channelGuide"), encodeBoundInput(value));
   }
   function getBoundButton(actionKey) {
     const action = CONTROLLER_ACTIONS_BY_KEY[actionKey];
-    const raw = csGet(presetKey("keybinds." + actionKey), String(action.defaultButton));
-    if (raw === "unbound") return null;
-    const n = parseInt(raw, 10);
-    return Number.isNaN(n) ? action.defaultButton : n;
+    return decodeBoundInput(csGet(presetKey("keybinds." + actionKey), String(action.defaultButton)), action.defaultButton);
   }
-  function setBoundButton(actionKey, idxOrNull) {
-    csSet(presetKey("keybinds." + actionKey), idxOrNull === null ? "unbound" : String(idxOrNull));
+  function setBoundButton(actionKey, value) {
+    csSet(presetKey("keybinds." + actionKey), encodeBoundInput(value));
   }
   function getBoundShortcutButton(actionKey) {
     const defaultButton = HARDWARE_SHORTCUT_DEFAULTS[actionKey];
-    const raw = csGet(presetKey("shortcuts." + actionKey), String(defaultButton));
-    if (raw === "unbound") return null;
-    const n = parseInt(raw, 10);
-    return Number.isNaN(n) ? defaultButton : n;
+    return decodeBoundInput(csGet(presetKey("shortcuts." + actionKey), String(defaultButton)), defaultButton);
   }
-  function setBoundShortcutButton(actionKey, idxOrNull) {
-    csSet(presetKey("shortcuts." + actionKey), idxOrNull === null ? "unbound" : String(idxOrNull));
+  function setBoundShortcutButton(actionKey, value) {
+    csSet(presetKey("shortcuts." + actionKey), encodeBoundInput(value));
   }
   var controllerEnabledSetting = null;
   function isControllerSupportEnabled() {
@@ -7560,14 +7580,14 @@ Version: v${version}`;
       textAlign: "center"
     });
     function refreshDisplay() {
-      el.value = buttonToDisplay(readBound());
+      el.value = bindingToDisplay(readBound());
     }
     refreshDisplay();
     boundInputRefreshers.push(refreshDisplay);
     el.addEventListener("focus", () => {
       el.style.border = "1px solid #40E0D0";
       el.style.boxShadow = "0 0 4px #40E0D0";
-      el.value = "Press a button...";
+      el.value = "Press a button or key...";
       controllerCaptureActive = true;
       let cancelled = false;
       let ignoreUntilReleased = /* @__PURE__ */ new Set();
@@ -7591,28 +7611,40 @@ Version: v${version}`;
         }
         if (!cancelled) requestAnimationFrame(captureFrame);
       }
-      function finishCapture(idx) {
+      function finishCapture(value) {
         if (cancelled) return;
         cancelled = true;
-        writeBound(idx);
+        writeBound(value);
+        cleanup();
         el.blur();
       }
-      function onEscape(e) {
+      function onKeydown(e) {
+        if (cancelled) return;
         if (e.key === "Escape") {
+          e.preventDefault();
           cancelled = true;
           writeBound(null);
-          document.removeEventListener("keydown", onEscape, true);
+          cleanup();
           el.blur();
+          return;
         }
+        if (e.key === "Shift" || e.key === "Control" || e.key === "Alt" || e.key === "Meta") return;
+        const gpNow = getMergedGamepad();
+        if (gpNow && gpNow.buttons.some((b) => b && b.pressed)) return;
+        e.preventDefault();
+        finishCapture({ type: "key", code: e.code });
       }
-      document.addEventListener("keydown", onEscape, true);
+      function cleanup() {
+        document.removeEventListener("keydown", onKeydown, true);
+      }
+      document.addEventListener("keydown", onKeydown, true);
       requestAnimationFrame(captureFrame);
       el.addEventListener("blur", function onBlur() {
         cancelled = true;
         controllerCaptureActive = false;
         el.style.border = "1px solid #b4b4b4";
         el.style.boxShadow = "none";
-        document.removeEventListener("keydown", onEscape, true);
+        cleanup();
         refreshDisplay();
         el.removeEventListener("blur", onBlur);
       });
@@ -8063,6 +8095,75 @@ Version: v${version}`;
         }
       });
     })();
+    const SENSITIVITY_BAR_HEIGHT = 120;
+    const sensitivityBar = document.createElement("div");
+    Object.assign(sensitivityBar.style, {
+      position: "fixed",
+      top: "50%",
+      right: "18px",
+      transform: "translateY(-50%)",
+      width: "14px",
+      height: SENSITIVITY_BAR_HEIGHT + "px",
+      background: "rgba(0,0,0,0.55)",
+      border: "1px solid rgba(255,255,255,0.4)",
+      borderRadius: "7px",
+      zIndex: 2147483647,
+      pointerEvents: "none",
+      display: "none"
+    });
+    const sensitivityBarCenterTick = document.createElement("div");
+    Object.assign(sensitivityBarCenterTick.style, {
+      position: "absolute",
+      left: "-4px",
+      right: "-4px",
+      top: "50%",
+      height: "2px",
+      background: "rgba(255,255,255,0.6)",
+      transform: "translateY(-1px)"
+    });
+    sensitivityBar.appendChild(sensitivityBarCenterTick);
+    const sensitivityBarFill = document.createElement("div");
+    Object.assign(sensitivityBarFill.style, {
+      position: "absolute",
+      left: "2px",
+      right: "2px",
+      background: "#40E0D0",
+      borderRadius: "2px"
+    });
+    sensitivityBar.appendChild(sensitivityBarFill);
+    const sensitivityBarLabel = document.createElement("div");
+    Object.assign(sensitivityBarLabel.style, {
+      position: "absolute",
+      right: "20px",
+      top: "50%",
+      transform: "translateY(-50%)",
+      background: "rgba(0,0,0,0.75)",
+      color: "white",
+      font: "11px monospace",
+      padding: "2px 6px",
+      borderRadius: "3px",
+      whiteSpace: "nowrap"
+    });
+    sensitivityBar.appendChild(sensitivityBarLabel);
+    let sensitivityBarHideTimer = null;
+    function showSensitivityBar(sensitivity) {
+      const mult = Math.max(0.3, Math.min(3, 1 - sensitivity * 2));
+      const halfTrack = SENSITIVITY_BAR_HEIGHT / 2 - 2;
+      const fillLen = Math.abs(sensitivity) * halfTrack;
+      if (sensitivity <= 0) {
+        sensitivityBarFill.style.top = halfTrack - fillLen + "px";
+        sensitivityBarFill.style.height = fillLen + "px";
+      } else {
+        sensitivityBarFill.style.top = halfTrack + 2 + "px";
+        sensitivityBarFill.style.height = fillLen + "px";
+      }
+      sensitivityBarLabel.textContent = mult.toFixed(1) + "x";
+      sensitivityBar.style.display = "block";
+      if (sensitivityBarHideTimer) clearTimeout(sensitivityBarHideTimer);
+      sensitivityBarHideTimer = setTimeout(() => {
+        sensitivityBar.style.display = "none";
+      }, 700);
+    }
     const OSK_THEMES = {
       dark: { panelBg: "#1c1c1c", panelBorder: "1px solid rgba(255,255,255,0.15)", panelShadow: "0 4px 16px rgba(0,0,0,0.6)", hintColor: "#999", closeBg: "#3a3a3a" },
       light: { panelBg: "#f2f2f4", panelBorder: "none", panelShadow: "0 8px 24px rgba(0,0,0,0.35)", hintColor: "#666", closeBg: "#333" }
@@ -8208,6 +8309,7 @@ Version: v${version}`;
       }
       document.body.appendChild(hud);
       document.body.appendChild(pressIndicator);
+      document.body.appendChild(sensitivityBar);
       document.body.appendChild(oskEl);
       document.body.appendChild(selectEl);
       document.body.appendChild(cursor);
@@ -8798,8 +8900,31 @@ Version: v${version}`;
     let usingController = false;
     const BASE_SPEED = 24;
     const WHEEL_DELTA = 100;
+    const STICK_DEADZONE = 0.15;
     function dz(v) {
-      return Math.abs(v) < 0.15 ? 0 : v;
+      const mag = Math.abs(v);
+      if (mag < STICK_DEADZONE) return 0;
+      const rescaled = (mag - STICK_DEADZONE) / (1 - STICK_DEADZONE);
+      return v < 0 ? -rescaled : rescaled;
+    }
+    const heldKeyCodes = /* @__PURE__ */ new Set();
+    document.addEventListener("keydown", (e) => {
+      heldKeyCodes.add(e.code);
+    });
+    document.addEventListener("keyup", (e) => {
+      heldKeyCodes.delete(e.code);
+    });
+    function isBoundInputDown(value, btnFn) {
+      if (value === null || value === void 0) return false;
+      if (typeof value === "number") return !!btnFn(value);
+      if (value.type === "key") return heldKeyCodes.has(value.code);
+      return false;
+    }
+    let cursorSensitivity = getCursorSensitivity();
+    let sensitivityAdjusting = false;
+    const SENSITIVITY_ADJUST_RATE = 0.02;
+    function currentCursorSpeedMult() {
+      return Math.max(0.3, Math.min(3, 1 - cursorSensitivity * 2));
     }
     function findRealScrollable(el) {
       let node = el;
@@ -9099,8 +9224,8 @@ Version: v${version}`;
     let shortcutBtnHeld = {};
     let shortcutHeldByAction = {};
     function shortcutJustPressed(btnFn, actionKey) {
-      const boundBtn = getBoundShortcutButton(actionKey);
-      const isDown = boundBtn !== null && !!btnFn(boundBtn);
+      const bound = getBoundShortcutButton(actionKey);
+      const isDown = isBoundInputDown(bound, btnFn);
       const wasDown = !!shortcutHeldByAction[actionKey];
       shortcutHeldByAction[actionKey] = isDown;
       return isDown && !wasDown;
@@ -9137,6 +9262,11 @@ Version: v${version}`;
             cursor.style.display = "none";
             if (oskOpen) closeOsk();
           }
+          if (sensitivityAdjusting) {
+            setCursorSensitivity(cursorSensitivity);
+            sensitivityAdjusting = false;
+          }
+          sensitivityBar.style.display = "none";
           return;
         }
         logRawGamepadStateIfChanged();
@@ -9162,6 +9292,14 @@ Version: v${version}`;
         }
         logMergedInputEdges(gp, usingController, anyStick);
         if (!usingController) return;
+        if (rx !== 0) {
+          cursorSensitivity = Math.max(-1, Math.min(1, cursorSensitivity + rx * SENSITIVITY_ADJUST_RATE));
+          showSensitivityBar(cursorSensitivity);
+          sensitivityAdjusting = true;
+        } else if (sensitivityAdjusting) {
+          setCursorSensitivity(cursorSensitivity);
+          sensitivityAdjusting = false;
+        }
         if (btn(5) && !shortcutBtnHeld[5]) {
           if (oskOpen) {
             oskPaused = !oskPaused;
@@ -9176,7 +9314,16 @@ Version: v${version}`;
           }
         }
         if (btn(1) && !shortcutBtnHeld[1] && oskOpen && oskPaused) closeOsk();
-        if (shortcutJustPressed(btn, "openSettings")) triggerElementClick(document.getElementById("btn-config"));
+        if (shortcutJustPressed(btn, "openSettings")) {
+          const openModal = queryModalRoot();
+          if (openModal && openModal.kind === "tabbed") {
+            const dismiss = findModalDismissButton(openModal.root);
+            if (dismiss) triggerElementClick(dismiss);
+            else document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
+          } else {
+            triggerElementClick(document.getElementById("btn-config"));
+          }
+        }
         if (shortcutJustPressed(btn, "yourDustpile") && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(true)"]'));
         if (shortcutJustPressed(btn, "opponentDustpile") && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(false)"]'));
         if (shortcutJustPressed(btn, "endTurn")) triggerElementClick(document.getElementById("endTurnBtn"));
@@ -9187,11 +9334,11 @@ Version: v${version}`;
         shortcutBtnHeld = { 1: btn(1), 5: btn(5) };
         if (!oskOpen || oskPaused) {
           const primaryBtn = getControllerPrimaryButton();
-          const l1Down = primaryBtn !== null && btn(primaryBtn) || oskOpen && oskPaused;
+          const l1Down = isBoundInputDown(primaryBtn, btn) || oskOpen && oskPaused;
           const viaPause = oskOpen && oskPaused;
           const primaryBase = { key: "Control", code: "ControlLeft", keyCode: 17, which: 17, bubbles: true };
           const guideBtnForRelay = getChannelGuideButton();
-          const guideDownForRelay = guideBtnForRelay !== null && btn(guideBtnForRelay);
+          const guideDownForRelay = isBoundInputDown(guideBtnForRelay, btn);
           if (l1Down) {
             if (!keybindRelayHeld.primary) primaryHoldHadAction = false;
           } else if (keybindRelayHeld.primary) {
@@ -9247,8 +9394,8 @@ Version: v${version}`;
               else if (action.context === "channelSwitch") applies = !inPatchMakerFieldForContext;
               else if (action.context === "patchMaker") applies = inPatchMakerFieldForContext;
               else applies = !inPatchMakerFieldForContext;
-              const boundBtn = applies ? getBoundButton(action.key) : null;
-              const isDown = boundBtn !== null && btn(boundBtn);
+              const boundInput = applies ? getBoundButton(action.key) : null;
+              const isDown = isBoundInputDown(boundInput, btn);
               nextActionHeld[action.key] = isDown;
               if (isDown && !keybindRelayHeld.actions[action.key]) {
                 const sig = action.dispatch.code;
@@ -9273,12 +9420,12 @@ R1: resume typing   ${btnLabel(1)}: close` : ""}`;
         }
         if (!oskOpen || oskPaused) {
           const guideBtn = getChannelGuideButton();
-          const guideDown = guideBtn !== null && btn(guideBtn);
+          const guideDown = isBoundInputDown(guideBtn, btn);
           if (guideDown) {
             const guideEl = document.getElementById("uctv-guide-overlay");
             if (!guideEl) {
               hud.textContent = `UC TV Guide loading\u2026
-release ${buttonToDisplay(guideBtn)} to cancel`;
+release ${bindingToDisplay(guideBtn)} to cancel`;
             } else {
               const playerSpans = Array.from(guideEl.querySelectorAll("span")).filter((el) => el.style.cursor === "pointer");
               const matches = [];
@@ -9300,7 +9447,7 @@ release ${buttonToDisplay(guideBtn)} to cancel`;
                 guideNeedsReanchor = false;
                 hud.textContent = `UC TV Guide
 no matches shown
-release ${buttonToDisplay(guideBtn)} to close`;
+release ${bindingToDisplay(guideBtn)} to close`;
               } else {
                 if (ry !== 0) {
                   guideEl.scrollTop += ry * 30;
@@ -9317,7 +9464,7 @@ release ${buttonToDisplay(guideBtn)} to close`;
                   guideBtn0Held = btn(0);
                   hud.textContent = `UC TV Guide
 (scrolled - press \u2191\u2193\u2190\u2192 to resume navigating)
-release ${buttonToDisplay(guideBtn)} to close`;
+release ${bindingToDisplay(guideBtn)} to close`;
                   return;
                 }
                 let justReanchored = false;
@@ -9357,7 +9504,7 @@ release ${buttonToDisplay(guideBtn)} to close`;
                 if (btn(0) && !guideBtn0Held) sel.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
                 hud.textContent = `UC TV Guide
 match ${guideMatchIndex + 1}/${matches.length}${playersInMatch.length > 1 ? `   player ${guidePlayerIndex + 1}/${playersInMatch.length}` : ""}
-\u2191/\u2193 match   \u2190/\u2192 player   ${btnLabel(0)} jump   release ${buttonToDisplay(guideBtn)} to close`;
+\u2191/\u2193 match   \u2190/\u2192 player   ${btnLabel(0)} jump   release ${bindingToDisplay(guideBtn)} to close`;
               }
             }
             guideDpadHeld = { up, down, left, right };
@@ -9380,7 +9527,7 @@ match ${guideMatchIndex + 1}/${matches.length}${playersInMatch.length > 1 ? `   
           }
         }
         if (oskOpen && !oskPaused) {
-          const oskSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
+          const oskSpeedMult = currentCursorSpeedMult();
           x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * oskSpeedMult));
           y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * oskSpeedMult));
           cursor.style.left = x + "px";
@@ -9458,7 +9605,7 @@ row ${oskRow + 1}/${activeRows.length} col ${oskCol + 1}/${row.length}${oskShift
           return;
         }
         if (selectTarget) {
-          const selSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
+          const selSpeedMult = currentCursorSpeedMult();
           x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * selSpeedMult));
           y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * selSpeedMult));
           cursor.style.left = x + "px";
@@ -9501,7 +9648,7 @@ D-Pad/cursor: browse   ${btnLabel(0)} confirm   ${btnLabel(1)} cancel`;
           return;
         }
         if (sliderTarget) {
-          const speedMult2 = Math.max(0.3, Math.min(3, 1 - rx * 2));
+          const speedMult2 = currentCursorSpeedMult();
           x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * speedMult2));
           y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * speedMult2));
           cursor.style.left = x + "px";
@@ -9552,7 +9699,7 @@ left/right = fine-tune   ${btnLabel(0)} hold = drag   ${btnLabel(1)} = done`;
           refreshHighlight();
         }
         if (mulliganHost) {
-          const mulSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
+          const mulSpeedMult = currentCursorSpeedMult();
           x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * mulSpeedMult));
           y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * mulSpeedMult));
           cursor.style.left = x + "px";
@@ -9659,7 +9806,7 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
         if (modalInfo) {
           const { root, kind } = modalInfo;
           modalKind = kind;
-          const modSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
+          const modSpeedMult = currentCursorSpeedMult();
           x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * modSpeedMult));
           y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * modSpeedMult));
           cursor.style.left = x + "px";
@@ -9871,7 +10018,7 @@ ${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   ${btnLabel(1)} close`;
           pendingAttacker = null;
         }
         if (handHost) {
-          const mSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
+          const mSpeedMult = currentCursorSpeedMult();
           x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * mSpeedMult));
           y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * mSpeedMult));
           cursor.style.left = x + "px";
@@ -10106,7 +10253,7 @@ ${btnLabel(0)} select attacker   \u2193/${btnLabel(1)} hand`;
           }
           return;
         }
-        const speedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
+        const speedMult = currentCursorSpeedMult();
         x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * speedMult));
         y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * speedMult));
         cursor.style.left = x + "px";

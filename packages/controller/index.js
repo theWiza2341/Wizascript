@@ -28,7 +28,7 @@
 // requestAnimationFrame loop that drives all of it every frame.
 
 import {
-  getMergedGamepad, btnLabel, buttonToDisplay,
+  getMergedGamepad, btnLabel, buttonToDisplay, bindingToDisplay,
   pressIndicator,
   logRawGamepadStateIfChanged, logMergedInputEdges
 } from './gamepad.js';
@@ -39,7 +39,7 @@ import {
   getChannelGuideButton,
   getPresetMenuState, isDebugTextEnabled, getHighlightColor
 } from './settings.js';
-import { getHudPosition, setHudPosition } from './storage.js';
+import { getHudPosition, setHudPosition, getCursorSensitivity, setCursorSensitivity } from './storage.js';
 import { getPageWindow } from '../core/page-window.js';
 
 export function initController(plugin, controllerEnabledSetting) {
@@ -185,6 +185,63 @@ export function initController(plugin, controllerEnabledSetting) {
     });
   })();
 
+  /* ---------- cursor sensitivity OSD (right stick, horizontal) ----------
+     Reworked from a live, momentary accel/decel hold into a persisted
+     dial - see the "cursor sensitivity dial" section in frame() below for
+     the actual adjustment logic. This is purely the visual: invisible
+     99% of the time, same idiom as a TV remote's volume bar - pops up the
+     instant the right stick tilts horizontally, fades back out shortly
+     after it's released. A vertical track with a center "0" tick (default
+     1x speed) and a fill that grows up (faster) or down (slower) from
+     that center line toward whichever edge matches the current value. */
+  const SENSITIVITY_BAR_HEIGHT = 120;
+  const sensitivityBar = document.createElement('div');
+  Object.assign(sensitivityBar.style, {
+    position: 'fixed', top: '50%', right: '18px', transform: 'translateY(-50%)',
+    width: '14px', height: SENSITIVITY_BAR_HEIGHT + 'px',
+    background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.4)',
+    borderRadius: '7px', zIndex: 2147483647, pointerEvents: 'none', display: 'none'
+  });
+  const sensitivityBarCenterTick = document.createElement('div');
+  Object.assign(sensitivityBarCenterTick.style, {
+    position: 'absolute', left: '-4px', right: '-4px', top: '50%',
+    height: '2px', background: 'rgba(255,255,255,0.6)', transform: 'translateY(-1px)'
+  });
+  sensitivityBar.appendChild(sensitivityBarCenterTick);
+  const sensitivityBarFill = document.createElement('div');
+  Object.assign(sensitivityBarFill.style, {
+    position: 'absolute', left: '2px', right: '2px',
+    background: '#40E0D0', borderRadius: '2px'
+  });
+  sensitivityBar.appendChild(sensitivityBarFill);
+  const sensitivityBarLabel = document.createElement('div');
+  Object.assign(sensitivityBarLabel.style, {
+    position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)',
+    background: 'rgba(0,0,0,0.75)', color: 'white', font: '11px monospace',
+    padding: '2px 6px', borderRadius: '3px', whiteSpace: 'nowrap'
+  });
+  sensitivityBar.appendChild(sensitivityBarLabel);
+
+  let sensitivityBarHideTimer = null;
+  function showSensitivityBar(sensitivity) {
+    const mult = Math.max(0.3, Math.min(3, 1 - sensitivity * 2));
+    const halfTrack = SENSITIVITY_BAR_HEIGHT / 2 - 2;
+    const fillLen = Math.abs(sensitivity) * halfTrack;
+    if (sensitivity <= 0) {
+      // Negative = pushed left = faster - fill grows UPWARD from center.
+      sensitivityBarFill.style.top = (halfTrack - fillLen) + 'px';
+      sensitivityBarFill.style.height = fillLen + 'px';
+    } else {
+      // Positive = pushed right = slower - fill grows DOWNWARD from center.
+      sensitivityBarFill.style.top = (halfTrack + 2) + 'px';
+      sensitivityBarFill.style.height = fillLen + 'px';
+    }
+    sensitivityBarLabel.textContent = mult.toFixed(1) + 'x';
+    sensitivityBar.style.display = 'block';
+    if (sensitivityBarHideTimer) clearTimeout(sensitivityBarHideTimer);
+    sensitivityBarHideTimer = setTimeout(() => { sensitivityBar.style.display = 'none'; }, 700);
+  }
+
   const OSK_THEMES = {
     dark:  { panelBg: '#1c1c1c', panelBorder: '1px solid rgba(255,255,255,0.15)', panelShadow: '0 4px 16px rgba(0,0,0,0.6)', hintColor: '#999', closeBg: '#3a3a3a' },
     light: { panelBg: '#f2f2f4', panelBorder: 'none', panelShadow: '0 8px 24px rgba(0,0,0,0.35)', hintColor: '#666', closeBg: '#333' }
@@ -293,6 +350,7 @@ export function initController(plugin, controllerEnabledSetting) {
     if (!document.body) { requestAnimationFrame(mount); return; }
     document.body.appendChild(hud);
     document.body.appendChild(pressIndicator);
+    document.body.appendChild(sensitivityBar);
     document.body.appendChild(oskEl);
     document.body.appendChild(selectEl);
     // Cursor mounted LAST - it already sits at the max practical z-index
@@ -1116,7 +1174,58 @@ export function initController(plugin, controllerEnabledSetting) {
   let usingController = false;
   const BASE_SPEED = 24;
   const WHEEL_DELTA = 100;
-  function dz(v) { return Math.abs(v) < 0.15 ? 0 : v; }
+  const STICK_DEADZONE = 0.15;
+  // Rescales the post-deadzone range back onto the full 0..1 output range,
+  // instead of just gating the raw value to 0 below the threshold and
+  // passing it straight through unchanged above it. That straight-
+  // passthrough was the actual reported bug ("the cursor should at least
+  // move slower than it does right outside the deadzone"): an axis
+  // reading of, say, 0.16 - barely past the 0.15 deadzone - used to pass
+  // through AS 0.16, i.e. already a noticeable, non-ramping speed the
+  // instant the deadzone was cleared, rather than easing in from near-
+  // zero. Now that same 0.16 rescales to (0.16-0.15)/(1-0.15) ≈ 0.012 -
+  // near-zero, growing smoothly to the full raw value only at full stick
+  // tilt (1.0 stays 1.0 either way).
+  function dz(v) {
+    const mag = Math.abs(v);
+    if (mag < STICK_DEADZONE) return 0;
+    const rescaled = (mag - STICK_DEADZONE) / (1 - STICK_DEADZONE);
+    return v < 0 ? -rescaled : rescaled;
+  }
+  // Real keyboard key state, tracked independently of the Gamepad API poll
+  // below - needed because a controller binding can now ALSO be a keyboard
+  // key (see settings.js's enhanceControllerCaptureInput and
+  // encodeBoundInput/decodeBoundInput), and there's no way to read "is
+  // this key currently held" from a poll the way gp.buttons[i].pressed
+  // works for a real gamepad. Registered once, here, rather than inside
+  // frame() itself, so it isn't re-attached every animation frame.
+  const heldKeyCodes = new Set();
+  document.addEventListener('keydown', (e) => { heldKeyCodes.add(e.code); });
+  document.addEventListener('keyup', (e) => { heldKeyCodes.delete(e.code); });
+  // Single place every consumer of a remappable binding (Controller
+  // Primary, Channel Guide, the CONTROLLER_ACTIONS combo relay, and every
+  // HARDWARE_SHORTCUT_ACTIONS shortcut via shortcutJustPressed) resolves
+  // "is this bound input currently physically active" through - `value`
+  // is whatever getControllerPrimaryButton()/getBoundButton()/etc. return:
+  // null (unbound), a number (gamepad button index, checked via the
+  // frame's own `btn` closure), or { type: 'key', code } (checked against
+  // heldKeyCodes above).
+  function isBoundInputDown(value, btnFn) {
+    if (value === null || value === undefined) return false;
+    if (typeof value === 'number') return !!btnFn(value);
+    if (value.type === 'key') return heldKeyCodes.has(value.code);
+    return false;
+  }
+  // Persisted cursor-speed dial (see storage.js's getCursorSensitivity/
+  // setCursorSensitivity) - loaded once here, adjusted live in frame()'s
+  // own "cursor sensitivity dial" section below, and only written back to
+  // storage on release (not every single frame while adjusting).
+  let cursorSensitivity = getCursorSensitivity();
+  let sensitivityAdjusting = false;
+  const SENSITIVITY_ADJUST_RATE = 0.02; // per frame at full tilt - ~1.2/s, full sweep (-1..1) in ~1.7s. First-pass value, likely worth tuning once actually felt live.
+  function currentCursorSpeedMult() {
+    return Math.max(0.3, Math.min(3, 1 - cursorSensitivity * 2));
+  }
 
   function findRealScrollable(el) {
     let node = el;
@@ -1461,8 +1570,8 @@ export function initController(plugin, controllerEnabledSetting) {
   // stale entry under the old number and never arm under the new one.
   let shortcutHeldByAction = {};
   function shortcutJustPressed(btnFn, actionKey) {
-    const boundBtn = getBoundShortcutButton(actionKey);
-    const isDown = boundBtn !== null && !!btnFn(boundBtn);
+    const bound = getBoundShortcutButton(actionKey);
+    const isDown = isBoundInputDown(bound, btnFn);
     const wasDown = !!shortcutHeldByAction[actionKey];
     shortcutHeldByAction[actionKey] = isDown;
     return isDown && !wasDown;
@@ -1564,6 +1673,11 @@ export function initController(plugin, controllerEnabledSetting) {
           cursor.style.display = 'none';
           if (oskOpen) closeOsk();
         }
+        if (sensitivityAdjusting) {
+          setCursorSensitivity(cursorSensitivity);
+          sensitivityAdjusting = false;
+        }
+        sensitivityBar.style.display = 'none';
         return;
       }
 
@@ -1610,6 +1724,25 @@ export function initController(plugin, controllerEnabledSetting) {
 
       if (!usingController) return;
 
+      /* ---------- cursor sensitivity dial (right stick, horizontal) ----------
+         Replaces the old live, momentary accel/decel: tilting rx no
+         longer scales THIS frame's cursor speed directly - it nudges a
+         PERSISTED sensitivity value that stays wherever it's left once
+         the stick is released, like a TV remote's volume rocker. Every
+         cursor-driven mode below reads the single shared
+         currentCursorSpeedMult() derived from it, instead of each
+         computing its own live `1 - rx*2` the way all seven used to. */
+      if (rx !== 0) {
+        cursorSensitivity = Math.max(-1, Math.min(1, cursorSensitivity + rx * SENSITIVITY_ADJUST_RATE));
+        showSensitivityBar(cursorSensitivity);
+        sensitivityAdjusting = true;
+      } else if (sensitivityAdjusting) {
+        // Stick released - commit to storage once, here, rather than on
+        // every single frame while actively adjusting.
+        setCursorSensitivity(cursorSensitivity);
+        sensitivityAdjusting = false;
+      }
+
       /* ---------- global in-match hardware shortcuts ----------
          Run right after the usingController gate so they always fire
          every frame regardless of which mode branch is about to handle
@@ -1642,7 +1775,23 @@ export function initController(plugin, controllerEnabledSetting) {
       // stays reserved for R1/button-5 and Circle/button-1 only, which
       // are deliberately still fixed (R1 doubles as the OSK-pause toggle
       // using the exact same physical button unconditionally).
-      if (shortcutJustPressed(btn, 'openSettings')) triggerElementClick(document.getElementById('btn-config'));
+      // Toggle, not just open - a second press while Settings is already
+      // open now closes it instead of stacking another copy on top,
+      // matching direct feedback from a live tester ("I don't want to be
+      // able to open many settings menus on top of each other with
+      // start"). queryModalRoot()'s own 'tabbed' kind IS Settings (see its
+      // own comment - a TabManager-shaped `.tabbedView.left` dialog), so
+      // reusing it here rather than re-detecting independently.
+      if (shortcutJustPressed(btn, 'openSettings')) {
+        const openModal = queryModalRoot();
+        if (openModal && openModal.kind === 'tabbed') {
+          const dismiss = findModalDismissButton(openModal.root);
+          if (dismiss) triggerElementClick(dismiss);
+          else document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', code: 'Escape', bubbles: true }));
+        } else {
+          triggerElementClick(document.getElementById('btn-config'));
+        }
+      }
       // Guarded on !oskOpen since L3/R3 (their default buttons) are ALSO
       // the OSK's own local symbols-toggle/send bindings while it's open.
       if (shortcutJustPressed(btn, 'yourDustpile') && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(true)"]'));
@@ -1694,11 +1843,11 @@ export function initController(plugin, controllerEnabledSetting) {
          tracking in keybinds.js. */
       if (!oskOpen || oskPaused) {
         const primaryBtn = getControllerPrimaryButton();
-        const l1Down = (primaryBtn !== null && btn(primaryBtn)) || (oskOpen && oskPaused);
+        const l1Down = isBoundInputDown(primaryBtn, btn) || (oskOpen && oskPaused);
         const viaPause = oskOpen && oskPaused;
         const primaryBase = { key: 'Control', code: 'ControlLeft', keyCode: 17, which: 17, bubbles: true };
         const guideBtnForRelay = getChannelGuideButton();
-        const guideDownForRelay = guideBtnForRelay !== null && btn(guideBtnForRelay);
+        const guideDownForRelay = isBoundInputDown(guideBtnForRelay, btn);
 
         if (l1Down) {
           if (!keybindRelayHeld.primary) primaryHoldHadAction = false;
@@ -1779,8 +1928,8 @@ export function initController(plugin, controllerEnabledSetting) {
             else if (action.context === 'patchMaker') applies = inPatchMakerFieldForContext;
             else /* 'default' */ applies = !inPatchMakerFieldForContext;
 
-            const boundBtn = applies ? getBoundButton(action.key) : null;
-            const isDown = boundBtn !== null && btn(boundBtn);
+            const boundInput = applies ? getBoundButton(action.key) : null;
+            const isDown = isBoundInputDown(boundInput, btn);
             nextActionHeld[action.key] = isDown;
             if (isDown && !keybindRelayHeld.actions[action.key]) {
               const sig = action.dispatch.code;
@@ -1832,7 +1981,7 @@ export function initController(plugin, controllerEnabledSetting) {
          before, only the navigation scheme changed. */
       if (!oskOpen || oskPaused) {
         const guideBtn = getChannelGuideButton();
-        const guideDown = guideBtn !== null && btn(guideBtn);
+        const guideDown = isBoundInputDown(guideBtn, btn);
 
         if (guideDown) {
           const guideEl = document.getElementById('uctv-guide-overlay');
@@ -1844,7 +1993,7 @@ export function initController(plugin, controllerEnabledSetting) {
             // free cursor doesn't flicker back on for a fraction of a
             // second, same as holding Primary always used to do
             // regardless of what it was about to show.
-            hud.textContent = `UC TV Guide loading…\nrelease ${buttonToDisplay(guideBtn)} to cancel`;
+            hud.textContent = `UC TV Guide loading…\nrelease ${bindingToDisplay(guideBtn)} to cancel`;
           } else {
             const playerSpans = Array.from(guideEl.querySelectorAll('span')).filter((el) => el.style.cursor === 'pointer');
             const matches = [];
@@ -1861,7 +2010,7 @@ export function initController(plugin, controllerEnabledSetting) {
               guidePlayerIndex = 0;
               guideSelectedEl = null;
               guideNeedsReanchor = false;
-              hud.textContent = `UC TV Guide\nno matches shown\nrelease ${buttonToDisplay(guideBtn)} to close`;
+              hud.textContent = `UC TV Guide\nno matches shown\nrelease ${bindingToDisplay(guideBtn)} to close`;
             } else {
               // Right stick free-scrolls the list independently of the
               // d-pad selection - lets you fly straight to the bottom of
@@ -1890,7 +2039,7 @@ export function initController(plugin, controllerEnabledSetting) {
                 // guessing at one.
                 guideDpadHeld = { up, down, left, right };
                 guideBtn0Held = btn(0);
-                hud.textContent = `UC TV Guide\n(scrolled - press ↑↓←→ to resume navigating)\nrelease ${buttonToDisplay(guideBtn)} to close`;
+                hud.textContent = `UC TV Guide\n(scrolled - press ↑↓←→ to resume navigating)\nrelease ${bindingToDisplay(guideBtn)} to close`;
                 return;
               }
 
@@ -1924,7 +2073,7 @@ export function initController(plugin, controllerEnabledSetting) {
               }
               if (btn(0) && !guideBtn0Held) sel.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
 
-              hud.textContent = `UC TV Guide\nmatch ${guideMatchIndex + 1}/${matches.length}${playersInMatch.length > 1 ? `   player ${guidePlayerIndex + 1}/${playersInMatch.length}` : ''}\n↑/↓ match   ←/→ player   ${btnLabel(0)} jump   release ${buttonToDisplay(guideBtn)} to close`;
+              hud.textContent = `UC TV Guide\nmatch ${guideMatchIndex + 1}/${matches.length}${playersInMatch.length > 1 ? `   player ${guidePlayerIndex + 1}/${playersInMatch.length}` : ''}\n↑/↓ match   ←/→ player   ${btnLabel(0)} jump   release ${bindingToDisplay(guideBtn)} to close`;
             }
           }
           guideDpadHeld = { up, down, left, right };
@@ -1969,7 +2118,7 @@ export function initController(plugin, controllerEnabledSetting) {
         // overrides oskRow/oskCol on frames where the stick actually
         // moved so it doesn't fight d-pad browsing while the cursor is
         // just resting over some key.
-        const oskSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
+        const oskSpeedMult = currentCursorSpeedMult();
         x = Math.max(0, Math.min(pageWindow.innerWidth, x + lx * BASE_SPEED * oskSpeedMult));
         y = Math.max(0, Math.min(pageWindow.innerHeight, y + ly * BASE_SPEED * oskSpeedMult));
         cursor.style.left = x + 'px';
@@ -2042,7 +2191,7 @@ export function initController(plugin, controllerEnabledSetting) {
       if (selectTarget) {
         // Same free-cursor treatment as the OSK above - hover a row to
         // highlight it, X confirms whatever's currently highlighted.
-        const selSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
+        const selSpeedMult = currentCursorSpeedMult();
         x = Math.max(0, Math.min(pageWindow.innerWidth, x + lx * BASE_SPEED * selSpeedMult));
         y = Math.max(0, Math.min(pageWindow.innerHeight, y + ly * BASE_SPEED * selSpeedMult));
         cursor.style.left = x + 'px';
@@ -2078,7 +2227,7 @@ export function initController(plugin, controllerEnabledSetting) {
       }
 
       if (sliderTarget) {
-        const speedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
+        const speedMult = currentCursorSpeedMult();
         x = Math.max(0, Math.min(pageWindow.innerWidth, x + lx * BASE_SPEED * speedMult));
         y = Math.max(0, Math.min(pageWindow.innerHeight, y + ly * BASE_SPEED * speedMult));
         cursor.style.left = x + 'px';
@@ -2127,7 +2276,7 @@ export function initController(plugin, controllerEnabledSetting) {
         refreshHighlight();
       }
       if (mulliganHost) {
-        const mulSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
+        const mulSpeedMult = currentCursorSpeedMult();
         x = Math.max(0, Math.min(pageWindow.innerWidth, x + lx * BASE_SPEED * mulSpeedMult));
         y = Math.max(0, Math.min(pageWindow.innerHeight, y + ly * BASE_SPEED * mulSpeedMult));
         cursor.style.left = x + 'px';
@@ -2234,7 +2383,7 @@ export function initController(plugin, controllerEnabledSetting) {
       if (modalInfo) {
         const { root, kind } = modalInfo;
         modalKind = kind;
-        const modSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
+        const modSpeedMult = currentCursorSpeedMult();
         x = Math.max(0, Math.min(pageWindow.innerWidth, x + lx * BASE_SPEED * modSpeedMult));
         y = Math.max(0, Math.min(pageWindow.innerHeight, y + ly * BASE_SPEED * modSpeedMult));
         cursor.style.left = x + 'px';
@@ -2519,7 +2668,7 @@ export function initController(plugin, controllerEnabledSetting) {
         resolveGrid = null; matchSubState = 'hand-nav'; pendingAttacker = null;
       }
       if (handHost) {
-        const mSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
+        const mSpeedMult = currentCursorSpeedMult();
         x = Math.max(0, Math.min(pageWindow.innerWidth, x + lx * BASE_SPEED * mSpeedMult));
         y = Math.max(0, Math.min(pageWindow.innerHeight, y + ly * BASE_SPEED * mSpeedMult));
         cursor.style.left = x + 'px';
@@ -2820,7 +2969,7 @@ export function initController(plugin, controllerEnabledSetting) {
         return;
       }
 
-      const speedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
+      const speedMult = currentCursorSpeedMult();
       x = Math.max(0, Math.min(pageWindow.innerWidth, x + lx * BASE_SPEED * speedMult));
       y = Math.max(0, Math.min(pageWindow.innerHeight, y + ly * BASE_SPEED * speedMult));
       cursor.style.left = x + 'px';

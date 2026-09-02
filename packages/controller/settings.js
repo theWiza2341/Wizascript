@@ -12,7 +12,7 @@
 import { createFeatureSettings } from '../core/settings.js';
 import {
   PRESET_COUNT, getActivePreset, setActivePreset, getPresetName, setPresetName,
-  presetKey, migrateFlatBindingsToPresetOne, csGet, csSet
+  presetKey, migrateFlatBindingsToPresetOne, resetPresetBindings, csGet, csSet
 } from './storage.js';
 import { getMergedGamepad, buttonToDisplay, connectWebHidController, isHidConnected } from './gamepad.js';
 
@@ -82,6 +82,28 @@ export function getControllerPrimaryButton() {
 export function setControllerPrimaryButton(idxOrNull) {
   csSet(presetKey('keybinds.__primary'), idxOrNull === null ? 'unbound' : String(idxOrNull));
 }
+
+// UC TV channel guide - a SEPARATE hold button from Controller Primary
+// (per request, after the round-B tap-toggle attempt turned out to be the
+// wrong fix for the original "locks the cursor" complaint - the real
+// problem was the guide sharing input with every other Primary+<button>
+// combo, not the hold gesture itself). Default Unbound rather than
+// reusing any existing default button - every other raw button index
+// already has SOME standalone or combo-secondary meaning in this package,
+// and shipping this pre-bound to one of them risked a real double-meaning
+// collision the first time someone held both at once. Unbound means this
+// is fully inert until a player deliberately binds it, exactly like
+// Controller Primary itself already behaves when unbound.
+export function getChannelGuideButton() {
+  const raw = csGet(presetKey('keybinds.__channelGuide'), 'unbound');
+  if (raw === 'unbound') return null;
+  const n = parseInt(raw, 10);
+  return Number.isNaN(n) ? null : n;
+}
+export function setChannelGuideButton(idxOrNull) {
+  csSet(presetKey('keybinds.__channelGuide'), idxOrNull === null ? 'unbound' : String(idxOrNull));
+}
+
 export function getBoundButton(actionKey) {
   const action = CONTROLLER_ACTIONS_BY_KEY[actionKey];
   const raw = csGet(presetKey('keybinds.' + actionKey), String(action.defaultButton));
@@ -441,6 +463,38 @@ function enhancePresetNameInput(el) {
   });
 }
 
+// "Restore Settings to Default" - a real native 'dblclick' (not a
+// hand-rolled two-clicks-within-a-window timer) so it actually behaves
+// like every other double-click the user already knows, and can't be
+// triggered by two unrelated single clicks landing far apart. Scoped to
+// whichever preset is currently active (see storage.js's
+// resetPresetBindings) - deletes the stored overrides for every keybind/
+// shortcut/Primary/Channel-Guide binding in that preset, then refreshes
+// every currently-rendered capture widget so the reset is visible
+// immediately without needing to close and reopen Settings.
+function enhanceResetButton(el) {
+  el.setAttribute('data-wc-enhanced', 'true');
+  el.readOnly = true;
+  el.tabIndex = 0;
+  Object.assign(el.style, {
+    cursor: 'pointer', backgroundColor: 'black', color: 'white',
+    border: '1px solid #b4b4b4', borderRadius: '3px', textAlign: 'center'
+  });
+
+  function refreshDisplay() {
+    el.value = 'Double Click to Reset';
+  }
+  refreshDisplay();
+  boundInputRefreshers.push(refreshDisplay);
+
+  el.addEventListener('dblclick', () => {
+    resetPresetBindings(getActivePreset(), CONTROLLER_ACTIONS.map((a) => a.key), HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key));
+    boundInputRefreshers.forEach((fn) => fn());
+    el.value = '✅ Reset to Defaults';
+    setTimeout(refreshDisplay, 1500);
+  });
+}
+
 // "Detect Controller" - replaces the old persistent, always-on-screen
 // top-right "Connect Controller (WebHID)" button (see gamepad.js). That
 // spot was handy for debugging but not something a regular player needs
@@ -513,8 +567,16 @@ function startControllerKeybindObserver(idPrefix) {
         enhancePresetNameInput(el);
         return;
       }
+      if (bindingKey === 'resetPreset') {
+        enhanceResetButton(el);
+        return;
+      }
       if (bindingKey === 'controllerPrimary') {
         enhanceControllerCaptureInput(el, () => getControllerPrimaryButton(), (v) => setControllerPrimaryButton(v));
+        return;
+      }
+      if (bindingKey === 'channelGuide') {
+        enhanceControllerCaptureInput(el, () => getChannelGuideButton(), (v) => setChannelGuideButton(v));
         return;
       }
       if (CONTROLLER_ACTIONS_BY_KEY[bindingKey]) {
@@ -595,7 +657,7 @@ export function registerControllerSettings(plugin, controllerEnabledSettingIn) {
   // enhanceDetectControllerButton() above.
   settings.add('detectController', {
     name: 'Detect Controller',
-    note: 'Only needed for a controller whose buttons don\'t register correctly otherwise (e.g. a Switch Pro Controller over Bluetooth) - click to open your browser\'s device picker.',
+    note: 'Click if your controller isn\'t responding.',
     type: 'text',
     default: 'Click to Detect Controller (WebHID)'
   });
@@ -604,7 +666,7 @@ export function registerControllerSettings(plugin, controllerEnabledSettingIn) {
   // the very top of the actual keybind configuration.
   settings.add('presetSelector', {
     name: 'Settings Preset',
-    note: 'Click to switch presets — each one remembers its own bindings independently.',
+    note: 'Click to switch presets.',
     type: 'text',
     default: getPresetName(getActivePreset())
   });
@@ -614,18 +676,22 @@ export function registerControllerSettings(plugin, controllerEnabledSettingIn) {
     type: 'text',
     default: getPresetName(getActivePreset())
   });
+  settings.add('resetPreset', {
+    name: 'Restore Settings to Default',
+    note: 'Double Click to reset selected preset settings',
+    type: 'text',
+    default: 'Double Click to Reset'
+  });
   settings.add('__divider_top', { name: '— — —', type: 'text', default: '' });
 
   debugTextEnabledSetting = settings.add('debugTextEnabled', {
     name: 'Enable Debug Text',
-    note: 'Off by default. Shows a green status readout - click and drag it to move it out of the way.',
     type: 'boolean',
     default: false
   });
 
   highlightColorSetting = settings.add('highlightColor', {
     name: 'Selection Outline Color',
-    note: 'Presets tied to each soul\'s own color, so it stands out against any background - pulled from Patch Maker\'s own color coding.',
     type: 'select',
     data: HIGHLIGHT_COLOR_PRESETS,
     default: DEFAULT_HIGHLIGHT_COLOR
@@ -636,6 +702,16 @@ export function registerControllerSettings(plugin, controllerEnabledSettingIn) {
     note: 'Click to remap. Hold for combos below, same as Wizascript\'s own Primary Key.',
     type: 'text',
     default: buttonToDisplay(DEFAULT_PRIMARY_BUTTON)
+  });
+
+  // Separate from Controller Primary on purpose - see getChannelGuideButton()
+  // above and the "Channel Guide" relay section in index.js. Unbound by
+  // default; the guide does nothing at all until a button is bound here.
+  settings.add('channelGuide', {
+    name: 'Channel Guide (hold)',
+    note: 'Hold while spectating to show the channel guide - d-pad navigates it. Separate from Controller Primary so it can\'t collide with Previous/Next Channel.',
+    type: 'text',
+    default: buttonToDisplay(null)
   });
 
   settings.add('__divider_General', { name: '— General —', type: 'text', default: '' });

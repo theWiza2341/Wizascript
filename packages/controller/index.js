@@ -36,11 +36,11 @@ import {
   registerControllerSettings, isControllerSupportEnabled, isControllerCaptureActive,
   CONTROLLER_ACTIONS, HARDWARE_SHORTCUT_ACTIONS_BY_KEY,
   getControllerPrimaryButton, getBoundButton, getBoundShortcutButton,
+  getChannelGuideButton,
   getPresetMenuState, isDebugTextEnabled, getHighlightColor
 } from './settings.js';
 import { getHudPosition, setHudPosition } from './storage.js';
 import { getPageWindow } from '../core/page-window.js';
-import { matchesPage } from '../core/page-match.js';
 
 export function initController(plugin, controllerEnabledSetting) {
   // Tampermonkey sandbox gotcha: this build grants GM_getValue/GM_setValue,
@@ -1454,36 +1454,22 @@ export function initController(plugin, controllerEnabledSetting) {
   // one (if one is focused) or toggles the channel guide open/closed
   // (everywhere else).
   let primaryHoldHadAction = false;
-  // Whether the UC TV channel guide is toggled open. A single bare tap of
-  // Controller Primary flips this (see the tap-release handling below)
-  // instead of the guide only showing while Primary is held down - that
-  // old design made the guide's own d-pad navigation fight the free
-  // cursor for the exact same physical hold, since both ran off it at
-  // once. Decoupled like this, the guide gets its own dedicated mode
-  // section further below that claims the frame only while `guideOpen` is
-  // true, and normal cursor/hand/board nav resumes the instant it's
-  // toggled back off. Hidden by default on page load.
-  let guideOpen = false;
-  // Timestamp (performance.now()) of the most recent bare tap that
-  // opened the guide. Confirmed from packages/uc-tv/channel-guide.js:
-  // showChannelGuide() only actually shows #uctv-guide-overlay after
-  // BOTH packages/core/keybinds.js's own 250ms hold-alone delay AND an
-  // async fetchLiveGamesFull() network call complete - real gaps of a
-  // few hundred ms where guideOpen is legitimately true but the element
-  // doesn't exist in the DOM yet. The self-heal below (guide-nav mode
-  // section) uses this to tell "still loading" apart from "actually
-  // closed some other way," rather than yanking guideOpen back to false
-  // on the very first post-toggle frame.
-  let guideOpenedAt = 0;
-  // Which UC TV channel-guide row (flattened list of playerEl entries,
-  // both names in a 2-player row counting separately) is currently
-  // d-pad-selected while the guide is open.
-  let guideSelectedIndex = -1, guideSelectedEl = null;
+  // UC TV channel guide state - back to a HOLD design (see the "Channel
+  // Guide" relay section below), but now gated on its own dedicated,
+  // separately remappable button (default Unbound) rather than Controller
+  // Primary. Holding Primary AND holding the guide button are fully
+  // independent physical gestures now, so Previous/Next Channel (a
+  // Primary+<button> combo) can never collide with the guide's own d-pad
+  // navigation no matter what either is bound to - the round-B tap-toggle
+  // design is retired; this only needed a dedicated button, not a new
+  // gesture. `guideMatchIndex`/`guidePlayerIndex` replace the old flat
+  // `guideSelectedIndex`: up/down now moves between MATCHES, left/right
+  // alternates between that match's two players, instead of flattening
+  // every player span into one list where both axes did the same thing.
+  let guideMatchIndex = -1, guidePlayerIndex = 0, guideSelectedEl = null;
   // Edge-state for the guide's own d-pad/X navigation, tracked separately
-  // from every other d-pad consumer (dpadHeld/keybindRelayHeld) so
-  // toggling the guide open never inherits a stale "already held" edge
-  // from whatever was using the d-pad the moment before.
-  let guideDpadHeld = { up: false, down: false };
+  // from every other d-pad consumer (dpadHeld/keybindRelayHeld).
+  let guideDpadHeld = { up: false, down: false, left: false, right: false };
   let guideBtn0Held = false;
   let leftHeldSince = 0, rightHeldSince = 0, lastPageTurnTime = 0;
   let dpadText = '';
@@ -1519,19 +1505,6 @@ export function initController(plugin, controllerEnabledSetting) {
       });
     });
     console.log('[Wizascript Controller] relayed a real Primary (Control) double-tap for Wizascript settings');
-  }
-
-  // Mirrors packages/uc-tv/channel-guide.js's own isSpectatePage() exactly
-  // (same matchesPage() helper, same '/Spectate' prefix) - the channel
-  // guide's own onPrimaryAlone handler no-ops off the spectate page, so a
-  // bare Primary tap toggling guideOpen anywhere else would optimistically
-  // "open" with nothing ever actually appearing, freezing the free cursor
-  // for the full guideOpenedAt grace period (see the tap-release handling
-  // and the channel guide navigation mode section below) for no reason.
-  // Checking this here keeps a bare tap outside spectate/Patch Maker a
-  // true no-op, same as before this feature existed.
-  function isSpectatePage() {
-    return matchesPage({ prefix: '/Spectate' });
   }
 
   function frame() {
@@ -1671,86 +1644,78 @@ export function initController(plugin, controllerEnabledSetting) {
          priority order Wizascript's own UC TV/Notepad/Patch Maker
          bindings expect. Actions sharing both the same bound button AND
          the same dispatch code are de-duped so holding one button
-         doesn't fire the same key event twice in one frame. */
+         doesn't fire the same key event twice in one frame.
+
+         The UC TV channel guide is NOT part of this relay any more - it
+         has its own dedicated, separately remappable hold button (see the
+         "Channel Guide" section right after this one). The synthetic
+         Control keydown/keyup dispatch below is shared between the two
+         (`keybindRelayHeld.controlDown` tracks whichever of "Primary
+         physically held" / "Channel Guide button physically held" is
+         true), so holding EITHER keeps Control logically down, and
+         holding both at once then releasing only one doesn't send a
+         stray keyup and desync Wizascript's own real primaryHeld
+         tracking in keybinds.js. */
       if (!oskOpen || oskPaused) {
         const primaryBtn = getControllerPrimaryButton();
         const l1Down = (primaryBtn !== null && btn(primaryBtn)) || (oskOpen && oskPaused);
         const viaPause = oskOpen && oskPaused;
         const primaryBase = { key: 'Control', code: 'ControlLeft', keyCode: 17, which: 17, bubbles: true };
+        const guideBtnForRelay = getChannelGuideButton();
+        const guideDownForRelay = guideBtnForRelay !== null && btn(guideBtnForRelay);
 
-        // Bare-tap detection runs on the PHYSICAL release edge, before
-        // anything below reacts to guideOpen having possibly just
-        // changed. A tap that lands while a Patch Maker `.uc-li-text`
-        // entry is focused cycles its category (unchanged behavior);
-        // everywhere else, it toggles the channel guide open/closed
-        // instead of requiring a continuous hold to see it at all.
-        if (!l1Down && keybindRelayHeld.primary && !primaryHoldHadAction) {
-          const tapFocusEl = document.activeElement;
-          if (tapFocusEl && tapFocusEl.matches && tapFocusEl.matches('.uc-li-text') && !guideOpen) {
-            // Reproduced directly against the DOM (matching
-            // cycleCategory()'s own known effect: swap the class off
-            // PATCH_MAKER_CYCLE_ORDER on the entry's `<li>`, then force a
-            // real saveState() via blur()+focus(), since that private
-            // closure is only reachable through the field's own blur
-            // handler) rather than trying to trigger Wizascript's own
-            // Cycle Category keybind, which this relay has no way to
-            // invoke directly.
-            const li = tapFocusEl.closest('li');
-            if (li) {
-              const PATCH_MAKER_CYCLE_ORDER = ['none', 'other', 'buff', 'rework', 'nerf'];
-              const curIdx = PATCH_MAKER_CYCLE_ORDER.findIndex((c) => li.classList.contains(c));
-              const nextCat = PATCH_MAKER_CYCLE_ORDER[((curIdx === -1 ? 0 : curIdx) + 1) % PATCH_MAKER_CYCLE_ORDER.length];
-              li.classList.remove(...PATCH_MAKER_CYCLE_ORDER);
-              li.classList.add(nextCat);
+        if (l1Down) {
+          if (!keybindRelayHeld.primary) primaryHoldHadAction = false;
+        } else if (keybindRelayHeld.primary) {
+          // A bare Controller Primary tap (nothing else fired during the
+          // hold) while a Patch Maker `.uc-li-text` entry is focused
+          // cycles the entry's category forward by one - reproduced
+          // directly against the DOM (matching cycleCategory()'s own
+          // known effect: swap the class off PATCH_MAKER_CYCLE_ORDER on
+          // the entry's `<li>`, then force a real saveState() via
+          // blur()+focus(), since that private closure is only reachable
+          // through the field's own blur handler) rather than trying to
+          // trigger Wizascript's own Cycle Category keybind, which this
+          // relay has no way to invoke directly. Every other bare tap is
+          // a no-op now that the channel guide has its own button.
+          if (!primaryHoldHadAction) {
+            const tapFocusEl = document.activeElement;
+            if (tapFocusEl && tapFocusEl.matches && tapFocusEl.matches('.uc-li-text')) {
+              const li = tapFocusEl.closest('li');
+              if (li) {
+                const PATCH_MAKER_CYCLE_ORDER = ['none', 'other', 'buff', 'rework', 'nerf'];
+                const curIdx = PATCH_MAKER_CYCLE_ORDER.findIndex((c) => li.classList.contains(c));
+                const nextCat = PATCH_MAKER_CYCLE_ORDER[((curIdx === -1 ? 0 : curIdx) + 1) % PATCH_MAKER_CYCLE_ORDER.length];
+                li.classList.remove(...PATCH_MAKER_CYCLE_ORDER);
+                li.classList.add(nextCat);
 
-              let savedRange = null;
-              const sel = pageWindow.getSelection();
-              if (sel && sel.rangeCount > 0) savedRange = sel.getRangeAt(0).cloneRange();
-              tapFocusEl.blur(); // real saveState() runs inside Patch Maker's own blur handler
-              tapFocusEl.focus();
-              if (savedRange) {
-                try {
-                  const sel2 = pageWindow.getSelection();
-                  sel2.removeAllRanges();
-                  sel2.addRange(savedRange);
-                } catch (e) {
-                  // Range can go stale if blur's own sanitizeText()
-                  // actually changed the text - not fatal, only the
-                  // exact caret position resets.
+                let savedRange = null;
+                const sel = pageWindow.getSelection();
+                if (sel && sel.rangeCount > 0) savedRange = sel.getRangeAt(0).cloneRange();
+                tapFocusEl.blur(); // real saveState() runs inside Patch Maker's own blur handler
+                tapFocusEl.focus();
+                if (savedRange) {
+                  try {
+                    const sel2 = pageWindow.getSelection();
+                    sel2.removeAllRanges();
+                    sel2.addRange(savedRange);
+                  } catch (e) {
+                    // Range can go stale if blur's own sanitizeText()
+                    // actually changed the text - not fatal, only the
+                    // exact caret position resets.
+                  }
                 }
+                console.log('[Wizascript Controller] Patch Maker: bare Controller Primary tap - cycled entry category directly to "' + nextCat + '"');
               }
-              console.log('[Wizascript Controller] Patch Maker: bare Controller Primary tap - cycled entry category directly to "' + nextCat + '"');
             }
-          } else if (guideOpen || isSpectatePage()) {
-            // guideOpen || isSpectatePage(): always allowed to TOGGLE
-            // CLOSED regardless of current page (guideOpen true), but only
-            // allowed to open in the first place while actually on a
-            // Spectate page - channel-guide.js's own onPrimaryAlone
-            // handler no-ops off that page, so opening from anywhere else
-            // would optimistically flip guideOpen with nothing ever
-            // actually appearing, freezing the free cursor for no reason
-            // (see guideOpenedAt's grace period below).
-            //
-            // Hidden by default on page load, so this bare tap is also
-            // how the guide is first shown. Toggling off resets the d-pad
-            // selection so re-opening later always starts from the top
-            // instead of resuming wherever it was left.
-            guideOpen = !guideOpen;
-            if (guideOpen) guideOpenedAt = performance.now();
-            guideSelectedIndex = -1;
-            guideSelectedEl = null;
-            console.log('[Wizascript Controller] bare Controller Primary tap - channel guide now', guideOpen ? 'open' : 'closed');
           }
         }
-        if (l1Down && !keybindRelayHeld.primary) primaryHoldHadAction = false;
 
-        // Keeps the REAL synthetic Control key in sync with whichever of
-        // "Primary is physically held" / "the guide is toggled open" is
-        // asking for it, independent of each other - a genuine keydown
-        // the instant either one goes from false to true, a genuine keyup
-        // only once BOTH are false. This is what lets Wizascript's own UC
-        // TV keep the guide rendered after the physical button is let go.
-        const controlShouldBeDown = l1Down || guideOpen;
+        // Shared reconciliation - see the comment above this block for
+        // why Primary and the Channel Guide button both feed into the
+        // same controlDown tracker instead of each dispatching their own
+        // independent keydown/keyup pair.
+        const controlShouldBeDown = l1Down || guideDownForRelay;
         if (controlShouldBeDown && !keybindRelayHeld.controlDown) {
           document.dispatchEvent(new KeyboardEvent('keydown', primaryBase));
           keybindRelayHeld.controlDown = true;
@@ -1759,14 +1724,7 @@ export function initController(plugin, controllerEnabledSetting) {
           keybindRelayHeld.controlDown = false;
         }
 
-        // While the guide is open it claims the d-pad/X entirely in its
-        // own dedicated mode section further below - skip the
-        // Primary+<button> combo relay entirely rather than fighting it
-        // for the same input, regardless of which button any combo
-        // (including Previous/Next Channel) happens to be bound to. The
-        // quick single-step channel shortcut is redundant once the full
-        // guide is already visible, and resumes the instant it's closed.
-        if (l1Down && !guideOpen) {
+        if (l1Down) {
           const relaySecondary = (code, key) => {
             const opts = { key, code, bubbles: true };
             document.dispatchEvent(new KeyboardEvent('keydown', opts));
@@ -1801,79 +1759,101 @@ export function initController(plugin, controllerEnabledSetting) {
 
           hud.textContent = inPatchMakerFieldForContext
             ? `Patch Maker (${viaPause ? 'OSK paused' : 'Primary held'})\ntap Primary alone = cycle category   move entry-section-card — see Settings > Keybinds - Controller${viaPause ? `\nR1: resume typing   ${btnLabel(1)}: close` : ''}`
-            : `Wizascript keybind relay (${viaPause ? 'OSK paused' : 'Primary held'})\ntap ${buttonToDisplay(primaryBtn)} alone = toggle channel guide   channel / notepad redo-undo-reset — see Settings > Keybinds - Controller${viaPause ? `\nR1: resume typing   ${btnLabel(1)}: close` : ''}`;
+            : `Wizascript keybind relay (${viaPause ? 'OSK paused' : 'Primary held'})\nchannel / notepad redo-undo-toggle-reset — see Settings > Keybinds - Controller${viaPause ? `\nR1: resume typing   ${btnLabel(1)}: close` : ''}`;
         } else {
           keybindRelayHeld.actions = {};
         }
 
         keybindRelayHeld.primary = l1Down;
-        if (l1Down && !guideOpen) return;
+        if (l1Down) return;
       }
 
-      /* ---------- channel guide navigation mode ----------
-         Independent of whether Controller Primary is still physically
-         held - see the bare-tap toggle above. Gets its own dedicated
-         early-priority mode section (mirroring how oskOpen/mulliganGrid/
-         modalInfo/sliderTarget/selectTarget each already claim the frame
-         for their own d-pad meaning) instead of living inside the
-         physical-hold branch, so d-pad/free-cursor movement genuinely
-         resumes the instant the guide is toggled closed rather than also
-         needing Primary released.
+      /* ---------- Channel Guide (dedicated hold button) ----------
+         Back to a HOLD design (per request), but no longer sharing
+         Controller Primary at all - a separate, independently
+         remappable button (default Unbound, see settings.js's
+         getChannelGuideButton()/setChannelGuideButton()) that the user
+         must explicitly bind. Holding it relays the same real synthetic
+         Control press/release Wizascript's own UC TV channel guide
+         already reacts to (packages/uc-tv/channel-guide.js's
+         onPrimaryAlone/onPrimaryRelease via packages/core/keybinds.js's
+         real 250ms hold-alone/release model - see the shared
+         controlShouldBeDown reconciliation above), just gated on a
+         different physical button - so it can never collide with any
+         Primary+<button> combo (including Previous/Next Channel)
+         regardless of what either is bound to, without needing any
+         guide-specific exclusion logic in CONTROLLER_ACTIONS at all.
 
-         The guide has no keyboard nav of its own - each match row is a
-         pair of plain `<span>` "playerEl" elements with only
-         click/mouseenter/mouseleave listeners. Up/Down moves a selection
-         cursor through the flattened list, dispatching a real
-         mouseenter/mouseleave pair so the guide's own hover-underline
-         styling shows the current selection, and X dispatches a real
-         click on whichever one is selected. */
-      if (guideOpen && (!oskOpen || oskPaused)) {
-        const primaryBtn = getControllerPrimaryButton();
-        const guideEl = document.getElementById('uctv-guide-overlay');
-        if (!guideEl) {
-          // NOT necessarily closed - packages/uc-tv/channel-guide.js's
-          // showChannelGuide() only actually mounts #uctv-guide-overlay
-          // after BOTH keybinds.js's own 250ms hold-alone delay AND an
-          // async fetchLiveGamesFull() network call resolve, so there's a
-          // real window right after toggling open where guideOpen is
-          // correctly true but the element genuinely doesn't exist yet.
-          // Only self-heal (assume Wizascript's own UC TV closed it some
-          // other way, e.g. the spectated match ending) once it's been
-          // missing well past any reasonable load time - a fresh toggle
-          // resets guideOpenedAt, so this grace period only ever applies
-          // right after opening, never once the guide has already shown
-          // up successfully at least once.
-          if (performance.now() - guideOpenedAt > 2000) {
-            guideOpen = false;
-            guideSelectedIndex = -1;
-            guideSelectedEl = null;
-          } else {
-            hud.textContent = `UC TV Guide loading…\ntap ${buttonToDisplay(primaryBtn)} to cancel`;
-          }
-        } else {
-          const entries = Array.from(guideEl.querySelectorAll('span')).filter((el) => el.style.cursor === 'pointer');
-          if (!entries.length) {
-            guideSelectedIndex = -1;
-            guideSelectedEl = null;
-          } else {
-            if (guideSelectedIndex < 0 || guideSelectedIndex >= entries.length) guideSelectedIndex = 0;
-            if (up && !guideDpadHeld.up) guideSelectedIndex = Math.max(0, guideSelectedIndex - 1);
-            if (down && !guideDpadHeld.down) guideSelectedIndex = Math.min(entries.length - 1, guideSelectedIndex + 1);
+         The guide has no keyboard nav of its own - each match is one
+         `row` <div> containing 1-2 plain `<span>` "playerEl" elements
+         (one per player) with only click/mouseenter/mouseleave
+         listeners. Up/Down moves between MATCHES; Left/Right alternates
+         between that match's players (clamped, not wrapped - a match
+         with only one listed player just ignores Left/Right). Whichever
+         player span is currently selected gets a real mouseenter/
+         mouseleave pair (matching the guide's own hover-underline
+         styling) and X dispatches a real click on it - unchanged from
+         before, only the navigation scheme changed. */
+      if (!oskOpen || oskPaused) {
+        const guideBtn = getChannelGuideButton();
+        const guideDown = guideBtn !== null && btn(guideBtn);
 
-            const sel = entries[guideSelectedIndex];
-            if (sel !== guideSelectedEl) {
-              if (guideSelectedEl) guideSelectedEl.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
-              sel.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-              sel.scrollIntoView({ block: 'nearest' });
-              guideSelectedEl = sel;
+        if (guideDown) {
+          const guideEl = document.getElementById('uctv-guide-overlay');
+          if (!guideEl) {
+            // Real gap between "button held" and "overlay actually
+            // mounted" - keybinds.js's own 250ms hold-alone delay plus
+            // showChannelGuide()'s async fetch. Matches the ORIGINAL
+            // pre-toggle design: keep claiming the frame (below) so the
+            // free cursor doesn't flicker back on for a fraction of a
+            // second, same as holding Primary always used to do
+            // regardless of what it was about to show.
+            hud.textContent = `UC TV Guide loading…\nrelease ${buttonToDisplay(guideBtn)} to cancel`;
+          } else {
+            const playerSpans = Array.from(guideEl.querySelectorAll('span')).filter((el) => el.style.cursor === 'pointer');
+            const matches = [];
+            const rowIndex = new Map();
+            playerSpans.forEach((el) => {
+              const row = el.parentElement;
+              if (!rowIndex.has(row)) { rowIndex.set(row, matches.length); matches.push([]); }
+              matches[rowIndex.get(row)].push(el);
+            });
+
+            if (!matches.length) {
+              guideMatchIndex = -1;
+              guidePlayerIndex = 0;
+              guideSelectedEl = null;
+              hud.textContent = `UC TV Guide\nno matches shown\nrelease ${buttonToDisplay(guideBtn)} to close`;
+            } else {
+              if (guideMatchIndex < 0 || guideMatchIndex >= matches.length) { guideMatchIndex = 0; guidePlayerIndex = 0; }
+              if (up && !guideDpadHeld.up) { guideMatchIndex = Math.max(0, guideMatchIndex - 1); guidePlayerIndex = 0; }
+              if (down && !guideDpadHeld.down) { guideMatchIndex = Math.min(matches.length - 1, guideMatchIndex + 1); guidePlayerIndex = 0; }
+
+              const playersInMatch = matches[guideMatchIndex];
+              guidePlayerIndex = Math.min(guidePlayerIndex, playersInMatch.length - 1);
+              if (left && !guideDpadHeld.left) guidePlayerIndex = Math.max(0, guidePlayerIndex - 1);
+              if (right && !guideDpadHeld.right) guidePlayerIndex = Math.min(playersInMatch.length - 1, guidePlayerIndex + 1);
+
+              const sel = playersInMatch[guidePlayerIndex];
+              if (sel !== guideSelectedEl) {
+                if (guideSelectedEl) guideSelectedEl.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+                sel.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+                sel.scrollIntoView({ block: 'nearest' });
+                guideSelectedEl = sel;
+              }
+              if (btn(0) && !guideBtn0Held) sel.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+
+              hud.textContent = `UC TV Guide\nmatch ${guideMatchIndex + 1}/${matches.length}${playersInMatch.length > 1 ? `   player ${guidePlayerIndex + 1}/${playersInMatch.length}` : ''}\n↑/↓ match   ←/→ player   ${btnLabel(0)} jump   release ${buttonToDisplay(guideBtn)} to close`;
             }
-            if (btn(0) && !guideBtn0Held) sel.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
           }
-          guideDpadHeld = { up, down };
+          guideDpadHeld = { up, down, left, right };
           guideBtn0Held = btn(0);
-          hud.textContent = `UC TV Guide\nmatch ${entries.length ? guideSelectedIndex + 1 : 0}/${entries.length}\n↑/↓ select   ${btnLabel(0)} jump   tap ${buttonToDisplay(primaryBtn)} to close`;
+          return;
+        } else {
+          guideMatchIndex = -1;
+          guidePlayerIndex = 0;
+          guideSelectedEl = null;
         }
-        if (guideOpen) return;
       }
 
       /* ---------- Notepad pen-size / lightness sliders ----------

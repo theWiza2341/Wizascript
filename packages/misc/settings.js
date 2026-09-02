@@ -20,7 +20,6 @@ export function registerMiscSettings(plugin) {
   // category of gamepad keybind rows they can't use yet.
   const enableController = settings.add("enableController", {
     name: "Enable Controller Support",
-    note: "Off by default to save CPU. Turning this on reveals the full \"Keybinds - Controller\" settings category after your next reload.",
     type: "boolean",
     default: false
   });

@@ -38,6 +38,14 @@ export function csSet(key, value) {
   }
 }
 
+export function csDelete(key) {
+  try {
+    GM_deleteValue(GM_PREFIX + key);
+  } catch (e) {
+    console.warn('[Wizascript Controller] GM_deleteValue failed:', e);
+  }
+}
+
 export const PRESET_COUNT = 3;
 const DEFAULT_PRESET_NAME_PREFIX = 'Preset ';
 
@@ -105,4 +113,25 @@ export function migrateFlatBindingsToPresetOne(controllerActionKeys, hardwareSho
   hardwareShortcutKeys.forEach((key) => migrate('shortcuts.' + key));
   csSet('migratedToPresetsV056', 'true');
   console.log('[Wizascript Controller] migrated any pre-preset-system bindings into Preset 1.');
+}
+
+// "Restore Settings to Default" (settings.js's Detect-Controller-style
+// double-click row). Resets every stored keybind/shortcut/Primary/
+// Channel-Guide binding for ONE preset back to its hardcoded default -
+// by DELETING the GM-stored override entirely rather than overwriting it
+// with the default value directly, so csGet()'s own existing
+// fallback-to-default behavior takes over exactly the same way it already
+// does for a preset that's never been touched. Deliberately scoped to
+// keybinds/shortcuts only ("selected preset settings") - debugTextEnabled,
+// highlightColor, and Enable Controller Support are real Underscript
+// settings, not preset-scoped GM keys, and untouched by this on purpose;
+// resetting a PRESET shouldn't also silently flip an unrelated global
+// display preference.
+export function resetPresetBindings(presetN, controllerActionKeys, hardwareShortcutKeys) {
+  const prefix = 'preset' + presetN + '.';
+  csDelete(prefix + 'keybinds.__primary');
+  csDelete(prefix + 'keybinds.__channelGuide');
+  controllerActionKeys.forEach((key) => csDelete(prefix + 'keybinds.' + key));
+  hardwareShortcutKeys.forEach((key) => csDelete(prefix + 'shortcuts.' + key));
+  console.log('[Wizascript Controller] reset preset ' + presetN + '\'s keybinds/shortcuts to their defaults.');
 }

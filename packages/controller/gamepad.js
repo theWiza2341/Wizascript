@@ -10,6 +10,15 @@
 // themselves and the small on-screen diagnostic indicator this module
 // owns.
 
+// Tampermonkey sandbox gotcha: this build grants GM_getValue/GM_setValue,
+// which pulls the whole script into Tampermonkey's sandboxed JS realm. In
+// that realm a bare `window` is a sandbox proxy, not the real page window -
+// addEventListener('gamepadconnected'/'gamepaddisconnected', ...) below
+// must be registered against the real page window (getPageWindow()), same
+// as every `window.`-derived value in index.js. See packages/core/page-window.js.
+import { getPageWindow } from '../core/page-window.js';
+const pageWindow = getPageWindow();
+
 // ---------- on-screen input indicator ----------
 // Big, unmissable, top-center - lets a live test be read purely by eye,
 // no devtools/console required. Every button press and stick movement
@@ -324,13 +333,13 @@ export function getMergedGamepad() {
   return { buttons, axes, _mergedFrom: pads.map((p) => p.id) };
 }
 
-window.addEventListener('gamepadconnected', (e) => {
+pageWindow.addEventListener('gamepadconnected', (e) => {
   console.log('[Wizascript Controller] gamepadconnected:', {
     index: e.gamepad.index, id: e.gamepad.id, mapping: e.gamepad.mapping,
     buttons: e.gamepad.buttons.length, axes: e.gamepad.axes.length
   });
 });
-window.addEventListener('gamepaddisconnected', (e) => {
+pageWindow.addEventListener('gamepaddisconnected', (e) => {
   console.log('[Wizascript Controller] gamepaddisconnected:', { index: e.gamepad.index, id: e.gamepad.id });
 });
 

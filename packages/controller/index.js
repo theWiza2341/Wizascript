@@ -37,8 +37,20 @@ import {
   CONTROLLER_ACTIONS, HARDWARE_SHORTCUT_ACTIONS_BY_KEY,
   getControllerPrimaryButton, getBoundButton, getBoundShortcutButton
 } from './settings.js';
+import { getPageWindow } from '../core/page-window.js';
 
 export function initController(plugin) {
+  // Tampermonkey sandbox gotcha: this build grants GM_getValue/GM_setValue,
+  // which pulls the whole script into Tampermonkey's sandboxed JS realm. In
+  // that realm a bare `window` is a sandbox proxy, not the real page window -
+  // it fails when used as an event's `view` (new PointerEvent({view: window})
+  // throws "Failed to convert value to 'Window'") and is unreliable for
+  // innerWidth/innerHeight/getSelection()/jQuery/HTMLInputElement/location.
+  // Every reference below that needs the real page window uses pageWindow,
+  // resolved once via getPageWindow() (packages/core/page-window.js), which
+  // returns unsafeWindow when present and falls back to window otherwise.
+  const pageWindow = getPageWindow();
+
   // Fixed constants - never made into live settings. Two earlier attempts
   // at anything beyond 'boolean'/'text' SettingTypes (a highlight-color
   // picker, a highlight-thickness slider) were never confirmed working
@@ -86,9 +98,9 @@ export function initController(plugin) {
     const w = panel.offsetWidth, h = panel.offsetHeight;
     let left = rect.left;
     let top = rect.bottom + 8;
-    if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+    if (left + w > pageWindow.innerWidth - 8) left = pageWindow.innerWidth - w - 8;
     if (left < 8) left = 8;
-    if (top + h > window.innerHeight - 8) {
+    if (top + h > pageWindow.innerHeight - 8) {
       top = rect.top - h - 8;
       if (top < 8) top = 8;
     }
@@ -383,9 +395,9 @@ export function initController(plugin) {
     fire(document.body, 'mousemove', MouseEvent, origin.x, origin.y, 0, 1);
     fire(document.body, 'pointerup', PointerEvent, origin.x, origin.y, 0, 0);
     fire(document.body, 'mouseup', MouseEvent, origin.x, origin.y, 0, 0);
-    if (window.jQuery) {
-      window.jQuery(card).stop(true, true);
-      window.jQuery('.ui-draggable-dragging').stop(true, true);
+    if (pageWindow.jQuery) {
+      pageWindow.jQuery(card).stop(true, true);
+      pageWindow.jQuery('.ui-draggable-dragging').stop(true, true);
     }
     console.log('[Wizascript Controller] card drag cancelled via', reason);
     placingCard = null; placingGrid = null; placingOrigin = null;
@@ -653,7 +665,7 @@ export function initController(plugin) {
       }
     }
     if (range && el.contains(range.startContainer)) {
-      const sel = window.getSelection();
+      const sel = pageWindow.getSelection();
       sel.removeAllRanges();
       sel.addRange(range);
       console.log('[Wizascript Controller] caret repositioned in', el, 'at', cx, cy);
@@ -684,7 +696,7 @@ export function initController(plugin) {
       if (node) range.setStart(node, toStart ? 0 : node.textContent.length);
       else range.selectNodeContents(oskTarget);
       range.collapse(true);
-      const sel = window.getSelection();
+      const sel = pageWindow.getSelection();
       sel.removeAllRanges();
       sel.addRange(range);
     } else {
@@ -696,7 +708,7 @@ export function initController(plugin) {
   function stepOskCaret(dir) {
     if (!oskTarget) return;
     if (oskTarget.isContentEditable) {
-      const sel = window.getSelection();
+      const sel = pageWindow.getSelection();
       if (!sel.rangeCount || !oskTarget.contains(sel.anchorNode)) { setOskCaretEdge(dir < 0); return; }
       sel.modify('move', dir < 0 ? 'left' : 'right', 'character');
       // Safety net: if the browser's selection ever drifted outside the
@@ -775,7 +787,7 @@ export function initController(plugin) {
       submitEl.click();
       return;
     }
-    const opts = { bubbles: true, cancelable: true, key: 'Enter', code: 'Enter', keyCode: 13, which: 13, view: window };
+    const opts = { bubbles: true, cancelable: true, key: 'Enter', code: 'Enter', keyCode: 13, which: 13, view: pageWindow };
     el.dispatchEvent(new KeyboardEvent('keydown', opts));
     el.dispatchEvent(new KeyboardEvent('keypress', opts));
     el.dispatchEvent(new KeyboardEvent('keyup', opts));
@@ -821,7 +833,7 @@ export function initController(plugin) {
   function typeChar(el, ch) {
     el.focus();
     const info = keyInfo(ch);
-    const base = { bubbles: true, cancelable: true, key: ch, code: info.code, keyCode: info.keyCode, which: info.keyCode, view: window };
+    const base = { bubbles: true, cancelable: true, key: ch, code: info.code, keyCode: info.keyCode, which: info.keyCode, view: pageWindow };
     el.dispatchEvent(new KeyboardEvent('keydown', base));
     el.dispatchEvent(new KeyboardEvent('keypress', base));
     document.execCommand('insertText', false, ch);
@@ -830,7 +842,7 @@ export function initController(plugin) {
   }
   function typeBackspace(el) {
     el.focus();
-    const base = { bubbles: true, cancelable: true, key: 'Backspace', code: 'Backspace', keyCode: 8, which: 8, view: window };
+    const base = { bubbles: true, cancelable: true, key: 'Backspace', code: 'Backspace', keyCode: 8, which: 8, view: pageWindow };
     el.dispatchEvent(new KeyboardEvent('keydown', base));
     document.execCommand('delete');
     el.dispatchEvent(new KeyboardEvent('keyup', base));
@@ -845,7 +857,7 @@ export function initController(plugin) {
 
   /* ---------- slider focus control ---------- */
   let sliderTarget = null;
-  const nativeValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+  const nativeValueSetter = Object.getOwnPropertyDescriptor(pageWindow.HTMLInputElement.prototype, 'value').set;
   function openSlider(el) {
     sliderTarget = el;
     setHighlight(el);
@@ -978,7 +990,7 @@ export function initController(plugin) {
   }
 
   /* ---------- cursor / click plumbing ---------- */
-  let x = window.innerWidth / 2, y = window.innerHeight / 2;
+  let x = pageWindow.innerWidth / 2, y = pageWindow.innerHeight / 2;
   let usingController = false;
   const BASE_SPEED = 24;
   const WHEEL_DELTA = 100;
@@ -1013,7 +1025,7 @@ export function initController(plugin) {
   }
   function fire(el, type, ctor, clientX, clientY, button, buttons) {
     const opts = {
-      bubbles: true, cancelable: true, view: window,
+      bubbles: true, cancelable: true, view: pageWindow,
       clientX, clientY, button: button || 0, buttons: buttons || 0
     };
     if (ctor === PointerEvent) { opts.pointerId = 1; opts.isPrimary = true; opts.pointerType = 'mouse'; }
@@ -1057,7 +1069,7 @@ export function initController(plugin) {
     fire(el, 'mousedown', MouseEvent, cx, cy, 0, 1);
     fire(el, 'pointerup', PointerEvent, cx, cy, 0, 0);
     fire(el, 'mouseup', MouseEvent, cx, cy, 0, 0);
-    el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window, clientX: cx, clientY: cy, button: 0, buttons: 0, detail }));
+    el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: pageWindow, clientX: cx, clientY: cy, button: 0, buttons: 0, detail }));
     lastResetBtnPressTime = isConfirmPress ? 0 : now; // reset after a completed pair so a 3rd press starts fresh
     console.log('[Wizascript Controller] Reset Data pressed, detail =', detail, isConfirmPress ? '(confirmed - resetting)' : '(press again to confirm)');
   }
@@ -1460,7 +1472,7 @@ export function initController(plugin) {
       if (shortcutJustPressed(btn, 'endTurn')) triggerElementClick(document.getElementById('endTurnBtn'));
       if (shortcutJustPressed(btn, 'openWizascriptSettings') && !oskOpen) openWizascriptSettings();
       if (shortcutJustPressed(btn, 'concede')) triggerConcede();
-      if (shortcutJustPressed(btn, 'goHome')) window.location.href = 'https://undercards.net/';
+      if (shortcutJustPressed(btn, 'goHome')) pageWindow.location.href = 'https://undercards.net/';
       shortcutBtnHeld = { 1: btn(1), 5: btn(5) };
 
       /* ---------- Controller Primary relay ----------
@@ -1598,13 +1610,13 @@ export function initController(plugin) {
                 li.classList.add(nextCat);
 
                 let savedRange = null;
-                const sel = window.getSelection();
+                const sel = pageWindow.getSelection();
                 if (sel && sel.rangeCount > 0) savedRange = sel.getRangeAt(0).cloneRange();
                 tapFocusEl.blur(); // real saveState() runs inside Patch Maker's own blur handler
                 tapFocusEl.focus();
                 if (savedRange) {
                   try {
-                    const sel2 = window.getSelection();
+                    const sel2 = pageWindow.getSelection();
                     sel2.removeAllRanges();
                     sel2.addRange(savedRange);
                   } catch (e) {
@@ -1657,8 +1669,8 @@ export function initController(plugin) {
         // moved so it doesn't fight d-pad browsing while the cursor is
         // just resting over some key.
         const oskSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
-        x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * oskSpeedMult));
-        y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * oskSpeedMult));
+        x = Math.max(0, Math.min(pageWindow.innerWidth, x + lx * BASE_SPEED * oskSpeedMult));
+        y = Math.max(0, Math.min(pageWindow.innerHeight, y + ly * BASE_SPEED * oskSpeedMult));
         cursor.style.left = x + 'px';
         cursor.style.top = y + 'px';
         cursor.style.display = 'block';
@@ -1730,8 +1742,8 @@ export function initController(plugin) {
         // Same free-cursor treatment as the OSK above - hover a row to
         // highlight it, X confirms whatever's currently highlighted.
         const selSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
-        x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * selSpeedMult));
-        y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * selSpeedMult));
+        x = Math.max(0, Math.min(pageWindow.innerWidth, x + lx * BASE_SPEED * selSpeedMult));
+        y = Math.max(0, Math.min(pageWindow.innerHeight, y + ly * BASE_SPEED * selSpeedMult));
         cursor.style.left = x + 'px';
         cursor.style.top = y + 'px';
         cursor.style.display = 'block';
@@ -1766,8 +1778,8 @@ export function initController(plugin) {
 
       if (sliderTarget) {
         const speedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
-        x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * speedMult));
-        y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * speedMult));
+        x = Math.max(0, Math.min(pageWindow.innerWidth, x + lx * BASE_SPEED * speedMult));
+        y = Math.max(0, Math.min(pageWindow.innerHeight, y + ly * BASE_SPEED * speedMult));
         cursor.style.left = x + 'px';
         cursor.style.top = y + 'px';
 
@@ -1815,8 +1827,8 @@ export function initController(plugin) {
       }
       if (mulliganHost) {
         const mulSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
-        x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * mulSpeedMult));
-        y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * mulSpeedMult));
+        x = Math.max(0, Math.min(pageWindow.innerWidth, x + lx * BASE_SPEED * mulSpeedMult));
+        y = Math.max(0, Math.min(pageWindow.innerHeight, y + ly * BASE_SPEED * mulSpeedMult));
         cursor.style.left = x + 'px';
         cursor.style.top = y + 'px';
         cursor.style.display = cursorRestingDisplay();
@@ -1911,8 +1923,8 @@ export function initController(plugin) {
         const { root, kind } = modalInfo;
         modalKind = kind;
         const modSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
-        x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * modSpeedMult));
-        y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * modSpeedMult));
+        x = Math.max(0, Math.min(pageWindow.innerWidth, x + lx * BASE_SPEED * modSpeedMult));
+        y = Math.max(0, Math.min(pageWindow.innerHeight, y + ly * BASE_SPEED * modSpeedMult));
         cursor.style.left = x + 'px';
         cursor.style.top = y + 'px';
         cursor.style.display = cursorRestingDisplay();
@@ -2134,8 +2146,8 @@ export function initController(plugin) {
       }
       if (handHost) {
         const mSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
-        x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * mSpeedMult));
-        y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * mSpeedMult));
+        x = Math.max(0, Math.min(pageWindow.innerWidth, x + lx * BASE_SPEED * mSpeedMult));
+        y = Math.max(0, Math.min(pageWindow.innerHeight, y + ly * BASE_SPEED * mSpeedMult));
         cursor.style.left = x + 'px';
         cursor.style.top = y + 'px';
         cursor.style.display = cursorRestingDisplay();
@@ -2435,8 +2447,8 @@ export function initController(plugin) {
       }
 
       const speedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
-      x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * speedMult));
-      y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * speedMult));
+      x = Math.max(0, Math.min(pageWindow.innerWidth, x + lx * BASE_SPEED * speedMult));
+      y = Math.max(0, Math.min(pageWindow.innerHeight, y + ly * BASE_SPEED * speedMult));
       cursor.style.left = x + 'px';
       cursor.style.top = y + 'px';
 

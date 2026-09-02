@@ -34,8 +34,8 @@
   function tryBootstrap() {
     if (suitePlugin) return;
     attempts++;
-    const pageWindow = getPageWindow();
-    if (typeof pageWindow.underscript === "undefined" || typeof pageWindow.underscript.plugin !== "function") {
+    const pageWindow2 = getPageWindow();
+    if (typeof pageWindow2.underscript === "undefined" || typeof pageWindow2.underscript.plugin !== "function") {
       if (attempts === WARN_AFTER_ATTEMPTS) {
         console.warn(
           "[Wizascript] Still waiting for UnderScript after ~10s. Is UnderScript installed and enabled for this page?"
@@ -44,7 +44,7 @@
       setTimeout(tryBootstrap, RETRY_MS);
       return;
     }
-    suitePlugin = pageWindow.underscript.plugin(SUITE_NAME, SUITE_VERSION);
+    suitePlugin = pageWindow2.underscript.plugin(SUITE_NAME, SUITE_VERSION);
     suitePlugin.updater(DOWNLOAD_URL);
     console.log(`[Wizascript] Registered with UnderScript (v${SUITE_VERSION}).`);
     readyCallbacks.forEach((cb) => cb(suitePlugin));
@@ -1184,12 +1184,12 @@ html, body { overflow-x: hidden !important; }
     }
   }
   function getI18n() {
-    const pageWindow = getPageWindow();
-    return pageWindow.$ && pageWindow.$.i18n ? pageWindow.$.i18n : null;
+    const pageWindow2 = getPageWindow();
+    return pageWindow2.$ && pageWindow2.$.i18n ? pageWindow2.$.i18n : null;
   }
   function getTranslateVersion() {
-    const pageWindow = getPageWindow();
-    return typeof pageWindow.translateVersion !== "undefined" ? pageWindow.translateVersion : "";
+    const pageWindow2 = getPageWindow();
+    return typeof pageWindow2.translateVersion !== "undefined" ? pageWindow2.translateVersion : "";
   }
   function getResolvedLanguage(selectedLabel) {
     const mapped = LANGUAGE_LABEL_TO_CODE[selectedLabel] || "auto";
@@ -1283,8 +1283,8 @@ html, body { overflow-x: hidden !important; }
     };
   }
   function getAllCards() {
-    const pageWindow = getPageWindow();
-    const candidates = [pageWindow.allCards, pageWindow.cards, pageWindow.cardList, pageWindow.ucCards];
+    const pageWindow2 = getPageWindow();
+    const candidates = [pageWindow2.allCards, pageWindow2.cards, pageWindow2.cardList, pageWindow2.ucCards];
     for (const c of candidates) {
       if (Array.isArray(c) && c.length) return c;
     }
@@ -1335,8 +1335,8 @@ html, body { overflow-x: hidden !important; }
     return map;
   }
   function getCardIdByExactGameLookup(name) {
-    const pageWindow = getPageWindow();
-    const getCardWithName = pageWindow.getCardWithName;
+    const pageWindow2 = getPageWindow();
+    const getCardWithName = pageWindow2.getCardWithName;
     if (typeof getCardWithName !== "function") return null;
     try {
       const card = getCardWithName(name);
@@ -1350,9 +1350,9 @@ html, body { overflow-x: hidden !important; }
     return cardNameMap.get(String(name).toLowerCase()) || null;
   }
   function attachCardHover(el, cardId) {
-    const pageWindow = getPageWindow();
-    const displayCardHelp = pageWindow.displayCardHelp;
-    const removeCardHover = pageWindow.removeCardHover;
+    const pageWindow2 = getPageWindow();
+    const displayCardHelp = pageWindow2.displayCardHelp;
+    const removeCardHover = pageWindow2.removeCardHover;
     if (typeof displayCardHelp !== "function" || typeof removeCardHover !== "function") {
       return false;
     }
@@ -2144,8 +2144,8 @@ Version: v${version}`;
       };
       helpBtn.onclick = () => {
         const message = buildHelpMessage(version);
-        const pageWindow = getPageWindow();
-        const BootstrapDialogRef = pageWindow.BootstrapDialog;
+        const pageWindow2 = getPageWindow();
+        const BootstrapDialogRef = pageWindow2.BootstrapDialog;
         if (BootstrapDialogRef && typeof BootstrapDialogRef.alert === "function") {
           BootstrapDialogRef.alert({ title: "Custom Patch Maker \u2013 Help", message, closable: true });
         } else {
@@ -6960,6 +6960,7 @@ Version: v${version}`;
   }
 
   // packages/controller/gamepad.js
+  var pageWindow = getPageWindow();
   var pressIndicator = document.createElement("div");
   Object.assign(pressIndicator.style, {
     position: "fixed",
@@ -7230,7 +7231,7 @@ Version: v${version}`;
     }
     return { buttons, axes, _mergedFrom: pads.map((p) => p.id) };
   }
-  window.addEventListener("gamepadconnected", (e) => {
+  pageWindow.addEventListener("gamepadconnected", (e) => {
     console.log("[Wizascript Controller] gamepadconnected:", {
       index: e.gamepad.index,
       id: e.gamepad.id,
@@ -7239,7 +7240,7 @@ Version: v${version}`;
       axes: e.gamepad.axes.length
     });
   });
-  window.addEventListener("gamepaddisconnected", (e) => {
+  pageWindow.addEventListener("gamepaddisconnected", (e) => {
     console.log("[Wizascript Controller] gamepaddisconnected:", { index: e.gamepad.index, id: e.gamepad.id });
   });
   var lastLoggedRawSnapshot = /* @__PURE__ */ new Map();
@@ -7728,6 +7729,7 @@ Version: v${version}`;
 
   // packages/controller/index.js
   function initController(plugin) {
+    const pageWindow2 = getPageWindow();
     const DEFAULT_HIGHLIGHT_COLOR = "#3ea6ff";
     const DEFAULT_HIGHLIGHT_THICKNESS = 4;
     function getHighlightColor() {
@@ -7772,9 +7774,9 @@ Version: v${version}`;
       const w = panel.offsetWidth, h = panel.offsetHeight;
       let left = rect.left;
       let top = rect.bottom + 8;
-      if (left + w > window.innerWidth - 8) left = window.innerWidth - w - 8;
+      if (left + w > pageWindow2.innerWidth - 8) left = pageWindow2.innerWidth - w - 8;
       if (left < 8) left = 8;
-      if (top + h > window.innerHeight - 8) {
+      if (top + h > pageWindow2.innerHeight - 8) {
         top = rect.top - h - 8;
         if (top < 8) top = 8;
       }
@@ -8073,9 +8075,9 @@ Version: v${version}`;
       fire(document.body, "mousemove", MouseEvent, origin.x, origin.y, 0, 1);
       fire(document.body, "pointerup", PointerEvent, origin.x, origin.y, 0, 0);
       fire(document.body, "mouseup", MouseEvent, origin.x, origin.y, 0, 0);
-      if (window.jQuery) {
-        window.jQuery(card).stop(true, true);
-        window.jQuery(".ui-draggable-dragging").stop(true, true);
+      if (pageWindow2.jQuery) {
+        pageWindow2.jQuery(card).stop(true, true);
+        pageWindow2.jQuery(".ui-draggable-dragging").stop(true, true);
       }
       console.log("[Wizascript Controller] card drag cancelled via", reason);
       placingCard = null;
@@ -8236,7 +8238,7 @@ Version: v${version}`;
         }
       }
       if (range && el.contains(range.startContainer)) {
-        const sel = window.getSelection();
+        const sel = pageWindow2.getSelection();
         sel.removeAllRanges();
         sel.addRange(range);
         console.log("[Wizascript Controller] caret repositioned in", el, "at", cx, cy);
@@ -8260,7 +8262,7 @@ Version: v${version}`;
         if (node) range.setStart(node, toStart ? 0 : node.textContent.length);
         else range.selectNodeContents(oskTarget);
         range.collapse(true);
-        const sel = window.getSelection();
+        const sel = pageWindow2.getSelection();
         sel.removeAllRanges();
         sel.addRange(range);
       } else {
@@ -8272,7 +8274,7 @@ Version: v${version}`;
     function stepOskCaret(dir) {
       if (!oskTarget) return;
       if (oskTarget.isContentEditable) {
-        const sel = window.getSelection();
+        const sel = pageWindow2.getSelection();
         if (!sel.rangeCount || !oskTarget.contains(sel.anchorNode)) {
           setOskCaretEdge(dir < 0);
           return;
@@ -8337,7 +8339,7 @@ Version: v${version}`;
         submitEl.click();
         return;
       }
-      const opts = { bubbles: true, cancelable: true, key: "Enter", code: "Enter", keyCode: 13, which: 13, view: window };
+      const opts = { bubbles: true, cancelable: true, key: "Enter", code: "Enter", keyCode: 13, which: 13, view: pageWindow2 };
       el.dispatchEvent(new KeyboardEvent("keydown", opts));
       el.dispatchEvent(new KeyboardEvent("keypress", opts));
       el.dispatchEvent(new KeyboardEvent("keyup", opts));
@@ -8378,7 +8380,7 @@ Version: v${version}`;
     function typeChar(el, ch) {
       el.focus();
       const info = keyInfo(ch);
-      const base = { bubbles: true, cancelable: true, key: ch, code: info.code, keyCode: info.keyCode, which: info.keyCode, view: window };
+      const base = { bubbles: true, cancelable: true, key: ch, code: info.code, keyCode: info.keyCode, which: info.keyCode, view: pageWindow2 };
       el.dispatchEvent(new KeyboardEvent("keydown", base));
       el.dispatchEvent(new KeyboardEvent("keypress", base));
       document.execCommand("insertText", false, ch);
@@ -8387,7 +8389,7 @@ Version: v${version}`;
     }
     function typeBackspace(el) {
       el.focus();
-      const base = { bubbles: true, cancelable: true, key: "Backspace", code: "Backspace", keyCode: 8, which: 8, view: window };
+      const base = { bubbles: true, cancelable: true, key: "Backspace", code: "Backspace", keyCode: 8, which: 8, view: pageWindow2 };
       el.dispatchEvent(new KeyboardEvent("keydown", base));
       document.execCommand("delete");
       el.dispatchEvent(new KeyboardEvent("keyup", base));
@@ -8403,7 +8405,7 @@ Version: v${version}`;
       typeChar(oskTarget, ch);
     }
     let sliderTarget = null;
-    const nativeValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+    const nativeValueSetter = Object.getOwnPropertyDescriptor(pageWindow2.HTMLInputElement.prototype, "value").set;
     function openSlider(el) {
       sliderTarget = el;
       setHighlight(el);
@@ -8521,7 +8523,7 @@ Version: v${version}`;
       dispatchClick(toggle, rect.left + rect.width / 2, rect.top + rect.height / 2, 0);
       refreshHighlight();
     }
-    let x = window.innerWidth / 2, y = window.innerHeight / 2;
+    let x = pageWindow2.innerWidth / 2, y = pageWindow2.innerHeight / 2;
     let usingController = false;
     const BASE_SPEED = 24;
     const WHEEL_DELTA = 100;
@@ -8552,7 +8554,7 @@ Version: v${version}`;
       const opts = {
         bubbles: true,
         cancelable: true,
-        view: window,
+        view: pageWindow2,
         clientX,
         clientY,
         button: button || 0,
@@ -8592,7 +8594,7 @@ Version: v${version}`;
       fire(el, "mousedown", MouseEvent, cx, cy, 0, 1);
       fire(el, "pointerup", PointerEvent, cx, cy, 0, 0);
       fire(el, "mouseup", MouseEvent, cx, cy, 0, 0);
-      el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window, clientX: cx, clientY: cy, button: 0, buttons: 0, detail }));
+      el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: pageWindow2, clientX: cx, clientY: cy, button: 0, buttons: 0, detail }));
       lastResetBtnPressTime = isConfirmPress ? 0 : now;
       console.log("[Wizascript Controller] Reset Data pressed, detail =", detail, isConfirmPress ? "(confirmed - resetting)" : "(press again to confirm)");
     }
@@ -8896,7 +8898,7 @@ Version: v${version}`;
         if (shortcutJustPressed(btn, "endTurn")) triggerElementClick(document.getElementById("endTurnBtn"));
         if (shortcutJustPressed(btn, "openWizascriptSettings") && !oskOpen) openWizascriptSettings();
         if (shortcutJustPressed(btn, "concede")) triggerConcede();
-        if (shortcutJustPressed(btn, "goHome")) window.location.href = "https://undercards.net/";
+        if (shortcutJustPressed(btn, "goHome")) pageWindow2.location.href = "https://undercards.net/";
         shortcutBtnHeld = { 1: btn(1), 5: btn(5) };
         if (!oskOpen || oskPaused) {
           const primaryBtn = getControllerPrimaryButton();
@@ -8991,13 +8993,13 @@ R1: resume typing   ${btnLabel(1)}: close` : ""}`;
                   li.classList.remove(...PATCH_MAKER_CYCLE_ORDER);
                   li.classList.add(nextCat);
                   let savedRange = null;
-                  const sel = window.getSelection();
+                  const sel = pageWindow2.getSelection();
                   if (sel && sel.rangeCount > 0) savedRange = sel.getRangeAt(0).cloneRange();
                   tapFocusEl.blur();
                   tapFocusEl.focus();
                   if (savedRange) {
                     try {
-                      const sel2 = window.getSelection();
+                      const sel2 = pageWindow2.getSelection();
                       sel2.removeAllRanges();
                       sel2.addRange(savedRange);
                     } catch (e) {
@@ -9025,8 +9027,8 @@ R1: resume typing   ${btnLabel(1)}: close` : ""}`;
         }
         if (oskOpen && !oskPaused) {
           const oskSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
-          x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * oskSpeedMult));
-          y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * oskSpeedMult));
+          x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * oskSpeedMult));
+          y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * oskSpeedMult));
           cursor.style.left = x + "px";
           cursor.style.top = y + "px";
           cursor.style.display = "block";
@@ -9103,8 +9105,8 @@ row ${oskRow + 1}/${activeRows.length} col ${oskCol + 1}/${row.length}${oskShift
         }
         if (selectTarget) {
           const selSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
-          x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * selSpeedMult));
-          y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * selSpeedMult));
+          x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * selSpeedMult));
+          y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * selSpeedMult));
           cursor.style.left = x + "px";
           cursor.style.top = y + "px";
           cursor.style.display = "block";
@@ -9146,8 +9148,8 @@ D-Pad/cursor: browse   ${btnLabel(0)} confirm   ${btnLabel(1)} cancel`;
         }
         if (sliderTarget) {
           const speedMult2 = Math.max(0.3, Math.min(3, 1 - rx * 2));
-          x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * speedMult2));
-          y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * speedMult2));
+          x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * speedMult2));
+          y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * speedMult2));
           cursor.style.left = x + "px";
           cursor.style.top = y + "px";
           const now = performance.now();
@@ -9197,8 +9199,8 @@ left/right = fine-tune   ${btnLabel(0)} hold = drag   ${btnLabel(1)} = done`;
         }
         if (mulliganHost) {
           const mulSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
-          x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * mulSpeedMult));
-          y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * mulSpeedMult));
+          x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * mulSpeedMult));
+          y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * mulSpeedMult));
           cursor.style.left = x + "px";
           cursor.style.top = y + "px";
           cursor.style.display = cursorRestingDisplay();
@@ -9291,8 +9293,8 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
           const { root, kind } = modalInfo;
           modalKind = kind;
           const modSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
-          x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * modSpeedMult));
-          y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * modSpeedMult));
+          x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * modSpeedMult));
+          y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * modSpeedMult));
           cursor.style.left = x + "px";
           cursor.style.top = y + "px";
           cursor.style.display = cursorRestingDisplay();
@@ -9471,8 +9473,8 @@ ${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   ${btnLabel(1)} close`;
         }
         if (handHost) {
           const mSpeedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
-          x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * mSpeedMult));
-          y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * mSpeedMult));
+          x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * mSpeedMult));
+          y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * mSpeedMult));
           cursor.style.left = x + "px";
           cursor.style.top = y + "px";
           cursor.style.display = cursorRestingDisplay();
@@ -9706,8 +9708,8 @@ ${btnLabel(0)} select attacker   \u2193/${btnLabel(1)} hand`;
           return;
         }
         const speedMult = Math.max(0.3, Math.min(3, 1 - rx * 2));
-        x = Math.max(0, Math.min(window.innerWidth, x + lx * BASE_SPEED * speedMult));
-        y = Math.max(0, Math.min(window.innerHeight, y + ly * BASE_SPEED * speedMult));
+        x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * speedMult));
+        y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * speedMult));
         cursor.style.left = x + "px";
         cursor.style.top = y + "px";
         if (ry !== 0) {

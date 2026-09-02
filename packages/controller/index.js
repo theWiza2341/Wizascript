@@ -35,8 +35,10 @@ import {
 import {
   registerControllerSettings, isControllerSupportEnabled, isControllerCaptureActive,
   CONTROLLER_ACTIONS, HARDWARE_SHORTCUT_ACTIONS_BY_KEY,
-  getControllerPrimaryButton, getBoundButton, getBoundShortcutButton
+  getControllerPrimaryButton, getBoundButton, getBoundShortcutButton,
+  getPresetMenuState, isDebugTextEnabled
 } from './settings.js';
+import { getHudPosition, setHudPosition } from './storage.js';
 import { getPageWindow } from '../core/page-window.js';
 
 export function initController(plugin) {
@@ -116,12 +118,71 @@ export function initController(plugin) {
     zIndex: 2147483647, pointerEvents: 'none', left: '0px', top: '0px',
     transform: 'translate(-50%,-50%)', display: 'none'
   });
+  // The persistent green debug status readout - OFF by default (see
+  // "Enable Debug Text" in settings.js; visibility is enforced every
+  // frame near the top of frame() below, well before any of its many
+  // `hud.textContent = ...` call sites further down, all of which stay
+  // unconditional since writing text to a hidden element is harmless).
+  // pointerEvents is 'auto' (not the usual 'none' for this package's
+  // other overlays) specifically so it can be click-and-dragged out of
+  // the way - it has no other reason to intercept clicks, being pure
+  // status text with nothing to activate.
   const hud = document.createElement('div');
   Object.assign(hud.style, {
     position: 'fixed', left: '8px', bottom: '8px', zIndex: 2147483647,
     background: 'rgba(0,0,0,0.6)', color: '#0f0', font: '12px monospace',
-    padding: '4px 8px', borderRadius: '4px', pointerEvents: 'none', whiteSpace: 'pre'
+    padding: '4px 8px', borderRadius: '4px', pointerEvents: 'auto', whiteSpace: 'pre',
+    cursor: 'move', userSelect: 'none', display: 'none'
   });
+  // Restore a previously-dragged position, if any - switches from the
+  // default bottom-left anchor to an explicit left/top the moment a saved
+  // position exists, since dragging naturally produces left/top
+  // coordinates rather than a distance-from-bottom.
+  const savedHudPos = getHudPosition();
+  if (savedHudPos) {
+    hud.style.left = savedHudPos.left + 'px';
+    hud.style.top = savedHudPos.top + 'px';
+    hud.style.bottom = '';
+  }
+  // Real mouse drag-to-reposition - deliberately real DOM mouse events,
+  // not this package's own synthetic controller-driven dispatch, since
+  // this is a plain screen-space UI convenience for whoever's holding the
+  // actual mouse, same small-movement-threshold shape as Deck Tracker's
+  // own tracker-button drag (packages/deck-tracker/index.js) so a click
+  // that barely twitches doesn't get mistaken for a drag and silently
+  // move the HUD.
+  (function makeHudDraggable() {
+    const DRAG_THRESHOLD_PX = 4;
+    let dragging = false, dragMoved = false, offsetX = 0, offsetY = 0;
+    hud.addEventListener('mousedown', (e) => {
+      dragging = true;
+      dragMoved = false;
+      const rect = hud.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      e.preventDefault();
+    });
+    pageWindow.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      const rect = hud.getBoundingClientRect();
+      const newLeft = e.clientX - offsetX, newTop = e.clientY - offsetY;
+      if (!dragMoved && (Math.abs(newLeft - rect.left) > DRAG_THRESHOLD_PX || Math.abs(newTop - rect.top) > DRAG_THRESHOLD_PX)) {
+        dragMoved = true;
+      }
+      if (!dragMoved) return;
+      hud.style.left = Math.max(0, Math.min(pageWindow.innerWidth - 20, newLeft)) + 'px';
+      hud.style.top = Math.max(0, Math.min(pageWindow.innerHeight - 20, newTop)) + 'px';
+      hud.style.bottom = '';
+    });
+    pageWindow.addEventListener('mouseup', () => {
+      if (!dragging) return;
+      dragging = false;
+      if (dragMoved) {
+        const rect = hud.getBoundingClientRect();
+        setHudPosition(rect.left, rect.top);
+      }
+    });
+  })();
 
   const OSK_THEMES = {
     dark:  { panelBg: '#1c1c1c', panelBorder: '1px solid rgba(255,255,255,0.15)', panelShadow: '0 4px 16px rgba(0,0,0,0.6)', hintColor: '#999', closeBg: '#3a3a3a' },
@@ -437,12 +498,37 @@ export function initController(plugin) {
   let modalPane = 'categories';
   let categoryItems = [], categoryIndex = 0;
   let fieldGrid = null, fieldRow = 0, fieldCol = 0;
+  // Traps d-pad focus inside a custom, non-native floating widget that a
+  // field row opened (currently just the controller preset picker - see
+  // settings.js's getPresetMenuState()) instead of letting up/down keep
+  // moving fieldRow/fieldCol through the rows underneath it, which is
+  // what a plain readOnly-input click previously did (the reported bug:
+  // the preset dropdown opened, but the d-pad kept browsing the settings
+  // list behind it instead of the dropdown's own rows). Shape:
+  // { items, index, onConfirm(item), onCancel(), isAlive() }. Set inside
+  // activateHighlighted() when opening a widget publishes menu state;
+  // cleared on confirm/cancel or, defensively, the moment isAlive() says
+  // the underlying widget closed itself some other way (outside click,
+  // Escape key).
+  let fieldSubmenu = null;
   // Tracks the checked-radio index as of LAST frame, for the edge-
   // triggered self-heal below (see its own comment at the use site).
   let lastKnownActiveCategoryIdx = -1;
   const MODAL_ITEM_SELECTOR = 'button, input:not([type="hidden"]):not(.tabButton), select, a[href], .card, li[role="button"], .tabLabel';
   function queryModalRoot() {
-    const dialog = document.querySelector('.bootstrap-dialog');
+    // Prefer the last VISIBLE `.bootstrap-dialog`, not just the first one
+    // in DOM order. Bootstrap can leave a just-closed dialog in the DOM
+    // mid fade-out (display/opacity still non-'none' for a frame or two)
+    // while a NEW one is already open on top of it (e.g. Deck Tracker's
+    // "Add Tracker Preset" picker opening its own "Help" dialog on top,
+    // per picker.js's own comment that Help stacks rather than replacing
+    // it) - a plain `document.querySelector` would silently grab the
+    // wrong (stale or underneath) one, and Cancel/Circle would then try
+    // to dismiss a dialog the player can't even see, doing nothing
+    // visible and forcing them out to the mouse instead.
+    const visibleDialogs = Array.from(document.querySelectorAll('.bootstrap-dialog'))
+      .filter((d) => d.offsetParent !== null);
+    const dialog = visibleDialogs[visibleDialogs.length - 1] || null;
     if (dialog && !document.querySelector('.mulligan')) {
       const tabbedRoot = dialog.querySelector('.tabbedView.left');
       return tabbedRoot
@@ -532,6 +618,7 @@ export function initController(plugin) {
     triggerElementClick(cat);
     modalPane = 'fields';
     fieldGrid = null; fieldRow = 0; fieldCol = 0;
+    if (fieldSubmenu) { fieldSubmenu.onCancel && fieldSubmenu.onCancel(); fieldSubmenu = null; }
   }
   function findModalDismissButton(root) {
     const byAttr = root.querySelector('[data-dismiss="modal"], .close');
@@ -560,6 +647,7 @@ export function initController(plugin) {
     // top of a match (e.g. Concede) just as easily as out of one.
     if (modalKind === 'tabbed') {
       if (modalPane === 'categories') return categoryItems[categoryIndex] || null;
+      if (fieldSubmenu) return fieldSubmenu.items[fieldSubmenu.index] || null;
       return (fieldGrid && fieldGrid[fieldRow] || [])[fieldCol] || null;
     }
     if (modalGrid && modalGrid.length) {
@@ -945,6 +1033,23 @@ export function initController(plugin) {
     // click first.
     if (isPatchMakerResetButton(el)) { activatePatchMakerResetButton(el, cx, cy); return; }
     dispatchClick(el, cx, cy, button === 2 ? 2 : 0);
+    // The controller preset picker (settings.js) is a fully custom
+    // floating menu, not part of Underscript's own settings DOM - the
+    // click above just opened it (synchronously, so it's already live by
+    // this line if it opened). Trap the d-pad inside it via fieldSubmenu
+    // rather than falling through to any of the generic handling below,
+    // which would leave the fields-pane grid navigating underneath it.
+    const openPresetMenu = getPresetMenuState();
+    if (openPresetMenu) {
+      fieldSubmenu = {
+        items: openPresetMenu.rows,
+        index: openPresetMenu.activeIndex,
+        onConfirm: (item) => { if (item) triggerElementClick(item); },
+        onCancel: () => openPresetMenu.close(),
+        isAlive: () => !!getPresetMenuState()
+      };
+      return;
+    }
     if (isNativeSelect(el)) { openSelectPicker(el); return; }
     if (isSlider(el)) { openSlider(el); return; }
     // `.uc-section-label` is only `contenteditable` for CUSTOM sections,
@@ -1374,6 +1479,13 @@ export function initController(plugin) {
 
   function frame() {
     try {
+      // Debug HUD visibility follows its own toggle every frame,
+      // independent of (and checked before) the Controller Support gate
+      // right below - so flipping "Enable Debug Text" off hides it
+      // immediately even if Controller Support was just turned off in the
+      // same moment, rather than leaving a stale readout on screen.
+      hud.style.display = isDebugTextEnabled() ? 'block' : 'none';
+
       // Master gate: while Controller Support is off, skip gamepad
       // polling and every DOM read/write below entirely. If it was
       // actively driving things a moment ago (user just flipped it off),
@@ -1457,8 +1569,8 @@ export function initController(plugin) {
       // blur-then-clear as the OSK's own Circle binding) without first
       // needing to un-pause via R1.
       if (btn(1) && !shortcutBtnHeld[1] && oskOpen && oskPaused) closeOsk();
-      // The 7 shortcuts below are remappable via "Keybinds - Controller"
-      // > "— Hardware Shortcuts —" (see settings.js). Edge-triggering is
+      // The 8 shortcuts below are remappable via "Keybinds - Controller"
+      // > "— In-Game Inputs —" (see settings.js). Edge-triggering is
       // done by shortcutJustPressed(), which reads the CURRENT bound
       // button every frame instead of a hardcoded number - shortcutBtnHeld
       // stays reserved for R1/button-5 and Circle/button-1 only, which
@@ -1473,6 +1585,14 @@ export function initController(plugin) {
       if (shortcutJustPressed(btn, 'openWizascriptSettings') && !oskOpen) openWizascriptSettings();
       if (shortcutJustPressed(btn, 'concede')) triggerConcede();
       if (shortcutJustPressed(btn, 'goHome')) pageWindow.location.href = 'https://undercards.net/';
+      // Deck Tracker's own "Add Tracker Preset" picker (packages/deck-
+      // tracker/index.js) otherwise only opens via a real mouse click on
+      // its floating button (`#dt-add-tracker-button`) - defaults to ZL
+      // (button 6), free in every existing preset (nothing else defaults
+      // there). Guarded on !oskOpen for the same reason as the dustpile
+      // checks above (shared default-button space with the OSK's own
+      // local bindings while it's open).
+      if (shortcutJustPressed(btn, 'openDeckTrackerPresets') && !oskOpen) triggerElementClick(document.getElementById('dt-add-tracker-button'));
       shortcutBtnHeld = { 1: btn(1), 5: btn(5) };
 
       /* ---------- Controller Primary relay ----------
@@ -1905,19 +2025,30 @@ export function initController(plugin) {
          mid-match, e.g. Concede's confirm dialog, takes priority over
          hand/board nav). */
       const modalInfo = queryModalRoot();
+      // Self-heal against a trapped field submenu (the preset dropdown)
+      // getting closed some way OTHER than our own confirm/cancel
+      // handling below - a real mouse click outside it, or the real
+      // Escape key, both handled entirely inside settings.js. Without
+      // this, fieldSubmenu would keep pointing at detached, already-
+      // removed row elements and silently eat every future d-pad press
+      // in this pane.
+      if (fieldSubmenu && fieldSubmenu.isAlive && !fieldSubmenu.isAlive()) fieldSubmenu = null;
       if (!modalInfo && modalKind) {
         modalGrid = null; modalKind = null;
         modalPane = 'categories'; categoryItems = []; categoryIndex = 0;
         fieldGrid = null; fieldRow = 0; fieldCol = 0;
+        if (fieldSubmenu) { fieldSubmenu.onCancel && fieldSubmenu.onCancel(); fieldSubmenu = null; }
         refreshHighlight();
       }
       if (modalInfo && modalInfo.kind !== 'tabbed' && modalKind === 'tabbed') {
         modalPane = 'categories'; categoryItems = []; categoryIndex = 0;
         fieldGrid = null; fieldRow = 0; fieldCol = 0;
+        if (fieldSubmenu) { fieldSubmenu.onCancel && fieldSubmenu.onCancel(); fieldSubmenu = null; }
       }
       if (modalInfo && modalInfo.kind === 'tabbed' && modalKind !== 'tabbed') {
         modalPane = 'categories'; fieldGrid = null; fieldRow = 0; fieldCol = 0;
         lastKnownActiveCategoryIdx = -1;
+        if (fieldSubmenu) { fieldSubmenu.onCancel && fieldSubmenu.onCancel(); fieldSubmenu = null; }
       }
       if (modalInfo) {
         const { root, kind } = modalInfo;
@@ -1999,7 +2130,13 @@ export function initController(plugin) {
             refreshHighlight();
 
             if (btn(0) && !btnHeld[0]) enterCategory();
-            if (btn(1) && !btnHeld[1]) {
+            // isControllerCaptureActive() can't actually be true while
+            // browsing categories (a capture widget only exists as a row
+            // INSIDE a category's own fields pane), but the guard is kept
+            // explicit here anyway rather than relying on that being true
+            // by construction - Cancel closing a dialog must never be
+            // able to race a capture widget waiting on this same press.
+            if (btn(1) && !btnHeld[1] && !isControllerCaptureActive()) {
               // Categories is the "outermost" pane for a tabbed dialog -
               // Circle here closes the whole dialog, matching the
               // fields-pane Circle backing out ONE level at a time
@@ -2010,6 +2147,34 @@ export function initController(plugin) {
             }
             btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
             hud.textContent = `settings: categories (${categoryItems.length ? categoryIndex + 1 : 0}/${categoryItems.length})\n${btnLabel(0)}/→ open category   ${btnLabel(1)} close dialog`;
+          } else if (fieldSubmenu) {
+            // Trapped inside a custom, non-native floating widget a field
+            // row opened (currently just the controller preset picker) -
+            // up/down move the highlighted row WITHIN the widget, confirm
+            // picks it, cancel/left backs out without touching it. Field-
+            // grid navigation and the generic activate/back handling below
+            // are both skipped entirely while this is set, same shape as
+            // the capture-widget guard just below it.
+            if (up && !dpadHeld.up) fieldSubmenu.index = (fieldSubmenu.index - 1 + fieldSubmenu.items.length) % fieldSubmenu.items.length;
+            if (down && !dpadHeld.down) fieldSubmenu.index = (fieldSubmenu.index + 1) % fieldSubmenu.items.length;
+            // Edge-detect against the PREVIOUS frame's held state before
+            // dpadHeld/btnHeld get overwritten below with this frame's.
+            const wasLeftOrB1Held = dpadHeld.left || btnHeld[1];
+            dpadHeld = { up, down, left, right };
+            refreshHighlight();
+
+            if (btn(0) && !btnHeld[0]) {
+              const item = fieldSubmenu.items[fieldSubmenu.index];
+              fieldSubmenu.onConfirm(item);
+              fieldSubmenu = null;
+            } else if ((btn(1) || left) && !wasLeftOrB1Held) {
+              fieldSubmenu.onCancel();
+              fieldSubmenu = null;
+            }
+            btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+            const idx = fieldSubmenu ? fieldSubmenu.index + 1 : 0;
+            const total = fieldSubmenu ? fieldSubmenu.items.length : 0;
+            hud.textContent = `settings: submenu (${idx}/${total})\n${btnLabel(0)} select   ←/${btnLabel(1)} cancel`;
           } else {
             // This whole d-pad-movement block (fieldRow/fieldCol, and the
             // "left at column 0 backs out to categories" case) is
@@ -2114,7 +2279,11 @@ export function initController(plugin) {
 
         if (btn(0) && !btnHeld[0]) activateHighlighted(0);
         if (btn(3) && !btnHeld[3]) activateHighlighted(2);
-        if (btn(1) && !btnHeld[1]) {
+        // Same explicit isControllerCaptureActive() guard as the
+        // categories-pane Circle-close above - can't actually be true
+        // here either (no capture widgets live outside our own "Keybinds
+        // - Controller" tabbed category), kept for the same reason.
+        if (btn(1) && !btnHeld[1] && !isControllerCaptureActive()) {
           // The custom Underscript menu always closes via Escape (its own
           // built-in hotkey). A BootstrapDialog is less certain, so try
           // an actual visible dismiss button first and only fall back to

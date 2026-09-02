@@ -71,6 +71,26 @@ export function presetKey(rawKey) {
 // if the OLD flat value exists AND the NEW preset1-namespaced value
 // doesn't already exist, so this can never clobber a real preset-1
 // customization made after upgrading.
+// Debug HUD (the persistent green status readout, gated behind "Enable
+// Debug Text" in settings.js) drag-to-reposition. Deliberately NOT
+// preset-namespaced via presetKey() - where someone likes to keep a debug
+// overlay on their screen is a UI preference, not a per-preset keybind,
+// so it stays put across preset switches.
+export function getHudPosition() {
+  const raw = csGet('debugHudPosition', null);
+  if (!raw) return null;
+  try {
+    const pos = JSON.parse(raw);
+    if (pos && typeof pos.left === 'number' && typeof pos.top === 'number') return pos;
+  } catch (e) {
+    console.warn('[Wizascript Controller] stored debug HUD position was invalid JSON, ignoring:', e);
+  }
+  return null;
+}
+export function setHudPosition(left, top) {
+  csSet('debugHudPosition', JSON.stringify({ left, top }));
+}
+
 export function migrateFlatBindingsToPresetOne(controllerActionKeys, hardwareShortcutKeys) {
   if (csGet('migratedToPresetsV056', null) !== null) return;
   const migrate = (rawKey) => {

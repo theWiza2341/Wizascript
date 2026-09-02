@@ -1772,7 +1772,13 @@ Version: v${version}`;
     const register = (config) => registerKeybind(plugin, { ...config, packageLabel: "Patch Maker", guardTypingContext: false });
     register({
       key: "cycleCategoryUp",
-      name: "Cycle Entry Category Up",
+      // Shortened from "Cycle Entry Category Up" - combined with the
+      // registry's own "- Primary + <key>" suffix (packages/core/
+      // keybinds.js), the full name was wide enough to force a horizontal
+      // scrollbar in the settings dialog. "Entry" was the only word doing
+      // no real work here (Patch Maker doesn't have any OTHER kind of
+      // category to cycle).
+      name: "Cycle Category Up",
       defaultCode: "Comma",
       scope: "scoped",
       selector: ".uc-li-text",
@@ -1783,7 +1789,7 @@ Version: v${version}`;
     });
     register({
       key: "cycleCategoryDown",
-      name: "Cycle Entry Category Down",
+      name: "Cycle Category Down",
       defaultCode: "Period",
       scope: "scoped",
       selector: ".uc-li-text",
@@ -1816,7 +1822,14 @@ Version: v${version}`;
     });
     register({
       key: "moveSectionUp",
-      name: "Move Balance Section Up",
+      // Shortened from "Move Balance Section Up" to match the identically-
+      // renamed controller-package action of the same key (packages/
+      // controller/settings.js) - both drove the same horizontal-scroll
+      // issue via their shared "- Primary + <key/button>" suffix, and
+      // keeping the two names in sync avoids the keyboard and controller
+      // versions of the same action reading differently in their
+      // respective settings categories.
+      name: "Move Section Up",
       defaultCode: "ArrowUp",
       scope: "scoped",
       selector: ".uc-section-label",
@@ -1830,7 +1843,7 @@ Version: v${version}`;
     });
     register({
       key: "moveSectionDown",
-      name: "Move Balance Section Down",
+      name: "Move Section Down",
       defaultCode: "ArrowDown",
       scope: "scoped",
       selector: ".uc-section-label",
@@ -3384,12 +3397,13 @@ Version: v${version}`;
       default: false
     });
     const allowFavoritedRetainedWhileSpectating = settings2.add("allowFavoritedRetainedWhileSpectating", {
-      name: "Auto-load Favorited/Retained Presets While Spectating",
+      name: "Auto-load Presets While Spectating",
+      note: "Applies to your own favorited/retained tracker presets specifically.",
       type: "boolean",
       default: false
     });
     const dimOpacity = settings2.add("dimOpacity", {
-      name: "Tracker Button Dim Opacity",
+      name: "Tracker Dim Opacity",
       type: "slider",
       default: 0.4,
       min: 0,
@@ -7325,6 +7339,20 @@ Version: v${version}`;
   function presetKey(rawKey) {
     return "preset" + getActivePreset() + "." + rawKey;
   }
+  function getHudPosition() {
+    const raw = csGet("debugHudPosition", null);
+    if (!raw) return null;
+    try {
+      const pos = JSON.parse(raw);
+      if (pos && typeof pos.left === "number" && typeof pos.top === "number") return pos;
+    } catch (e) {
+      console.warn("[Wizascript Controller] stored debug HUD position was invalid JSON, ignoring:", e);
+    }
+    return null;
+  }
+  function setHudPosition(left, top) {
+    csSet("debugHudPosition", JSON.stringify({ left, top }));
+  }
   function migrateFlatBindingsToPresetOne(controllerActionKeys, hardwareShortcutKeys) {
     if (csGet("migratedToPresetsV056", null) !== null) return;
     const migrate = (rawKey) => {
@@ -7351,8 +7379,14 @@ Version: v${version}`;
     { key: "redoNotepad", name: "Redo Drawing", packageLabel: "Notepad", context: "default", defaultButton: 12, dispatch: { code: "KeyY", key: "y" } },
     { key: "moveEntryUp", name: "Move Entry Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
     { key: "moveEntryDown", name: "Move Entry Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
-    { key: "moveSectionUp", name: "Move Balance Section Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
-    { key: "moveSectionDown", name: "Move Balance Section Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
+    // Shortened from "Move Balance Section Up/Down" - the "- Primary +
+    // <button>" suffix registerControllerSettings() appends below already
+    // pushed the combined row name wide enough to force a horizontal
+    // scrollbar in the settings dialog. "Section" alone is unambiguous
+    // here (Patch Maker only has one thing called a "section"), matching
+    // "Entry"/"Card" already being bare nouns in the two actions above.
+    { key: "moveSectionUp", name: "Move Section Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
+    { key: "moveSectionDown", name: "Move Section Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
     { key: "moveCardUp", name: "Move Card Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
     { key: "moveCardDown", name: "Move Card Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } }
   ];
@@ -7367,7 +7401,8 @@ Version: v${version}`;
     { key: "endTurn", name: "End Turn" },
     { key: "openWizascriptSettings", name: "Open Wizascript Settings" },
     { key: "concede", name: "Concede" },
-    { key: "goHome", name: "Go to Home Page" }
+    { key: "goHome", name: "Go to Home Page" },
+    { key: "openDeckTrackerPresets", name: "Open Deck Tracker Presets" }
   ];
   var HARDWARE_SHORTCUT_DEFAULTS = {
     openSettings: 9,
@@ -7376,7 +7411,8 @@ Version: v${version}`;
     endTurn: 17,
     openWizascriptSettings: 7,
     concede: 8,
-    goHome: 16
+    goHome: 16,
+    openDeckTrackerPresets: 6
   };
   var HARDWARE_SHORTCUT_ACTIONS_BY_KEY = {};
   HARDWARE_SHORTCUT_ACTIONS.forEach((a) => {
@@ -7422,6 +7458,15 @@ Version: v${version}`;
       return true;
     }
   }
+  var debugTextEnabledSetting = null;
+  function isDebugTextEnabled() {
+    if (!debugTextEnabledSetting || typeof debugTextEnabledSetting.value !== "function") return false;
+    try {
+      return !!debugTextEnabledSetting.value();
+    } catch (e) {
+      return false;
+    }
+  }
   var controllerCaptureActive = false;
   function isControllerCaptureActive() {
     return controllerCaptureActive;
@@ -7438,7 +7483,15 @@ Version: v${version}`;
       color: "#8ab4f8",
       fontWeight: "bold",
       cursor: "default",
-      pointerEvents: "none"
+      pointerEvents: "none",
+      // A bit of breathing room above/below each section header - without
+      // it every divider sat flush against the row before it, and with
+      // "— In-Game Inputs —" no longer followed by its own info row (see
+      // registerControllerSettings), that section in particular read as
+      // visually cramped against "Move Section Down" right above it.
+      marginTop: "14px",
+      marginBottom: "2px",
+      paddingTop: "4px"
     });
   }
   function enhanceControllerCaptureInput(el, readBound, writeBound) {
@@ -7511,6 +7564,10 @@ Version: v${version}`;
       });
     });
   }
+  var presetMenuState = null;
+  function getPresetMenuState() {
+    return presetMenuState;
+  }
   function enhancePresetSelector(el) {
     el.setAttribute("data-wc-enhanced", "true");
     el.readOnly = true;
@@ -7539,6 +7596,7 @@ Version: v${version}`;
       if (!menuEl) return;
       menuEl.remove();
       menuEl = null;
+      presetMenuState = null;
       document.removeEventListener("mousedown", onOutsideClick, true);
       document.removeEventListener("keydown", onEscape, true);
     }
@@ -7561,6 +7619,7 @@ Version: v${version}`;
         overflow: "hidden",
         fontFamily: "inherit"
       });
+      const rowEls = [];
       for (let n = 1; n <= PRESET_COUNT; n++) {
         const isActive = n === getActivePreset();
         const row = document.createElement("div");
@@ -7586,10 +7645,12 @@ Version: v${version}`;
           console.log("[Wizascript Controller] switched to preset", n, "(" + getPresetName(n) + ")");
         });
         menuEl.appendChild(row);
+        rowEls.push(row);
       }
       document.body.appendChild(menuEl);
       document.addEventListener("mousedown", onOutsideClick, true);
       document.addEventListener("keydown", onEscape, true);
+      presetMenuState = { rows: rowEls, activeIndex: Math.max(0, getActivePreset() - 1), close: closeMenu };
     }
     el.addEventListener("click", openMenu);
   }
@@ -7690,6 +7751,12 @@ Version: v${version}`;
       type: "boolean",
       default: false
     });
+    debugTextEnabledSetting = settings2.add("debugTextEnabled", {
+      name: "Enable Debug Text",
+      note: "Off by default. Shows a green status readout - click and drag it to move it out of the way.",
+      type: "boolean",
+      default: false
+    });
     settings2.add("controllerPrimary", {
       name: "Controller Primary",
       note: "Click to remap. Hold for combos below, same as Wizascript's own Primary Key.",
@@ -7697,7 +7764,7 @@ Version: v${version}`;
       default: buttonToDisplay(DEFAULT_PRIMARY_BUTTON)
     });
     settings2.add("__divider_General", { name: "\u2014 General \u2014", type: "text", default: "" });
-    settings2.add("__info_openSettings", { name: "Double Tap Controller Primary \u2192 Open Wizascript Settings", type: "text", default: "" });
+    settings2.add("__info_openSettings", { name: "Double Tap Primary \u2192 Open Wizascript Settings", type: "text", default: "" });
     const seenLabels = /* @__PURE__ */ new Set();
     CONTROLLER_ACTIONS.forEach((action) => {
       if (!seenLabels.has(action.packageLabel)) {
@@ -7714,8 +7781,7 @@ Version: v${version}`;
         default: buttonToDisplay(action.defaultButton)
       });
     });
-    settings2.add("__divider_HardwareShortcuts", { name: "\u2014 Hardware Shortcuts (no Primary needed) \u2014", type: "text", default: "" });
-    settings2.add("__info_hardwareShortcuts", { name: "These fire on a single button press, no Controller Primary hold required.", type: "text", default: "" });
+    settings2.add("__divider_HardwareShortcuts", { name: "\u2014 In-Game Inputs \u2014", type: "text", default: "" });
     HARDWARE_SHORTCUT_ACTIONS.forEach((action) => {
       settings2.add("shortcut_" + action.key, {
         name: action.name,
@@ -7809,9 +7875,50 @@ Version: v${version}`;
       font: "12px monospace",
       padding: "4px 8px",
       borderRadius: "4px",
-      pointerEvents: "none",
-      whiteSpace: "pre"
+      pointerEvents: "auto",
+      whiteSpace: "pre",
+      cursor: "move",
+      userSelect: "none",
+      display: "none"
     });
+    const savedHudPos = getHudPosition();
+    if (savedHudPos) {
+      hud.style.left = savedHudPos.left + "px";
+      hud.style.top = savedHudPos.top + "px";
+      hud.style.bottom = "";
+    }
+    (function makeHudDraggable() {
+      const DRAG_THRESHOLD_PX = 4;
+      let dragging = false, dragMoved = false, offsetX = 0, offsetY = 0;
+      hud.addEventListener("mousedown", (e) => {
+        dragging = true;
+        dragMoved = false;
+        const rect = hud.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        e.preventDefault();
+      });
+      pageWindow2.addEventListener("mousemove", (e) => {
+        if (!dragging) return;
+        const rect = hud.getBoundingClientRect();
+        const newLeft = e.clientX - offsetX, newTop = e.clientY - offsetY;
+        if (!dragMoved && (Math.abs(newLeft - rect.left) > DRAG_THRESHOLD_PX || Math.abs(newTop - rect.top) > DRAG_THRESHOLD_PX)) {
+          dragMoved = true;
+        }
+        if (!dragMoved) return;
+        hud.style.left = Math.max(0, Math.min(pageWindow2.innerWidth - 20, newLeft)) + "px";
+        hud.style.top = Math.max(0, Math.min(pageWindow2.innerHeight - 20, newTop)) + "px";
+        hud.style.bottom = "";
+      });
+      pageWindow2.addEventListener("mouseup", () => {
+        if (!dragging) return;
+        dragging = false;
+        if (dragMoved) {
+          const rect = hud.getBoundingClientRect();
+          setHudPosition(rect.left, rect.top);
+        }
+      });
+    })();
     const OSK_THEMES = {
       dark: { panelBg: "#1c1c1c", panelBorder: "1px solid rgba(255,255,255,0.15)", panelShadow: "0 4px 16px rgba(0,0,0,0.6)", hintColor: "#999", closeBg: "#3a3a3a" },
       light: { panelBg: "#f2f2f4", panelBorder: "none", panelShadow: "0 8px 24px rgba(0,0,0,0.35)", hintColor: "#666", closeBg: "#333" }
@@ -8090,10 +8197,12 @@ Version: v${version}`;
     let modalPane = "categories";
     let categoryItems = [], categoryIndex = 0;
     let fieldGrid = null, fieldRow = 0, fieldCol = 0;
+    let fieldSubmenu = null;
     let lastKnownActiveCategoryIdx = -1;
     const MODAL_ITEM_SELECTOR = 'button, input:not([type="hidden"]):not(.tabButton), select, a[href], .card, li[role="button"], .tabLabel';
     function queryModalRoot() {
-      const dialog = document.querySelector(".bootstrap-dialog");
+      const visibleDialogs = Array.from(document.querySelectorAll(".bootstrap-dialog")).filter((d) => d.offsetParent !== null);
+      const dialog = visibleDialogs[visibleDialogs.length - 1] || null;
       if (dialog && !document.querySelector(".mulligan")) {
         const tabbedRoot = dialog.querySelector(".tabbedView.left");
         return tabbedRoot ? { root: dialog, kind: "tabbed", tabbedRoot } : { root: dialog, kind: "plain" };
@@ -8140,6 +8249,10 @@ Version: v${version}`;
       fieldGrid = null;
       fieldRow = 0;
       fieldCol = 0;
+      if (fieldSubmenu) {
+        fieldSubmenu.onCancel && fieldSubmenu.onCancel();
+        fieldSubmenu = null;
+      }
     }
     function findModalDismissButton(root) {
       const byAttr = root.querySelector('[data-dismiss="modal"], .close');
@@ -8160,6 +8273,7 @@ Version: v${version}`;
       }
       if (modalKind === "tabbed") {
         if (modalPane === "categories") return categoryItems[categoryIndex] || null;
+        if (fieldSubmenu) return fieldSubmenu.items[fieldSubmenu.index] || null;
         return (fieldGrid && fieldGrid[fieldRow] || [])[fieldCol] || null;
       }
       if (modalGrid && modalGrid.length) {
@@ -8486,6 +8600,19 @@ Version: v${version}`;
         return;
       }
       dispatchClick(el, cx, cy, button === 2 ? 2 : 0);
+      const openPresetMenu = getPresetMenuState();
+      if (openPresetMenu) {
+        fieldSubmenu = {
+          items: openPresetMenu.rows,
+          index: openPresetMenu.activeIndex,
+          onConfirm: (item) => {
+            if (item) triggerElementClick(item);
+          },
+          onCancel: () => openPresetMenu.close(),
+          isAlive: () => !!getPresetMenuState()
+        };
+        return;
+      }
       if (isNativeSelect(el)) {
         openSelectPicker(el);
         return;
@@ -8846,6 +8973,7 @@ Version: v${version}`;
     }
     function frame() {
       try {
+        hud.style.display = isDebugTextEnabled() ? "block" : "none";
         if (!isControllerSupportEnabled()) {
           if (usingController) {
             usingController = false;
@@ -8899,6 +9027,7 @@ Version: v${version}`;
         if (shortcutJustPressed(btn, "openWizascriptSettings") && !oskOpen) openWizascriptSettings();
         if (shortcutJustPressed(btn, "concede")) triggerConcede();
         if (shortcutJustPressed(btn, "goHome")) pageWindow2.location.href = "https://undercards.net/";
+        if (shortcutJustPressed(btn, "openDeckTrackerPresets") && !oskOpen) triggerElementClick(document.getElementById("dt-add-tracker-button"));
         shortcutBtnHeld = { 1: btn(1), 5: btn(5) };
         if (!oskOpen || oskPaused) {
           const primaryBtn = getControllerPrimaryButton();
@@ -9263,6 +9392,7 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
           return;
         }
         const modalInfo = queryModalRoot();
+        if (fieldSubmenu && fieldSubmenu.isAlive && !fieldSubmenu.isAlive()) fieldSubmenu = null;
         if (!modalInfo && modalKind) {
           modalGrid = null;
           modalKind = null;
@@ -9272,6 +9402,10 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
           fieldGrid = null;
           fieldRow = 0;
           fieldCol = 0;
+          if (fieldSubmenu) {
+            fieldSubmenu.onCancel && fieldSubmenu.onCancel();
+            fieldSubmenu = null;
+          }
           refreshHighlight();
         }
         if (modalInfo && modalInfo.kind !== "tabbed" && modalKind === "tabbed") {
@@ -9281,6 +9415,10 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
           fieldGrid = null;
           fieldRow = 0;
           fieldCol = 0;
+          if (fieldSubmenu) {
+            fieldSubmenu.onCancel && fieldSubmenu.onCancel();
+            fieldSubmenu = null;
+          }
         }
         if (modalInfo && modalInfo.kind === "tabbed" && modalKind !== "tabbed") {
           modalPane = "categories";
@@ -9288,6 +9426,10 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
           fieldRow = 0;
           fieldCol = 0;
           lastKnownActiveCategoryIdx = -1;
+          if (fieldSubmenu) {
+            fieldSubmenu.onCancel && fieldSubmenu.onCancel();
+            fieldSubmenu = null;
+          }
         }
         if (modalInfo) {
           const { root, kind } = modalInfo;
@@ -9364,7 +9506,7 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
               dpadHeld = { up, down, left, right };
               refreshHighlight();
               if (btn(0) && !btnHeld[0]) enterCategory();
-              if (btn(1) && !btnHeld[1]) {
+              if (btn(1) && !btnHeld[1] && !isControllerCaptureActive()) {
                 const dismiss = findModalDismissButton(root);
                 if (dismiss) triggerElementClick(dismiss);
                 else document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
@@ -9372,6 +9514,25 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
               btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
               hud.textContent = `settings: categories (${categoryItems.length ? categoryIndex + 1 : 0}/${categoryItems.length})
 ${btnLabel(0)}/\u2192 open category   ${btnLabel(1)} close dialog`;
+            } else if (fieldSubmenu) {
+              if (up && !dpadHeld.up) fieldSubmenu.index = (fieldSubmenu.index - 1 + fieldSubmenu.items.length) % fieldSubmenu.items.length;
+              if (down && !dpadHeld.down) fieldSubmenu.index = (fieldSubmenu.index + 1) % fieldSubmenu.items.length;
+              const wasLeftOrB1Held = dpadHeld.left || btnHeld[1];
+              dpadHeld = { up, down, left, right };
+              refreshHighlight();
+              if (btn(0) && !btnHeld[0]) {
+                const item = fieldSubmenu.items[fieldSubmenu.index];
+                fieldSubmenu.onConfirm(item);
+                fieldSubmenu = null;
+              } else if ((btn(1) || left) && !wasLeftOrB1Held) {
+                fieldSubmenu.onCancel();
+                fieldSubmenu = null;
+              }
+              btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+              const idx = fieldSubmenu ? fieldSubmenu.index + 1 : 0;
+              const total = fieldSubmenu ? fieldSubmenu.items.length : 0;
+              hud.textContent = `settings: submenu (${idx}/${total})
+${btnLabel(0)} select   \u2190/${btnLabel(1)} cancel`;
             } else {
               if (!isControllerCaptureActive()) {
                 if (fieldGrid.length) {
@@ -9447,7 +9608,7 @@ ${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   \u2190/${btnLabel(1)} ba
           refreshHighlight();
           if (btn(0) && !btnHeld[0]) activateHighlighted(0);
           if (btn(3) && !btnHeld[3]) activateHighlighted(2);
-          if (btn(1) && !btnHeld[1]) {
+          if (btn(1) && !btnHeld[1] && !isControllerCaptureActive()) {
             if (kind === "menu") {
               document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
             } else {

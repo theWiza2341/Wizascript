@@ -1,0 +1,40 @@
+diff --git a/packages/deck-tracker/settings.js b/packages/deck-tracker/settings.js
+index 9ae1135..c0f0e82 100644
+--- a/packages/deck-tracker/settings.js
++++ b/packages/deck-tracker/settings.js
+@@ -29,8 +29,16 @@ export function registerDeckTrackerSettings(plugin) {
+   // else's match felt like it shouldn't happen unless deliberately
+   // opted into. Soul-based auto-load above is unaffected by this -
+   // it already always applies to spectating regardless.
++  //
++  // Name shortened from "Auto-load Favorited/Retained Presets While
++  // Spectating" - combined with the "- Primary + <key>"-style suffixes
++  // other settings rows can carry, that name was one of the widest rows
++  // in the whole settings dialog and forced a horizontal scrollbar. The
++  // dropped "Favorited/Retained" nuance now lives in the `note` instead
++  // of the row name itself.
+   const allowFavoritedRetainedWhileSpectating = settings.add("allowFavoritedRetainedWhileSpectating", {
+-    name: "Auto-load Favorited/Retained Presets While Spectating",
++    name: "Auto-load Presets While Spectating",
++    note: "Applies to your own favorited/retained tracker presets specifically.",
+     type: "boolean",
+     default: false
+   });
+@@ -39,8 +47,16 @@ export function registerDeckTrackerSettings(plugin) {
+   // blocking modal (messageBox, mulligan, card-choice) is open, since
+   // there's no single "correct" value - it just needs to visually
+   // match whatever the rest of the dimmed screen looks like.
++  //
++  // Name shortened from "Tracker Button Dim Opacity" (another
++  // horizontal-scroll outlier). Flagged during the same pass as a
++  // candidate to drop from the visible settings entirely and hardcode,
++  // since it's arguably only ever been useful for debugging the dim
++  // effect itself rather than something a player would tune day to day -
++  // left in for now (removing a working, saved setting outright wasn't
++  // this pass's call to make), but worth revisiting.
+   const dimOpacity = settings.add("dimOpacity", {
+-    name: "Tracker Button Dim Opacity",
++    name: "Tracker Dim Opacity",
+     type: "slider",
+     default: 0.4,
+     min: 0,

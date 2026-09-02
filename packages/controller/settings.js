@@ -31,8 +31,14 @@ export const CONTROLLER_ACTIONS = [
   { key: 'redoNotepad', name: 'Redo Drawing', packageLabel: 'Notepad', context: 'default', defaultButton: 12, dispatch: { code: 'KeyY', key: 'y' } },
   { key: 'moveEntryUp', name: 'Move Entry Up', packageLabel: 'Patch Maker', context: 'patchMaker', defaultButton: 12, dispatch: { code: 'ArrowUp', key: 'ArrowUp' } },
   { key: 'moveEntryDown', name: 'Move Entry Down', packageLabel: 'Patch Maker', context: 'patchMaker', defaultButton: 13, dispatch: { code: 'ArrowDown', key: 'ArrowDown' } },
-  { key: 'moveSectionUp', name: 'Move Balance Section Up', packageLabel: 'Patch Maker', context: 'patchMaker', defaultButton: 12, dispatch: { code: 'ArrowUp', key: 'ArrowUp' } },
-  { key: 'moveSectionDown', name: 'Move Balance Section Down', packageLabel: 'Patch Maker', context: 'patchMaker', defaultButton: 13, dispatch: { code: 'ArrowDown', key: 'ArrowDown' } },
+  // Shortened from "Move Balance Section Up/Down" - the "- Primary +
+  // <button>" suffix registerControllerSettings() appends below already
+  // pushed the combined row name wide enough to force a horizontal
+  // scrollbar in the settings dialog. "Section" alone is unambiguous
+  // here (Patch Maker only has one thing called a "section"), matching
+  // "Entry"/"Card" already being bare nouns in the two actions above.
+  { key: 'moveSectionUp', name: 'Move Section Up', packageLabel: 'Patch Maker', context: 'patchMaker', defaultButton: 12, dispatch: { code: 'ArrowUp', key: 'ArrowUp' } },
+  { key: 'moveSectionDown', name: 'Move Section Down', packageLabel: 'Patch Maker', context: 'patchMaker', defaultButton: 13, dispatch: { code: 'ArrowDown', key: 'ArrowDown' } },
   { key: 'moveCardUp', name: 'Move Card Up', packageLabel: 'Patch Maker', context: 'patchMaker', defaultButton: 12, dispatch: { code: 'ArrowUp', key: 'ArrowUp' } },
   { key: 'moveCardDown', name: 'Move Card Down', packageLabel: 'Patch Maker', context: 'patchMaker', defaultButton: 13, dispatch: { code: 'ArrowDown', key: 'ArrowDown' } }
 ];
@@ -40,8 +46,12 @@ export const CONTROLLER_ACTIONS_BY_KEY = {};
 CONTROLLER_ACTIONS.forEach((a) => { CONTROLLER_ACTIONS_BY_KEY[a.key] = a; });
 
 // Single-button, direct DOM hardware shortcuts (End Turn, Concede,
-// dustpiles, Settings, Open Wizascript Settings, Go Home) - no Primary
-// hold needed. Deliberately NOT included: R1's Underscript-menu-toggle,
+// dustpiles, Settings, Open Wizascript Settings, Go Home, opening Deck
+// Tracker's own preset picker) - no Primary hold needed. Labeled
+// "In-Game Inputs" in the settings UI (see registerControllerSettings
+// below) to make clear these are the ones that matter DURING a match, as
+// opposed to the Primary+<button> bindings above them, which mostly
+// aren't. Deliberately NOT included: R1's Underscript-menu-toggle,
 // because it doubles as the OSK-pause toggle using the exact same
 // physical button unconditionally.
 export const HARDWARE_SHORTCUT_ACTIONS = [
@@ -51,11 +61,12 @@ export const HARDWARE_SHORTCUT_ACTIONS = [
   { key: 'endTurn', name: 'End Turn' },
   { key: 'openWizascriptSettings', name: 'Open Wizascript Settings' },
   { key: 'concede', name: 'Concede' },
-  { key: 'goHome', name: 'Go to Home Page' }
+  { key: 'goHome', name: 'Go to Home Page' },
+  { key: 'openDeckTrackerPresets', name: 'Open Deck Tracker Presets' }
 ];
 export const HARDWARE_SHORTCUT_DEFAULTS = {
   openSettings: 9, yourDustpile: 10, opponentDustpile: 11, endTurn: 17,
-  openWizascriptSettings: 7, concede: 8, goHome: 16
+  openWizascriptSettings: 7, concede: 8, goHome: 16, openDeckTrackerPresets: 6
 };
 export const HARDWARE_SHORTCUT_ACTIONS_BY_KEY = {};
 HARDWARE_SHORTCUT_ACTIONS.forEach((a) => { HARDWARE_SHORTCUT_ACTIONS_BY_KEY[a.key] = a; });
@@ -106,6 +117,24 @@ export function isControllerSupportEnabled() {
   }
 }
 
+// The persistent green debug status readout (index.js's `hud`) - OFF by
+// default, unlike Enable Controller Support above, since this one is
+// diagnostic text nobody needs for normal play and it can sit on top of
+// other UI if left on. Fails CLOSED (treated as disabled) rather than
+// open if settings registration never completes, the opposite default
+// direction from isControllerSupportEnabled() above and deliberately so -
+// a debug overlay silently appearing for everyone on a registration hiccup
+// is a worse failure mode than it silently staying off.
+let debugTextEnabledSetting = null;
+export function isDebugTextEnabled() {
+  if (!debugTextEnabledSetting || typeof debugTextEnabledSetting.value !== 'function') return false;
+  try {
+    return !!debugTextEnabledSetting.value();
+  } catch (e) {
+    return false;
+  }
+}
+
 // True for as long as ANY capture widget is actively waiting for its next
 // button press ("Press a button..."). Without this flag, the Settings
 // dialog's own generic fields-pane confirm/navigation handling (in
@@ -130,7 +159,13 @@ function enhanceControllerDivider(el) {
   el.tabIndex = -1;
   Object.assign(el.style, {
     backgroundColor: 'transparent', border: 'none', borderBottom: '1px solid #666',
-    color: '#8ab4f8', fontWeight: 'bold', cursor: 'default', pointerEvents: 'none'
+    color: '#8ab4f8', fontWeight: 'bold', cursor: 'default', pointerEvents: 'none',
+    // A bit of breathing room above/below each section header - without
+    // it every divider sat flush against the row before it, and with
+    // "— In-Game Inputs —" no longer followed by its own info row (see
+    // registerControllerSettings), that section in particular read as
+    // visually cramped against "Move Section Down" right above it.
+    marginTop: '14px', marginBottom: '2px', paddingTop: '4px'
   });
 }
 
@@ -207,6 +242,19 @@ function enhanceControllerCaptureInput(el, readBound, writeBound) {
   });
 }
 
+// Because the preset picker below is a fully custom floating `<div>`
+// (appended to `document.body`, not part of Underscript's own settings
+// DOM), index.js's generic d-pad field-grid navigation has no way to
+// know it opened - the d-pad would otherwise keep moving the highlight
+// through the settings rows underneath it. This is the handoff point:
+// whichever menu is currently open (if any) publishes its row elements
+// and a close() here, and index.js's fields-pane handler wraps this into
+// its own trapped-submenu state (see `fieldSubmenu` in index.js) for as
+// long as it stays open, the same way it already traps native Underscript
+// dropdown-toggle submenus elsewhere.
+let presetMenuState = null; // { rows: HTMLElement[], activeIndex: number, close: () => void } | null
+export function getPresetMenuState() { return presetMenuState; }
+
 // "Settings Preset" - click-to-open dropdown-style preset picker. Built
 // as a plain type:'text' input with fully custom DOM/click handling
 // (renders and behaves like a dropdown) rather than a native Underscript
@@ -239,6 +287,7 @@ function enhancePresetSelector(el) {
     if (!menuEl) return;
     menuEl.remove();
     menuEl = null;
+    presetMenuState = null;
     document.removeEventListener('mousedown', onOutsideClick, true);
     document.removeEventListener('keydown', onEscape, true);
   }
@@ -252,6 +301,7 @@ function enhancePresetSelector(el) {
       border: '1px solid #40E0D0', borderRadius: '3px',
       zIndex: 2147483647, overflow: 'hidden', fontFamily: 'inherit'
     });
+    const rowEls = [];
     for (let n = 1; n <= PRESET_COUNT; n++) {
       const isActive = n === getActivePreset();
       const row = document.createElement('div');
@@ -269,10 +319,16 @@ function enhancePresetSelector(el) {
         console.log('[Wizascript Controller] switched to preset', n, '(' + getPresetName(n) + ')');
       });
       menuEl.appendChild(row);
+      rowEls.push(row);
     }
     document.body.appendChild(menuEl);
     document.addEventListener('mousedown', onOutsideClick, true);
     document.addEventListener('keydown', onEscape, true);
+    // Published for index.js's d-pad fields-pane handler to pick up (see
+    // getPresetMenuState() above) - activeIndex seeds the trapped-submenu
+    // highlight on whichever preset is currently active, so d-pad users
+    // land on the right row instead of always starting at the top.
+    presetMenuState = { rows: rowEls, activeIndex: Math.max(0, getActivePreset() - 1), close: closeMenu };
   }
   el.addEventListener('click', openMenu);
 }
@@ -393,6 +449,13 @@ export function registerControllerSettings(plugin) {
     default: false
   });
 
+  debugTextEnabledSetting = settings.add('debugTextEnabled', {
+    name: 'Enable Debug Text',
+    note: 'Off by default. Shows a green status readout - click and drag it to move it out of the way.',
+    type: 'boolean',
+    default: false
+  });
+
   settings.add('controllerPrimary', {
     name: 'Controller Primary',
     note: 'Click to remap. Hold for combos below, same as Wizascript\'s own Primary Key.',
@@ -401,7 +464,13 @@ export function registerControllerSettings(plugin) {
   });
 
   settings.add('__divider_General', { name: '— General —', type: 'text', default: '' });
-  settings.add('__info_openSettings', { name: 'Double Tap Controller Primary → Open Wizascript Settings', type: 'text', default: '' });
+  // Shortened from "Double Tap CONTROLLER Primary → ..." - dropping the
+  // redundant word (this whole category is already controller-only)
+  // both fixes the horizontal-scroll outlier AND matches the wording
+  // packages/core/keybinds.js already uses for the equivalent KEYBOARD
+  // shortcut ('Double Tap Primary → Open Wizascript Settings'), so the
+  // two now read consistently if a player has both open at once.
+  settings.add('__info_openSettings', { name: 'Double Tap Primary → Open Wizascript Settings', type: 'text', default: '' });
 
   const seenLabels = new Set();
   CONTROLLER_ACTIONS.forEach((action) => {
@@ -419,8 +488,13 @@ export function registerControllerSettings(plugin) {
     });
   });
 
-  settings.add('__divider_HardwareShortcuts', { name: '— Hardware Shortcuts (no Primary needed) —', type: 'text', default: '' });
-  settings.add('__info_hardwareShortcuts', { name: 'These fire on a single button press, no Controller Primary hold required.', type: 'text', default: '' });
+  // Renamed from "Hardware Shortcuts (no Primary needed)" - "In-Game
+  // Inputs" says up front what actually distinguishes this section (it's
+  // the stuff that matters DURING a match) instead of describing the
+  // mechanism (no Primary hold), which needed its own separate info row
+  // to explain and was still one of the widest rows in the category. That
+  // info row is gone now that the section name itself carries the point.
+  settings.add('__divider_HardwareShortcuts', { name: '— In-Game Inputs —', type: 'text', default: '' });
   HARDWARE_SHORTCUT_ACTIONS.forEach((action) => {
     settings.add('shortcut_' + action.key, {
       name: action.name,

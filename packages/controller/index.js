@@ -498,6 +498,13 @@ export function initController(plugin, controllerEnabledSetting) {
   let modalPane = 'categories';
   let categoryItems = [], categoryIndex = 0;
   let fieldGrid = null, fieldRow = 0, fieldCol = 0;
+  // Armed by a right-stick scroll of the fields pane (see the ry
+  // handling in the tabbed-dialog block below) - while true, fieldRow/
+  // fieldCol are considered stale (the list moved under them without
+  // them moving), so the NEXT d-pad press re-anchors selection to
+  // whichever row is now topmost-visible instead of applying its
+  // direction on top of the old index. See topVisibleRowIndex() above.
+  let fieldNeedsReanchor = false;
   // Traps d-pad focus inside a custom, non-native floating widget that a
   // field row opened (currently just the controller preset picker - see
   // settings.js's getPresetMenuState()) instead of letting up/down keep
@@ -1138,6 +1145,28 @@ export function initController(plugin, controllerEnabledSetting) {
     }
     return null;
   }
+  // Shared by both the Channel Guide and the Settings dialog's fields
+  // pane: after the right stick free-scrolls a list (see the ry-driven
+  // reanchor blocks at each use site), the very next d-pad press should
+  // pick up wherever the list visually IS now, not wherever the old
+  // selection index used to point (which may well have scrolled off
+  // screen by then - a d-pad move applied to a stale, off-screen index
+  // and then `scrollIntoView`'d back into place is exactly what produced
+  // the "d-pad send me back to the top" bug this exists to fix).
+  // `rowEls` is an ordered top-to-bottom array of row elements;
+  // `containerEl` is the actual scrollable viewport (its own
+  // getBoundingClientRect() IS the visible area, since it's the element
+  // with overflow-y:auto/scroll). Returns the index of the first row
+  // still at least partially visible within that viewport.
+  function topVisibleRowIndex(rowEls, containerEl) {
+    if (!rowEls.length) return 0;
+    if (!containerEl) return 0;
+    const containerTop = containerEl.getBoundingClientRect().top;
+    for (let i = 0; i < rowEls.length; i++) {
+      if (rowEls[i] && rowEls[i].getBoundingClientRect().bottom > containerTop + 1) return i;
+    }
+    return rowEls.length - 1;
+  }
   function fire(el, type, ctor, clientX, clientY, button, buttons) {
     const opts = {
       bubbles: true, cancelable: true, view: pageWindow,
@@ -1471,6 +1500,13 @@ export function initController(plugin, controllerEnabledSetting) {
   // from every other d-pad consumer (dpadHeld/keybindRelayHeld).
   let guideDpadHeld = { up: false, down: false, left: false, right: false };
   let guideBtn0Held = false;
+  // Armed the moment the right stick free-scrolls the guide list - see
+  // the ry handling below and topVisibleRowIndex()'s own comment. While
+  // true, the list is considered "unfocused" (no highlighted match/
+  // player - it wouldn't mean anything once scrolled off screen), and
+  // the next d-pad press re-anchors to whatever's now topmost-visible
+  // instead of moving from the old, possibly off-screen match index.
+  let guideNeedsReanchor = false;
   let leftHeldSince = 0, rightHeldSince = 0, lastPageTurnTime = 0;
   let dpadText = '';
   // The controller equivalent of Wizascript's real "double-tap Primary"
@@ -1812,10 +1848,11 @@ export function initController(plugin, controllerEnabledSetting) {
           } else {
             const playerSpans = Array.from(guideEl.querySelectorAll('span')).filter((el) => el.style.cursor === 'pointer');
             const matches = [];
+            const rows = [];
             const rowIndex = new Map();
             playerSpans.forEach((el) => {
               const row = el.parentElement;
-              if (!rowIndex.has(row)) { rowIndex.set(row, matches.length); matches.push([]); }
+              if (!rowIndex.has(row)) { rowIndex.set(row, matches.length); matches.push([]); rows.push(row); }
               matches[rowIndex.get(row)].push(el);
             });
 
@@ -1823,16 +1860,60 @@ export function initController(plugin, controllerEnabledSetting) {
               guideMatchIndex = -1;
               guidePlayerIndex = 0;
               guideSelectedEl = null;
+              guideNeedsReanchor = false;
               hud.textContent = `UC TV Guide\nno matches shown\nrelease ${buttonToDisplay(guideBtn)} to close`;
             } else {
+              // Right stick free-scrolls the list independently of the
+              // d-pad selection - lets you fly straight to the bottom of
+              // a long list instead of walking there one match at a
+              // time. Any nonzero tilt drops the current highlight (a
+              // highlighted match/player wouldn't mean anything once
+              // it's scrolled off screen) and arms guideNeedsReanchor,
+              // so the very next d-pad press picks up at whatever's now
+              // topmost-visible instead of jumping back to the old index.
+              if (ry !== 0) {
+                guideEl.scrollTop += ry * 30;
+                if (guideSelectedEl) {
+                  guideSelectedEl.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+                  guideSelectedEl = null;
+                }
+                guideMatchIndex = -1;
+                guideNeedsReanchor = true;
+              }
+
+              const dpadPressed = (up && !guideDpadHeld.up) || (down && !guideDpadHeld.down) ||
+                (left && !guideDpadHeld.left) || (right && !guideDpadHeld.right);
+
+              if (guideNeedsReanchor && !dpadPressed) {
+                // Scrolled, but no fresh d-pad press has landed yet -
+                // stay unfocused (no highlighted row) rather than
+                // guessing at one.
+                guideDpadHeld = { up, down, left, right };
+                guideBtn0Held = btn(0);
+                hud.textContent = `UC TV Guide\n(scrolled - press ↑↓←→ to resume navigating)\nrelease ${buttonToDisplay(guideBtn)} to close`;
+                return;
+              }
+
+              let justReanchored = false;
+              if (guideNeedsReanchor && dpadPressed) {
+                guideMatchIndex = topVisibleRowIndex(rows, guideEl);
+                guidePlayerIndex = 0;
+                guideNeedsReanchor = false;
+                justReanchored = true;
+              }
+
               if (guideMatchIndex < 0 || guideMatchIndex >= matches.length) { guideMatchIndex = 0; guidePlayerIndex = 0; }
-              if (up && !guideDpadHeld.up) { guideMatchIndex = Math.max(0, guideMatchIndex - 1); guidePlayerIndex = 0; }
-              if (down && !guideDpadHeld.down) { guideMatchIndex = Math.min(matches.length - 1, guideMatchIndex + 1); guidePlayerIndex = 0; }
+              if (!justReanchored) {
+                if (up && !guideDpadHeld.up) { guideMatchIndex = Math.max(0, guideMatchIndex - 1); guidePlayerIndex = 0; }
+                if (down && !guideDpadHeld.down) { guideMatchIndex = Math.min(matches.length - 1, guideMatchIndex + 1); guidePlayerIndex = 0; }
+              }
 
               const playersInMatch = matches[guideMatchIndex];
               guidePlayerIndex = Math.min(guidePlayerIndex, playersInMatch.length - 1);
-              if (left && !guideDpadHeld.left) guidePlayerIndex = Math.max(0, guidePlayerIndex - 1);
-              if (right && !guideDpadHeld.right) guidePlayerIndex = Math.min(playersInMatch.length - 1, guidePlayerIndex + 1);
+              if (!justReanchored) {
+                if (left && !guideDpadHeld.left) guidePlayerIndex = Math.max(0, guidePlayerIndex - 1);
+                if (right && !guideDpadHeld.right) guidePlayerIndex = Math.min(playersInMatch.length - 1, guidePlayerIndex + 1);
+              }
 
               const sel = playersInMatch[guidePlayerIndex];
               if (sel !== guideSelectedEl) {
@@ -1853,6 +1934,7 @@ export function initController(plugin, controllerEnabledSetting) {
           guideMatchIndex = -1;
           guidePlayerIndex = 0;
           guideSelectedEl = null;
+          guideNeedsReanchor = false;
         }
       }
 
@@ -2191,6 +2273,7 @@ export function initController(plugin, controllerEnabledSetting) {
           if (!fieldGrid || !elArraysEqual(gridFlat(fieldGrid), liveFieldsFlat)) {
             fieldGrid = liveFieldRows;
             fieldRow = 0; fieldCol = 0;
+            fieldNeedsReanchor = false;
           }
           if (fieldGrid.length) {
             fieldRow = Math.min(fieldRow, fieldGrid.length - 1);
@@ -2219,6 +2302,11 @@ export function initController(plugin, controllerEnabledSetting) {
               : (fieldGrid[fieldRow] || [])[fieldCol];
             const scrollable = findRealScrollable(scrollEl || activeContent || root);
             if (scrollable) scrollable.scrollTop += ry * 30;
+            // Only the fields pane suffers from the stale-index bug this
+            // guards against (the categories sidebar is short enough to
+            // never need scrolling in practice) - see fieldNeedsReanchor's
+            // own comment above.
+            if (modalPane === 'fields') fieldNeedsReanchor = true;
           }
 
           if (modalPane === 'categories') {
@@ -2285,17 +2373,35 @@ export function initController(plugin, controllerEnabledSetting) {
             // getMergedGamepad() read.
             if (!isControllerCaptureActive()) {
               if (fieldGrid.length) {
-                if (up && !dpadHeld.up) fieldRow = Math.max(0, fieldRow - 1);
-                if (down && !dpadHeld.down) fieldRow = Math.min(fieldGrid.length - 1, fieldRow + 1);
-                fieldCol = Math.min(fieldCol, fieldGrid[fieldRow].length - 1);
-                if (right && !dpadHeld.right) fieldCol = Math.min(fieldGrid[fieldRow].length - 1, fieldCol + 1);
-                if (left && !dpadHeld.left) {
-                  if (fieldCol > 0) fieldCol -= 1;
-                  else modalPane = 'categories';
-                }
-                if ((up && !dpadHeld.up) || (down && !dpadHeld.down) || (left && !dpadHeld.left) || (right && !dpadHeld.right)) {
-                  const selEl = fieldGrid[fieldRow] && fieldGrid[fieldRow][fieldCol];
-                  if (selEl) selEl.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+                const dpadPressed = (up && !dpadHeld.up) || (down && !dpadHeld.down) ||
+                  (left && !dpadHeld.left) || (right && !dpadHeld.right);
+                if (fieldNeedsReanchor) {
+                  // The list moved out from under fieldRow/fieldCol via
+                  // the right stick - the first press after that just
+                  // re-anchors to whatever's now topmost-visible, rather
+                  // than moving from the stale index (which is what used
+                  // to yank the scroll position back to wherever that
+                  // stale row happened to be).
+                  if (dpadPressed) {
+                    const rowAnchors = fieldGrid.map((r) => r[0]);
+                    const scrollableNow = findRealScrollable(rowAnchors[fieldRow] || activeContent || root) || activeContent || root;
+                    fieldRow = topVisibleRowIndex(rowAnchors, scrollableNow);
+                    fieldCol = 0;
+                    fieldNeedsReanchor = false;
+                  }
+                } else {
+                  if (up && !dpadHeld.up) fieldRow = Math.max(0, fieldRow - 1);
+                  if (down && !dpadHeld.down) fieldRow = Math.min(fieldGrid.length - 1, fieldRow + 1);
+                  fieldCol = Math.min(fieldCol, fieldGrid[fieldRow].length - 1);
+                  if (right && !dpadHeld.right) fieldCol = Math.min(fieldGrid[fieldRow].length - 1, fieldCol + 1);
+                  if (left && !dpadHeld.left) {
+                    if (fieldCol > 0) fieldCol -= 1;
+                    else modalPane = 'categories';
+                  }
+                  if (dpadPressed) {
+                    const selEl = fieldGrid[fieldRow] && fieldGrid[fieldRow][fieldCol];
+                    if (selEl) selEl.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+                  }
                 }
               } else if (left && !dpadHeld.left) {
                 modalPane = 'categories';

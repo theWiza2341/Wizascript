@@ -7904,12 +7904,6 @@ Version: v${version}`;
       type: "text",
       default: buttonToDisplay(DEFAULT_PRIMARY_BUTTON)
     });
-    settings2.add("channelGuide", {
-      name: "Channel Guide (hold)",
-      note: "Hold while spectating to show the channel guide - d-pad navigates it. Separate from Controller Primary so it can't collide with Previous/Next Channel.",
-      type: "text",
-      default: buttonToDisplay(null)
-    });
     settings2.add("__divider_General", { name: "\u2014 General \u2014", type: "text", default: "" });
     settings2.add("__info_openSettings", { name: "Double Tap Primary \u2192 Open Wizascript Settings", type: "text", default: "" });
     const seenLabels = /* @__PURE__ */ new Set();
@@ -7921,6 +7915,13 @@ Version: v${version}`;
           type: "text",
           default: ""
         });
+        if (action.packageLabel === "UC TV") {
+          settings2.add("channelGuide", {
+            name: "Channel Guide (hold)",
+            type: "text",
+            default: buttonToDisplay(null)
+          });
+        }
       }
       settings2.add(action.key, {
         name: action.name + " - Primary + <btn>",
@@ -8339,6 +8340,7 @@ Version: v${version}`;
     let modalPane = "categories";
     let categoryItems = [], categoryIndex = 0;
     let fieldGrid = null, fieldRow = 0, fieldCol = 0;
+    let fieldNeedsReanchor = false;
     let fieldSubmenu = null;
     let lastKnownActiveCategoryIdx = -1;
     const MODAL_ITEM_SELECTOR = 'button, input:not([type="hidden"]):not(.tabButton), select, a[href], .card, li[role="button"], .tabLabel';
@@ -8819,6 +8821,15 @@ Version: v${version}`;
       }
       return null;
     }
+    function topVisibleRowIndex(rowEls, containerEl) {
+      if (!rowEls.length) return 0;
+      if (!containerEl) return 0;
+      const containerTop = containerEl.getBoundingClientRect().top;
+      for (let i = 0; i < rowEls.length; i++) {
+        if (rowEls[i] && rowEls[i].getBoundingClientRect().bottom > containerTop + 1) return i;
+      }
+      return rowEls.length - 1;
+    }
     function fire(el, type, ctor, clientX, clientY, button, buttons) {
       const opts = {
         bubbles: true,
@@ -9099,6 +9110,7 @@ Version: v${version}`;
     let guideMatchIndex = -1, guidePlayerIndex = 0, guideSelectedEl = null;
     let guideDpadHeld = { up: false, down: false, left: false, right: false };
     let guideBtn0Held = false;
+    let guideNeedsReanchor = false;
     let leftHeldSince = 0, rightHeldSince = 0, lastPageTurnTime = 0;
     let dpadText = "";
     function openWizascriptSettings() {
@@ -9270,12 +9282,14 @@ release ${buttonToDisplay(guideBtn)} to cancel`;
             } else {
               const playerSpans = Array.from(guideEl.querySelectorAll("span")).filter((el) => el.style.cursor === "pointer");
               const matches = [];
+              const rows = [];
               const rowIndex = /* @__PURE__ */ new Map();
               playerSpans.forEach((el) => {
                 const row = el.parentElement;
                 if (!rowIndex.has(row)) {
                   rowIndex.set(row, matches.length);
                   matches.push([]);
+                  rows.push(row);
                 }
                 matches[rowIndex.get(row)].push(el);
               });
@@ -9283,26 +9297,56 @@ release ${buttonToDisplay(guideBtn)} to cancel`;
                 guideMatchIndex = -1;
                 guidePlayerIndex = 0;
                 guideSelectedEl = null;
+                guideNeedsReanchor = false;
                 hud.textContent = `UC TV Guide
 no matches shown
 release ${buttonToDisplay(guideBtn)} to close`;
               } else {
+                if (ry !== 0) {
+                  guideEl.scrollTop += ry * 30;
+                  if (guideSelectedEl) {
+                    guideSelectedEl.dispatchEvent(new MouseEvent("mouseleave", { bubbles: true }));
+                    guideSelectedEl = null;
+                  }
+                  guideMatchIndex = -1;
+                  guideNeedsReanchor = true;
+                }
+                const dpadPressed = up && !guideDpadHeld.up || down && !guideDpadHeld.down || left && !guideDpadHeld.left || right && !guideDpadHeld.right;
+                if (guideNeedsReanchor && !dpadPressed) {
+                  guideDpadHeld = { up, down, left, right };
+                  guideBtn0Held = btn(0);
+                  hud.textContent = `UC TV Guide
+(scrolled - press \u2191\u2193\u2190\u2192 to resume navigating)
+release ${buttonToDisplay(guideBtn)} to close`;
+                  return;
+                }
+                let justReanchored = false;
+                if (guideNeedsReanchor && dpadPressed) {
+                  guideMatchIndex = topVisibleRowIndex(rows, guideEl);
+                  guidePlayerIndex = 0;
+                  guideNeedsReanchor = false;
+                  justReanchored = true;
+                }
                 if (guideMatchIndex < 0 || guideMatchIndex >= matches.length) {
                   guideMatchIndex = 0;
                   guidePlayerIndex = 0;
                 }
-                if (up && !guideDpadHeld.up) {
-                  guideMatchIndex = Math.max(0, guideMatchIndex - 1);
-                  guidePlayerIndex = 0;
-                }
-                if (down && !guideDpadHeld.down) {
-                  guideMatchIndex = Math.min(matches.length - 1, guideMatchIndex + 1);
-                  guidePlayerIndex = 0;
+                if (!justReanchored) {
+                  if (up && !guideDpadHeld.up) {
+                    guideMatchIndex = Math.max(0, guideMatchIndex - 1);
+                    guidePlayerIndex = 0;
+                  }
+                  if (down && !guideDpadHeld.down) {
+                    guideMatchIndex = Math.min(matches.length - 1, guideMatchIndex + 1);
+                    guidePlayerIndex = 0;
+                  }
                 }
                 const playersInMatch = matches[guideMatchIndex];
                 guidePlayerIndex = Math.min(guidePlayerIndex, playersInMatch.length - 1);
-                if (left && !guideDpadHeld.left) guidePlayerIndex = Math.max(0, guidePlayerIndex - 1);
-                if (right && !guideDpadHeld.right) guidePlayerIndex = Math.min(playersInMatch.length - 1, guidePlayerIndex + 1);
+                if (!justReanchored) {
+                  if (left && !guideDpadHeld.left) guidePlayerIndex = Math.max(0, guidePlayerIndex - 1);
+                  if (right && !guideDpadHeld.right) guidePlayerIndex = Math.min(playersInMatch.length - 1, guidePlayerIndex + 1);
+                }
                 const sel = playersInMatch[guidePlayerIndex];
                 if (sel !== guideSelectedEl) {
                   if (guideSelectedEl) guideSelectedEl.dispatchEvent(new MouseEvent("mouseleave", { bubbles: true }));
@@ -9323,6 +9367,7 @@ match ${guideMatchIndex + 1}/${matches.length}${playersInMatch.length > 1 ? `   
             guideMatchIndex = -1;
             guidePlayerIndex = 0;
             guideSelectedEl = null;
+            guideNeedsReanchor = false;
           }
         }
         if (!oskOpen && !sliderTarget && !selectTarget && btn(0)) {
@@ -9646,6 +9691,7 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
               fieldGrid = liveFieldRows;
               fieldRow = 0;
               fieldCol = 0;
+              fieldNeedsReanchor = false;
             }
             if (fieldGrid.length) {
               fieldRow = Math.min(fieldRow, fieldGrid.length - 1);
@@ -9678,6 +9724,7 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
               const scrollEl = modalPane === "categories" ? categoryItems[categoryIndex] : (fieldGrid[fieldRow] || [])[fieldCol];
               const scrollable = findRealScrollable(scrollEl || activeContent || root);
               if (scrollable) scrollable.scrollTop += ry * 30;
+              if (modalPane === "fields") fieldNeedsReanchor = true;
             }
             if (modalPane === "categories") {
               if (up && !dpadHeld.up && categoryItems.length) categoryIndex = Math.max(0, categoryIndex - 1);
@@ -9716,17 +9763,28 @@ ${btnLabel(0)} select   \u2190/${btnLabel(1)} cancel`;
             } else {
               if (!isControllerCaptureActive()) {
                 if (fieldGrid.length) {
-                  if (up && !dpadHeld.up) fieldRow = Math.max(0, fieldRow - 1);
-                  if (down && !dpadHeld.down) fieldRow = Math.min(fieldGrid.length - 1, fieldRow + 1);
-                  fieldCol = Math.min(fieldCol, fieldGrid[fieldRow].length - 1);
-                  if (right && !dpadHeld.right) fieldCol = Math.min(fieldGrid[fieldRow].length - 1, fieldCol + 1);
-                  if (left && !dpadHeld.left) {
-                    if (fieldCol > 0) fieldCol -= 1;
-                    else modalPane = "categories";
-                  }
-                  if (up && !dpadHeld.up || down && !dpadHeld.down || left && !dpadHeld.left || right && !dpadHeld.right) {
-                    const selEl = fieldGrid[fieldRow] && fieldGrid[fieldRow][fieldCol];
-                    if (selEl) selEl.scrollIntoView({ block: "nearest", inline: "nearest" });
+                  const dpadPressed = up && !dpadHeld.up || down && !dpadHeld.down || left && !dpadHeld.left || right && !dpadHeld.right;
+                  if (fieldNeedsReanchor) {
+                    if (dpadPressed) {
+                      const rowAnchors = fieldGrid.map((r) => r[0]);
+                      const scrollableNow = findRealScrollable(rowAnchors[fieldRow] || activeContent || root) || activeContent || root;
+                      fieldRow = topVisibleRowIndex(rowAnchors, scrollableNow);
+                      fieldCol = 0;
+                      fieldNeedsReanchor = false;
+                    }
+                  } else {
+                    if (up && !dpadHeld.up) fieldRow = Math.max(0, fieldRow - 1);
+                    if (down && !dpadHeld.down) fieldRow = Math.min(fieldGrid.length - 1, fieldRow + 1);
+                    fieldCol = Math.min(fieldCol, fieldGrid[fieldRow].length - 1);
+                    if (right && !dpadHeld.right) fieldCol = Math.min(fieldGrid[fieldRow].length - 1, fieldCol + 1);
+                    if (left && !dpadHeld.left) {
+                      if (fieldCol > 0) fieldCol -= 1;
+                      else modalPane = "categories";
+                    }
+                    if (dpadPressed) {
+                      const selEl = fieldGrid[fieldRow] && fieldGrid[fieldRow][fieldCol];
+                      if (selEl) selEl.scrollIntoView({ block: "nearest", inline: "nearest" });
+                    }
                   }
                 } else if (left && !dpadHeld.left) {
                   modalPane = "categories";

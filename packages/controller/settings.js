@@ -704,16 +704,6 @@ export function registerControllerSettings(plugin, controllerEnabledSettingIn) {
     default: buttonToDisplay(DEFAULT_PRIMARY_BUTTON)
   });
 
-  // Separate from Controller Primary on purpose - see getChannelGuideButton()
-  // above and the "Channel Guide" relay section in index.js. Unbound by
-  // default; the guide does nothing at all until a button is bound here.
-  settings.add('channelGuide', {
-    name: 'Channel Guide (hold)',
-    note: 'Hold while spectating to show the channel guide - d-pad navigates it. Separate from Controller Primary so it can\'t collide with Previous/Next Channel.',
-    type: 'text',
-    default: buttonToDisplay(null)
-  });
-
   settings.add('__divider_General', { name: '— General —', type: 'text', default: '' });
   // Shortened from "Double Tap CONTROLLER Primary → ..." - dropping the
   // redundant word (this whole category is already controller-only)
@@ -731,6 +721,21 @@ export function registerControllerSettings(plugin, controllerEnabledSettingIn) {
         name: '— <b>' + action.packageLabel + '</b> —',
         type: 'text', default: ''
       });
+      // "Channel Guide (hold)" moved here, at the very top of the UC TV
+      // section, right under its own divider - it's a UC TV keybind
+      // (separate from Controller Primary, see getChannelGuideButton()
+      // above and the "Channel Guide" relay section in index.js) and
+      // reads more naturally grouped with Previous/Next Channel than up
+      // near Controller Primary. Unbound by default; the guide does
+      // nothing at all until a button is bound here. Note field dropped -
+      // self-explanatory next to the other UC TV rows.
+      if (action.packageLabel === 'UC TV') {
+        settings.add('channelGuide', {
+          name: 'Channel Guide (hold)',
+          type: 'text',
+          default: buttonToDisplay(null)
+        });
+      }
     }
     // Suffix shortened from " - Primary + <button>" to " - Primary +
     // <btn>" - a follow-up trim after the round-2 name shortenings still

@@ -526,8 +526,18 @@ export function initController(plugin) {
     // wrong (stale or underneath) one, and Cancel/Circle would then try
     // to dismiss a dialog the player can't even see, doing nothing
     // visible and forcing them out to the mouse instead.
+    //
+    // Deliberately `getComputedStyle(...).display !== 'none'`, NOT
+    // `offsetParent !== null` (a first attempt at this that shipped
+    // broken and got caught in live testing) - `offsetParent` is null for
+    // ANY `position: fixed` element regardless of visibility, which is
+    // exactly how BootstrapDialog renders, so that check was silently
+    // treating every real, visible Settings/Concede/etc dialog as
+    // invisible and made queryModalRoot() never detect a tabbed dialog at
+    // all. getComputedStyle's `display` isn't fooled by position, and
+    // matches the check already used for `.menu-backdrop` below.
     const visibleDialogs = Array.from(document.querySelectorAll('.bootstrap-dialog'))
-      .filter((d) => d.offsetParent !== null);
+      .filter((d) => getComputedStyle(d).display !== 'none');
     const dialog = visibleDialogs[visibleDialogs.length - 1] || null;
     if (dialog && !document.querySelector('.mulligan')) {
       const tabbedRoot = dialog.querySelector('.tabbedView.left');

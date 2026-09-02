@@ -126,7 +126,25 @@ export function isControllerSupportEnabled() {
 // a debug overlay silently appearing for everyone on a registration hiccup
 // is a worse failure mode than it silently staying off.
 let debugTextEnabledSetting = null;
+// Direct read of the checkbox's own `.checked`, kept in sync by a real
+// 'change' listener attached the moment the row renders (see
+// observeDebugTextCheckbox() in the MutationObserver dispatch below).
+// null until that row has actually appeared in the DOM at least once;
+// boolean from then on. This exists as a belt-and-suspenders path
+// alongside debugTextEnabledSetting.value() below - first live test of
+// this toggle came back stuck permanently OFF even after checking it and
+// refreshing, which fits a `.value()` accessor that isn't reliably live
+// for a brand-new setting key the way it evidently is for the
+// long-established "Enable Controller Support" one. Reading the DOM
+// checkbox itself can't have that problem, whatever it turns out to be.
+let debugTextCheckedLive = null;
+function observeDebugTextCheckbox(el) {
+  el.setAttribute('data-wc-enhanced', 'true');
+  debugTextCheckedLive = !!el.checked;
+  el.addEventListener('change', () => { debugTextCheckedLive = !!el.checked; });
+}
 export function isDebugTextEnabled() {
+  if (debugTextCheckedLive !== null) return debugTextCheckedLive;
   if (!debugTextEnabledSetting || typeof debugTextEnabledSetting.value !== 'function') return false;
   try {
     return !!debugTextEnabledSetting.value();
@@ -399,6 +417,10 @@ function startControllerKeybindObserver(idPrefix) {
           return;
         }
       }
+      if (bindingKey === 'debugTextEnabled') {
+        observeDebugTextCheckbox(el);
+        return;
+      }
       // 'enabled' (the boolean toggle) and anything else unrecognized:
       // leave Underscript's own rendering alone, just mark it seen so the
       // observer stops re-scanning it every mutation.
@@ -481,8 +503,16 @@ export function registerControllerSettings(plugin) {
         type: 'text', default: ''
       });
     }
+    // Suffix shortened from " - Primary + <button>" to " - Primary +
+    // <btn>" - a follow-up trim after the round-2 name shortenings still
+    // left a horizontal scrollbar (just a narrower one). This suffix is
+    // shared across all 12 rows here, so trimming it once saves 3
+    // characters on every single one - real keyboard keybinds
+    // (packages/core/keybinds.js) already use the even terser "<key>",
+    // which is part of why they were never as wide as these to begin
+    // with.
     settings.add(action.key, {
-      name: action.name + ' - Primary + <button>',
+      name: action.name + ' - Primary + <btn>',
       type: 'text',
       default: buttonToDisplay(action.defaultButton)
     });

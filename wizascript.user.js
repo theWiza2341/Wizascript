@@ -7459,7 +7459,16 @@ Version: v${version}`;
     }
   }
   var debugTextEnabledSetting = null;
+  var debugTextCheckedLive = null;
+  function observeDebugTextCheckbox(el) {
+    el.setAttribute("data-wc-enhanced", "true");
+    debugTextCheckedLive = !!el.checked;
+    el.addEventListener("change", () => {
+      debugTextCheckedLive = !!el.checked;
+    });
+  }
   function isDebugTextEnabled() {
+    if (debugTextCheckedLive !== null) return debugTextCheckedLive;
     if (!debugTextEnabledSetting || typeof debugTextEnabledSetting.value !== "function") return false;
     try {
       return !!debugTextEnabledSetting.value();
@@ -7715,6 +7724,10 @@ Version: v${version}`;
             return;
           }
         }
+        if (bindingKey === "debugTextEnabled") {
+          observeDebugTextCheckbox(el);
+          return;
+        }
         el.setAttribute("data-wc-enhanced", "true");
       });
     });
@@ -7776,7 +7789,7 @@ Version: v${version}`;
         });
       }
       settings2.add(action.key, {
-        name: action.name + " - Primary + <button>",
+        name: action.name + " - Primary + <btn>",
         type: "text",
         default: buttonToDisplay(action.defaultButton)
       });
@@ -8201,7 +8214,7 @@ Version: v${version}`;
     let lastKnownActiveCategoryIdx = -1;
     const MODAL_ITEM_SELECTOR = 'button, input:not([type="hidden"]):not(.tabButton), select, a[href], .card, li[role="button"], .tabLabel';
     function queryModalRoot() {
-      const visibleDialogs = Array.from(document.querySelectorAll(".bootstrap-dialog")).filter((d) => d.offsetParent !== null);
+      const visibleDialogs = Array.from(document.querySelectorAll(".bootstrap-dialog")).filter((d) => getComputedStyle(d).display !== "none");
       const dialog = visibleDialogs[visibleDialogs.length - 1] || null;
       if (dialog && !document.querySelector(".mulligan")) {
         const tabbedRoot = dialog.querySelector(".tabbedView.left");

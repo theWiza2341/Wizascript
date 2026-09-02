@@ -9,5 +9,21 @@ export function registerMiscSettings(plugin) {
     type: "boolean",
     default: false
   });
-  return { settings, enableNotepad };
+
+  // Moved here from its own "Keybinds - Controller" category - off by
+  // default, and packages/controller/settings.js now reads THIS exact
+  // setting object (handed through manifest.js -> initController) to
+  // decide, once at registration time, whether to register the rest of
+  // "Keybinds - Controller" at all. Mirrors packages/uc-tv/settings.js's
+  // own pattern for its "Filter Settings" category: a brand new player
+  // who hasn't turned Controller Support on yet no longer sees an entire
+  // category of gamepad keybind rows they can't use yet.
+  const enableController = settings.add("enableController", {
+    name: "Enable Controller Support",
+    note: "Off by default to save CPU. Turning this on reveals the full \"Keybinds - Controller\" settings category after your next reload.",
+    type: "boolean",
+    default: false
+  });
+
+  return { settings, enableNotepad, enableController };
 }

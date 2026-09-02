@@ -15,16 +15,24 @@ import { initController } from "./packages/controller/index.js";
 // case a future, compliant feature ends up reusing them, but the
 // feature's own source code has been deleted, not just unwired.
 //
-// The "misc" package now houses ONLY the Notepad feature - moved out
-// of deck-tracker specifically so it works outside of matches too,
-// not gated behind deck-tracker's isGamePage() check.
+// The "misc" package houses the Notepad feature - moved out of
+// deck-tracker specifically so it works outside of matches too, not
+// gated behind deck-tracker's isGamePage() check - plus, now, the
+// "Enable Controller Support" master toggle itself. That toggle lives
+// under Miscellaneous rather than its own "Keybinds - Controller"
+// category so a player who hasn't turned it on yet isn't shown an
+// entire category of gamepad keybind rows they can't use - initMisc
+// must run BEFORE initController so the setting object it returns
+// (miscSettings.enableController) exists in time for
+// registerControllerSettings() to read it and decide whether to
+// register the rest of "Keybinds - Controller" at all this load.
 
 bootstrap(plugin => {
   initPatchMaker(plugin);
   initTrueHubBridge(plugin);
   initDeckTracker(plugin);
   initUcTv(plugin);
-  initMisc(plugin);
-  initController(plugin);
+  const miscSettings = initMisc(plugin);
+  initController(plugin, miscSettings.enableController);
   flushKeybindRegistrations(); // must come after all of the above
 });

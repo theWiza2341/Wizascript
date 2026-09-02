@@ -40,21 +40,20 @@ export function showPressIndicator(text) {
   pressIndicatorHideTimer = setTimeout(() => { pressIndicator.style.display = 'none'; }, 1000);
 }
 
-// ---------- WebHID connect button ----------
+// ---------- WebHID connect ----------
 // WebHID's requestDevice() is spec-required to run from a real user
 // gesture (it shows the browser's own device picker) - this is the one
 // unavoidable manual step, needed only once ever per browser profile
 // since the granted permission persists across reloads (see
-// tryAutoReconnectWebHid below).
-export const hidConnectBtn = document.createElement('button');
-hidConnectBtn.textContent = '🎮 Connect Controller (WebHID)';
-Object.assign(hidConnectBtn.style, {
-  position: 'fixed', top: '16px', right: '16px', zIndex: 2147483647,
-  padding: '8px 14px', borderRadius: '8px', border: 'none',
-  background: '#2a6', color: '#fff', fontWeight: 'bold', fontSize: '13px',
-  cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.4)'
-});
-hidConnectBtn.addEventListener('click', () => { connectWebHidController(); });
+// tryAutoReconnectWebHid below). connectWebHidController() below used to
+// be wired to a persistent, always-on-screen top-right button living in
+// this module; that's gone now (moved into a "Detect Controller" row at
+// the top of the "Keybinds - Controller" settings category - see
+// settings.js's enhanceDetectControllerButton) since a fixed floating
+// button was only ever useful for debug, not something most players
+// need permanently on screen. A real click on that settings row still
+// calls connectWebHidController() directly and synchronously, same as
+// the old button did, so the user-gesture requirement is unaffected.
 
 // ---------- button labels ----------
 // PlayStation-style glyphs - the default/fallback, used whenever the
@@ -200,10 +199,6 @@ async function openHidDevice(device) {
     device.addEventListener('inputreport', handleHidInputReport);
     hidDevice = device;
     console.log('[Wizascript Controller] WebHID device opened:', device.productName || device.vendorId + ':' + device.productId);
-    hidConnectBtn.textContent = '🎮 Controller Connected';
-    hidConnectBtn.disabled = true;
-    hidConnectBtn.style.background = '#555';
-    hidConnectBtn.style.cursor = 'default';
   } catch (e) {
     console.log('[Wizascript Controller] WebHID open failed:', e);
   }

@@ -5674,7 +5674,13 @@ Version: v${version}`;
       type: "boolean",
       default: false
     });
-    return { settings: settings2, enableNotepad };
+    const enableController = settings2.add("enableController", {
+      name: "Enable Controller Support",
+      note: 'Off by default to save CPU. Turning this on reveals the full "Keybinds - Controller" settings category after your next reload.',
+      type: "boolean",
+      default: false
+    });
+    return { settings: settings2, enableNotepad, enableController };
   }
 
   // packages/misc/notepad/storage.js
@@ -6971,6 +6977,7 @@ Version: v${version}`;
       packageLabel: "Notepad",
       onMatch: () => redoNotepad()
     });
+    return settings2;
   }
 
   // packages/controller/gamepad.js
@@ -7001,26 +7008,6 @@ Version: v${version}`;
       pressIndicator.style.display = "none";
     }, 1e3);
   }
-  var hidConnectBtn = document.createElement("button");
-  hidConnectBtn.textContent = "\u{1F3AE} Connect Controller (WebHID)";
-  Object.assign(hidConnectBtn.style, {
-    position: "fixed",
-    top: "16px",
-    right: "16px",
-    zIndex: 2147483647,
-    padding: "8px 14px",
-    borderRadius: "8px",
-    border: "none",
-    background: "#2a6",
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: "13px",
-    cursor: "pointer",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.4)"
-  });
-  hidConnectBtn.addEventListener("click", () => {
-    connectWebHidController();
-  });
   var BUTTON_LABELS = {
     0: "\u2715",
     1: "\u25CB",
@@ -7101,6 +7088,9 @@ Version: v${version}`;
   }
   var WEBHID_VENDOR_ID = 1406;
   var hidDevice = null;
+  function isHidConnected() {
+    return !!hidDevice;
+  }
   var hidState = { axes: [0, 0, 0, 0], hat: 8, raw1: 0, raw2: 0 };
   var lastLoggedHidBits = { raw1: 0, raw2: 0 };
   function decodeHidReport(dataView) {
@@ -7147,10 +7137,6 @@ Version: v${version}`;
       device.addEventListener("inputreport", handleHidInputReport);
       hidDevice = device;
       console.log("[Wizascript Controller] WebHID device opened:", device.productName || device.vendorId + ":" + device.productId);
-      hidConnectBtn.textContent = "\u{1F3AE} Controller Connected";
-      hidConnectBtn.disabled = true;
-      hidConnectBtn.style.background = "#555";
-      hidConnectBtn.style.cursor = "default";
     } catch (e) {
       console.log("[Wizascript Controller] WebHID open failed:", e);
     }
@@ -7476,6 +7462,42 @@ Version: v${version}`;
       return false;
     }
   }
+  var HIGHLIGHT_COLOR_PRESETS = [
+    ["Light Blue (default)", "#3ea6ff"],
+    ["Yellow", "#ffff00"],
+    // JUSTICE
+    ["Red", "red"],
+    // DETERMINATION
+    ["Green", "#00c000"],
+    // KINDNESS
+    ["Orange", "#fca500"],
+    // BRAVERY
+    ["Blue", "#0064ff"],
+    // INTEGRITY
+    ["Cyan", "#41fcff"],
+    // PATIENCE
+    ["Magenta", "#d535d9"]
+    // PERSEVERANCE
+  ];
+  var DEFAULT_HIGHLIGHT_COLOR = HIGHLIGHT_COLOR_PRESETS[0][1];
+  var highlightColorSetting = null;
+  var highlightColorLive = null;
+  function observeHighlightColorSelect(el) {
+    el.setAttribute("data-wc-enhanced", "true");
+    highlightColorLive = el.value || null;
+    el.addEventListener("change", () => {
+      highlightColorLive = el.value || null;
+    });
+  }
+  function getHighlightColor() {
+    if (highlightColorLive) return highlightColorLive;
+    if (!highlightColorSetting || typeof highlightColorSetting.value !== "function") return DEFAULT_HIGHLIGHT_COLOR;
+    try {
+      return highlightColorSetting.value() || DEFAULT_HIGHLIGHT_COLOR;
+    } catch (e) {
+      return DEFAULT_HIGHLIGHT_COLOR;
+    }
+  }
   var controllerCaptureActive = false;
   function isControllerCaptureActive() {
     return controllerCaptureActive;
@@ -7687,18 +7709,49 @@ Version: v${version}`;
       if (e.key === "Enter") el.blur();
     });
   }
+  function enhanceDetectControllerButton(el) {
+    el.setAttribute("data-wc-enhanced", "true");
+    el.readOnly = true;
+    el.tabIndex = 0;
+    Object.assign(el.style, {
+      cursor: "pointer",
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      el.value = isHidConnected() ? "\u2705 Controller Detected (WebHID)" : "\u{1F3AE} Click to Detect Controller (WebHID)";
+    }
+    refreshDisplay();
+    boundInputRefreshers.push(refreshDisplay);
+    el.addEventListener("click", async () => {
+      if (isHidConnected()) return;
+      el.value = "Check your browser's device picker\u2026";
+      try {
+        await connectWebHidController();
+      } finally {
+        refreshDisplay();
+      }
+    });
+  }
   var controllerObserverStarted = false;
   function startControllerKeybindObserver(idPrefix) {
     if (controllerObserverStarted) return;
     controllerObserverStarted = true;
     let everFoundOne = false;
     const observer = new MutationObserver(() => {
-      const matches = document.querySelectorAll(`input[id^="${idPrefix}"]:not([data-wc-enhanced])`);
+      const matches = document.querySelectorAll(`input[id^="${idPrefix}"]:not([data-wc-enhanced]), select[id^="${idPrefix}"]:not([data-wc-enhanced])`);
       matches.forEach((el) => {
         everFoundOne = true;
         const bindingKey = el.id.slice(idPrefix.length);
         if (bindingKey.startsWith("__divider_") || bindingKey.startsWith("__info_")) {
           enhanceControllerDivider(el);
+          return;
+        }
+        if (bindingKey === "detectController") {
+          enhanceDetectControllerButton(el);
           return;
         }
         if (bindingKey === "presetSelector") {
@@ -7728,6 +7781,10 @@ Version: v${version}`;
           observeDebugTextCheckbox(el);
           return;
         }
+        if (bindingKey === "highlightColor") {
+          observeHighlightColorSelect(el);
+          return;
+        }
         el.setAttribute("data-wc-enhanced", "true");
       });
     });
@@ -7738,13 +7795,24 @@ Version: v${version}`;
       }
     }, 15e3);
   }
-  function registerControllerSettings(plugin) {
+  function registerControllerSettings(plugin, controllerEnabledSettingIn) {
     migrateFlatBindingsToPresetOne(
       CONTROLLER_ACTIONS.map((a) => a.key),
       HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key)
     );
+    controllerEnabledSetting = controllerEnabledSettingIn;
+    if (!controllerEnabledSetting || typeof controllerEnabledSetting.value !== "function" || !controllerEnabledSetting.value()) {
+      console.log('[Wizascript Controller] Enable Controller Support is off - "Keybinds - Controller" category not registered this load. Turn it on under Miscellaneous, then reload, to configure it.');
+      return;
+    }
     const CATEGORY2 = "Keybinds - Controller";
     const settings2 = createFeatureSettings(plugin, "controller", CATEGORY2);
+    settings2.add("detectController", {
+      name: "Detect Controller",
+      note: "Only needed for a controller whose buttons don't register correctly otherwise (e.g. a Switch Pro Controller over Bluetooth) - click to open your browser's device picker.",
+      type: "text",
+      default: "Click to Detect Controller (WebHID)"
+    });
     settings2.add("presetSelector", {
       name: "Settings Preset",
       note: "Click to switch presets \u2014 each one remembers its own bindings independently.",
@@ -7758,17 +7826,18 @@ Version: v${version}`;
       default: getPresetName(getActivePreset())
     });
     settings2.add("__divider_top", { name: "\u2014 \u2014 \u2014", type: "text", default: "" });
-    controllerEnabledSetting = settings2.add("enabled", {
-      name: "Enable Controller Support",
-      note: "Off by default to save CPU. Turn on before configuring anything below.",
-      type: "boolean",
-      default: false
-    });
     debugTextEnabledSetting = settings2.add("debugTextEnabled", {
       name: "Enable Debug Text",
       note: "Off by default. Shows a green status readout - click and drag it to move it out of the way.",
       type: "boolean",
       default: false
+    });
+    highlightColorSetting = settings2.add("highlightColor", {
+      name: "Selection Outline Color",
+      note: "Presets tied to each soul's own color, so it stands out against any background - pulled from Patch Maker's own color coding.",
+      type: "select",
+      data: HIGHLIGHT_COLOR_PRESETS,
+      default: DEFAULT_HIGHLIGHT_COLOR
     });
     settings2.add("controllerPrimary", {
       name: "Controller Primary",
@@ -7807,13 +7876,9 @@ Version: v${version}`;
   }
 
   // packages/controller/index.js
-  function initController(plugin) {
+  function initController(plugin, controllerEnabledSetting2) {
     const pageWindow2 = getPageWindow();
-    const DEFAULT_HIGHLIGHT_COLOR = "#3ea6ff";
     const DEFAULT_HIGHLIGHT_THICKNESS = 4;
-    function getHighlightColor() {
-      return DEFAULT_HIGHLIGHT_COLOR;
-    }
     function getHighlightThickness() {
       return DEFAULT_HIGHLIGHT_THICKNESS;
     }
@@ -8077,13 +8142,12 @@ Version: v${version}`;
       }
       document.body.appendChild(hud);
       document.body.appendChild(pressIndicator);
-      document.body.appendChild(hidConnectBtn);
       document.body.appendChild(oskEl);
       document.body.appendChild(selectEl);
       document.body.appendChild(cursor);
     }
     mount();
-    registerControllerSettings(plugin);
+    registerControllerSettings(plugin, controllerEnabledSetting2);
     let navInputMethod = "stick";
     const GROUP_DEFS = [
       { name: "navbar", containerSelectors: ["nav", ".navbar", ".navbar-nav", "header nav"], itemSelector: "a" },
@@ -8965,9 +9029,13 @@ Version: v${version}`;
       shortcutHeldByAction[actionKey] = isDown;
       return isDown && !wasDown;
     }
-    let keybindRelayHeld = { primary: false, left: false, right: false, up: false, down: false, 0: false, actions: {} };
+    let keybindRelayHeld = { primary: false, controlDown: false, actions: {} };
     let primaryHoldHadAction = false;
+    let guideOpen = false;
+    let guideOpenedAt = 0;
     let guideSelectedIndex = -1, guideSelectedEl = null;
+    let guideDpadHeld = { up: false, down: false };
+    let guideBtn0Held = false;
     let leftHeldSince = 0, rightHeldSince = 0, lastPageTurnTime = 0;
     let dpadText = "";
     function openWizascriptSettings() {
@@ -8983,6 +9051,9 @@ Version: v${version}`;
         });
       });
       console.log("[Wizascript Controller] relayed a real Primary (Control) double-tap for Wizascript settings");
+    }
+    function isSpectatePage4() {
+      return matchesPage({ prefix: "/Spectate" });
     }
     function frame() {
       try {
@@ -9047,19 +9118,56 @@ Version: v${version}`;
           const l1Down = primaryBtn !== null && btn(primaryBtn) || oskOpen && oskPaused;
           const viaPause = oskOpen && oskPaused;
           const primaryBase = { key: "Control", code: "ControlLeft", keyCode: 17, which: 17, bubbles: true };
-          if (l1Down) {
-            if (!keybindRelayHeld.primary) {
-              document.dispatchEvent(new KeyboardEvent("keydown", primaryBase));
-              primaryHoldHadAction = false;
+          if (!l1Down && keybindRelayHeld.primary && !primaryHoldHadAction) {
+            const tapFocusEl = document.activeElement;
+            if (tapFocusEl && tapFocusEl.matches && tapFocusEl.matches(".uc-li-text") && !guideOpen) {
+              const li = tapFocusEl.closest("li");
+              if (li) {
+                const PATCH_MAKER_CYCLE_ORDER = ["none", "other", "buff", "rework", "nerf"];
+                const curIdx = PATCH_MAKER_CYCLE_ORDER.findIndex((c) => li.classList.contains(c));
+                const nextCat = PATCH_MAKER_CYCLE_ORDER[((curIdx === -1 ? 0 : curIdx) + 1) % PATCH_MAKER_CYCLE_ORDER.length];
+                li.classList.remove(...PATCH_MAKER_CYCLE_ORDER);
+                li.classList.add(nextCat);
+                let savedRange = null;
+                const sel = pageWindow2.getSelection();
+                if (sel && sel.rangeCount > 0) savedRange = sel.getRangeAt(0).cloneRange();
+                tapFocusEl.blur();
+                tapFocusEl.focus();
+                if (savedRange) {
+                  try {
+                    const sel2 = pageWindow2.getSelection();
+                    sel2.removeAllRanges();
+                    sel2.addRange(savedRange);
+                  } catch (e) {
+                  }
+                }
+                console.log('[Wizascript Controller] Patch Maker: bare Controller Primary tap - cycled entry category directly to "' + nextCat + '"');
+              }
+            } else if (guideOpen || isSpectatePage4()) {
+              guideOpen = !guideOpen;
+              if (guideOpen) guideOpenedAt = performance.now();
+              guideSelectedIndex = -1;
+              guideSelectedEl = null;
+              console.log("[Wizascript Controller] bare Controller Primary tap - channel guide now", guideOpen ? "open" : "closed");
             }
+          }
+          if (l1Down && !keybindRelayHeld.primary) primaryHoldHadAction = false;
+          const controlShouldBeDown = l1Down || guideOpen;
+          if (controlShouldBeDown && !keybindRelayHeld.controlDown) {
+            document.dispatchEvent(new KeyboardEvent("keydown", primaryBase));
+            keybindRelayHeld.controlDown = true;
+          } else if (!controlShouldBeDown && keybindRelayHeld.controlDown) {
+            document.dispatchEvent(new KeyboardEvent("keyup", primaryBase));
+            keybindRelayHeld.controlDown = false;
+          }
+          if (l1Down && !guideOpen) {
             const relaySecondary = (code, key) => {
               const opts = { key, code, bubbles: true };
               document.dispatchEvent(new KeyboardEvent("keydown", opts));
               document.dispatchEvent(new KeyboardEvent("keyup", opts));
             };
-            const guideElForContext = document.getElementById("uctv-guide-overlay");
             const pmFocusForContext = document.activeElement;
-            const inPatchMakerFieldForContext = !guideElForContext && !!(pmFocusForContext && pmFocusForContext.matches && pmFocusForContext.matches(".uc-li-text, .uc-section-label, .uc-card-item"));
+            const inPatchMakerFieldForContext = !!(pmFocusForContext && pmFocusForContext.matches && pmFocusForContext.matches(".uc-li-text, .uc-section-label, .uc-card-item"));
             const nextActionHeld = {};
             const codesFiredThisFrame = /* @__PURE__ */ new Set();
             CONTROLLER_ACTIONS.forEach((action) => {
@@ -9067,7 +9175,7 @@ Version: v${version}`;
               if (action.context === "always") applies = true;
               else if (action.context === "channelSwitch") applies = !inPatchMakerFieldForContext;
               else if (action.context === "patchMaker") applies = inPatchMakerFieldForContext;
-              else applies = !guideElForContext && !inPatchMakerFieldForContext;
+              else applies = !inPatchMakerFieldForContext;
               const boundBtn = applies ? getBoundButton(action.key) : null;
               const isDown = boundBtn !== null && btn(boundBtn);
               nextActionHeld[action.key] = isDown;
@@ -9081,82 +9189,54 @@ Version: v${version}`;
               }
             });
             keybindRelayHeld.actions = nextActionHeld;
-            const guideEl = guideElForContext;
-            if (guideEl) {
-              const entries = Array.from(guideEl.querySelectorAll("span")).filter((el) => el.style.cursor === "pointer");
-              if (!entries.length) {
-                guideSelectedIndex = -1;
-                guideSelectedEl = null;
-              } else {
-                if (guideSelectedIndex < 0 || guideSelectedIndex >= entries.length) guideSelectedIndex = 0;
-                if (up && !keybindRelayHeld.up) guideSelectedIndex = Math.max(0, guideSelectedIndex - 1);
-                if (down && !keybindRelayHeld.down) guideSelectedIndex = Math.min(entries.length - 1, guideSelectedIndex + 1);
-                const sel = entries[guideSelectedIndex];
-                if (sel !== guideSelectedEl) {
-                  if (guideSelectedEl) guideSelectedEl.dispatchEvent(new MouseEvent("mouseleave", { bubbles: true }));
-                  sel.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
-                  sel.scrollIntoView({ block: "nearest" });
-                  guideSelectedEl = sel;
-                }
-                if (btn(0) && !keybindRelayHeld[0]) sel.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
-              }
-              hud.textContent = `UC TV Guide (${viaPause ? "OSK paused" : "L1 held"})
-match ${entries.length ? guideSelectedIndex + 1 : 0}/${entries.length}
-\u2191/\u2193 select   ${btnLabel(0)} jump   \u2190/\u2192 channel (remap in Settings)${viaPause ? "   R1: resume typing" : ""}`;
-            } else {
+            hud.textContent = inPatchMakerFieldForContext ? `Patch Maker (${viaPause ? "OSK paused" : "Primary held"})
+tap Primary alone = cycle category   move entry-section-card \u2014 see Settings > Keybinds - Controller${viaPause ? `
+R1: resume typing   ${btnLabel(1)}: close` : ""}` : `Wizascript keybind relay (${viaPause ? "OSK paused" : "Primary held"})
+tap ${buttonToDisplay(primaryBtn)} alone = toggle channel guide   channel / notepad redo-undo-reset \u2014 see Settings > Keybinds - Controller${viaPause ? `
+R1: resume typing   ${btnLabel(1)}: close` : ""}`;
+          } else {
+            keybindRelayHeld.actions = {};
+          }
+          keybindRelayHeld.primary = l1Down;
+          if (l1Down && !guideOpen) return;
+        }
+        if (guideOpen && (!oskOpen || oskPaused)) {
+          const primaryBtn = getControllerPrimaryButton();
+          const guideEl = document.getElementById("uctv-guide-overlay");
+          if (!guideEl) {
+            if (performance.now() - guideOpenedAt > 2e3) {
+              guideOpen = false;
               guideSelectedIndex = -1;
               guideSelectedEl = null;
-              if (inPatchMakerFieldForContext) {
-                hud.textContent = `Patch Maker (${viaPause ? "OSK paused" : "L1 held"})
-tap Primary alone = cycle category   move entry-section-card \u2014 see Settings > Keybinds - Controller${viaPause ? `
-R1: resume typing   ${btnLabel(1)}: close` : ""}`;
-              } else {
-                hud.textContent = `Wizascript keybind relay (${viaPause ? "OSK paused" : "L1 held"})
-channel / notepad redo-undo-toggle-reset \u2014 see Settings > Keybinds - Controller${viaPause ? `
-R1: resume typing   ${btnLabel(1)}: close` : ""}`;
-              }
+            } else {
+              hud.textContent = `UC TV Guide loading\u2026
+tap ${buttonToDisplay(primaryBtn)} to cancel`;
             }
-            keybindRelayHeld.primary = true;
-            keybindRelayHeld.left = left;
-            keybindRelayHeld.right = right;
-            keybindRelayHeld.up = up;
-            keybindRelayHeld.down = down;
-            keybindRelayHeld[0] = btn(0);
-            return;
-          } else if (keybindRelayHeld.primary) {
-            if (!primaryHoldHadAction) {
-              const tapFocusEl = document.activeElement;
-              if (tapFocusEl && tapFocusEl.matches && tapFocusEl.matches(".uc-li-text")) {
-                const li = tapFocusEl.closest("li");
-                if (li) {
-                  const PATCH_MAKER_CYCLE_ORDER = ["none", "other", "buff", "rework", "nerf"];
-                  const curIdx = PATCH_MAKER_CYCLE_ORDER.findIndex((c) => li.classList.contains(c));
-                  const nextCat = PATCH_MAKER_CYCLE_ORDER[((curIdx === -1 ? 0 : curIdx) + 1) % PATCH_MAKER_CYCLE_ORDER.length];
-                  li.classList.remove(...PATCH_MAKER_CYCLE_ORDER);
-                  li.classList.add(nextCat);
-                  let savedRange = null;
-                  const sel = pageWindow2.getSelection();
-                  if (sel && sel.rangeCount > 0) savedRange = sel.getRangeAt(0).cloneRange();
-                  tapFocusEl.blur();
-                  tapFocusEl.focus();
-                  if (savedRange) {
-                    try {
-                      const sel2 = pageWindow2.getSelection();
-                      sel2.removeAllRanges();
-                      sel2.addRange(savedRange);
-                    } catch (e) {
-                    }
-                  }
-                  console.log('[Wizascript Controller] Patch Maker: bare Controller Primary tap - cycled entry category directly to "' + nextCat + '"');
-                }
+          } else {
+            const entries = Array.from(guideEl.querySelectorAll("span")).filter((el) => el.style.cursor === "pointer");
+            if (!entries.length) {
+              guideSelectedIndex = -1;
+              guideSelectedEl = null;
+            } else {
+              if (guideSelectedIndex < 0 || guideSelectedIndex >= entries.length) guideSelectedIndex = 0;
+              if (up && !guideDpadHeld.up) guideSelectedIndex = Math.max(0, guideSelectedIndex - 1);
+              if (down && !guideDpadHeld.down) guideSelectedIndex = Math.min(entries.length - 1, guideSelectedIndex + 1);
+              const sel = entries[guideSelectedIndex];
+              if (sel !== guideSelectedEl) {
+                if (guideSelectedEl) guideSelectedEl.dispatchEvent(new MouseEvent("mouseleave", { bubbles: true }));
+                sel.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+                sel.scrollIntoView({ block: "nearest" });
+                guideSelectedEl = sel;
               }
+              if (btn(0) && !guideBtn0Held) sel.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
             }
-            document.dispatchEvent(new KeyboardEvent("keyup", primaryBase));
-            guideSelectedIndex = -1;
-            guideSelectedEl = null;
+            guideDpadHeld = { up, down };
+            guideBtn0Held = btn(0);
+            hud.textContent = `UC TV Guide
+match ${entries.length ? guideSelectedIndex + 1 : 0}/${entries.length}
+\u2191/\u2193 select   ${btnLabel(0)} jump   tap ${buttonToDisplay(primaryBtn)} to close`;
           }
-          keybindRelayHeld = { primary: false, left: false, right: false, up: false, down: false, 0: false, actions: {} };
-          primaryHoldHadAction = false;
+          if (guideOpen) return;
         }
         if (!oskOpen && !sliderTarget && !selectTarget && btn(0)) {
           cursor.style.display = "none";
@@ -10040,8 +10120,8 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     initTrueHubBridge(plugin);
     initDeckTracker(plugin);
     initUcTv(plugin);
-    initMisc(plugin);
-    initController(plugin);
+    const miscSettings = initMisc(plugin);
+    initController(plugin, miscSettings.enableController);
     flushKeybindRegistrations();
   });
 })();

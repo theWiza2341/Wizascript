@@ -1,0 +1,15 @@
+diff --git a/packages/misc/index.js b/packages/misc/index.js
+index 4fcebb3..9b3b4e4 100644
+--- a/packages/misc/index.js
++++ b/packages/misc/index.js
+@@ -69,4 +69,10 @@ export function initMisc(plugin) {
+     packageLabel: "Notepad",
+     onMatch: () => redoNotepad()
+   });
++
++  // Handed back so manifest.js can pass settings.enableController straight
++  // through to initController(plugin, controllerEnabledSetting) - initMisc
++  // runs before initController, so this is already registered under
++  // "Miscellaneous" by the time the controller package reads it.
++  return settings;
+ }

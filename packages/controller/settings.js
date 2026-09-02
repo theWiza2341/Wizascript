@@ -14,7 +14,7 @@ import {
   PRESET_COUNT, getActivePreset, setActivePreset, getPresetName, setPresetName,
   presetKey, migrateFlatBindingsToPresetOne, csGet, csSet
 } from './storage.js';
-import { getMergedGamepad, buttonToDisplay } from './gamepad.js';
+import { getMergedGamepad, buttonToDisplay, connectWebHidController, isHidConnected } from './gamepad.js';
 
 // One entry per real Wizascript keybind this package's Primary+<button>
 // relay dispatches (see actions.js). `context` decides which subset of
@@ -103,9 +103,20 @@ export function setBoundShortcutButton(actionKey, idxOrNull) {
   csSet(presetKey('shortcuts.' + actionKey), idxOrNull === null ? 'unbound' : String(idxOrNull));
 }
 
-// Master toggle. Fails OPEN (treated as enabled) if settings registration
-// itself never completes, rather than silently bricking every feature
-// with no way to turn it back on.
+// Master toggle. Lives under "Miscellaneous" now, not this package's own
+// "Keybinds - Controller" category - registered by packages/misc/settings.js
+// and handed in as registerControllerSettings(plugin, controllerEnabledSetting)'s
+// second argument (manifest.js wires initMisc's return value through to
+// initController), the same setting object either way. Moved so a brand
+// new user (off by default) doesn't see an entire category of gamepad
+// keybind rows before they've even connected a controller - see
+// registerControllerSettings() below, which now skips registering the
+// rest of "Keybinds - Controller" entirely while this reads false,
+// mirroring exactly how packages/uc-tv/settings.js hides its own
+// "Filter Settings" category while UC TV itself is disabled. Fails OPEN
+// (treated as enabled) if settings registration itself never completes,
+// rather than silently bricking every feature with no way to turn it
+// back on.
 let controllerEnabledSetting = null;
 export function isControllerSupportEnabled() {
   if (!controllerEnabledSetting || typeof controllerEnabledSetting.value !== 'function') return true;
@@ -150,6 +161,56 @@ export function isDebugTextEnabled() {
     return !!debugTextEnabledSetting.value();
   } catch (e) {
     return false;
+  }
+}
+
+// Selection-outline highlight color. Presets tied to each soul's own
+// color coding rather than a free color picker, both because a fixed
+// small set is far more reliable to persist as a 'select' SettingType
+// (string values, matching every other confirmed-working 'select' in
+// this codebase - see packages/uc-tv/settings.js) than trying a THIRD
+// unproven SettingType, and because it directly answers what was asked:
+// a background-proof default that isn't just "light blue" for everyone.
+// Values pulled verbatim from packages/patch-maker/formatting.js's own
+// BASE_WORD_COLORS (the same colors that already highlight each soul's
+// name in a patch note), generalized to plain color names here rather
+// than the class names, per request - a player who's never touched
+// Patch Maker still immediately knows what "Orange" looks like.
+export const HIGHLIGHT_COLOR_PRESETS = [
+  ['Light Blue (default)', '#3ea6ff'],
+  ['Yellow', '#ffff00'],   // JUSTICE
+  ['Red', 'red'],          // DETERMINATION
+  ['Green', '#00c000'],    // KINDNESS
+  ['Orange', '#fca500'],   // BRAVERY
+  ['Blue', '#0064ff'],     // INTEGRITY
+  ['Cyan', '#41fcff'],     // PATIENCE
+  ['Magenta', '#d535d9']   // PERSEVERANCE
+];
+const DEFAULT_HIGHLIGHT_COLOR = HIGHLIGHT_COLOR_PRESETS[0][1];
+
+let highlightColorSetting = null;
+// Same belt-and-suspenders direct-DOM-read fallback as
+// isDebugTextEnabled() above, for the same reason: this package's own
+// documented history is that anything past 'boolean'/'text' SettingTypes
+// was never confirmed working end to end before now, and a live 'change'
+// listener on the rendered element can't have whatever reliability quirk
+// `.value()` turned out to have for debugTextEnabled. Works whether
+// Underscript renders a 'select' SettingType as a real `<select>` or as
+// an `<input>` with its own dropdown behavior - both fire 'change' the
+// same way and both expose the current value via `.value`.
+let highlightColorLive = null;
+function observeHighlightColorSelect(el) {
+  el.setAttribute('data-wc-enhanced', 'true');
+  highlightColorLive = el.value || null;
+  el.addEventListener('change', () => { highlightColorLive = el.value || null; });
+}
+export function getHighlightColor() {
+  if (highlightColorLive) return highlightColorLive;
+  if (!highlightColorSetting || typeof highlightColorSetting.value !== 'function') return DEFAULT_HIGHLIGHT_COLOR;
+  try {
+    return highlightColorSetting.value() || DEFAULT_HIGHLIGHT_COLOR;
+  } catch (e) {
+    return DEFAULT_HIGHLIGHT_COLOR;
   }
 }
 
@@ -380,18 +441,68 @@ function enhancePresetNameInput(el) {
   });
 }
 
+// "Detect Controller" - replaces the old persistent, always-on-screen
+// top-right "Connect Controller (WebHID)" button (see gamepad.js). That
+// spot was handy for debugging but not something a regular player needs
+// sitting on screen permanently; this on-demand row at the very top of
+// "Keybinds - Controller" keeps the same one-click WebHID pairing flow
+// available for whoever actually needs it (a controller whose native
+// Gamepad-API button translation doesn't work over Bluetooth), without
+// it being visible the rest of the time. A real click on a readOnly
+// `type: 'text'` settings input, same idiom as the preset selector above,
+// still counts as the genuine user gesture WebHID's requestDevice()
+// requires - connectWebHidController() is called directly and
+// synchronously from this element's own 'click' listener, exactly like
+// the old button's listener did.
+function enhanceDetectControllerButton(el) {
+  el.setAttribute('data-wc-enhanced', 'true');
+  el.readOnly = true;
+  el.tabIndex = 0;
+  Object.assign(el.style, {
+    cursor: 'pointer', backgroundColor: 'black', color: 'white',
+    border: '1px solid #b4b4b4', borderRadius: '3px', textAlign: 'center'
+  });
+
+  function refreshDisplay() {
+    el.value = isHidConnected() ? '✅ Controller Detected (WebHID)' : '🎮 Click to Detect Controller (WebHID)';
+  }
+  refreshDisplay();
+  boundInputRefreshers.push(refreshDisplay);
+
+  el.addEventListener('click', async () => {
+    if (isHidConnected()) return; // already connected, nothing to do
+    el.value = 'Check your browser\'s device picker…';
+    try {
+      await connectWebHidController();
+    } finally {
+      refreshDisplay();
+    }
+  });
+}
+
 let controllerObserverStarted = false;
 function startControllerKeybindObserver(idPrefix) {
   if (controllerObserverStarted) return;
   controllerObserverStarted = true;
   let everFoundOne = false;
   const observer = new MutationObserver(() => {
-    const matches = document.querySelectorAll(`input[id^="${idPrefix}"]:not([data-wc-enhanced])`);
+    // Matches both <input> and <select> - every binding registered so far
+    // has rendered as an <input> (including the custom click-to-open
+    // pickers above, which are plain readOnly text inputs dressed up to
+    // behave like dropdowns), but highlightColor is this package's first
+    // real 'select' SettingType, and it's not confirmed from here which
+    // tag Underscript renders that as. Costs nothing for the existing
+    // input-based bindings either way.
+    const matches = document.querySelectorAll(`input[id^="${idPrefix}"]:not([data-wc-enhanced]), select[id^="${idPrefix}"]:not([data-wc-enhanced])`);
     matches.forEach((el) => {
       everFoundOne = true;
       const bindingKey = el.id.slice(idPrefix.length);
       if (bindingKey.startsWith('__divider_') || bindingKey.startsWith('__info_')) {
         enhanceControllerDivider(el);
+        return;
+      }
+      if (bindingKey === 'detectController') {
+        enhanceDetectControllerButton(el);
         return;
       }
       if (bindingKey === 'presetSelector') {
@@ -421,9 +532,15 @@ function startControllerKeybindObserver(idPrefix) {
         observeDebugTextCheckbox(el);
         return;
       }
-      // 'enabled' (the boolean toggle) and anything else unrecognized:
-      // leave Underscript's own rendering alone, just mark it seen so the
-      // observer stops re-scanning it every mutation.
+      if (bindingKey === 'highlightColor') {
+        observeHighlightColorSelect(el);
+        return;
+      }
+      // Anything unrecognized: leave Underscript's own rendering alone,
+      // just mark it seen so the observer stops re-scanning it every
+      // mutation. ("Enable Controller Support" itself no longer renders
+      // under this idPrefix at all now - see registerControllerSettings()
+      // below - it moved to packages/misc/settings.js's own category.)
       el.setAttribute('data-wc-enhanced', 'true');
     });
   });
@@ -436,20 +553,55 @@ function startControllerKeybindObserver(idPrefix) {
 }
 
 // Registers the whole "Keybinds - Controller" category. Called once from
-// index.js's initController(plugin), directly (not deferred) - unlike the
-// standalone prototype, `plugin` here is already guaranteed ready by
-// bootstrap.js's contract by the time initController runs.
-export function registerControllerSettings(plugin) {
+// index.js's initController(plugin, controllerEnabledSetting), directly
+// (not deferred) - unlike the standalone prototype, `plugin` here is
+// already guaranteed ready by bootstrap.js's contract by the time
+// initController runs. `controllerEnabledSetting` is the SAME "Enable
+// Controller Support" setting object packages/misc/settings.js registers
+// under "Miscellaneous" now (manifest.js passes initMisc's return value
+// through to initController) - this file no longer registers it itself.
+export function registerControllerSettings(plugin, controllerEnabledSettingIn) {
   migrateFlatBindingsToPresetOne(
     CONTROLLER_ACTIONS.map((a) => a.key),
     HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key)
   );
 
+  // Stored regardless of enabled state (module-level, read every frame by
+  // isControllerSupportEnabled()) - only whether the REST of this
+  // category gets registered below depends on it.
+  controllerEnabledSetting = controllerEnabledSettingIn;
+
+  // Mirrors packages/uc-tv/settings.js's own "only register Filter
+  // Settings while UC TV itself is enabled" pattern exactly: read the
+  // master toggle once, right here at registration time, and skip
+  // registering every remaining row in this category entirely while it's
+  // off (default off) rather than showing an entire settings category
+  // for a feature a new user hasn't turned on yet. Like UC TV's version,
+  // this only skips *registering* - stored bindings/presets aren't
+  // touched, so turning Controller Support back on and reloading brings
+  // everything back exactly as it was left.
+  if (!controllerEnabledSetting || typeof controllerEnabledSetting.value !== 'function' || !controllerEnabledSetting.value()) {
+    console.log('[Wizascript Controller] Enable Controller Support is off - "Keybinds - Controller" category not registered this load. Turn it on under Miscellaneous, then reload, to configure it.');
+    return;
+  }
+
   const CATEGORY = 'Keybinds - Controller';
   const settings = createFeatureSettings(plugin, 'controller', CATEGORY);
 
-  // Preset selector/name, deliberately registered FIRST so they render at
-  // the very top of the category, above even "Enable Controller Support".
+  // "Detect Controller" - deliberately the very first row in the whole
+  // category, above even the preset selector, since checking whether a
+  // controller is actually recognized is the natural first thing to do
+  // here, before touching any preset/keybind. See
+  // enhanceDetectControllerButton() above.
+  settings.add('detectController', {
+    name: 'Detect Controller',
+    note: 'Only needed for a controller whose buttons don\'t register correctly otherwise (e.g. a Switch Pro Controller over Bluetooth) - click to open your browser\'s device picker.',
+    type: 'text',
+    default: 'Click to Detect Controller (WebHID)'
+  });
+
+  // Preset selector/name, deliberately registered next so they render at
+  // the very top of the actual keybind configuration.
   settings.add('presetSelector', {
     name: 'Settings Preset',
     note: 'Click to switch presets — each one remembers its own bindings independently.',
@@ -464,18 +616,19 @@ export function registerControllerSettings(plugin) {
   });
   settings.add('__divider_top', { name: '— — —', type: 'text', default: '' });
 
-  controllerEnabledSetting = settings.add('enabled', {
-    name: 'Enable Controller Support',
-    note: 'Off by default to save CPU. Turn on before configuring anything below.',
-    type: 'boolean',
-    default: false
-  });
-
   debugTextEnabledSetting = settings.add('debugTextEnabled', {
     name: 'Enable Debug Text',
     note: 'Off by default. Shows a green status readout - click and drag it to move it out of the way.',
     type: 'boolean',
     default: false
+  });
+
+  highlightColorSetting = settings.add('highlightColor', {
+    name: 'Selection Outline Color',
+    note: 'Presets tied to each soul\'s own color, so it stands out against any background - pulled from Patch Maker\'s own color coding.',
+    type: 'select',
+    data: HIGHLIGHT_COLOR_PRESETS,
+    default: DEFAULT_HIGHLIGHT_COLOR
   });
 
   settings.add('controllerPrimary', {

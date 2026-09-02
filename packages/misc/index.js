@@ -69,4 +69,10 @@ export function initMisc(plugin) {
     packageLabel: "Notepad",
     onMatch: () => redoNotepad()
   });
+
+  // Handed back so manifest.js can pass settings.enableController straight
+  // through to initController(plugin, controllerEnabledSetting) - initMisc
+  // runs before initController, so this is already registered under
+  // "Miscellaneous" by the time the controller package reads it.
+  return settings;
 }

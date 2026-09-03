@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.4.0
+// @version      1.3.1
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "1.4.0";
+  var SUITE_VERSION = "1.3.1";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -91,6 +91,9 @@
   }
   function readCode(bindingKey, defaultCode) {
     return GM_getValue(storageKey(bindingKey), defaultCode);
+  }
+  function getBoundKeybindCode(bindingKey, defaultCode) {
+    return readCode(bindingKey, defaultCode);
   }
   function writeCode(bindingKey, code) {
     GM_setValue(storageKey(bindingKey), code);
@@ -8232,9 +8235,25 @@ Version: v${version}`;
       fontSize: "12px",
       display: "flex",
       alignItems: "center",
-      justifyContent: "center"
+      justifyContent: "center",
+      // FIXED: oskEl itself is deliberately pointerEvents:'none' (so a
+      // real mouse click passes straight through the OSK panel to
+      // whatever's underneath, since the panel's own key grid is
+      // controller-hover-driven, not mouse-clickable) - but pointer-events
+      // is an inherited CSS property, so without its own explicit 'auto'
+      // override, this close badge silently inherited 'none' from its
+      // parent too and was never clickable by anything, mouse OR
+      // controller (the physical Circle button closes the OSK through its
+      // own separate keybind path entirely, unrelated to this element's
+      // screen position - this badge had no click handler wired to it at
+      // all before now). cursor:'pointer' is just a visual affordance
+      // matching the new real behavior.
+      pointerEvents: "auto",
+      cursor: "pointer"
     });
     oskClose.textContent = "\u2715";
+    oskClose.title = "Close";
+    oskClose.addEventListener("click", () => closeOsk());
     oskEl.appendChild(oskClose);
     const oskGrid = document.createElement("div");
     oskEl.appendChild(oskGrid);
@@ -9437,10 +9456,10 @@ Version: v${version}`;
               const isDown = isBoundInputDown(boundInput, btn);
               nextActionHeld[action.key] = isDown;
               if (isDown && !keybindRelayHeld.actions[action.key]) {
-                const sig = action.dispatch.code;
-                if (!codesFiredThisFrame.has(sig)) {
-                  codesFiredThisFrame.add(sig);
-                  relaySecondary(action.dispatch.code, action.dispatch.key);
+                const liveCode = getBoundKeybindCode(action.key, action.dispatch.code);
+                if (!codesFiredThisFrame.has(liveCode)) {
+                  codesFiredThisFrame.add(liveCode);
+                  relaySecondary(liveCode, action.dispatch.key);
                 }
               }
             });

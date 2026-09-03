@@ -41,6 +41,17 @@ import {
 } from './settings.js';
 import { getHudPosition, setHudPosition, getCursorSensitivity, setCursorSensitivity } from './storage.js';
 import { getPageWindow } from '../core/page-window.js';
+// Read-only accessor for a real Wizascript keybind's CURRENT e.code,
+// bypassing that binding's own hardcoded default - see the
+// CONTROLLER_ACTIONS relay's own comment (getBoundKeybindCode call
+// site, below) for why the relay needs this instead of trusting
+// action.dispatch.code. Deliberately narrower than reaching into
+// keybinds.js's storage directly (still going through its own public
+// accessor), unlike the Primary Key case documented elsewhere in this
+// file, which stays a known limitation rather than adding this same
+// coupling for a single relay dispatch that isn't tied to a specific
+// remappable action key the way this one is.
+import { getBoundKeybindCode } from '../core/keybinds.js';
 
 export function initController(plugin, controllerEnabledSetting) {
   // Tampermonkey sandbox gotcha: this build grants GM_getValue/GM_setValue,
@@ -260,9 +271,24 @@ export function initController(plugin, controllerEnabledSetting) {
   Object.assign(oskClose.style, {
     position: 'absolute', top: '8px', right: '8px', width: '20px', height: '20px',
     borderRadius: '50%', background: oskTheme.closeBg, color: '#fff', fontSize: '12px',
-    display: 'flex', alignItems: 'center', justifyContent: 'center'
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    // FIXED: oskEl itself is deliberately pointerEvents:'none' (so a
+    // real mouse click passes straight through the OSK panel to
+    // whatever's underneath, since the panel's own key grid is
+    // controller-hover-driven, not mouse-clickable) - but pointer-events
+    // is an inherited CSS property, so without its own explicit 'auto'
+    // override, this close badge silently inherited 'none' from its
+    // parent too and was never clickable by anything, mouse OR
+    // controller (the physical Circle button closes the OSK through its
+    // own separate keybind path entirely, unrelated to this element's
+    // screen position - this badge had no click handler wired to it at
+    // all before now). cursor:'pointer' is just a visual affordance
+    // matching the new real behavior.
+    pointerEvents: 'auto', cursor: 'pointer'
   });
   oskClose.textContent = '✕';
+  oskClose.title = 'Close';
+  oskClose.addEventListener('click', () => closeOsk());
   oskEl.appendChild(oskClose);
 
   const oskGrid = document.createElement('div');
@@ -2052,10 +2078,26 @@ export function initController(plugin, controllerEnabledSetting) {
             const isDown = isBoundInputDown(boundInput, btn);
             nextActionHeld[action.key] = isDown;
             if (isDown && !keybindRelayHeld.actions[action.key]) {
-              const sig = action.dispatch.code;
-              if (!codesFiredThisFrame.has(sig)) {
-                codesFiredThisFrame.add(sig);
-                relaySecondary(action.dispatch.code, action.dispatch.key);
+              // Read the REAL keybind's CURRENT e.code live, every time,
+              // rather than trusting action.dispatch.code (a hardcoded
+              // snapshot of whatever that binding's default happened to
+              // be when this table was written). Confirmed broken for
+              // Cycle Category Up/Down: this player's real "Cycle
+              // Category" keybind is actually bound to Control+ArrowLeft/
+              // ArrowRight (not the Comma/Period this table shipped as
+              // its default - likely an older default from before this
+              // was changed, still persisted in their storage from back
+              // then), so relaying the hardcoded 'Comma'/'Period' never
+              // matched anything, silently, with zero visible symptom -
+              // this is almost certainly the "real struggle to even get
+              // it to pick up" from the earlier attempt at this exact
+              // feature too. Falls back to action.dispatch.code when
+              // nothing's been stored yet, so every action that's never
+              // been remapped behaves identically to before.
+              const liveCode = getBoundKeybindCode(action.key, action.dispatch.code);
+              if (!codesFiredThisFrame.has(liveCode)) {
+                codesFiredThisFrame.add(liveCode);
+                relaySecondary(liveCode, action.dispatch.key);
               }
             }
           });

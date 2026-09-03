@@ -29,7 +29,7 @@
 
 import {
   getMergedGamepad, btnLabel, buttonToDisplay, bindingToDisplay,
-  pressIndicator,
+  pressIndicator, setDebugLoggingEnabled,
   logRawGamepadStateIfChanged, logMergedInputEdges
 } from './gamepad.js';
 import {
@@ -700,6 +700,20 @@ export function initController(plugin, controllerEnabledSetting) {
     if (byAttr) return byAttr;
     const buttons = Array.from(root.querySelectorAll('button'));
     return buttons.find(b => /close|cancel|^no$/i.test((b.textContent || '').trim())) || null;
+  }
+  // queryModalRoot()'s own 'tabbed' kind IS Settings (a TabManager-shaped
+  // `.tabbedView.left` dialog, per its own comment) - shared by every
+  // place that needs to know "is Settings currently open" before deciding
+  // whether to open it (again) or close it. Used by both the 'openSettings'
+  // hardware shortcut and triggerConcedeNative()'s fallback flow below -
+  // the latter used to click btn-config completely unconditionally, which
+  // is what a live tester hit trying to concede before turn 5 (Underscript
+  // won't allow it, so the fallback opens Settings looking for a native
+  // surrender button that's never there either, and a second attempt
+  // opened a second copy of the same dialog on top of the first).
+  function isWizascriptSettingsOpen() {
+    const m = queryModalRoot();
+    return !!(m && m.kind === 'tabbed');
   }
 
   /* ---------- highlight / submenu state ---------- */
@@ -1379,7 +1393,20 @@ export function initController(plugin, controllerEnabledSetting) {
       console.log('[Wizascript Controller] concede: settings button not found (not in a match?)');
       return;
     }
-    triggerElementClick(configBtn);
+    // Don't click it again if Settings is already open - a previous
+    // Concede attempt (most commonly trying to concede before turn 5,
+    // when Underscript's own canSurrender() guard silently blocks it)
+    // can leave it open without ever finding a surrender button inside,
+    // and every subsequent Concede press used to open a fresh copy on
+    // top of the one already there. Already-open just goes straight to
+    // polling below instead - if the confirm button legitimately isn't
+    // there (still pre-turn-5), the poll times out the same as it always
+    // has, without stacking anything new in the meantime.
+    if (!isWizascriptSettingsOpen()) {
+      triggerElementClick(configBtn);
+    } else if (isDebugTextEnabled()) {
+      console.log('[Wizascript Controller] concede: Settings already open - skipped opening a duplicate, going straight to polling for the surrender button');
+    }
 
     // The settings modal's content does not mount synchronously with the
     // click - poll across a few animation frames instead of assuming
@@ -1659,7 +1686,17 @@ export function initController(plugin, controllerEnabledSetting) {
       // right below - so flipping "Enable Debug Text" off hides it
       // immediately even if Controller Support was just turned off in the
       // same moment, rather than leaving a stale readout on screen.
-      hud.style.display = isDebugTextEnabled() ? 'block' : 'none';
+      const debugTextOn = isDebugTextEnabled();
+      hud.style.display = debugTextOn ? 'block' : 'none';
+      // Same toggle also governs gamepad.js's own diagnostics (raw/merged
+      // state console logs, the WebHID raw-bit discovery log, and the
+      // "🎮 X pressed" press-indicator flash) - previously none of that
+      // checked "Enable Debug Text" at all, so it kept firing even with
+      // debug text switched off. gamepad.js stays free of any direct
+      // dependency on settings.js (would be a circular import, since
+      // settings.js already imports FROM gamepad.js) - this just pushes
+      // the already-read value in every frame instead.
+      setDebugLoggingEnabled(debugTextOn);
 
       // Master gate: while Controller Support is off, skip gamepad
       // polling and every DOM read/write below entirely. If it was
@@ -1785,6 +1822,7 @@ export function initController(plugin, controllerEnabledSetting) {
       if (shortcutJustPressed(btn, 'openSettings')) {
         const openModal = queryModalRoot();
         if (openModal && openModal.kind === 'tabbed') {
+          if (debugTextOn) console.log('[Wizascript Controller] openSettings: Settings already open - closing instead of stacking another copy');
           const dismiss = findModalDismissButton(openModal.root);
           if (dismiss) triggerElementClick(dismiss);
           else document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', code: 'Escape', bubbles: true }));

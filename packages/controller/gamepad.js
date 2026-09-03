@@ -19,6 +19,23 @@
 import { getPageWindow } from '../core/page-window.js';
 const pageWindow = getPageWindow();
 
+// ---------- debug logging/visuals gate ----------
+// Every console.log and on-screen flash in this file (the press
+// indicator, the raw/merged diagnostic dumps, the WebHID raw-bit
+// discovery logs) should only actually fire while "Enable Debug Text" is
+// on - previously none of it checked that at all, so it was live handing
+// out uninvited on-screen flashes and console spam even with debug text
+// switched off. That real setting lives in settings.js, but this file
+// deliberately stays free of any dependency on settings/storage (see the
+// header comment above) - importing it directly would also create a
+// circular import, since settings.js already imports FROM this file.
+// Instead, index.js (which already reads the real setting every frame
+// for the debug HUD's own visibility) pushes the current value in here
+// once a frame via setDebugLoggingEnabled(), and everything below reads
+// the local copy.
+let debugLoggingEnabled = false;
+export function setDebugLoggingEnabled(v) { debugLoggingEnabled = !!v; }
+
 // ---------- on-screen input indicator ----------
 // Big, unmissable, top-center - lets a live test be read purely by eye,
 // no devtools/console required. Every button press and stick movement
@@ -34,6 +51,7 @@ Object.assign(pressIndicator.style, {
 });
 let pressIndicatorHideTimer = null;
 export function showPressIndicator(text) {
+  if (!debugLoggingEnabled) return;
   pressIndicator.textContent = text;
   pressIndicator.style.display = 'block';
   if (pressIndicatorHideTimer) clearTimeout(pressIndicatorHideTimer);
@@ -124,32 +142,51 @@ export function bindingToDisplay(value) {
 // out of every future reading before the deadzone runs. A normally
 // centered pad just "confirms" a baseline of ~0, so this is a no-op for
 // it.
-const AXIS_CALIBRATION = new Map(); // pad.id -> { baseline[], lastRaw[], stableFrames[] }
+const AXIS_CALIBRATION = new Map(); // pad.id -> { baseline[], lastRaw[], stableFrames[], calibrateUntil }
 const AXIS_STABLE_FRAMES_NEEDED = 90; // ~1.5s at 60fps
 const AXIS_JITTER_EPS = 0.02;
+// FIXED (live-tester report: "moving it in one direction long enough, it
+// starts to drift back another direction"): recalibration used to run
+// for the pad's entire connected lifetime, not just once at connect. The
+// "flat for ~1.5s" heuristic below can't actually tell a genuinely
+// miscentered REST position apart from a player just deliberately
+// holding a stick pegged in one direction for over a second during
+// completely normal play (dragging the cursor a long distance, dialing
+// the sensitivity bar, sitting on a d-pad direction) - either one reads
+// as "stable." Recalibrating mid-play adopted that held position as the
+// new zero-point, so releasing the stick back to its REAL physical
+// center then read as a hard tilt in the OPPOSITE direction - exactly
+// the reported symptom. A genuinely miscentered pad reports its bad rest
+// value from the moment it connects, so it only ever needed a short
+// window right after connecting, not a standing recalibration that can
+// fire at any time - capped to that window here.
+const AXIS_CALIBRATION_WINDOW_MS = 4000;
 function getCalibratedAxes(pad) {
   let cal = AXIS_CALIBRATION.get(pad.id);
   if (!cal) {
     cal = {
       baseline: pad.axes.map(() => 0),
       lastRaw: pad.axes.slice(),
-      stableFrames: pad.axes.map(() => 0)
+      stableFrames: pad.axes.map(() => 0),
+      calibrateUntil: Date.now() + AXIS_CALIBRATION_WINDOW_MS
     };
     AXIS_CALIBRATION.set(pad.id, cal);
   }
-  pad.axes.forEach((v, i) => {
-    const prev = cal.lastRaw[i] !== undefined ? cal.lastRaw[i] : v;
-    if (Math.abs(v - prev) < AXIS_JITTER_EPS) {
-      cal.stableFrames[i] = (cal.stableFrames[i] || 0) + 1;
-    } else {
-      cal.stableFrames[i] = 0;
-    }
-    cal.lastRaw[i] = v;
-    if (cal.stableFrames[i] === AXIS_STABLE_FRAMES_NEEDED && Math.abs(v - (cal.baseline[i] || 0)) > AXIS_JITTER_EPS) {
-      cal.baseline[i] = v;
-      console.log(`[Wizascript Controller] axis ${i} on "${pad.id}" recalibrated to neutral=${v.toFixed(3)} after holding steady for ~1.5s`);
-    }
-  });
+  if (Date.now() < cal.calibrateUntil) {
+    pad.axes.forEach((v, i) => {
+      const prev = cal.lastRaw[i] !== undefined ? cal.lastRaw[i] : v;
+      if (Math.abs(v - prev) < AXIS_JITTER_EPS) {
+        cal.stableFrames[i] = (cal.stableFrames[i] || 0) + 1;
+      } else {
+        cal.stableFrames[i] = 0;
+      }
+      cal.lastRaw[i] = v;
+      if (cal.stableFrames[i] === AXIS_STABLE_FRAMES_NEEDED && Math.abs(v - (cal.baseline[i] || 0)) > AXIS_JITTER_EPS) {
+        cal.baseline[i] = v;
+        if (debugLoggingEnabled) console.log(`[Wizascript Controller] axis ${i} on "${pad.id}" recalibrated to neutral=${v.toFixed(3)} after holding steady for ~1.5s (calibration window closes ${((cal.calibrateUntil - Date.now()) / 1000).toFixed(1)}s from now)`);
+      }
+    });
+  }
   return pad.axes.map((v, i) => Math.max(-1, Math.min(1, v - (cal.baseline[i] || 0))));
 }
 
@@ -190,12 +227,12 @@ function decodeHidReport(dataView) {
     const mask = 1 << bit;
     const wasR1 = !!(lastLoggedHidBits.raw1 & mask), isR1 = !!(raw1 & mask);
     if (wasR1 !== isR1) {
-      console.log(`[Wizascript Controller] WebHID raw bit B1.0x${mask.toString(16).padStart(2, '0')} -> ${isR1 ? 'DOWN' : 'UP'}`);
+      if (debugLoggingEnabled) console.log(`[Wizascript Controller] WebHID raw bit B1.0x${mask.toString(16).padStart(2, '0')} -> ${isR1 ? 'DOWN' : 'UP'}`);
       if (isR1) showPressIndicator(`🎮 WebHID B1.0x${mask.toString(16).padStart(2, '0')} pressed`);
     }
     const wasR2 = !!(lastLoggedHidBits.raw2 & mask), isR2 = !!(raw2 & mask);
     if (wasR2 !== isR2) {
-      console.log(`[Wizascript Controller] WebHID raw bit B2.0x${mask.toString(16).padStart(2, '0')} -> ${isR2 ? 'DOWN' : 'UP'}`);
+      if (debugLoggingEnabled) console.log(`[Wizascript Controller] WebHID raw bit B2.0x${mask.toString(16).padStart(2, '0')} -> ${isR2 ? 'DOWN' : 'UP'}`);
       if (isR2) showPressIndicator(`🎮 WebHID B2.0x${mask.toString(16).padStart(2, '0')} pressed`);
     }
   }
@@ -376,6 +413,7 @@ function rawSnapshotsEqual(a, b) {
   return true;
 }
 export function logRawGamepadStateIfChanged() {
+  if (!debugLoggingEnabled) return;
   const pads = Array.from(navigator.getGamepads()).filter((p) => p);
   if (!pads.length) return;
   pads.forEach((p) => {
@@ -395,6 +433,7 @@ let lastMergedButtonState = [];
 let lastUsingControllerLogged = null;
 let lastAnyStickState = false;
 export function logMergedInputEdges(gp, usingControllerNow, anyStickNow) {
+  if (!debugLoggingEnabled) return;
   if (lastUsingControllerLogged !== usingControllerNow) {
     lastUsingControllerLogged = usingControllerNow;
     console.log(`[Wizascript Controller] usingController -> ${usingControllerNow}`);

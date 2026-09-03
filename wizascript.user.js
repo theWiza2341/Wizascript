@@ -6981,6 +6981,10 @@ Version: v${version}`;
 
   // packages/controller/gamepad.js
   var pageWindow = getPageWindow();
+  var debugLoggingEnabled = false;
+  function setDebugLoggingEnabled(v) {
+    debugLoggingEnabled = !!v;
+  }
   var pressIndicator = document.createElement("div");
   Object.assign(pressIndicator.style, {
     position: "fixed",
@@ -7000,6 +7004,7 @@ Version: v${version}`;
   });
   var pressIndicatorHideTimer = null;
   function showPressIndicator(text) {
+    if (!debugLoggingEnabled) return;
     pressIndicator.textContent = text;
     pressIndicator.style.display = "block";
     if (pressIndicatorHideTimer) clearTimeout(pressIndicatorHideTimer);
@@ -7071,29 +7076,33 @@ Version: v${version}`;
   var AXIS_CALIBRATION = /* @__PURE__ */ new Map();
   var AXIS_STABLE_FRAMES_NEEDED = 90;
   var AXIS_JITTER_EPS = 0.02;
+  var AXIS_CALIBRATION_WINDOW_MS = 4e3;
   function getCalibratedAxes(pad) {
     let cal = AXIS_CALIBRATION.get(pad.id);
     if (!cal) {
       cal = {
         baseline: pad.axes.map(() => 0),
         lastRaw: pad.axes.slice(),
-        stableFrames: pad.axes.map(() => 0)
+        stableFrames: pad.axes.map(() => 0),
+        calibrateUntil: Date.now() + AXIS_CALIBRATION_WINDOW_MS
       };
       AXIS_CALIBRATION.set(pad.id, cal);
     }
-    pad.axes.forEach((v, i) => {
-      const prev = cal.lastRaw[i] !== void 0 ? cal.lastRaw[i] : v;
-      if (Math.abs(v - prev) < AXIS_JITTER_EPS) {
-        cal.stableFrames[i] = (cal.stableFrames[i] || 0) + 1;
-      } else {
-        cal.stableFrames[i] = 0;
-      }
-      cal.lastRaw[i] = v;
-      if (cal.stableFrames[i] === AXIS_STABLE_FRAMES_NEEDED && Math.abs(v - (cal.baseline[i] || 0)) > AXIS_JITTER_EPS) {
-        cal.baseline[i] = v;
-        console.log(`[Wizascript Controller] axis ${i} on "${pad.id}" recalibrated to neutral=${v.toFixed(3)} after holding steady for ~1.5s`);
-      }
-    });
+    if (Date.now() < cal.calibrateUntil) {
+      pad.axes.forEach((v, i) => {
+        const prev = cal.lastRaw[i] !== void 0 ? cal.lastRaw[i] : v;
+        if (Math.abs(v - prev) < AXIS_JITTER_EPS) {
+          cal.stableFrames[i] = (cal.stableFrames[i] || 0) + 1;
+        } else {
+          cal.stableFrames[i] = 0;
+        }
+        cal.lastRaw[i] = v;
+        if (cal.stableFrames[i] === AXIS_STABLE_FRAMES_NEEDED && Math.abs(v - (cal.baseline[i] || 0)) > AXIS_JITTER_EPS) {
+          cal.baseline[i] = v;
+          if (debugLoggingEnabled) console.log(`[Wizascript Controller] axis ${i} on "${pad.id}" recalibrated to neutral=${v.toFixed(3)} after holding steady for ~1.5s (calibration window closes ${((cal.calibrateUntil - Date.now()) / 1e3).toFixed(1)}s from now)`);
+        }
+      });
+    }
     return pad.axes.map((v, i) => Math.max(-1, Math.min(1, v - (cal.baseline[i] || 0))));
   }
   var WEBHID_VENDOR_ID = 1406;
@@ -7121,12 +7130,12 @@ Version: v${version}`;
       const mask = 1 << bit;
       const wasR1 = !!(lastLoggedHidBits.raw1 & mask), isR1 = !!(raw1 & mask);
       if (wasR1 !== isR1) {
-        console.log(`[Wizascript Controller] WebHID raw bit B1.0x${mask.toString(16).padStart(2, "0")} -> ${isR1 ? "DOWN" : "UP"}`);
+        if (debugLoggingEnabled) console.log(`[Wizascript Controller] WebHID raw bit B1.0x${mask.toString(16).padStart(2, "0")} -> ${isR1 ? "DOWN" : "UP"}`);
         if (isR1) showPressIndicator(`\u{1F3AE} WebHID B1.0x${mask.toString(16).padStart(2, "0")} pressed`);
       }
       const wasR2 = !!(lastLoggedHidBits.raw2 & mask), isR2 = !!(raw2 & mask);
       if (wasR2 !== isR2) {
-        console.log(`[Wizascript Controller] WebHID raw bit B2.0x${mask.toString(16).padStart(2, "0")} -> ${isR2 ? "DOWN" : "UP"}`);
+        if (debugLoggingEnabled) console.log(`[Wizascript Controller] WebHID raw bit B2.0x${mask.toString(16).padStart(2, "0")} -> ${isR2 ? "DOWN" : "UP"}`);
         if (isR2) showPressIndicator(`\u{1F3AE} WebHID B2.0x${mask.toString(16).padStart(2, "0")} pressed`);
       }
     }
@@ -7263,6 +7272,7 @@ Version: v${version}`;
     return true;
   }
   function logRawGamepadStateIfChanged() {
+    if (!debugLoggingEnabled) return;
     const pads = Array.from(navigator.getGamepads()).filter((p) => p);
     if (!pads.length) return;
     pads.forEach((p) => {
@@ -7278,6 +7288,7 @@ Version: v${version}`;
   var lastUsingControllerLogged = null;
   var lastAnyStickState = false;
   function logMergedInputEdges(gp, usingControllerNow, anyStickNow) {
+    if (!debugLoggingEnabled) return;
     if (lastUsingControllerLogged !== usingControllerNow) {
       lastUsingControllerLogged = usingControllerNow;
       console.log(`[Wizascript Controller] usingController -> ${usingControllerNow}`);
@@ -8506,6 +8517,10 @@ Version: v${version}`;
       const buttons = Array.from(root.querySelectorAll("button"));
       return buttons.find((b) => /close|cancel|^no$/i.test((b.textContent || "").trim())) || null;
     }
+    function isWizascriptSettingsOpen() {
+      const m = queryModalRoot();
+      return !!(m && m.kind === "tabbed");
+    }
     let activeSubmenu = null;
     let currentHighlightedEl = null;
     function findDropdownMenuNear(toggleEl) {
@@ -9043,7 +9058,11 @@ Version: v${version}`;
         console.log("[Wizascript Controller] concede: settings button not found (not in a match?)");
         return;
       }
-      triggerElementClick(configBtn);
+      if (!isWizascriptSettingsOpen()) {
+        triggerElementClick(configBtn);
+      } else if (isDebugTextEnabled()) {
+        console.log("[Wizascript Controller] concede: Settings already open - skipped opening a duplicate, going straight to polling for the surrender button");
+      }
       let attempts2 = 0;
       const MAX_ATTEMPTS = 30;
       (function poll() {
@@ -9254,7 +9273,9 @@ Version: v${version}`;
     }
     function frame() {
       try {
-        hud.style.display = isDebugTextEnabled() ? "block" : "none";
+        const debugTextOn = isDebugTextEnabled();
+        hud.style.display = debugTextOn ? "block" : "none";
+        setDebugLoggingEnabled(debugTextOn);
         if (!isControllerSupportEnabled()) {
           if (usingController) {
             usingController = false;
@@ -9317,6 +9338,7 @@ Version: v${version}`;
         if (shortcutJustPressed(btn, "openSettings")) {
           const openModal = queryModalRoot();
           if (openModal && openModal.kind === "tabbed") {
+            if (debugTextOn) console.log("[Wizascript Controller] openSettings: Settings already open - closing instead of stacking another copy");
             const dismiss = findModalDismissButton(openModal.root);
             if (dismiss) triggerElementClick(dismiss);
             else document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));

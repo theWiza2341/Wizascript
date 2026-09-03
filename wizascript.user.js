@@ -9321,39 +9321,41 @@ Version: v${version}`;
           setCursorSensitivity(cursorSensitivity);
           sensitivityAdjusting = false;
         }
-        if (btn(5) && !shortcutBtnHeld[5]) {
-          if (oskOpen) {
-            oskPaused = !oskPaused;
-            oskEl.style.display = oskPaused ? "none" : "block";
-            if (!oskPaused && oskTarget) {
-              positionPanelNear(oskEl, oskTarget);
-              updateOskHighlight();
+        if (!isControllerCaptureActive()) {
+          if (btn(5) && !shortcutBtnHeld[5]) {
+            if (oskOpen) {
+              oskPaused = !oskPaused;
+              oskEl.style.display = oskPaused ? "none" : "block";
+              if (!oskPaused && oskTarget) {
+                positionPanelNear(oskEl, oskTarget);
+                updateOskHighlight();
+              }
+              console.log("[Wizascript Controller] OSK", oskPaused ? "paused" : "resumed");
+            } else {
+              document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
             }
-            console.log("[Wizascript Controller] OSK", oskPaused ? "paused" : "resumed");
-          } else {
-            document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
           }
-        }
-        if (btn(1) && !shortcutBtnHeld[1] && oskOpen && oskPaused) closeOsk();
-        if (shortcutJustPressed(btn, "openSettings")) {
-          const openModal = queryModalRoot();
-          if (openModal && openModal.kind === "tabbed") {
-            if (debugTextOn) console.log("[Wizascript Controller] openSettings: Settings already open - closing instead of stacking another copy");
-            const dismiss = findModalDismissButton(openModal.root);
-            if (dismiss) triggerElementClick(dismiss);
-            else document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
-          } else {
-            triggerElementClick(document.getElementById("btn-config"));
+          if (btn(1) && !shortcutBtnHeld[1] && oskOpen && oskPaused) closeOsk();
+          if (shortcutJustPressed(btn, "openSettings")) {
+            const openModal = queryModalRoot();
+            if (openModal && openModal.kind === "tabbed") {
+              if (debugTextOn) console.log("[Wizascript Controller] openSettings: Settings already open - closing instead of stacking another copy");
+              const dismiss = findModalDismissButton(openModal.root);
+              if (dismiss) triggerElementClick(dismiss);
+              else document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
+            } else {
+              triggerElementClick(document.getElementById("btn-config"));
+            }
           }
+          if (shortcutJustPressed(btn, "yourDustpile") && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(true)"]'));
+          if (shortcutJustPressed(btn, "opponentDustpile") && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(false)"]'));
+          if (shortcutJustPressed(btn, "endTurn")) triggerElementClick(document.getElementById("endTurnBtn"));
+          if (shortcutJustPressed(btn, "openWizascriptSettings") && !oskOpen) openWizascriptSettings();
+          if (shortcutJustPressed(btn, "concede")) triggerConcede();
+          if (shortcutJustPressed(btn, "goHome")) pageWindow2.location.href = "https://undercards.net/";
+          if (shortcutJustPressed(btn, "openDeckTrackerPresets") && !oskOpen) triggerElementClick(document.getElementById("dt-add-tracker-button"));
+          shortcutBtnHeld = { 1: btn(1), 5: btn(5) };
         }
-        if (shortcutJustPressed(btn, "yourDustpile") && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(true)"]'));
-        if (shortcutJustPressed(btn, "opponentDustpile") && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(false)"]'));
-        if (shortcutJustPressed(btn, "endTurn")) triggerElementClick(document.getElementById("endTurnBtn"));
-        if (shortcutJustPressed(btn, "openWizascriptSettings") && !oskOpen) openWizascriptSettings();
-        if (shortcutJustPressed(btn, "concede")) triggerConcede();
-        if (shortcutJustPressed(btn, "goHome")) pageWindow2.location.href = "https://undercards.net/";
-        if (shortcutJustPressed(btn, "openDeckTrackerPresets") && !oskOpen) triggerElementClick(document.getElementById("dt-add-tracker-button"));
-        shortcutBtnHeld = { 1: btn(1), 5: btn(5) };
         if (!oskOpen || oskPaused) {
           const primaryBtn = getControllerPrimaryButton();
           const l1Down = isBoundInputDown(primaryBtn, btn) || oskOpen && oskPaused;

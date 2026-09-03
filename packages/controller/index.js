@@ -1785,68 +1785,91 @@ export function initController(plugin, controllerEnabledSetting) {
          every frame regardless of which mode branch is about to handle
          the rest of the frame - every match-mode/modal/OSK branch below
          ends in `return`, so anything living further down would silently
-         go dead the instant one of those branches claims the frame. */
-      // R1 toggles the OSK's "paused" state whenever the OSK is open
-      // (instead of its usual Underscript-menu toggle) - reuses
-      // Underscript's own built-in "Open Menu" hotkey (a synthetic Escape
-      // keyup) when the OSK isn't open, rather than reaching into
-      // Underscript's closures directly.
-      if (btn(5) && !shortcutBtnHeld[5]) {
-        if (oskOpen) {
-          oskPaused = !oskPaused;
-          oskEl.style.display = oskPaused ? 'none' : 'block';
-          if (!oskPaused && oskTarget) { positionPanelNear(oskEl, oskTarget); updateOskHighlight(); }
-          console.log('[Wizascript Controller] OSK', oskPaused ? 'paused' : 'resumed');
-        } else {
-          document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', code: 'Escape', bubbles: true }));
+         go dead the instant one of those branches claims the frame.
+
+         FIXED: this whole block used to run completely unconditionally,
+         with no isControllerCaptureActive() guard at all - unlike every
+         other input-consuming section in this file. That meant a settings
+         capture widget ("Press a button or key...") never actually stood
+         down input the way it's supposed to: pressing a button mid-
+         capture that happened to ALSO be a currently-bound hardware
+         shortcut fired that shortcut for real, in parallel with the
+         capture attempt. Confirmed live and root-caused (not guessed):
+         rebinding "Open Settings" itself ALWAYS closed the very Settings
+         dialog you were rebinding from, because the OLD binding (e.g.
+         Start) is still what shortcutJustPressed() reads until the NEW
+         one is actually written - so a natural first press while
+         capturing (often literally the current button, out of habit) hit
+         the live 'openSettings' shortcut, which (as of the round that
+         fixed dialog-stacking) actively CLOSES Settings when it detects
+         Settings is already open. Standing the whole block down while
+         ANY capture widget owns input, the same way the modal fields-pane
+         handling elsewhere already does, fixes this generally rather than
+         special-casing 'openSettings' alone - the same class of
+         interference could happen with any of the other 8 shortcuts too. */
+      if (!isControllerCaptureActive()) {
+        // R1 toggles the OSK's "paused" state whenever the OSK is open
+        // (instead of its usual Underscript-menu toggle) - reuses
+        // Underscript's own built-in "Open Menu" hotkey (a synthetic Escape
+        // keyup) when the OSK isn't open, rather than reaching into
+        // Underscript's closures directly.
+        if (btn(5) && !shortcutBtnHeld[5]) {
+          if (oskOpen) {
+            oskPaused = !oskPaused;
+            oskEl.style.display = oskPaused ? 'none' : 'block';
+            if (!oskPaused && oskTarget) { positionPanelNear(oskEl, oskTarget); updateOskHighlight(); }
+            console.log('[Wizascript Controller] OSK', oskPaused ? 'paused' : 'resumed');
+          } else {
+            document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', code: 'Escape', bubbles: true }));
+          }
         }
-      }
-      // While paused, Circle closes the OSK entirely (same real
-      // blur-then-clear as the OSK's own Circle binding) without first
-      // needing to un-pause via R1.
-      if (btn(1) && !shortcutBtnHeld[1] && oskOpen && oskPaused) closeOsk();
-      // The 8 shortcuts below are remappable via "Keybinds - Controller"
-      // > "— In-Game Inputs —" (see settings.js). Edge-triggering is
-      // done by shortcutJustPressed(), which reads the CURRENT bound
-      // button every frame instead of a hardcoded number - shortcutBtnHeld
-      // stays reserved for R1/button-5 and Circle/button-1 only, which
-      // are deliberately still fixed (R1 doubles as the OSK-pause toggle
-      // using the exact same physical button unconditionally).
-      // Toggle, not just open - a second press while Settings is already
-      // open now closes it instead of stacking another copy on top,
-      // matching direct feedback from a live tester ("I don't want to be
-      // able to open many settings menus on top of each other with
-      // start"). queryModalRoot()'s own 'tabbed' kind IS Settings (see its
-      // own comment - a TabManager-shaped `.tabbedView.left` dialog), so
-      // reusing it here rather than re-detecting independently.
-      if (shortcutJustPressed(btn, 'openSettings')) {
-        const openModal = queryModalRoot();
-        if (openModal && openModal.kind === 'tabbed') {
-          if (debugTextOn) console.log('[Wizascript Controller] openSettings: Settings already open - closing instead of stacking another copy');
-          const dismiss = findModalDismissButton(openModal.root);
-          if (dismiss) triggerElementClick(dismiss);
-          else document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', code: 'Escape', bubbles: true }));
-        } else {
-          triggerElementClick(document.getElementById('btn-config'));
+        // While paused, Circle closes the OSK entirely (same real
+        // blur-then-clear as the OSK's own Circle binding) without first
+        // needing to un-pause via R1.
+        if (btn(1) && !shortcutBtnHeld[1] && oskOpen && oskPaused) closeOsk();
+        // The 8 shortcuts below are remappable via "Keybinds - Controller"
+        // > "— In-Game Inputs —" (see settings.js). Edge-triggering is
+        // done by shortcutJustPressed(), which reads the CURRENT bound
+        // button every frame instead of a hardcoded number - shortcutBtnHeld
+        // stays reserved for R1/button-5 and Circle/button-1 only, which
+        // are deliberately still fixed (R1 doubles as the OSK-pause toggle
+        // using the exact same physical button unconditionally).
+        // Toggle, not just open - a second press while Settings is already
+        // open now closes it instead of stacking another copy on top,
+        // matching direct feedback from a live tester ("I don't want to be
+        // able to open many settings menus on top of each other with
+        // start"). queryModalRoot()'s own 'tabbed' kind IS Settings (see its
+        // own comment - a TabManager-shaped `.tabbedView.left` dialog), so
+        // reusing it here rather than re-detecting independently.
+        if (shortcutJustPressed(btn, 'openSettings')) {
+          const openModal = queryModalRoot();
+          if (openModal && openModal.kind === 'tabbed') {
+            if (debugTextOn) console.log('[Wizascript Controller] openSettings: Settings already open - closing instead of stacking another copy');
+            const dismiss = findModalDismissButton(openModal.root);
+            if (dismiss) triggerElementClick(dismiss);
+            else document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', code: 'Escape', bubbles: true }));
+          } else {
+            triggerElementClick(document.getElementById('btn-config'));
+          }
         }
+        // Guarded on !oskOpen since L3/R3 (their default buttons) are ALSO
+        // the OSK's own local symbols-toggle/send bindings while it's open.
+        if (shortcutJustPressed(btn, 'yourDustpile') && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(true)"]'));
+        if (shortcutJustPressed(btn, 'opponentDustpile') && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(false)"]'));
+        if (shortcutJustPressed(btn, 'endTurn')) triggerElementClick(document.getElementById('endTurnBtn'));
+        if (shortcutJustPressed(btn, 'openWizascriptSettings') && !oskOpen) openWizascriptSettings();
+        if (shortcutJustPressed(btn, 'concede')) triggerConcede();
+        if (shortcutJustPressed(btn, 'goHome')) pageWindow.location.href = 'https://undercards.net/';
+        // Deck Tracker's own "Add Tracker Preset" picker (packages/deck-
+        // tracker/index.js) otherwise only opens via a real mouse click on
+        // its floating button (`#dt-add-tracker-button`) - defaults to ZL
+        // (button 6), free in every existing preset (nothing else defaults
+        // there). Guarded on !oskOpen for the same reason as the dustpile
+        // checks above (shared default-button space with the OSK's own
+        // local bindings while it's open).
+        if (shortcutJustPressed(btn, 'openDeckTrackerPresets') && !oskOpen) triggerElementClick(document.getElementById('dt-add-tracker-button'));
+        shortcutBtnHeld = { 1: btn(1), 5: btn(5) };
       }
-      // Guarded on !oskOpen since L3/R3 (their default buttons) are ALSO
-      // the OSK's own local symbols-toggle/send bindings while it's open.
-      if (shortcutJustPressed(btn, 'yourDustpile') && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(true)"]'));
-      if (shortcutJustPressed(btn, 'opponentDustpile') && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(false)"]'));
-      if (shortcutJustPressed(btn, 'endTurn')) triggerElementClick(document.getElementById('endTurnBtn'));
-      if (shortcutJustPressed(btn, 'openWizascriptSettings') && !oskOpen) openWizascriptSettings();
-      if (shortcutJustPressed(btn, 'concede')) triggerConcede();
-      if (shortcutJustPressed(btn, 'goHome')) pageWindow.location.href = 'https://undercards.net/';
-      // Deck Tracker's own "Add Tracker Preset" picker (packages/deck-
-      // tracker/index.js) otherwise only opens via a real mouse click on
-      // its floating button (`#dt-add-tracker-button`) - defaults to ZL
-      // (button 6), free in every existing preset (nothing else defaults
-      // there). Guarded on !oskOpen for the same reason as the dustpile
-      // checks above (shared default-button space with the OSK's own
-      // local bindings while it's open).
-      if (shortcutJustPressed(btn, 'openDeckTrackerPresets') && !oskOpen) triggerElementClick(document.getElementById('dt-add-tracker-button'));
-      shortcutBtnHeld = { 1: btn(1), 5: btn(5) };
 
       /* ---------- Controller Primary relay ----------
          Rather than hand-rolling double-tap/hold-alone timing again the

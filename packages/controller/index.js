@@ -1613,12 +1613,13 @@ export function initController(plugin, controllerEnabledSetting) {
   // now lives in its own independent mode section with its own edge
   // trackers (guideDpadHeld/guideBtn0Held) below.
   let keybindRelayHeld = { primary: false, controlDown: false, actions: {} };
-  // Tracks whether any real action fired during the current Controller
-  // Primary hold - false all the way through means it was a bare tap,
-  // which either cycles a focused Patch Maker entry's category forward by
-  // one (if one is focused) or toggles the channel guide open/closed
-  // (everywhere else).
-  let primaryHoldHadAction = false;
+  // Tracks isControllerCaptureActive() across frames so the block right
+  // before the hardware-shortcuts section (below) can detect the exact
+  // frame capture starts/ends and resync every held-state tracker this
+  // file owns to current physical reality on that transition - see that
+  // block's own comment for why this is necessary (a false "just
+  // pressed" edge otherwise fires the instant capture ends).
+  let wasCaptureActiveLastFrame = false;
   // UC TV channel guide state - back to a HOLD design (see the "Channel
   // Guide" relay section below), but now gated on its own dedicated,
   // separately remappable button (default Unbound) rather than Controller
@@ -1780,6 +1781,73 @@ export function initController(plugin, controllerEnabledSetting) {
         sensitivityAdjusting = false;
       }
 
+      /* ---------- capture-widget enter/exit resync ----------
+         isControllerCaptureActive() (settings.js) tells the hardware-
+         shortcuts / Controller Primary / Channel Guide relay blocks
+         right below to stand down while a settings capture widget
+         ("Press a button or key...") is waiting for its next press -
+         but standing a block down means it stops updating its OWN
+         held-state trackers too (shortcutHeldByAction, shortcutBtnHeld,
+         keybindRelayHeld), since those are only ever touched from
+         inside that same block. That's fine while capture is actively
+         running, but it creates a real problem right at the moment
+         capture STARTS or ENDS:
+
+         ENTER: if Controller Primary (or the Channel Guide button)
+         happened to already be physically held the instant a capture
+         widget grabbed focus, keybindRelayHeld.controlDown may already
+         be true (a synthetic Control keydown already relayed to
+         Wizascript's own real keybind system). The relay block that
+         would normally release it on physical release is about to stop
+         running for the whole capture session - without an explicit
+         release here, that Control key would stay silently stuck "down"
+         on Wizascript's end for as long as capture lasts.
+
+         EXIT: this is the actual, confirmed mechanism behind "rebinding
+         closes the Settings dialog." Finishing a capture inherently
+         means the button just used to complete it is still physically
+         held for at least the next frame or two (releasing takes real
+         time; capture completes instantly on press). Every held-state
+         tracker below was frozen at whatever it read BEFORE capture
+         started, since the block that updates it never ran during
+         capture - so the very first frame after capture ends, a still-
+         held button reads as a brand-new "just pressed" edge purely
+         because of the transition, and immediately fires whatever
+         action is now bound to it. Rebinding "Open Settings" to a new
+         button always ends capture with THAT exact button freshly held,
+         so this false edge always fires the newly-bound openSettings
+         shortcut once - and since Settings is still open, Round F's own
+         close-if-already-open logic closes it. Any other rebind can
+         trigger the same false edge against whatever action the
+         just-captured button happens to already be bound to elsewhere,
+         matching the "some cases" the user described for non-Settings
+         rebinds. Resyncing every tracker to CURRENT physical reality on
+         this exact transition frame - instead of letting the normal
+         per-frame edge-detection run first - means a still-held button
+         reads as "already held," not "just pressed," so the action only
+         fires once the player genuinely releases and presses again. */
+      const captureActiveNow = isControllerCaptureActive();
+      if (!wasCaptureActiveLastFrame && captureActiveNow) {
+        if (keybindRelayHeld.controlDown) {
+          document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Control', code: 'ControlLeft', keyCode: 17, which: 17, bubbles: true }));
+          keybindRelayHeld.controlDown = false;
+        }
+      } else if (wasCaptureActiveLastFrame && !captureActiveNow) {
+        Object.keys(HARDWARE_SHORTCUT_ACTIONS_BY_KEY).forEach((key) => {
+          shortcutHeldByAction[key] = isBoundInputDown(getBoundShortcutButton(key), btn);
+        });
+        shortcutBtnHeld = { 1: btn(1), 5: btn(5) };
+        keybindRelayHeld.primary = isBoundInputDown(getControllerPrimaryButton(), btn) || (oskOpen && oskPaused);
+        const resyncedActions = {};
+        CONTROLLER_ACTIONS.forEach((action) => {
+          resyncedActions[action.key] = isBoundInputDown(getBoundButton(action.key), btn);
+        });
+        keybindRelayHeld.actions = resyncedActions;
+        guideDpadHeld = { up, down, left, right };
+        guideBtn0Held = btn(0);
+      }
+      wasCaptureActiveLastFrame = captureActiveNow;
+
       /* ---------- global in-match hardware shortcuts ----------
          Run right after the usingController gate so they always fire
          every frame regardless of which mode branch is about to handle
@@ -1901,8 +1969,27 @@ export function initController(plugin, controllerEnabledSetting) {
          true), so holding EITHER keeps Control logically down, and
          holding both at once then releasing only one doesn't send a
          stray keyup and desync Wizascript's own real primaryHeld
-         tracking in keybinds.js. */
-      if (!oskOpen || oskPaused) {
+         tracking in keybinds.js.
+
+         FIXED: this whole block, like the hardware-shortcuts block
+         above it, used to run completely unconditionally with no
+         isControllerCaptureActive() guard - meaning holding/tapping
+         whatever's bound to Controller Primary (or the Channel Guide
+         button, since it also feeds controlShouldBeDown below) while a
+         settings capture widget was open dispatched a REAL synthetic
+         Control keydown/keyup straight onto `document`, live, during
+         capture. Wizascript's own real double-tap-Primary-opens-
+         Settings listener (packages/core/keybinds.js) reacts to that
+         exactly like a genuine keyboard double-tap, and since Settings
+         was already open (that's where the capture widget lives), a
+         double-tap read that way toggles it CLOSED - a second, fully
+         independent way rebinding could close the very dialog being
+         used to rebind, on top of the hardware-shortcuts false-edge
+         bug fixed by the resync block above. Guarded the same way now;
+         the enter-transition resync above releases any synthetic
+         Control key already down the instant capture starts, so
+         nothing is left stuck "held" for the whole capture session. */
+      if ((!oskOpen || oskPaused) && !isControllerCaptureActive()) {
         const primaryBtn = getControllerPrimaryButton();
         const l1Down = isBoundInputDown(primaryBtn, btn) || (oskOpen && oskPaused);
         const viaPause = oskOpen && oskPaused;
@@ -1910,52 +1997,24 @@ export function initController(plugin, controllerEnabledSetting) {
         const guideBtnForRelay = getChannelGuideButton();
         const guideDownForRelay = isBoundInputDown(guideBtnForRelay, btn);
 
-        if (l1Down) {
-          if (!keybindRelayHeld.primary) primaryHoldHadAction = false;
-        } else if (keybindRelayHeld.primary) {
-          // A bare Controller Primary tap (nothing else fired during the
-          // hold) while a Patch Maker `.uc-li-text` entry is focused
-          // cycles the entry's category forward by one - reproduced
-          // directly against the DOM (matching cycleCategory()'s own
-          // known effect: swap the class off PATCH_MAKER_CYCLE_ORDER on
-          // the entry's `<li>`, then force a real saveState() via
-          // blur()+focus(), since that private closure is only reachable
-          // through the field's own blur handler) rather than trying to
-          // trigger Wizascript's own Cycle Category keybind, which this
-          // relay has no way to invoke directly. Every other bare tap is
-          // a no-op now that the channel guide has its own button.
-          if (!primaryHoldHadAction) {
-            const tapFocusEl = document.activeElement;
-            if (tapFocusEl && tapFocusEl.matches && tapFocusEl.matches('.uc-li-text')) {
-              const li = tapFocusEl.closest('li');
-              if (li) {
-                const PATCH_MAKER_CYCLE_ORDER = ['none', 'other', 'buff', 'rework', 'nerf'];
-                const curIdx = PATCH_MAKER_CYCLE_ORDER.findIndex((c) => li.classList.contains(c));
-                const nextCat = PATCH_MAKER_CYCLE_ORDER[((curIdx === -1 ? 0 : curIdx) + 1) % PATCH_MAKER_CYCLE_ORDER.length];
-                li.classList.remove(...PATCH_MAKER_CYCLE_ORDER);
-                li.classList.add(nextCat);
-
-                let savedRange = null;
-                const sel = pageWindow.getSelection();
-                if (sel && sel.rangeCount > 0) savedRange = sel.getRangeAt(0).cloneRange();
-                tapFocusEl.blur(); // real saveState() runs inside Patch Maker's own blur handler
-                tapFocusEl.focus();
-                if (savedRange) {
-                  try {
-                    const sel2 = pageWindow.getSelection();
-                    sel2.removeAllRanges();
-                    sel2.addRange(savedRange);
-                  } catch (e) {
-                    // Range can go stale if blur's own sanitizeText()
-                    // actually changed the text - not fatal, only the
-                    // exact caret position resets.
-                  }
-                }
-                console.log('[Wizascript Controller] Patch Maker: bare Controller Primary tap - cycled entry category directly to "' + nextCat + '"');
-              }
-            }
-          }
-        }
+        // A bare Controller Primary tap used to have a Patch-Maker-only
+        // special case here: while nothing else fired during the hold
+        // AND a `.uc-li-text` entry was focused, it cycled the entry's
+        // category forward by reproducing cycleCategory()'s own effect
+        // directly against the DOM (swap the class, then force a real
+        // saveState() via blur()+focus()) - a workaround adopted because
+        // this relay had no way to invoke Wizascript's own real Cycle
+        // Category keybind directly. That workaround is gone now that
+        // Cycle Category Up/Down are proper CONTROLLER_ACTIONS entries
+        // (see settings.js) relaying the SAME real e.code/e.key pairs
+        // Move Entry/Section/Card Up/Down already relay successfully -
+        // the genuine keybind fires for real (through Patch Maker's own
+        // registered handler, complete with its own saveState() call),
+        // remappable and visible in "Keybinds - Controller" like every
+        // other action, instead of a second, harder-to-discover, DOM-
+        // reproducing path living only here. A bare Primary tap is a
+        // no-op everywhere now that the channel guide has its own
+        // dedicated button too.
 
         // Shared reconciliation - see the comment above this block for
         // why Primary and the Channel Guide button both feed into the
@@ -1997,14 +2056,13 @@ export function initController(plugin, controllerEnabledSetting) {
               if (!codesFiredThisFrame.has(sig)) {
                 codesFiredThisFrame.add(sig);
                 relaySecondary(action.dispatch.code, action.dispatch.key);
-                primaryHoldHadAction = true;
               }
             }
           });
           keybindRelayHeld.actions = nextActionHeld;
 
           hud.textContent = inPatchMakerFieldForContext
-            ? `Patch Maker (${viaPause ? 'OSK paused' : 'Primary held'})\ntap Primary alone = cycle category   move entry-section-card — see Settings > Keybinds - Controller${viaPause ? `\nR1: resume typing   ${btnLabel(1)}: close` : ''}`
+            ? `Patch Maker (${viaPause ? 'OSK paused' : 'Primary held'})\nmove entry/section/card, cycle category — see Settings > Keybinds - Controller${viaPause ? `\nR1: resume typing   ${btnLabel(1)}: close` : ''}`
             : `Wizascript keybind relay (${viaPause ? 'OSK paused' : 'Primary held'})\nchannel / notepad redo-undo-toggle-reset — see Settings > Keybinds - Controller${viaPause ? `\nR1: resume typing   ${btnLabel(1)}: close` : ''}`;
         } else {
           keybindRelayHeld.actions = {};
@@ -2039,8 +2097,18 @@ export function initController(plugin, controllerEnabledSetting) {
          player span is currently selected gets a real mouseenter/
          mouseleave pair (matching the guide's own hover-underline
          styling) and X dispatches a real click on it - unchanged from
-         before, only the navigation scheme changed. */
-      if (!oskOpen || oskPaused) {
+         before, only the navigation scheme changed.
+
+         FIXED: also gated on !isControllerCaptureActive() now, same
+         reasoning as the Controller Primary relay right above - without
+         it, holding the Channel Guide button while a settings capture
+         widget is open (the guide overlay itself won't exist there, so
+         guideEl is null) still hit the loading-hud branch's own early
+         `return` below, silently freezing ALL settings/capture input
+         for as long as the button stayed held, since nothing further
+         down in frame() (including the modal-navigation code that
+         capture widgets live in) ever got to run that frame. */
+      if ((!oskOpen || oskPaused) && !isControllerCaptureActive()) {
         const guideBtn = getChannelGuideButton();
         const guideDown = isBoundInputDown(guideBtn, btn);
 

@@ -7419,7 +7419,32 @@ Version: v${version}`;
     { key: "moveSectionUp", name: "Move Section Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
     { key: "moveSectionDown", name: "Move Section Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
     { key: "moveCardUp", name: "Move Card Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
-    { key: "moveCardDown", name: "Move Card Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } }
+    { key: "moveCardDown", name: "Move Card Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
+    // Relays Patch Maker's own real "Cycle Category Up/Down" keybind
+    // (packages/patch-maker/overlay.js - Comma/Period by default,
+    // scope:'scoped'/selector:'.uc-li-text', same registry Move Entry/
+    // Section/Card Up/Down above already relay into successfully) exactly
+    // the same way those do: dispatch the real e.code Wizascript's own
+    // registry is listening for while Primary is synthetically held, and
+    // let that registry's own document.activeElement/selector check
+    // decide whether it actually applies. defaultButton is D-pad Left/
+    // Right (14/15) rather than Up/Down (12/13, already claimed by Move
+    // Entry/Section/Card in this same 'patchMaker' context) specifically
+    // to avoid a same-frame double-fire - Up/Down and Left/Right dispatch
+    // different e.codes, so sharing a button between two 'patchMaker'
+    // actions would relay BOTH every time it's pressed. Left/Right is
+    // free here: previousChannel/nextChannel above claim the same two
+    // buttons, but only under 'channelSwitch' context, which is mutually
+    // exclusive with 'patchMaker' by construction (see the `applies`
+    // check in index.js's relay). This is very likely the actual
+    // technical snag from the earlier, abandoned attempt at this exact
+    // feature - reusing Up/Down here would produce confusing dual
+    // behavior (moving the entry AND cycling its category on the same
+    // press) that could easily read as "wiring it was a pain," even
+    // though the underlying relay mechanism itself works correctly in
+    // isolation (proven by Move Entry/Section/Card already using it).
+    { key: "cycleCategoryUp", name: "Cycle Category Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 14, dispatch: { code: "Comma", key: "," } },
+    { key: "cycleCategoryDown", name: "Cycle Category Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 15, dispatch: { code: "Period", key: "." } }
   ];
   var CONTROLLER_ACTIONS_BY_KEY = {};
   CONTROLLER_ACTIONS.forEach((a) => {
@@ -9250,7 +9275,7 @@ Version: v${version}`;
       return isDown && !wasDown;
     }
     let keybindRelayHeld = { primary: false, controlDown: false, actions: {} };
-    let primaryHoldHadAction = false;
+    let wasCaptureActiveLastFrame = false;
     let guideMatchIndex = -1, guidePlayerIndex = 0, guideSelectedEl = null;
     let guideDpadHeld = { up: false, down: false, left: false, right: false };
     let guideBtn0Held = false;
@@ -9321,6 +9346,27 @@ Version: v${version}`;
           setCursorSensitivity(cursorSensitivity);
           sensitivityAdjusting = false;
         }
+        const captureActiveNow = isControllerCaptureActive();
+        if (!wasCaptureActiveLastFrame && captureActiveNow) {
+          if (keybindRelayHeld.controlDown) {
+            document.dispatchEvent(new KeyboardEvent("keyup", { key: "Control", code: "ControlLeft", keyCode: 17, which: 17, bubbles: true }));
+            keybindRelayHeld.controlDown = false;
+          }
+        } else if (wasCaptureActiveLastFrame && !captureActiveNow) {
+          Object.keys(HARDWARE_SHORTCUT_ACTIONS_BY_KEY).forEach((key) => {
+            shortcutHeldByAction[key] = isBoundInputDown(getBoundShortcutButton(key), btn);
+          });
+          shortcutBtnHeld = { 1: btn(1), 5: btn(5) };
+          keybindRelayHeld.primary = isBoundInputDown(getControllerPrimaryButton(), btn) || oskOpen && oskPaused;
+          const resyncedActions = {};
+          CONTROLLER_ACTIONS.forEach((action) => {
+            resyncedActions[action.key] = isBoundInputDown(getBoundButton(action.key), btn);
+          });
+          keybindRelayHeld.actions = resyncedActions;
+          guideDpadHeld = { up, down, left, right };
+          guideBtn0Held = btn(0);
+        }
+        wasCaptureActiveLastFrame = captureActiveNow;
         if (!isControllerCaptureActive()) {
           if (btn(5) && !shortcutBtnHeld[5]) {
             if (oskOpen) {
@@ -9356,44 +9402,13 @@ Version: v${version}`;
           if (shortcutJustPressed(btn, "openDeckTrackerPresets") && !oskOpen) triggerElementClick(document.getElementById("dt-add-tracker-button"));
           shortcutBtnHeld = { 1: btn(1), 5: btn(5) };
         }
-        if (!oskOpen || oskPaused) {
+        if ((!oskOpen || oskPaused) && !isControllerCaptureActive()) {
           const primaryBtn = getControllerPrimaryButton();
           const l1Down = isBoundInputDown(primaryBtn, btn) || oskOpen && oskPaused;
           const viaPause = oskOpen && oskPaused;
           const primaryBase = { key: "Control", code: "ControlLeft", keyCode: 17, which: 17, bubbles: true };
           const guideBtnForRelay = getChannelGuideButton();
           const guideDownForRelay = isBoundInputDown(guideBtnForRelay, btn);
-          if (l1Down) {
-            if (!keybindRelayHeld.primary) primaryHoldHadAction = false;
-          } else if (keybindRelayHeld.primary) {
-            if (!primaryHoldHadAction) {
-              const tapFocusEl = document.activeElement;
-              if (tapFocusEl && tapFocusEl.matches && tapFocusEl.matches(".uc-li-text")) {
-                const li = tapFocusEl.closest("li");
-                if (li) {
-                  const PATCH_MAKER_CYCLE_ORDER = ["none", "other", "buff", "rework", "nerf"];
-                  const curIdx = PATCH_MAKER_CYCLE_ORDER.findIndex((c) => li.classList.contains(c));
-                  const nextCat = PATCH_MAKER_CYCLE_ORDER[((curIdx === -1 ? 0 : curIdx) + 1) % PATCH_MAKER_CYCLE_ORDER.length];
-                  li.classList.remove(...PATCH_MAKER_CYCLE_ORDER);
-                  li.classList.add(nextCat);
-                  let savedRange = null;
-                  const sel = pageWindow2.getSelection();
-                  if (sel && sel.rangeCount > 0) savedRange = sel.getRangeAt(0).cloneRange();
-                  tapFocusEl.blur();
-                  tapFocusEl.focus();
-                  if (savedRange) {
-                    try {
-                      const sel2 = pageWindow2.getSelection();
-                      sel2.removeAllRanges();
-                      sel2.addRange(savedRange);
-                    } catch (e) {
-                    }
-                  }
-                  console.log('[Wizascript Controller] Patch Maker: bare Controller Primary tap - cycled entry category directly to "' + nextCat + '"');
-                }
-              }
-            }
-          }
           const controlShouldBeDown = l1Down || guideDownForRelay;
           if (controlShouldBeDown && !keybindRelayHeld.controlDown) {
             document.dispatchEvent(new KeyboardEvent("keydown", primaryBase));
@@ -9426,13 +9441,12 @@ Version: v${version}`;
                 if (!codesFiredThisFrame.has(sig)) {
                   codesFiredThisFrame.add(sig);
                   relaySecondary(action.dispatch.code, action.dispatch.key);
-                  primaryHoldHadAction = true;
                 }
               }
             });
             keybindRelayHeld.actions = nextActionHeld;
             hud.textContent = inPatchMakerFieldForContext ? `Patch Maker (${viaPause ? "OSK paused" : "Primary held"})
-tap Primary alone = cycle category   move entry-section-card \u2014 see Settings > Keybinds - Controller${viaPause ? `
+move entry/section/card, cycle category \u2014 see Settings > Keybinds - Controller${viaPause ? `
 R1: resume typing   ${btnLabel(1)}: close` : ""}` : `Wizascript keybind relay (${viaPause ? "OSK paused" : "Primary held"})
 channel / notepad redo-undo-toggle-reset \u2014 see Settings > Keybinds - Controller${viaPause ? `
 R1: resume typing   ${btnLabel(1)}: close` : ""}`;
@@ -9442,7 +9456,7 @@ R1: resume typing   ${btnLabel(1)}: close` : ""}`;
           keybindRelayHeld.primary = l1Down;
           if (l1Down) return;
         }
-        if (!oskOpen || oskPaused) {
+        if ((!oskOpen || oskPaused) && !isControllerCaptureActive()) {
           const guideBtn = getChannelGuideButton();
           const guideDown = isBoundInputDown(guideBtn, btn);
           if (guideDown) {

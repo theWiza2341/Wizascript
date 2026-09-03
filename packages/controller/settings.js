@@ -43,7 +43,32 @@ export const CONTROLLER_ACTIONS = [
   { key: 'moveSectionUp', name: 'Move Section Up', packageLabel: 'Patch Maker', context: 'patchMaker', defaultButton: 12, dispatch: { code: 'ArrowUp', key: 'ArrowUp' } },
   { key: 'moveSectionDown', name: 'Move Section Down', packageLabel: 'Patch Maker', context: 'patchMaker', defaultButton: 13, dispatch: { code: 'ArrowDown', key: 'ArrowDown' } },
   { key: 'moveCardUp', name: 'Move Card Up', packageLabel: 'Patch Maker', context: 'patchMaker', defaultButton: 12, dispatch: { code: 'ArrowUp', key: 'ArrowUp' } },
-  { key: 'moveCardDown', name: 'Move Card Down', packageLabel: 'Patch Maker', context: 'patchMaker', defaultButton: 13, dispatch: { code: 'ArrowDown', key: 'ArrowDown' } }
+  { key: 'moveCardDown', name: 'Move Card Down', packageLabel: 'Patch Maker', context: 'patchMaker', defaultButton: 13, dispatch: { code: 'ArrowDown', key: 'ArrowDown' } },
+  // Relays Patch Maker's own real "Cycle Category Up/Down" keybind
+  // (packages/patch-maker/overlay.js - Comma/Period by default,
+  // scope:'scoped'/selector:'.uc-li-text', same registry Move Entry/
+  // Section/Card Up/Down above already relay into successfully) exactly
+  // the same way those do: dispatch the real e.code Wizascript's own
+  // registry is listening for while Primary is synthetically held, and
+  // let that registry's own document.activeElement/selector check
+  // decide whether it actually applies. defaultButton is D-pad Left/
+  // Right (14/15) rather than Up/Down (12/13, already claimed by Move
+  // Entry/Section/Card in this same 'patchMaker' context) specifically
+  // to avoid a same-frame double-fire - Up/Down and Left/Right dispatch
+  // different e.codes, so sharing a button between two 'patchMaker'
+  // actions would relay BOTH every time it's pressed. Left/Right is
+  // free here: previousChannel/nextChannel above claim the same two
+  // buttons, but only under 'channelSwitch' context, which is mutually
+  // exclusive with 'patchMaker' by construction (see the `applies`
+  // check in index.js's relay). This is very likely the actual
+  // technical snag from the earlier, abandoned attempt at this exact
+  // feature - reusing Up/Down here would produce confusing dual
+  // behavior (moving the entry AND cycling its category on the same
+  // press) that could easily read as "wiring it was a pain," even
+  // though the underlying relay mechanism itself works correctly in
+  // isolation (proven by Move Entry/Section/Card already using it).
+  { key: 'cycleCategoryUp', name: 'Cycle Category Up', packageLabel: 'Patch Maker', context: 'patchMaker', defaultButton: 14, dispatch: { code: 'Comma', key: ',' } },
+  { key: 'cycleCategoryDown', name: 'Cycle Category Down', packageLabel: 'Patch Maker', context: 'patchMaker', defaultButton: 15, dispatch: { code: 'Period', key: '.' } }
 ];
 export const CONTROLLER_ACTIONS_BY_KEY = {};
 CONTROLLER_ACTIONS.forEach((a) => { CONTROLLER_ACTIONS_BY_KEY[a.key] = a; });

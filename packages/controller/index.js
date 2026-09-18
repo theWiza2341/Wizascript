@@ -407,11 +407,11 @@ export function initController(plugin, controllerEnabledSetting) {
       const items = Array.from(container.querySelectorAll(def.itemSelector))
         .filter(el => el.offsetParent !== null);
       if (items.length) {
-        console.log(`[Wizascript Controller] group "${def.name}" found via "${sel}": ${items.length} items`);
+        if (isDebugTextEnabled()) console.log(`[Wizascript Controller] group "${def.name}" found via "${sel}": ${items.length} items`);
         return { name: def.name, container, items };
       }
     }
-    console.log(`[Wizascript Controller] group "${def.name}" NOT found`);
+    if (isDebugTextEnabled()) console.log(`[Wizascript Controller] group "${def.name}" NOT found`);
     return null;
   }
   const navbarGroup = buildGroup(GROUP_DEFS[0]);
@@ -524,7 +524,7 @@ export function initController(plugin, controllerEnabledSetting) {
     placingCard = card;
     placingGrid = null;
     matchPhase = 'placing';
-    console.log('[Wizascript Controller] card drag started', card);
+    if (isDebugTextEnabled()) console.log('[Wizascript Controller] card drag started', card);
   }
 
   // Shared cancel logic for an in-progress placement. jQuery UI
@@ -544,7 +544,7 @@ export function initController(plugin, controllerEnabledSetting) {
       pageWindow.jQuery(card).stop(true, true);
       pageWindow.jQuery('.ui-draggable-dragging').stop(true, true);
     }
-    console.log('[Wizascript Controller] card drag cancelled via', reason);
+    if (isDebugTextEnabled()) console.log('[Wizascript Controller] card drag cancelled via', reason);
     placingCard = null; placingGrid = null; placingOrigin = null;
     matchPhase = 'hand';
     refreshHighlight();
@@ -871,7 +871,7 @@ export function initController(plugin, controllerEnabledSetting) {
       const sel = pageWindow.getSelection();
       sel.removeAllRanges();
       sel.addRange(range);
-      console.log('[Wizascript Controller] caret repositioned in', el, 'at', cx, cy);
+      if (isDebugTextEnabled()) console.log('[Wizascript Controller] caret repositioned in', el, 'at', cx, cy);
     }
   }
 
@@ -968,7 +968,7 @@ export function initController(plugin, controllerEnabledSetting) {
     positionPanelNear(oskEl, target);
     cursor.style.display = 'block'; // cursor stays live for hover-to-type
     updateOskHighlight();
-    console.log('[Wizascript Controller] OSK opened for', target);
+    if (isDebugTextEnabled()) console.log('[Wizascript Controller] OSK opened for', target);
   }
   // Always blurs the real target on close, regardless of field type -
   // Patch Maker's saveState() (and similar save-on-blur logic elsewhere)
@@ -980,7 +980,7 @@ export function initController(plugin, controllerEnabledSetting) {
     oskEl.style.display = 'none';
     if (oskTarget) oskTarget.blur();
     oskTarget = null;
-    console.log('[Wizascript Controller] OSK closed');
+    if (isDebugTextEnabled()) console.log('[Wizascript Controller] OSK closed');
   }
   function dispatchEnterKey(el) {
     el.focus();
@@ -1065,7 +1065,7 @@ export function initController(plugin, controllerEnabledSetting) {
     sliderTarget = el;
     setHighlight(el);
     cursor.style.display = 'none';
-    console.log('[Wizascript Controller] slider focused', el, 'value=', el.value, 'min=', el.min, 'max=', el.max, 'step=', el.step);
+    if (isDebugTextEnabled()) console.log('[Wizascript Controller] slider focused', el, 'value=', el.value, 'min=', el.min, 'max=', el.max, 'step=', el.step);
   }
   function closeSlider() {
     if (sliderTarget) clearHighlight(sliderTarget);
@@ -1119,7 +1119,7 @@ export function initController(plugin, controllerEnabledSetting) {
     positionPanelNear(selectEl, el);
     updateSelectHighlight();
     cursor.style.display = 'block'; // cursor stays live for hover-to-select
-    console.log('[Wizascript Controller] select picker opened', el, selectOptions.map(o => o.text));
+    if (isDebugTextEnabled()) console.log('[Wizascript Controller] select picker opened', el, selectOptions.map(o => o.text));
   }
   function closeSelectPicker() {
     selectEl.style.display = 'none';
@@ -1364,7 +1364,7 @@ export function initController(plugin, controllerEnabledSetting) {
     fire(el, 'mouseup', MouseEvent, cx, cy, 0, 0);
     el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: pageWindow, clientX: cx, clientY: cy, button: 0, buttons: 0, detail }));
     lastResetBtnPressTime = isConfirmPress ? 0 : now; // reset after a completed pair so a 3rd press starts fresh
-    console.log('[Wizascript Controller] Reset Data pressed, detail =', detail, isConfirmPress ? '(confirmed - resetting)' : '(press again to confirm)');
+    if (isDebugTextEnabled()) console.log('[Wizascript Controller] Reset Data pressed, detail =', detail, isConfirmPress ? '(confirmed - resetting)' : '(press again to confirm)');
   }
 
   /* ---------- in-match action shortcuts ----------
@@ -1400,12 +1400,12 @@ export function initController(plugin, controllerEnabledSetting) {
       const surrenderLi = items.find((li) => /surrender/i.test((li.textContent || '').trim()));
       if (surrenderLi) {
         triggerElementClick(surrenderLi);
-        console.log('[Wizascript Controller] concede: used Underscript\'s own Surrender menu entry');
+        if (isDebugTextEnabled()) console.log('[Wizascript Controller] concede: used Underscript\'s own Surrender menu entry');
         return;
       }
       attempts++;
       if (attempts < MAX_ATTEMPTS) { requestAnimationFrame(poll); return; }
-      console.log('[Wizascript Controller] concede: no Surrender entry found in Underscript\'s menu, falling back to the native flow');
+      if (isDebugTextEnabled()) console.log('[Wizascript Controller] concede: no Surrender entry found in Underscript\'s menu, falling back to the native flow');
       if (!wasMenuOpen) document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', code: 'Escape', bubbles: true }));
       triggerConcedeNative();
     })();
@@ -1416,7 +1416,7 @@ export function initController(plugin, controllerEnabledSetting) {
 
     const configBtn = document.getElementById('btn-config');
     if (!configBtn) {
-      console.log('[Wizascript Controller] concede: settings button not found (not in a match?)');
+      if (isDebugTextEnabled()) console.log('[Wizascript Controller] concede: settings button not found (not in a match?)');
       return;
     }
     // Don't click it again if Settings is already open - a previous
@@ -1444,7 +1444,7 @@ export function initController(plugin, controllerEnabledSetting) {
       if (btn) { triggerElementClick(btn); return; }
       attempts++;
       if (attempts < MAX_ATTEMPTS) requestAnimationFrame(poll);
-      else console.log('[Wizascript Controller] concede: gave up waiting for the surrender button after opening settings');
+      else if (isDebugTextEnabled()) console.log('[Wizascript Controller] concede: gave up waiting for the surrender button after opening settings');
     })();
     // Leaves the resulting "are you sure?" confirmation dialog for the
     // generic modal handler to d-pad-navigate (or, worst case, the free
@@ -1543,7 +1543,7 @@ export function initController(plugin, controllerEnabledSetting) {
       item.querySelectorAll('img').forEach(resolveHoverStyle);
     });
   });
-  console.log(`[Wizascript Controller] resolved hover styles for ${hoverStyleMap.size} curated element(s)`);
+  if (isDebugTextEnabled()) console.log(`[Wizascript Controller] resolved hover styles for ${hoverStyleMap.size} curated element(s)`);
 
   function findHoverTarget(el) {
     if (!el) return null;
@@ -1602,7 +1602,7 @@ export function initController(plugin, controllerEnabledSetting) {
   document.addEventListener('mousemove', (e) => {
     if (!e.isTrusted) return;
     if (usingController) {
-      console.log('[Wizascript Controller] real mouse movement detected -> forcing usingController OFF');
+      if (isDebugTextEnabled()) console.log('[Wizascript Controller] real mouse movement detected -> forcing usingController OFF');
     }
     usingController = false;
     document.documentElement.style.cursor = '';
@@ -1703,7 +1703,7 @@ export function initController(plugin, controllerEnabledSetting) {
         });
       });
     });
-    console.log('[Wizascript Controller] relayed a real Primary (Control) double-tap for Wizascript settings');
+    if (isDebugTextEnabled()) console.log('[Wizascript Controller] relayed a real Primary (Control) double-tap for Wizascript settings');
   }
 
   function frame() {
@@ -1912,7 +1912,7 @@ export function initController(plugin, controllerEnabledSetting) {
             oskPaused = !oskPaused;
             oskEl.style.display = oskPaused ? 'none' : 'block';
             if (!oskPaused && oskTarget) { positionPanelNear(oskEl, oskTarget); updateOskHighlight(); }
-            console.log('[Wizascript Controller] OSK', oskPaused ? 'paused' : 'resumed');
+            if (isDebugTextEnabled()) console.log('[Wizascript Controller] OSK', oskPaused ? 'paused' : 'resumed');
           } else {
             document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', code: 'Escape', bubbles: true }));
           }
@@ -2512,7 +2512,7 @@ export function initController(plugin, controllerEnabledSetting) {
           const el = mulliganGrid[mulliganRow][mulliganCol];
           const r = el.getBoundingClientRect();
           dispatchClick(el, r.left + r.width / 2, r.top + r.height / 2, 0);
-          console.log('[Wizascript Controller] mulligan item clicked', el);
+          if (isDebugTextEnabled()) console.log('[Wizascript Controller] mulligan item clicked', el);
         }
         btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
         const focusedIsConfirm = mulliganGrid[mulliganRow][mulliganCol] === confirmBtn;
@@ -2902,7 +2902,7 @@ export function initController(plugin, controllerEnabledSetting) {
             if (btn(0) && !btnHeld[0]) {
               fire(targetSlot, 'pointerup', PointerEvent, tcx, tcy, 0, 0);
               fire(targetSlot, 'mouseup', MouseEvent, tcx, tcy, 0, 0);
-              console.log('[Wizascript Controller] card dropped on', targetSlot);
+              if (isDebugTextEnabled()) console.log('[Wizascript Controller] card dropped on', targetSlot);
               placingCard = null; placingGrid = null;
               matchPhase = 'hand';
               refreshHighlight();
@@ -2974,7 +2974,7 @@ export function initController(plugin, controllerEnabledSetting) {
               const el = resolveGrid[resolveRow][resolveCol];
               const r = el.getBoundingClientRect();
               dispatchClick(el, r.left + r.width / 2, r.top + r.height / 2, 0);
-              console.log('[Wizascript Controller] resolve target confirmed (d-pad)', el);
+              if (isDebugTextEnabled()) console.log('[Wizascript Controller] resolve target confirmed (d-pad)', el);
             } else {
               // Cursor-driven confirm does a REAL hit-test at the
               // cursor's actual on-screen position instead of always
@@ -2987,7 +2987,7 @@ export function initController(plugin, controllerEnabledSetting) {
               cursor.style.display = cursorRestingDisplay();
               if (hitEl) {
                 dispatchClick(hitEl, x, y, 0);
-                console.log('[Wizascript Controller] resolve target confirmed (cursor, real hit-test)', hitEl);
+                if (isDebugTextEnabled()) console.log('[Wizascript Controller] resolve target confirmed (cursor, real hit-test)', hitEl);
               }
             }
           }
@@ -3002,9 +3002,9 @@ export function initController(plugin, controllerEnabledSetting) {
             if (pendingAttacker) {
               const r = pendingAttacker.getBoundingClientRect();
               dispatchClick(pendingAttacker, r.left + r.width / 2, r.top + r.height / 2, 0);
-              console.log('[Wizascript Controller] attack cancelled via Circle (re-clicked attacker)', pendingAttacker);
+              if (isDebugTextEnabled()) console.log('[Wizascript Controller] attack cancelled via Circle (re-clicked attacker)', pendingAttacker);
             } else {
-              console.log('[Wizascript Controller] Circle pressed during target-resolve with no known attacker (likely a spell/effect target, not an attack) - no action taken');
+              if (isDebugTextEnabled()) console.log('[Wizascript Controller] Circle pressed during target-resolve with no known attacker (likely a spell/effect target, not an attack) - no action taken');
             }
           }
           btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
@@ -3050,7 +3050,7 @@ export function initController(plugin, controllerEnabledSetting) {
             if (card && card.classList.contains('canPlay')) {
               beginCardDrag(card);
             } else {
-              console.log('[Wizascript Controller] card not playable, ignoring', card);
+              if (isDebugTextEnabled()) console.log('[Wizascript Controller] card not playable, ignoring', card);
             }
           }
           // Circle drops to the free cursor, mirroring board-nav's
@@ -3090,7 +3090,7 @@ export function initController(plugin, controllerEnabledSetting) {
               const r = monster.getBoundingClientRect();
               dispatchClick(monster, r.left + r.width / 2, r.top + r.height / 2, 0);
               pendingAttacker = monster;
-              console.log('[Wizascript Controller] monster clicked to select as attacker', monster);
+              if (isDebugTextEnabled()) console.log('[Wizascript Controller] monster clicked to select as attacker', monster);
             }
           }
           btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };

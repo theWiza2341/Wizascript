@@ -251,30 +251,30 @@ function handleHidInputReport(event) {
 // so a real device is never double-listened-to.
 async function openHidDevice(device) {
   if (hidDevice) {
-    console.log('[Wizascript Controller] WebHID device already connected, ignoring duplicate open call.');
+    if (debugLoggingEnabled) console.log('[Wizascript Controller] WebHID device already connected, ignoring duplicate open call.');
     return;
   }
   try {
     if (!device.opened) await device.open();
     device.addEventListener('inputreport', handleHidInputReport);
     hidDevice = device;
-    console.log('[Wizascript Controller] WebHID device opened:', device.productName || device.vendorId + ':' + device.productId);
+    if (debugLoggingEnabled) console.log('[Wizascript Controller] WebHID device opened:', device.productName || device.vendorId + ':' + device.productId);
   } catch (e) {
-    console.log('[Wizascript Controller] WebHID open failed:', e);
+    if (debugLoggingEnabled) console.log('[Wizascript Controller] WebHID open failed:', e);
   }
 }
 
 export async function connectWebHidController() {
   if (!navigator.hid) {
-    console.log('[Wizascript Controller] navigator.hid is not available in this browser/context - WebHID cannot be used.');
+    if (debugLoggingEnabled) console.log('[Wizascript Controller] navigator.hid is not available in this browser/context - WebHID cannot be used.');
     return;
   }
   try {
     const devices = await navigator.hid.requestDevice({ filters: [{ vendorId: WEBHID_VENDOR_ID }] });
-    if (!devices.length) { console.log('[Wizascript Controller] WebHID device picker closed with no selection.'); return; }
+    if (!devices.length) { if (debugLoggingEnabled) console.log('[Wizascript Controller] WebHID device picker closed with no selection.'); return; }
     await openHidDevice(devices[0]);
   } catch (e) {
-    console.log('[Wizascript Controller] WebHID requestDevice failed:', e);
+    if (debugLoggingEnabled) console.log('[Wizascript Controller] WebHID requestDevice failed:', e);
   }
 }
 
@@ -288,7 +288,7 @@ export async function connectWebHidController() {
     const match = devices.find((d) => d.vendorId === WEBHID_VENDOR_ID);
     if (match) await openHidDevice(match);
   } catch (e) {
-    console.log('[Wizascript Controller] WebHID auto-reconnect check failed:', e);
+    if (debugLoggingEnabled) console.log('[Wizascript Controller] WebHID auto-reconnect check failed:', e);
   }
 })();
 
@@ -322,7 +322,7 @@ export function getMergedGamepad() {
     rawPads = rawPads.filter((p) => {
       const id = (p.id || '').toLowerCase();
       const isSameDevice = id.includes(vidHex) && id.includes(pidHex);
-      if (isSameDevice) console.log('[Wizascript Controller] excluding native Gamepad-API entry for the WebHID-connected device from the merge (buttons unreliable over Bluetooth):', p.id);
+      if (isSameDevice && debugLoggingEnabled) console.log('[Wizascript Controller] excluding native Gamepad-API entry for the WebHID-connected device from the merge (buttons unreliable over Bluetooth):', p.id);
       return !isSameDevice;
     });
   }
@@ -389,12 +389,14 @@ export function getMergedGamepad() {
 }
 
 pageWindow.addEventListener('gamepadconnected', (e) => {
+  if (!debugLoggingEnabled) return;
   console.log('[Wizascript Controller] gamepadconnected:', {
     index: e.gamepad.index, id: e.gamepad.id, mapping: e.gamepad.mapping,
     buttons: e.gamepad.buttons.length, axes: e.gamepad.axes.length
   });
 });
 pageWindow.addEventListener('gamepaddisconnected', (e) => {
+  if (!debugLoggingEnabled) return;
   console.log('[Wizascript Controller] gamepaddisconnected:', { index: e.gamepad.index, id: e.gamepad.id });
 });
 

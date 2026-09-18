@@ -4121,6 +4121,15 @@ Version: v${version}`;
     <path d="M12 2l2.9 6.6 7.1.6-5.4 4.6 1.6 7-6.2-3.8L6 21l1.6-7L2.2 9.2l7.1-.6L12 2z"/>
   </svg>`;
   }
+  function trashIconSVG() {
+    return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="3 6 5 6 21 6"></polyline>
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+    <path d="M10 11v6"></path>
+    <path d="M14 11v6"></path>
+    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+  </svg>`;
+  }
   function buildPresetRow(preset, onAdd, onCloseWidget, onDelete) {
     const row = $("<div>").css({
       display: "flex",
@@ -4178,34 +4187,36 @@ Version: v${version}`;
     let active = isWidgetOpen(preset.id);
     function renderStar() {
       starBtn.html(starIconSVG(active));
-      if (active && preset.custom) {
-        starBtn.attr("title", "Double-click to permanently delete this preset");
-      } else if (active) {
-        starBtn.attr("title", "Remove from screen");
-      } else {
-        starBtn.attr("title", "Add to screen");
-      }
+      starBtn.attr("title", active ? "Remove from screen" : "Add to screen");
     }
     renderStar();
     starBtn.on("click", (e) => {
       e.stopPropagation();
-      if (!active) {
+      if (active) {
+        onCloseWidget(preset.id);
+      } else {
         onAdd(preset.id);
-        active = true;
-        renderStar();
-        return;
       }
-      if (preset.custom) {
-        if (e.detail !== 2) return;
-        onDelete(preset.id);
-        row.remove();
-        return;
-      }
-      onCloseWidget(preset.id);
-      active = false;
+      active = !active;
       renderStar();
     });
     row.append(heart, info, starBtn);
+    if (preset.custom) {
+      const trashBtn = $("<span>").css({
+        width: "20px",
+        flexShrink: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer"
+      }).html(trashIconSVG()).attr("title", "Double-click to permanently delete this custom tracker").on("click", (e) => {
+        e.stopPropagation();
+        if (e.detail !== 2) return;
+        onDelete(preset.id);
+        row.remove();
+      });
+      row.append(trashBtn);
+    }
     return row;
   }
   function renderList(container, term, onAdd, onCloseWidget, onDelete) {
@@ -4279,7 +4290,11 @@ Version: v${version}`;
     );
     section(
       "The star (\u2605 / \u2606)",
-      "Adds the preset to your screen. Once active, the star fills in - click it again to remove it from screen. For your own custom presets specifically, double-clicking the filled star permanently deletes it (built-in presets can't be deleted this way)."
+      "Adds the preset to your screen. Once active, the star fills in - click it again to remove it from screen. Same behavior for every preset, built-in or custom."
+    );
+    section(
+      "The trash icon (custom presets only)",
+      "Permanently deletes one of your own custom trackers - double-click to confirm, no popup. Shown next to every custom preset in this list whether or not it's currently on screen, so you can clean up an old one without adding it back first."
     );
     section(
       "Creating your own preset",
@@ -7761,32 +7776,32 @@ Version: v${version}`;
   }
   async function openHidDevice(device) {
     if (hidDevice) {
-      console.log("[Wizascript Controller] WebHID device already connected, ignoring duplicate open call.");
+      if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID device already connected, ignoring duplicate open call.");
       return;
     }
     try {
       if (!device.opened) await device.open();
       device.addEventListener("inputreport", handleHidInputReport);
       hidDevice = device;
-      console.log("[Wizascript Controller] WebHID device opened:", device.productName || device.vendorId + ":" + device.productId);
+      if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID device opened:", device.productName || device.vendorId + ":" + device.productId);
     } catch (e) {
-      console.log("[Wizascript Controller] WebHID open failed:", e);
+      if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID open failed:", e);
     }
   }
   async function connectWebHidController() {
     if (!navigator.hid) {
-      console.log("[Wizascript Controller] navigator.hid is not available in this browser/context - WebHID cannot be used.");
+      if (debugLoggingEnabled) console.log("[Wizascript Controller] navigator.hid is not available in this browser/context - WebHID cannot be used.");
       return;
     }
     try {
       const devices = await navigator.hid.requestDevice({ filters: [{ vendorId: WEBHID_VENDOR_ID }] });
       if (!devices.length) {
-        console.log("[Wizascript Controller] WebHID device picker closed with no selection.");
+        if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID device picker closed with no selection.");
         return;
       }
       await openHidDevice(devices[0]);
     } catch (e) {
-      console.log("[Wizascript Controller] WebHID requestDevice failed:", e);
+      if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID requestDevice failed:", e);
     }
   }
   (async function tryAutoReconnectWebHid() {
@@ -7796,7 +7811,7 @@ Version: v${version}`;
       const match = devices.find((d) => d.vendorId === WEBHID_VENDOR_ID);
       if (match) await openHidDevice(match);
     } catch (e) {
-      console.log("[Wizascript Controller] WebHID auto-reconnect check failed:", e);
+      if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID auto-reconnect check failed:", e);
     }
   })();
   function getMergedGamepad() {
@@ -7807,7 +7822,7 @@ Version: v${version}`;
       rawPads = rawPads.filter((p) => {
         const id = (p.id || "").toLowerCase();
         const isSameDevice = id.includes(vidHex) && id.includes(pidHex);
-        if (isSameDevice) console.log("[Wizascript Controller] excluding native Gamepad-API entry for the WebHID-connected device from the merge (buttons unreliable over Bluetooth):", p.id);
+        if (isSameDevice && debugLoggingEnabled) console.log("[Wizascript Controller] excluding native Gamepad-API entry for the WebHID-connected device from the merge (buttons unreliable over Bluetooth):", p.id);
         return !isSameDevice;
       });
     }
@@ -7864,6 +7879,7 @@ Version: v${version}`;
     return { buttons, axes, _mergedFrom: pads.map((p) => p.id) };
   }
   pageWindow.addEventListener("gamepadconnected", (e) => {
+    if (!debugLoggingEnabled) return;
     console.log("[Wizascript Controller] gamepadconnected:", {
       index: e.gamepad.index,
       id: e.gamepad.id,
@@ -7873,6 +7889,7 @@ Version: v${version}`;
     });
   });
   pageWindow.addEventListener("gamepaddisconnected", (e) => {
+    if (!debugLoggingEnabled) return;
     console.log("[Wizascript Controller] gamepaddisconnected:", { index: e.gamepad.index, id: e.gamepad.id });
   });
   var lastLoggedRawSnapshot = /* @__PURE__ */ new Map();
@@ -8377,7 +8394,7 @@ Version: v${version}`;
           setActivePreset(n);
           closeMenu();
           boundInputRefreshers.forEach((fn) => fn());
-          console.log("[Wizascript Controller] switched to preset", n, "(" + getPresetName(n) + ")");
+          if (isDebugTextEnabled()) console.log("[Wizascript Controller] switched to preset", n, "(" + getPresetName(n) + ")");
         });
         menuEl.appendChild(row);
         rowEls.push(row);
@@ -8992,11 +9009,11 @@ Version: v${version}`;
         if (!container) continue;
         const items = Array.from(container.querySelectorAll(def.itemSelector)).filter((el) => el.offsetParent !== null);
         if (items.length) {
-          console.log(`[Wizascript Controller] group "${def.name}" found via "${sel}": ${items.length} items`);
+          if (isDebugTextEnabled()) console.log(`[Wizascript Controller] group "${def.name}" found via "${sel}": ${items.length} items`);
           return { name: def.name, container, items };
         }
       }
-      console.log(`[Wizascript Controller] group "${def.name}" NOT found`);
+      if (isDebugTextEnabled()) console.log(`[Wizascript Controller] group "${def.name}" NOT found`);
       return null;
     }
     const navbarGroup = buildGroup(GROUP_DEFS[0]);
@@ -9083,7 +9100,7 @@ Version: v${version}`;
       placingCard = card;
       placingGrid = null;
       matchPhase = "placing";
-      console.log("[Wizascript Controller] card drag started", card);
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] card drag started", card);
     }
     function cancelPlacingDrag(reason) {
       const card = placingCard;
@@ -9096,7 +9113,7 @@ Version: v${version}`;
         pageWindow2.jQuery(card).stop(true, true);
         pageWindow2.jQuery(".ui-draggable-dragging").stop(true, true);
       }
-      console.log("[Wizascript Controller] card drag cancelled via", reason);
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] card drag cancelled via", reason);
       placingCard = null;
       placingGrid = null;
       placingOrigin = null;
@@ -9270,7 +9287,7 @@ Version: v${version}`;
         const sel = pageWindow2.getSelection();
         sel.removeAllRanges();
         sel.addRange(range);
-        console.log("[Wizascript Controller] caret repositioned in", el, "at", cx, cy);
+        if (isDebugTextEnabled()) console.log("[Wizascript Controller] caret repositioned in", el, "at", cx, cy);
       }
     }
     function firstTextNode(el) {
@@ -9350,7 +9367,7 @@ Version: v${version}`;
       positionPanelNear(oskEl, target);
       cursor.style.display = "block";
       updateOskHighlight();
-      console.log("[Wizascript Controller] OSK opened for", target);
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] OSK opened for", target);
     }
     function closeOsk() {
       oskOpen = false;
@@ -9358,7 +9375,7 @@ Version: v${version}`;
       oskEl.style.display = "none";
       if (oskTarget) oskTarget.blur();
       oskTarget = null;
-      console.log("[Wizascript Controller] OSK closed");
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] OSK closed");
     }
     function dispatchEnterKey(el) {
       el.focus();
@@ -9439,7 +9456,7 @@ Version: v${version}`;
       sliderTarget = el;
       setHighlight(el);
       cursor.style.display = "none";
-      console.log("[Wizascript Controller] slider focused", el, "value=", el.value, "min=", el.min, "max=", el.max, "step=", el.step);
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] slider focused", el, "value=", el.value, "min=", el.min, "max=", el.max, "step=", el.step);
     }
     function closeSlider() {
       if (sliderTarget) clearHighlight(sliderTarget);
@@ -9489,7 +9506,7 @@ Version: v${version}`;
       positionPanelNear(selectEl, el);
       updateSelectHighlight();
       cursor.style.display = "block";
-      console.log("[Wizascript Controller] select picker opened", el, selectOptions.map((o) => o.text));
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] select picker opened", el, selectOptions.map((o) => o.text));
     }
     function closeSelectPicker() {
       selectEl.style.display = "none";
@@ -9670,7 +9687,7 @@ Version: v${version}`;
       fire(el, "mouseup", MouseEvent, cx, cy, 0, 0);
       el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: pageWindow2, clientX: cx, clientY: cy, button: 0, buttons: 0, detail }));
       lastResetBtnPressTime = isConfirmPress ? 0 : now;
-      console.log("[Wizascript Controller] Reset Data pressed, detail =", detail, isConfirmPress ? "(confirmed - resetting)" : "(press again to confirm)");
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] Reset Data pressed, detail =", detail, isConfirmPress ? "(confirmed - resetting)" : "(press again to confirm)");
     }
     function triggerElementClick(el) {
       if (!el) return;
@@ -9688,7 +9705,7 @@ Version: v${version}`;
         const surrenderLi = items.find((li) => /surrender/i.test((li.textContent || "").trim()));
         if (surrenderLi) {
           triggerElementClick(surrenderLi);
-          console.log("[Wizascript Controller] concede: used Underscript's own Surrender menu entry");
+          if (isDebugTextEnabled()) console.log("[Wizascript Controller] concede: used Underscript's own Surrender menu entry");
           return;
         }
         attempts2++;
@@ -9696,7 +9713,7 @@ Version: v${version}`;
           requestAnimationFrame(poll);
           return;
         }
-        console.log("[Wizascript Controller] concede: no Surrender entry found in Underscript's menu, falling back to the native flow");
+        if (isDebugTextEnabled()) console.log("[Wizascript Controller] concede: no Surrender entry found in Underscript's menu, falling back to the native flow");
         if (!wasMenuOpen) document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
         triggerConcedeNative();
       })();
@@ -9709,7 +9726,7 @@ Version: v${version}`;
       }
       const configBtn = document.getElementById("btn-config");
       if (!configBtn) {
-        console.log("[Wizascript Controller] concede: settings button not found (not in a match?)");
+        if (isDebugTextEnabled()) console.log("[Wizascript Controller] concede: settings button not found (not in a match?)");
         return;
       }
       if (!isWizascriptSettingsOpen()) {
@@ -9727,7 +9744,7 @@ Version: v${version}`;
         }
         attempts2++;
         if (attempts2 < MAX_ATTEMPTS) requestAnimationFrame(poll);
-        else console.log("[Wizascript Controller] concede: gave up waiting for the surrender button after opening settings");
+        else if (isDebugTextEnabled()) console.log("[Wizascript Controller] concede: gave up waiting for the surrender button after opening settings");
       })();
     }
     const drag = { left: null, right: null };
@@ -9827,7 +9844,7 @@ Version: v${version}`;
         item.querySelectorAll("img").forEach(resolveHoverStyle);
       });
     });
-    console.log(`[Wizascript Controller] resolved hover styles for ${hoverStyleMap.size} curated element(s)`);
+    if (isDebugTextEnabled()) console.log(`[Wizascript Controller] resolved hover styles for ${hoverStyleMap.size} curated element(s)`);
     function findHoverTarget(el) {
       if (!el) return null;
       if (hoverStyleMap.has(el)) return el;
@@ -9882,7 +9899,7 @@ Version: v${version}`;
     document.addEventListener("mousemove", (e) => {
       if (!e.isTrusted) return;
       if (usingController) {
-        console.log("[Wizascript Controller] real mouse movement detected -> forcing usingController OFF");
+        if (isDebugTextEnabled()) console.log("[Wizascript Controller] real mouse movement detected -> forcing usingController OFF");
       }
       usingController = false;
       document.documentElement.style.cursor = "";
@@ -9923,7 +9940,7 @@ Version: v${version}`;
           });
         });
       });
-      console.log("[Wizascript Controller] relayed a real Primary (Control) double-tap for Wizascript settings");
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] relayed a real Primary (Control) double-tap for Wizascript settings");
     }
     function frame() {
       try {
@@ -10005,7 +10022,7 @@ Version: v${version}`;
                 positionPanelNear(oskEl, oskTarget);
                 updateOskHighlight();
               }
-              console.log("[Wizascript Controller] OSK", oskPaused ? "paused" : "resumed");
+              if (isDebugTextEnabled()) console.log("[Wizascript Controller] OSK", oskPaused ? "paused" : "resumed");
             } else {
               document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
             }
@@ -10421,7 +10438,7 @@ left/right = fine-tune   ${btnLabel(0)} hold = drag   ${btnLabel(1)} = done`;
             const el = mulliganGrid[mulliganRow][mulliganCol];
             const r = el.getBoundingClientRect();
             dispatchClick(el, r.left + r.width / 2, r.top + r.height / 2, 0);
-            console.log("[Wizascript Controller] mulligan item clicked", el);
+            if (isDebugTextEnabled()) console.log("[Wizascript Controller] mulligan item clicked", el);
           }
           btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
           const focusedIsConfirm = mulliganGrid[mulliganRow][mulliganCol] === confirmBtn;
@@ -10738,7 +10755,7 @@ ${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   ${btnLabel(1)} close`;
               if (btn(0) && !btnHeld[0]) {
                 fire(targetSlot, "pointerup", PointerEvent, tcx, tcy, 0, 0);
                 fire(targetSlot, "mouseup", MouseEvent, tcx, tcy, 0, 0);
-                console.log("[Wizascript Controller] card dropped on", targetSlot);
+                if (isDebugTextEnabled()) console.log("[Wizascript Controller] card dropped on", targetSlot);
                 placingCard = null;
                 placingGrid = null;
                 matchPhase = "hand";
@@ -10802,14 +10819,14 @@ ${btnLabel(0)} drop here   ${btnLabel(1)} cancel`;
                 const el = resolveGrid[resolveRow][resolveCol];
                 const r = el.getBoundingClientRect();
                 dispatchClick(el, r.left + r.width / 2, r.top + r.height / 2, 0);
-                console.log("[Wizascript Controller] resolve target confirmed (d-pad)", el);
+                if (isDebugTextEnabled()) console.log("[Wizascript Controller] resolve target confirmed (d-pad)", el);
               } else {
                 cursor.style.display = "none";
                 const hitEl2 = document.elementFromPoint(x, y);
                 cursor.style.display = cursorRestingDisplay();
                 if (hitEl2) {
                   dispatchClick(hitEl2, x, y, 0);
-                  console.log("[Wizascript Controller] resolve target confirmed (cursor, real hit-test)", hitEl2);
+                  if (isDebugTextEnabled()) console.log("[Wizascript Controller] resolve target confirmed (cursor, real hit-test)", hitEl2);
                 }
               }
             }
@@ -10817,9 +10834,9 @@ ${btnLabel(0)} drop here   ${btnLabel(1)} cancel`;
               if (pendingAttacker) {
                 const r = pendingAttacker.getBoundingClientRect();
                 dispatchClick(pendingAttacker, r.left + r.width / 2, r.top + r.height / 2, 0);
-                console.log("[Wizascript Controller] attack cancelled via Circle (re-clicked attacker)", pendingAttacker);
+                if (isDebugTextEnabled()) console.log("[Wizascript Controller] attack cancelled via Circle (re-clicked attacker)", pendingAttacker);
               } else {
-                console.log("[Wizascript Controller] Circle pressed during target-resolve with no known attacker (likely a spell/effect target, not an attack) - no action taken");
+                if (isDebugTextEnabled()) console.log("[Wizascript Controller] Circle pressed during target-resolve with no known attacker (likely a spell/effect target, not an attack) - no action taken");
               }
             }
             btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
@@ -10853,7 +10870,7 @@ ${btnLabel(0)} confirm${resolveKind === "target" ? `   ${btnLabel(1)} cancel att
               if (card && card.classList.contains("canPlay")) {
                 beginCardDrag(card);
               } else {
-                console.log("[Wizascript Controller] card not playable, ignoring", card);
+                if (isDebugTextEnabled()) console.log("[Wizascript Controller] card not playable, ignoring", card);
               }
             }
             if (btn(1) && !btnHeld[1]) matchSubState = "neutral";
@@ -10880,7 +10897,7 @@ ${btnLabel(0)} play   \u2191 board   ${btnLabel(1)} free cursor`;
                 const r = monster.getBoundingClientRect();
                 dispatchClick(monster, r.left + r.width / 2, r.top + r.height / 2, 0);
                 pendingAttacker = monster;
-                console.log("[Wizascript Controller] monster clicked to select as attacker", monster);
+                if (isDebugTextEnabled()) console.log("[Wizascript Controller] monster clicked to select as attacker", monster);
               }
             }
             btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };

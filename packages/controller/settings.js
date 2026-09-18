@@ -482,7 +482,7 @@ function enhancePresetSelector(el) {
         setActivePreset(n);
         closeMenu();
         boundInputRefreshers.forEach((fn) => fn());
-        console.log('[Wizascript Controller] switched to preset', n, '(' + getPresetName(n) + ')');
+        if (isDebugTextEnabled()) console.log('[Wizascript Controller] switched to preset', n, '(' + getPresetName(n) + ')');
       });
       menuEl.appendChild(row);
       rowEls.push(row);

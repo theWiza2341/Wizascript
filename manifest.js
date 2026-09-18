@@ -17,15 +17,20 @@ import { initController } from "./packages/controller/index.js";
 //
 // The "misc" package houses the Notepad feature - moved out of
 // deck-tracker specifically so it works outside of matches too, not
-// gated behind deck-tracker's isGamePage() check - plus, now, the
-// "Enable Controller Support" master toggle itself. That toggle lives
-// under Miscellaneous rather than its own "Keybinds - Controller"
-// category so a player who hasn't turned it on yet isn't shown an
-// entire category of gamepad keybind rows they can't use - initMisc
-// must run BEFORE initController so the setting object it returns
-// (miscSettings.enableController) exists in time for
+// gated behind deck-tracker's isGamePage() check - plus the "Enable
+// Controller Support" master toggle itself, and now Card Tags
+// (right-click a card in Crafting/Deck-building to apply custom flair
+// tags, filterable via the existing search bar, with an on-card
+// indicator). Both toggles live under Miscellaneous rather than their
+// own category so a player who hasn't turned a feature on yet isn't
+// shown a whole category of settings for something they can't use -
+// initMisc must run BEFORE initController so the setting object it
+// returns (miscSettings.enableController) exists in time for
 // registerControllerSettings() to read it and decide whether to
-// register the rest of "Keybinds - Controller" at all this load.
+// register the rest of "Keybinds - Controller" at all this load. Card
+// Tags itself is wired entirely inside initMisc (no manifest.js
+// involvement needed) since, unlike Controller, nothing outside the
+// misc package needs to read its setting.
 
 bootstrap(plugin => {
   initPatchMaker(plugin);

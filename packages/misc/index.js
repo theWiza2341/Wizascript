@@ -2,10 +2,13 @@
 
 import { registerMiscSettings } from "./settings.js";
 import { showNotepad, hideNotepad, forceResetNotepad, undoNotepad, redoNotepad } from "./notepad/index.js";
+import { initCardTags } from "./card-tags/index.js";
 import { registerKeybind } from "../core/keybinds.js";
 
 export function initMisc(plugin) {
   const settings = registerMiscSettings(plugin);
+
+  initCardTags(plugin, settings.enableCardTags);
 
   function syncNotepadVisibility() {
     if (settings.enableNotepad.value()) {

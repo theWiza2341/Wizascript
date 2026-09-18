@@ -24,5 +24,15 @@ export function registerMiscSettings(plugin) {
     default: false
   });
 
-  return { settings, enableNotepad, enableController };
+  // Off by default like every other Miscellaneous toggle here. When off,
+  // packages/misc/card-tags/index.js returns before doing any real work
+  // at all (no right-click listener, no search-filter registration, no
+  // MutationObserver) - not just hidden, genuinely inert.
+  const enableCardTags = settings.add("enableCardTags", {
+    name: "Enable Card Tags",
+    type: "boolean",
+    default: false
+  });
+
+  return { settings, enableNotepad, enableController, enableCardTags };
 }

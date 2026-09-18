@@ -1468,7 +1468,7 @@ Version: v${version}`;
   }
   function createPatchMakerOverlay({
     plugin,
-    logger,
+    logger: logger4,
     getWordColors,
     getUnderlineTokens,
     getCardHoversEnabled,
@@ -1491,26 +1491,26 @@ Version: v${version}`;
         const state = collectState();
         if (state) {
           GM_setValue(STATE_KEY, JSON.stringify(state));
-          logger.log("save", "State saved.", { sections: state.sections.length });
+          logger4.log("save", "State saved.", { sections: state.sections.length });
         }
       } catch (e) {
-        logger.error("save", "Failed to save state", e);
+        logger4.error("save", "Failed to save state", e);
       }
     }
     function loadState() {
       const text = GM_getValue(STATE_KEY, "");
       if (!text) {
-        logger.log("load", "No saved state found.");
+        logger4.log("load", "No saved state found.");
         return;
       }
       try {
         const saved = JSON.parse(text);
         if (saved && saved.sections) {
           restoreState(saved);
-          logger.log("load", "State restored.", { sections: saved.sections.length });
+          logger4.log("load", "State restored.", { sections: saved.sections.length });
         }
       } catch (e) {
-        logger.error("load", "Failed to parse saved state", e);
+        logger4.error("load", "Failed to parse saved state", e);
       }
     }
     function resetState() {
@@ -1882,7 +1882,7 @@ Version: v${version}`;
         const name = el.textContent.trim();
         const cardId = getCardIdByExactGameLookup(name) || resolveCardId(name, cardNameMap);
         if (!cardId) {
-          logger.warn("hover", "Card not found for hover", name);
+          logger4.warn("hover", "Card not found for hover", name);
           return;
         }
         attachCardHover(el, cardId);
@@ -1963,14 +1963,14 @@ Version: v${version}`;
     }
     function init(mainEl) {
       if (document.getElementById("uc-patch-overlay")) {
-        logger.warn("init", "Overlay already exists; aborting duplicate init.");
+        logger4.warn("init", "Overlay already exists; aborting duplicate init.");
         return;
       }
       injectPatchMakerStyle();
       const navbars = mainEl.querySelectorAll(".navbar.navbar-default");
       const headerNav = navbars[0];
       if (!headerNav) {
-        logger.error("init", "Could not find header navbar.");
+        logger4.error("init", "Could not find header navbar.");
         return;
       }
       const footer = mainEl.querySelector("footer");
@@ -2041,7 +2041,7 @@ Version: v${version}`;
       headerNav.insertAdjacentElement("afterend", overlay);
       buildControlButtons();
       loadState();
-      logger.log("init", "Overlay initialized.");
+      logger4.log("init", "Overlay initialized.");
       if (getOpenOnLoad()) {
         setTimeout(() => {
           if (!custom) toggle.click();
@@ -2142,14 +2142,14 @@ Version: v${version}`;
           });
           applyFormattingOverlay();
           setEditingEnabled(false);
-          logger.log("mode", "Switched to viewer mode.");
+          logger4.log("mode", "Switched to viewer mode.");
         } else {
           container.querySelectorAll("p").forEach((p) => {
             p.style.display = "";
           });
           clearFormattingOverlay();
           setEditingEnabled(true);
-          logger.log("mode", "Switched to editor mode.");
+          logger4.log("mode", "Switched to editor mode.");
         }
       };
       resetBtn.onclick = (e) => {
@@ -2224,13 +2224,13 @@ Version: v${version}`;
   }
   function initPatchMaker(plugin) {
     const settings2 = registerPatchMakerSettings(plugin);
-    const logger = createLogger("PatchMaker");
-    const originalWarn = logger.warn.bind(logger);
-    const originalLog = logger.log.bind(logger);
-    logger.log = (...args) => {
+    const logger4 = createLogger("PatchMaker");
+    const originalWarn = logger4.warn.bind(logger4);
+    const originalLog = logger4.log.bind(logger4);
+    logger4.log = (...args) => {
       if (settings2.debugLogging.value()) originalLog(...args);
     };
-    logger.warn = (...args) => {
+    logger4.warn = (...args) => {
       if (settings2.debugLogging.value()) originalWarn(...args);
     };
     let wordColors = { ...BASE_WORD_COLORS };
@@ -2238,7 +2238,7 @@ Version: v${version}`;
     let cardNameMap = /* @__PURE__ */ new Map();
     const overlay = createPatchMakerOverlay({
       plugin,
-      logger,
+      logger: logger4,
       version: FEATURE_VERSION,
       getWordColors: () => wordColors,
       getUnderlineTokens: () => underlineTokens,
@@ -2259,7 +2259,7 @@ Version: v${version}`;
     }
     waitForMainContent((mainEl) => {
       overlay.init(mainEl);
-      refreshLocalizedData().catch((e) => logger.error("init", "Failed to load localized data", e));
+      refreshLocalizedData().catch((e) => logger4.error("init", "Failed to load localized data", e));
     });
   }
 
@@ -2732,7 +2732,7 @@ Version: v${version}`;
     KINDNESS: "#00c000",
     JUSTICE: "#ffff00"
   };
-  function createTrueHubOverlay({ logger, getAutoOpen, getScrollPaging }) {
+  function createTrueHubOverlay({ logger: logger4, getAutoOpen, getScrollPaging }) {
     let allDecks = [];
     let filteredDecks = [];
     let currentPage = 1;
@@ -2754,7 +2754,7 @@ Version: v${version}`;
       allDecks = Array.isArray(decks) ? decks : [];
       allDecks.sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
       filteredDecks = [...allDecks];
-      logger.log("data", "Decks loaded.", { count: allDecks.length });
+      logger4.log("data", "Decks loaded.", { count: allDecks.length });
     }
     function applyFilters2() {
       filteredDecks = filterDecks(allDecks, { activeSoulFilter, activeSearch, includeCards, excludeCards });
@@ -2815,7 +2815,7 @@ Version: v${version}`;
             if (index < artifacts.length - 1) artifactContainer.append(" ");
           });
         } catch (err) {
-          logger.error("card", "Artifact decode failed", err, deck);
+          logger4.error("card", "Artifact decode failed", err, deck);
         }
       }
       const archetypeEl = clone.querySelector(".hubDeckArchetype div");
@@ -3257,14 +3257,14 @@ Version: v${version}`;
           renderPage();
           btn.textContent = "Switch to Classic Hub";
           mode = "true";
-          logger.log("mode", "Switched to True Hub view.");
+          logger4.log("mode", "Switched to True Hub view.");
         } else {
           trueHubWrapper.style.display = "none";
           originalDecks.style.display = "";
           restoreClassicNav();
           btn.textContent = "Switch to True Hub";
           mode = "classic";
-          logger.log("mode", "Switched to Classic Hub view.");
+          logger4.log("mode", "Switched to Classic Hub view.");
         }
       };
     }
@@ -3278,7 +3278,7 @@ Version: v${version}`;
         btnPrevious = document.getElementById("btnPrevious");
         btnNext = document.getElementById("btnNext");
         if (!selectPage || !btnPrevious || !btnNext) {
-          logger.error("init", "Could not find nav elements.");
+          logger4.error("init", "Could not find nav elements.");
           return;
         }
         const style = document.createElement("style");
@@ -3316,10 +3316,10 @@ Version: v${version}`;
         buildToggle();
         if (getAutoOpen()) {
           const toggleBtn = document.getElementById("truehub-switch");
-          logger.log("init", "Auto-opening True Hub view.");
+          logger4.log("init", "Auto-opening True Hub view.");
           if (toggleBtn) toggleBtn.click();
         }
-        logger.log("init", "Ready.", { decksLoaded: allDecks.length });
+        logger4.log("init", "Ready.", { decksLoaded: allDecks.length });
       });
     }
     return { init, setDecks };
@@ -3361,24 +3361,24 @@ Version: v${version}`;
     const settings2 = registerTrueHubBridgeSettings(plugin);
     if (!settings2.enabled.value()) return;
     if (!isHubPage()) return;
-    const logger = createLogger("TrueHubBridge");
-    const originalWarn = logger.warn.bind(logger);
-    const originalLog = logger.log.bind(logger);
-    logger.log = (...args) => {
+    const logger4 = createLogger("TrueHubBridge");
+    const originalWarn = logger4.warn.bind(logger4);
+    const originalLog = logger4.log.bind(logger4);
+    logger4.log = (...args) => {
       if (settings2.debugLogging.value()) originalLog(...args);
     };
-    logger.warn = (...args) => {
+    logger4.warn = (...args) => {
       if (settings2.debugLogging.value()) originalWarn(...args);
     };
     const overlay = createTrueHubOverlay({
-      logger,
+      logger: logger4,
       getAutoOpen: () => settings2.autoOpen.value(),
       getScrollPaging: () => settings2.scrollPaging.value()
     });
     loadDecks().then((decks) => {
       overlay.setDecks(decks);
       overlay.init();
-    }).catch((e) => logger.error("data", "Failed to load decks.json", e));
+    }).catch((e) => logger4.error("data", "Failed to load decks.json", e));
   }
 
   // packages/deck-tracker/settings.js
@@ -4568,29 +4568,29 @@ Version: v${version}`;
     const settings2 = registerDeckTrackerSettings(plugin);
     if (!settings2.enabled.value()) return;
     if (!isGamePage()) return;
-    const logger = createLogger("DeckTracker");
-    const originalWarn = logger.warn.bind(logger);
-    const originalLog = logger.log.bind(logger);
-    logger.log = (...args) => {
+    const logger4 = createLogger("DeckTracker");
+    const originalWarn = logger4.warn.bind(logger4);
+    const originalLog = logger4.log.bind(logger4);
+    logger4.log = (...args) => {
       if (settings2.debugLogging.value()) originalLog(...args);
     };
-    logger.warn = (...args) => {
+    logger4.warn = (...args) => {
       if (settings2.debugLogging.value()) originalWarn(...args);
     };
     setRetainEnabledGetter(() => settings2.retainUnclosedPresets.value());
     registerBuiltInPresets();
     function handleAddPreset(id) {
       spawnPreset(id);
-      logger.log("hud", "Spawned preset from picker:", id);
+      logger4.log("hud", "Spawned preset from picker:", id);
     }
     function handleCloseWidget(id) {
       closeWidget(id);
-      logger.log("hud", "Closed preset from picker:", id);
+      logger4.log("hud", "Closed preset from picker:", id);
     }
     function handleDeletePreset(id) {
       closeWidget(id);
       deleteCustomPreset(id);
-      logger.log("hud", "Deleted custom preset:", id);
+      logger4.log("hud", "Deleted custom preset:", id);
     }
     function handleCreateAdHoc() {
       openCustomTrackerBuilder({
@@ -4601,7 +4601,7 @@ Version: v${version}`;
             onRequestSaveAsPreset: (defaultName, _spriteArg, onSaved) => {
               openSaveAsPresetPrompt(defaultName, (savedName, description) => {
                 onSaved(savedName, description);
-                logger.log("hud", "Saved custom tracker as preset:", savedName);
+                logger4.log("hud", "Saved custom tracker as preset:", savedName);
               });
             }
           });
@@ -4743,7 +4743,7 @@ Version: v${version}`;
         if (dragMoved) {
           const rect = btn.getBoundingClientRect();
           setSavedButtonPosition({ left: rect.left, top: rect.top });
-          logger.log("hud", "Add-tracker button repositioned by drag.", { left: rect.left, top: rect.top });
+          logger4.log("hud", "Add-tracker button repositioned by drag.", { left: rect.left, top: rect.top });
         }
       });
       btn.addEventListener("mousedown", (e) => {
@@ -4754,7 +4754,7 @@ Version: v${version}`;
         hasCustomPosition = false;
         clearSavedButtonPosition();
         reposition();
-        logger.log("hud", "Add-tracker button position reset to the default (avatar-relative) spot.");
+        logger4.log("hud", "Add-tracker button position reset to the default (avatar-relative) spot.");
       });
       btn.onclick = () => {
         if (dragMoved) return;
@@ -4783,10 +4783,10 @@ Version: v${version}`;
       const favoritedIds = getFavoritedPresetIds();
       const spawnedFavorites = favoritedIds.filter((id) => spawnPreset(id) !== null);
       if (spawnedFavorites.length) {
-        logger.log("autoload", "Spawned favorited presets.", spawnedFavorites);
+        logger4.log("autoload", "Spawned favorited presets.", spawnedFavorites);
       }
       if (spawnedFavorites.length < favoritedIds.length) {
-        logger.warn(
+        logger4.warn(
           "autoload",
           "Some favorited presets could not be spawned (missing definition).",
           favoritedIds.filter((id) => !spawnedFavorites.includes(id))
@@ -4796,7 +4796,7 @@ Version: v${version}`;
         const retainedIds = getRetainedPresetIds().filter((id) => !favoritedIds.includes(id));
         retainedIds.forEach((id) => spawnPreset(id));
         if (retainedIds.length) {
-          logger.log("autoload", "Restored retained (unclosed) presets.", retainedIds);
+          logger4.log("autoload", "Restored retained (unclosed) presets.", retainedIds);
         }
       }
     }
@@ -4804,7 +4804,7 @@ Version: v${version}`;
       if (trackerButton == null ? void 0 : trackerButton.style) trackerButton.style.display = "";
       restoreFavoritedAndRetained();
     });
-    plugin.events.on("connect", (data) => {
+    plugin.events.on("connect", (data2) => {
       restoreFavoritedAndRetained();
     });
   }
@@ -5653,8 +5653,8 @@ Version: v${version}`;
     logDebug("Channel switching and channel guide keybinds registered (see the Keybinds settings category).");
     if (!isSpectatePage3()) return;
     let handled = false;
-    plugin.events.on("getResult", (data) => {
-      logDebug("getResult fired - match ended.", data);
+    plugin.events.on("getResult", (data2) => {
+      logDebug("getResult fired - match ended.", data2);
       if (handled) return;
       handled = true;
       if (!CONFIG.masterEnabled) {
@@ -5682,7 +5682,12 @@ Version: v${version}`;
       type: "boolean",
       default: false
     });
-    return { settings: settings2, enableNotepad, enableController };
+    const enableCardTags = settings2.add("enableCardTags", {
+      name: "Enable Card Tags",
+      type: "boolean",
+      default: false
+    });
+    return { settings: settings2, enableNotepad, enableController, enableCardTags };
   }
 
   // packages/misc/notepad/storage.js
@@ -5836,18 +5841,18 @@ Version: v${version}`;
   }
 
   // packages/misc/notepad/flood-fill.js
-  function floodFillPixels(data, width, height, startX, startY, fillRgb, tolerance = 24) {
+  function floodFillPixels(data2, width, height, startX, startY, fillRgb, tolerance = 24) {
     const x0 = Math.floor(startX);
     const y0 = Math.floor(startY);
     if (x0 < 0 || y0 < 0 || x0 >= width || y0 >= height) return false;
     const idx = (x, y) => (y * width + x) * 4;
     const startI = idx(x0, y0);
-    const startR = data[startI], startG = data[startI + 1], startB = data[startI + 2], startA = data[startI + 3];
+    const startR = data2[startI], startG = data2[startI + 1], startB = data2[startI + 2], startA = data2[startI + 3];
     const [fr, fg, fb] = fillRgb;
     const fa = 255;
     if (startR === fr && startG === fg && startB === fb && startA === fa) return false;
     function matchesStart(i) {
-      return Math.abs(data[i] - startR) <= tolerance && Math.abs(data[i + 1] - startG) <= tolerance && Math.abs(data[i + 2] - startB) <= tolerance && Math.abs(data[i + 3] - startA) <= tolerance;
+      return Math.abs(data2[i] - startR) <= tolerance && Math.abs(data2[i + 1] - startG) <= tolerance && Math.abs(data2[i + 2] - startB) <= tolerance && Math.abs(data2[i + 3] - startA) <= tolerance;
     }
     const visited = new Uint8Array(width * height);
     const stack = [x0, y0];
@@ -5858,10 +5863,10 @@ Version: v${version}`;
       const y = stack.pop();
       const x = stack.pop();
       const i = idx(x, y);
-      data[i] = fr;
-      data[i + 1] = fg;
-      data[i + 2] = fb;
-      data[i + 3] = fa;
+      data2[i] = fr;
+      data2[i + 1] = fg;
+      data2[i + 2] = fb;
+      data2[i + 3] = fa;
       filledAny = true;
       filledCoords.push(x, y);
       if (x > 0) tryPush(x - 1, y);
@@ -5890,12 +5895,12 @@ Version: v${version}`;
       const vIdx = ny * width + nx;
       if (visited[vIdx]) return;
       const i = idx(nx, ny);
-      const alpha = data[i + 3];
+      const alpha = data2[i + 3];
       if (alpha <= 0 || alpha >= 255) return;
-      data[i] = fr;
-      data[i + 1] = fg;
-      data[i + 2] = fb;
-      data[i + 3] = fa;
+      data2[i] = fr;
+      data2[i + 1] = fg;
+      data2[i + 2] = fb;
+      data2[i + 3] = fa;
       visited[vIdx] = 1;
     }
     return filledAny;
@@ -6231,7 +6236,7 @@ Version: v${version}`;
   function drawColorWheel(canvas) {
     const ctx = canvas.getContext("2d");
     const imageData = ctx.createImageData(WHEEL_SIZE, WHEEL_SIZE);
-    const data = imageData.data;
+    const data2 = imageData.data;
     for (let y = 0; y < WHEEL_SIZE; y++) {
       for (let x = 0; x < WHEEL_SIZE; x++) {
         const dx = x - WHEEL_RADIUS;
@@ -6239,17 +6244,17 @@ Version: v${version}`;
         const dist = Math.sqrt(dx * dx + dy * dy);
         const idx = (y * WHEEL_SIZE + x) * 4;
         if (dist > WHEEL_RADIUS) {
-          data[idx + 3] = 0;
+          data2[idx + 3] = 0;
           continue;
         }
         let angle = Math.atan2(dy, dx) * 180 / Math.PI;
         if (angle < 0) angle += 360;
         const saturation = Math.min(1, dist / WHEEL_RADIUS);
         const [r, g, b] = hslToRgbString(angle, saturation, WHEEL_FIXED_LIGHTNESS).match(/\d+/g).map(Number);
-        data[idx] = r;
-        data[idx + 1] = g;
-        data[idx + 2] = b;
-        data[idx + 3] = 255;
+        data2[idx] = r;
+        data2[idx + 1] = g;
+        data2[idx + 2] = b;
+        data2[idx + 3] = 255;
       }
     }
     ctx.putImageData(imageData, 0, 0);
@@ -6928,9 +6933,614 @@ Version: v${version}`;
 }
 `;
 
+  // packages/misc/card-tags/constants.js
+  var CARD_LIST_SELECTOR = ".cardsList, .cardSkinList, #loadDeckCards";
+
+  // packages/misc/card-tags/storage.js
+  var DATA_KEY = "wizascript.misc.cardTags.data";
+  var DEFAULT_COLORS = ["#4dabf7", "#51cf66", "#ffa94d", "#ff6b6b", "#cc5de8", "#20c997", "#ffd43b"];
+  function genTagId() {
+    return "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+  function emptyData() {
+    return { tags: [], cardTags: {} };
+  }
+  function readData() {
+    let raw;
+    try {
+      raw = GM_getValue(DATA_KEY, null);
+    } catch (e) {
+      console.warn("[CardTags] Failed to read storage key", DATA_KEY, e);
+      return emptyData();
+    }
+    if (!raw) return emptyData();
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (e) {
+      console.warn("[CardTags] Failed to parse stored data, starting fresh.", e);
+      return emptyData();
+    }
+    if (Array.isArray(parsed.tags) && parsed.tags.length && typeof parsed.tags[0] === "string") {
+      const nameToId = {};
+      const upgradedTags = parsed.tags.map((name, i) => {
+        const id = genTagId();
+        nameToId[name] = id;
+        return { id, name, color: DEFAULT_COLORS[i % DEFAULT_COLORS.length] };
+      });
+      const upgradedCardTags = {};
+      Object.keys(parsed.cardTags || {}).forEach((cardId) => {
+        const ids = (parsed.cardTags[cardId] || []).map((name) => nameToId[name]).filter(Boolean);
+        if (ids.length) upgradedCardTags[cardId] = ids;
+      });
+      const upgraded = { tags: upgradedTags, cardTags: upgradedCardTags };
+      writeData(upgraded);
+      return upgraded;
+    }
+    return {
+      tags: Array.isArray(parsed.tags) ? parsed.tags : [],
+      cardTags: parsed.cardTags && typeof parsed.cardTags === "object" ? parsed.cardTags : {}
+    };
+  }
+  function writeData(value) {
+    try {
+      GM_setValue(DATA_KEY, JSON.stringify(value));
+    } catch (e) {
+      console.warn("[CardTags] Failed to write storage key", DATA_KEY, e);
+    }
+  }
+  var data = readData();
+  function allTags() {
+    return data.tags;
+  }
+  function findTag(id) {
+    return data.tags.find((t) => t.id === id) || null;
+  }
+  function createTag(name, color) {
+    const tag = {
+      id: genTagId(),
+      name: name.trim(),
+      color: color || DEFAULT_COLORS[data.tags.length % DEFAULT_COLORS.length]
+    };
+    data.tags.push(tag);
+    writeData(data);
+    return tag;
+  }
+  function updateTag(id, patch) {
+    const tag = findTag(id);
+    if (!tag) return;
+    Object.assign(tag, patch);
+    writeData(data);
+  }
+  function deleteTag(id) {
+    data.tags = data.tags.filter((t) => t.id !== id);
+    Object.keys(data.cardTags).forEach((cardId) => {
+      data.cardTags[cardId] = data.cardTags[cardId].filter((tagId) => tagId !== id);
+      if (!data.cardTags[cardId].length) delete data.cardTags[cardId];
+    });
+    writeData(data);
+  }
+  function tagIdsForCard(cardId) {
+    return data.cardTags[cardId] || [];
+  }
+  function tagObjectsForCard(cardId) {
+    return tagIdsForCard(cardId).map(findTag).filter(Boolean);
+  }
+  function cardHasTag(cardId, tagId) {
+    return tagIdsForCard(cardId).includes(tagId);
+  }
+  function toggleCardTag(cardId, tagId) {
+    const current = data.cardTags[cardId] || [];
+    const has = current.includes(tagId);
+    const next = has ? current.filter((t) => t !== tagId) : [...current, tagId];
+    if (next.length) {
+      data.cardTags[cardId] = next;
+    } else {
+      delete data.cardTags[cardId];
+    }
+    writeData(data);
+  }
+  function taggedCardIds() {
+    return Object.keys(data.cardTags);
+  }
+
+  // packages/misc/card-tags/indicators.js
+  var INDICATOR_ATTR = "data-wiza-tag-dot";
+  var rarityAnchorWarned = false;
+  var logger = null;
+  function findRarityAnchor(cardEl) {
+    return cardEl.querySelector(".cardRarity");
+  }
+  function fillDots(holder, tags) {
+    holder.innerHTML = "";
+    holder.title = tags.map((t) => t.name).join(", ");
+    tags.forEach((t) => {
+      const dot = document.createElement("span");
+      dot.style.cssText = "width:8px;height:8px;border-radius:50%;background:" + (t.color || DEFAULT_COLORS[0]) + ";border:1px solid rgba(0,0,0,0.4);";
+      holder.appendChild(dot);
+    });
+  }
+  function makeFlankHolder(side) {
+    const holder = document.createElement("div");
+    holder.setAttribute(INDICATOR_ATTR, side);
+    Object.assign(holder.style, { position: "absolute", zIndex: "50", display: "flex", gap: "2px", pointerEvents: "none" });
+    return holder;
+  }
+  function positionFlank(cardEl, anchorEl, holder, side) {
+    const cardRect = cardEl.getBoundingClientRect();
+    const anchorRect = anchorEl.getBoundingClientRect();
+    const gap = 3;
+    holder.style.top = anchorRect.top - cardRect.top + anchorRect.height / 2 + "px";
+    if (side === "left") {
+      holder.style.left = anchorRect.left - cardRect.left - gap + "px";
+      holder.style.transform = "translate(-100%, -50%)";
+    } else {
+      holder.style.left = anchorRect.right - cardRect.left + gap + "px";
+      holder.style.transform = "translate(0, -50%)";
+    }
+  }
+  function decorateCorner(el, tags) {
+    const existing = el.querySelector(":scope > [" + INDICATOR_ATTR + '="corner"]');
+    if (getComputedStyle(el).position === "static") el.style.position = "relative";
+    const holder = existing || document.createElement("div");
+    if (!existing) {
+      holder.setAttribute(INDICATOR_ATTR, "corner");
+      Object.assign(holder.style, { position: "absolute", top: "2px", right: "2px", zIndex: "50", display: "flex", gap: "2px", pointerEvents: "none" });
+      el.appendChild(holder);
+    }
+    fillDots(holder, tags.slice(0, 4));
+  }
+  function decorateOneCardElement(el, tags) {
+    const leftExisting = el.querySelector(":scope > [" + INDICATOR_ATTR + '="left"]');
+    const rightExisting = el.querySelector(":scope > [" + INDICATOR_ATTR + '="right"]');
+    const cornerExisting = el.querySelector(":scope > [" + INDICATOR_ATTR + '="corner"]');
+    if (!tags.length) {
+      [leftExisting, rightExisting, cornerExisting].forEach((h) => h && h.remove());
+      return;
+    }
+    const anchor = findRarityAnchor(el);
+    if (!anchor) {
+      if (!rarityAnchorWarned) {
+        rarityAnchorWarned = true;
+        logger == null ? void 0 : logger.warn(null, "A card element has no .cardRarity element - falling back to a corner dot for it.");
+      }
+      if (leftExisting) leftExisting.remove();
+      if (rightExisting) rightExisting.remove();
+      decorateCorner(el, tags);
+      return;
+    }
+    if (cornerExisting) cornerExisting.remove();
+    if (getComputedStyle(el).position === "static") el.style.position = "relative";
+    const leftTags = tags.slice(0, 2);
+    const rightTags = tags.slice(2, 4);
+    const leftHolder = leftExisting || makeFlankHolder("left");
+    const rightHolder = rightExisting || makeFlankHolder("right");
+    if (!leftExisting) el.appendChild(leftHolder);
+    if (!rightExisting) el.appendChild(rightHolder);
+    fillDots(leftHolder, leftTags);
+    fillDots(rightHolder, rightTags);
+    leftHolder.style.display = leftTags.length ? "flex" : "none";
+    rightHolder.style.display = rightTags.length ? "flex" : "none";
+    positionFlank(el, anchor, leftHolder, "left");
+    positionFlank(el, anchor, rightHolder, "right");
+  }
+  function decorateCard(cardId) {
+    const els = Array.from(document.getElementsByClassName("card-" + cardId));
+    if (!els.length) return;
+    const tags = tagObjectsForCard(cardId);
+    els.forEach((el) => decorateOneCardElement(el, tags));
+  }
+  function decorateAllCards() {
+    taggedCardIds().forEach(decorateCard);
+  }
+  function initIndicators(loggerInstance) {
+    logger = loggerInstance;
+    let scheduled = false;
+    function schedule() {
+      if (scheduled) return;
+      scheduled = true;
+      setTimeout(() => {
+        scheduled = false;
+        decorateAllCards();
+      }, 100);
+    }
+    const containers = document.querySelectorAll(CARD_LIST_SELECTOR);
+    const observer = new MutationObserver(schedule);
+    if (containers.length) {
+      containers.forEach((c) => observer.observe(c, { childList: true, subtree: true, attributes: true, attributeFilter: ["id"] }));
+    } else {
+      observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["id"] });
+    }
+    schedule();
+  }
+
+  // packages/misc/card-tags/menu.js
+  var logger2 = null;
+  function setMenuLogger(instance) {
+    logger2 = instance;
+  }
+  var openMenuEl = null;
+  var outsideClick = null;
+  var outsideContext = null;
+  function maybeRefreshSearch() {
+    const searchEl = document.getElementById("searchInput");
+    if (searchEl && searchEl.value.trim()) refreshSearch();
+  }
+  function refreshSearch() {
+    const pageWindow2 = getPageWindow();
+    try {
+      if (typeof pageWindow2.applyFilters === "function") pageWindow2.applyFilters();
+      if (typeof pageWindow2.showPage === "function") pageWindow2.showPage(pageWindow2.currentPage);
+      decorateAllCards();
+    } catch (e) {
+      logger2 == null ? void 0 : logger2.warn(null, "applyFilters()/showPage() call failed.", e);
+    }
+  }
+  function closeTagMenu() {
+    if (!openMenuEl) return;
+    if (outsideClick) document.removeEventListener("click", outsideClick);
+    if (outsideContext) document.removeEventListener("contextmenu", outsideContext);
+    outsideClick = null;
+    outsideContext = null;
+    openMenuEl.remove();
+    openMenuEl = null;
+    maybeRefreshSearch();
+  }
+  function openTagMenu(card, cards, x, y) {
+    closeTagMenu();
+    const menu = document.createElement("div");
+    menu.className = "wiza-tag-menu";
+    Object.assign(menu.style, {
+      position: "fixed",
+      left: x + "px",
+      top: y + "px",
+      zIndex: 999999,
+      background: "#1b1b1f",
+      border: "1px solid rgba(255,255,255,0.15)",
+      borderRadius: "8px",
+      minWidth: "200px",
+      maxWidth: "260px",
+      boxShadow: "0 4px 18px rgba(0,0,0,0.5)",
+      overflow: "hidden",
+      fontFamily: "inherit",
+      fontSize: "13px",
+      color: "#eee"
+    });
+    const filterInput = document.createElement("input");
+    filterInput.type = "text";
+    filterInput.placeholder = "Filter tags\u2026";
+    Object.assign(filterInput.style, {
+      width: "100%",
+      boxSizing: "border-box",
+      padding: "7px 10px",
+      border: "none",
+      borderBottom: "1px solid rgba(255,255,255,0.15)",
+      background: "transparent",
+      color: "#eee",
+      outline: "none",
+      fontSize: "13px"
+    });
+    menu.appendChild(filterInput);
+    const rowsWrap = document.createElement("div");
+    Object.assign(rowsWrap.style, { maxHeight: "220px", overflowY: "auto" });
+    function makeRow({ label, onClick, active, secondary, swatch }) {
+      const row = document.createElement("div");
+      Object.assign(row.style, {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "8px 12px",
+        cursor: "pointer",
+        gap: "8px",
+        background: active ? "rgba(120,170,255,0.18)" : "transparent",
+        borderBottom: "1px solid rgba(255,255,255,0.08)"
+      });
+      row.addEventListener("mouseenter", () => {
+        if (!active) row.style.background = "rgba(255,255,255,0.08)";
+      });
+      row.addEventListener("mouseleave", () => {
+        row.style.background = active ? "rgba(120,170,255,0.18)" : "transparent";
+      });
+      const left = document.createElement("span");
+      left.style.cssText = "display:flex;align-items:center;gap:8px;overflow:hidden;flex:1;";
+      if (swatch) {
+        const dot = document.createElement("span");
+        dot.style.cssText = "width:10px;height:10px;border-radius:50%;background:" + swatch + ";flex-shrink:0;";
+        left.appendChild(dot);
+      }
+      const text = document.createElement("span");
+      text.textContent = (active ? "\u2713 " : "") + label;
+      text.style.cssText = "overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
+      left.appendChild(text);
+      row.appendChild(left);
+      if (secondary) {
+        const secBtn = document.createElement("span");
+        secBtn.textContent = secondary.label;
+        secBtn.title = secondary.title || "";
+        secBtn.style.cssText = "color:#9ab;flex-shrink:0;padding:2px 4px;";
+        secBtn.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          secondary.onClick();
+        });
+        row.appendChild(secBtn);
+      }
+      row.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        onClick();
+      });
+      return row;
+    }
+    function renderRows(filterTerm) {
+      rowsWrap.innerHTML = "";
+      const term = (filterTerm || "").trim().toLowerCase();
+      const tags = allTags().filter((t) => !term || t.name.toLowerCase().includes(term));
+      if (!tags.length) {
+        const empty = document.createElement("div");
+        empty.style.cssText = "padding:10px 12px;color:#999;";
+        empty.textContent = allTags().length ? "No matching tags." : "No tags yet.";
+        rowsWrap.appendChild(empty);
+        return;
+      }
+      tags.forEach((tag) => {
+        rowsWrap.appendChild(makeRow({
+          label: tag.name,
+          swatch: tag.color,
+          active: cardHasTag(card.id, tag.id),
+          onClick: () => {
+            toggleCardTag(card.id, tag.id);
+            decorateCard(card.id);
+            renderRows(filterInput.value);
+          },
+          secondary: {
+            label: "\u{1F441}",
+            title: 'See cards tagged "' + tag.name + '"',
+            onClick: () => showCardsForTag(tag, cards)
+          }
+        }));
+      });
+    }
+    renderRows("");
+    menu.appendChild(rowsWrap);
+    filterInput.addEventListener("input", () => renderRows(filterInput.value));
+    const divider = document.createElement("div");
+    divider.style.cssText = "height:1px;background:rgba(255,255,255,0.15);";
+    menu.appendChild(divider);
+    const newTagRow = makeRow({ label: "+ New Tag", onClick: () => {
+      closeTagMenu();
+      promptNewTag(card, cards, x, y);
+    } });
+    newTagRow.style.color = "#8f8";
+    menu.appendChild(newTagRow);
+    const manageRow = makeRow({ label: "Manage Tags\u2026", onClick: () => {
+      closeTagMenu();
+      openManageTagsDialog();
+    } });
+    manageRow.style.color = "#9ab";
+    menu.appendChild(manageRow);
+    menu.addEventListener("click", (ev) => ev.stopPropagation());
+    document.body.appendChild(menu);
+    openMenuEl = menu;
+    const rect = menu.getBoundingClientRect();
+    if (rect.right > window.innerWidth) menu.style.left = Math.max(0, window.innerWidth - rect.width - 8) + "px";
+    if (rect.bottom > window.innerHeight) menu.style.top = Math.max(0, window.innerHeight - rect.height - 8) + "px";
+    filterInput.focus();
+    const openedAt = performance.now();
+    function outsideCloser(e) {
+      if (performance.now() - openedAt < 200) return;
+      if (menu.contains(e.target)) return;
+      closeTagMenu();
+    }
+    outsideClick = outsideCloser;
+    outsideContext = outsideCloser;
+    document.addEventListener("click", outsideClick);
+    document.addEventListener("contextmenu", outsideContext);
+  }
+  function promptNewTag(card, cards, reopenX, reopenY) {
+    const pageWindow2 = getPageWindow();
+    const BootstrapDialog2 = pageWindow2.BootstrapDialog;
+    if (typeof BootstrapDialog2 === "undefined" || typeof BootstrapDialog2.show !== "function") {
+      logger2 == null ? void 0 : logger2.warn(null, "BootstrapDialog is not available - cannot open the new-tag dialog.");
+      return;
+    }
+    const wrapper = document.createElement("div");
+    wrapper.style.cssText = "display:flex;gap:8px;align-items:center;min-width:260px;";
+    const colorInput = document.createElement("input");
+    colorInput.type = "color";
+    colorInput.value = DEFAULT_COLORS[allTags().length % DEFAULT_COLORS.length];
+    colorInput.style.cssText = "width:32px;height:32px;padding:0;border:none;background:none;flex-shrink:0;cursor:pointer;";
+    wrapper.appendChild(colorInput);
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "Tag name\u2026";
+    input.className = "form-control";
+    input.style.cssText = "flex:1;padding:6px 8px;font-size:13px;";
+    wrapper.appendChild(input);
+    BootstrapDialog2.show({
+      title: "New tag",
+      message: wrapper,
+      cssClass: "mono",
+      buttons: [
+        { label: "Cancel", action: (d) => d.close() },
+        {
+          label: "Create",
+          cssClass: "btn-success",
+          action: (d) => {
+            const name = input.value.trim();
+            if (!name) return;
+            const tag = createTag(name, colorInput.value);
+            toggleCardTag(card.id, tag.id);
+            decorateCard(card.id);
+            d.close();
+            openTagMenu(card, cards, reopenX, reopenY);
+          }
+        }
+      ]
+    });
+    setTimeout(() => input.focus(), 100);
+  }
+  function openManageTagsDialog() {
+    const pageWindow2 = getPageWindow();
+    const BootstrapDialog2 = pageWindow2.BootstrapDialog;
+    if (typeof BootstrapDialog2 === "undefined" || typeof BootstrapDialog2.show !== "function") {
+      logger2 == null ? void 0 : logger2.warn(null, "BootstrapDialog is not available - cannot open tag management.");
+      return;
+    }
+    const wrapper = document.createElement("div");
+    wrapper.style.cssText = "min-width:280px;max-height:320px;overflow-y:auto;";
+    function renderList2() {
+      wrapper.innerHTML = "";
+      if (!allTags().length) {
+        const empty = document.createElement("div");
+        empty.style.cssText = "color:#999;padding:6px 0;";
+        empty.textContent = "No tags yet.";
+        wrapper.appendChild(empty);
+        return;
+      }
+      allTags().forEach((tag) => {
+        const row = document.createElement("div");
+        row.style.cssText = "display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08);";
+        const colorInput = document.createElement("input");
+        colorInput.type = "color";
+        colorInput.value = tag.color || DEFAULT_COLORS[0];
+        colorInput.style.cssText = "width:26px;height:26px;padding:0;border:none;background:none;flex-shrink:0;cursor:pointer;";
+        colorInput.addEventListener("change", () => {
+          updateTag(tag.id, { color: colorInput.value });
+          decorateAllCards();
+        });
+        row.appendChild(colorInput);
+        const nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.value = tag.name;
+        nameInput.className = "form-control";
+        nameInput.style.cssText = "flex:1;padding:5px 7px;font-size:13px;";
+        nameInput.addEventListener("change", () => {
+          const v = nameInput.value.trim();
+          if (v) updateTag(tag.id, { name: v });
+          else nameInput.value = tag.name;
+          decorateAllCards();
+        });
+        row.appendChild(nameInput);
+        const delBtn = document.createElement("div");
+        delBtn.textContent = "-";
+        delBtn.title = "Double-click to delete (removes from every tagged card)";
+        delBtn.style.cssText = "width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(220,53,69,0.15);color:#e05260;border:1px solid rgba(220,53,69,0.5);border-radius:4px;font-weight:700;font-size:16px;line-height:1;cursor:pointer;user-select:none;";
+        delBtn.addEventListener("mouseenter", () => {
+          delBtn.style.background = "rgba(220,53,69,0.3)";
+        });
+        delBtn.addEventListener("mouseleave", () => {
+          delBtn.style.background = "rgba(220,53,69,0.15)";
+        });
+        delBtn.addEventListener("click", (e) => {
+          if (e.detail !== 2) return;
+          deleteTag(tag.id);
+          decorateAllCards();
+          renderList2();
+        });
+        row.appendChild(delBtn);
+        wrapper.appendChild(row);
+      });
+    }
+    renderList2();
+    BootstrapDialog2.show({
+      title: "Manage Tags",
+      message: wrapper,
+      cssClass: "mono",
+      buttons: [{ label: "Close", action: (d) => {
+        d.close();
+        maybeRefreshSearch();
+      } }]
+    });
+  }
+  function showCardsForTag(tag, cards) {
+    const pageWindow2 = getPageWindow();
+    const BootstrapDialog2 = pageWindow2.BootstrapDialog;
+    const matches = cards.filter((c) => c && c.id != null && cardHasTag(c.id, tag.id));
+    const listText = matches.length ? matches.map((c) => c.name).join(", ") : '(nothing tagged "' + tag.name + '" yet)';
+    if (typeof BootstrapDialog2 === "undefined" || typeof BootstrapDialog2.show !== "function") {
+      alert('Cards tagged "' + tag.name + '": ' + listText);
+      return;
+    }
+    const wrapper = document.createElement("div");
+    wrapper.style.cssText = "max-height:260px;overflow-y:auto;";
+    wrapper.textContent = listText;
+    BootstrapDialog2.show({
+      title: 'Tagged "' + tag.name + '" (' + matches.length + ")",
+      message: wrapper,
+      cssClass: "mono",
+      buttons: [{ label: "Close", action: (d) => d.close() }]
+    });
+  }
+
+  // packages/misc/card-tags/right-click.js
+  function getCardById2(cards, id) {
+    return cards.find((c) => c && String(c.id) === String(id)) || null;
+  }
+  function wireRightClick(cards) {
+    document.addEventListener("contextmenu", function(e) {
+      const container = e.target.closest(CARD_LIST_SELECTOR);
+      if (!container) return;
+      if (e.defaultPrevented) return;
+      const cardEl = e.target.closest(".card");
+      const card = cardEl && cardEl.id ? getCardById2(cards, cardEl.id) : null;
+      if (!card) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      openTagMenu(card, cards, e.clientX, e.clientY);
+    });
+  }
+
+  // packages/misc/card-tags/search-filter.js
+  function wireSearchFilter(plugin, logger4) {
+    if (typeof plugin.addFilter !== "function") {
+      logger4.warn(null, "plugin.addFilter is not available - Card Tags search integration disabled.");
+      return;
+    }
+    plugin.addFilter(function cardTagsFilter(card, removed, results) {
+      if (!removed || !results || !results.search) return removed;
+      if (!card || card.id == null) return removed;
+      const searchEl = document.getElementById("searchInput");
+      const term = searchEl ? searchEl.value.trim().toLowerCase() : "";
+      if (!term) return removed;
+      const tags = tagObjectsForCard(card.id);
+      if (!tags.length) return removed;
+      const matched = tags.some((t) => t.name.toLowerCase().includes(term));
+      return matched ? false : removed;
+    });
+  }
+
+  // packages/misc/card-tags/index.js
+  var logger3 = createLogger("CardTags");
+  function isCardTagsPage() {
+    return matchesPage(["/Crafting", "/Decks"]);
+  }
+  function waitForCards(callback, attempt = 0) {
+    const cards = getAllCards();
+    if (cards.length) {
+      callback(cards);
+      return;
+    }
+    if (attempt > 80) {
+      logger3.warn(null, "Never found a populated card list after ~20s - Card Tags will not activate on this page load.");
+      return;
+    }
+    setTimeout(() => waitForCards(callback, attempt + 1), 250);
+  }
+  function initCardTags(plugin, enableCardTagsSetting) {
+    if (!enableCardTagsSetting.value()) return;
+    if (!isCardTagsPage()) return;
+    setMenuLogger(logger3);
+    waitForCards((cards) => {
+      wireSearchFilter(plugin, logger3);
+      wireRightClick(cards);
+      initIndicators(logger3);
+      decorateAllCards();
+    });
+  }
+
   // packages/misc/index.js
   function initMisc(plugin) {
     const settings2 = registerMiscSettings(plugin);
+    initCardTags(plugin, settings2.enableCardTags);
     function syncNotepadVisibility() {
       if (settings2.enableNotepad.value()) {
         showNotepad();

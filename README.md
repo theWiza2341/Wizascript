@@ -42,7 +42,7 @@ Full gamepad navigation, for players who'd rather not reach for a mouse/keyboard
 - **Presets** — up to 3 independent sets of button bindings, switchable from a dropdown at the top of the category (handy for sharing one controller between players, or keeping a couple of layouts around). "Restore Settings to Default" (double-click) resets whichever preset is currently selected back to its defaults.
 
 ### Card Tags
-Custom, user-defined tags for cards in Crafting and Deck-building — no preset list, just names you create yourself. Right-click any card to create a tag (with its own color) or toggle it on/off, filter by typing a tag name into the existing search bar, and spot tagged cards at a glance via a small on-card indicator dot. A "Manage Tags…" dialog handles renaming, recoloring, and deleting tags in one place. Lives under Miscellaneous settings behind an "Enable Card Tags" toggle (off by default).
+Custom, user-defined tags for cards in Crafting and Deck-building. That means no preset list, just names you create yourself. Right-click any card to create a tag (with its own color) or toggle it on/off, filter by typing a tag name into the existing search bar, and spot tagged cards at a glance via a small on-card indicator dot. A "Manage Tags…" dialog handles renaming, recoloring, and deleting tags in one place. Lives under Miscellaneous settings behind an "Enable Card Tags" toggle (off by default).
 
 ### bot/
 A small Node.js bot that scrapes deck codes and metadata from a Discord server and writes them to `bot/decks.json`, which True Hub Bridge reads. Runs both as a one-off full sync (`bot.js`) and an incremental sync (`new-only-sync.js`), automated via GitHub Actions.

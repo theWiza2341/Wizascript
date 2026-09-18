@@ -11,6 +11,7 @@ on:
     paths-ignore:
       - 'wizascript.user.js'
       - 'bot/**'
+      - 'README.md'
   workflow_dispatch:
 
 permissions:

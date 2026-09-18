@@ -2,7 +2,7 @@
 
 Wizascript is an all-in-one UnderScript plugin suite for [Undercards](https://undercards.net) — a single Tampermonkey userscript that combines several previously-separate plugins into one download, one plugin registration, and one settings tab.
 
-**Current version:** 1.3.1
+**Current version:** 1.4.0
 **Repository:** [theWiza2341/Wizascript](https://github.com/theWiza2341/Wizascript) (public)
 
 ## Compliance note
@@ -41,6 +41,9 @@ Full gamepad navigation, for players who'd rather not reach for a mouse/keyboard
 - **In-Game Inputs** — a fixed set of no-hold-required hardware shortcuts, each individually remappable: Concede, End Turn, opening your/the opponent's dustpile, opening Wizascript's settings, opening Deck Tracker's tracker-preset picker, and pausing/resuming the on-screen keyboard while it's open.
 - **Presets** — up to 3 independent sets of button bindings, switchable from a dropdown at the top of the category (handy for sharing one controller between players, or keeping a couple of layouts around). "Restore Settings to Default" (double-click) resets whichever preset is currently selected back to its defaults.
 
+### Card Tags
+Custom, user-defined tags for cards in Crafting and Deck-building — no preset list, just names you create yourself. Right-click any card to create a tag (with its own color) or toggle it on/off, filter by typing a tag name into the existing search bar, and spot tagged cards at a glance via a small on-card indicator dot. A "Manage Tags…" dialog handles renaming, recoloring, and deleting tags in one place. Lives under Miscellaneous settings behind an "Enable Card Tags" toggle (off by default).
+
 ### bot/
 A small Node.js bot that scrapes deck codes and metadata from a Discord server and writes them to `bot/decks.json`, which True Hub Bridge reads. Runs both as a one-off full sync (`bot.js`) and an incremental sync (`new-only-sync.js`), automated via GitHub Actions.
 
@@ -56,6 +59,7 @@ packages/
   controller/      full gamepad navigation + remappable controller keybinds (see Controller Support above)
   misc/            small standalone features
     notepad/       freeform drawing canvas (see Notepad above)
+    card-tags/     custom card flair tags (see Card Tags above)
 bot/               deck-scraping bot + decks.json
 manifest.js        wires each package's init function together (also flushes the keybind registry once every package has registered its own settings)
 build.js            esbuild bundler + userscript header

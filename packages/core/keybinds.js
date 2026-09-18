@@ -55,6 +55,24 @@ function readCode(bindingKey, defaultCode) {
   return GM_getValue(storageKey(bindingKey), defaultCode);
 }
 
+// Public accessor so another package's OWN relay (currently: the
+// controller package's CONTROLLER_ACTIONS - see its relaySecondary()
+// call site) can dispatch whatever e.code a real keybind is CURRENTLY
+// actually bound to, instead of assuming its shipped default is still
+// what's stored. Read-only, same value readCode() itself would use -
+// this is deliberately the one crack in the "don't reach into another
+// package's storage" rule (see the controller relay's own comment on
+// why it does NOT do this for the Primary Key itself), justified here
+// because the alternative is confirmed broken: a real keybind that's
+// ever been remapped away from its default (including by an OLDER
+// shipped default than the one currently in this file, since a GM-
+// stored value persists across updates) makes a controller action
+// relaying the hardcoded default silently never match anything, with
+// no error and no visible symptom beyond "it just doesn't work."
+export function getBoundKeybindCode(bindingKey, defaultCode) {
+  return readCode(bindingKey, defaultCode);
+}
+
 function writeCode(bindingKey, code) {
   GM_setValue(storageKey(bindingKey), code);
 }

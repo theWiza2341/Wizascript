@@ -2,10 +2,13 @@
 
 import { registerMiscSettings } from "./settings.js";
 import { showNotepad, hideNotepad, forceResetNotepad, undoNotepad, redoNotepad } from "./notepad/index.js";
+import { initCardTags } from "./card-tags/index.js";
 import { registerKeybind } from "../core/keybinds.js";
 
 export function initMisc(plugin) {
   const settings = registerMiscSettings(plugin);
+
+  initCardTags(plugin, settings.enableCardTags);
 
   function syncNotepadVisibility() {
     if (settings.enableNotepad.value()) {
@@ -69,4 +72,10 @@ export function initMisc(plugin) {
     packageLabel: "Notepad",
     onMatch: () => redoNotepad()
   });
+
+  // Handed back so manifest.js can pass settings.enableController straight
+  // through to initController(plugin, controllerEnabledSetting) - initMisc
+  // runs before initController, so this is already registered under
+  // "Miscellaneous" by the time the controller package reads it.
+  return settings;
 }

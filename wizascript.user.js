@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.3.1
+// @version      1.4.1
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "1.3.1";
+  var SUITE_VERSION = "1.4.1";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -34,8 +34,8 @@
   function tryBootstrap() {
     if (suitePlugin) return;
     attempts++;
-    const pageWindow = getPageWindow();
-    if (typeof pageWindow.underscript === "undefined" || typeof pageWindow.underscript.plugin !== "function") {
+    const pageWindow2 = getPageWindow();
+    if (typeof pageWindow2.underscript === "undefined" || typeof pageWindow2.underscript.plugin !== "function") {
       if (attempts === WARN_AFTER_ATTEMPTS) {
         console.warn(
           "[Wizascript] Still waiting for UnderScript after ~10s. Is UnderScript installed and enabled for this page?"
@@ -44,7 +44,7 @@
       setTimeout(tryBootstrap, RETRY_MS);
       return;
     }
-    suitePlugin = pageWindow.underscript.plugin(SUITE_NAME, SUITE_VERSION);
+    suitePlugin = pageWindow2.underscript.plugin(SUITE_NAME, SUITE_VERSION);
     suitePlugin.updater(DOWNLOAD_URL);
     console.log(`[Wizascript] Registered with UnderScript (v${SUITE_VERSION}).`);
     readyCallbacks.forEach((cb) => cb(suitePlugin));
@@ -91,6 +91,9 @@
   }
   function readCode(bindingKey, defaultCode) {
     return GM_getValue(storageKey(bindingKey), defaultCode);
+  }
+  function getBoundKeybindCode(bindingKey, defaultCode) {
+    return readCode(bindingKey, defaultCode);
   }
   function writeCode(bindingKey, code) {
     GM_setValue(storageKey(bindingKey), code);
@@ -1184,12 +1187,12 @@ html, body { overflow-x: hidden !important; }
     }
   }
   function getI18n() {
-    const pageWindow = getPageWindow();
-    return pageWindow.$ && pageWindow.$.i18n ? pageWindow.$.i18n : null;
+    const pageWindow2 = getPageWindow();
+    return pageWindow2.$ && pageWindow2.$.i18n ? pageWindow2.$.i18n : null;
   }
   function getTranslateVersion() {
-    const pageWindow = getPageWindow();
-    return typeof pageWindow.translateVersion !== "undefined" ? pageWindow.translateVersion : "";
+    const pageWindow2 = getPageWindow();
+    return typeof pageWindow2.translateVersion !== "undefined" ? pageWindow2.translateVersion : "";
   }
   function getResolvedLanguage(selectedLabel) {
     const mapped = LANGUAGE_LABEL_TO_CODE[selectedLabel] || "auto";
@@ -1283,8 +1286,8 @@ html, body { overflow-x: hidden !important; }
     };
   }
   function getAllCards() {
-    const pageWindow = getPageWindow();
-    const candidates = [pageWindow.allCards, pageWindow.cards, pageWindow.cardList, pageWindow.ucCards];
+    const pageWindow2 = getPageWindow();
+    const candidates = [pageWindow2.allCards, pageWindow2.cards, pageWindow2.cardList, pageWindow2.ucCards];
     for (const c of candidates) {
       if (Array.isArray(c) && c.length) return c;
     }
@@ -1335,8 +1338,8 @@ html, body { overflow-x: hidden !important; }
     return map;
   }
   function getCardIdByExactGameLookup(name) {
-    const pageWindow = getPageWindow();
-    const getCardWithName = pageWindow.getCardWithName;
+    const pageWindow2 = getPageWindow();
+    const getCardWithName = pageWindow2.getCardWithName;
     if (typeof getCardWithName !== "function") return null;
     try {
       const card = getCardWithName(name);
@@ -1350,9 +1353,9 @@ html, body { overflow-x: hidden !important; }
     return cardNameMap.get(String(name).toLowerCase()) || null;
   }
   function attachCardHover(el, cardId) {
-    const pageWindow = getPageWindow();
-    const displayCardHelp = pageWindow.displayCardHelp;
-    const removeCardHover = pageWindow.removeCardHover;
+    const pageWindow2 = getPageWindow();
+    const displayCardHelp = pageWindow2.displayCardHelp;
+    const removeCardHover = pageWindow2.removeCardHover;
     if (typeof displayCardHelp !== "function" || typeof removeCardHover !== "function") {
       return false;
     }
@@ -1465,7 +1468,7 @@ Version: v${version}`;
   }
   function createPatchMakerOverlay({
     plugin,
-    logger,
+    logger: logger4,
     getWordColors,
     getUnderlineTokens,
     getCardHoversEnabled,
@@ -1488,26 +1491,26 @@ Version: v${version}`;
         const state = collectState();
         if (state) {
           GM_setValue(STATE_KEY, JSON.stringify(state));
-          logger.log("save", "State saved.", { sections: state.sections.length });
+          logger4.log("save", "State saved.", { sections: state.sections.length });
         }
       } catch (e) {
-        logger.error("save", "Failed to save state", e);
+        logger4.error("save", "Failed to save state", e);
       }
     }
     function loadState() {
       const text = GM_getValue(STATE_KEY, "");
       if (!text) {
-        logger.log("load", "No saved state found.");
+        logger4.log("load", "No saved state found.");
         return;
       }
       try {
         const saved = JSON.parse(text);
         if (saved && saved.sections) {
           restoreState(saved);
-          logger.log("load", "State restored.", { sections: saved.sections.length });
+          logger4.log("load", "State restored.", { sections: saved.sections.length });
         }
       } catch (e) {
-        logger.error("load", "Failed to parse saved state", e);
+        logger4.error("load", "Failed to parse saved state", e);
       }
     }
     function resetState() {
@@ -1772,7 +1775,13 @@ Version: v${version}`;
     const register = (config) => registerKeybind(plugin, { ...config, packageLabel: "Patch Maker", guardTypingContext: false });
     register({
       key: "cycleCategoryUp",
-      name: "Cycle Entry Category Up",
+      // Shortened from "Cycle Entry Category Up" - combined with the
+      // registry's own "- Primary + <key>" suffix (packages/core/
+      // keybinds.js), the full name was wide enough to force a horizontal
+      // scrollbar in the settings dialog. "Entry" was the only word doing
+      // no real work here (Patch Maker doesn't have any OTHER kind of
+      // category to cycle).
+      name: "Cycle Category Up",
       defaultCode: "Comma",
       scope: "scoped",
       selector: ".uc-li-text",
@@ -1783,7 +1792,7 @@ Version: v${version}`;
     });
     register({
       key: "cycleCategoryDown",
-      name: "Cycle Entry Category Down",
+      name: "Cycle Category Down",
       defaultCode: "Period",
       scope: "scoped",
       selector: ".uc-li-text",
@@ -1816,7 +1825,14 @@ Version: v${version}`;
     });
     register({
       key: "moveSectionUp",
-      name: "Move Balance Section Up",
+      // Shortened from "Move Balance Section Up" to match the identically-
+      // renamed controller-package action of the same key (packages/
+      // controller/settings.js) - both drove the same horizontal-scroll
+      // issue via their shared "- Primary + <key/button>" suffix, and
+      // keeping the two names in sync avoids the keyboard and controller
+      // versions of the same action reading differently in their
+      // respective settings categories.
+      name: "Move Section Up",
       defaultCode: "ArrowUp",
       scope: "scoped",
       selector: ".uc-section-label",
@@ -1830,7 +1846,7 @@ Version: v${version}`;
     });
     register({
       key: "moveSectionDown",
-      name: "Move Balance Section Down",
+      name: "Move Section Down",
       defaultCode: "ArrowDown",
       scope: "scoped",
       selector: ".uc-section-label",
@@ -1866,7 +1882,7 @@ Version: v${version}`;
         const name = el.textContent.trim();
         const cardId = getCardIdByExactGameLookup(name) || resolveCardId(name, cardNameMap);
         if (!cardId) {
-          logger.warn("hover", "Card not found for hover", name);
+          logger4.warn("hover", "Card not found for hover", name);
           return;
         }
         attachCardHover(el, cardId);
@@ -1947,14 +1963,14 @@ Version: v${version}`;
     }
     function init(mainEl) {
       if (document.getElementById("uc-patch-overlay")) {
-        logger.warn("init", "Overlay already exists; aborting duplicate init.");
+        logger4.warn("init", "Overlay already exists; aborting duplicate init.");
         return;
       }
       injectPatchMakerStyle();
       const navbars = mainEl.querySelectorAll(".navbar.navbar-default");
       const headerNav = navbars[0];
       if (!headerNav) {
-        logger.error("init", "Could not find header navbar.");
+        logger4.error("init", "Could not find header navbar.");
         return;
       }
       const footer = mainEl.querySelector("footer");
@@ -2025,7 +2041,7 @@ Version: v${version}`;
       headerNav.insertAdjacentElement("afterend", overlay);
       buildControlButtons();
       loadState();
-      logger.log("init", "Overlay initialized.");
+      logger4.log("init", "Overlay initialized.");
       if (getOpenOnLoad()) {
         setTimeout(() => {
           if (!custom) toggle.click();
@@ -2126,14 +2142,14 @@ Version: v${version}`;
           });
           applyFormattingOverlay();
           setEditingEnabled(false);
-          logger.log("mode", "Switched to viewer mode.");
+          logger4.log("mode", "Switched to viewer mode.");
         } else {
           container.querySelectorAll("p").forEach((p) => {
             p.style.display = "";
           });
           clearFormattingOverlay();
           setEditingEnabled(true);
-          logger.log("mode", "Switched to editor mode.");
+          logger4.log("mode", "Switched to editor mode.");
         }
       };
       resetBtn.onclick = (e) => {
@@ -2144,8 +2160,8 @@ Version: v${version}`;
       };
       helpBtn.onclick = () => {
         const message = buildHelpMessage(version);
-        const pageWindow = getPageWindow();
-        const BootstrapDialogRef = pageWindow.BootstrapDialog;
+        const pageWindow2 = getPageWindow();
+        const BootstrapDialogRef = pageWindow2.BootstrapDialog;
         if (BootstrapDialogRef && typeof BootstrapDialogRef.alert === "function") {
           BootstrapDialogRef.alert({ title: "Custom Patch Maker \u2013 Help", message, closable: true });
         } else {
@@ -2208,13 +2224,13 @@ Version: v${version}`;
   }
   function initPatchMaker(plugin) {
     const settings2 = registerPatchMakerSettings(plugin);
-    const logger = createLogger("PatchMaker");
-    const originalWarn = logger.warn.bind(logger);
-    const originalLog = logger.log.bind(logger);
-    logger.log = (...args) => {
+    const logger4 = createLogger("PatchMaker");
+    const originalWarn = logger4.warn.bind(logger4);
+    const originalLog = logger4.log.bind(logger4);
+    logger4.log = (...args) => {
       if (settings2.debugLogging.value()) originalLog(...args);
     };
-    logger.warn = (...args) => {
+    logger4.warn = (...args) => {
       if (settings2.debugLogging.value()) originalWarn(...args);
     };
     let wordColors = { ...BASE_WORD_COLORS };
@@ -2222,7 +2238,7 @@ Version: v${version}`;
     let cardNameMap = /* @__PURE__ */ new Map();
     const overlay = createPatchMakerOverlay({
       plugin,
-      logger,
+      logger: logger4,
       version: FEATURE_VERSION,
       getWordColors: () => wordColors,
       getUnderlineTokens: () => underlineTokens,
@@ -2243,7 +2259,7 @@ Version: v${version}`;
     }
     waitForMainContent((mainEl) => {
       overlay.init(mainEl);
-      refreshLocalizedData().catch((e) => logger.error("init", "Failed to load localized data", e));
+      refreshLocalizedData().catch((e) => logger4.error("init", "Failed to load localized data", e));
     });
   }
 
@@ -2707,6 +2723,10 @@ Version: v${version}`;
 
   // packages/true-hub-bridge/overlay.js
   var DECKS_PER_PAGE = 10;
+  function seasonNumber(season) {
+    const match = /^s(\d+)/i.exec(season || "");
+    return match ? Number(match[1]) : -1;
+  }
   var SOUL_COLORS = {
     DETERMINATION: "red",
     PATIENCE: "#41fcff",
@@ -2716,7 +2736,7 @@ Version: v${version}`;
     KINDNESS: "#00c000",
     JUSTICE: "#ffff00"
   };
-  function createTrueHubOverlay({ logger, getAutoOpen, getScrollPaging }) {
+  function createTrueHubOverlay({ logger: logger4, getAutoOpen, getScrollPaging }) {
     let allDecks = [];
     let filteredDecks = [];
     let currentPage = 1;
@@ -2736,9 +2756,13 @@ Version: v${version}`;
     let cardFilterPanel = null, cardSearchInput = null, cardDropdown = null, cardTagsContainer = null;
     function setDecks(decks) {
       allDecks = Array.isArray(decks) ? decks : [];
-      allDecks.sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
+      allDecks.sort((a, b) => {
+        const seasonDiff = seasonNumber(b.season) - seasonNumber(a.season);
+        if (seasonDiff !== 0) return seasonDiff;
+        return new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0);
+      });
       filteredDecks = [...allDecks];
-      logger.log("data", "Decks loaded.", { count: allDecks.length });
+      logger4.log("data", "Decks loaded.", { count: allDecks.length });
     }
     function applyFilters2() {
       filteredDecks = filterDecks(allDecks, { activeSoulFilter, activeSearch, includeCards, excludeCards });
@@ -2799,7 +2823,7 @@ Version: v${version}`;
             if (index < artifacts.length - 1) artifactContainer.append(" ");
           });
         } catch (err) {
-          logger.error("card", "Artifact decode failed", err, deck);
+          logger4.error("card", "Artifact decode failed", err, deck);
         }
       }
       const archetypeEl = clone.querySelector(".hubDeckArchetype div");
@@ -3241,14 +3265,14 @@ Version: v${version}`;
           renderPage();
           btn.textContent = "Switch to Classic Hub";
           mode = "true";
-          logger.log("mode", "Switched to True Hub view.");
+          logger4.log("mode", "Switched to True Hub view.");
         } else {
           trueHubWrapper.style.display = "none";
           originalDecks.style.display = "";
           restoreClassicNav();
           btn.textContent = "Switch to True Hub";
           mode = "classic";
-          logger.log("mode", "Switched to Classic Hub view.");
+          logger4.log("mode", "Switched to Classic Hub view.");
         }
       };
     }
@@ -3262,7 +3286,7 @@ Version: v${version}`;
         btnPrevious = document.getElementById("btnPrevious");
         btnNext = document.getElementById("btnNext");
         if (!selectPage || !btnPrevious || !btnNext) {
-          logger.error("init", "Could not find nav elements.");
+          logger4.error("init", "Could not find nav elements.");
           return;
         }
         const style = document.createElement("style");
@@ -3300,10 +3324,10 @@ Version: v${version}`;
         buildToggle();
         if (getAutoOpen()) {
           const toggleBtn = document.getElementById("truehub-switch");
-          logger.log("init", "Auto-opening True Hub view.");
+          logger4.log("init", "Auto-opening True Hub view.");
           if (toggleBtn) toggleBtn.click();
         }
-        logger.log("init", "Ready.", { decksLoaded: allDecks.length });
+        logger4.log("init", "Ready.", { decksLoaded: allDecks.length });
       });
     }
     return { init, setDecks };
@@ -3345,24 +3369,24 @@ Version: v${version}`;
     const settings2 = registerTrueHubBridgeSettings(plugin);
     if (!settings2.enabled.value()) return;
     if (!isHubPage()) return;
-    const logger = createLogger("TrueHubBridge");
-    const originalWarn = logger.warn.bind(logger);
-    const originalLog = logger.log.bind(logger);
-    logger.log = (...args) => {
+    const logger4 = createLogger("TrueHubBridge");
+    const originalWarn = logger4.warn.bind(logger4);
+    const originalLog = logger4.log.bind(logger4);
+    logger4.log = (...args) => {
       if (settings2.debugLogging.value()) originalLog(...args);
     };
-    logger.warn = (...args) => {
+    logger4.warn = (...args) => {
       if (settings2.debugLogging.value()) originalWarn(...args);
     };
     const overlay = createTrueHubOverlay({
-      logger,
+      logger: logger4,
       getAutoOpen: () => settings2.autoOpen.value(),
       getScrollPaging: () => settings2.scrollPaging.value()
     });
     loadDecks().then((decks) => {
       overlay.setDecks(decks);
       overlay.init();
-    }).catch((e) => logger.error("data", "Failed to load decks.json", e));
+    }).catch((e) => logger4.error("data", "Failed to load decks.json", e));
   }
 
   // packages/deck-tracker/settings.js
@@ -3384,12 +3408,13 @@ Version: v${version}`;
       default: false
     });
     const allowFavoritedRetainedWhileSpectating = settings2.add("allowFavoritedRetainedWhileSpectating", {
-      name: "Auto-load Favorited/Retained Presets While Spectating",
+      name: "Auto-load Presets While Spectating",
+      note: "Applies to your own favorited/retained tracker presets specifically.",
       type: "boolean",
       default: false
     });
     const dimOpacity = settings2.add("dimOpacity", {
-      name: "Tracker Button Dim Opacity",
+      name: "Tracker Dim Opacity",
       type: "slider",
       default: 0.4,
       min: 0,
@@ -4104,6 +4129,15 @@ Version: v${version}`;
     <path d="M12 2l2.9 6.6 7.1.6-5.4 4.6 1.6 7-6.2-3.8L6 21l1.6-7L2.2 9.2l7.1-.6L12 2z"/>
   </svg>`;
   }
+  function trashIconSVG() {
+    return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="3 6 5 6 21 6"></polyline>
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+    <path d="M10 11v6"></path>
+    <path d="M14 11v6"></path>
+    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+  </svg>`;
+  }
   function buildPresetRow(preset, onAdd, onCloseWidget, onDelete) {
     const row = $("<div>").css({
       display: "flex",
@@ -4161,34 +4195,36 @@ Version: v${version}`;
     let active = isWidgetOpen(preset.id);
     function renderStar() {
       starBtn.html(starIconSVG(active));
-      if (active && preset.custom) {
-        starBtn.attr("title", "Double-click to permanently delete this preset");
-      } else if (active) {
-        starBtn.attr("title", "Remove from screen");
-      } else {
-        starBtn.attr("title", "Add to screen");
-      }
+      starBtn.attr("title", active ? "Remove from screen" : "Add to screen");
     }
     renderStar();
     starBtn.on("click", (e) => {
       e.stopPropagation();
-      if (!active) {
+      if (active) {
+        onCloseWidget(preset.id);
+      } else {
         onAdd(preset.id);
-        active = true;
-        renderStar();
-        return;
       }
-      if (preset.custom) {
-        if (e.detail !== 2) return;
-        onDelete(preset.id);
-        row.remove();
-        return;
-      }
-      onCloseWidget(preset.id);
-      active = false;
+      active = !active;
       renderStar();
     });
     row.append(heart, info, starBtn);
+    if (preset.custom) {
+      const trashBtn = $("<span>").css({
+        width: "20px",
+        flexShrink: 0,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer"
+      }).html(trashIconSVG()).attr("title", "Double-click to permanently delete this custom tracker").on("click", (e) => {
+        e.stopPropagation();
+        if (e.detail !== 2) return;
+        onDelete(preset.id);
+        row.remove();
+      });
+      row.append(trashBtn);
+    }
     return row;
   }
   function renderList(container, term, onAdd, onCloseWidget, onDelete) {
@@ -4262,7 +4298,11 @@ Version: v${version}`;
     );
     section(
       "The star (\u2605 / \u2606)",
-      "Adds the preset to your screen. Once active, the star fills in - click it again to remove it from screen. For your own custom presets specifically, double-clicking the filled star permanently deletes it (built-in presets can't be deleted this way)."
+      "Adds the preset to your screen. Once active, the star fills in - click it again to remove it from screen. Same behavior for every preset, built-in or custom."
+    );
+    section(
+      "The trash icon (custom presets only)",
+      "Permanently deletes one of your own custom trackers - double-click to confirm, no popup. Shown next to every custom preset in this list whether or not it's currently on screen, so you can clean up an old one without adding it back first."
     );
     section(
       "Creating your own preset",
@@ -4551,29 +4591,29 @@ Version: v${version}`;
     const settings2 = registerDeckTrackerSettings(plugin);
     if (!settings2.enabled.value()) return;
     if (!isGamePage()) return;
-    const logger = createLogger("DeckTracker");
-    const originalWarn = logger.warn.bind(logger);
-    const originalLog = logger.log.bind(logger);
-    logger.log = (...args) => {
+    const logger4 = createLogger("DeckTracker");
+    const originalWarn = logger4.warn.bind(logger4);
+    const originalLog = logger4.log.bind(logger4);
+    logger4.log = (...args) => {
       if (settings2.debugLogging.value()) originalLog(...args);
     };
-    logger.warn = (...args) => {
+    logger4.warn = (...args) => {
       if (settings2.debugLogging.value()) originalWarn(...args);
     };
     setRetainEnabledGetter(() => settings2.retainUnclosedPresets.value());
     registerBuiltInPresets();
     function handleAddPreset(id) {
       spawnPreset(id);
-      logger.log("hud", "Spawned preset from picker:", id);
+      logger4.log("hud", "Spawned preset from picker:", id);
     }
     function handleCloseWidget(id) {
       closeWidget(id);
-      logger.log("hud", "Closed preset from picker:", id);
+      logger4.log("hud", "Closed preset from picker:", id);
     }
     function handleDeletePreset(id) {
       closeWidget(id);
       deleteCustomPreset(id);
-      logger.log("hud", "Deleted custom preset:", id);
+      logger4.log("hud", "Deleted custom preset:", id);
     }
     function handleCreateAdHoc() {
       openCustomTrackerBuilder({
@@ -4584,7 +4624,7 @@ Version: v${version}`;
             onRequestSaveAsPreset: (defaultName, _spriteArg, onSaved) => {
               openSaveAsPresetPrompt(defaultName, (savedName, description) => {
                 onSaved(savedName, description);
-                logger.log("hud", "Saved custom tracker as preset:", savedName);
+                logger4.log("hud", "Saved custom tracker as preset:", savedName);
               });
             }
           });
@@ -4726,7 +4766,7 @@ Version: v${version}`;
         if (dragMoved) {
           const rect = btn.getBoundingClientRect();
           setSavedButtonPosition({ left: rect.left, top: rect.top });
-          logger.log("hud", "Add-tracker button repositioned by drag.", { left: rect.left, top: rect.top });
+          logger4.log("hud", "Add-tracker button repositioned by drag.", { left: rect.left, top: rect.top });
         }
       });
       btn.addEventListener("mousedown", (e) => {
@@ -4737,7 +4777,7 @@ Version: v${version}`;
         hasCustomPosition = false;
         clearSavedButtonPosition();
         reposition();
-        logger.log("hud", "Add-tracker button position reset to the default (avatar-relative) spot.");
+        logger4.log("hud", "Add-tracker button position reset to the default (avatar-relative) spot.");
       });
       btn.onclick = () => {
         if (dragMoved) return;
@@ -4766,10 +4806,10 @@ Version: v${version}`;
       const favoritedIds = getFavoritedPresetIds();
       const spawnedFavorites = favoritedIds.filter((id) => spawnPreset(id) !== null);
       if (spawnedFavorites.length) {
-        logger.log("autoload", "Spawned favorited presets.", spawnedFavorites);
+        logger4.log("autoload", "Spawned favorited presets.", spawnedFavorites);
       }
       if (spawnedFavorites.length < favoritedIds.length) {
-        logger.warn(
+        logger4.warn(
           "autoload",
           "Some favorited presets could not be spawned (missing definition).",
           favoritedIds.filter((id) => !spawnedFavorites.includes(id))
@@ -4779,7 +4819,7 @@ Version: v${version}`;
         const retainedIds = getRetainedPresetIds().filter((id) => !favoritedIds.includes(id));
         retainedIds.forEach((id) => spawnPreset(id));
         if (retainedIds.length) {
-          logger.log("autoload", "Restored retained (unclosed) presets.", retainedIds);
+          logger4.log("autoload", "Restored retained (unclosed) presets.", retainedIds);
         }
       }
     }
@@ -4787,7 +4827,7 @@ Version: v${version}`;
       if (trackerButton == null ? void 0 : trackerButton.style) trackerButton.style.display = "";
       restoreFavoritedAndRetained();
     });
-    plugin.events.on("connect", (data) => {
+    plugin.events.on("connect", (data2) => {
       restoreFavoritedAndRetained();
     });
   }
@@ -5636,8 +5676,8 @@ Version: v${version}`;
     logDebug("Channel switching and channel guide keybinds registered (see the Keybinds settings category).");
     if (!isSpectatePage3()) return;
     let handled = false;
-    plugin.events.on("getResult", (data) => {
-      logDebug("getResult fired - match ended.", data);
+    plugin.events.on("getResult", (data2) => {
+      logDebug("getResult fired - match ended.", data2);
       if (handled) return;
       handled = true;
       if (!CONFIG.masterEnabled) {
@@ -5660,7 +5700,17 @@ Version: v${version}`;
       type: "boolean",
       default: false
     });
-    return { settings: settings2, enableNotepad };
+    const enableController = settings2.add("enableController", {
+      name: "Enable Controller Support",
+      type: "boolean",
+      default: false
+    });
+    const enableCardTags = settings2.add("enableCardTags", {
+      name: "Enable Card Tags",
+      type: "boolean",
+      default: false
+    });
+    return { settings: settings2, enableNotepad, enableController, enableCardTags };
   }
 
   // packages/misc/notepad/storage.js
@@ -5814,18 +5864,18 @@ Version: v${version}`;
   }
 
   // packages/misc/notepad/flood-fill.js
-  function floodFillPixels(data, width, height, startX, startY, fillRgb, tolerance = 24) {
+  function floodFillPixels(data2, width, height, startX, startY, fillRgb, tolerance = 24) {
     const x0 = Math.floor(startX);
     const y0 = Math.floor(startY);
     if (x0 < 0 || y0 < 0 || x0 >= width || y0 >= height) return false;
     const idx = (x, y) => (y * width + x) * 4;
     const startI = idx(x0, y0);
-    const startR = data[startI], startG = data[startI + 1], startB = data[startI + 2], startA = data[startI + 3];
+    const startR = data2[startI], startG = data2[startI + 1], startB = data2[startI + 2], startA = data2[startI + 3];
     const [fr, fg, fb] = fillRgb;
     const fa = 255;
     if (startR === fr && startG === fg && startB === fb && startA === fa) return false;
     function matchesStart(i) {
-      return Math.abs(data[i] - startR) <= tolerance && Math.abs(data[i + 1] - startG) <= tolerance && Math.abs(data[i + 2] - startB) <= tolerance && Math.abs(data[i + 3] - startA) <= tolerance;
+      return Math.abs(data2[i] - startR) <= tolerance && Math.abs(data2[i + 1] - startG) <= tolerance && Math.abs(data2[i + 2] - startB) <= tolerance && Math.abs(data2[i + 3] - startA) <= tolerance;
     }
     const visited = new Uint8Array(width * height);
     const stack = [x0, y0];
@@ -5836,10 +5886,10 @@ Version: v${version}`;
       const y = stack.pop();
       const x = stack.pop();
       const i = idx(x, y);
-      data[i] = fr;
-      data[i + 1] = fg;
-      data[i + 2] = fb;
-      data[i + 3] = fa;
+      data2[i] = fr;
+      data2[i + 1] = fg;
+      data2[i + 2] = fb;
+      data2[i + 3] = fa;
       filledAny = true;
       filledCoords.push(x, y);
       if (x > 0) tryPush(x - 1, y);
@@ -5868,12 +5918,12 @@ Version: v${version}`;
       const vIdx = ny * width + nx;
       if (visited[vIdx]) return;
       const i = idx(nx, ny);
-      const alpha = data[i + 3];
+      const alpha = data2[i + 3];
       if (alpha <= 0 || alpha >= 255) return;
-      data[i] = fr;
-      data[i + 1] = fg;
-      data[i + 2] = fb;
-      data[i + 3] = fa;
+      data2[i] = fr;
+      data2[i + 1] = fg;
+      data2[i + 2] = fb;
+      data2[i + 3] = fa;
       visited[vIdx] = 1;
     }
     return filledAny;
@@ -6209,7 +6259,7 @@ Version: v${version}`;
   function drawColorWheel(canvas) {
     const ctx = canvas.getContext("2d");
     const imageData = ctx.createImageData(WHEEL_SIZE, WHEEL_SIZE);
-    const data = imageData.data;
+    const data2 = imageData.data;
     for (let y = 0; y < WHEEL_SIZE; y++) {
       for (let x = 0; x < WHEEL_SIZE; x++) {
         const dx = x - WHEEL_RADIUS;
@@ -6217,17 +6267,17 @@ Version: v${version}`;
         const dist = Math.sqrt(dx * dx + dy * dy);
         const idx = (y * WHEEL_SIZE + x) * 4;
         if (dist > WHEEL_RADIUS) {
-          data[idx + 3] = 0;
+          data2[idx + 3] = 0;
           continue;
         }
         let angle = Math.atan2(dy, dx) * 180 / Math.PI;
         if (angle < 0) angle += 360;
         const saturation = Math.min(1, dist / WHEEL_RADIUS);
         const [r, g, b] = hslToRgbString(angle, saturation, WHEEL_FIXED_LIGHTNESS).match(/\d+/g).map(Number);
-        data[idx] = r;
-        data[idx + 1] = g;
-        data[idx + 2] = b;
-        data[idx + 3] = 255;
+        data2[idx] = r;
+        data2[idx + 1] = g;
+        data2[idx + 2] = b;
+        data2[idx + 3] = 255;
       }
     }
     ctx.putImageData(imageData, 0, 0);
@@ -6906,9 +6956,614 @@ Version: v${version}`;
 }
 `;
 
+  // packages/misc/card-tags/constants.js
+  var CARD_LIST_SELECTOR = ".cardsList, .cardSkinList, #loadDeckCards";
+
+  // packages/misc/card-tags/storage.js
+  var DATA_KEY = "wizascript.misc.cardTags.data";
+  var DEFAULT_COLORS = ["#4dabf7", "#51cf66", "#ffa94d", "#ff6b6b", "#cc5de8", "#20c997", "#ffd43b"];
+  function genTagId() {
+    return "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+  function emptyData() {
+    return { tags: [], cardTags: {} };
+  }
+  function readData() {
+    let raw;
+    try {
+      raw = GM_getValue(DATA_KEY, null);
+    } catch (e) {
+      console.warn("[CardTags] Failed to read storage key", DATA_KEY, e);
+      return emptyData();
+    }
+    if (!raw) return emptyData();
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (e) {
+      console.warn("[CardTags] Failed to parse stored data, starting fresh.", e);
+      return emptyData();
+    }
+    if (Array.isArray(parsed.tags) && parsed.tags.length && typeof parsed.tags[0] === "string") {
+      const nameToId = {};
+      const upgradedTags = parsed.tags.map((name, i) => {
+        const id = genTagId();
+        nameToId[name] = id;
+        return { id, name, color: DEFAULT_COLORS[i % DEFAULT_COLORS.length] };
+      });
+      const upgradedCardTags = {};
+      Object.keys(parsed.cardTags || {}).forEach((cardId) => {
+        const ids = (parsed.cardTags[cardId] || []).map((name) => nameToId[name]).filter(Boolean);
+        if (ids.length) upgradedCardTags[cardId] = ids;
+      });
+      const upgraded = { tags: upgradedTags, cardTags: upgradedCardTags };
+      writeData(upgraded);
+      return upgraded;
+    }
+    return {
+      tags: Array.isArray(parsed.tags) ? parsed.tags : [],
+      cardTags: parsed.cardTags && typeof parsed.cardTags === "object" ? parsed.cardTags : {}
+    };
+  }
+  function writeData(value) {
+    try {
+      GM_setValue(DATA_KEY, JSON.stringify(value));
+    } catch (e) {
+      console.warn("[CardTags] Failed to write storage key", DATA_KEY, e);
+    }
+  }
+  var data = readData();
+  function allTags() {
+    return data.tags;
+  }
+  function findTag(id) {
+    return data.tags.find((t) => t.id === id) || null;
+  }
+  function createTag(name, color) {
+    const tag = {
+      id: genTagId(),
+      name: name.trim(),
+      color: color || DEFAULT_COLORS[data.tags.length % DEFAULT_COLORS.length]
+    };
+    data.tags.push(tag);
+    writeData(data);
+    return tag;
+  }
+  function updateTag(id, patch) {
+    const tag = findTag(id);
+    if (!tag) return;
+    Object.assign(tag, patch);
+    writeData(data);
+  }
+  function deleteTag(id) {
+    data.tags = data.tags.filter((t) => t.id !== id);
+    Object.keys(data.cardTags).forEach((cardId) => {
+      data.cardTags[cardId] = data.cardTags[cardId].filter((tagId) => tagId !== id);
+      if (!data.cardTags[cardId].length) delete data.cardTags[cardId];
+    });
+    writeData(data);
+  }
+  function tagIdsForCard(cardId) {
+    return data.cardTags[cardId] || [];
+  }
+  function tagObjectsForCard(cardId) {
+    return tagIdsForCard(cardId).map(findTag).filter(Boolean);
+  }
+  function cardHasTag(cardId, tagId) {
+    return tagIdsForCard(cardId).includes(tagId);
+  }
+  function toggleCardTag(cardId, tagId) {
+    const current = data.cardTags[cardId] || [];
+    const has = current.includes(tagId);
+    const next = has ? current.filter((t) => t !== tagId) : [...current, tagId];
+    if (next.length) {
+      data.cardTags[cardId] = next;
+    } else {
+      delete data.cardTags[cardId];
+    }
+    writeData(data);
+  }
+  function taggedCardIds() {
+    return Object.keys(data.cardTags);
+  }
+
+  // packages/misc/card-tags/indicators.js
+  var INDICATOR_ATTR = "data-wiza-tag-dot";
+  var rarityAnchorWarned = false;
+  var logger = null;
+  function findRarityAnchor(cardEl) {
+    return cardEl.querySelector(".cardRarity");
+  }
+  function fillDots(holder, tags) {
+    holder.innerHTML = "";
+    holder.title = tags.map((t) => t.name).join(", ");
+    tags.forEach((t) => {
+      const dot = document.createElement("span");
+      dot.style.cssText = "width:8px;height:8px;border-radius:50%;background:" + (t.color || DEFAULT_COLORS[0]) + ";border:1px solid rgba(0,0,0,0.4);";
+      holder.appendChild(dot);
+    });
+  }
+  function makeFlankHolder(side) {
+    const holder = document.createElement("div");
+    holder.setAttribute(INDICATOR_ATTR, side);
+    Object.assign(holder.style, { position: "absolute", zIndex: "50", display: "flex", gap: "2px", pointerEvents: "none" });
+    return holder;
+  }
+  function positionFlank(cardEl, anchorEl, holder, side) {
+    const cardRect = cardEl.getBoundingClientRect();
+    const anchorRect = anchorEl.getBoundingClientRect();
+    const gap = 3;
+    holder.style.top = anchorRect.top - cardRect.top + anchorRect.height / 2 + "px";
+    if (side === "left") {
+      holder.style.left = anchorRect.left - cardRect.left - gap + "px";
+      holder.style.transform = "translate(-100%, -50%)";
+    } else {
+      holder.style.left = anchorRect.right - cardRect.left + gap + "px";
+      holder.style.transform = "translate(0, -50%)";
+    }
+  }
+  function decorateCorner(el, tags) {
+    const existing = el.querySelector(":scope > [" + INDICATOR_ATTR + '="corner"]');
+    if (getComputedStyle(el).position === "static") el.style.position = "relative";
+    const holder = existing || document.createElement("div");
+    if (!existing) {
+      holder.setAttribute(INDICATOR_ATTR, "corner");
+      Object.assign(holder.style, { position: "absolute", top: "2px", right: "2px", zIndex: "50", display: "flex", gap: "2px", pointerEvents: "none" });
+      el.appendChild(holder);
+    }
+    fillDots(holder, tags.slice(0, 4));
+  }
+  function decorateOneCardElement(el, tags) {
+    const leftExisting = el.querySelector(":scope > [" + INDICATOR_ATTR + '="left"]');
+    const rightExisting = el.querySelector(":scope > [" + INDICATOR_ATTR + '="right"]');
+    const cornerExisting = el.querySelector(":scope > [" + INDICATOR_ATTR + '="corner"]');
+    if (!tags.length) {
+      [leftExisting, rightExisting, cornerExisting].forEach((h) => h && h.remove());
+      return;
+    }
+    const anchor = findRarityAnchor(el);
+    if (!anchor) {
+      if (!rarityAnchorWarned) {
+        rarityAnchorWarned = true;
+        logger == null ? void 0 : logger.warn(null, "A card element has no .cardRarity element - falling back to a corner dot for it.");
+      }
+      if (leftExisting) leftExisting.remove();
+      if (rightExisting) rightExisting.remove();
+      decorateCorner(el, tags);
+      return;
+    }
+    if (cornerExisting) cornerExisting.remove();
+    if (getComputedStyle(el).position === "static") el.style.position = "relative";
+    const leftTags = tags.slice(0, 2);
+    const rightTags = tags.slice(2, 4);
+    const leftHolder = leftExisting || makeFlankHolder("left");
+    const rightHolder = rightExisting || makeFlankHolder("right");
+    if (!leftExisting) el.appendChild(leftHolder);
+    if (!rightExisting) el.appendChild(rightHolder);
+    fillDots(leftHolder, leftTags);
+    fillDots(rightHolder, rightTags);
+    leftHolder.style.display = leftTags.length ? "flex" : "none";
+    rightHolder.style.display = rightTags.length ? "flex" : "none";
+    positionFlank(el, anchor, leftHolder, "left");
+    positionFlank(el, anchor, rightHolder, "right");
+  }
+  function decorateCard(cardId) {
+    const els = Array.from(document.getElementsByClassName("card-" + cardId));
+    if (!els.length) return;
+    const tags = tagObjectsForCard(cardId);
+    els.forEach((el) => decorateOneCardElement(el, tags));
+  }
+  function decorateAllCards() {
+    taggedCardIds().forEach(decorateCard);
+  }
+  function initIndicators(loggerInstance) {
+    logger = loggerInstance;
+    let scheduled = false;
+    function schedule() {
+      if (scheduled) return;
+      scheduled = true;
+      setTimeout(() => {
+        scheduled = false;
+        decorateAllCards();
+      }, 100);
+    }
+    const containers = document.querySelectorAll(CARD_LIST_SELECTOR);
+    const observer = new MutationObserver(schedule);
+    if (containers.length) {
+      containers.forEach((c) => observer.observe(c, { childList: true, subtree: true, attributes: true, attributeFilter: ["id"] }));
+    } else {
+      observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["id"] });
+    }
+    schedule();
+  }
+
+  // packages/misc/card-tags/menu.js
+  var logger2 = null;
+  function setMenuLogger(instance) {
+    logger2 = instance;
+  }
+  var openMenuEl = null;
+  var outsideClick = null;
+  var outsideContext = null;
+  function maybeRefreshSearch() {
+    const searchEl = document.getElementById("searchInput");
+    if (searchEl && searchEl.value.trim()) refreshSearch();
+  }
+  function refreshSearch() {
+    const pageWindow2 = getPageWindow();
+    try {
+      if (typeof pageWindow2.applyFilters === "function") pageWindow2.applyFilters();
+      if (typeof pageWindow2.showPage === "function") pageWindow2.showPage(pageWindow2.currentPage);
+      decorateAllCards();
+    } catch (e) {
+      logger2 == null ? void 0 : logger2.warn(null, "applyFilters()/showPage() call failed.", e);
+    }
+  }
+  function closeTagMenu() {
+    if (!openMenuEl) return;
+    if (outsideClick) document.removeEventListener("click", outsideClick);
+    if (outsideContext) document.removeEventListener("contextmenu", outsideContext);
+    outsideClick = null;
+    outsideContext = null;
+    openMenuEl.remove();
+    openMenuEl = null;
+    maybeRefreshSearch();
+  }
+  function openTagMenu(card, cards, x, y) {
+    closeTagMenu();
+    const menu = document.createElement("div");
+    menu.className = "wiza-tag-menu";
+    Object.assign(menu.style, {
+      position: "fixed",
+      left: x + "px",
+      top: y + "px",
+      zIndex: 999999,
+      background: "#1b1b1f",
+      border: "1px solid rgba(255,255,255,0.15)",
+      borderRadius: "8px",
+      minWidth: "200px",
+      maxWidth: "260px",
+      boxShadow: "0 4px 18px rgba(0,0,0,0.5)",
+      overflow: "hidden",
+      fontFamily: "inherit",
+      fontSize: "13px",
+      color: "#eee"
+    });
+    const filterInput = document.createElement("input");
+    filterInput.type = "text";
+    filterInput.placeholder = "Filter tags\u2026";
+    Object.assign(filterInput.style, {
+      width: "100%",
+      boxSizing: "border-box",
+      padding: "7px 10px",
+      border: "none",
+      borderBottom: "1px solid rgba(255,255,255,0.15)",
+      background: "transparent",
+      color: "#eee",
+      outline: "none",
+      fontSize: "13px"
+    });
+    menu.appendChild(filterInput);
+    const rowsWrap = document.createElement("div");
+    Object.assign(rowsWrap.style, { maxHeight: "220px", overflowY: "auto" });
+    function makeRow({ label, onClick, active, secondary, swatch }) {
+      const row = document.createElement("div");
+      Object.assign(row.style, {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "8px 12px",
+        cursor: "pointer",
+        gap: "8px",
+        background: active ? "rgba(120,170,255,0.18)" : "transparent",
+        borderBottom: "1px solid rgba(255,255,255,0.08)"
+      });
+      row.addEventListener("mouseenter", () => {
+        if (!active) row.style.background = "rgba(255,255,255,0.08)";
+      });
+      row.addEventListener("mouseleave", () => {
+        row.style.background = active ? "rgba(120,170,255,0.18)" : "transparent";
+      });
+      const left = document.createElement("span");
+      left.style.cssText = "display:flex;align-items:center;gap:8px;overflow:hidden;flex:1;";
+      if (swatch) {
+        const dot = document.createElement("span");
+        dot.style.cssText = "width:10px;height:10px;border-radius:50%;background:" + swatch + ";flex-shrink:0;";
+        left.appendChild(dot);
+      }
+      const text = document.createElement("span");
+      text.textContent = (active ? "\u2713 " : "") + label;
+      text.style.cssText = "overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
+      left.appendChild(text);
+      row.appendChild(left);
+      if (secondary) {
+        const secBtn = document.createElement("span");
+        secBtn.textContent = secondary.label;
+        secBtn.title = secondary.title || "";
+        secBtn.style.cssText = "color:#9ab;flex-shrink:0;padding:2px 4px;";
+        secBtn.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          secondary.onClick();
+        });
+        row.appendChild(secBtn);
+      }
+      row.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        onClick();
+      });
+      return row;
+    }
+    function renderRows(filterTerm) {
+      rowsWrap.innerHTML = "";
+      const term = (filterTerm || "").trim().toLowerCase();
+      const tags = allTags().filter((t) => !term || t.name.toLowerCase().includes(term));
+      if (!tags.length) {
+        const empty = document.createElement("div");
+        empty.style.cssText = "padding:10px 12px;color:#999;";
+        empty.textContent = allTags().length ? "No matching tags." : "No tags yet.";
+        rowsWrap.appendChild(empty);
+        return;
+      }
+      tags.forEach((tag) => {
+        rowsWrap.appendChild(makeRow({
+          label: tag.name,
+          swatch: tag.color,
+          active: cardHasTag(card.id, tag.id),
+          onClick: () => {
+            toggleCardTag(card.id, tag.id);
+            decorateCard(card.id);
+            renderRows(filterInput.value);
+          },
+          secondary: {
+            label: "\u{1F441}",
+            title: 'See cards tagged "' + tag.name + '"',
+            onClick: () => showCardsForTag(tag, cards)
+          }
+        }));
+      });
+    }
+    renderRows("");
+    menu.appendChild(rowsWrap);
+    filterInput.addEventListener("input", () => renderRows(filterInput.value));
+    const divider = document.createElement("div");
+    divider.style.cssText = "height:1px;background:rgba(255,255,255,0.15);";
+    menu.appendChild(divider);
+    const newTagRow = makeRow({ label: "+ New Tag", onClick: () => {
+      closeTagMenu();
+      promptNewTag(card, cards, x, y);
+    } });
+    newTagRow.style.color = "#8f8";
+    menu.appendChild(newTagRow);
+    const manageRow = makeRow({ label: "Manage Tags\u2026", onClick: () => {
+      closeTagMenu();
+      openManageTagsDialog();
+    } });
+    manageRow.style.color = "#9ab";
+    menu.appendChild(manageRow);
+    menu.addEventListener("click", (ev) => ev.stopPropagation());
+    document.body.appendChild(menu);
+    openMenuEl = menu;
+    const rect = menu.getBoundingClientRect();
+    if (rect.right > window.innerWidth) menu.style.left = Math.max(0, window.innerWidth - rect.width - 8) + "px";
+    if (rect.bottom > window.innerHeight) menu.style.top = Math.max(0, window.innerHeight - rect.height - 8) + "px";
+    filterInput.focus();
+    const openedAt = performance.now();
+    function outsideCloser(e) {
+      if (performance.now() - openedAt < 200) return;
+      if (menu.contains(e.target)) return;
+      closeTagMenu();
+    }
+    outsideClick = outsideCloser;
+    outsideContext = outsideCloser;
+    document.addEventListener("click", outsideClick);
+    document.addEventListener("contextmenu", outsideContext);
+  }
+  function promptNewTag(card, cards, reopenX, reopenY) {
+    const pageWindow2 = getPageWindow();
+    const BootstrapDialog2 = pageWindow2.BootstrapDialog;
+    if (typeof BootstrapDialog2 === "undefined" || typeof BootstrapDialog2.show !== "function") {
+      logger2 == null ? void 0 : logger2.warn(null, "BootstrapDialog is not available - cannot open the new-tag dialog.");
+      return;
+    }
+    const wrapper = document.createElement("div");
+    wrapper.style.cssText = "display:flex;gap:8px;align-items:center;min-width:260px;";
+    const colorInput = document.createElement("input");
+    colorInput.type = "color";
+    colorInput.value = DEFAULT_COLORS[allTags().length % DEFAULT_COLORS.length];
+    colorInput.style.cssText = "width:32px;height:32px;padding:0;border:none;background:none;flex-shrink:0;cursor:pointer;";
+    wrapper.appendChild(colorInput);
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "Tag name\u2026";
+    input.className = "form-control";
+    input.style.cssText = "flex:1;padding:6px 8px;font-size:13px;";
+    wrapper.appendChild(input);
+    BootstrapDialog2.show({
+      title: "New tag",
+      message: wrapper,
+      cssClass: "mono",
+      buttons: [
+        { label: "Cancel", action: (d) => d.close() },
+        {
+          label: "Create",
+          cssClass: "btn-success",
+          action: (d) => {
+            const name = input.value.trim();
+            if (!name) return;
+            const tag = createTag(name, colorInput.value);
+            toggleCardTag(card.id, tag.id);
+            decorateCard(card.id);
+            d.close();
+            openTagMenu(card, cards, reopenX, reopenY);
+          }
+        }
+      ]
+    });
+    setTimeout(() => input.focus(), 100);
+  }
+  function openManageTagsDialog() {
+    const pageWindow2 = getPageWindow();
+    const BootstrapDialog2 = pageWindow2.BootstrapDialog;
+    if (typeof BootstrapDialog2 === "undefined" || typeof BootstrapDialog2.show !== "function") {
+      logger2 == null ? void 0 : logger2.warn(null, "BootstrapDialog is not available - cannot open tag management.");
+      return;
+    }
+    const wrapper = document.createElement("div");
+    wrapper.style.cssText = "min-width:280px;max-height:320px;overflow-y:auto;";
+    function renderList2() {
+      wrapper.innerHTML = "";
+      if (!allTags().length) {
+        const empty = document.createElement("div");
+        empty.style.cssText = "color:#999;padding:6px 0;";
+        empty.textContent = "No tags yet.";
+        wrapper.appendChild(empty);
+        return;
+      }
+      allTags().forEach((tag) => {
+        const row = document.createElement("div");
+        row.style.cssText = "display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08);";
+        const colorInput = document.createElement("input");
+        colorInput.type = "color";
+        colorInput.value = tag.color || DEFAULT_COLORS[0];
+        colorInput.style.cssText = "width:26px;height:26px;padding:0;border:none;background:none;flex-shrink:0;cursor:pointer;";
+        colorInput.addEventListener("change", () => {
+          updateTag(tag.id, { color: colorInput.value });
+          decorateAllCards();
+        });
+        row.appendChild(colorInput);
+        const nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.value = tag.name;
+        nameInput.className = "form-control";
+        nameInput.style.cssText = "flex:1;padding:5px 7px;font-size:13px;";
+        nameInput.addEventListener("change", () => {
+          const v = nameInput.value.trim();
+          if (v) updateTag(tag.id, { name: v });
+          else nameInput.value = tag.name;
+          decorateAllCards();
+        });
+        row.appendChild(nameInput);
+        const delBtn = document.createElement("div");
+        delBtn.textContent = "-";
+        delBtn.title = "Double-click to delete (removes from every tagged card)";
+        delBtn.style.cssText = "width:26px;height:26px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(220,53,69,0.15);color:#e05260;border:1px solid rgba(220,53,69,0.5);border-radius:4px;font-weight:700;font-size:16px;line-height:1;cursor:pointer;user-select:none;";
+        delBtn.addEventListener("mouseenter", () => {
+          delBtn.style.background = "rgba(220,53,69,0.3)";
+        });
+        delBtn.addEventListener("mouseleave", () => {
+          delBtn.style.background = "rgba(220,53,69,0.15)";
+        });
+        delBtn.addEventListener("click", (e) => {
+          if (e.detail !== 2) return;
+          deleteTag(tag.id);
+          decorateAllCards();
+          renderList2();
+        });
+        row.appendChild(delBtn);
+        wrapper.appendChild(row);
+      });
+    }
+    renderList2();
+    BootstrapDialog2.show({
+      title: "Manage Tags",
+      message: wrapper,
+      cssClass: "mono",
+      buttons: [{ label: "Close", action: (d) => {
+        d.close();
+        maybeRefreshSearch();
+      } }]
+    });
+  }
+  function showCardsForTag(tag, cards) {
+    const pageWindow2 = getPageWindow();
+    const BootstrapDialog2 = pageWindow2.BootstrapDialog;
+    const matches = cards.filter((c) => c && c.id != null && cardHasTag(c.id, tag.id));
+    const listText = matches.length ? matches.map((c) => c.name).join(", ") : '(nothing tagged "' + tag.name + '" yet)';
+    if (typeof BootstrapDialog2 === "undefined" || typeof BootstrapDialog2.show !== "function") {
+      alert('Cards tagged "' + tag.name + '": ' + listText);
+      return;
+    }
+    const wrapper = document.createElement("div");
+    wrapper.style.cssText = "max-height:260px;overflow-y:auto;";
+    wrapper.textContent = listText;
+    BootstrapDialog2.show({
+      title: 'Tagged "' + tag.name + '" (' + matches.length + ")",
+      message: wrapper,
+      cssClass: "mono",
+      buttons: [{ label: "Close", action: (d) => d.close() }]
+    });
+  }
+
+  // packages/misc/card-tags/right-click.js
+  function getCardById2(cards, id) {
+    return cards.find((c) => c && String(c.id) === String(id)) || null;
+  }
+  function wireRightClick(cards) {
+    document.addEventListener("contextmenu", function(e) {
+      const container = e.target.closest(CARD_LIST_SELECTOR);
+      if (!container) return;
+      if (e.defaultPrevented) return;
+      const cardEl = e.target.closest(".card");
+      const card = cardEl && cardEl.id ? getCardById2(cards, cardEl.id) : null;
+      if (!card) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      openTagMenu(card, cards, e.clientX, e.clientY);
+    });
+  }
+
+  // packages/misc/card-tags/search-filter.js
+  function wireSearchFilter(plugin, logger4) {
+    if (typeof plugin.addFilter !== "function") {
+      logger4.warn(null, "plugin.addFilter is not available - Card Tags search integration disabled.");
+      return;
+    }
+    plugin.addFilter(function cardTagsFilter(card, removed, results) {
+      if (!removed || !results || !results.search) return removed;
+      if (!card || card.id == null) return removed;
+      const searchEl = document.getElementById("searchInput");
+      const term = searchEl ? searchEl.value.trim().toLowerCase() : "";
+      if (!term) return removed;
+      const tags = tagObjectsForCard(card.id);
+      if (!tags.length) return removed;
+      const matched = tags.some((t) => t.name.toLowerCase().includes(term));
+      return matched ? false : removed;
+    });
+  }
+
+  // packages/misc/card-tags/index.js
+  var logger3 = createLogger("CardTags");
+  function isCardTagsPage() {
+    return matchesPage(["/Crafting", "/Decks"]);
+  }
+  function waitForCards(callback, attempt = 0) {
+    const cards = getAllCards();
+    if (cards.length) {
+      callback(cards);
+      return;
+    }
+    if (attempt > 80) {
+      logger3.warn(null, "Never found a populated card list after ~20s - Card Tags will not activate on this page load.");
+      return;
+    }
+    setTimeout(() => waitForCards(callback, attempt + 1), 250);
+  }
+  function initCardTags(plugin, enableCardTagsSetting) {
+    if (!enableCardTagsSetting.value()) return;
+    if (!isCardTagsPage()) return;
+    setMenuLogger(logger3);
+    waitForCards((cards) => {
+      wireSearchFilter(plugin, logger3);
+      wireRightClick(cards);
+      initIndicators(logger3);
+      decorateAllCards();
+    });
+  }
+
   // packages/misc/index.js
   function initMisc(plugin) {
     const settings2 = registerMiscSettings(plugin);
+    initCardTags(plugin, settings2.enableCardTags);
     function syncNotepadVisibility() {
       if (settings2.enableNotepad.value()) {
         showNotepad();
@@ -6957,6 +7612,3490 @@ Version: v${version}`;
       packageLabel: "Notepad",
       onMatch: () => redoNotepad()
     });
+    return settings2;
+  }
+
+  // packages/controller/gamepad.js
+  var pageWindow = getPageWindow();
+  var debugLoggingEnabled = false;
+  function setDebugLoggingEnabled(v) {
+    debugLoggingEnabled = !!v;
+  }
+  var pressIndicator = document.createElement("div");
+  Object.assign(pressIndicator.style, {
+    position: "fixed",
+    top: "16px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    zIndex: 2147483647,
+    background: "rgba(0,150,0,0.92)",
+    color: "#fff",
+    font: 'bold 22px -apple-system, "Segoe UI", sans-serif',
+    padding: "10px 22px",
+    borderRadius: "10px",
+    pointerEvents: "none",
+    boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+    display: "none",
+    textAlign: "center"
+  });
+  var pressIndicatorHideTimer = null;
+  function showPressIndicator(text) {
+    if (!debugLoggingEnabled) return;
+    pressIndicator.textContent = text;
+    pressIndicator.style.display = "block";
+    if (pressIndicatorHideTimer) clearTimeout(pressIndicatorHideTimer);
+    pressIndicatorHideTimer = setTimeout(() => {
+      pressIndicator.style.display = "none";
+    }, 1e3);
+  }
+  var BUTTON_LABELS = {
+    0: "\u2715",
+    1: "\u25CB",
+    2: "\u25A1",
+    3: "\u25B3",
+    4: "L1",
+    5: "R1",
+    6: "L2",
+    7: "R2",
+    8: "Select",
+    9: "Start",
+    10: "L3",
+    11: "R3",
+    12: "D-Up",
+    13: "D-Down",
+    14: "D-Left",
+    15: "D-Right",
+    16: "Home",
+    17: "Touchpad"
+  };
+  var BUTTON_LABELS_NINTENDO = {
+    0: "B",
+    1: "A",
+    2: "Y",
+    3: "X",
+    4: "L",
+    5: "R",
+    6: "ZL",
+    7: "ZR",
+    8: "-",
+    9: "+",
+    10: "L3",
+    11: "R3",
+    12: "D-Up",
+    13: "D-Down",
+    14: "D-Left",
+    15: "D-Right",
+    16: "Home",
+    17: "Capture"
+  };
+  function activeButtonLabelTable() {
+    return hidDevice ? BUTTON_LABELS_NINTENDO : BUTTON_LABELS;
+  }
+  function btnLabel(idx) {
+    return activeButtonLabelTable()[idx] || "Button " + idx;
+  }
+  function buttonToDisplay(idx) {
+    if (idx === null || idx === void 0) return "Unbound";
+    return btnLabel(idx);
+  }
+  function prettifyKeyCode(code) {
+    if (code.startsWith("Key") && code.length === 4) return code.slice(3);
+    if (code.startsWith("Digit") && code.length === 6) return code.slice(5);
+    return code;
+  }
+  function bindingToDisplay(value) {
+    if (value === null || value === void 0) return "Unbound";
+    if (typeof value === "number") return btnLabel(value);
+    if (value && value.type === "key") return "Key: " + prettifyKeyCode(value.code);
+    return "Unbound";
+  }
+  var AXIS_CALIBRATION = /* @__PURE__ */ new Map();
+  var AXIS_STABLE_FRAMES_NEEDED = 90;
+  var AXIS_JITTER_EPS = 0.02;
+  var AXIS_CALIBRATION_WINDOW_MS = 4e3;
+  function getCalibratedAxes(pad) {
+    let cal = AXIS_CALIBRATION.get(pad.id);
+    if (!cal) {
+      cal = {
+        baseline: pad.axes.map(() => 0),
+        lastRaw: pad.axes.slice(),
+        stableFrames: pad.axes.map(() => 0),
+        calibrateUntil: Date.now() + AXIS_CALIBRATION_WINDOW_MS
+      };
+      AXIS_CALIBRATION.set(pad.id, cal);
+    }
+    if (Date.now() < cal.calibrateUntil) {
+      pad.axes.forEach((v, i) => {
+        const prev = cal.lastRaw[i] !== void 0 ? cal.lastRaw[i] : v;
+        if (Math.abs(v - prev) < AXIS_JITTER_EPS) {
+          cal.stableFrames[i] = (cal.stableFrames[i] || 0) + 1;
+        } else {
+          cal.stableFrames[i] = 0;
+        }
+        cal.lastRaw[i] = v;
+        if (cal.stableFrames[i] === AXIS_STABLE_FRAMES_NEEDED && Math.abs(v - (cal.baseline[i] || 0)) > AXIS_JITTER_EPS) {
+          cal.baseline[i] = v;
+          if (debugLoggingEnabled) console.log(`[Wizascript Controller] axis ${i} on "${pad.id}" recalibrated to neutral=${v.toFixed(3)} after holding steady for ~1.5s (calibration window closes ${((cal.calibrateUntil - Date.now()) / 1e3).toFixed(1)}s from now)`);
+        }
+      });
+    }
+    return pad.axes.map((v, i) => Math.max(-1, Math.min(1, v - (cal.baseline[i] || 0))));
+  }
+  var WEBHID_VENDOR_ID = 1406;
+  var hidDevice = null;
+  function isHidConnected() {
+    return !!hidDevice;
+  }
+  var hidState = { axes: [0, 0, 0, 0], hat: 8, raw1: 0, raw2: 0 };
+  var lastLoggedHidBits = { raw1: 0, raw2: 0 };
+  function decodeHidReport(dataView) {
+    if (dataView.byteLength < 11) return;
+    const raw1 = dataView.getUint8(0);
+    const raw2 = dataView.getUint8(1);
+    const hat = dataView.getUint8(2);
+    const lh = dataView.getUint16(3, true);
+    const lv = dataView.getUint16(5, true);
+    const rh = dataView.getUint16(7, true);
+    const rv = dataView.getUint16(9, true);
+    const norm = (v) => Math.max(-1, Math.min(1, (v - 32768) / 32768));
+    hidState.axes = [norm(lh), norm(lv), norm(rh), norm(rv)];
+    hidState.hat = hat;
+    hidState.raw1 = raw1;
+    hidState.raw2 = raw2;
+    for (let bit = 0; bit < 8; bit++) {
+      const mask = 1 << bit;
+      const wasR1 = !!(lastLoggedHidBits.raw1 & mask), isR1 = !!(raw1 & mask);
+      if (wasR1 !== isR1) {
+        if (debugLoggingEnabled) console.log(`[Wizascript Controller] WebHID raw bit B1.0x${mask.toString(16).padStart(2, "0")} -> ${isR1 ? "DOWN" : "UP"}`);
+        if (isR1) showPressIndicator(`\u{1F3AE} WebHID B1.0x${mask.toString(16).padStart(2, "0")} pressed`);
+      }
+      const wasR2 = !!(lastLoggedHidBits.raw2 & mask), isR2 = !!(raw2 & mask);
+      if (wasR2 !== isR2) {
+        if (debugLoggingEnabled) console.log(`[Wizascript Controller] WebHID raw bit B2.0x${mask.toString(16).padStart(2, "0")} -> ${isR2 ? "DOWN" : "UP"}`);
+        if (isR2) showPressIndicator(`\u{1F3AE} WebHID B2.0x${mask.toString(16).padStart(2, "0")} pressed`);
+      }
+    }
+    lastLoggedHidBits.raw1 = raw1;
+    lastLoggedHidBits.raw2 = raw2;
+  }
+  function handleHidInputReport(event) {
+    if (event.reportId !== 63) return;
+    decodeHidReport(event.data);
+  }
+  async function openHidDevice(device) {
+    if (hidDevice) {
+      if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID device already connected, ignoring duplicate open call.");
+      return;
+    }
+    try {
+      if (!device.opened) await device.open();
+      device.addEventListener("inputreport", handleHidInputReport);
+      hidDevice = device;
+      if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID device opened:", device.productName || device.vendorId + ":" + device.productId);
+    } catch (e) {
+      if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID open failed:", e);
+    }
+  }
+  async function connectWebHidController() {
+    if (!navigator.hid) {
+      if (debugLoggingEnabled) console.log("[Wizascript Controller] navigator.hid is not available in this browser/context - WebHID cannot be used.");
+      return;
+    }
+    try {
+      const devices = await navigator.hid.requestDevice({ filters: [{ vendorId: WEBHID_VENDOR_ID }] });
+      if (!devices.length) {
+        if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID device picker closed with no selection.");
+        return;
+      }
+      await openHidDevice(devices[0]);
+    } catch (e) {
+      if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID requestDevice failed:", e);
+    }
+  }
+  (async function tryAutoReconnectWebHid() {
+    if (!navigator.hid) return;
+    try {
+      const devices = await navigator.hid.getDevices();
+      const match = devices.find((d) => d.vendorId === WEBHID_VENDOR_ID);
+      if (match) await openHidDevice(match);
+    } catch (e) {
+      if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID auto-reconnect check failed:", e);
+    }
+  })();
+  function getMergedGamepad() {
+    let rawPads = Array.from(navigator.getGamepads()).filter((p) => p);
+    if (hidDevice) {
+      const vidHex = hidDevice.vendorId.toString(16).padStart(4, "0");
+      const pidHex = hidDevice.productId.toString(16).padStart(4, "0");
+      rawPads = rawPads.filter((p) => {
+        const id = (p.id || "").toLowerCase();
+        const isSameDevice = id.includes(vidHex) && id.includes(pidHex);
+        if (isSameDevice && debugLoggingEnabled) console.log("[Wizascript Controller] excluding native Gamepad-API entry for the WebHID-connected device from the merge (buttons unreliable over Bluetooth):", p.id);
+        return !isSameDevice;
+      });
+    }
+    if (hidDevice) {
+      const hidButtons = new Array(18).fill(null).map(() => ({ pressed: false, value: 0 }));
+      const hat = hidState.hat;
+      hidButtons[12] = { pressed: hat === 0 || hat === 1 || hat === 7, value: 0 };
+      hidButtons[15] = { pressed: hat === 1 || hat === 2 || hat === 3, value: 0 };
+      hidButtons[13] = { pressed: hat === 3 || hat === 4 || hat === 5, value: 0 };
+      hidButtons[14] = { pressed: hat === 5 || hat === 6 || hat === 7, value: 0 };
+      const r1 = hidState.raw1, r2 = hidState.raw2;
+      hidButtons[0] = { pressed: !!(r1 & 1), value: 0 };
+      hidButtons[1] = { pressed: !!(r1 & 2), value: 0 };
+      hidButtons[2] = { pressed: !!(r1 & 4), value: 0 };
+      hidButtons[3] = { pressed: !!(r1 & 8), value: 0 };
+      hidButtons[4] = { pressed: !!(r1 & 16), value: r1 & 16 ? 1 : 0 };
+      hidButtons[5] = { pressed: !!(r1 & 32), value: r1 & 32 ? 1 : 0 };
+      hidButtons[6] = { pressed: !!(r1 & 64), value: r1 & 64 ? 1 : 0 };
+      hidButtons[7] = { pressed: !!(r1 & 128), value: r1 & 128 ? 1 : 0 };
+      hidButtons[8] = { pressed: !!(r2 & 1), value: 0 };
+      hidButtons[9] = { pressed: !!(r2 & 2), value: 0 };
+      hidButtons[10] = { pressed: !!(r2 & 4), value: 0 };
+      hidButtons[11] = { pressed: !!(r2 & 8), value: 0 };
+      hidButtons[16] = { pressed: !!(r2 & 16), value: 0 };
+      hidButtons[17] = { pressed: !!(r2 & 32), value: 0 };
+      rawPads.push({ id: "WebHID Switch Pro Controller", buttons: hidButtons, axes: hidState.axes.slice() });
+    }
+    if (!rawPads.length) return null;
+    const pads = rawPads.map((p) => ({ id: p.id, buttons: p.buttons, axes: getCalibratedAxes(p) }));
+    if (pads.length === 1) return pads[0];
+    const buttonCount = Math.max(...pads.map((p) => p.buttons.length));
+    const axesCount = Math.max(...pads.map((p) => p.axes.length));
+    const buttons = [];
+    for (let i = 0; i < buttonCount; i++) {
+      let pressed = false, value = 0;
+      for (const p of pads) {
+        const b = p.buttons[i];
+        if (!b) continue;
+        if (b.pressed) pressed = true;
+        if (b.value > value) value = b.value;
+      }
+      buttons.push({ pressed, value });
+    }
+    const axes = [];
+    for (let i = 0; i < axesCount; i++) {
+      let best = 0;
+      for (const p of pads) {
+        const v = p.axes[i];
+        if (v === void 0) continue;
+        if (Math.abs(v) > Math.abs(best)) best = v;
+      }
+      axes.push(best);
+    }
+    return { buttons, axes, _mergedFrom: pads.map((p) => p.id) };
+  }
+  pageWindow.addEventListener("gamepadconnected", (e) => {
+    if (!debugLoggingEnabled) return;
+    console.log("[Wizascript Controller] gamepadconnected:", {
+      index: e.gamepad.index,
+      id: e.gamepad.id,
+      mapping: e.gamepad.mapping,
+      buttons: e.gamepad.buttons.length,
+      axes: e.gamepad.axes.length
+    });
+  });
+  pageWindow.addEventListener("gamepaddisconnected", (e) => {
+    if (!debugLoggingEnabled) return;
+    console.log("[Wizascript Controller] gamepaddisconnected:", { index: e.gamepad.index, id: e.gamepad.id });
+  });
+  var lastLoggedRawSnapshot = /* @__PURE__ */ new Map();
+  function rawSnapshotsEqual(a, b) {
+    if (!a || !b) return false;
+    if (a.pressedIdx.length !== b.pressedIdx.length) return false;
+    for (let i = 0; i < a.pressedIdx.length; i++) if (a.pressedIdx[i] !== b.pressedIdx[i]) return false;
+    if (a.axes.length !== b.axes.length) return false;
+    for (let i = 0; i < a.axes.length; i++) if (Math.abs(a.axes[i] - b.axes[i]) > 0.03) return false;
+    return true;
+  }
+  function logRawGamepadStateIfChanged() {
+    if (!debugLoggingEnabled) return;
+    const pads = Array.from(navigator.getGamepads()).filter((p) => p);
+    if (!pads.length) return;
+    pads.forEach((p) => {
+      const pressedIdx = p.buttons.map((b, i) => b.pressed ? i : null).filter((i) => i !== null);
+      const snapshot = { pressedIdx, axes: p.axes.slice() };
+      const prev = lastLoggedRawSnapshot.get(p.id);
+      if (rawSnapshotsEqual(prev, snapshot)) return;
+      lastLoggedRawSnapshot.set(p.id, snapshot);
+      console.log(`[Wizascript Controller] raw gamepad[${p.index}] "${p.id}" mapping="${p.mapping}" pressed=[${pressedIdx.join(",")}] axes=[${p.axes.map((v) => v.toFixed(2)).join(",")}]`);
+    });
+  }
+  var lastMergedButtonState = [];
+  var lastUsingControllerLogged = null;
+  var lastAnyStickState = false;
+  function logMergedInputEdges(gp, usingControllerNow, anyStickNow) {
+    if (!debugLoggingEnabled) return;
+    if (lastUsingControllerLogged !== usingControllerNow) {
+      lastUsingControllerLogged = usingControllerNow;
+      console.log(`[Wizascript Controller] usingController -> ${usingControllerNow}`);
+    }
+    gp.buttons.forEach((b, i) => {
+      const was = !!lastMergedButtonState[i];
+      const is = !!(b && b.pressed);
+      if (was !== is) {
+        console.log(`[Wizascript Controller] MERGED button ${i} (${buttonToDisplay(i)}) -> ${is ? "DOWN" : "UP"}`);
+        if (is) showPressIndicator("\u{1F3AE} " + buttonToDisplay(i) + " pressed");
+      }
+      lastMergedButtonState[i] = is;
+    });
+    if (!!anyStickNow !== lastAnyStickState) {
+      lastAnyStickState = !!anyStickNow;
+      if (lastAnyStickState) showPressIndicator("\u{1F579} Stick moved");
+    }
+  }
+
+  // packages/controller/storage.js
+  var GM_PREFIX2 = "wizascript.controller.";
+  function csGet(key, fallback) {
+    try {
+      const v = GM_getValue(GM_PREFIX2 + key, null);
+      return v === null || v === void 0 ? fallback : v;
+    } catch (e) {
+      console.warn("[Wizascript Controller] GM_getValue failed, falling back to default:", e);
+      return fallback;
+    }
+  }
+  function csSet(key, value) {
+    try {
+      GM_setValue(GM_PREFIX2 + key, value);
+    } catch (e) {
+      console.warn("[Wizascript Controller] GM_setValue failed, binding will not persist:", e);
+    }
+  }
+  function csDelete(key) {
+    try {
+      GM_deleteValue(GM_PREFIX2 + key);
+    } catch (e) {
+      console.warn("[Wizascript Controller] GM_deleteValue failed:", e);
+    }
+  }
+  var PRESET_COUNT = 3;
+  var DEFAULT_PRESET_NAME_PREFIX = "Preset ";
+  function getActivePreset() {
+    const raw = csGet("activePreset", "1");
+    const n = parseInt(raw, 10);
+    return Number.isNaN(n) || n < 1 || n > PRESET_COUNT ? 1 : n;
+  }
+  function setActivePreset(n) {
+    csSet("activePreset", String(n));
+  }
+  function getPresetName(n) {
+    return csGet("presetName." + n, DEFAULT_PRESET_NAME_PREFIX + n);
+  }
+  function setPresetName(n, name) {
+    const trimmed = (name || "").trim();
+    csSet("presetName." + n, trimmed === "" ? DEFAULT_PRESET_NAME_PREFIX + n : trimmed);
+  }
+  function presetKey(rawKey) {
+    return "preset" + getActivePreset() + "." + rawKey;
+  }
+  function getHudPosition() {
+    const raw = csGet("debugHudPosition", null);
+    if (!raw) return null;
+    try {
+      const pos = JSON.parse(raw);
+      if (pos && typeof pos.left === "number" && typeof pos.top === "number") return pos;
+    } catch (e) {
+      console.warn("[Wizascript Controller] stored debug HUD position was invalid JSON, ignoring:", e);
+    }
+    return null;
+  }
+  function setHudPosition(left, top) {
+    csSet("debugHudPosition", JSON.stringify({ left, top }));
+  }
+  function getCursorSensitivity() {
+    const raw = csGet("cursorSensitivity", null);
+    if (raw === null) return 0;
+    const n = parseFloat(raw);
+    return Number.isNaN(n) ? 0 : Math.max(-1, Math.min(1, n));
+  }
+  function setCursorSensitivity(v) {
+    csSet("cursorSensitivity", String(Math.max(-1, Math.min(1, v))));
+  }
+  function migrateFlatBindingsToPresetOne(controllerActionKeys, hardwareShortcutKeys) {
+    if (csGet("migratedToPresetsV056", null) !== null) return;
+    const migrate = (rawKey) => {
+      const oldVal = csGet(rawKey, null);
+      if (oldVal === null) return;
+      const newKey = "preset1." + rawKey;
+      if (csGet(newKey, null) !== null) return;
+      csSet(newKey, oldVal);
+    };
+    migrate("keybinds.__primary");
+    controllerActionKeys.forEach((key) => migrate("keybinds." + key));
+    hardwareShortcutKeys.forEach((key) => migrate("shortcuts." + key));
+    csSet("migratedToPresetsV056", "true");
+    console.log("[Wizascript Controller] migrated any pre-preset-system bindings into Preset 1.");
+  }
+  function resetPresetBindings(presetN, controllerActionKeys, hardwareShortcutKeys) {
+    const prefix = "preset" + presetN + ".";
+    csDelete(prefix + "keybinds.__primary");
+    csDelete(prefix + "keybinds.__channelGuide");
+    controllerActionKeys.forEach((key) => csDelete(prefix + "keybinds." + key));
+    hardwareShortcutKeys.forEach((key) => csDelete(prefix + "shortcuts." + key));
+    console.log("[Wizascript Controller] reset preset " + presetN + "'s keybinds/shortcuts to their defaults.");
+  }
+
+  // packages/controller/settings.js
+  var CONTROLLER_ACTIONS = [
+    { key: "previousChannel", name: "Previous Channel", packageLabel: "UC TV", context: "channelSwitch", defaultButton: 14, dispatch: { code: "ArrowLeft", key: "ArrowLeft" } },
+    { key: "nextChannel", name: "Next Channel", packageLabel: "UC TV", context: "channelSwitch", defaultButton: 15, dispatch: { code: "ArrowRight", key: "ArrowRight" } },
+    { key: "toggleNotepad", name: "Toggle Notepad", packageLabel: "Notepad", context: "always", defaultButton: 3, dispatch: { code: "KeyO", key: "o" } },
+    { key: "resetNotepad", name: "Reset Notepad", packageLabel: "Notepad", context: "always", defaultButton: 2, dispatch: { code: "KeyN", key: "n" } },
+    { key: "undoNotepad", name: "Undo Drawing", packageLabel: "Notepad", context: "default", defaultButton: 13, dispatch: { code: "KeyZ", key: "z" } },
+    { key: "redoNotepad", name: "Redo Drawing", packageLabel: "Notepad", context: "default", defaultButton: 12, dispatch: { code: "KeyY", key: "y" } },
+    { key: "moveEntryUp", name: "Move Entry Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
+    { key: "moveEntryDown", name: "Move Entry Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
+    // Shortened from "Move Balance Section Up/Down" - the "- Primary +
+    // <button>" suffix registerControllerSettings() appends below already
+    // pushed the combined row name wide enough to force a horizontal
+    // scrollbar in the settings dialog. "Section" alone is unambiguous
+    // here (Patch Maker only has one thing called a "section"), matching
+    // "Entry"/"Card" already being bare nouns in the two actions above.
+    { key: "moveSectionUp", name: "Move Section Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
+    { key: "moveSectionDown", name: "Move Section Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
+    { key: "moveCardUp", name: "Move Card Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
+    { key: "moveCardDown", name: "Move Card Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
+    // Relays Patch Maker's own real "Cycle Category Up/Down" keybind
+    // (packages/patch-maker/overlay.js - Comma/Period by default,
+    // scope:'scoped'/selector:'.uc-li-text', same registry Move Entry/
+    // Section/Card Up/Down above already relay into successfully) exactly
+    // the same way those do: dispatch the real e.code Wizascript's own
+    // registry is listening for while Primary is synthetically held, and
+    // let that registry's own document.activeElement/selector check
+    // decide whether it actually applies. defaultButton is D-pad Left/
+    // Right (14/15) rather than Up/Down (12/13, already claimed by Move
+    // Entry/Section/Card in this same 'patchMaker' context) specifically
+    // to avoid a same-frame double-fire - Up/Down and Left/Right dispatch
+    // different e.codes, so sharing a button between two 'patchMaker'
+    // actions would relay BOTH every time it's pressed. Left/Right is
+    // free here: previousChannel/nextChannel above claim the same two
+    // buttons, but only under 'channelSwitch' context, which is mutually
+    // exclusive with 'patchMaker' by construction (see the `applies`
+    // check in index.js's relay). This is very likely the actual
+    // technical snag from the earlier, abandoned attempt at this exact
+    // feature - reusing Up/Down here would produce confusing dual
+    // behavior (moving the entry AND cycling its category on the same
+    // press) that could easily read as "wiring it was a pain," even
+    // though the underlying relay mechanism itself works correctly in
+    // isolation (proven by Move Entry/Section/Card already using it).
+    { key: "cycleCategoryUp", name: "Cycle Category Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 14, dispatch: { code: "Comma", key: "," } },
+    { key: "cycleCategoryDown", name: "Cycle Category Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 15, dispatch: { code: "Period", key: "." } }
+  ];
+  var CONTROLLER_ACTIONS_BY_KEY = {};
+  CONTROLLER_ACTIONS.forEach((a) => {
+    CONTROLLER_ACTIONS_BY_KEY[a.key] = a;
+  });
+  var HARDWARE_SHORTCUT_ACTIONS = [
+    { key: "openSettings", name: "Open Settings" },
+    { key: "yourDustpile", name: "Check Your Dustpile" },
+    { key: "opponentDustpile", name: "Check Opponent's Dustpile" },
+    { key: "endTurn", name: "End Turn" },
+    { key: "openWizascriptSettings", name: "Open Wizascript Settings" },
+    { key: "concede", name: "Concede" },
+    { key: "goHome", name: "Go to Home Page" },
+    { key: "openDeckTrackerPresets", name: "Open Deck Tracker Presets" }
+  ];
+  var HARDWARE_SHORTCUT_DEFAULTS = {
+    openSettings: 9,
+    yourDustpile: 10,
+    opponentDustpile: 11,
+    endTurn: 17,
+    openWizascriptSettings: 7,
+    concede: 8,
+    goHome: 16,
+    openDeckTrackerPresets: 6
+  };
+  var HARDWARE_SHORTCUT_ACTIONS_BY_KEY = {};
+  HARDWARE_SHORTCUT_ACTIONS.forEach((a) => {
+    HARDWARE_SHORTCUT_ACTIONS_BY_KEY[a.key] = a;
+  });
+  var DEFAULT_PRIMARY_BUTTON = 4;
+  function encodeBoundInput(value) {
+    if (value === null || value === void 0) return "unbound";
+    if (typeof value === "number") return String(value);
+    if (value && value.type === "key") return "kb:" + value.code;
+    return "unbound";
+  }
+  function decodeBoundInput(raw, defaultValue) {
+    if (raw === "unbound") return null;
+    if (typeof raw === "string" && raw.indexOf("kb:") === 0) return { type: "key", code: raw.slice(3) };
+    const n = parseInt(raw, 10);
+    return Number.isNaN(n) ? defaultValue : n;
+  }
+  function getControllerPrimaryButton() {
+    return decodeBoundInput(csGet(presetKey("keybinds.__primary"), String(DEFAULT_PRIMARY_BUTTON)), DEFAULT_PRIMARY_BUTTON);
+  }
+  function setControllerPrimaryButton(value) {
+    csSet(presetKey("keybinds.__primary"), encodeBoundInput(value));
+  }
+  function getChannelGuideButton() {
+    return decodeBoundInput(csGet(presetKey("keybinds.__channelGuide"), "unbound"), null);
+  }
+  function setChannelGuideButton(value) {
+    csSet(presetKey("keybinds.__channelGuide"), encodeBoundInput(value));
+  }
+  function getBoundButton(actionKey) {
+    const action = CONTROLLER_ACTIONS_BY_KEY[actionKey];
+    return decodeBoundInput(csGet(presetKey("keybinds." + actionKey), String(action.defaultButton)), action.defaultButton);
+  }
+  function setBoundButton(actionKey, value) {
+    csSet(presetKey("keybinds." + actionKey), encodeBoundInput(value));
+  }
+  function getBoundShortcutButton(actionKey) {
+    const defaultButton = HARDWARE_SHORTCUT_DEFAULTS[actionKey];
+    return decodeBoundInput(csGet(presetKey("shortcuts." + actionKey), String(defaultButton)), defaultButton);
+  }
+  function setBoundShortcutButton(actionKey, value) {
+    csSet(presetKey("shortcuts." + actionKey), encodeBoundInput(value));
+  }
+  var controllerEnabledSetting = null;
+  function isControllerSupportEnabled() {
+    if (!controllerEnabledSetting || typeof controllerEnabledSetting.value !== "function") return true;
+    try {
+      const v = controllerEnabledSetting.value();
+      return v === void 0 || v === null ? true : !!v;
+    } catch (e) {
+      return true;
+    }
+  }
+  var debugTextEnabledSetting = null;
+  var debugTextCheckedLive = null;
+  function observeDebugTextCheckbox(el) {
+    el.setAttribute("data-wc-enhanced", "true");
+    debugTextCheckedLive = !!el.checked;
+    el.addEventListener("change", () => {
+      debugTextCheckedLive = !!el.checked;
+    });
+  }
+  function isDebugTextEnabled() {
+    if (debugTextCheckedLive !== null) return debugTextCheckedLive;
+    if (!debugTextEnabledSetting || typeof debugTextEnabledSetting.value !== "function") return false;
+    try {
+      return !!debugTextEnabledSetting.value();
+    } catch (e) {
+      return false;
+    }
+  }
+  var HIGHLIGHT_COLOR_PRESETS = [
+    ["Light Blue (default)", "#3ea6ff"],
+    ["Yellow", "#ffff00"],
+    // JUSTICE
+    ["Red", "red"],
+    // DETERMINATION
+    ["Green", "#00c000"],
+    // KINDNESS
+    ["Orange", "#fca500"],
+    // BRAVERY
+    ["Blue", "#0064ff"],
+    // INTEGRITY
+    ["Cyan", "#41fcff"],
+    // PATIENCE
+    ["Magenta", "#d535d9"]
+    // PERSEVERANCE
+  ];
+  var DEFAULT_HIGHLIGHT_COLOR = HIGHLIGHT_COLOR_PRESETS[0][1];
+  var highlightColorSetting = null;
+  var highlightColorLive = null;
+  function observeHighlightColorSelect(el) {
+    el.setAttribute("data-wc-enhanced", "true");
+    highlightColorLive = el.value || null;
+    el.addEventListener("change", () => {
+      highlightColorLive = el.value || null;
+    });
+  }
+  function getHighlightColor() {
+    if (highlightColorLive) return highlightColorLive;
+    if (!highlightColorSetting || typeof highlightColorSetting.value !== "function") return DEFAULT_HIGHLIGHT_COLOR;
+    try {
+      return highlightColorSetting.value() || DEFAULT_HIGHLIGHT_COLOR;
+    } catch (e) {
+      return DEFAULT_HIGHLIGHT_COLOR;
+    }
+  }
+  var controllerCaptureActive = false;
+  function isControllerCaptureActive() {
+    return controllerCaptureActive;
+  }
+  var boundInputRefreshers = [];
+  function enhanceControllerDivider(el) {
+    el.setAttribute("data-wc-enhanced", "true");
+    el.readOnly = true;
+    el.tabIndex = -1;
+    Object.assign(el.style, {
+      backgroundColor: "transparent",
+      border: "none",
+      borderBottom: "1px solid #666",
+      color: "#8ab4f8",
+      fontWeight: "bold",
+      cursor: "default",
+      pointerEvents: "none",
+      // A bit of breathing room above/below each section header - without
+      // it every divider sat flush against the row before it, and with
+      // "— In-Game Inputs —" no longer followed by its own info row (see
+      // registerControllerSettings), that section in particular read as
+      // visually cramped against "Move Section Down" right above it.
+      marginTop: "14px",
+      marginBottom: "2px",
+      paddingTop: "4px"
+    });
+  }
+  function enhanceControllerCaptureInput(el, readBound, writeBound) {
+    el.setAttribute("data-wc-enhanced", "true");
+    el.readOnly = true;
+    Object.assign(el.style, {
+      cursor: "pointer",
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      el.value = bindingToDisplay(readBound());
+    }
+    refreshDisplay();
+    boundInputRefreshers.push(refreshDisplay);
+    el.addEventListener("focus", () => {
+      el.style.border = "1px solid #40E0D0";
+      el.style.boxShadow = "0 0 4px #40E0D0";
+      el.value = "Press a button or key...";
+      controllerCaptureActive = true;
+      let cancelled = false;
+      let ignoreUntilReleased = /* @__PURE__ */ new Set();
+      const gp0 = getMergedGamepad();
+      if (gp0) gp0.buttons.forEach((b, i) => {
+        if (b && b.pressed) ignoreUntilReleased.add(i);
+      });
+      function captureFrame() {
+        if (cancelled) return;
+        const gp = getMergedGamepad();
+        if (gp) {
+          gp.buttons.forEach((b, i) => {
+            if (!b) return;
+            if (!b.pressed) {
+              ignoreUntilReleased.delete(i);
+              return;
+            }
+            if (ignoreUntilReleased.has(i)) return;
+            finishCapture(i);
+          });
+        }
+        if (!cancelled) requestAnimationFrame(captureFrame);
+      }
+      function finishCapture(value) {
+        if (cancelled) return;
+        cancelled = true;
+        writeBound(value);
+        cleanup();
+        el.blur();
+      }
+      function onKeydown(e) {
+        if (cancelled) return;
+        if (e.key === "Escape") {
+          e.preventDefault();
+          cancelled = true;
+          writeBound(null);
+          cleanup();
+          el.blur();
+          return;
+        }
+        if (e.key === "Shift" || e.key === "Control" || e.key === "Alt" || e.key === "Meta") return;
+        const gpNow = getMergedGamepad();
+        if (gpNow && gpNow.buttons.some((b) => b && b.pressed)) return;
+        e.preventDefault();
+        finishCapture({ type: "key", code: e.code });
+      }
+      function cleanup() {
+        document.removeEventListener("keydown", onKeydown, true);
+      }
+      document.addEventListener("keydown", onKeydown, true);
+      requestAnimationFrame(captureFrame);
+      el.addEventListener("blur", function onBlur() {
+        cancelled = true;
+        controllerCaptureActive = false;
+        el.style.border = "1px solid #b4b4b4";
+        el.style.boxShadow = "none";
+        cleanup();
+        refreshDisplay();
+        el.removeEventListener("blur", onBlur);
+      });
+    });
+  }
+  var presetMenuState = null;
+  function getPresetMenuState() {
+    return presetMenuState;
+  }
+  function enhancePresetSelector(el) {
+    el.setAttribute("data-wc-enhanced", "true");
+    el.readOnly = true;
+    el.tabIndex = 0;
+    Object.assign(el.style, {
+      cursor: "pointer",
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      el.value = getPresetName(getActivePreset());
+    }
+    refreshDisplay();
+    boundInputRefreshers.push(refreshDisplay);
+    let menuEl = null;
+    function onOutsideClick(e) {
+      if (menuEl && !menuEl.contains(e.target) && e.target !== el) closeMenu();
+    }
+    function onEscape(e) {
+      if (e.key === "Escape") closeMenu();
+    }
+    function closeMenu() {
+      if (!menuEl) return;
+      menuEl.remove();
+      menuEl = null;
+      presetMenuState = null;
+      document.removeEventListener("mousedown", onOutsideClick, true);
+      document.removeEventListener("keydown", onEscape, true);
+    }
+    function openMenu() {
+      if (menuEl) {
+        closeMenu();
+        return;
+      }
+      const rect = el.getBoundingClientRect();
+      menuEl = document.createElement("div");
+      Object.assign(menuEl.style, {
+        position: "fixed",
+        left: rect.left + "px",
+        top: rect.bottom + 2 + "px",
+        width: Math.max(rect.width, 140) + "px",
+        background: "#111",
+        border: "1px solid #40E0D0",
+        borderRadius: "3px",
+        zIndex: 2147483647,
+        overflow: "hidden",
+        fontFamily: "inherit"
+      });
+      const rowEls = [];
+      for (let n = 1; n <= PRESET_COUNT; n++) {
+        const isActive = n === getActivePreset();
+        const row = document.createElement("div");
+        row.textContent = getPresetName(n) + (isActive ? "  \u2713" : "");
+        Object.assign(row.style, {
+          padding: "6px 10px",
+          cursor: "pointer",
+          color: "white",
+          background: isActive ? "#333" : "transparent"
+        });
+        row.addEventListener("mouseenter", () => {
+          row.style.background = "#40E0D0";
+          row.style.color = "black";
+        });
+        row.addEventListener("mouseleave", () => {
+          row.style.background = isActive ? "#333" : "transparent";
+          row.style.color = "white";
+        });
+        row.addEventListener("click", () => {
+          setActivePreset(n);
+          closeMenu();
+          boundInputRefreshers.forEach((fn) => fn());
+          if (isDebugTextEnabled()) console.log("[Wizascript Controller] switched to preset", n, "(" + getPresetName(n) + ")");
+        });
+        menuEl.appendChild(row);
+        rowEls.push(row);
+      }
+      document.body.appendChild(menuEl);
+      document.addEventListener("mousedown", onOutsideClick, true);
+      document.addEventListener("keydown", onEscape, true);
+      presetMenuState = { rows: rowEls, activeIndex: Math.max(0, getActivePreset() - 1), close: closeMenu };
+    }
+    el.addEventListener("click", openMenu);
+  }
+  function enhancePresetNameInput(el) {
+    el.setAttribute("data-wc-enhanced", "true");
+    el.readOnly = false;
+    Object.assign(el.style, {
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      if (document.activeElement !== el) el.value = getPresetName(getActivePreset());
+    }
+    refreshDisplay();
+    boundInputRefreshers.push(refreshDisplay);
+    function commit() {
+      setPresetName(getActivePreset(), el.value);
+      boundInputRefreshers.forEach((fn) => fn());
+    }
+    el.addEventListener("blur", commit);
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") el.blur();
+    });
+  }
+  function enhanceResetButton(el) {
+    el.setAttribute("data-wc-enhanced", "true");
+    el.readOnly = true;
+    el.tabIndex = 0;
+    Object.assign(el.style, {
+      cursor: "pointer",
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      el.value = "Double Click to Reset";
+    }
+    refreshDisplay();
+    boundInputRefreshers.push(refreshDisplay);
+    el.addEventListener("dblclick", () => {
+      resetPresetBindings(getActivePreset(), CONTROLLER_ACTIONS.map((a) => a.key), HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key));
+      boundInputRefreshers.forEach((fn) => fn());
+      el.value = "\u2705 Reset to Defaults";
+      setTimeout(refreshDisplay, 1500);
+    });
+  }
+  function enhanceDetectControllerButton(el) {
+    el.setAttribute("data-wc-enhanced", "true");
+    el.readOnly = true;
+    el.tabIndex = 0;
+    Object.assign(el.style, {
+      cursor: "pointer",
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      el.value = isHidConnected() ? "\u2705 Controller Detected (WebHID)" : "\u{1F3AE} Click to Detect Controller (WebHID)";
+    }
+    refreshDisplay();
+    boundInputRefreshers.push(refreshDisplay);
+    el.addEventListener("click", async () => {
+      if (isHidConnected()) return;
+      el.value = "Check your browser's device picker\u2026";
+      try {
+        await connectWebHidController();
+      } finally {
+        refreshDisplay();
+      }
+    });
+  }
+  var controllerObserverStarted = false;
+  function startControllerKeybindObserver(idPrefix) {
+    if (controllerObserverStarted) return;
+    controllerObserverStarted = true;
+    let everFoundOne = false;
+    const observer = new MutationObserver(() => {
+      const matches = document.querySelectorAll(`input[id^="${idPrefix}"]:not([data-wc-enhanced]), select[id^="${idPrefix}"]:not([data-wc-enhanced])`);
+      matches.forEach((el) => {
+        everFoundOne = true;
+        const bindingKey = el.id.slice(idPrefix.length);
+        if (bindingKey.startsWith("__divider_") || bindingKey.startsWith("__info_")) {
+          enhanceControllerDivider(el);
+          return;
+        }
+        if (bindingKey === "detectController") {
+          enhanceDetectControllerButton(el);
+          return;
+        }
+        if (bindingKey === "presetSelector") {
+          enhancePresetSelector(el);
+          return;
+        }
+        if (bindingKey === "presetName") {
+          enhancePresetNameInput(el);
+          return;
+        }
+        if (bindingKey === "resetPreset") {
+          enhanceResetButton(el);
+          return;
+        }
+        if (bindingKey === "controllerPrimary") {
+          enhanceControllerCaptureInput(el, () => getControllerPrimaryButton(), (v) => setControllerPrimaryButton(v));
+          return;
+        }
+        if (bindingKey === "channelGuide") {
+          enhanceControllerCaptureInput(el, () => getChannelGuideButton(), (v) => setChannelGuideButton(v));
+          return;
+        }
+        if (CONTROLLER_ACTIONS_BY_KEY[bindingKey]) {
+          enhanceControllerCaptureInput(el, () => getBoundButton(bindingKey), (v) => setBoundButton(bindingKey, v));
+          return;
+        }
+        if (bindingKey.startsWith("shortcut_")) {
+          const shortcutKey = bindingKey.slice("shortcut_".length);
+          if (HARDWARE_SHORTCUT_ACTIONS_BY_KEY[shortcutKey]) {
+            enhanceControllerCaptureInput(el, () => getBoundShortcutButton(shortcutKey), (v) => setBoundShortcutButton(shortcutKey, v));
+            return;
+          }
+        }
+        if (bindingKey === "debugTextEnabled") {
+          observeDebugTextCheckbox(el);
+          return;
+        }
+        if (bindingKey === "highlightColor") {
+          observeHighlightColorSelect(el);
+          return;
+        }
+        el.setAttribute("data-wc-enhanced", "true");
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    setTimeout(() => {
+      if (!everFoundOne) {
+        console.warn('[Wizascript Controller] never found any "Keybinds - Controller" <input> elements to enhance after 15s - either the category never rendered, or the assumed id pattern (' + idPrefix + "<key>) is wrong.");
+      }
+    }, 15e3);
+  }
+  function registerControllerSettings(plugin, controllerEnabledSettingIn) {
+    migrateFlatBindingsToPresetOne(
+      CONTROLLER_ACTIONS.map((a) => a.key),
+      HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key)
+    );
+    controllerEnabledSetting = controllerEnabledSettingIn;
+    if (!controllerEnabledSetting || typeof controllerEnabledSetting.value !== "function" || !controllerEnabledSetting.value()) {
+      console.log('[Wizascript Controller] Enable Controller Support is off - "Keybinds - Controller" category not registered this load. Turn it on under Miscellaneous, then reload, to configure it.');
+      return;
+    }
+    const CATEGORY2 = "Keybinds - Controller";
+    const settings2 = createFeatureSettings(plugin, "controller", CATEGORY2);
+    settings2.add("detectController", {
+      name: "Detect Controller",
+      note: "Click if your controller isn't responding.",
+      type: "text",
+      default: "Click to Detect Controller (WebHID)"
+    });
+    settings2.add("presetSelector", {
+      name: "Settings Preset",
+      note: "Click to switch presets.",
+      type: "text",
+      default: getPresetName(getActivePreset())
+    });
+    settings2.add("presetName", {
+      name: "Preset Name",
+      note: "Renames whichever preset is currently selected above.",
+      type: "text",
+      default: getPresetName(getActivePreset())
+    });
+    settings2.add("resetPreset", {
+      name: "Restore Settings to Default",
+      note: "Double Click to reset selected preset settings",
+      type: "text",
+      default: "Double Click to Reset"
+    });
+    settings2.add("__divider_top", { name: "\u2014 \u2014 \u2014", type: "text", default: "" });
+    debugTextEnabledSetting = settings2.add("debugTextEnabled", {
+      name: "Enable Debug Text",
+      type: "boolean",
+      default: false
+    });
+    highlightColorSetting = settings2.add("highlightColor", {
+      name: "Selection Outline Color",
+      type: "select",
+      data: HIGHLIGHT_COLOR_PRESETS,
+      default: DEFAULT_HIGHLIGHT_COLOR
+    });
+    settings2.add("controllerPrimary", {
+      name: "Controller Primary",
+      note: "Click to remap. Hold for combos below, same as Wizascript's own Primary Key.",
+      type: "text",
+      default: buttonToDisplay(DEFAULT_PRIMARY_BUTTON)
+    });
+    settings2.add("__divider_General", { name: "\u2014 General \u2014", type: "text", default: "" });
+    settings2.add("__info_openSettings", { name: "Double Tap Primary \u2192 Open Wizascript Settings", type: "text", default: "" });
+    const seenLabels = /* @__PURE__ */ new Set();
+    CONTROLLER_ACTIONS.forEach((action) => {
+      if (!seenLabels.has(action.packageLabel)) {
+        seenLabels.add(action.packageLabel);
+        settings2.add("__divider_" + action.packageLabel.replace(/\s+/g, "_"), {
+          name: "\u2014 <b>" + action.packageLabel + "</b> \u2014",
+          type: "text",
+          default: ""
+        });
+        if (action.packageLabel === "UC TV") {
+          settings2.add("channelGuide", {
+            name: "Channel Guide (hold)",
+            type: "text",
+            default: buttonToDisplay(null)
+          });
+        }
+      }
+      settings2.add(action.key, {
+        name: action.name + " - Primary + <btn>",
+        type: "text",
+        default: buttonToDisplay(action.defaultButton)
+      });
+    });
+    settings2.add("__divider_HardwareShortcuts", { name: "\u2014 In-Game Inputs \u2014", type: "text", default: "" });
+    HARDWARE_SHORTCUT_ACTIONS.forEach((action) => {
+      settings2.add("shortcut_" + action.key, {
+        name: action.name,
+        type: "text",
+        default: buttonToDisplay(HARDWARE_SHORTCUT_DEFAULTS[action.key])
+      });
+    });
+    console.log('[Wizascript Controller] controller keybind settings registered under "Keybinds - Controller".');
+    startControllerKeybindObserver("underscript.plugin.Wizascript.controller.");
+  }
+
+  // packages/controller/index.js
+  function initController(plugin, controllerEnabledSetting2) {
+    const pageWindow2 = getPageWindow();
+    const DEFAULT_HIGHLIGHT_THICKNESS = 4;
+    function getHighlightThickness() {
+      return DEFAULT_HIGHLIGHT_THICKNESS;
+    }
+    function cursorRestingDisplay() {
+      return "block";
+    }
+    const KEY_PAGES = {
+      letters: [
+        ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
+        ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
+        ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
+        ["z", "x", "c", "v", "b", "n", "m", ",", "."],
+        ["\u2423"]
+      ],
+      symbols: [
+        ["!", "?", '"', "'", "#", "%", "(", ")", "/", "\\"],
+        ["-", "_", ",", ".", ":", ";", "*", "+", "=", "&"],
+        ["<", ">", "@", "[", "]", "{", "}", "^", "`", "|"],
+        ["$", "\u20AC"],
+        ["\u2423"]
+      ]
+    };
+    function displayLabel(label, shift) {
+      if (label === "\u2423") return "SPACE";
+      return shift ? label.toUpperCase() : label;
+    }
+    function keyInfo(ch) {
+      if (ch === " ") return { code: "Space", keyCode: 32 };
+      if (ch === ",") return { code: "Comma", keyCode: 188 };
+      if (ch === ".") return { code: "Period", keyCode: 190 };
+      if (/[a-z]/i.test(ch)) return { code: "Key" + ch.toUpperCase(), keyCode: ch.toUpperCase().charCodeAt(0) };
+      if (/[0-9]/.test(ch)) return { code: "Digit" + ch, keyCode: ch.charCodeAt(0) };
+      return { code: "", keyCode: ch.charCodeAt(0) };
+    }
+    function positionPanelNear(panel, target) {
+      const rect = target.getBoundingClientRect();
+      const w = panel.offsetWidth, h = panel.offsetHeight;
+      let left = rect.left;
+      let top = rect.bottom + 8;
+      if (left + w > pageWindow2.innerWidth - 8) left = pageWindow2.innerWidth - w - 8;
+      if (left < 8) left = 8;
+      if (top + h > pageWindow2.innerHeight - 8) {
+        top = rect.top - h - 8;
+        if (top < 8) top = 8;
+      }
+      panel.style.left = left + "px";
+      panel.style.top = top + "px";
+    }
+    const cursor = document.createElement("div");
+    Object.assign(cursor.style, {
+      position: "fixed",
+      width: "18px",
+      height: "18px",
+      borderRadius: "50%",
+      background: "rgba(255,0,0,0.85)",
+      border: "2px solid white",
+      zIndex: 2147483647,
+      pointerEvents: "none",
+      left: "0px",
+      top: "0px",
+      transform: "translate(-50%,-50%)",
+      display: "none"
+    });
+    const hud = document.createElement("div");
+    Object.assign(hud.style, {
+      position: "fixed",
+      left: "8px",
+      bottom: "8px",
+      zIndex: 2147483647,
+      background: "rgba(0,0,0,0.6)",
+      color: "#0f0",
+      font: "12px monospace",
+      padding: "4px 8px",
+      borderRadius: "4px",
+      pointerEvents: "auto",
+      whiteSpace: "pre",
+      cursor: "move",
+      userSelect: "none",
+      display: "none"
+    });
+    const savedHudPos = getHudPosition();
+    if (savedHudPos) {
+      hud.style.left = savedHudPos.left + "px";
+      hud.style.top = savedHudPos.top + "px";
+      hud.style.bottom = "";
+    }
+    (function makeHudDraggable() {
+      const DRAG_THRESHOLD_PX = 4;
+      let dragging = false, dragMoved = false, offsetX = 0, offsetY = 0;
+      hud.addEventListener("mousedown", (e) => {
+        dragging = true;
+        dragMoved = false;
+        const rect = hud.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        e.preventDefault();
+      });
+      pageWindow2.addEventListener("mousemove", (e) => {
+        if (!dragging) return;
+        const rect = hud.getBoundingClientRect();
+        const newLeft = e.clientX - offsetX, newTop = e.clientY - offsetY;
+        if (!dragMoved && (Math.abs(newLeft - rect.left) > DRAG_THRESHOLD_PX || Math.abs(newTop - rect.top) > DRAG_THRESHOLD_PX)) {
+          dragMoved = true;
+        }
+        if (!dragMoved) return;
+        hud.style.left = Math.max(0, Math.min(pageWindow2.innerWidth - 20, newLeft)) + "px";
+        hud.style.top = Math.max(0, Math.min(pageWindow2.innerHeight - 20, newTop)) + "px";
+        hud.style.bottom = "";
+      });
+      pageWindow2.addEventListener("mouseup", () => {
+        if (!dragging) return;
+        dragging = false;
+        if (dragMoved) {
+          const rect = hud.getBoundingClientRect();
+          setHudPosition(rect.left, rect.top);
+        }
+      });
+    })();
+    const SENSITIVITY_BAR_HEIGHT = 120;
+    const sensitivityBar = document.createElement("div");
+    Object.assign(sensitivityBar.style, {
+      position: "fixed",
+      top: "50%",
+      right: "18px",
+      transform: "translateY(-50%)",
+      width: "14px",
+      height: SENSITIVITY_BAR_HEIGHT + "px",
+      background: "rgba(0,0,0,0.55)",
+      border: "1px solid rgba(255,255,255,0.4)",
+      borderRadius: "7px",
+      zIndex: 2147483647,
+      pointerEvents: "none",
+      display: "none"
+    });
+    const sensitivityBarCenterTick = document.createElement("div");
+    Object.assign(sensitivityBarCenterTick.style, {
+      position: "absolute",
+      left: "-4px",
+      right: "-4px",
+      top: "50%",
+      height: "2px",
+      background: "rgba(255,255,255,0.6)",
+      transform: "translateY(-1px)"
+    });
+    sensitivityBar.appendChild(sensitivityBarCenterTick);
+    const sensitivityBarFill = document.createElement("div");
+    Object.assign(sensitivityBarFill.style, {
+      position: "absolute",
+      left: "2px",
+      right: "2px",
+      background: "#40E0D0",
+      borderRadius: "2px"
+    });
+    sensitivityBar.appendChild(sensitivityBarFill);
+    const sensitivityBarLabel = document.createElement("div");
+    Object.assign(sensitivityBarLabel.style, {
+      position: "absolute",
+      right: "20px",
+      top: "50%",
+      transform: "translateY(-50%)",
+      background: "rgba(0,0,0,0.75)",
+      color: "white",
+      font: "11px monospace",
+      padding: "2px 6px",
+      borderRadius: "3px",
+      whiteSpace: "nowrap"
+    });
+    sensitivityBar.appendChild(sensitivityBarLabel);
+    let sensitivityBarHideTimer = null;
+    function showSensitivityBar(sensitivity) {
+      const mult = Math.max(0.3, Math.min(3, 1 - sensitivity * 2));
+      const halfTrack = SENSITIVITY_BAR_HEIGHT / 2 - 2;
+      const fillLen = Math.abs(sensitivity) * halfTrack;
+      if (sensitivity <= 0) {
+        sensitivityBarFill.style.top = halfTrack - fillLen + "px";
+        sensitivityBarFill.style.height = fillLen + "px";
+      } else {
+        sensitivityBarFill.style.top = halfTrack + 2 + "px";
+        sensitivityBarFill.style.height = fillLen + "px";
+      }
+      sensitivityBarLabel.textContent = mult.toFixed(1) + "x";
+      sensitivityBar.style.display = "block";
+      if (sensitivityBarHideTimer) clearTimeout(sensitivityBarHideTimer);
+      sensitivityBarHideTimer = setTimeout(() => {
+        sensitivityBar.style.display = "none";
+      }, 700);
+    }
+    const OSK_THEMES = {
+      dark: { panelBg: "#1c1c1c", panelBorder: "1px solid rgba(255,255,255,0.15)", panelShadow: "0 4px 16px rgba(0,0,0,0.6)", hintColor: "#999", closeBg: "#3a3a3a" },
+      light: { panelBg: "#f2f2f4", panelBorder: "none", panelShadow: "0 8px 24px rgba(0,0,0,0.35)", hintColor: "#666", closeBg: "#333" }
+    };
+    const OSK_THEME_NAME = "dark";
+    const oskTheme = OSK_THEMES[OSK_THEME_NAME];
+    const oskEl = document.createElement("div");
+    Object.assign(oskEl.style, {
+      position: "fixed",
+      zIndex: 2147483647,
+      background: oskTheme.panelBg,
+      padding: "16px 14px 10px",
+      borderRadius: "14px",
+      display: "none",
+      font: '15px -apple-system, "Segoe UI", sans-serif',
+      pointerEvents: "none",
+      border: oskTheme.panelBorder,
+      boxShadow: oskTheme.panelShadow
+    });
+    const oskClose = document.createElement("div");
+    Object.assign(oskClose.style, {
+      position: "absolute",
+      top: "8px",
+      right: "8px",
+      width: "20px",
+      height: "20px",
+      borderRadius: "50%",
+      background: oskTheme.closeBg,
+      color: "#fff",
+      fontSize: "12px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      // FIXED: oskEl itself is deliberately pointerEvents:'none' (so a
+      // real mouse click passes straight through the OSK panel to
+      // whatever's underneath, since the panel's own key grid is
+      // controller-hover-driven, not mouse-clickable) - but pointer-events
+      // is an inherited CSS property, so without its own explicit 'auto'
+      // override, this close badge silently inherited 'none' from its
+      // parent too and was never clickable by anything, mouse OR
+      // controller (the physical Circle button closes the OSK through its
+      // own separate keybind path entirely, unrelated to this element's
+      // screen position - this badge had no click handler wired to it at
+      // all before now). cursor:'pointer' is just a visual affordance
+      // matching the new real behavior.
+      pointerEvents: "auto",
+      cursor: "pointer"
+    });
+    oskClose.textContent = "\u2715";
+    oskClose.title = "Close";
+    oskClose.addEventListener("click", () => closeOsk());
+    oskEl.appendChild(oskClose);
+    const oskGrid = document.createElement("div");
+    oskEl.appendChild(oskGrid);
+    let oskRowEls = [];
+    function buildGrid(rows) {
+      oskGrid.innerHTML = "";
+      oskRowEls = [];
+      rows.forEach((row) => {
+        const rowEl = document.createElement("div");
+        Object.assign(rowEl.style, { display: "flex", justifyContent: "center", marginBottom: "5px" });
+        const keyEls = [];
+        row.forEach((label) => {
+          const keyEl = document.createElement("div");
+          keyEl.textContent = displayLabel(label, oskShift);
+          const wide = label === "\u2423";
+          Object.assign(keyEl.style, {
+            minWidth: wide ? "220px" : "34px",
+            height: "34px",
+            margin: "3px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "#232326",
+            color: "#fff",
+            borderRadius: "8px",
+            border: "2px solid transparent",
+            fontWeight: "600",
+            fontSize: "14px"
+          });
+          rowEl.appendChild(keyEl);
+          keyEls.push(keyEl);
+        });
+        oskGrid.appendChild(rowEl);
+        oskRowEls.push(keyEls);
+      });
+    }
+    const oskHint = document.createElement("div");
+    Object.assign(oskHint.style, {
+      marginTop: "4px",
+      fontSize: "11px",
+      color: oskTheme.hintColor,
+      textAlign: "center"
+    });
+    oskHint.textContent = "\u25A1 backspace   L1 shift   L3 symbols   \u25B3 space   L2/R2 caret (\xD72=edge)   R3 send   R1 pause   \u25CB close   \u2715 type";
+    oskEl.appendChild(oskHint);
+    const selectEl = document.createElement("div");
+    Object.assign(selectEl.style, {
+      position: "fixed",
+      zIndex: 2147483647,
+      background: "#000",
+      padding: "2px",
+      borderRadius: "4px",
+      display: "none",
+      font: "inherit",
+      fontSize: "14px",
+      pointerEvents: "none",
+      border: "1px solid #ccc",
+      boxShadow: "0 2px 6px rgba(0,0,0,0.5)",
+      minWidth: "160px",
+      maxHeight: "320px",
+      overflowY: "auto",
+      overflowX: "hidden"
+    });
+    let selectRowEls = [];
+    function renderSelectOptions() {
+      selectEl.innerHTML = "";
+      selectRowEls = [];
+      selectOptions.forEach((opt) => {
+        const rowEl = document.createElement("div");
+        rowEl.textContent = opt.text || opt.value;
+        const optCs = getComputedStyle(opt);
+        const bg = optCs.backgroundColor;
+        Object.assign(rowEl.style, {
+          padding: "6px 10px",
+          margin: "0",
+          borderRadius: "0",
+          background: bg && bg !== "rgba(0, 0, 0, 0)" ? bg : "transparent",
+          color: optCs.color || "#fff",
+          border: "none",
+          fontSize: "inherit",
+          fontFamily: "inherit"
+        });
+        selectEl.appendChild(rowEl);
+        selectRowEls.push(rowEl);
+      });
+      const hint = document.createElement("div");
+      Object.assign(hint.style, {
+        marginTop: "2px",
+        padding: "4px 10px 2px",
+        fontSize: "11px",
+        color: "#888",
+        textAlign: "center",
+        borderTop: "1px solid rgba(255,255,255,0.12)"
+      });
+      hint.textContent = "\u2715 confirm   \u25CB cancel";
+      selectEl.appendChild(hint);
+    }
+    function updateSelectHighlight() {
+      selectRowEls.forEach((el, i) => {
+        const active = i === selectIndex;
+        el.style.boxShadow = active ? "inset 0 0 0 999px rgba(255,255,255,0.18)" : "none";
+      });
+    }
+    function mount() {
+      if (!document.body) {
+        requestAnimationFrame(mount);
+        return;
+      }
+      document.body.appendChild(hud);
+      document.body.appendChild(pressIndicator);
+      document.body.appendChild(sensitivityBar);
+      document.body.appendChild(oskEl);
+      document.body.appendChild(selectEl);
+      document.body.appendChild(cursor);
+    }
+    mount();
+    registerControllerSettings(plugin, controllerEnabledSetting2);
+    let navInputMethod = "stick";
+    const GROUP_DEFS = [
+      { name: "navbar", containerSelectors: ["nav", ".navbar", ".navbar-nav", "header nav"], itemSelector: "a" },
+      { name: "footbar", containerSelectors: ["footer", ".footer", ".footer-nav"], itemSelector: "a" }
+    ];
+    function buildGroup(def) {
+      for (const sel of def.containerSelectors) {
+        const container = document.querySelector(sel);
+        if (!container) continue;
+        const items = Array.from(container.querySelectorAll(def.itemSelector)).filter((el) => el.offsetParent !== null);
+        if (items.length) {
+          if (isDebugTextEnabled()) console.log(`[Wizascript Controller] group "${def.name}" found via "${sel}": ${items.length} items`);
+          return { name: def.name, container, items };
+        }
+      }
+      if (isDebugTextEnabled()) console.log(`[Wizascript Controller] group "${def.name}" NOT found`);
+      return null;
+    }
+    const navbarGroup = buildGroup(GROUP_DEFS[0]);
+    const footbarGroup = buildGroup(GROUP_DEFS[1]);
+    const chromeStates = [
+      ...navbarGroup ? [{ type: "group", group: navbarGroup }] : [],
+      { type: "neutral" },
+      ...footbarGroup ? [{ type: "group", group: footbarGroup }] : []
+    ];
+    let chromeIndex = chromeStates.findIndex((s) => s.type === "neutral");
+    const itemIndexByGroupName = {};
+    let matchPhase = "hand";
+    let matchSubState = "hand-nav";
+    let pendingAttacker = null;
+    let handItems = [];
+    let handIndex = 0;
+    let placingCard = null;
+    let placingGrid = null;
+    let placingRow = 0, placingCol = 0;
+    let resolveGrid = null;
+    let resolveRow = 0, resolveCol = 0;
+    let resolveKind = null;
+    let boardItems = [];
+    let boardIndex = 0;
+    let mulliganGrid = null;
+    let mulliganRow = 0, mulliganCol = 0;
+    function queryHandCards() {
+      const host = document.getElementById("handCards");
+      if (!host) return [];
+      let els = Array.from(host.querySelectorAll(".card"));
+      if (!els.length) els = Array.from(host.children);
+      return els.filter((el) => el.offsetParent !== null);
+    }
+    function queryBoardMonsterCards() {
+      const slots = Array.from(document.querySelectorAll(".droppableMonster.slot, .droppableMonster"));
+      const cards = slots.map((s) => s.querySelector(".card")).filter((c) => c && c.offsetParent !== null);
+      if (!cards.length) return [];
+      const rows = buildRowGrid(cards);
+      if (!rows.length) return [];
+      let bestRow = rows[0], bestTop = -Infinity;
+      for (const row of rows) {
+        const avgTop = row.reduce((sum, el) => sum + el.getBoundingClientRect().top, 0) / row.length;
+        if (avgTop > bestTop) {
+          bestTop = avgTop;
+          bestRow = row;
+        }
+      }
+      return bestRow;
+    }
+    function elArraysEqual(a, b) {
+      if (a.length !== b.length) return false;
+      const setA = new Set(a);
+      for (const el of b) if (!setA.has(el)) return false;
+      return true;
+    }
+    function buildRowGrid(els, rowTolerance = 28) {
+      const withRect = els.map((el) => ({ el, r: el.getBoundingClientRect() })).sort((a, b) => a.r.top - b.r.top);
+      const rows = [];
+      for (const item of withRect) {
+        let row = rows.find((r) => Math.abs(r.top - item.r.top) <= rowTolerance);
+        if (!row) {
+          row = { top: item.r.top, items: [] };
+          rows.push(row);
+        }
+        row.items.push(item);
+      }
+      rows.forEach((r) => r.items.sort((a, b) => a.r.left - b.r.left));
+      return rows.map((r) => r.items.map((i) => i.el));
+    }
+    function gridFlat(grid) {
+      return grid ? grid.flat() : [];
+    }
+    let placingOrigin = null;
+    function beginCardDrag(card) {
+      pendingAttacker = null;
+      const r = card.getBoundingClientRect();
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      placingOrigin = { x: cx, y: cy };
+      fire(card, "pointerdown", PointerEvent, cx, cy, 0, 1);
+      fire(card, "mousedown", MouseEvent, cx, cy, 0, 1);
+      const liftY = cy - 40;
+      fire(card, "pointermove", PointerEvent, cx, liftY, 0, 1);
+      fire(card, "mousemove", MouseEvent, cx, liftY, 0, 1);
+      placingCard = card;
+      placingGrid = null;
+      matchPhase = "placing";
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] card drag started", card);
+    }
+    function cancelPlacingDrag(reason) {
+      const card = placingCard;
+      const origin = placingOrigin || { x: -9999, y: -9999 };
+      fire(document.body, "pointermove", PointerEvent, origin.x, origin.y, 0, 1);
+      fire(document.body, "mousemove", MouseEvent, origin.x, origin.y, 0, 1);
+      fire(document.body, "pointerup", PointerEvent, origin.x, origin.y, 0, 0);
+      fire(document.body, "mouseup", MouseEvent, origin.x, origin.y, 0, 0);
+      if (pageWindow2.jQuery) {
+        pageWindow2.jQuery(card).stop(true, true);
+        pageWindow2.jQuery(".ui-draggable-dragging").stop(true, true);
+      }
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] card drag cancelled via", reason);
+      placingCard = null;
+      placingGrid = null;
+      placingOrigin = null;
+      matchPhase = "hand";
+      refreshHighlight();
+    }
+    let modalGrid = null, modalRow = 0, modalCol = 0, modalKind = null;
+    let modalPane = "categories";
+    let categoryItems = [], categoryIndex = 0;
+    let fieldGrid = null, fieldRow = 0, fieldCol = 0;
+    let fieldNeedsReanchor = false;
+    let fieldSubmenu = null;
+    let lastKnownActiveCategoryIdx = -1;
+    const MODAL_ITEM_SELECTOR = 'button, input:not([type="hidden"]):not(.tabButton), select, a[href], .card, li[role="button"], .tabLabel';
+    function queryModalRoot() {
+      const visibleDialogs = Array.from(document.querySelectorAll(".bootstrap-dialog")).filter((d) => getComputedStyle(d).display !== "none");
+      const dialog = visibleDialogs[visibleDialogs.length - 1] || null;
+      if (dialog && !document.querySelector(".mulligan")) {
+        const tabbedRoot = dialog.querySelector(".tabbedView.left");
+        return tabbedRoot ? { root: dialog, kind: "tabbed", tabbedRoot } : { root: dialog, kind: "plain" };
+      }
+      const menu = document.querySelector(".menu-backdrop");
+      if (menu && getComputedStyle(menu).display !== "none") return { root: menu, kind: "menu" };
+      return null;
+    }
+    function queryModalItems(root) {
+      return Array.from(root.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el) => el.offsetParent !== null);
+    }
+    function queryScrollableListItems(root) {
+      const scrollable = findScrollableDescendant(root);
+      if (!scrollable) return [];
+      const items = [];
+      Array.from(scrollable.children).forEach((row) => {
+        if (row.tagName !== "DIV") return;
+        Array.from(row.children).filter((c) => c.tagName === "SPAN").forEach((s) => items.push(s));
+      });
+      return items.filter((el) => el.offsetParent !== null);
+    }
+    function queryCategoryItems(tabbedRoot) {
+      return Array.from(tabbedRoot.querySelectorAll(":scope > .tabLabel")).filter((el) => el.offsetParent !== null).sort((a, b) => {
+        const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+        if (Math.abs(ra.top - rb.top) > 2) return ra.top - rb.top;
+        return ra.left - rb.left;
+      });
+    }
+    function queryActiveTabContent(tabbedRoot) {
+      return Array.from(tabbedRoot.querySelectorAll(":scope > .tabContent")).find((el) => el.offsetParent !== null) || null;
+    }
+    function queryFieldRows(root) {
+      const flexRows = Array.from(root.querySelectorAll(".flex-start")).filter((row) => row.offsetParent !== null).map((row) => Array.from(row.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el) => el.offsetParent !== null)).filter((items) => items.length);
+      const bareLabels = Array.from(root.querySelectorAll(".tabLabel")).filter((el) => el.offsetParent !== null).map((el) => [el]);
+      const rows = [...bareLabels, ...flexRows];
+      if (rows.length) return rows;
+      return buildRowGrid(queryModalItems(root));
+    }
+    function enterCategory() {
+      const cat = categoryItems[categoryIndex];
+      if (!cat) return;
+      triggerElementClick(cat);
+      modalPane = "fields";
+      fieldGrid = null;
+      fieldRow = 0;
+      fieldCol = 0;
+      if (fieldSubmenu) {
+        fieldSubmenu.onCancel && fieldSubmenu.onCancel();
+        fieldSubmenu = null;
+      }
+    }
+    function findModalDismissButton(root) {
+      const byAttr = root.querySelector('[data-dismiss="modal"], .close');
+      if (byAttr) return byAttr;
+      const buttons = Array.from(root.querySelectorAll("button"));
+      return buttons.find((b) => /close|cancel|^no$/i.test((b.textContent || "").trim())) || null;
+    }
+    function isWizascriptSettingsOpen() {
+      const m = queryModalRoot();
+      return !!(m && m.kind === "tabbed");
+    }
+    let activeSubmenu = null;
+    let currentHighlightedEl = null;
+    function findDropdownMenuNear(toggleEl) {
+      const wrap = toggleEl.closest(".dropdown, .btn-group, li");
+      if (!wrap) return [];
+      return Array.from(wrap.querySelectorAll(".dropdown-menu a")).filter((a) => a.offsetParent !== null);
+    }
+    function currentFocusedEl() {
+      if (mulliganGrid && mulliganGrid.length) {
+        return (mulliganGrid[mulliganRow] || [])[mulliganCol] || null;
+      }
+      if (modalKind === "tabbed") {
+        if (modalPane === "categories") return categoryItems[categoryIndex] || null;
+        if (fieldSubmenu) return fieldSubmenu.items[fieldSubmenu.index] || null;
+        return (fieldGrid && fieldGrid[fieldRow] || [])[fieldCol] || null;
+      }
+      if (modalGrid && modalGrid.length) {
+        return (modalGrid[modalRow] || [])[modalCol] || null;
+      }
+      if (matchPhase === "placing" && placingGrid && placingGrid.length) {
+        return (placingGrid[placingRow] || [])[placingCol] || null;
+      }
+      if (matchPhase === "resolve" && resolveGrid && resolveGrid.length) {
+        return (resolveGrid[resolveRow] || [])[resolveCol] || null;
+      }
+      if (document.getElementById("handCards") && matchSubState === "board-nav" && boardItems.length) {
+        return boardItems[boardIndex] || null;
+      }
+      if (document.getElementById("handCards") && matchSubState === "hand-nav" && handItems.length) {
+        return handItems[handIndex] || null;
+      }
+      if (activeSubmenu) return activeSubmenu.items[activeSubmenu.index] || null;
+      const state = chromeStates[chromeIndex];
+      if (!state || state.type !== "group") return null;
+      const g = state.group;
+      const idx = itemIndexByGroupName[g.name] || 0;
+      return g.items[idx] || null;
+    }
+    function setHighlight(el) {
+      if (!el) return;
+      el.style.outline = `${getHighlightThickness()}px solid ${getHighlightColor()}`;
+      el.style.outlineOffset = "2px";
+    }
+    function clearHighlight(el) {
+      if (!el) return;
+      el.style.outline = "";
+      el.style.outlineOffset = "";
+    }
+    function refreshHighlight() {
+      if (navInputMethod !== "dpad") {
+        if (currentHighlightedEl) {
+          clearHighlight(currentHighlightedEl);
+          currentHighlightedEl = null;
+        }
+        return;
+      }
+      const el = currentFocusedEl();
+      if (el === currentHighlightedEl) return;
+      if (currentHighlightedEl) clearHighlight(currentHighlightedEl);
+      if (el) setHighlight(el);
+      currentHighlightedEl = el;
+    }
+    function isTextInput(el) {
+      if (!el) return false;
+      if (el.readOnly) return false;
+      if (el.tagName === "TEXTAREA") return true;
+      if (el.tagName === "INPUT") {
+        const type = (el.type || "text").toLowerCase();
+        return ["text", "search", "email", "url", "tel", "password", "number"].includes(type);
+      }
+      return !!el.isContentEditable;
+    }
+    function isSlider(el) {
+      return !!el && el.tagName === "INPUT" && (el.type || "").toLowerCase() === "range";
+    }
+    function isNativeSelect(el) {
+      return !!el && el.tagName === "SELECT";
+    }
+    function placeCaretAtPoint(el, cx, cy) {
+      if (!el || !el.isContentEditable) return;
+      let range = null;
+      if (document.caretRangeFromPoint) {
+        range = document.caretRangeFromPoint(cx, cy);
+      } else if (document.caretPositionFromPoint) {
+        const pos = document.caretPositionFromPoint(cx, cy);
+        if (pos) {
+          range = document.createRange();
+          range.setStart(pos.offsetNode, pos.offset);
+          range.collapse(true);
+        }
+      }
+      if (range && el.contains(range.startContainer)) {
+        const sel = pageWindow2.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        if (isDebugTextEnabled()) console.log("[Wizascript Controller] caret repositioned in", el, "at", cx, cy);
+      }
+    }
+    function firstTextNode(el) {
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      return walker.nextNode();
+    }
+    function lastTextNode(el) {
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      let last = null, node;
+      while (node = walker.nextNode()) last = node;
+      return last;
+    }
+    function setOskCaretEdge(toStart) {
+      if (!oskTarget) return;
+      if (oskTarget.isContentEditable) {
+        const node = toStart ? firstTextNode(oskTarget) : lastTextNode(oskTarget);
+        const range = document.createRange();
+        if (node) range.setStart(node, toStart ? 0 : node.textContent.length);
+        else range.selectNodeContents(oskTarget);
+        range.collapse(true);
+        const sel = pageWindow2.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } else {
+        const pos = toStart ? 0 : oskTarget.value.length;
+        oskTarget.setSelectionRange(pos, pos);
+        scrollFieldToCaret(oskTarget);
+      }
+    }
+    function stepOskCaret(dir) {
+      if (!oskTarget) return;
+      if (oskTarget.isContentEditable) {
+        const sel = pageWindow2.getSelection();
+        if (!sel.rangeCount || !oskTarget.contains(sel.anchorNode)) {
+          setOskCaretEdge(dir < 0);
+          return;
+        }
+        sel.modify("move", dir < 0 ? "left" : "right", "character");
+        if (!oskTarget.contains(sel.focusNode)) setOskCaretEdge(dir < 0);
+      } else {
+        const cur = oskTarget.selectionStart == null ? oskTarget.value.length : oskTarget.selectionStart;
+        const next = Math.max(0, Math.min(oskTarget.value.length, cur + dir));
+        oskTarget.setSelectionRange(next, next);
+        scrollFieldToCaret(oskTarget);
+      }
+    }
+    let oskOpen = false, oskTarget = null, oskRow = 0, oskCol = 0, oskShift = false, oskPage = "letters";
+    let oskPaused = false;
+    let lastL2TapTime = 0, lastR2TapTime = 0;
+    const DOUBLE_TAP_WINDOW_MS2 = 400;
+    let activeRows = KEY_PAGES.letters;
+    buildGrid(activeRows);
+    function renderOskLabels() {
+      activeRows.forEach((row, r) => row.forEach((label, c) => {
+        oskRowEls[r][c].textContent = displayLabel(label, oskShift);
+      }));
+    }
+    function updateOskHighlight() {
+      activeRows.forEach((row, r) => row.forEach((label, c) => {
+        const active = r === oskRow && c === oskCol;
+        oskRowEls[r][c].style.border = active ? "2px solid #0f0" : "2px solid transparent";
+        oskRowEls[r][c].style.background = active ? "#0a4d0a" : "#232326";
+      }));
+    }
+    function openOsk(target) {
+      oskTarget = target;
+      target.focus();
+      oskOpen = true;
+      oskPaused = false;
+      oskRow = 0;
+      oskCol = 0;
+      oskShift = false;
+      oskPage = "letters";
+      activeRows = KEY_PAGES.letters;
+      buildGrid(activeRows);
+      oskEl.style.display = "block";
+      positionPanelNear(oskEl, target);
+      cursor.style.display = "block";
+      updateOskHighlight();
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] OSK opened for", target);
+    }
+    function closeOsk() {
+      oskOpen = false;
+      oskPaused = false;
+      oskEl.style.display = "none";
+      if (oskTarget) oskTarget.blur();
+      oskTarget = null;
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] OSK closed");
+    }
+    function dispatchEnterKey(el) {
+      el.focus();
+      const scope = el.closest("form") || el.closest(".chat-box") || el.parentElement;
+      const submitEl = scope && scope.querySelector('input[type="submit"]');
+      if (submitEl) {
+        submitEl.click();
+        return;
+      }
+      const opts = { bubbles: true, cancelable: true, key: "Enter", code: "Enter", keyCode: 13, which: 13, view: pageWindow2 };
+      el.dispatchEvent(new KeyboardEvent("keydown", opts));
+      el.dispatchEvent(new KeyboardEvent("keypress", opts));
+      el.dispatchEvent(new KeyboardEvent("keyup", opts));
+    }
+    let scrollMirrorEl = null;
+    function measureTextWidth(el, text) {
+      if (!scrollMirrorEl) {
+        scrollMirrorEl = document.createElement("span");
+        Object.assign(scrollMirrorEl.style, {
+          position: "absolute",
+          visibility: "hidden",
+          whiteSpace: "pre",
+          top: "-9999px",
+          left: "-9999px"
+        });
+        document.body.appendChild(scrollMirrorEl);
+      }
+      const cs = getComputedStyle(el);
+      scrollMirrorEl.style.font = cs.font;
+      scrollMirrorEl.style.letterSpacing = cs.letterSpacing;
+      scrollMirrorEl.style.textTransform = cs.textTransform;
+      scrollMirrorEl.textContent = text;
+      return scrollMirrorEl.getBoundingClientRect().width;
+    }
+    function scrollFieldToCaret(el) {
+      if (!el || el.isContentEditable) return;
+      if (typeof el.selectionEnd !== "number") return;
+      const pos = el.selectionEnd;
+      const caretX = measureTextWidth(el, el.value.slice(0, pos));
+      const visibleWidth = el.clientWidth;
+      const margin = 12;
+      if (caretX - el.scrollLeft > visibleWidth - margin) {
+        el.scrollLeft = caretX - visibleWidth + margin;
+      } else if (caretX - el.scrollLeft < margin) {
+        el.scrollLeft = Math.max(0, caretX - margin);
+      }
+    }
+    function typeChar(el, ch) {
+      el.focus();
+      const info = keyInfo(ch);
+      const base = { bubbles: true, cancelable: true, key: ch, code: info.code, keyCode: info.keyCode, which: info.keyCode, view: pageWindow2 };
+      el.dispatchEvent(new KeyboardEvent("keydown", base));
+      el.dispatchEvent(new KeyboardEvent("keypress", base));
+      document.execCommand("insertText", false, ch);
+      el.dispatchEvent(new KeyboardEvent("keyup", base));
+      scrollFieldToCaret(el);
+    }
+    function typeBackspace(el) {
+      el.focus();
+      const base = { bubbles: true, cancelable: true, key: "Backspace", code: "Backspace", keyCode: 8, which: 8, view: pageWindow2 };
+      el.dispatchEvent(new KeyboardEvent("keydown", base));
+      document.execCommand("delete");
+      el.dispatchEvent(new KeyboardEvent("keyup", base));
+      scrollFieldToCaret(el);
+    }
+    function pressKey(label) {
+      if (!oskTarget) return;
+      if (label === "\u2423") {
+        typeChar(oskTarget, " ");
+        return;
+      }
+      const ch = oskShift ? label.toUpperCase() : label;
+      typeChar(oskTarget, ch);
+    }
+    let sliderTarget = null;
+    const nativeValueSetter = Object.getOwnPropertyDescriptor(pageWindow2.HTMLInputElement.prototype, "value").set;
+    function openSlider(el) {
+      sliderTarget = el;
+      setHighlight(el);
+      cursor.style.display = "none";
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] slider focused", el, "value=", el.value, "min=", el.min, "max=", el.max, "step=", el.step);
+    }
+    function closeSlider() {
+      if (sliderTarget) clearHighlight(sliderTarget);
+      sliderTarget = null;
+    }
+    function adjustSlider(dir) {
+      if (!sliderTarget) return;
+      const el = sliderTarget;
+      const step = parseFloat(el.step) || 1;
+      const min = el.min !== "" ? parseFloat(el.min) : -Infinity;
+      const max = el.max !== "" ? parseFloat(el.max) : Infinity;
+      let val = parseFloat(el.value) || 0;
+      val = Math.max(min, Math.min(max, val + dir * step));
+      nativeValueSetter.call(el, String(val));
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    function setSliderValueFromPointer(el, clientX) {
+      const rect = el.getBoundingClientRect();
+      if (!rect.width) return;
+      const min = el.min !== "" ? parseFloat(el.min) : 0;
+      const max = el.max !== "" ? parseFloat(el.max) : 100;
+      const step = parseFloat(el.step) || 1;
+      let frac = (clientX - rect.left) / rect.width;
+      frac = Math.max(0, Math.min(1, frac));
+      let val = min + frac * (max - min);
+      val = Math.round(val / step) * step;
+      val = Math.max(min, Math.min(max, val));
+      nativeValueSetter.call(el, String(val));
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    let selectTarget = null, selectOptions = [], selectIndex = 0;
+    function openSelectPicker(el) {
+      selectTarget = el;
+      selectOptions = Array.from(el.options);
+      selectIndex = Math.max(0, selectOptions.findIndex((o) => o.selected));
+      const selCs = getComputedStyle(el);
+      const selBg = selCs.backgroundColor;
+      selectEl.style.background = selBg && selBg !== "rgba(0, 0, 0, 0)" ? selBg : "#000";
+      selectEl.style.border = `${selCs.borderTopWidth} ${selCs.borderTopStyle} ${selCs.borderTopColor}`;
+      selectEl.style.borderRadius = selCs.borderRadius;
+      selectEl.style.fontFamily = selCs.fontFamily;
+      selectEl.style.fontSize = selCs.fontSize;
+      renderSelectOptions();
+      selectEl.style.display = "block";
+      positionPanelNear(selectEl, el);
+      updateSelectHighlight();
+      cursor.style.display = "block";
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] select picker opened", el, selectOptions.map((o) => o.text));
+    }
+    function closeSelectPicker() {
+      selectEl.style.display = "none";
+      selectTarget = null;
+    }
+    function confirmSelectPicker() {
+      if (!selectTarget) return;
+      const opt = selectOptions[selectIndex];
+      if (opt) {
+        selectTarget.value = opt.value;
+        selectTarget.dispatchEvent(new Event("input", { bubbles: true }));
+        selectTarget.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      closeSelectPicker();
+    }
+    function activateHighlighted(button) {
+      const el = currentFocusedEl();
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+      if (isPatchMakerResetButton(el)) {
+        activatePatchMakerResetButton(el, cx, cy);
+        return;
+      }
+      dispatchClick(el, cx, cy, button === 2 ? 2 : 0);
+      const openPresetMenu = getPresetMenuState();
+      if (openPresetMenu) {
+        fieldSubmenu = {
+          items: openPresetMenu.rows,
+          index: openPresetMenu.activeIndex,
+          onConfirm: (item) => {
+            if (item) triggerElementClick(item);
+          },
+          onCancel: () => openPresetMenu.close(),
+          isAlive: () => !!getPresetMenuState()
+        };
+        return;
+      }
+      if (isNativeSelect(el)) {
+        openSelectPicker(el);
+        return;
+      }
+      if (isSlider(el)) {
+        openSlider(el);
+        return;
+      }
+      if (el.matches && el.matches(".uc-section-label, .uc-card-item")) {
+        el.focus();
+        return;
+      }
+      if (el.readOnly && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) {
+        el.focus();
+        return;
+      }
+      if (isTextInput(el)) {
+        openOsk(el);
+        if (el.isContentEditable) placeCaretAtPoint(el, cx, cy);
+        return;
+      }
+      if (!activeSubmenu && el.classList.contains("dropdown-toggle")) {
+        const items = findDropdownMenuNear(el);
+        if (items.length) {
+          activeSubmenu = { toggle: el, items, index: 0 };
+          refreshHighlight();
+        }
+      }
+    }
+    function closeSubmenu() {
+      if (!activeSubmenu) return;
+      const toggle = activeSubmenu.toggle;
+      activeSubmenu = null;
+      const rect = toggle.getBoundingClientRect();
+      dispatchClick(toggle, rect.left + rect.width / 2, rect.top + rect.height / 2, 0);
+      refreshHighlight();
+    }
+    let x = pageWindow2.innerWidth / 2, y = pageWindow2.innerHeight / 2;
+    let usingController = false;
+    const BASE_SPEED = 24;
+    const WHEEL_DELTA = 100;
+    const STICK_DEADZONE = 0.15;
+    function dz(v) {
+      const mag = Math.abs(v);
+      if (mag < STICK_DEADZONE) return 0;
+      const rescaled = (mag - STICK_DEADZONE) / (1 - STICK_DEADZONE);
+      return v < 0 ? -rescaled : rescaled;
+    }
+    const heldKeyCodes = /* @__PURE__ */ new Set();
+    document.addEventListener("keydown", (e) => {
+      heldKeyCodes.add(e.code);
+    });
+    document.addEventListener("keyup", (e) => {
+      heldKeyCodes.delete(e.code);
+    });
+    function isBoundInputDown(value, btnFn) {
+      if (value === null || value === void 0) return false;
+      if (typeof value === "number") return !!btnFn(value);
+      if (value.type === "key") return heldKeyCodes.has(value.code);
+      return false;
+    }
+    let cursorSensitivity = getCursorSensitivity();
+    let sensitivityAdjusting = false;
+    const SENSITIVITY_ADJUST_RATE = 0.02;
+    function currentCursorSpeedMult() {
+      return Math.max(0.3, Math.min(3, 1 - cursorSensitivity * 2));
+    }
+    function findRealScrollable(el) {
+      let node = el;
+      while (node && node !== document.documentElement) {
+        const cs = getComputedStyle(node);
+        if (/(auto|scroll)/.test(cs.overflowY) && node.scrollHeight > node.clientHeight) return node;
+        node = node.parentElement;
+      }
+      const root = document.scrollingElement || document.documentElement;
+      if (root && root.scrollHeight > root.clientHeight) return root;
+      return null;
+    }
+    function findScrollableDescendant(root) {
+      if (!root) return null;
+      const all = root.querySelectorAll("*");
+      for (const node of all) {
+        const cs = getComputedStyle(node);
+        if (/(auto|scroll)/.test(cs.overflowY) && node.scrollHeight > node.clientHeight) return node;
+      }
+      return null;
+    }
+    function topVisibleRowIndex(rowEls, containerEl) {
+      if (!rowEls.length) return 0;
+      if (!containerEl) return 0;
+      const containerTop = containerEl.getBoundingClientRect().top;
+      for (let i = 0; i < rowEls.length; i++) {
+        if (rowEls[i] && rowEls[i].getBoundingClientRect().bottom > containerTop + 1) return i;
+      }
+      return rowEls.length - 1;
+    }
+    function fire(el, type, ctor, clientX, clientY, button, buttons) {
+      const opts = {
+        bubbles: true,
+        cancelable: true,
+        view: pageWindow2,
+        clientX,
+        clientY,
+        button: button || 0,
+        buttons: buttons || 0
+      };
+      if (ctor === PointerEvent) {
+        opts.pointerId = 1;
+        opts.isPrimary = true;
+        opts.pointerType = "mouse";
+      }
+      el.dispatchEvent(new ctor(type, opts));
+    }
+    function dispatchClick(el, cx, cy, button) {
+      if (button === 2) {
+        fire(el, "pointerdown", PointerEvent, cx, cy, 2, 2);
+        fire(el, "mousedown", MouseEvent, cx, cy, 2, 2);
+        fire(el, "pointerup", PointerEvent, cx, cy, 2, 0);
+        fire(el, "mouseup", MouseEvent, cx, cy, 2, 0);
+        fire(el, "contextmenu", MouseEvent, cx, cy, 2, 0);
+        return;
+      }
+      fire(el, "pointerdown", PointerEvent, cx, cy, 0, 1);
+      fire(el, "mousedown", MouseEvent, cx, cy, 0, 1);
+      fire(el, "pointerup", PointerEvent, cx, cy, 0, 0);
+      fire(el, "mouseup", MouseEvent, cx, cy, 0, 0);
+      fire(el, "click", MouseEvent, cx, cy, 0, 0);
+    }
+    function isPatchMakerResetButton(el) {
+      return !!el && el.tagName === "BUTTON" && el.textContent && el.textContent.trim() === "Reset Data";
+    }
+    let lastResetBtnPressTime = 0;
+    function activatePatchMakerResetButton(el, cx, cy) {
+      const now = performance.now();
+      const isConfirmPress = now - lastResetBtnPressTime < DOUBLE_TAP_WINDOW_MS2;
+      const detail = isConfirmPress ? 2 : 1;
+      fire(el, "pointerdown", PointerEvent, cx, cy, 0, 1);
+      fire(el, "mousedown", MouseEvent, cx, cy, 0, 1);
+      fire(el, "pointerup", PointerEvent, cx, cy, 0, 0);
+      fire(el, "mouseup", MouseEvent, cx, cy, 0, 0);
+      el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: pageWindow2, clientX: cx, clientY: cy, button: 0, buttons: 0, detail }));
+      lastResetBtnPressTime = isConfirmPress ? 0 : now;
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] Reset Data pressed, detail =", detail, isConfirmPress ? "(confirmed - resetting)" : "(press again to confirm)");
+    }
+    function triggerElementClick(el) {
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      dispatchClick(el, r.left + r.width / 2, r.top + r.height / 2, 0);
+    }
+    function triggerConcede() {
+      const menu = document.querySelector(".menu-backdrop");
+      const wasMenuOpen = !!(menu && getComputedStyle(menu).display !== "none");
+      document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
+      let attempts2 = 0;
+      const MAX_ATTEMPTS = 30;
+      (function poll() {
+        const items = Array.from(document.querySelectorAll('.menu-body li[role="button"]'));
+        const surrenderLi = items.find((li) => /surrender/i.test((li.textContent || "").trim()));
+        if (surrenderLi) {
+          triggerElementClick(surrenderLi);
+          if (isDebugTextEnabled()) console.log("[Wizascript Controller] concede: used Underscript's own Surrender menu entry");
+          return;
+        }
+        attempts2++;
+        if (attempts2 < MAX_ATTEMPTS) {
+          requestAnimationFrame(poll);
+          return;
+        }
+        if (isDebugTextEnabled()) console.log("[Wizascript Controller] concede: no Surrender entry found in Underscript's menu, falling back to the native flow");
+        if (!wasMenuOpen) document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
+        triggerConcedeNative();
+      })();
+    }
+    function triggerConcedeNative() {
+      const existing = document.querySelector('.btn-danger[onclick*="askSurrender"]');
+      if (existing) {
+        triggerElementClick(existing);
+        return;
+      }
+      const configBtn = document.getElementById("btn-config");
+      if (!configBtn) {
+        if (isDebugTextEnabled()) console.log("[Wizascript Controller] concede: settings button not found (not in a match?)");
+        return;
+      }
+      if (!isWizascriptSettingsOpen()) {
+        triggerElementClick(configBtn);
+      } else if (isDebugTextEnabled()) {
+        console.log("[Wizascript Controller] concede: Settings already open - skipped opening a duplicate, going straight to polling for the surrender button");
+      }
+      let attempts2 = 0;
+      const MAX_ATTEMPTS = 30;
+      (function poll() {
+        const btn = document.querySelector('.btn-danger[onclick*="askSurrender"]');
+        if (btn) {
+          triggerElementClick(btn);
+          return;
+        }
+        attempts2++;
+        if (attempts2 < MAX_ATTEMPTS) requestAnimationFrame(poll);
+        else if (isDebugTextEnabled()) console.log("[Wizascript Controller] concede: gave up waiting for the surrender button after opening settings");
+      })();
+    }
+    const drag = { left: null, right: null };
+    function beginPress(side, button) {
+      cursor.style.display = "none";
+      const hitEl = document.elementFromPoint(x, y);
+      cursor.style.display = "block";
+      if (!hitEl) return;
+      drag[side] = { downEl: hitEl };
+      if (button === 2) {
+        fire(hitEl, "pointerdown", PointerEvent, x, y, 2, 2);
+        fire(hitEl, "mousedown", MouseEvent, x, y, 2, 2);
+      } else {
+        fire(hitEl, "pointerdown", PointerEvent, x, y, 0, 1);
+        fire(hitEl, "mousedown", MouseEvent, x, y, 0, 1);
+      }
+    }
+    function continuePress(side, button) {
+      if (!drag[side]) return;
+      cursor.style.display = "none";
+      const hitEl = document.elementFromPoint(x, y);
+      cursor.style.display = "block";
+      if (!hitEl) return;
+      if (button === 2) {
+        fire(hitEl, "pointermove", PointerEvent, x, y, 2, 2);
+        fire(hitEl, "mousemove", MouseEvent, x, y, 2, 2);
+      } else {
+        fire(hitEl, "pointermove", PointerEvent, x, y, 0, 1);
+        fire(hitEl, "mousemove", MouseEvent, x, y, 0, 1);
+      }
+    }
+    function endPress(side, button) {
+      const state = drag[side];
+      drag[side] = null;
+      if (!state) return;
+      cursor.style.display = "none";
+      const hitEl = document.elementFromPoint(x, y);
+      cursor.style.display = "block";
+      if (!hitEl) return;
+      if (button === 2) {
+        fire(hitEl, "pointerup", PointerEvent, x, y, 2, 0);
+        fire(hitEl, "mouseup", MouseEvent, x, y, 2, 0);
+        if (hitEl === state.downEl) fire(hitEl, "contextmenu", MouseEvent, x, y, 2, 0);
+      } else {
+        fire(hitEl, "pointerup", PointerEvent, x, y, 0, 0);
+        fire(hitEl, "mouseup", MouseEvent, x, y, 0, 0);
+        if (hitEl === state.downEl) fire(hitEl, "click", MouseEvent, x, y, 0, 0);
+      }
+    }
+    function collectHoverRules() {
+      const rules = [];
+      for (const sheet of document.styleSheets) {
+        let cssRules;
+        try {
+          cssRules = sheet.cssRules;
+        } catch (e) {
+          continue;
+        }
+        if (!cssRules) continue;
+        for (const rule of cssRules) {
+          if (!rule.selectorText || !rule.selectorText.includes(":hover")) continue;
+          for (const part of rule.selectorText.split(",")) {
+            const trimmed = part.trim();
+            if (!trimmed.includes(":hover")) continue;
+            const base = trimmed.replace(/:hover/g, "").trim();
+            if (base) rules.push({ selector: base, style: rule.style });
+          }
+        }
+      }
+      return rules;
+    }
+    const hoverRules = collectHoverRules();
+    const hoverStyleMap = /* @__PURE__ */ new Map();
+    function resolveHoverStyle(el) {
+      const finalProps = /* @__PURE__ */ new Map();
+      for (const { selector, style } of hoverRules) {
+        try {
+          if (!el.matches(selector)) continue;
+        } catch (e) {
+          continue;
+        }
+        for (let i = 0; i < style.length; i++) {
+          const prop = style[i];
+          finalProps.set(prop, [style.getPropertyValue(prop), style.getPropertyPriority(prop)]);
+        }
+      }
+      if (!finalProps.size) return;
+      const originalProps = Array.from(finalProps.keys()).map((prop) => [prop, el.style.getPropertyValue(prop), el.style.getPropertyPriority(prop)]);
+      hoverStyleMap.set(el, {
+        finalProps: Array.from(finalProps.entries()).map(([p, [v, pr]]) => [p, v, pr]),
+        originalProps
+      });
+    }
+    [navbarGroup, footbarGroup].filter(Boolean).forEach((g) => {
+      g.container.querySelectorAll("a").forEach((item) => {
+        resolveHoverStyle(item);
+        item.querySelectorAll("img").forEach(resolveHoverStyle);
+      });
+    });
+    if (isDebugTextEnabled()) console.log(`[Wizascript Controller] resolved hover styles for ${hoverStyleMap.size} curated element(s)`);
+    function findHoverTarget(el) {
+      if (!el) return null;
+      if (hoverStyleMap.has(el)) return el;
+      const link = el.closest && el.closest("a");
+      if (link && hoverStyleMap.has(link)) return link;
+      return null;
+    }
+    function applyCuratedHover(el) {
+      const entry = hoverStyleMap.get(el);
+      if (!entry) return;
+      for (const [prop, val, pr] of entry.finalProps) el.style.setProperty(prop, val, pr);
+    }
+    function revertCuratedHover(el) {
+      const entry = hoverStyleMap.get(el);
+      if (!entry) return;
+      for (const [prop, val, pr] of entry.originalProps) {
+        if (val) el.style.setProperty(prop, val, pr);
+        else el.style.removeProperty(prop);
+      }
+    }
+    let hoverActiveEl = null;
+    function setHoverTarget(target) {
+      if (target === hoverActiveEl) return;
+      if (hoverActiveEl) revertCuratedHover(hoverActiveEl);
+      if (target) applyCuratedHover(target);
+      hoverActiveEl = target;
+    }
+    let lastHitEl = null;
+    function updateHover(el, cx, cy) {
+      if (el !== lastHitEl) {
+        if (lastHitEl) {
+          fire(lastHitEl, "pointerout", PointerEvent, cx, cy, 0, 0);
+          fire(lastHitEl, "mouseout", MouseEvent, cx, cy, 0, 0);
+          fire(lastHitEl, "pointerleave", PointerEvent, cx, cy, 0, 0);
+          fire(lastHitEl, "mouseleave", MouseEvent, cx, cy, 0, 0);
+        }
+        if (el) {
+          fire(el, "pointerover", PointerEvent, cx, cy, 0, 0);
+          fire(el, "mouseover", MouseEvent, cx, cy, 0, 0);
+          fire(el, "pointerenter", PointerEvent, cx, cy, 0, 0);
+          fire(el, "mouseenter", MouseEvent, cx, cy, 0, 0);
+        }
+        lastHitEl = el;
+      }
+      if (el) {
+        fire(el, "pointermove", PointerEvent, cx, cy, 0, 0);
+        fire(el, "mousemove", MouseEvent, cx, cy, 0, 0);
+      }
+      const focused = currentFocusedEl();
+      setHoverTarget(findHoverTarget(focused || el));
+    }
+    document.addEventListener("mousemove", (e) => {
+      if (!e.isTrusted) return;
+      if (usingController) {
+        if (isDebugTextEnabled()) console.log("[Wizascript Controller] real mouse movement detected -> forcing usingController OFF");
+      }
+      usingController = false;
+      document.documentElement.style.cursor = "";
+      cursor.style.display = "none";
+      if (currentHighlightedEl) {
+        clearHighlight(currentHighlightedEl);
+        currentHighlightedEl = null;
+      }
+    }, true);
+    let dpadHeld = { up: false, down: false, left: false, right: false };
+    let btnHeld = {};
+    let shortcutBtnHeld = {};
+    let shortcutHeldByAction = {};
+    function shortcutJustPressed(btnFn, actionKey) {
+      const bound = getBoundShortcutButton(actionKey);
+      const isDown = isBoundInputDown(bound, btnFn);
+      const wasDown = !!shortcutHeldByAction[actionKey];
+      shortcutHeldByAction[actionKey] = isDown;
+      return isDown && !wasDown;
+    }
+    let keybindRelayHeld = { primary: false, controlDown: false, actions: {} };
+    let wasCaptureActiveLastFrame = false;
+    let guideMatchIndex = -1, guidePlayerIndex = 0, guideSelectedEl = null;
+    let guideDpadHeld = { up: false, down: false, left: false, right: false };
+    let guideBtn0Held = false;
+    let guideNeedsReanchor = false;
+    let leftHeldSince = 0, rightHeldSince = 0, lastPageTurnTime = 0;
+    let dpadText = "";
+    function openWizascriptSettings() {
+      const base = { key: "Control", code: "ControlLeft", keyCode: 17, which: 17, bubbles: true };
+      document.dispatchEvent(new KeyboardEvent("keydown", base));
+      requestAnimationFrame(() => {
+        document.dispatchEvent(new KeyboardEvent("keyup", base));
+        requestAnimationFrame(() => {
+          document.dispatchEvent(new KeyboardEvent("keydown", base));
+          requestAnimationFrame(() => {
+            document.dispatchEvent(new KeyboardEvent("keyup", base));
+          });
+        });
+      });
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] relayed a real Primary (Control) double-tap for Wizascript settings");
+    }
+    function frame() {
+      try {
+        const debugTextOn = isDebugTextEnabled();
+        hud.style.display = debugTextOn ? "block" : "none";
+        setDebugLoggingEnabled(debugTextOn);
+        if (!isControllerSupportEnabled()) {
+          if (usingController) {
+            usingController = false;
+            document.documentElement.style.cursor = "";
+            cursor.style.display = "none";
+            if (oskOpen) closeOsk();
+          }
+          if (sensitivityAdjusting) {
+            setCursorSensitivity(cursorSensitivity);
+            sensitivityAdjusting = false;
+          }
+          sensitivityBar.style.display = "none";
+          return;
+        }
+        logRawGamepadStateIfChanged();
+        const gp = getMergedGamepad();
+        if (!gp) return;
+        const lx = dz(gp.axes[0]), ly = dz(gp.axes[1]);
+        const rx = dz(gp.axes[2]), ry = dz(gp.axes[3]);
+        const up = gp.buttons[12] && gp.buttons[12].pressed;
+        const down = gp.buttons[13] && gp.buttons[13].pressed;
+        const left = gp.buttons[14] && gp.buttons[14].pressed;
+        const right = gp.buttons[15] && gp.buttons[15].pressed;
+        const btn = (i) => gp.buttons[i] && gp.buttons[i].pressed;
+        const anyStick = lx || ly || rx || ry;
+        const anyButton = gp.buttons.some((b) => b.pressed);
+        if (anyStick) navInputMethod = "stick";
+        else if (up || down || left || right) navInputMethod = "dpad";
+        if (anyStick || anyButton) {
+          if (!usingController) {
+            usingController = true;
+            document.documentElement.style.cursor = "none";
+            if (!oskOpen && !sliderTarget && !selectTarget) cursor.style.display = cursorRestingDisplay();
+          }
+        }
+        logMergedInputEdges(gp, usingController, anyStick);
+        if (!usingController) return;
+        if (rx !== 0) {
+          cursorSensitivity = Math.max(-1, Math.min(1, cursorSensitivity + rx * SENSITIVITY_ADJUST_RATE));
+          showSensitivityBar(cursorSensitivity);
+          sensitivityAdjusting = true;
+        } else if (sensitivityAdjusting) {
+          setCursorSensitivity(cursorSensitivity);
+          sensitivityAdjusting = false;
+        }
+        const captureActiveNow = isControllerCaptureActive();
+        if (!wasCaptureActiveLastFrame && captureActiveNow) {
+          if (keybindRelayHeld.controlDown) {
+            document.dispatchEvent(new KeyboardEvent("keyup", { key: "Control", code: "ControlLeft", keyCode: 17, which: 17, bubbles: true }));
+            keybindRelayHeld.controlDown = false;
+          }
+        } else if (wasCaptureActiveLastFrame && !captureActiveNow) {
+          Object.keys(HARDWARE_SHORTCUT_ACTIONS_BY_KEY).forEach((key) => {
+            shortcutHeldByAction[key] = isBoundInputDown(getBoundShortcutButton(key), btn);
+          });
+          shortcutBtnHeld = { 1: btn(1), 5: btn(5) };
+          keybindRelayHeld.primary = isBoundInputDown(getControllerPrimaryButton(), btn) || oskOpen && oskPaused;
+          const resyncedActions = {};
+          CONTROLLER_ACTIONS.forEach((action) => {
+            resyncedActions[action.key] = isBoundInputDown(getBoundButton(action.key), btn);
+          });
+          keybindRelayHeld.actions = resyncedActions;
+          guideDpadHeld = { up, down, left, right };
+          guideBtn0Held = btn(0);
+        }
+        wasCaptureActiveLastFrame = captureActiveNow;
+        if (!isControllerCaptureActive()) {
+          if (btn(5) && !shortcutBtnHeld[5]) {
+            if (oskOpen) {
+              oskPaused = !oskPaused;
+              oskEl.style.display = oskPaused ? "none" : "block";
+              if (!oskPaused && oskTarget) {
+                positionPanelNear(oskEl, oskTarget);
+                updateOskHighlight();
+              }
+              if (isDebugTextEnabled()) console.log("[Wizascript Controller] OSK", oskPaused ? "paused" : "resumed");
+            } else {
+              document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
+            }
+          }
+          if (btn(1) && !shortcutBtnHeld[1] && oskOpen && oskPaused) closeOsk();
+          if (shortcutJustPressed(btn, "openSettings")) {
+            const openModal = queryModalRoot();
+            if (openModal && openModal.kind === "tabbed") {
+              if (debugTextOn) console.log("[Wizascript Controller] openSettings: Settings already open - closing instead of stacking another copy");
+              const dismiss = findModalDismissButton(openModal.root);
+              if (dismiss) triggerElementClick(dismiss);
+              else document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
+            } else {
+              triggerElementClick(document.getElementById("btn-config"));
+            }
+          }
+          if (shortcutJustPressed(btn, "yourDustpile") && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(true)"]'));
+          if (shortcutJustPressed(btn, "opponentDustpile") && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(false)"]'));
+          if (shortcutJustPressed(btn, "endTurn")) triggerElementClick(document.getElementById("endTurnBtn"));
+          if (shortcutJustPressed(btn, "openWizascriptSettings") && !oskOpen) openWizascriptSettings();
+          if (shortcutJustPressed(btn, "concede")) triggerConcede();
+          if (shortcutJustPressed(btn, "goHome")) pageWindow2.location.href = "https://undercards.net/";
+          if (shortcutJustPressed(btn, "openDeckTrackerPresets") && !oskOpen) triggerElementClick(document.getElementById("dt-add-tracker-button"));
+          shortcutBtnHeld = { 1: btn(1), 5: btn(5) };
+        }
+        if ((!oskOpen || oskPaused) && !isControllerCaptureActive()) {
+          const primaryBtn = getControllerPrimaryButton();
+          const l1Down = isBoundInputDown(primaryBtn, btn) || oskOpen && oskPaused;
+          const viaPause = oskOpen && oskPaused;
+          const primaryBase = { key: "Control", code: "ControlLeft", keyCode: 17, which: 17, bubbles: true };
+          const guideBtnForRelay = getChannelGuideButton();
+          const guideDownForRelay = isBoundInputDown(guideBtnForRelay, btn);
+          const controlShouldBeDown = l1Down || guideDownForRelay;
+          if (controlShouldBeDown && !keybindRelayHeld.controlDown) {
+            document.dispatchEvent(new KeyboardEvent("keydown", primaryBase));
+            keybindRelayHeld.controlDown = true;
+          } else if (!controlShouldBeDown && keybindRelayHeld.controlDown) {
+            document.dispatchEvent(new KeyboardEvent("keyup", primaryBase));
+            keybindRelayHeld.controlDown = false;
+          }
+          if (l1Down) {
+            const relaySecondary = (code, key) => {
+              const opts = { key, code, bubbles: true };
+              document.dispatchEvent(new KeyboardEvent("keydown", opts));
+              document.dispatchEvent(new KeyboardEvent("keyup", opts));
+            };
+            const pmFocusForContext = document.activeElement;
+            const inPatchMakerFieldForContext = !!(pmFocusForContext && pmFocusForContext.matches && pmFocusForContext.matches(".uc-li-text, .uc-section-label, .uc-card-item"));
+            const nextActionHeld = {};
+            const codesFiredThisFrame = /* @__PURE__ */ new Set();
+            CONTROLLER_ACTIONS.forEach((action) => {
+              let applies;
+              if (action.context === "always") applies = true;
+              else if (action.context === "channelSwitch") applies = !inPatchMakerFieldForContext;
+              else if (action.context === "patchMaker") applies = inPatchMakerFieldForContext;
+              else applies = !inPatchMakerFieldForContext;
+              const boundInput = applies ? getBoundButton(action.key) : null;
+              const isDown = isBoundInputDown(boundInput, btn);
+              nextActionHeld[action.key] = isDown;
+              if (isDown && !keybindRelayHeld.actions[action.key]) {
+                const liveCode = getBoundKeybindCode(action.key, action.dispatch.code);
+                if (!codesFiredThisFrame.has(liveCode)) {
+                  codesFiredThisFrame.add(liveCode);
+                  relaySecondary(liveCode, action.dispatch.key);
+                }
+              }
+            });
+            keybindRelayHeld.actions = nextActionHeld;
+            hud.textContent = inPatchMakerFieldForContext ? `Patch Maker (${viaPause ? "OSK paused" : "Primary held"})
+move entry/section/card, cycle category \u2014 see Settings > Keybinds - Controller${viaPause ? `
+R1: resume typing   ${btnLabel(1)}: close` : ""}` : `Wizascript keybind relay (${viaPause ? "OSK paused" : "Primary held"})
+channel / notepad redo-undo-toggle-reset \u2014 see Settings > Keybinds - Controller${viaPause ? `
+R1: resume typing   ${btnLabel(1)}: close` : ""}`;
+          } else {
+            keybindRelayHeld.actions = {};
+          }
+          keybindRelayHeld.primary = l1Down;
+          if (l1Down) return;
+        }
+        if ((!oskOpen || oskPaused) && !isControllerCaptureActive()) {
+          const guideBtn = getChannelGuideButton();
+          const guideDown = isBoundInputDown(guideBtn, btn);
+          if (guideDown) {
+            const guideEl = document.getElementById("uctv-guide-overlay");
+            if (!guideEl) {
+              hud.textContent = `UC TV Guide loading\u2026
+release ${bindingToDisplay(guideBtn)} to cancel`;
+            } else {
+              const playerSpans = Array.from(guideEl.querySelectorAll("span")).filter((el) => el.style.cursor === "pointer");
+              const matches = [];
+              const rows = [];
+              const rowIndex = /* @__PURE__ */ new Map();
+              playerSpans.forEach((el) => {
+                const row = el.parentElement;
+                if (!rowIndex.has(row)) {
+                  rowIndex.set(row, matches.length);
+                  matches.push([]);
+                  rows.push(row);
+                }
+                matches[rowIndex.get(row)].push(el);
+              });
+              if (!matches.length) {
+                guideMatchIndex = -1;
+                guidePlayerIndex = 0;
+                guideSelectedEl = null;
+                guideNeedsReanchor = false;
+                hud.textContent = `UC TV Guide
+no matches shown
+release ${bindingToDisplay(guideBtn)} to close`;
+              } else {
+                if (ry !== 0) {
+                  guideEl.scrollTop += ry * 30;
+                  if (guideSelectedEl) {
+                    guideSelectedEl.dispatchEvent(new MouseEvent("mouseleave", { bubbles: true }));
+                    guideSelectedEl = null;
+                  }
+                  guideMatchIndex = -1;
+                  guideNeedsReanchor = true;
+                }
+                const dpadPressed = up && !guideDpadHeld.up || down && !guideDpadHeld.down || left && !guideDpadHeld.left || right && !guideDpadHeld.right;
+                if (guideNeedsReanchor && !dpadPressed) {
+                  guideDpadHeld = { up, down, left, right };
+                  guideBtn0Held = btn(0);
+                  hud.textContent = `UC TV Guide
+(scrolled - press \u2191\u2193\u2190\u2192 to resume navigating)
+release ${bindingToDisplay(guideBtn)} to close`;
+                  return;
+                }
+                let justReanchored = false;
+                if (guideNeedsReanchor && dpadPressed) {
+                  guideMatchIndex = topVisibleRowIndex(rows, guideEl);
+                  guidePlayerIndex = 0;
+                  guideNeedsReanchor = false;
+                  justReanchored = true;
+                }
+                if (guideMatchIndex < 0 || guideMatchIndex >= matches.length) {
+                  guideMatchIndex = 0;
+                  guidePlayerIndex = 0;
+                }
+                if (!justReanchored) {
+                  if (up && !guideDpadHeld.up) {
+                    guideMatchIndex = Math.max(0, guideMatchIndex - 1);
+                    guidePlayerIndex = 0;
+                  }
+                  if (down && !guideDpadHeld.down) {
+                    guideMatchIndex = Math.min(matches.length - 1, guideMatchIndex + 1);
+                    guidePlayerIndex = 0;
+                  }
+                }
+                const playersInMatch = matches[guideMatchIndex];
+                guidePlayerIndex = Math.min(guidePlayerIndex, playersInMatch.length - 1);
+                if (!justReanchored) {
+                  if (left && !guideDpadHeld.left) guidePlayerIndex = Math.max(0, guidePlayerIndex - 1);
+                  if (right && !guideDpadHeld.right) guidePlayerIndex = Math.min(playersInMatch.length - 1, guidePlayerIndex + 1);
+                }
+                const sel = playersInMatch[guidePlayerIndex];
+                if (sel !== guideSelectedEl) {
+                  if (guideSelectedEl) guideSelectedEl.dispatchEvent(new MouseEvent("mouseleave", { bubbles: true }));
+                  sel.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+                  sel.scrollIntoView({ block: "nearest" });
+                  guideSelectedEl = sel;
+                }
+                if (btn(0) && !guideBtn0Held) sel.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+                hud.textContent = `UC TV Guide
+match ${guideMatchIndex + 1}/${matches.length}${playersInMatch.length > 1 ? `   player ${guidePlayerIndex + 1}/${playersInMatch.length}` : ""}
+\u2191/\u2193 match   \u2190/\u2192 player   ${btnLabel(0)} jump   release ${bindingToDisplay(guideBtn)} to close`;
+              }
+            }
+            guideDpadHeld = { up, down, left, right };
+            guideBtn0Held = btn(0);
+            return;
+          } else {
+            guideMatchIndex = -1;
+            guidePlayerIndex = 0;
+            guideSelectedEl = null;
+            guideNeedsReanchor = false;
+          }
+        }
+        if (!oskOpen && !sliderTarget && !selectTarget && btn(0)) {
+          cursor.style.display = "none";
+          const notepadHitEl = document.elementFromPoint(x, y);
+          cursor.style.display = "block";
+          if (notepadHitEl && isSlider(notepadHitEl) && notepadHitEl.closest(".wizascript-notepad")) {
+            openSlider(notepadHitEl);
+            return;
+          }
+        }
+        if (oskOpen && !oskPaused) {
+          const oskSpeedMult = currentCursorSpeedMult();
+          x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * oskSpeedMult));
+          y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * oskSpeedMult));
+          cursor.style.left = x + "px";
+          cursor.style.top = y + "px";
+          cursor.style.display = "block";
+          if (lx || ly) {
+            hoverKey:
+              for (let r = 0; r < oskRowEls.length; r++) {
+                for (let c = 0; c < oskRowEls[r].length; c++) {
+                  const kr = oskRowEls[r][c].getBoundingClientRect();
+                  if (x >= kr.left && x <= kr.right && y >= kr.top && y <= kr.bottom) {
+                    if (oskRow !== r || oskCol !== c) {
+                      oskRow = r;
+                      oskCol = c;
+                      updateOskHighlight();
+                    }
+                    break hoverKey;
+                  }
+                }
+              }
+          }
+          const row = activeRows[oskRow];
+          if (up && !dpadHeld.up) {
+            oskRow = Math.max(0, oskRow - 1);
+            oskCol = Math.min(oskCol, activeRows[oskRow].length - 1);
+            updateOskHighlight();
+          }
+          if (down && !dpadHeld.down) {
+            oskRow = Math.min(activeRows.length - 1, oskRow + 1);
+            oskCol = Math.min(oskCol, activeRows[oskRow].length - 1);
+            updateOskHighlight();
+          }
+          if (left && !dpadHeld.left) {
+            oskCol = (oskCol - 1 + row.length) % row.length;
+            updateOskHighlight();
+          }
+          if (right && !dpadHeld.right) {
+            oskCol = (oskCol + 1) % row.length;
+            updateOskHighlight();
+          }
+          dpadHeld = { up, down, left, right };
+          if (btn(0) && !btnHeld[0]) pressKey(activeRows[oskRow][oskCol]);
+          if (btn(2) && !btnHeld[2] && oskTarget) typeBackspace(oskTarget);
+          if (btn(3) && !btnHeld[3] && oskTarget) typeChar(oskTarget, " ");
+          if (btn(4) && !btnHeld[4]) {
+            oskShift = !oskShift;
+            renderOskLabels();
+          }
+          if (btn(6) && !btnHeld[6]) {
+            const now = performance.now();
+            if (now - lastL2TapTime < DOUBLE_TAP_WINDOW_MS2) setOskCaretEdge(true);
+            else stepOskCaret(-1);
+            lastL2TapTime = now;
+          }
+          if (btn(7) && !btnHeld[7]) {
+            const now = performance.now();
+            if (now - lastR2TapTime < DOUBLE_TAP_WINDOW_MS2) setOskCaretEdge(false);
+            else stepOskCaret(1);
+            lastR2TapTime = now;
+          }
+          if (btn(10) && !btnHeld[10]) {
+            oskPage = oskPage === "letters" ? "symbols" : "letters";
+            activeRows = KEY_PAGES[oskPage];
+            buildGrid(activeRows);
+            oskRow = 0;
+            oskCol = 0;
+            if (oskTarget) positionPanelNear(oskEl, oskTarget);
+            updateOskHighlight();
+          }
+          if (btn(11) && !btnHeld[11] && oskTarget) dispatchEnterKey(oskTarget);
+          if (btn(1) && !btnHeld[1]) closeOsk();
+          btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3), 4: btn(4), 6: btn(6), 7: btn(7), 10: btn(10), 11: btn(11) };
+          hud.textContent = `on-screen keyboard [${oskPage}]
+row ${oskRow + 1}/${activeRows.length} col ${oskCol + 1}/${row.length}${oskShift ? " [SHIFT]" : ""}`;
+          return;
+        }
+        if (selectTarget) {
+          const selSpeedMult = currentCursorSpeedMult();
+          x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * selSpeedMult));
+          y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * selSpeedMult));
+          cursor.style.left = x + "px";
+          cursor.style.top = y + "px";
+          cursor.style.display = "block";
+          if (lx || ly) {
+            for (let i = 0; i < selectRowEls.length; i++) {
+              const rr = selectRowEls[i].getBoundingClientRect();
+              if (x >= rr.left && x <= rr.right && y >= rr.top && y <= rr.bottom) {
+                if (selectIndex !== i) {
+                  selectIndex = i;
+                  updateSelectHighlight();
+                }
+                break;
+              }
+            }
+          }
+          if (ry !== 0) selectEl.scrollTop += ry * 20;
+          if (up && !dpadHeld.up) {
+            selectIndex = Math.max(0, selectIndex - 1);
+            updateSelectHighlight();
+            selectRowEls[selectIndex].scrollIntoView({ block: "nearest" });
+          }
+          if (down && !dpadHeld.down) {
+            selectIndex = Math.min(selectOptions.length - 1, selectIndex + 1);
+            updateSelectHighlight();
+            selectRowEls[selectIndex].scrollIntoView({ block: "nearest" });
+          }
+          dpadHeld = { up, down, left, right };
+          if (btn(0) && !btnHeld[0]) confirmSelectPicker();
+          if (btn(1) && !btnHeld[1]) {
+            closeSelectPicker();
+            btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+            return;
+          }
+          btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+          hud.textContent = `select list
+${selectOptions[selectIndex] ? selectOptions[selectIndex].text : ""}
+D-Pad/cursor: browse   ${btnLabel(0)} confirm   ${btnLabel(1)} cancel`;
+          return;
+        }
+        if (sliderTarget) {
+          const speedMult2 = currentCursorSpeedMult();
+          x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * speedMult2));
+          y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * speedMult2));
+          cursor.style.left = x + "px";
+          cursor.style.top = y + "px";
+          const now = performance.now();
+          const REPEAT_INITIAL_DELAY = 400, REPEAT_INTERVAL = 120;
+          if (left) {
+            if (!dpadHeld.left) {
+              leftHeldSince = now;
+              adjustSlider(-1);
+              lastPageTurnTime = now;
+            } else if (now - leftHeldSince > REPEAT_INITIAL_DELAY && now - lastPageTurnTime > REPEAT_INTERVAL) {
+              adjustSlider(-1);
+              lastPageTurnTime = now;
+            }
+          } else leftHeldSince = 0;
+          if (right) {
+            if (!dpadHeld.right) {
+              rightHeldSince = now;
+              adjustSlider(1);
+              lastPageTurnTime = now;
+            } else if (now - rightHeldSince > REPEAT_INITIAL_DELAY && now - lastPageTurnTime > REPEAT_INTERVAL) {
+              adjustSlider(1);
+              lastPageTurnTime = now;
+            }
+          } else rightHeldSince = 0;
+          dpadHeld = { up, down, left, right };
+          if (btn(0)) {
+            cursor.style.display = "block";
+            setSliderValueFromPointer(sliderTarget, x);
+          } else {
+            cursor.style.display = "none";
+          }
+          if (btn(1) && !btnHeld[1]) {
+            closeSlider();
+            btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+            return;
+          }
+          btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+          hud.textContent = `slider focused
+value: ${sliderTarget.value}
+left/right = fine-tune   ${btnLabel(0)} hold = drag   ${btnLabel(1)} = done`;
+          return;
+        }
+        const mulliganHost = document.querySelector(".mulligan");
+        if (!mulliganHost && mulliganGrid) {
+          mulliganGrid = null;
+          refreshHighlight();
+        }
+        if (mulliganHost) {
+          const mulSpeedMult = currentCursorSpeedMult();
+          x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * mulSpeedMult));
+          y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * mulSpeedMult));
+          cursor.style.left = x + "px";
+          cursor.style.top = y + "px";
+          cursor.style.display = cursorRestingDisplay();
+          const mulliganCards = Array.from(mulliganHost.querySelectorAll(":scope > .card")).filter((el) => el.offsetParent !== null);
+          const confirmBtn = document.querySelector(".bootstrap-dialog-footer-buttons .btn-primary") || document.querySelector(".modal-footer .btn-primary");
+          const mulliganItems = confirmBtn ? [...mulliganCards, confirmBtn] : mulliganCards;
+          if (!mulliganItems.length) {
+            hud.textContent = "mulligan (nothing navigable found)";
+            return;
+          }
+          if (!mulliganGrid || !elArraysEqual(gridFlat(mulliganGrid), mulliganItems)) {
+            mulliganGrid = buildRowGrid(mulliganItems);
+            mulliganRow = 0;
+            mulliganCol = 0;
+          }
+          mulliganRow = Math.min(mulliganRow, mulliganGrid.length - 1);
+          mulliganCol = Math.min(mulliganCol, mulliganGrid[mulliganRow].length - 1);
+          if (lx || ly) {
+            hoverMulligan:
+              for (let r = 0; r < mulliganGrid.length; r++) {
+                for (let c = 0; c < mulliganGrid[r].length; c++) {
+                  const rr = mulliganGrid[r][c].getBoundingClientRect();
+                  if (x >= rr.left && x <= rr.right && y >= rr.top && y <= rr.bottom) {
+                    mulliganRow = r;
+                    mulliganCol = c;
+                    break hoverMulligan;
+                  }
+                }
+              }
+          }
+          if (ry !== 0) {
+            const scrollable = findRealScrollable(mulliganGrid[mulliganRow][mulliganCol] || mulliganItems[0]);
+            if (scrollable) scrollable.scrollTop += ry * 30;
+          }
+          if (up && !dpadHeld.up) mulliganRow = Math.max(0, mulliganRow - 1);
+          if (down && !dpadHeld.down) mulliganRow = Math.min(mulliganGrid.length - 1, mulliganRow + 1);
+          mulliganCol = Math.min(mulliganCol, mulliganGrid[mulliganRow].length - 1);
+          if (left && !dpadHeld.left) mulliganCol = (mulliganCol - 1 + mulliganGrid[mulliganRow].length) % mulliganGrid[mulliganRow].length;
+          if (right && !dpadHeld.right) mulliganCol = (mulliganCol + 1) % mulliganGrid[mulliganRow].length;
+          if (up && !dpadHeld.up || down && !dpadHeld.down || left && !dpadHeld.left || right && !dpadHeld.right) {
+            const selEl = mulliganGrid[mulliganRow][mulliganCol];
+            if (selEl) selEl.scrollIntoView({ block: "nearest", inline: "nearest" });
+          }
+          dpadHeld = { up, down, left, right };
+          refreshHighlight();
+          if (navInputMethod !== "dpad") {
+            updateHover(mulliganGrid[mulliganRow][mulliganCol], x, y);
+          }
+          if (btn(0) && !btnHeld[0]) {
+            const el = mulliganGrid[mulliganRow][mulliganCol];
+            const r = el.getBoundingClientRect();
+            dispatchClick(el, r.left + r.width / 2, r.top + r.height / 2, 0);
+            if (isDebugTextEnabled()) console.log("[Wizascript Controller] mulligan item clicked", el);
+          }
+          btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+          const focusedIsConfirm = mulliganGrid[mulliganRow][mulliganCol] === confirmBtn;
+          hud.textContent = `mulligan
+row ${mulliganRow + 1}/${mulliganGrid.length}, col ${mulliganCol + 1}/${mulliganGrid[mulliganRow].length}
+${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
+          return;
+        }
+        const modalInfo = queryModalRoot();
+        if (fieldSubmenu && fieldSubmenu.isAlive && !fieldSubmenu.isAlive()) fieldSubmenu = null;
+        if (!modalInfo && modalKind) {
+          modalGrid = null;
+          modalKind = null;
+          modalPane = "categories";
+          categoryItems = [];
+          categoryIndex = 0;
+          fieldGrid = null;
+          fieldRow = 0;
+          fieldCol = 0;
+          if (fieldSubmenu) {
+            fieldSubmenu.onCancel && fieldSubmenu.onCancel();
+            fieldSubmenu = null;
+          }
+          refreshHighlight();
+        }
+        if (modalInfo && modalInfo.kind !== "tabbed" && modalKind === "tabbed") {
+          modalPane = "categories";
+          categoryItems = [];
+          categoryIndex = 0;
+          fieldGrid = null;
+          fieldRow = 0;
+          fieldCol = 0;
+          if (fieldSubmenu) {
+            fieldSubmenu.onCancel && fieldSubmenu.onCancel();
+            fieldSubmenu = null;
+          }
+        }
+        if (modalInfo && modalInfo.kind === "tabbed" && modalKind !== "tabbed") {
+          modalPane = "categories";
+          fieldGrid = null;
+          fieldRow = 0;
+          fieldCol = 0;
+          lastKnownActiveCategoryIdx = -1;
+          if (fieldSubmenu) {
+            fieldSubmenu.onCancel && fieldSubmenu.onCancel();
+            fieldSubmenu = null;
+          }
+        }
+        if (modalInfo) {
+          const { root, kind } = modalInfo;
+          modalKind = kind;
+          const modSpeedMult = currentCursorSpeedMult();
+          x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * modSpeedMult));
+          y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * modSpeedMult));
+          cursor.style.left = x + "px";
+          cursor.style.top = y + "px";
+          cursor.style.display = cursorRestingDisplay();
+          if (kind === "tabbed") {
+            const { tabbedRoot } = modalInfo;
+            const liveCategories = queryCategoryItems(tabbedRoot);
+            if (!elArraysEqual(categoryItems, liveCategories)) {
+              const prevCat = categoryItems[categoryIndex];
+              categoryItems = liveCategories;
+              const keep = prevCat ? categoryItems.indexOf(prevCat) : -1;
+              categoryIndex = keep >= 0 ? keep : Math.min(categoryIndex, Math.max(0, categoryItems.length - 1));
+            }
+            if (categoryItems.length) {
+              const activeIdx = categoryItems.findIndex((label) => {
+                const radio = label.previousElementSibling;
+                return radio && radio.tagName === "INPUT" && radio.checked;
+              });
+              if (activeIdx >= 0) {
+                if (activeIdx !== lastKnownActiveCategoryIdx) categoryIndex = activeIdx;
+                lastKnownActiveCategoryIdx = activeIdx;
+              }
+            }
+            const activeContent = queryActiveTabContent(tabbedRoot);
+            const liveFieldRows = activeContent ? queryFieldRows(activeContent) : [];
+            const liveFieldsFlat = liveFieldRows.flat();
+            if (!fieldGrid || !elArraysEqual(gridFlat(fieldGrid), liveFieldsFlat)) {
+              fieldGrid = liveFieldRows;
+              fieldRow = 0;
+              fieldCol = 0;
+              fieldNeedsReanchor = false;
+            }
+            if (fieldGrid.length) {
+              fieldRow = Math.min(fieldRow, fieldGrid.length - 1);
+              fieldCol = Math.min(fieldCol, fieldGrid[fieldRow].length - 1);
+            }
+            if (lx || ly) {
+              if (modalPane === "categories") {
+                for (let i = 0; i < categoryItems.length; i++) {
+                  const rr = categoryItems[i].getBoundingClientRect();
+                  if (x >= rr.left && x <= rr.right && y >= rr.top && y <= rr.bottom) {
+                    categoryIndex = i;
+                    break;
+                  }
+                }
+              } else {
+                hoverField:
+                  for (let r = 0; r < fieldGrid.length; r++) {
+                    for (let c = 0; c < fieldGrid[r].length; c++) {
+                      const rr = fieldGrid[r][c].getBoundingClientRect();
+                      if (x >= rr.left && x <= rr.right && y >= rr.top && y <= rr.bottom) {
+                        fieldRow = r;
+                        fieldCol = c;
+                        break hoverField;
+                      }
+                    }
+                  }
+              }
+            }
+            if (ry !== 0) {
+              const scrollEl = modalPane === "categories" ? categoryItems[categoryIndex] : (fieldGrid[fieldRow] || [])[fieldCol];
+              const scrollable = findRealScrollable(scrollEl || activeContent || root);
+              if (scrollable) scrollable.scrollTop += ry * 30;
+              if (modalPane === "fields") fieldNeedsReanchor = true;
+            }
+            if (modalPane === "categories") {
+              if (up && !dpadHeld.up && categoryItems.length) categoryIndex = Math.max(0, categoryIndex - 1);
+              if (down && !dpadHeld.down && categoryItems.length) categoryIndex = Math.min(categoryItems.length - 1, categoryIndex + 1);
+              if (right && !dpadHeld.right) enterCategory();
+              dpadHeld = { up, down, left, right };
+              refreshHighlight();
+              if (btn(0) && !btnHeld[0]) enterCategory();
+              if (btn(1) && !btnHeld[1] && !isControllerCaptureActive()) {
+                const dismiss = findModalDismissButton(root);
+                if (dismiss) triggerElementClick(dismiss);
+                else document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
+              }
+              btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+              hud.textContent = `settings: categories (${categoryItems.length ? categoryIndex + 1 : 0}/${categoryItems.length})
+${btnLabel(0)}/\u2192 open category   ${btnLabel(1)} close dialog`;
+            } else if (fieldSubmenu) {
+              if (up && !dpadHeld.up) fieldSubmenu.index = (fieldSubmenu.index - 1 + fieldSubmenu.items.length) % fieldSubmenu.items.length;
+              if (down && !dpadHeld.down) fieldSubmenu.index = (fieldSubmenu.index + 1) % fieldSubmenu.items.length;
+              const wasLeftOrB1Held = dpadHeld.left || btnHeld[1];
+              dpadHeld = { up, down, left, right };
+              refreshHighlight();
+              if (btn(0) && !btnHeld[0]) {
+                const item = fieldSubmenu.items[fieldSubmenu.index];
+                fieldSubmenu.onConfirm(item);
+                fieldSubmenu = null;
+              } else if ((btn(1) || left) && !wasLeftOrB1Held) {
+                fieldSubmenu.onCancel();
+                fieldSubmenu = null;
+              }
+              btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+              const idx = fieldSubmenu ? fieldSubmenu.index + 1 : 0;
+              const total = fieldSubmenu ? fieldSubmenu.items.length : 0;
+              hud.textContent = `settings: submenu (${idx}/${total})
+${btnLabel(0)} select   \u2190/${btnLabel(1)} cancel`;
+            } else {
+              if (!isControllerCaptureActive()) {
+                if (fieldGrid.length) {
+                  const dpadPressed = up && !dpadHeld.up || down && !dpadHeld.down || left && !dpadHeld.left || right && !dpadHeld.right;
+                  if (fieldNeedsReanchor) {
+                    if (dpadPressed) {
+                      const rowAnchors = fieldGrid.map((r) => r[0]);
+                      const scrollableNow = findRealScrollable(rowAnchors[fieldRow] || activeContent || root) || activeContent || root;
+                      fieldRow = topVisibleRowIndex(rowAnchors, scrollableNow);
+                      fieldCol = 0;
+                      fieldNeedsReanchor = false;
+                    }
+                  } else {
+                    if (up && !dpadHeld.up) fieldRow = Math.max(0, fieldRow - 1);
+                    if (down && !dpadHeld.down) fieldRow = Math.min(fieldGrid.length - 1, fieldRow + 1);
+                    fieldCol = Math.min(fieldCol, fieldGrid[fieldRow].length - 1);
+                    if (right && !dpadHeld.right) fieldCol = Math.min(fieldGrid[fieldRow].length - 1, fieldCol + 1);
+                    if (left && !dpadHeld.left) {
+                      if (fieldCol > 0) fieldCol -= 1;
+                      else modalPane = "categories";
+                    }
+                    if (dpadPressed) {
+                      const selEl = fieldGrid[fieldRow] && fieldGrid[fieldRow][fieldCol];
+                      if (selEl) selEl.scrollIntoView({ block: "nearest", inline: "nearest" });
+                    }
+                  }
+                } else if (left && !dpadHeld.left) {
+                  modalPane = "categories";
+                }
+              }
+              dpadHeld = { up, down, left, right };
+              refreshHighlight();
+              if (!isControllerCaptureActive()) {
+                if (btn(0) && !btnHeld[0]) activateHighlighted(0);
+                if (btn(3) && !btnHeld[3]) activateHighlighted(2);
+                if (btn(1) && !btnHeld[1]) modalPane = "categories";
+              }
+              btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+              const fieldPos = fieldGrid.length ? `row ${fieldRow + 1}/${fieldGrid.length}, col ${fieldCol + 1}/${fieldGrid[fieldRow].length}` : "(empty)";
+              hud.textContent = `settings: fields ${fieldPos}
+${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   \u2190/${btnLabel(1)} back to categories`;
+            }
+            return;
+          }
+          const modalItems = kind === "plain" ? [...queryModalItems(root), ...queryScrollableListItems(root)] : queryModalItems(root);
+          if (!modalItems.length) {
+            hud.textContent = `${kind === "menu" ? "underscript menu" : "dialog"} (nothing navigable found)`;
+            return;
+          }
+          if (!modalGrid || !elArraysEqual(gridFlat(modalGrid), modalItems)) {
+            modalGrid = kind === "menu" ? modalItems.map((el) => [el]) : buildRowGrid(modalItems);
+            modalRow = 0;
+            modalCol = 0;
+          }
+          modalRow = Math.min(modalRow, modalGrid.length - 1);
+          modalCol = Math.min(modalCol, modalGrid[modalRow].length - 1);
+          if (lx || ly) {
+            hoverModal:
+              for (let r = 0; r < modalGrid.length; r++) {
+                for (let c = 0; c < modalGrid[r].length; c++) {
+                  const rr = modalGrid[r][c].getBoundingClientRect();
+                  if (x >= rr.left && x <= rr.right && y >= rr.top && y <= rr.bottom) {
+                    modalRow = r;
+                    modalCol = c;
+                    break hoverModal;
+                  }
+                }
+              }
+          }
+          if (ry !== 0) {
+            const scrollable = findRealScrollable(modalGrid[modalRow][modalCol] || modalItems[0]) || findScrollableDescendant(root);
+            if (scrollable) scrollable.scrollTop += ry * 30;
+          }
+          if (up && !dpadHeld.up) modalRow = Math.max(0, modalRow - 1);
+          if (down && !dpadHeld.down) modalRow = Math.min(modalGrid.length - 1, modalRow + 1);
+          modalCol = Math.min(modalCol, modalGrid[modalRow].length - 1);
+          if (left && !dpadHeld.left) modalCol = (modalCol - 1 + modalGrid[modalRow].length) % modalGrid[modalRow].length;
+          if (right && !dpadHeld.right) modalCol = (modalCol + 1) % modalGrid[modalRow].length;
+          if (up && !dpadHeld.up || down && !dpadHeld.down || left && !dpadHeld.left || right && !dpadHeld.right) {
+            const selEl = modalGrid[modalRow][modalCol];
+            if (selEl) selEl.scrollIntoView({ block: "nearest", inline: "nearest" });
+          }
+          dpadHeld = { up, down, left, right };
+          refreshHighlight();
+          if (btn(0) && !btnHeld[0]) activateHighlighted(0);
+          if (btn(3) && !btnHeld[3]) activateHighlighted(2);
+          if (btn(1) && !btnHeld[1] && !isControllerCaptureActive()) {
+            if (kind === "menu") {
+              document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
+            } else {
+              const dismiss = findModalDismissButton(root);
+              if (dismiss) triggerElementClick(dismiss);
+              else document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
+            }
+          }
+          btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+          hud.textContent = `${kind === "menu" ? "underscript menu" : "dialog"}
+row ${modalRow + 1}/${modalGrid.length}, col ${modalCol + 1}/${modalGrid[modalRow].length}
+${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   ${btnLabel(1)} close`;
+          return;
+        }
+        const handHost = document.getElementById("handCards");
+        if (!handHost && matchPhase !== "hand") {
+          matchPhase = "hand";
+          placingGrid = null;
+          placingCard = null;
+          resolveGrid = null;
+          matchSubState = "hand-nav";
+          pendingAttacker = null;
+        }
+        if (handHost) {
+          const mSpeedMult = currentCursorSpeedMult();
+          x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * mSpeedMult));
+          y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * mSpeedMult));
+          cursor.style.left = x + "px";
+          cursor.style.top = y + "px";
+          cursor.style.display = cursorRestingDisplay();
+          if (matchPhase === "placing" && anyStick) {
+            cancelPlacingDrag("stick movement");
+            matchSubState = "neutral";
+            hud.textContent = "placement cancelled (stick moved)";
+            return;
+          }
+          if (matchPhase === "placing") {
+            const activeEls = Array.from(document.querySelectorAll(".ui-droppable-active"));
+            if (!activeEls.length) {
+              matchPhase = "hand";
+              refreshHighlight();
+            } else {
+              if (!placingGrid || !elArraysEqual(gridFlat(placingGrid), activeEls)) {
+                placingGrid = buildRowGrid(activeEls);
+                placingRow = 0;
+                placingCol = 0;
+              }
+              placingRow = Math.min(placingRow, placingGrid.length - 1);
+              placingCol = Math.min(placingCol, placingGrid[placingRow].length - 1);
+              if (lx || ly) {
+                hoverSlot:
+                  for (let r = 0; r < placingGrid.length; r++) {
+                    for (let c = 0; c < placingGrid[r].length; c++) {
+                      const rr = placingGrid[r][c].getBoundingClientRect();
+                      if (x >= rr.left && x <= rr.right && y >= rr.top && y <= rr.bottom) {
+                        placingRow = r;
+                        placingCol = c;
+                        break hoverSlot;
+                      }
+                    }
+                  }
+              }
+              if (up && !dpadHeld.up) placingRow = Math.max(0, placingRow - 1);
+              if (down && !dpadHeld.down) placingRow = Math.min(placingGrid.length - 1, placingRow + 1);
+              placingCol = Math.min(placingCol, placingGrid[placingRow].length - 1);
+              if (left && !dpadHeld.left) placingCol = (placingCol - 1 + placingGrid[placingRow].length) % placingGrid[placingRow].length;
+              if (right && !dpadHeld.right) placingCol = (placingCol + 1) % placingGrid[placingRow].length;
+              dpadHeld = { up, down, left, right };
+              refreshHighlight();
+              const targetSlot = placingGrid[placingRow][placingCol];
+              const tr = targetSlot.getBoundingClientRect();
+              const tcx = tr.left + tr.width / 2, tcy = tr.top + tr.height / 2;
+              fire(targetSlot, "pointermove", PointerEvent, tcx, tcy, 0, 1);
+              fire(targetSlot, "mousemove", MouseEvent, tcx, tcy, 0, 1);
+              if (btn(0) && !btnHeld[0]) {
+                fire(targetSlot, "pointerup", PointerEvent, tcx, tcy, 0, 0);
+                fire(targetSlot, "mouseup", MouseEvent, tcx, tcy, 0, 0);
+                if (isDebugTextEnabled()) console.log("[Wizascript Controller] card dropped on", targetSlot);
+                placingCard = null;
+                placingGrid = null;
+                matchPhase = "hand";
+                refreshHighlight();
+              } else if (btn(1) && !btnHeld[1]) {
+                cancelPlacingDrag("circle button");
+              }
+              btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+              hud.textContent = `placing card
+slot row ${placingRow + 1}/${placingGrid.length}, col ${placingCol + 1}/${placingGrid[placingRow].length}
+${btnLabel(0)} drop here   ${btnLabel(1)} cancel`;
+              return;
+            }
+          }
+          const choiceEls = Array.from(document.querySelectorAll(".select-card-option.target"));
+          const targetEls = choiceEls.length ? [] : Array.from(document.querySelectorAll(".target:not(.select-card-option)"));
+          const resolveEls = choiceEls.length ? choiceEls : targetEls;
+          if (resolveEls.length) {
+            matchPhase = "resolve";
+            resolveKind = choiceEls.length ? "choice" : "target";
+            if (!resolveGrid || !elArraysEqual(gridFlat(resolveGrid), resolveEls)) {
+              resolveGrid = buildRowGrid(resolveEls);
+              resolveRow = 0;
+              resolveCol = 0;
+            }
+            resolveRow = Math.min(resolveRow, resolveGrid.length - 1);
+            resolveCol = Math.min(resolveCol, resolveGrid[resolveRow].length - 1);
+            if (lx || ly) {
+              hoverTarget:
+                for (let r = 0; r < resolveGrid.length; r++) {
+                  for (let c = 0; c < resolveGrid[r].length; c++) {
+                    const rr = resolveGrid[r][c].getBoundingClientRect();
+                    if (x >= rr.left && x <= rr.right && y >= rr.top && y <= rr.bottom) {
+                      resolveRow = r;
+                      resolveCol = c;
+                      break hoverTarget;
+                    }
+                  }
+                }
+            }
+            if (ry !== 0) {
+              const scrollable = findRealScrollable(resolveGrid[resolveRow][resolveCol] || resolveEls[0]);
+              if (scrollable) scrollable.scrollTop += ry * 30;
+            }
+            if (up && !dpadHeld.up) resolveRow = Math.max(0, resolveRow - 1);
+            if (down && !dpadHeld.down) resolveRow = Math.min(resolveGrid.length - 1, resolveRow + 1);
+            resolveCol = Math.min(resolveCol, resolveGrid[resolveRow].length - 1);
+            if (left && !dpadHeld.left) resolveCol = (resolveCol - 1 + resolveGrid[resolveRow].length) % resolveGrid[resolveRow].length;
+            if (right && !dpadHeld.right) resolveCol = (resolveCol + 1) % resolveGrid[resolveRow].length;
+            if (up && !dpadHeld.up || down && !dpadHeld.down || left && !dpadHeld.left || right && !dpadHeld.right) {
+              const selEl = resolveGrid[resolveRow][resolveCol];
+              if (selEl) selEl.scrollIntoView({ block: "nearest", inline: "nearest" });
+            }
+            dpadHeld = { up, down, left, right };
+            refreshHighlight();
+            if (navInputMethod !== "dpad") {
+              updateHover(resolveGrid[resolveRow][resolveCol], x, y);
+            }
+            if (btn(0) && !btnHeld[0]) {
+              if (navInputMethod === "dpad") {
+                const el = resolveGrid[resolveRow][resolveCol];
+                const r = el.getBoundingClientRect();
+                dispatchClick(el, r.left + r.width / 2, r.top + r.height / 2, 0);
+                if (isDebugTextEnabled()) console.log("[Wizascript Controller] resolve target confirmed (d-pad)", el);
+              } else {
+                cursor.style.display = "none";
+                const hitEl2 = document.elementFromPoint(x, y);
+                cursor.style.display = cursorRestingDisplay();
+                if (hitEl2) {
+                  dispatchClick(hitEl2, x, y, 0);
+                  if (isDebugTextEnabled()) console.log("[Wizascript Controller] resolve target confirmed (cursor, real hit-test)", hitEl2);
+                }
+              }
+            }
+            if (resolveKind === "target" && btn(1) && !btnHeld[1]) {
+              if (pendingAttacker) {
+                const r = pendingAttacker.getBoundingClientRect();
+                dispatchClick(pendingAttacker, r.left + r.width / 2, r.top + r.height / 2, 0);
+                if (isDebugTextEnabled()) console.log("[Wizascript Controller] attack cancelled via Circle (re-clicked attacker)", pendingAttacker);
+              } else {
+                if (isDebugTextEnabled()) console.log("[Wizascript Controller] Circle pressed during target-resolve with no known attacker (likely a spell/effect target, not an attack) - no action taken");
+              }
+            }
+            btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+            hud.textContent = `${resolveKind === "choice" ? "choose one" : "select target"}
+row ${resolveRow + 1}/${resolveGrid.length}, col ${resolveCol + 1}/${resolveGrid[resolveRow].length}
+${btnLabel(0)} confirm${resolveKind === "target" ? `   ${btnLabel(1)} cancel attack` : ""}`;
+            return;
+          } else if (matchPhase === "resolve") {
+            matchPhase = "hand";
+            resolveGrid = null;
+            matchSubState = "hand-nav";
+            pendingAttacker = null;
+            refreshHighlight();
+          }
+          const liveHand = queryHandCards();
+          if (!elArraysEqual(handItems, liveHand)) {
+            const prevCard = handItems[handIndex];
+            handItems = liveHand;
+            const keep = prevCard ? handItems.indexOf(prevCard) : -1;
+            handIndex = keep >= 0 ? keep : Math.min(handIndex, Math.max(0, handItems.length - 1));
+          }
+          if (anyStick && (matchSubState === "hand-nav" || matchSubState === "board-nav")) matchSubState = "neutral";
+          if (matchSubState === "hand-nav" && handItems.length) {
+            if (left && !dpadHeld.left) handIndex = (handIndex - 1 + handItems.length) % handItems.length;
+            if (right && !dpadHeld.right) handIndex = (handIndex + 1) % handItems.length;
+            if (up && !dpadHeld.up) matchSubState = "board-nav";
+            dpadHeld = { up, down, left, right };
+            refreshHighlight();
+            if (btn(0) && !btnHeld[0]) {
+              const card = handItems[handIndex];
+              if (card && card.classList.contains("canPlay")) {
+                beginCardDrag(card);
+              } else {
+                if (isDebugTextEnabled()) console.log("[Wizascript Controller] card not playable, ignoring", card);
+              }
+            }
+            if (btn(1) && !btnHeld[1]) matchSubState = "neutral";
+            btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+            hud.textContent = `hand (${handIndex + 1}/${handItems.length})
+${btnLabel(0)} play   \u2191 board   ${btnLabel(1)} free cursor`;
+          } else if (matchSubState === "board-nav") {
+            const liveBoard = queryBoardMonsterCards();
+            if (!elArraysEqual(boardItems, liveBoard)) {
+              const prevMonster = boardItems[boardIndex];
+              boardItems = liveBoard;
+              const keep = prevMonster ? boardItems.indexOf(prevMonster) : -1;
+              boardIndex = keep >= 0 ? keep : Math.min(boardIndex, Math.max(0, boardItems.length - 1));
+            }
+            if (left && !dpadHeld.left && boardItems.length) boardIndex = (boardIndex - 1 + boardItems.length) % boardItems.length;
+            if (right && !dpadHeld.right && boardItems.length) boardIndex = (boardIndex + 1) % boardItems.length;
+            if (down && !dpadHeld.down) matchSubState = "hand-nav";
+            if (btn(1) && !btnHeld[1]) matchSubState = "hand-nav";
+            dpadHeld = { up, down, left, right };
+            refreshHighlight();
+            if (btn(0) && !btnHeld[0]) {
+              const monster = boardItems[boardIndex];
+              if (monster) {
+                const r = monster.getBoundingClientRect();
+                dispatchClick(monster, r.left + r.width / 2, r.top + r.height / 2, 0);
+                pendingAttacker = monster;
+                if (isDebugTextEnabled()) console.log("[Wizascript Controller] monster clicked to select as attacker", monster);
+              }
+            }
+            btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+            hud.textContent = `board (${boardItems.length ? boardIndex + 1 : 0}/${boardItems.length})
+${btnLabel(0)} select attacker   \u2193/${btnLabel(1)} hand`;
+          } else {
+            refreshHighlight();
+            if (up && !dpadHeld.up && handItems.length) matchSubState = "hand-nav";
+            dpadHeld = { up, down, left, right };
+            if (btn(0) && !btnHeld[0]) {
+              cursor.style.display = "none";
+              const hitEl2 = document.elementFromPoint(x, y);
+              cursor.style.display = "block";
+              if (hitEl2) beginPress("left", 0);
+            } else if (btn(0) && drag.left) {
+              continuePress("left", 0);
+            } else if (!btn(0) && drag.left) {
+              endPress("left", 0);
+            }
+            if (btn(3) && !btnHeld[3]) {
+              cursor.style.display = "none";
+              const hitEl2 = document.elementFromPoint(x, y);
+              cursor.style.display = "block";
+              if (hitEl2) beginPress("right", 2);
+            } else if (btn(3) && drag.right) {
+              continuePress("right", 2);
+            } else if (!btn(3) && drag.right) {
+              endPress("right", 2);
+            }
+            btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+            cursor.style.display = "none";
+            const hoverEl = document.elementFromPoint(x, y);
+            cursor.style.display = cursorRestingDisplay();
+            updateHover(hoverEl, x, y);
+            hud.textContent = `free cursor (in match)
+\u2191 = hand nav (${handItems.length} cards)   ${btnLabel(3)} inspect`;
+          }
+          return;
+        }
+        const speedMult = currentCursorSpeedMult();
+        x = Math.max(0, Math.min(pageWindow2.innerWidth, x + lx * BASE_SPEED * speedMult));
+        y = Math.max(0, Math.min(pageWindow2.innerHeight, y + ly * BASE_SPEED * speedMult));
+        cursor.style.left = x + "px";
+        cursor.style.top = y + "px";
+        if (ry !== 0) {
+          cursor.style.display = "none";
+          const under = document.elementFromPoint(x, y);
+          cursor.style.display = "block";
+          const scrollable = findRealScrollable(under || document.body);
+          if (scrollable) scrollable.scrollTop += ry * 30;
+        }
+        if (anyStick) {
+          if (activeSubmenu) closeSubmenu();
+          if (chromeStates[chromeIndex] && chromeStates[chromeIndex].type === "group") {
+            chromeIndex = chromeStates.findIndex((s) => s.type === "neutral");
+            refreshHighlight();
+          }
+        }
+        const state = chromeStates[chromeIndex];
+        if (activeSubmenu) {
+          if (up && !dpadHeld.up) {
+            activeSubmenu.index = (activeSubmenu.index - 1 + activeSubmenu.items.length) % activeSubmenu.items.length;
+            refreshHighlight();
+          }
+          if (down && !dpadHeld.down) {
+            activeSubmenu.index = (activeSubmenu.index + 1) % activeSubmenu.items.length;
+            refreshHighlight();
+          }
+          dpadText = `submenu (${activeSubmenu.index + 1}/${activeSubmenu.items.length})`;
+        } else if (state && state.type === "group") {
+          if (up && !dpadHeld.up) {
+            chromeIndex = Math.max(0, chromeIndex - 1);
+            refreshHighlight();
+          }
+          if (down && !dpadHeld.down) {
+            chromeIndex = Math.min(chromeStates.length - 1, chromeIndex + 1);
+            refreshHighlight();
+          }
+          const g = state.group;
+          if (left && !dpadHeld.left) {
+            itemIndexByGroupName[g.name] = ((itemIndexByGroupName[g.name] || 0) - 1 + g.items.length) % g.items.length;
+            refreshHighlight();
+          }
+          if (right && !dpadHeld.right) {
+            itemIndexByGroupName[g.name] = ((itemIndexByGroupName[g.name] || 0) + 1) % g.items.length;
+            refreshHighlight();
+          }
+          dpadText = `${g.name} (${(itemIndexByGroupName[g.name] || 0) + 1}/${g.items.length})`;
+        } else {
+          let tryPageTurn = function(dir) {
+            cursor.style.display = "none";
+            const under = document.elementFromPoint(x, y);
+            cursor.style.display = "block";
+            if (under) {
+              under.dispatchEvent(new WheelEvent("wheel", {
+                bubbles: true,
+                cancelable: true,
+                clientX: x,
+                clientY: y,
+                deltaY: dir * WHEEL_DELTA,
+                deltaMode: 0
+              }));
+            }
+            lastPageTurnTime = now;
+          };
+          if (up && !dpadHeld.up) {
+            chromeIndex = Math.max(0, chromeIndex - 1);
+            refreshHighlight();
+          }
+          if (down && !dpadHeld.down) {
+            chromeIndex = Math.min(chromeStates.length - 1, chromeIndex + 1);
+            refreshHighlight();
+          }
+          const now = performance.now();
+          const REPEAT_INITIAL_DELAY = 400, REPEAT_INTERVAL = 150;
+          if (left) {
+            if (!dpadHeld.left) {
+              leftHeldSince = now;
+              tryPageTurn(-1);
+            } else if (now - leftHeldSince > REPEAT_INITIAL_DELAY && now - lastPageTurnTime > REPEAT_INTERVAL) tryPageTurn(-1);
+          } else leftHeldSince = 0;
+          if (right) {
+            if (!dpadHeld.right) {
+              rightHeldSince = now;
+              tryPageTurn(1);
+            } else if (now - rightHeldSince > REPEAT_INITIAL_DELAY && now - lastPageTurnTime > REPEAT_INTERVAL) tryPageTurn(1);
+          } else rightHeldSince = 0;
+          dpadText = "neutral (left/right = page turn, hold to repeat)";
+        }
+        dpadHeld = { up, down, left, right };
+        if (btn(0) && !btnHeld[0]) {
+          if (currentFocusedEl()) {
+            activateHighlighted(0);
+          } else {
+            cursor.style.display = "none";
+            const hitEl2 = document.elementFromPoint(x, y);
+            cursor.style.display = "block";
+            if (hitEl2) {
+              if (isNativeSelect(hitEl2)) openSelectPicker(hitEl2);
+              else if (isSlider(hitEl2)) openSlider(hitEl2);
+              else if (isPatchMakerResetButton(hitEl2)) activatePatchMakerResetButton(hitEl2, x, y);
+              else if (hitEl2.readOnly && (hitEl2.tagName === "INPUT" || hitEl2.tagName === "TEXTAREA")) {
+                dispatchClick(hitEl2, x, y, 0);
+                hitEl2.focus();
+              } else if (isTextInput(hitEl2)) {
+                dispatchClick(hitEl2, x, y, 0);
+                openOsk(hitEl2);
+                if (hitEl2.isContentEditable) placeCaretAtPoint(hitEl2, x, y);
+              } else if (hitEl2.matches && hitEl2.matches(".uc-section-label, .uc-card-item")) {
+                dispatchClick(hitEl2, x, y, 0);
+                hitEl2.focus();
+              } else beginPress("left", 0);
+            }
+          }
+        } else if (btn(0) && drag.left) {
+          continuePress("left", 0);
+        } else if (!btn(0) && drag.left) {
+          endPress("left", 0);
+        }
+        if (btn(3) && !btnHeld[3]) {
+          if (currentFocusedEl()) {
+            activateHighlighted(2);
+          } else {
+            cursor.style.display = "none";
+            const hitEl2 = document.elementFromPoint(x, y);
+            cursor.style.display = "block";
+            if (hitEl2) beginPress("right", 2);
+          }
+        } else if (btn(3) && drag.right) {
+          continuePress("right", 2);
+        } else if (!btn(3) && drag.right) {
+          endPress("right", 2);
+        }
+        if (btn(1) && !btnHeld[1]) closeSubmenu();
+        btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+        cursor.style.display = "none";
+        const hitEl = document.elementFromPoint(x, y);
+        cursor.style.display = cursorRestingDisplay();
+        updateHover(hitEl, x, y);
+        hud.textContent = `controller active
+${dpadText}
+chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
+      } catch (err) {
+        console.error("[Wizascript Controller] frame() error, loop continues:", err);
+      } finally {
+        requestAnimationFrame(frame);
+      }
+    }
+    refreshHighlight();
+    requestAnimationFrame(frame);
   }
 
   // manifest.js
@@ -6965,7 +11104,8 @@ Version: v${version}`;
     initTrueHubBridge(plugin);
     initDeckTracker(plugin);
     initUcTv(plugin);
-    initMisc(plugin);
+    const miscSettings = initMisc(plugin);
+    initController(plugin, miscSettings.enableController);
     flushKeybindRegistrations();
   });
 })();

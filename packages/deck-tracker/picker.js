@@ -4,12 +4,19 @@
 // rest - it's the option meant to be reached for constantly, so it
 // shouldn't have to compete with scrolling or filtering.
 //
-// Two icons per row, both SVG (not text glyphs) for consistent
-// rendering regardless of the user's system font/OS:
+// Icons per row, all SVG (not text glyphs) for consistent rendering
+// regardless of the user's system font/OS:
 //  - heart: the ONLY place favoriting happens now (not on the widget)
-//  - star: add-to-screen / remove-from-screen, and for custom presets
-//    specifically, double-clicking it while filled permanently deletes
-//    the preset (there's no separate delete button anymore)
+//  - star: add-to-screen / remove-from-screen - same meaning for every
+//    preset, built-in or custom
+//  - trash (custom presets only): permanently deletes the preset.
+//    Previously this lived as a hidden double-click on the star, and
+//    ONLY worked while the preset happened to be active on screen -
+//    a user report confirmed this was effectively undiscoverable and,
+//    for an inactive custom preset, actually impossible. Now it's its
+//    own always-visible control, independent of whether the preset is
+//    currently on screen. Still double-click-to-confirm (no confirm()
+//    messagebox), matching Patch Maker's destructive-control convention.
 
 import { getAvailablePresets, isFavorited, setFavorited } from "./registry.js";
 import { isWidgetOpen } from "./hud.js";
@@ -27,6 +34,16 @@ function starIconSVG(filled) {
   const stroke = filled ? '#2ecc71' : '#888';
   return `<svg width="16" height="16" viewBox="0 0 24 24" fill="${fill}" stroke="${stroke}" stroke-width="1.5" stroke-linejoin="round">
     <path d="M12 2l2.9 6.6 7.1.6-5.4 4.6 1.6 7-6.2-3.8L6 21l1.6-7L2.2 9.2l7.1-.6L12 2z"/>
+  </svg>`;
+}
+
+function trashIconSVG() {
+  return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e74c3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="3 6 5 6 21 6"></polyline>
+    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+    <path d="M10 11v6"></path>
+    <path d="M14 11v6"></path>
+    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
   </svg>`;
 }
 
@@ -63,8 +80,9 @@ function buildPresetRow(preset, onAdd, onCloseWidget, onDelete) {
   const descLine = $('<div>').css({ fontSize: '12px', color: '#aaa', marginTop: '2px' }).text(preset.description || '');
   info.append(nameLine, descLine);
 
-  // ---- star: add / remove from screen, and (custom + double-click)
-  // permanent delete. No separate delete button anymore. ----
+  // ---- star: add / remove from screen. Same meaning for every preset
+  // now, custom or built-in - no more overloaded double-click-to-delete
+  // behavior (see the dedicated trash control below for that). ----
   const starBtn = $('<span>').css({
     width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center',
     borderRadius: '4px', background: 'rgba(255,255,255,0.08)', cursor: 'pointer', flexShrink: 0
@@ -74,47 +92,44 @@ function buildPresetRow(preset, onAdd, onCloseWidget, onDelete) {
 
   function renderStar() {
     starBtn.html(starIconSVG(active));
-    if (active && preset.custom) {
-      starBtn.attr('title', 'Double-click to permanently delete this preset');
-    } else if (active) {
-      starBtn.attr('title', 'Remove from screen');
-    } else {
-      starBtn.attr('title', 'Add to screen');
-    }
+    starBtn.attr('title', active ? 'Remove from screen' : 'Add to screen');
   }
   renderStar();
 
   starBtn.on('click', e => {
     e.stopPropagation();
-
-    if (!active) {
+    if (active) {
+      onCloseWidget(preset.id);
+    } else {
       onAdd(preset.id);
-      active = true;
-      renderStar();
-      return;
     }
-
-    if (preset.custom) {
-      // Ignore single clicks entirely here - a lone click on an active
-      // custom preset's star does nothing. This is deliberate: without
-      // it, the first click of a genuine double-click would fire as a
-      // single click first and could close the widget right before the
-      // second click tries to delete it. Closing without deleting is
-      // still always available via the widget's own close (x) button.
-      if (e.detail !== 2) return;
-      onDelete(preset.id);
-      row.remove();
-      return;
-    }
-
-    // Built-in preset, currently active - nothing to delete, so a
-    // single click just removes it from screen.
-    onCloseWidget(preset.id);
-    active = false;
+    active = !active;
     renderStar();
   });
 
   row.append(heart, info, starBtn);
+
+  // ---- trash: permanent delete, custom presets only. Always visible
+  // regardless of whether the preset is currently active on screen -
+  // deleting an inactive custom preset used to be impossible entirely,
+  // since the old delete path only existed on the star AND only while
+  // active. onDelete (handleDeletePreset in deck-tracker/index.js)
+  // already closes the widget first if it happens to be open, so this
+  // works correctly either way without checking `active` here. ----
+  if (preset.custom) {
+    const trashBtn = $('<span>').css({
+      width: '20px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+    }).html(trashIconSVG())
+      .attr('title', 'Double-click to permanently delete this custom tracker')
+      .on('click', e => {
+        e.stopPropagation();
+        if (e.detail !== 2) return; // require a real double-click, not a single stray click
+        onDelete(preset.id);
+        row.remove();
+      });
+    row.append(trashBtn);
+  }
+
   return row;
 }
 
@@ -176,7 +191,10 @@ function openHelpDialog() {
     'Favorites a preset - a favorited preset always auto-loads at the start of every match, in the same spot you left it.'
   );
   section('The star (★ / ☆)',
-    'Adds the preset to your screen. Once active, the star fills in - click it again to remove it from screen. For your own custom presets specifically, double-clicking the filled star permanently deletes it (built-in presets can\'t be deleted this way).'
+    'Adds the preset to your screen. Once active, the star fills in - click it again to remove it from screen. Same behavior for every preset, built-in or custom.'
+  );
+  section('The trash icon (custom presets only)',
+    'Permanently deletes one of your own custom trackers - double-click to confirm, no popup. Shown next to every custom preset in this list whether or not it\'s currently on screen, so you can clean up an old one without adding it back first.'
   );
   section('Creating your own preset',
     'Use "Custom Tracker" below the list to build one - search for a card sprite (optional), name it, and create it. That gives you a plain counter on screen; click its own star to "Save as Preset," adding it to this list permanently.'

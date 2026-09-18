@@ -13,6 +13,16 @@ import {
 
 const DECKS_PER_PAGE = 10;
 
+// Pulls the leading season number out of a deck's season label - handles
+// both plain "sNNN" and extended forms like "s109-dr3&4" (only the
+// leading number matters for ordering), case-insensitively since some
+// stored labels are "S92"/"S95" instead of lowercase. Unparseable/missing
+// season falls to the very bottom (-1) rather than crashing the sort.
+function seasonNumber(season) {
+  const match = /^s(\d+)/i.exec(season || "");
+  return match ? Number(match[1]) : -1;
+}
+
 const SOUL_COLORS = {
   DETERMINATION: "red",
   PATIENCE: "#41fcff",
@@ -48,7 +58,20 @@ export function createTrueHubOverlay({ logger, getAutoOpen, getScrollPaging }) {
 
   function setDecks(decks) {
     allDecks = Array.isArray(decks) ? decks : [];
-    allDecks.sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
+    // Season number first (descending), publishedAt only as a tiebreaker
+    // within the same season. This keeps the visible ordering matching
+    // each deck's season badge even when a channel's true creation date
+    // (publishedAt, deliberately taken from the channel's very first
+    // message - see bot.js) falls outside that season's typical window,
+    // e.g. because the channel was later moved into a different season
+    // category. Without this, a deck could visually appear "out of
+    // season order" purely because of when its channel first existed,
+    // rather than which season it's actually filed under.
+    allDecks.sort((a, b) => {
+      const seasonDiff = seasonNumber(b.season) - seasonNumber(a.season);
+      if (seasonDiff !== 0) return seasonDiff;
+      return new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0);
+    });
     filteredDecks = [...allDecks];
     logger.log("data", "Decks loaded.", { count: allDecks.length });
   }

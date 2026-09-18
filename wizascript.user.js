@@ -2723,6 +2723,10 @@ Version: v${version}`;
 
   // packages/true-hub-bridge/overlay.js
   var DECKS_PER_PAGE = 10;
+  function seasonNumber(season) {
+    const match = /^s(\d+)/i.exec(season || "");
+    return match ? Number(match[1]) : -1;
+  }
   var SOUL_COLORS = {
     DETERMINATION: "red",
     PATIENCE: "#41fcff",
@@ -2752,7 +2756,11 @@ Version: v${version}`;
     let cardFilterPanel = null, cardSearchInput = null, cardDropdown = null, cardTagsContainer = null;
     function setDecks(decks) {
       allDecks = Array.isArray(decks) ? decks : [];
-      allDecks.sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
+      allDecks.sort((a, b) => {
+        const seasonDiff = seasonNumber(b.season) - seasonNumber(a.season);
+        if (seasonDiff !== 0) return seasonDiff;
+        return new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0);
+      });
       filteredDecks = [...allDecks];
       logger4.log("data", "Decks loaded.", { count: allDecks.length });
     }

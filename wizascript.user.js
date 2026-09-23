@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.5.0.202609230326
+// @version      1.5.0.202609230422
 // @description  All-in-one UnderScript plugin suite for Undercards. [DEV BUILD - unstable, from the dev branch]
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "1.5.0.202609230326";
+  var SUITE_VERSION = "1.5.0.202609230422";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/dev/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -11141,12 +11141,13 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
   function assetUrl(path) {
     return ASSET_BASE + path.replace(/^\/+/, "");
   }
-  function loadAssetBlob(path) {
-    if (cache.has(path)) return cache.get(path);
+  function loadAssetBlob(path, { fresh = false } = {}) {
+    if (!fresh && cache.has(path)) return cache.get(path);
+    const url = assetUrl(path) + (fresh ? `?t=${Date.now()}` : "");
     const promise = new Promise((resolve, reject) => {
       GM_xmlhttpRequest({
         method: "GET",
-        url: assetUrl(path),
+        url,
         responseType: "blob",
         onload(res) {
           if (res.status !== 200 || !res.response) {
@@ -11160,14 +11161,22 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
         timeout: 15e3
       });
     });
-    promise.catch(() => cache.delete(path));
+    promise.catch(() => {
+      if (cache.get(path) === promise) cache.delete(path);
+    });
     cache.set(path, promise);
     return promise;
+  }
+  function loadAssetText(path, options) {
+    return loadAssetBlob(path, options).then((blob) => blob.text());
   }
 
   // packages/dt-animations/animations/barrier.js
   var BARRIER_CARD_ID = 801;
   var CLASSIC_GIF = "dt-animations/barrier-classic.gif";
+  var CUSTOM_DIR = "dt-animations/barrier-custom/";
+  var CUSTOM_LIST = CUSTOM_DIR + "clips.json";
+  var CUSTOM_MAX_MS = 3100;
   var Z_INDEX = 1e6;
   var T = {
     crack: 330,
@@ -11177,8 +11186,10 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     black: 2710,
     end: 3110,
     fadeOut: 700,
-    classicWaitMax: 2e3
+    classicWaitMax: 2e3,
     // how long "classic" may wait for the GIF before falling back to the remake
+    customWaitMax: 2500
+    // same for a custom clip
   };
   var VIEW_W = 1200;
   var VIEW_H = 675;
@@ -11233,6 +11244,16 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
   function splitHalfWidth(t) {
     return 213 + (t - T.split) * (70.5 / 40);
   }
+  function parseClipList(text) {
+    const cleaned = String(text).replace(/,\s*([\]}])/g, "$1");
+    const data2 = JSON.parse(cleaned);
+    const list = Array.isArray(data2) ? data2 : data2 && data2.clips || [];
+    return list.filter((c) => c && typeof c.file === "string" && c.enabled !== false).map((c) => ({
+      file: c.file.replace(/^[\/.]+/, "").replace(/\.\.+/g, "."),
+      title: c.title || c.file,
+      durationMs: Math.min(CUSTOM_MAX_MS, Math.max(300, Number(c.durationMs) || CUSTOM_MAX_MS))
+    })).filter((c) => c.file);
+  }
   function isGeneratedCard(card) {
     if (!card) return false;
     if (card.generated === true) return true;
@@ -11258,7 +11279,14 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
       rafId = null;
       timers.forEach(clearTimeout);
       timers = [];
-      if (root) root.remove();
+      if (root) {
+        if (root.tagName === "VIDEO") {
+          root.pause();
+          root.removeAttribute("src");
+          root.load();
+        }
+        root.remove();
+      }
       root = null;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
       objectUrl = null;
@@ -11276,7 +11304,7 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
         transition: `opacity ${T.fadeOut}ms ease`
       });
     }
-    function scheduleEnd(token, startedAt) {
+    function scheduleEnd(token, startedAt, endMs = T.end) {
       const elapsed = performance.now() - startedAt;
       later(() => {
         if (token !== runToken || !root) return;
@@ -11287,7 +11315,7 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
           active = false;
           ctx.finished();
         }, T.fadeOut);
-      }, Math.max(0, T.end - elapsed));
+      }, Math.max(0, endMs - elapsed));
     }
     function playRemake(token) {
       const svg = document.createElementNS(svgNS, "svg");
@@ -11378,13 +11406,96 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
         (img.decode ? img.decode() : Promise.resolve()).then(show, () => fallback("decode failed"));
       }).catch((err) => fallback(err.message));
     }
-    function play() {
+    let clipListPromise = null;
+    let lastFile = null;
+    let nextPick = null;
+    function loadClipList(refresh) {
+      if (refresh || !clipListPromise) {
+        clipListPromise = loadAssetText(CUSTOM_LIST, { fresh: !!refresh }).then(parseClipList);
+        clipListPromise.catch(() => {
+          clipListPromise = null;
+        });
+      }
+      return clipListPromise;
+    }
+    function chooseClip(list) {
+      const pool = list.length > 1 ? list.filter((c) => c.file !== lastFile) : list;
+      return pool[Math.floor(Math.random() * pool.length)] || null;
+    }
+    function prepareNext() {
+      return loadClipList(false).then((list) => {
+        if (nextPick) return nextPick;
+        const clip = chooseClip(list);
+        if (!clip) return null;
+        nextPick = { clip, blob: loadAssetBlob(CUSTOM_DIR + clip.file) };
+        nextPick.blob.catch(() => {
+          nextPick = null;
+        });
+        return nextPick;
+      });
+    }
+    function playCustom(token, forcedFile) {
+      let settled = false;
+      const fallback = (why) => {
+        if (settled || token !== runToken) return;
+        settled = true;
+        ctx.warn(`custom clip unavailable (${why}) - using the remake instead.`);
+        playRemake(token);
+      };
+      later(() => fallback("timed out"), T.customWaitMax);
+      const picked = forcedFile ? loadClipList(false).then((list) => {
+        const clip = list.find((c) => c.file === forcedFile) || { file: forcedFile, title: forcedFile, durationMs: CUSTOM_MAX_MS };
+        return { clip, blob: loadAssetBlob(CUSTOM_DIR + clip.file) };
+      }) : prepareNext();
+      picked.then((pick) => {
+        if (!pick) throw new Error("clips.json lists no clips");
+        if (!forcedFile) nextPick = null;
+        return pick.blob.then((blob) => ({ clip: pick.clip, blob }));
+      }).then(({ clip, blob }) => {
+        var _a;
+        if (settled || token !== runToken) return;
+        objectUrl = URL.createObjectURL(blob);
+        const video = document.createElement("video");
+        baseStyle(video);
+        video.style.objectFit = "cover";
+        video.style.background = "#000";
+        video.playsInline = true;
+        video.preload = "auto";
+        video.volume = Math.max(0, Math.min(1, Number((_a = ctx.setting("volume")) != null ? _a : 0.6)));
+        video.src = objectUrl;
+        const onReady = () => {
+          if (settled || token !== runToken) return;
+          settled = true;
+          timers.forEach(clearTimeout);
+          timers = [];
+          root = video;
+          document.body.appendChild(video);
+          video.play().catch(() => {
+            ctx.warn("sound was blocked - playing the clip muted.");
+            video.muted = true;
+            return video.play();
+          }).catch(() => {
+          });
+          ctx.log(`custom clip: ${clip.title} (${clip.file})`);
+          lastFile = clip.file;
+          scheduleEnd(token, performance.now(), clip.durationMs);
+          prepareNext().catch(() => {
+          });
+        };
+        video.addEventListener("canplay", onReady, { once: true });
+        video.addEventListener("error", () => fallback("the clip couldn't be decoded"), { once: true });
+        video.load();
+      }).catch((err) => fallback(err && err.message ? err.message : String(err)));
+    }
+    function play({ variant } = {}) {
       if (active) return false;
       if (!document.body) return false;
       active = true;
       const token = ++runToken;
       cleanupDom();
-      if (ctx.setting("style") === "classic") playClassic(token);
+      const [style, file] = variant ? [variant.split(":")[0], variant.split(":").slice(1).join(":")] : [ctx.setting("style"), ""];
+      if (style === "classic") playClassic(token);
+      else if (style === "custom") playCustom(token, file || null);
       else playRemake(token);
       return true;
     }
@@ -11417,10 +11528,28 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
       forceStop,
       isActive: () => active,
       destroy: forceStop,
-      // Lets the detector warm the GIF cache at match start.
+      // Match start: fetch whatever the chosen style needs ahead of time.
       preload() {
-        if (ctx.setting("style") === "classic") loadAssetBlob(CLASSIC_GIF).catch(() => {
+        const style = ctx.setting("style");
+        if (style === "classic") loadAssetBlob(CLASSIC_GIF).catch(() => {
         });
+        else if (style === "custom") prepareNext().catch((err) => ctx.warn("couldn't load clips.json:", err.message));
+      },
+      // Debug panel picker: every style, plus each custom clip on its own.
+      async debugVariants({ refresh = false } = {}) {
+        if (refresh) nextPick = null;
+        const base = [
+          { label: "Remake", value: "remake" },
+          { label: "Classic (GIF)", value: "classic" },
+          { label: "Custom: random clip", value: "custom" }
+        ];
+        let clips = [];
+        try {
+          clips = await loadClipList(refresh);
+        } catch (err) {
+          ctx.warn("couldn't load clips.json:", err.message);
+        }
+        return base.concat(clips.map((c) => ({ label: `Custom: ${c.title}`, value: `custom:${c.file}` })));
       }
     };
   }
@@ -11466,13 +11595,13 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
   var barrier_default = {
     id: "barrier",
     name: "The Barrier",
-    description: "The barrier cracks and breaks open when The Barrier is played.",
+    description: "The barrier cracks and breaks open when The Barrier is played - or one of your own clips plays instead.",
     kind: "oneShot",
     settings: {
       style: {
         name: "Style",
         type: "select",
-        data: [["Remake (animated)", "remake"], ["Classic (original GIF)", "classic"]],
+        data: [["Remake (animated)", "remake"], ["Classic (original GIF)", "classic"], ["Custom (random clip)", "custom"]],
         default: "remake"
       },
       opacity: {
@@ -11481,6 +11610,14 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
         type: "slider",
         default: 1,
         min: 0.3,
+        max: 1,
+        step: 0.05
+      },
+      volume: {
+        name: "Custom clip volume",
+        type: "slider",
+        default: 0.6,
+        min: 0,
         max: 1,
         step: 0.05
       },
@@ -12342,7 +12479,7 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
       const me = getRelevantPlayerId();
       return me !== null && Number(playerId) === me;
     }
-    function start(anim, ownerId, { force = false, resumed = false } = {}) {
+    function start(anim, ownerId, { force = false, resumed = false, variant } = {}) {
       if (!force && !settings2.isAnimationEnabled(anim.id)) return false;
       if (current) {
         const curEffect = effects.get(current.id);
@@ -12369,7 +12506,7 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
         suspended = null;
       }
       const effect = getEffect(anim);
-      const ok = effect.play({ resumed }) !== false;
+      const ok = effect.play({ resumed, variant }) !== false;
       if (ok) {
         current = { id: anim.id, ownerId, ending: false };
         logger4.log(anim.id, resumed ? "resumed." : "playing.", { ownerId });
@@ -12468,9 +12605,26 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
       });
     }
     const debugApi = {
-      play(id) {
+      // `variant`: optional, from variants() - lets the panel test a
+      // specific style/clip without changing settings.
+      play(id, variant) {
         const anim = animations2.find((a) => a.id === id);
-        return anim ? start(anim, "debug", { force: true }) : false;
+        return anim ? start(anim, "debug", { force: true, variant: variant || void 0 }) : false;
+      },
+      // [{ label, value }] an effect offers for debug plays (e.g. The
+      // Barrier's styles and every custom clip). `refresh` re-reads any
+      // remote list instead of using the cached one.
+      async variants(id, { refresh = false } = {}) {
+        const anim = animations2.find((a) => a.id === id);
+        if (!anim) return [];
+        const effect = getEffect(anim);
+        if (typeof effect.debugVariants !== "function") return [];
+        try {
+          return await effect.debugVariants({ refresh }) || [];
+        } catch (err) {
+          logger4.warn(id, "couldn't list variants:", err);
+          return [];
+        }
       },
       react(id, kind = "hurt") {
         const anim = animations2.find((a) => a.id === id);
@@ -12523,6 +12677,42 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
         opt.textContent = a.name;
         select.appendChild(opt);
       });
+      const variantRow = document.createElement("div");
+      Object.assign(variantRow.style, { display: "flex", gap: "4px" });
+      const variantSelect = document.createElement("select");
+      variantSelect.style.maxWidth = "220px";
+      variantSelect.title = "What Play should show (defaults to the current settings)";
+      const reloadBtn = document.createElement("button");
+      reloadBtn.type = "button";
+      reloadBtn.textContent = "\u21BB";
+      reloadBtn.title = "Reload the list (e.g. after pushing new clips)";
+      Object.assign(reloadBtn.style, { font: "12px sans-serif", padding: "1px 6px", cursor: "pointer" });
+      variantRow.append(variantSelect, reloadBtn);
+      variantRow.hidden = true;
+      let loadSeq = 0;
+      async function loadVariants(refresh2) {
+        const seq = ++loadSeq;
+        const id = select.value;
+        const list = await debugApi.variants(id, { refresh: refresh2 });
+        if (seq !== loadSeq) return;
+        const keep = variantSelect.value;
+        variantSelect.innerHTML = "";
+        const def = document.createElement("option");
+        def.value = "";
+        def.textContent = "(use settings)";
+        variantSelect.appendChild(def);
+        list.forEach(({ label, value }) => {
+          const opt = document.createElement("option");
+          opt.value = value;
+          opt.textContent = label;
+          variantSelect.appendChild(opt);
+        });
+        if ([...variantSelect.options].some((o) => o.value === keep)) variantSelect.value = keep;
+        variantRow.hidden = list.length === 0;
+      }
+      select.addEventListener("change", () => loadVariants(false));
+      reloadBtn.addEventListener("click", () => loadVariants(true));
+      loadVariants(false);
       const row = document.createElement("div");
       row.style.display = "flex";
       row.style.gap = "4px";
@@ -12534,14 +12724,14 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
         b.addEventListener("click", fn);
         row.appendChild(b);
       };
-      button("Play", () => debugApi.play(select.value));
+      button("Play", () => debugApi.play(select.value, variantSelect.value));
       button("React", () => debugApi.react(select.value));
       button("End", () => debugApi.reset(select.value));
       button("Stop all", () => debugApi.forceStop());
       button("\u2699", () => openSettings());
       const status = document.createElement("div");
       status.style.color = "#aaa";
-      panel.append(title, select, row, status);
+      panel.append(title, select, variantRow, row, status);
       document.body.appendChild(panel);
       const refresh = () => {
         const cur = debugApi.current();

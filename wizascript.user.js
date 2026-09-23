@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.5.0.202609230238
+// @version      1.5.0.202609230257
 // @description  All-in-one UnderScript plugin suite for Undercards. [DEV BUILD - unstable, from the dev branch]
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -24,39 +24,65 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "1.5.0.202609230238";
+  var SUITE_VERSION = "1.5.0.202609230257";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/dev/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
-  var suitePlugin = null;
-  var attempts = 0;
-  var readyCallbacks = [];
-  function tryBootstrap() {
-    if (suitePlugin) return;
-    attempts++;
-    const pageWindow2 = getPageWindow();
-    if (typeof pageWindow2.underscript === "undefined" || typeof pageWindow2.underscript.plugin !== "function") {
-      if (attempts === WARN_AFTER_ATTEMPTS) {
-        console.warn(
-          "[Wizascript] Still waiting for UnderScript after ~10s. Is UnderScript installed and enabled for this page?"
-        );
+  function createPluginBootstrap({ name, version, updaterUrl }) {
+    let plugin = null;
+    let attempts = 0;
+    let polling = false;
+    const readyCallbacks = [];
+    function tryRegister() {
+      if (plugin) return;
+      attempts++;
+      const pageWindow2 = getPageWindow();
+      if (typeof pageWindow2.underscript === "undefined" || typeof pageWindow2.underscript.plugin !== "function") {
+        if (attempts === WARN_AFTER_ATTEMPTS) {
+          console.warn(
+            `[${name}] Still waiting for UnderScript after ~10s. Is UnderScript installed and enabled for this page?`
+          );
+        }
+        setTimeout(tryRegister, RETRY_MS);
+        return;
       }
-      setTimeout(tryBootstrap, RETRY_MS);
-      return;
+      plugin = pageWindow2.underscript.plugin(name, version);
+      if (updaterUrl) plugin.updater(updaterUrl);
+      console.log(`[${name}] Registered with UnderScript (v${version}).`);
+      readyCallbacks.splice(0).forEach((cb) => {
+        try {
+          cb(plugin);
+        } catch (err) {
+          console.error(`[${name}] init failed:`, err);
+        }
+      });
     }
-    suitePlugin = pageWindow2.underscript.plugin(SUITE_NAME, SUITE_VERSION);
-    suitePlugin.updater(DOWNLOAD_URL);
-    console.log(`[Wizascript] Registered with UnderScript (v${SUITE_VERSION}).`);
-    readyCallbacks.forEach((cb) => cb(suitePlugin));
-    readyCallbacks.length = 0;
+    return function onReady(cb) {
+      if (plugin) {
+        cb(plugin);
+        return;
+      }
+      readyCallbacks.push(cb);
+      if (!polling) {
+        polling = true;
+        tryRegister();
+      }
+    };
   }
+  var suiteBootstrap = createPluginBootstrap({
+    name: SUITE_NAME,
+    version: SUITE_VERSION,
+    updaterUrl: DOWNLOAD_URL
+  });
   function bootstrap(onReady) {
-    if (suitePlugin) {
-      onReady(suitePlugin);
-      return;
+    suiteBootstrap(onReady);
+  }
+  var extraBootstraps = /* @__PURE__ */ new Map();
+  function bootstrapPlugin(name, onReady, { version = SUITE_VERSION } = {}) {
+    if (!extraBootstraps.has(name)) {
+      extraBootstraps.set(name, createPluginBootstrap({ name, version }));
     }
-    readyCallbacks.push(onReady);
-    tryBootstrap();
+    extraBootstraps.get(name)(onReady);
   }
 
   // packages/core/settings.js
@@ -8577,8 +8603,8 @@ Version: v${version}`;
       console.log('[Wizascript Controller] Enable Controller Support is off - "Keybinds - Controller" category not registered this load. Turn it on under Miscellaneous, then reload, to configure it.');
       return;
     }
-    const CATEGORY3 = "Keybinds - Controller";
-    const settings2 = createFeatureSettings(plugin, "controller", CATEGORY3);
+    const CATEGORY2 = "Keybinds - Controller";
+    const settings2 = createFeatureSettings(plugin, "controller", CATEGORY2);
     settings2.add("detectController", {
       name: "Detect Controller",
       note: "Click if your controller isn't responding.",
@@ -9717,7 +9743,7 @@ Version: v${version}`;
       const menu = document.querySelector(".menu-backdrop");
       const wasMenuOpen = !!(menu && getComputedStyle(menu).display !== "none");
       document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
-      let attempts2 = 0;
+      let attempts = 0;
       const MAX_ATTEMPTS = 30;
       (function poll() {
         const items = Array.from(document.querySelectorAll('.menu-body li[role="button"]'));
@@ -9727,8 +9753,8 @@ Version: v${version}`;
           if (isDebugTextEnabled()) console.log("[Wizascript Controller] concede: used Underscript's own Surrender menu entry");
           return;
         }
-        attempts2++;
-        if (attempts2 < MAX_ATTEMPTS) {
+        attempts++;
+        if (attempts < MAX_ATTEMPTS) {
           requestAnimationFrame(poll);
           return;
         }
@@ -9753,7 +9779,7 @@ Version: v${version}`;
       } else if (isDebugTextEnabled()) {
         console.log("[Wizascript Controller] concede: Settings already open - skipped opening a duplicate, going straight to polling for the surrender button");
       }
-      let attempts2 = 0;
+      let attempts = 0;
       const MAX_ATTEMPTS = 30;
       (function poll() {
         const btn = document.querySelector('.btn-danger[onclick*="askSurrender"]');
@@ -9761,8 +9787,8 @@ Version: v${version}`;
           triggerElementClick(btn);
           return;
         }
-        attempts2++;
-        if (attempts2 < MAX_ATTEMPTS) requestAnimationFrame(poll);
+        attempts++;
+        if (attempts < MAX_ATTEMPTS) requestAnimationFrame(poll);
         else if (isDebugTextEnabled()) console.log("[Wizascript Controller] concede: gave up waiting for the surrender button after opening settings");
       })();
     }
@@ -11370,10 +11396,10 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
           const basePadding = LAYOUT.eyeSpacingPadding + jitter.dx;
           let x = side === -1 ? boardRect.left - basePadding - EYE_TOTAL_WIDTH : boardRect.right + basePadding;
           let y = baseY - EYE_TOTAL_HEIGHT / 2;
-          for (let attempts2 = 0; attempts2 < 8; attempts2++) {
+          for (let attempts = 0; attempts < 8; attempts++) {
             const candidate = { left: x, right: x + EYE_TOTAL_WIDTH, top: y, bottom: y + EYE_TOTAL_HEIGHT };
             if (!avoidRects.some((r) => rectsOverlap(candidate, r, LAYOUT.avoidPadding))) break;
-            if (attempts2 < 4) x += side * 24;
+            if (attempts < 4) x += side * 24;
             else y += 40;
           }
           positions.push({ x, y, scale: jitter.scale });
@@ -11840,74 +11866,78 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
   }
 
   // packages/dt-animations/settings.js
-  var CATEGORY2 = "DT Animations";
+  var GENERAL = "General";
   var OVERLAP_POLICIES = [
     ["Newest DT replaces the current animation", "replace"],
     ["Keep the current animation, ignore the new DT", "ignore"]
   ];
-  function registerDtAnimationSettings(plugin, animations2) {
-    const settings2 = createFeatureSettings(plugin, "dtAnimations", CATEGORY2);
-    const enabled = settings2.add("enabled", {
-      name: "Enable DT Animations",
-      type: "boolean",
-      default: true
-    });
-    const overlapPolicy = settings2.add("overlapPolicy", {
+  function registerDtAnimationSettings(plugin, animations2, { onDebugChange } = {}) {
+    const api = plugin.settings();
+    const rerender = () => setTimeout(() => {
+      try {
+        if (api.isOpen()) api.open();
+      } catch (err) {
+      }
+    }, 0);
+    const overlapPolicy = api.add({
+      key: "general.overlapPolicy",
       name: "When a second DT triggers mid-animation",
       type: "select",
       data: OVERLAP_POLICIES,
-      default: "replace"
+      default: "replace",
+      category: GENERAL
     });
-    const allowOpponent = settings2.add("allowOpponent", {
+    const allowOpponent = api.add({
+      key: "general.allowOpponent",
       name: "[Experimental] Also play for the opponent's DTs",
-      note: "Off: only DTs you play trigger animations.",
+      note: "Off: only DTs you play (or the player you're spectating) trigger animations.",
       type: "boolean",
-      default: false
+      default: false,
+      category: GENERAL
     });
-    const debug = settings2.add("debug", {
-      name: "Enable debug logging + test keybinds",
-      note: "Reload the page after changing this.",
+    const debug = api.add({
+      key: "general.debug",
+      name: "Debug mode (console logging + test panel in matches)",
       type: "boolean",
-      default: false
+      default: false,
+      category: GENERAL,
+      onChange: () => onDebugChange && setTimeout(onDebugChange, 0)
     });
     const perAnimation = {};
-    animations2.forEach((anim) => {
-      perAnimation[anim.id] = settings2.add(`${anim.id}.enabled`, {
-        name: `${anim.name} Animation`,
-        note: anim.description,
-        type: "boolean",
-        default: anim.defaultEnabled !== false
-      });
-    });
-    const debugTarget = debug.value() && animations2.length ? settings2.add("debugTarget", {
-      name: "Test keybinds target",
-      type: "select",
-      data: animations2.map((a) => [a.name, a.id]),
-      default: animations2[0].id
-    }) : null;
     const animationValues = {};
     animations2.forEach((anim) => {
-      const defs = anim.settings || {};
+      const category = anim.name;
+      const toggle = api.add({
+        key: `${anim.id}.enabled`,
+        name: `Enable ${anim.name} animation`,
+        note: anim.description,
+        type: "boolean",
+        default: anim.defaultEnabled !== false,
+        category,
+        onChange: rerender
+      });
+      perAnimation[anim.id] = toggle;
       const registered = {};
-      const visible = enabled.value() && perAnimation[anim.id].value();
-      if (visible) {
-        Object.entries(defs).forEach(([key, def]) => {
-          registered[key] = settings2.add(`${anim.id}.${key}`, {
-            ...def,
-            category: `${CATEGORY2} - ${anim.name}`
-          });
+      Object.entries(anim.settings || {}).forEach(([key, def]) => {
+        registered[key] = api.add({
+          ...def,
+          key: `${anim.id}.${key}`,
+          category,
+          hidden: () => !toggle.value()
         });
-      }
-      animationValues[anim.id] = (key) => registered[key] ? registered[key].value() : defs[key] && defs[key].default;
+      });
+      animationValues[anim.id] = (key) => registered[key] ? registered[key].value() : void 0;
     });
     return {
-      isMasterEnabled: () => enabled.value(),
-      isAnimationEnabled: (id) => enabled.value() && !!perAnimation[id] && perAnimation[id].value(),
+      // UnderScript's native per-plugin toggle. `enabled` only exists on
+      // versioned plugins; treat "missing" as on.
+      isMasterEnabled: () => plugin.enabled !== false,
+      isAnimationEnabled: (id) => plugin.enabled !== false && !!perAnimation[id] && perAnimation[id].value(),
       overlapPolicy: () => overlapPolicy.value(),
       allowOpponent: () => allowOpponent.value(),
       isDebug: () => debug.value(),
-      debugTarget: () => debugTarget ? debugTarget.value() : animations2[0] && animations2[0].id,
-      animationValue: (id, key) => animationValues[id](key)
+      animationValue: (id, key) => animationValues[id](key),
+      open: () => api.open()
     };
   }
 
@@ -12043,60 +12073,121 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     return { onGameEvent, onMatchStart: resetDetectors, stopAll, debugApi };
   }
 
+  // packages/dt-animations/debug-panel.js
+  var PANEL_ID = "wiza-dt-debug-panel";
+  function createDebugPanel({ animations: animations2, debugApi, openSettings }) {
+    let panel = null;
+    let statusTimer = null;
+    function build() {
+      panel = document.createElement("div");
+      panel.id = PANEL_ID;
+      Object.assign(panel.style, {
+        position: "fixed",
+        left: "8px",
+        bottom: "8px",
+        zIndex: "1000000",
+        background: "rgba(0,0,0,0.85)",
+        border: "1px solid #666",
+        borderRadius: "4px",
+        padding: "6px 8px",
+        color: "#ddd",
+        font: "12px sans-serif",
+        display: "flex",
+        flexDirection: "column",
+        gap: "4px",
+        userSelect: "none"
+      });
+      const title = document.createElement("div");
+      title.textContent = "DT Animations - debug";
+      title.style.color = "#8ab4f8";
+      title.style.fontWeight = "bold";
+      const select = document.createElement("select");
+      animations2.forEach((a) => {
+        const opt = document.createElement("option");
+        opt.value = a.id;
+        opt.textContent = a.name;
+        select.appendChild(opt);
+      });
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.gap = "4px";
+      const button = (label, fn) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = label;
+        Object.assign(b.style, { font: "12px sans-serif", padding: "1px 6px", cursor: "pointer" });
+        b.addEventListener("click", fn);
+        row.appendChild(b);
+      };
+      button("Play", () => debugApi.play(select.value));
+      button("React", () => debugApi.react(select.value));
+      button("End", () => debugApi.reset(select.value));
+      button("Stop all", () => debugApi.forceStop());
+      button("\u2699", () => openSettings());
+      const status = document.createElement("div");
+      status.style.color = "#aaa";
+      panel.append(title, select, row, status);
+      document.body.appendChild(panel);
+      const refresh = () => {
+        const cur = debugApi.current();
+        status.textContent = cur ? `now: ${cur.id} (owner ${cur.ownerId})${cur.ending ? " - ending" : ""}` : "now: idle";
+      };
+      refresh();
+      statusTimer = setInterval(refresh, 250);
+    }
+    return {
+      show() {
+        if (panel && panel.isConnected) return;
+        if (!document.body) return;
+        build();
+      },
+      hide() {
+        if (statusTimer) clearInterval(statusTimer);
+        statusTimer = null;
+        if (panel) panel.remove();
+        panel = null;
+      }
+    };
+  }
+
   // packages/dt-animations/index.js
+  var DT_PLUGIN_NAME = "DT Animations";
   function isGamePage2() {
     return matchesPage(["/Game", { prefix: "/Spectate" }]);
   }
   function initDtAnimations(plugin) {
     dt_animations_default.forEach(({ source, module }) => registerAnimation(module, source));
     const animations2 = getAnimations();
-    const settings2 = registerDtAnimationSettings(plugin, animations2);
+    let loader = null;
+    let panel = null;
+    const syncDebug = () => {
+      if (!loader) return;
+      const on = settings2.isDebug();
+      const pageWindow2 = getPageWindow();
+      if (on) {
+        pageWindow2.__wizaDtAnimations = loader.debugApi;
+        panel.show();
+      } else {
+        delete pageWindow2.__wizaDtAnimations;
+        panel.hide();
+      }
+    };
+    const settings2 = registerDtAnimationSettings(plugin, animations2, { onDebugChange: syncDebug });
     const logger4 = createLogger("DT Animations");
-    const debug = settings2.isDebug();
-    const quietLogger = {
-      log: (...a) => debug && logger4.log(...a),
-      warn: (...a) => debug && logger4.warn(...a),
+    const gatedLogger = {
+      log: (...a) => settings2.isDebug() && logger4.log(...a),
+      warn: (...a) => settings2.isDebug() && logger4.warn(...a),
       error: (...a) => logger4.error(...a)
     };
-    if (debug) registerDebugKeybinds(plugin, settings2);
     if (!animations2.length || !isGamePage2()) return;
-    const loader = createLoader({ animations: animations2, settings: settings2, logger: quietLogger });
+    loader = createLoader({ animations: animations2, settings: settings2, logger: gatedLogger });
+    panel = createDebugPanel({ animations: animations2, debugApi: loader.debugApi, openSettings: settings2.open });
     plugin.events.on("GameEvent", (event) => loader.onGameEvent(event));
     plugin.events.on("GameStart", () => loader.onMatchStart());
     plugin.events.on("connect", () => loader.onMatchStart());
-    activeLoader = loader;
-    if (debug) {
-      getPageWindow().__wizaDtAnimations = loader.debugApi;
-      logger4.log(null, `Loaded: ${animations2.map((a) => a.id).join(", ")}. Console: __wizaDtAnimations`);
-    }
-  }
-  var activeLoader = null;
-  function registerDebugKeybinds(plugin, settings2) {
-    const withLoader = (fn) => () => {
-      if (!activeLoader) return;
-      fn(activeLoader.debugApi, settings2.debugTarget());
-    };
-    registerKeybind(plugin, {
-      key: "dtTestPlay",
-      name: "[Debug] Play DT animation",
-      defaultCode: "KeyQ",
-      packageLabel: "DT Animations",
-      onMatch: withLoader((api, id) => api.play(id))
-    });
-    registerKeybind(plugin, {
-      key: "dtTestReact",
-      name: "[Debug] React (glow/hurt)",
-      defaultCode: "KeyE",
-      packageLabel: "DT Animations",
-      onMatch: withLoader((api, id) => api.react(id))
-    });
-    registerKeybind(plugin, {
-      key: "dtTestReset",
-      name: "[Debug] End DT animation",
-      defaultCode: "KeyR",
-      packageLabel: "DT Animations",
-      onMatch: withLoader((api, id) => api.reset(id))
-    });
+    if (document.body) syncDebug();
+    else document.addEventListener("DOMContentLoaded", syncDebug, { once: true });
+    gatedLogger.log(null, `Loaded: ${animations2.map((a) => a.id).join(", ")}. Console: __wizaDtAnimations`);
   }
 
   // manifest.js
@@ -12105,9 +12196,9 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     initTrueHubBridge(plugin);
     initDeckTracker(plugin);
     initUcTv(plugin);
-    initDtAnimations(plugin);
     const miscSettings = initMisc(plugin);
     initController(plugin, miscSettings.enableController);
     flushKeybindRegistrations();
   });
+  bootstrapPlugin(DT_PLUGIN_NAME, initDtAnimations);
 })();

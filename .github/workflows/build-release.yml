@@ -1,13 +1,16 @@
 # Builds manifest.js (and everything it imports from packages/*) via
 # build.js, then commits the result to wizascript.user.js at the repo
-# root. Triggers on push to main, excluding pushes that only touch
-# wizascript.user.js itself (to avoid re-triggering on its own commit).
+# root of whichever branch was pushed. main -> stable build; dev -> dev
+# build (timestamped version, self-updates from the dev branch only, so
+# dev testers never get pulled onto main and main users never see dev).
+# Excludes pushes that only touch wizascript.user.js itself (to avoid
+# re-triggering on its own commit).
 
 name: Build Wizascript
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     paths-ignore:
       - 'wizascript.user.js'
       - 'bot/**'
@@ -33,7 +36,7 @@ jobs:
         run: npm install
 
       - name: Build wizascript.user.js
-        run: node build.js
+        run: node build.js ${{ github.ref_name == 'dev' && '--dev' || '' }}
 
       - name: Commit built userscript
         run: |

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.5.0.202609230258
+// @version      1.5.0.202609230326
 // @description  All-in-one UnderScript plugin suite for Undercards. [DEV BUILD - unstable, from the dev branch]
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -24,7 +24,7 @@
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "1.5.0.202609230258";
+  var SUITE_VERSION = "1.5.0.202609230326";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/dev/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -11135,6 +11135,365 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     requestAnimationFrame(frame);
   }
 
+  // packages/core/assets.js
+  var ASSET_BASE = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/dev/assets/";
+  var cache = /* @__PURE__ */ new Map();
+  function assetUrl(path) {
+    return ASSET_BASE + path.replace(/^\/+/, "");
+  }
+  function loadAssetBlob(path) {
+    if (cache.has(path)) return cache.get(path);
+    const promise = new Promise((resolve, reject) => {
+      GM_xmlhttpRequest({
+        method: "GET",
+        url: assetUrl(path),
+        responseType: "blob",
+        onload(res) {
+          if (res.status !== 200 || !res.response) {
+            reject(new Error(`Asset ${path}: HTTP ${res.status}`));
+            return;
+          }
+          resolve(res.response);
+        },
+        onerror: () => reject(new Error(`Asset ${path}: network error`)),
+        ontimeout: () => reject(new Error(`Asset ${path}: timed out`)),
+        timeout: 15e3
+      });
+    });
+    promise.catch(() => cache.delete(path));
+    cache.set(path, promise);
+    return promise;
+  }
+
+  // packages/dt-animations/animations/barrier.js
+  var BARRIER_CARD_ID = 801;
+  var CLASSIC_GIF = "dt-animations/barrier-classic.gif";
+  var Z_INDEX = 1e6;
+  var T = {
+    crack: 330,
+    widen: 2340,
+    flash: 2380,
+    split: 2420,
+    black: 2710,
+    end: 3110,
+    fadeOut: 700,
+    classicWaitMax: 2e3
+    // how long "classic" may wait for the GIF before falling back to the remake
+  };
+  var VIEW_W = 1200;
+  var VIEW_H = 675;
+  var COLORS = {
+    paper: "#fcfcff",
+    crack: "#000",
+    flash: "#fcfce3"
+  };
+  var CRACK = [
+    [548, -20],
+    [548, 0],
+    [531, 13],
+    [519, 33],
+    [553, 75],
+    [565, 98],
+    [554, 116],
+    [543, 124],
+    [541, 134],
+    [525, 151],
+    [523, 160],
+    [507, 176],
+    [507, 183],
+    [590, 241],
+    [608, 259],
+    [607, 264],
+    [556, 303],
+    [707, 330],
+    [658, 399],
+    [647, 408],
+    [645, 417],
+    [613, 446],
+    [606, 461],
+    [580, 492],
+    [602, 508],
+    [714, 557],
+    [696, 571],
+    [681, 591],
+    [673, 594],
+    [671, 601],
+    [639, 633],
+    [626, 641],
+    [623, 651],
+    [593, 674],
+    [575, 695]
+  ];
+  var crackLine = () => CRACK.map(([x, y]) => `${x},${y}`).join(" ");
+  function bandPoints(d) {
+    const left = CRACK.map(([x, y]) => `${(x - d).toFixed(1)},${y}`);
+    const right = CRACK.slice().reverse().map(([x, y]) => `${(x + d).toFixed(1)},${y}`);
+    return left.concat(right).join(" ");
+  }
+  function splitHalfWidth(t) {
+    return 213 + (t - T.split) * (70.5 / 40);
+  }
+  function isGeneratedCard(card) {
+    if (!card) return false;
+    if (card.generated === true) return true;
+    const info = card.creatorInfo;
+    if (!info) return false;
+    if (typeof info === "string") return info.length > 0;
+    return typeof info === "object" && Object.keys(info).length > 0;
+  }
+  function createEffect(ctx) {
+    const svgNS = "http://www.w3.org/2000/svg";
+    let root = null;
+    let rafId = null;
+    let timers = [];
+    let objectUrl = null;
+    let active = false;
+    let runToken = 0;
+    const reducedMotion = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function later(fn, ms) {
+      timers.push(setTimeout(fn, ms));
+    }
+    function cleanupDom() {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = null;
+      timers.forEach(clearTimeout);
+      timers = [];
+      if (root) root.remove();
+      root = null;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      objectUrl = null;
+    }
+    function baseStyle(el) {
+      var _a;
+      Object.assign(el.style, {
+        position: "fixed",
+        inset: "0",
+        width: "100vw",
+        height: "100vh",
+        pointerEvents: "none",
+        zIndex: String(Z_INDEX),
+        opacity: String((_a = ctx.setting("opacity")) != null ? _a : 1),
+        transition: `opacity ${T.fadeOut}ms ease`
+      });
+    }
+    function scheduleEnd(token, startedAt) {
+      const elapsed = performance.now() - startedAt;
+      later(() => {
+        if (token !== runToken || !root) return;
+        root.style.opacity = "0";
+        later(() => {
+          if (token !== runToken) return;
+          cleanupDom();
+          active = false;
+          ctx.finished();
+        }, T.fadeOut);
+      }, Math.max(0, T.end - elapsed));
+    }
+    function playRemake(token) {
+      const svg = document.createElementNS(svgNS, "svg");
+      svg.setAttribute("viewBox", `0 0 ${VIEW_W} ${VIEW_H}`);
+      svg.setAttribute("preserveAspectRatio", "xMidYMid slice");
+      baseStyle(svg);
+      svg.style.overflow = "hidden";
+      const el = (tag, attrs) => {
+        const n = document.createElementNS(svgNS, tag);
+        Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, v));
+        return n;
+      };
+      svg.appendChild(el("rect", { x: -2e3, y: -1e3, width: VIEW_W + 4e3, height: VIEW_H + 2e3, fill: COLORS.paper }));
+      const line = el("polyline", {
+        points: crackLine(),
+        fill: "none",
+        stroke: COLORS.crack,
+        "stroke-width": 3,
+        "stroke-linejoin": "miter",
+        visibility: "hidden"
+      });
+      const band = el("polygon", { points: bandPoints(0), fill: COLORS.crack, visibility: "hidden" });
+      const cover = el("rect", { x: -2e3, y: -1e3, width: VIEW_W + 4e3, height: VIEW_H + 2e3, fill: COLORS.crack, visibility: "hidden" });
+      svg.append(line, band, cover);
+      root = svg;
+      document.body.appendChild(svg);
+      const reduce = reducedMotion();
+      const startedAt = performance.now();
+      let phase = "";
+      function frame(now) {
+        if (token !== runToken) return;
+        const t = now - startedAt;
+        let next;
+        if (t < T.crack) next = "paper";
+        else if (t < T.widen) next = "crack";
+        else if (t < T.flash) next = "widen";
+        else if (t < T.split) next = reduce ? "widen" : "flash";
+        else if (t < T.black) next = "split";
+        else next = "black";
+        if (next !== phase) {
+          phase = next;
+          line.setAttribute("visibility", phase === "crack" ? "visible" : "hidden");
+          band.setAttribute("visibility", ["widen", "flash", "split"].includes(phase) ? "visible" : "hidden");
+          cover.setAttribute("visibility", phase === "black" ? "visible" : "hidden");
+          if (phase === "widen") {
+            band.setAttribute("points", bandPoints(72));
+            band.setAttribute("fill", COLORS.crack);
+          } else if (phase === "flash") {
+            band.setAttribute("points", bandPoints(144));
+            band.setAttribute("fill", COLORS.flash);
+          } else if (phase === "split") {
+            band.setAttribute("fill", COLORS.crack);
+          }
+        }
+        if (phase === "split") band.setAttribute("points", bandPoints(splitHalfWidth(t)));
+        if (phase !== "black") rafId = requestAnimationFrame(frame);
+      }
+      rafId = requestAnimationFrame(frame);
+      scheduleEnd(token, startedAt);
+    }
+    function playClassic(token) {
+      let settled = false;
+      const fallback = (why) => {
+        if (settled || token !== runToken) return;
+        settled = true;
+        ctx.warn(`classic GIF unavailable (${why}) - using the remake instead.`);
+        playRemake(token);
+      };
+      later(() => fallback("timed out"), T.classicWaitMax);
+      loadAssetBlob(CLASSIC_GIF).then((blob) => {
+        if (settled || token !== runToken) return;
+        objectUrl = URL.createObjectURL(blob);
+        const img = document.createElement("img");
+        img.alt = "";
+        baseStyle(img);
+        img.style.objectFit = "cover";
+        img.style.background = COLORS.paper;
+        img.src = objectUrl;
+        const show = () => {
+          if (settled || token !== runToken) return;
+          settled = true;
+          timers.forEach(clearTimeout);
+          timers = [];
+          root = img;
+          document.body.appendChild(img);
+          scheduleEnd(token, performance.now());
+        };
+        (img.decode ? img.decode() : Promise.resolve()).then(show, () => fallback("decode failed"));
+      }).catch((err) => fallback(err.message));
+    }
+    function play() {
+      if (active) return false;
+      if (!document.body) return false;
+      active = true;
+      const token = ++runToken;
+      cleanupDom();
+      if (ctx.setting("style") === "classic") playClassic(token);
+      else playRemake(token);
+      return true;
+    }
+    function forceStop() {
+      runToken++;
+      cleanupDom();
+      active = false;
+    }
+    return {
+      play,
+      // One-shot: a "graceful end" just means finishing early with the fade.
+      reset() {
+        if (!active) return;
+        if (!root) {
+          forceStop();
+          ctx.finished();
+          return;
+        }
+        const token = runToken;
+        timers.forEach(clearTimeout);
+        timers = [];
+        root.style.opacity = "0";
+        later(() => {
+          if (token !== runToken) return;
+          cleanupDom();
+          active = false;
+          ctx.finished();
+        }, T.fadeOut);
+      },
+      forceStop,
+      isActive: () => active,
+      destroy: forceStop,
+      // Lets the detector warm the GIF cache at match start.
+      preload() {
+        if (ctx.setting("style") === "classic") loadAssetBlob(CLASSIC_GIF).catch(() => {
+        });
+      }
+    };
+  }
+  function createDetector(api) {
+    const recent = /* @__PURE__ */ new Map();
+    function seenRecently(instanceId) {
+      const now = Date.now();
+      recent.forEach((ts, id) => {
+        if (now - ts > 1e4) recent.delete(id);
+      });
+      if (recent.has(instanceId)) return true;
+      recent.set(instanceId, now);
+      return false;
+    }
+    function onPlayed(event) {
+      let card;
+      try {
+        card = typeof event.card === "string" ? JSON.parse(event.card) : event.card;
+      } catch (err) {
+        api.warn("played card failed to parse:", err);
+        return;
+      }
+      if (!card || card.fixedId !== BARRIER_CARD_ID) return;
+      const playerId = Number(event.idPlayer);
+      api.log(`The Barrier played by ${playerId} (${event.action}):`, card);
+      if (card.id !== void 0 && seenRecently(card.id)) return;
+      if (!api.isRelevantPlayer(playerId)) return;
+      if (api.setting("skipGenerated") && isGeneratedCard(card)) {
+        api.log("skipped - looks like a generated copy.");
+        return;
+      }
+      api.start(playerId);
+    }
+    return {
+      onGameEvent(event) {
+        if (event.action === "getMonsterPlayed" || event.action === "getSpellPlayed") onPlayed(event);
+      },
+      reset() {
+        recent.clear();
+      }
+    };
+  }
+  var barrier_default = {
+    id: "barrier",
+    name: "The Barrier",
+    description: "The barrier cracks and breaks open when The Barrier is played.",
+    kind: "oneShot",
+    settings: {
+      style: {
+        name: "Style",
+        type: "select",
+        data: [["Remake (animated)", "remake"], ["Classic (original GIF)", "classic"]],
+        default: "remake"
+      },
+      opacity: {
+        name: "Effect opacity",
+        note: "Lower it to keep the board visible through the flash.",
+        type: "slider",
+        default: 1,
+        min: 0.3,
+        max: 1,
+        step: 0.05
+      },
+      skipGenerated: {
+        name: "Only for copies played from your deck (skip generated)",
+        type: "boolean",
+        default: true
+      }
+    },
+    createEffect,
+    createDetector
+  };
+
   // packages/dt-animations/animations/titan.js
   var CONSTRICTING_DARKNESS_ID = 67;
   var TIMING = {
@@ -11142,7 +11501,10 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     eyeAppearStaggerMs: 220,
     eyeDissipateMs: 900,
     eyeDissipateStaggerMs: 140,
-    glowMs: 1e3
+    glowMs: 1e3,
+    resumeDarkenMs: 500,
+    // after a one-shot DT interrupted us
+    resumeStaggerMs: 60
   };
   var SHATTER = {
     cols: 8,
@@ -11301,7 +11663,7 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     .wiza-titan-shard { transition-duration: 1ms; }
   }
 `;
-  function createEffect(ctx) {
+  function createEffect2(ctx) {
     const svgNS = "http://www.w3.org/2000/svg";
     let overlay = null;
     let eyeLayer = null;
@@ -11629,20 +11991,24 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
       staggerTimeoutIds.splice(0).forEach(clearTimeout);
       dissipateTimeoutIds.splice(0).forEach(clearTimeout);
     }
-    function play() {
+    function play({ resumed = false } = {}) {
       if (isEffectActive) return false;
       if (!mount()) return false;
       isEffectActive = true;
       clearTimers();
       applySettingVars();
       renderEyes();
+      const darkenMs = resumed ? TIMING.resumeDarkenMs : TIMING.darkenMs;
+      const staggerMs = resumed ? TIMING.resumeStaggerMs : TIMING.eyeAppearStaggerMs;
+      overlay.style.transitionDuration = `${darkenMs}ms`;
       void overlay.offsetHeight;
       overlay.classList.add("is-dark");
       darknessTimeoutId = setTimeout(() => {
+        overlay.style.transitionDuration = "";
         eyes.forEach((eye, i) => {
-          staggerTimeoutIds.push(setTimeout(() => eye.classList.add("is-visible"), i * TIMING.eyeAppearStaggerMs));
+          staggerTimeoutIds.push(setTimeout(() => eye.classList.add("is-visible"), i * staggerMs));
         });
-      }, TIMING.darkenMs);
+      }, darkenMs);
       return true;
     }
     function reset() {
@@ -11707,7 +12073,7 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     }
     return { play, reset, forceStop, react, isActive: () => isEffectActive, destroy };
   }
-  function createDetector(api) {
+  function createDetector2(api) {
     const states = /* @__PURE__ */ new Map();
     const anyLive = () => [...states.values()].some((s) => !s.disabled);
     function maybeEnd() {
@@ -11827,12 +12193,13 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
         default: true
       }
     },
-    createEffect,
-    createDetector
+    createEffect: createEffect2,
+    createDetector: createDetector2
   };
 
   // dt-animations:dt-animations
   var dt_animations_default = [
+    { source: "barrier.js", module: barrier_default },
     { source: "titan.js", module: titan_default }
   ];
 
@@ -11947,13 +12314,20 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     const effects = /* @__PURE__ */ new Map();
     const detectors = /* @__PURE__ */ new Map();
     let current = null;
+    let suspended = null;
+    const byId = new Map(animations2.map((a) => [a.id, a]));
+    const isOneShot = (anim) => anim && anim.kind === "oneShot";
     function getEffect(anim) {
       if (!effects.has(anim.id)) {
         effects.set(anim.id, anim.createEffect({
           setting: (key) => settings2.animationValue(anim.id, key),
           log: (...args) => logger4.log(anim.id, ...args),
           warn: (...args) => logger4.warn(anim.id, ...args),
-          pageWindow: getPageWindow()
+          pageWindow: getPageWindow(),
+          // Effects that end on their own (one-shots) call this when fully
+          // done, so the host can clear `current` and resume anything a
+          // one-shot suspended.
+          finished: () => onEffectFinished(anim)
         }));
       }
       return effects.get(anim.id);
@@ -11968,7 +12342,7 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
       const me = getRelevantPlayerId();
       return me !== null && Number(playerId) === me;
     }
-    function start(anim, ownerId, { force = false } = {}) {
+    function start(anim, ownerId, { force = false, resumed = false } = {}) {
       if (!force && !settings2.isAnimationEnabled(anim.id)) return false;
       if (current) {
         const curEffect = effects.get(current.id);
@@ -11981,22 +12355,46 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
             logger4.log(anim.id, `start ignored - "${current.id}" is playing (overlap policy: ignore).`);
             return false;
           }
-          logger4.log(anim.id, `replacing "${current.id}".`);
+          if (isOneShot(anim) && !isOneShot(byId.get(current.id)) && !current.ending) {
+            suspended = { id: current.id, ownerId: current.ownerId };
+            logger4.log(anim.id, `suspending "${current.id}" until this finishes.`);
+          } else {
+            logger4.log(anim.id, `replacing "${current.id}".`);
+          }
           curEffect.forceStop();
         }
         current = null;
       }
+      if (!isOneShot(anim)) {
+        suspended = null;
+      }
       const effect = getEffect(anim);
-      const ok = effect.play() !== false;
+      const ok = effect.play({ resumed }) !== false;
       if (ok) {
         current = { id: anim.id, ownerId, ending: false };
-        logger4.log(anim.id, "playing.", { ownerId });
+        logger4.log(anim.id, resumed ? "resumed." : "playing.", { ownerId });
       } else {
         logger4.warn(anim.id, "effect.play() declined to start (board not found?).");
       }
       return ok;
     }
+    function onEffectFinished(anim) {
+      if (!current || current.id !== anim.id) return;
+      current = null;
+      logger4.log(anim.id, "finished.");
+      if (suspended) {
+        const { id, ownerId } = suspended;
+        suspended = null;
+        const persistent = byId.get(id);
+        if (persistent && settings2.isAnimationEnabled(id)) start(persistent, ownerId, { resumed: true });
+      }
+    }
     function end(anim, { force = false } = {}) {
+      if (suspended && suspended.id === anim.id) {
+        suspended = null;
+        logger4.log(anim.id, "ended while suspended - won't resume.");
+        return;
+      }
       if (!current || current.id !== anim.id || current.ending) return;
       current.ending = true;
       logger4.log(anim.id, "ending.");
@@ -12020,7 +12418,22 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     function resetDetectors() {
       detectors.forEach((d) => d.reset && d.reset());
     }
+    function onMatchStart() {
+      resetDetectors();
+      animations2.forEach((anim) => {
+        if (!settings2.isAnimationEnabled(anim.id)) return;
+        const effect = getEffect(anim);
+        if (typeof effect.preload === "function") {
+          try {
+            effect.preload();
+          } catch (err) {
+            logger4.warn(anim.id, "preload failed:", err);
+          }
+        }
+      });
+    }
     function stopAll() {
+      suspended = null;
       effects.forEach((e) => e.forceStop());
       current = null;
       resetDetectors();
@@ -12032,7 +12445,8 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
         start: (ownerId) => start(anim, ownerId),
         end: () => end(anim),
         react: (kind) => react(anim, kind),
-        isPlaying: () => !!current && current.id === anim.id && !current.ending,
+        isPlaying: () => !!current && current.id === anim.id && !current.ending && !!effects.get(anim.id) && effects.get(anim.id).isActive(),
+        setting: (key) => settings2.animationValue(anim.id, key),
         log: (...args) => logger4.log(anim.id, ...args),
         warn: (...args) => logger4.warn(anim.id, ...args)
       }));
@@ -12067,10 +12481,10 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
         if (anim) end(anim);
       },
       forceStop: stopAll,
-      current: () => current ? { ...current } : null,
+      current: () => current ? { ...current, suspended: suspended && suspended.id } : null,
       list: () => animations2.map((a) => a.id)
     };
-    return { onGameEvent, onMatchStart: resetDetectors, stopAll, debugApi };
+    return { onGameEvent, onMatchStart, stopAll, debugApi };
   }
 
   // packages/dt-animations/debug-panel.js
@@ -12085,7 +12499,8 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
         position: "fixed",
         left: "8px",
         bottom: "8px",
-        zIndex: "1000000",
+        zIndex: "1000010",
+        // above every animation layer
         background: "rgba(0,0,0,0.85)",
         border: "1px solid #666",
         borderRadius: "4px",

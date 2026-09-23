@@ -19,7 +19,7 @@ export function createDebugPanel({ animations, debugApi, openSettings }) {
       position: "fixed",
       left: "8px",
       bottom: "8px",
-      zIndex: "1000000",
+      zIndex: "1000010", // above every animation layer
       background: "rgba(0,0,0,0.85)",
       border: "1px solid #666",
       borderRadius: "4px",

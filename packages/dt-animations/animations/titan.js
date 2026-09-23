@@ -32,7 +32,9 @@ const TIMING = {
   eyeAppearStaggerMs: 220,
   eyeDissipateMs: 900,
   eyeDissipateStaggerMs: 140,
-  glowMs: 1000
+  glowMs: 1000,
+  resumeDarkenMs: 500,       // after a one-shot DT interrupted us
+  resumeStaggerMs: 60
 };
 
 const SHATTER = {
@@ -597,7 +599,10 @@ function createEffect(ctx) {
     dissipateTimeoutIds.splice(0).forEach(clearTimeout);
   }
 
-  function play() {
+  // `resumed`: coming back after a one-shot DT (e.g. The Barrier) briefly
+  // took the screen - the darkness was already established, so skip the
+  // slow 3s build-up and bring the eyes straight back.
+  function play({ resumed = false } = {}) {
     if (isEffectActive) return false;
     if (!mount()) return false;
     isEffectActive = true;
@@ -605,14 +610,18 @@ function createEffect(ctx) {
     clearTimers();
     applySettingVars();
     renderEyes();
+    const darkenMs = resumed ? TIMING.resumeDarkenMs : TIMING.darkenMs;
+    const staggerMs = resumed ? TIMING.resumeStaggerMs : TIMING.eyeAppearStaggerMs;
+    overlay.style.transitionDuration = `${darkenMs}ms`;
     void overlay.offsetHeight; // reflow so the fade actually transitions
     overlay.classList.add("is-dark");
 
     darknessTimeoutId = setTimeout(() => {
+      overlay.style.transitionDuration = "";
       eyes.forEach((eye, i) => {
-        staggerTimeoutIds.push(setTimeout(() => eye.classList.add("is-visible"), i * TIMING.eyeAppearStaggerMs));
+        staggerTimeoutIds.push(setTimeout(() => eye.classList.add("is-visible"), i * staggerMs));
       });
-    }, TIMING.darkenMs);
+    }, darkenMs);
     return true;
   }
 

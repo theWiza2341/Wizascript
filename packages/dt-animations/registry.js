@@ -13,6 +13,7 @@
 //     name:           "Titan"            - shown in settings
 //     description:    "..."              - optional, shown as the toggle's note
 //     defaultEnabled: true               - optional, defaults to true
+//     kind:           "oneShot"          - optional; default "persistent" (see loader.js)
 //     settings:       { key: {...} }     - optional, UnderScript setting configs
 //                                          (name/type/default/data/min/max/step...),
 //                                          shown under "DT Animations - <name>"
@@ -20,8 +21,9 @@
 //     createDetector(api) -> detector    - reads GameEvents, decides when to start/end/react
 //   }
 //
-// effect:   { play() -> boolean, reset(), forceStop(), isActive() -> boolean,
-//             react?(kind), destroy?() }
+// effect:   { play({ resumed }) -> boolean, reset(), forceStop(), isActive() -> boolean,
+//             react?(kind), preload?(), destroy?() }
+//           one-shots call ctx.finished() when fully done
 // detector: { onGameEvent(event), reset?() }
 //
 // See README.md in this folder for what ctx/api provide.

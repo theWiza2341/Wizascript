@@ -24,8 +24,11 @@ function devStamp() {
 }
 
 const VERSION = CHANNEL === "dev" ? `${DEV_BASE_VERSION}.${devStamp()}` : pkg.version;
-const DOWNLOAD_URL =
-  `https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/${BRANCH}/wizascript.user.js`;
+const RAW_BASE = `https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/${BRANCH}/`;
+const DOWNLOAD_URL = `${RAW_BASE}wizascript.user.js`;
+// Runtime-fetched binary assets (see packages/core/assets.js) follow the
+// same branch, so dev builds can use assets that only exist on dev yet.
+const ASSET_BASE = `${RAW_BASE}assets/`;
 const DESCRIPTION =
   CHANNEL === "dev"
     ? "All-in-one UnderScript plugin suite for Undercards. [DEV BUILD - unstable, from the dev branch]"
@@ -111,7 +114,8 @@ async function build() {
     plugins: [dtAnimationsPlugin],
     define: {
       __WIZASCRIPT_VERSION__: JSON.stringify(VERSION),
-      __WIZASCRIPT_DOWNLOAD_URL__: JSON.stringify(DOWNLOAD_URL)
+      __WIZASCRIPT_DOWNLOAD_URL__: JSON.stringify(DOWNLOAD_URL),
+      __WIZASCRIPT_ASSET_BASE__: JSON.stringify(ASSET_BASE)
     }
   });
 

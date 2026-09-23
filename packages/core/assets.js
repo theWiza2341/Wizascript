@@ -23,12 +23,16 @@ export function assetUrl(path) {
   return ASSET_BASE + path.replace(/^\/+/, "");
 }
 
-export function loadAssetBlob(path) {
-  if (cache.has(path)) return cache.get(path);
+// { fresh: true } skips this page's cache and asks GitHub for the current
+// file (handy while testing newly pushed assets; raw.githubusercontent.com
+// itself may still serve a copy up to ~5 minutes old).
+export function loadAssetBlob(path, { fresh = false } = {}) {
+  if (!fresh && cache.has(path)) return cache.get(path);
+  const url = assetUrl(path) + (fresh ? `?t=${Date.now()}` : "");
   const promise = new Promise((resolve, reject) => {
     GM_xmlhttpRequest({
       method: "GET",
-      url: assetUrl(path),
+      url,
       responseType: "blob",
       onload(res) {
         if (res.status !== 200 || !res.response) {
@@ -43,7 +47,11 @@ export function loadAssetBlob(path) {
     });
   });
   // A failed fetch shouldn't be cached forever - allow a retry later.
-  promise.catch(() => cache.delete(path));
+  promise.catch(() => { if (cache.get(path) === promise) cache.delete(path); });
   cache.set(path, promise);
   return promise;
+}
+
+export function loadAssetText(path, options) {
+  return loadAssetBlob(path, options).then((blob) => blob.text());
 }

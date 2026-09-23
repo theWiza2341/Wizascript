@@ -64,7 +64,7 @@ export function createLoader({ animations, settings, logger }) {
     return me !== null && Number(playerId) === me;
   }
 
-  function start(anim, ownerId, { force = false, resumed = false } = {}) {
+  function start(anim, ownerId, { force = false, resumed = false, variant } = {}) {
     if (!force && !settings.isAnimationEnabled(anim.id)) return false;
 
     if (current) {
@@ -96,7 +96,7 @@ export function createLoader({ animations, settings, logger }) {
     }
 
     const effect = getEffect(anim);
-    const ok = effect.play({ resumed }) !== false;
+    const ok = effect.play({ resumed, variant }) !== false;
     if (ok) {
       current = { id: anim.id, ownerId, ending: false };
       logger.log(anim.id, resumed ? "resumed." : "playing.", { ownerId });
@@ -206,9 +206,26 @@ export function createLoader({ animations, settings, logger }) {
   // Manual controls for the debug panel/console - bypass ownership
   // and the per-animation toggle, but still go through arbitration.
   const debugApi = {
-    play(id) {
+    // `variant`: optional, from variants() - lets the panel test a
+    // specific style/clip without changing settings.
+    play(id, variant) {
       const anim = animations.find((a) => a.id === id);
-      return anim ? start(anim, "debug", { force: true }) : false;
+      return anim ? start(anim, "debug", { force: true, variant: variant || undefined }) : false;
+    },
+    // [{ label, value }] an effect offers for debug plays (e.g. The
+    // Barrier's styles and every custom clip). `refresh` re-reads any
+    // remote list instead of using the cached one.
+    async variants(id, { refresh = false } = {}) {
+      const anim = animations.find((a) => a.id === id);
+      if (!anim) return [];
+      const effect = getEffect(anim);
+      if (typeof effect.debugVariants !== "function") return [];
+      try {
+        return (await effect.debugVariants({ refresh })) || [];
+      } catch (err) {
+        logger.warn(id, "couldn't list variants:", err);
+        return [];
+      }
     },
     react(id, kind = "hurt") {
       const anim = animations.find((a) => a.id === id);

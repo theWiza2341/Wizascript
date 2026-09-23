@@ -8,7 +8,9 @@
 //   remake   the same animation rebuilt as live SVG: identical shapes and
 //            timing (measured from the GIF), but rendered per frame, so the
 //            split is smooth instead of stepping at the GIF's 25 fps
-//   (custom  - planned, its own iteration)
+//   custom   one of YOUR clips, picked at random (never the same one twice
+//            in a row): assets/dt-animations/barrier-custom/*.webm, listed
+//            in clips.json there. Make them with the Clip Squisher page.
 //
 // Timeline (both styles; measured from the GIF, 1200x675 design space):
 //      0 ms  off-white screen
@@ -25,10 +27,13 @@
 // TRIGGER: getMonsterPlayed / getSpellPlayed where the played card's
 // fixedId is 801. The card being played is public - both players see it.
 
-import { loadAssetBlob } from "../../core/assets.js";
+import { loadAssetBlob, loadAssetText } from "../../core/assets.js";
 
 const BARRIER_CARD_ID = 801;
 const CLASSIC_GIF = "dt-animations/barrier-classic.gif";
+const CUSTOM_DIR = "dt-animations/barrier-custom/";
+const CUSTOM_LIST = CUSTOM_DIR + "clips.json";
+const CUSTOM_MAX_MS = 3100;
 const Z_INDEX = 1000000; // above Titan's eyes (999999), below the debug panel
 
 const T = {
@@ -39,7 +44,8 @@ const T = {
   black: 2710,
   end: 3110,
   fadeOut: 700,
-  classicWaitMax: 2000 // how long "classic" may wait for the GIF before falling back to the remake
+  classicWaitMax: 2000, // how long "classic" may wait for the GIF before falling back to the remake
+  customWaitMax: 2500   // same for a custom clip
 };
 
 const VIEW_W = 1200;
@@ -75,6 +81,23 @@ function splitHalfWidth(t) {
   return 213 + (t - T.split) * (70.5 / 40);
 }
 
+// clips.json is hand-edited, so be forgiving: accept a bare array or
+// { "clips": [...] }, and a trailing comma after the last entry (the Clip
+// Squisher's copy-line ends with one).
+function parseClipList(text) {
+  const cleaned = String(text).replace(/,\s*([\]}])/g, "$1");
+  const data = JSON.parse(cleaned);
+  const list = Array.isArray(data) ? data : (data && data.clips) || [];
+  return list
+    .filter((c) => c && typeof c.file === "string" && c.enabled !== false)
+    .map((c) => ({
+      file: c.file.replace(/^[\/.]+/, "").replace(/\.\.+/g, "."),
+      title: c.title || c.file,
+      durationMs: Math.min(CUSTOM_MAX_MS, Math.max(300, Number(c.durationMs) || CUSTOM_MAX_MS))
+    }))
+    .filter((c) => c.file);
+}
+
 function isGeneratedCard(card) {
   if (!card) return false;
   if (card.generated === true) return true;
@@ -108,7 +131,14 @@ function createEffect(ctx) {
     rafId = null;
     timers.forEach(clearTimeout);
     timers = [];
-    if (root) root.remove();
+    if (root) {
+      if (root.tagName === "VIDEO") {
+        root.pause();
+        root.removeAttribute("src");
+        root.load();
+      }
+      root.remove();
+    }
     root = null;
     if (objectUrl) URL.revokeObjectURL(objectUrl);
     objectUrl = null;
@@ -128,7 +158,7 @@ function createEffect(ctx) {
   }
 
   // Fade out after the black hold, then report back to the host.
-  function scheduleEnd(token, startedAt) {
+  function scheduleEnd(token, startedAt, endMs = T.end) {
     const elapsed = performance.now() - startedAt;
     later(() => {
       if (token !== runToken || !root) return;
@@ -139,7 +169,7 @@ function createEffect(ctx) {
         active = false;
         ctx.finished();
       }, T.fadeOut);
-    }, Math.max(0, T.end - elapsed));
+    }, Math.max(0, endMs - elapsed));
   }
 
   // ---- remake ------------------------------------------------------
@@ -247,13 +277,106 @@ function createEffect(ctx) {
       .catch((err) => fallback(err.message));
   }
 
-  function play() {
+  // ---- custom ------------------------------------------------------
+  let clipListPromise = null;
+  let lastFile = null;
+  let nextPick = null; // { clip, blob: Promise<Blob> } - fetched ahead of time
+
+  function loadClipList(refresh) {
+    if (refresh || !clipListPromise) {
+      clipListPromise = loadAssetText(CUSTOM_LIST, { fresh: !!refresh }).then(parseClipList);
+      clipListPromise.catch(() => { clipListPromise = null; });
+    }
+    return clipListPromise;
+  }
+
+  function chooseClip(list) {
+    const pool = list.length > 1 ? list.filter((c) => c.file !== lastFile) : list;
+    return pool[Math.floor(Math.random() * pool.length)] || null;
+  }
+
+  function prepareNext() {
+    return loadClipList(false).then((list) => {
+      if (nextPick) return nextPick;
+      const clip = chooseClip(list);
+      if (!clip) return null;
+      nextPick = { clip, blob: loadAssetBlob(CUSTOM_DIR + clip.file) };
+      nextPick.blob.catch(() => { nextPick = null; });
+      return nextPick;
+    });
+  }
+
+  function playCustom(token, forcedFile) {
+    let settled = false;
+    const fallback = (why) => {
+      if (settled || token !== runToken) return;
+      settled = true;
+      ctx.warn(`custom clip unavailable (${why}) - using the remake instead.`);
+      playRemake(token);
+    };
+    later(() => fallback("timed out"), T.customWaitMax);
+
+    const picked = forcedFile
+      ? loadClipList(false).then((list) => {
+          const clip = list.find((c) => c.file === forcedFile) || { file: forcedFile, title: forcedFile, durationMs: CUSTOM_MAX_MS };
+          return { clip, blob: loadAssetBlob(CUSTOM_DIR + clip.file) };
+        })
+      : prepareNext();
+
+    picked
+      .then((pick) => {
+        if (!pick) throw new Error("clips.json lists no clips");
+        if (!forcedFile) nextPick = null; // used up - the next play picks again
+        return pick.blob.then((blob) => ({ clip: pick.clip, blob }));
+      })
+      .then(({ clip, blob }) => {
+        if (settled || token !== runToken) return;
+        objectUrl = URL.createObjectURL(blob);
+        const video = document.createElement("video");
+        baseStyle(video);
+        video.style.objectFit = "cover";
+        video.style.background = "#000";
+        video.playsInline = true;
+        video.preload = "auto";
+        video.volume = Math.max(0, Math.min(1, Number(ctx.setting("volume") ?? 0.6)));
+        video.src = objectUrl;
+        const onReady = () => {
+          if (settled || token !== runToken) return;
+          settled = true;
+          timers.forEach(clearTimeout); // drop the fallback timer
+          timers = [];
+          root = video;
+          document.body.appendChild(video);
+          video.play().catch(() => {
+            // Sound needs a prior click on the page; mid-match there always
+            // is one, but play muted rather than not at all.
+            ctx.warn("sound was blocked - playing the clip muted.");
+            video.muted = true;
+            return video.play();
+          }).catch(() => {});
+          ctx.log(`custom clip: ${clip.title} (${clip.file})`);
+          lastFile = clip.file;
+          scheduleEnd(token, performance.now(), clip.durationMs);
+          prepareNext().catch(() => {}); // warm up the next one
+        };
+        video.addEventListener("canplay", onReady, { once: true });
+        video.addEventListener("error", () => fallback("the clip couldn't be decoded"), { once: true });
+        video.load();
+      })
+      .catch((err) => fallback(err && err.message ? err.message : String(err)));
+  }
+
+  // `variant` (debug panel only): "remake" | "classic" | "custom" |
+  // "custom:<file>" - overrides the Style setting for this one play.
+  function play({ variant } = {}) {
     if (active) return false;
     if (!document.body) return false;
     active = true;
     const token = ++runToken;
     cleanupDom();
-    if (ctx.setting("style") === "classic") playClassic(token);
+    const [style, file] = variant ? [variant.split(":")[0], variant.split(":").slice(1).join(":")] : [ctx.setting("style"), ""];
+    if (style === "classic") playClassic(token);
+    else if (style === "custom") playCustom(token, file || null);
     else playRemake(token);
     return true;
   }
@@ -289,9 +412,27 @@ function createEffect(ctx) {
     forceStop,
     isActive: () => active,
     destroy: forceStop,
-    // Lets the detector warm the GIF cache at match start.
+    // Match start: fetch whatever the chosen style needs ahead of time.
     preload() {
-      if (ctx.setting("style") === "classic") loadAssetBlob(CLASSIC_GIF).catch(() => {});
+      const style = ctx.setting("style");
+      if (style === "classic") loadAssetBlob(CLASSIC_GIF).catch(() => {});
+      else if (style === "custom") prepareNext().catch((err) => ctx.warn("couldn't load clips.json:", err.message));
+    },
+    // Debug panel picker: every style, plus each custom clip on its own.
+    async debugVariants({ refresh = false } = {}) {
+      if (refresh) nextPick = null;
+      const base = [
+        { label: "Remake", value: "remake" },
+        { label: "Classic (GIF)", value: "classic" },
+        { label: "Custom: random clip", value: "custom" }
+      ];
+      let clips = [];
+      try {
+        clips = await loadClipList(refresh);
+      } catch (err) {
+        ctx.warn("couldn't load clips.json:", err.message);
+      }
+      return base.concat(clips.map((c) => ({ label: `Custom: ${c.title}`, value: `custom:${c.file}` })));
     }
   };
 }
@@ -352,13 +493,13 @@ function createDetector(api) {
 export default {
   id: "barrier",
   name: "The Barrier",
-  description: "The barrier cracks and breaks open when The Barrier is played.",
+  description: "The barrier cracks and breaks open when The Barrier is played - or one of your own clips plays instead.",
   kind: "oneShot",
   settings: {
     style: {
       name: "Style",
       type: "select",
-      data: [["Remake (animated)", "remake"], ["Classic (original GIF)", "classic"]],
+      data: [["Remake (animated)", "remake"], ["Classic (original GIF)", "classic"], ["Custom (random clip)", "custom"]],
       default: "remake"
     },
     opacity: {
@@ -367,6 +508,14 @@ export default {
       type: "slider",
       default: 1,
       min: 0.3,
+      max: 1,
+      step: 0.05
+    },
+    volume: {
+      name: "Custom clip volume",
+      type: "slider",
+      default: 0.6,
+      min: 0,
       max: 1,
       step: 0.05
     },

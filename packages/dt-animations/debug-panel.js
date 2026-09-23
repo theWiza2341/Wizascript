@@ -45,6 +45,46 @@ export function createDebugPanel({ animations, debugApi, openSettings }) {
       select.appendChild(opt);
     });
 
+    // Optional second picker: the selected animation's variants (styles,
+    // individual clips...). Hidden when the animation offers none.
+    const variantRow = document.createElement("div");
+    Object.assign(variantRow.style, { display: "flex", gap: "4px" });
+    const variantSelect = document.createElement("select");
+    variantSelect.style.maxWidth = "220px";
+    variantSelect.title = "What Play should show (defaults to the current settings)";
+    const reloadBtn = document.createElement("button");
+    reloadBtn.type = "button";
+    reloadBtn.textContent = "\u21bb";
+    reloadBtn.title = "Reload the list (e.g. after pushing new clips)";
+    Object.assign(reloadBtn.style, { font: "12px sans-serif", padding: "1px 6px", cursor: "pointer" });
+    variantRow.append(variantSelect, reloadBtn);
+    variantRow.hidden = true;
+
+    let loadSeq = 0;
+    async function loadVariants(refresh) {
+      const seq = ++loadSeq;
+      const id = select.value;
+      const list = await debugApi.variants(id, { refresh });
+      if (seq !== loadSeq) return; // a newer load won
+      const keep = variantSelect.value;
+      variantSelect.innerHTML = "";
+      const def = document.createElement("option");
+      def.value = "";
+      def.textContent = "(use settings)";
+      variantSelect.appendChild(def);
+      list.forEach(({ label, value }) => {
+        const opt = document.createElement("option");
+        opt.value = value;
+        opt.textContent = label;
+        variantSelect.appendChild(opt);
+      });
+      if ([...variantSelect.options].some((o) => o.value === keep)) variantSelect.value = keep;
+      variantRow.hidden = list.length === 0;
+    }
+    select.addEventListener("change", () => loadVariants(false));
+    reloadBtn.addEventListener("click", () => loadVariants(true));
+    loadVariants(false);
+
     const row = document.createElement("div");
     row.style.display = "flex";
     row.style.gap = "4px";
@@ -56,7 +96,7 @@ export function createDebugPanel({ animations, debugApi, openSettings }) {
       b.addEventListener("click", fn);
       row.appendChild(b);
     };
-    button("Play", () => debugApi.play(select.value));
+    button("Play", () => debugApi.play(select.value, variantSelect.value));
     button("React", () => debugApi.react(select.value));
     button("End", () => debugApi.reset(select.value));
     button("Stop all", () => debugApi.forceStop());
@@ -65,7 +105,7 @@ export function createDebugPanel({ animations, debugApi, openSettings }) {
     const status = document.createElement("div");
     status.style.color = "#aaa";
 
-    panel.append(title, select, row, status);
+    panel.append(title, select, variantRow, row, status);
     document.body.appendChild(panel);
 
     const refresh = () => {

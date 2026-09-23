@@ -53,8 +53,11 @@ export default {
 | `isActive()` | True from `play()` until the exit has completely finished. |
 | `react(kind)` | Optional mid-animation reaction, e.g. `"hurt"`. |
 | `preload()` | Optional. Called at match start while the animation is enabled, e.g. to fetch a GIF ahead of time. |
+| `debugVariants({ refresh })` | Optional. Resolves to `[{ label, value }]` for the debug panel's second picker. The Barrier lists its styles plus every custom clip. |
 
-`play({ resumed })`: `resumed` is true when a persistent animation comes back after a one-shot interrupted it. Titan uses it to skip its slow 3 s darkening.
+`play({ resumed, variant })`:
+- `resumed` is true when a persistent animation comes back after a one-shot interrupted it. Titan uses it to skip its slow 3 s darkening.
+- `variant` is only set by the debug panel. It's the value picked from `debugVariants()`, and it should override the settings for that one play.
 
 `ctx.setting(key)` returns the current value of one of the module's own settings. Read it inside `play()` so changes apply on the next play. `ctx.log`, `ctx.warn` and `ctx.pageWindow` are also available.
 
@@ -89,6 +92,7 @@ The detector receives every `GameEvent` while its animation is enabled. It decid
 - **Settings.** The page has a **General** category (overlap, opponent, debug), then one category per DT. Each DT category starts with "Enable <name> animation". The DT's own options sit under that toggle and are hidden while it's off, so a disabled DT takes up one row. Flipping the toggle re-renders the page, so no reload is needed.
 - **Debug.** With "Debug mode" on (it can be switched mid-match):
   - A small panel appears in the bottom-left of matches, with Play, React, End and Stop all buttons plus a gear that opens this settings page.
+  - When the selected animation offers variants, a second picker appears, with **↻** to reload it. It lets you play a specific style or clip without changing settings.
   - Console logging is turned on.
   - `__wizaDtAnimations` in the console exposes `play(id)`, `react(id)`, `reset(id)`, `forceStop()` and `current()`.
   - Nothing is registered in Wizascript's Keybinds category.
@@ -96,6 +100,8 @@ The detector receives every `GameEvent` while its animation is enabled. It decid
 ## Assets (GIFs, images, sounds)
 
 Binary files go in the repo under `assets/dt-animations/`. They're **not** bundled into the userscript; they're fetched at runtime with `loadAssetBlob(path)` from `core/assets.js`. Stable builds read from `main` and dev builds read from `dev`, so an asset has to be committed on that branch before it will load there. Keep them small: The Barrier's GIF was re-encoded from 1.7 MB down to 116 KB with no visible difference. If an asset can't load, the animation should fall back to something drawn in code, like Barrier falling back from "classic" to "remake".
+
+The Barrier's Custom style reads `assets/dt-animations/barrier-custom/clips.json`. See the README in that folder.
 
 ## Rules for detectors (compliance)
 

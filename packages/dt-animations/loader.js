@@ -146,7 +146,7 @@ export function createLoader({ animations, settings, logger }) {
     });
   }
 
-  // Manual controls for the debug keybinds/console - bypass ownership
+  // Manual controls for the debug panel/console - bypass ownership
   // and the per-animation toggle, but still go through arbitration.
   const debugApi = {
     play(id) {

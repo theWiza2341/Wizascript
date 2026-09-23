@@ -1,106 +1,102 @@
 // packages/dt-animations/settings.js
 //
-// "DT Animations" category: master enable, overlap policy, the
-// experimental opponent toggle, debug, and one enable toggle per
-// registered animation (generated from the registry - adding a module
-// adds its toggle automatically).
+// DT Animations is its own UnderScript plugin, so everything here lives
+// on its own page under Plugins -> "DT Animations", not in Wizascript's.
+// Layout, top to bottom:
 //
-// Each animation's OWN settings (module.settings) go in a separate
-// "DT Animations - <name>" category, and - same trick as UC TV's
-// "Filter Settings" - that category is only registered while both the
-// master switch and that animation are enabled. Disabled DTs don't
-// clutter the panel, and since this only skips *registering* them, the
-// stored values survive: re-enabling + reloading brings them back.
+//   (UnderScript's own "Enabled" toggle - added automatically for every
+//    versioned plugin; it's the master switch, read via plugin.enabled)
+//   General      overlap policy, experimental opponent toggle, debug
+//   <DT name>    one category per animation (alphabetical by file name):
+//                  "Enable <name> animation"
+//                  ...that animation's own options, HIDDEN while it's off
+//
+// So a disabled DT costs exactly one row. UnderScript evaluates `hidden`
+// each time the page renders, and flipping a DT's toggle re-renders the
+// open page, so its options appear/disappear immediately - no reload.
 
-import { createFeatureSettings } from "../core/settings.js";
-
-export const CATEGORY = "DT Animations";
+export const GENERAL = "General";
 
 export const OVERLAP_POLICIES = [
   ["Newest DT replaces the current animation", "replace"],
   ["Keep the current animation, ignore the new DT", "ignore"]
 ];
 
-export function registerDtAnimationSettings(plugin, animations) {
-  const settings = createFeatureSettings(plugin, "dtAnimations", CATEGORY);
+export function registerDtAnimationSettings(plugin, animations, { onDebugChange } = {}) {
+  const api = plugin.settings();
 
-  const enabled = settings.add("enabled", {
-    name: "Enable DT Animations",
-    type: "boolean",
-    default: true
-  });
+  // Re-render the settings page if it's open, so `hidden` is re-evaluated.
+  // Deferred: we're inside UnderScript's own change handler here.
+  const rerender = () => setTimeout(() => {
+    try {
+      if (api.isOpen()) api.open();
+    } catch (err) { /* purely cosmetic - next open shows the right state */ }
+  }, 0);
 
-  const overlapPolicy = settings.add("overlapPolicy", {
+  const overlapPolicy = api.add({
+    key: "general.overlapPolicy",
     name: "When a second DT triggers mid-animation",
     type: "select",
     data: OVERLAP_POLICIES,
-    default: "replace"
+    default: "replace",
+    category: GENERAL
   });
 
-  const allowOpponent = settings.add("allowOpponent", {
+  const allowOpponent = api.add({
+    key: "general.allowOpponent",
     name: "[Experimental] Also play for the opponent's DTs",
-    note: "Off: only DTs you play trigger animations.",
+    note: "Off: only DTs you play (or the player you're spectating) trigger animations.",
     type: "boolean",
-    default: false
+    default: false,
+    category: GENERAL
   });
 
-  const debug = settings.add("debug", {
-    name: "Enable debug logging + test keybinds",
-    note: "Reload the page after changing this.",
+  const debug = api.add({
+    key: "general.debug",
+    name: "Debug mode (console logging + test panel in matches)",
     type: "boolean",
-    default: false
+    default: false,
+    category: GENERAL,
+    onChange: () => onDebugChange && setTimeout(onDebugChange, 0)
   });
 
   const perAnimation = {};
-  animations.forEach((anim) => {
-    perAnimation[anim.id] = settings.add(`${anim.id}.enabled`, {
-      name: `${anim.name} Animation`,
-      note: anim.description,
-      type: "boolean",
-      default: anim.defaultEnabled !== false
-    });
-  });
-
-  // Only registered while debug is on (read once at load, hence the
-  // "reload" note above) - picks which animation the test keybinds drive.
-  const debugTarget = debug.value() && animations.length
-    ? settings.add("debugTarget", {
-        name: "Test keybinds target",
-        type: "select",
-        data: animations.map((a) => [a.name, a.id]),
-        default: animations[0].id
-      })
-    : null;
-
-  // Per-animation option categories.
   const animationValues = {};
   animations.forEach((anim) => {
-    const defs = anim.settings || {};
+    const category = anim.name;
+    const toggle = api.add({
+      key: `${anim.id}.enabled`,
+      name: `Enable ${anim.name} animation`,
+      note: anim.description,
+      type: "boolean",
+      default: anim.defaultEnabled !== false,
+      category,
+      onChange: rerender
+    });
+    perAnimation[anim.id] = toggle;
+
     const registered = {};
-    const visible = enabled.value() && perAnimation[anim.id].value();
-    if (visible) {
-      Object.entries(defs).forEach(([key, def]) => {
-        registered[key] = settings.add(`${anim.id}.${key}`, {
-          ...def,
-          category: `${CATEGORY} - ${anim.name}`
-        });
+    Object.entries(anim.settings || {}).forEach(([key, def]) => {
+      registered[key] = api.add({
+        ...def,
+        key: `${anim.id}.${key}`,
+        category,
+        hidden: () => !toggle.value()
       });
-    }
-    // Falls back to the module's declared default when the category
-    // wasn't registered this load (animation disabled) - only reachable
-    // via the debug keybinds/console, which deliberately ignore the
-    // per-animation toggle.
+    });
     animationValues[anim.id] = (key) =>
-      registered[key] ? registered[key].value() : defs[key] && defs[key].default;
+      registered[key] ? registered[key].value() : undefined;
   });
 
   return {
-    isMasterEnabled: () => enabled.value(),
-    isAnimationEnabled: (id) => enabled.value() && !!perAnimation[id] && perAnimation[id].value(),
+    // UnderScript's native per-plugin toggle. `enabled` only exists on
+    // versioned plugins; treat "missing" as on.
+    isMasterEnabled: () => plugin.enabled !== false,
+    isAnimationEnabled: (id) => plugin.enabled !== false && !!perAnimation[id] && perAnimation[id].value(),
     overlapPolicy: () => overlapPolicy.value(),
     allowOpponent: () => allowOpponent.value(),
     isDebug: () => debug.value(),
-    debugTarget: () => (debugTarget ? debugTarget.value() : animations[0] && animations[0].id),
-    animationValue: (id, key) => animationValues[id](key)
+    animationValue: (id, key) => animationValues[id](key),
+    open: () => api.open()
   };
 }

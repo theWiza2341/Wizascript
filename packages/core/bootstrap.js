@@ -1,5 +1,6 @@
 // Waits for underscript to exist on the REAL page window, then registers
-// the single suite-wide Plugin() instance. Past that point, no defensive
+// the suite-wide Plugin() instance (plus any independent plugins shipped
+// in this same script - see bootstrapPlugin below). Past that point, no defensive
 // ?. on plugin.* calls - the plugin's own methods are guaranteed once it
 // exists.
 //
@@ -23,41 +24,77 @@ const DOWNLOAD_URL = __WIZASCRIPT_DOWNLOAD_URL__;
 const RETRY_MS = 250;
 const WARN_AFTER_ATTEMPTS = 40; // ~10s - if UnderScript still isn't found by then, something's wrong
 
-let suitePlugin = null;
-let attempts = 0;
-const readyCallbacks = [];
+// Generic "wait for UnderScript, then register a plugin" - used for the
+// Wizascript suite itself AND for independent plugins that ship in this
+// same script (DT Animations). Each registration gets its own polling
+// loop and its own callback list, so one plugin's init throwing can't
+// stop another from registering.
+function createPluginBootstrap({ name, version, updaterUrl }) {
+  let plugin = null;
+  let attempts = 0;
+  let polling = false;
+  const readyCallbacks = [];
 
-function tryBootstrap() {
-  if (suitePlugin) return;
-  attempts++;
-
-  const pageWindow = getPageWindow();
-
-  if (typeof pageWindow.underscript === "undefined" || typeof pageWindow.underscript.plugin !== "function") {
-    if (attempts === WARN_AFTER_ATTEMPTS) {
-      console.warn(
-        "[Wizascript] Still waiting for UnderScript after ~10s. " +
-        "Is UnderScript installed and enabled for this page?"
-      );
+  function tryRegister() {
+    if (plugin) return;
+    attempts++;
+    const pageWindow = getPageWindow();
+    if (typeof pageWindow.underscript === "undefined" || typeof pageWindow.underscript.plugin !== "function") {
+      if (attempts === WARN_AFTER_ATTEMPTS) {
+        console.warn(
+          `[${name}] Still waiting for UnderScript after ~10s. ` +
+          "Is UnderScript installed and enabled for this page?"
+        );
+      }
+      setTimeout(tryRegister, RETRY_MS);
+      return;
     }
-    setTimeout(tryBootstrap, RETRY_MS);
-    return;
+
+    plugin = pageWindow.underscript.plugin(name, version);
+    if (updaterUrl) plugin.updater(updaterUrl); // single-arg form, per UnderScript author
+    console.log(`[${name}] Registered with UnderScript (v${version}).`);
+
+    readyCallbacks.splice(0).forEach((cb) => {
+      try {
+        cb(plugin);
+      } catch (err) {
+        console.error(`[${name}] init failed:`, err);
+      }
+    });
   }
 
-  suitePlugin = pageWindow.underscript.plugin(SUITE_NAME, SUITE_VERSION);
-  suitePlugin.updater(DOWNLOAD_URL); // single-arg form, per UnderScript author
-
-  console.log(`[Wizascript] Registered with UnderScript (v${SUITE_VERSION}).`);
-
-  readyCallbacks.forEach(cb => cb(suitePlugin));
-  readyCallbacks.length = 0;
+  return function onReady(cb) {
+    if (plugin) {
+      cb(plugin);
+      return;
+    }
+    readyCallbacks.push(cb);
+    if (!polling) {
+      polling = true;
+      tryRegister();
+    }
+  };
 }
 
+const suiteBootstrap = createPluginBootstrap({
+  name: SUITE_NAME,
+  version: SUITE_VERSION,
+  updaterUrl: DOWNLOAD_URL
+});
+
+// The Wizascript suite plugin.
 export function bootstrap(onReady) {
-  if (suitePlugin) {
-    onReady(suitePlugin);
-    return;
+  suiteBootstrap(onReady);
+}
+
+// An independent plugin shipped inside this same script (own settings
+// page, own UnderScript "Enabled" toggle). Deliberately NO updater by
+// default: the suite plugin already updates the whole file, and a second
+// updater would mean two update prompts for one download.
+const extraBootstraps = new Map();
+export function bootstrapPlugin(name, onReady, { version = SUITE_VERSION } = {}) {
+  if (!extraBootstraps.has(name)) {
+    extraBootstraps.set(name, createPluginBootstrap({ name, version }));
   }
-  readyCallbacks.push(onReady);
-  tryBootstrap();
+  extraBootstraps.get(name)(onReady);
 }

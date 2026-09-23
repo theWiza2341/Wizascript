@@ -45,7 +45,7 @@ Full gamepad navigation, for players who'd rather not reach for a mouse/keyboard
 Custom, user-defined tags for cards in Crafting and Deck-building. That means no preset list, just names you create yourself. Right-click any card to create a tag (with its own color) or toggle it on/off, filter by typing a tag name into the existing search bar, and spot tagged cards at a glance via a small on-card indicator dot. A "Manage Tags…" dialog handles renaming, recoloring, and deleting tags in one place. Lives under Miscellaneous settings behind an "Enable Card Tags" toggle (off by default).
 
 ### DT Animations *(dev branch, in progress)*
-Cosmetic, staff-approved animations for DT cards, added a few at a time. The first is **Titan**: while Constricting Darkness is active, the screen darkens and eyes gather around the board. They follow your cursor, flash red when the counter drops, and shatter when it ends. By default an animation only plays for DTs you play. An experimental setting extends that to your opponent's DTs, and a second setting picks whether a newer DT replaces the current animation or is ignored. Every animation has its own on/off toggle, plus its own options category that only appears while it's enabled. See `packages/dt-animations/README.md` for how to add one.
+Cosmetic, staff-approved animations for DT cards, added a few at a time. The first is **Titan**: while Constricting Darkness is active, the screen darkens and eyes gather around the board. They follow your cursor, flash red when the counter drops, and shatter when it ends. DT Animations is registered as its own UnderScript plugin with its own settings page, so it works even with every other Wizascript feature turned off. By default an animation only plays for DTs you play. An experimental setting extends that to your opponent's DTs, and a second setting picks whether a newer DT replaces the current animation or is ignored. Each DT gets one toggle, and its options only show while it's enabled. See `packages/dt-animations/README.md` for how to add one.
 
 ### bot/
 A small Node.js bot that scrapes deck codes and metadata from a Discord server and writes them to `bot/decks.json`, which True Hub Bridge reads. Runs both as a one-off full sync (`bot.js`) and an incremental sync (`new-only-sync.js`), automated via GitHub Actions.
@@ -54,13 +54,13 @@ A small Node.js bot that scrapes deck codes and metadata from a Discord server a
 
 ```
 packages/
-  core/            shared bootstrap, settings wrapper, page-window access, page matching, keybind registry
+  core/            shared bootstrap (suite plugin + independent plugins), settings wrapper, page-window access, page matching, keybind registry
   patch-maker/
   uc-tv/           spectator-mode channel switching + guide overlay
   true-hub-bridge/
   deck-tracker/
   controller/      full gamepad navigation + remappable controller keybinds (see Controller Support above)
-  dt-animations/   DT card animation host (registry, loader, settings)
+  dt-animations/   DT card animation host - registered as its own "DT Animations" UnderScript plugin
     animations/    one file per DT, auto-discovered by build.js
   misc/            small standalone features
     notepad/       freeform drawing canvas (see Notepad above)

@@ -14,9 +14,12 @@
 import { getPageWindow } from "./page-window.js";
 
 const SUITE_NAME = "Wizascript";
-const SUITE_VERSION = "1.4.1";
-const DOWNLOAD_URL =
-  "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
+// Injected by build.js (esbuild `define`) so the stable and dev channels
+// each report their own version and self-update from their own branch.
+// A dev build must never point its updater at main, or the next stable
+// release would silently replace it.
+const SUITE_VERSION = __WIZASCRIPT_VERSION__;
+const DOWNLOAD_URL = __WIZASCRIPT_DOWNLOAD_URL__;
 const RETRY_MS = 250;
 const WARN_AFTER_ATTEMPTS = 40; // ~10s - if UnderScript still isn't found by then, something's wrong
 

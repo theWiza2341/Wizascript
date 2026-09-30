@@ -2,6 +2,10 @@
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
 
+## 1.5.1
+
+Added Logo to main settings page (and removed a few leftover dev notes).
+
 ## 1.5.0
 
 Wizascript is now listed in UnderScript's plugin directory, so this update is all about making it easy to understand without a readme.

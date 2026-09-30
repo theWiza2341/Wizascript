@@ -10,12 +10,42 @@
 // with no network request.
 
 import changelogMarkdown from "../../CHANGELOG.md";
+// Shown on the right of the Wizascript section. Replace assets/logo.png
+// with any square PNG (192x192 recommended - shown at LOGO_SIZE_PX, so
+// 2x keeps it sharp on high-DPI screens and when zoomed).
+import logoUrl from "../../assets/logo.png";
 import { SUITE_VERSION } from "./version.js";
 import { getPageWindow } from "./page-window.js";
 import { registerSettingWidget, asButton, asInfo } from "./setting-widgets.js";
 
 const LAST_SEEN_KEY = "wizascript.lastSeenVersion";
 const CATEGORY = "Wizascript";
+const LOGO_SIZE_PX = 96;
+
+// Puts the logo on the right-hand side of the Wizascript section,
+// vertically centred. pointer-events:none so it can never block a click.
+function addLogo(anyRowInput) {
+  const set = anyRowInput.closest("fieldset");
+  if (!set || set.querySelector(".wizascript-logo")) return;
+  set.style.position = "relative";
+  set.style.minHeight = `${LOGO_SIZE_PX + 24}px`;
+  const img = document.createElement("img");
+  img.className = "wizascript-logo";
+  img.src = logoUrl;
+  img.alt = "Wizascript";
+  img.draggable = false;
+  Object.assign(img.style, {
+    position: "absolute",
+    right: "24px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    width: `${LOGO_SIZE_PX}px`,
+    height: `${LOGO_SIZE_PX}px`,
+    objectFit: "contain",
+    pointerEvents: "none"
+  });
+  set.appendChild(img);
+}
 
 function escapeHtml(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -54,7 +84,8 @@ export function registerAboutSection(plugin) {
     default: SUITE_VERSION,
     category: CATEGORY
   });
-  registerSettingWidget("about.version", asInfo(SUITE_VERSION));
+  const asVersionInfo = asInfo(SUITE_VERSION);
+  registerSettingWidget("about.version", (el) => { asVersionInfo(el); addLogo(el); });
 
   settingsApi.add({
     key: "about.changelog",

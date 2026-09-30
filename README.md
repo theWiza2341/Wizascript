@@ -74,6 +74,7 @@ packages/
     notepad/       freeform drawing canvas (see Notepad above)
     card-tags/     custom card flair tags (see Card Tags above)
 bot/               deck-scraping bot + decks.json
+assets/logo.png    logo shown in the General tab's Wizascript section (square PNG, 192x192 recommended; embedded into the script at build time)
 manifest.js        wires each package's init function together (also flushes the keybind registry once every package has registered its own settings)
 CHANGELOG.md        release notes, bundled into the script for the in-game Changelog button
 build.js            esbuild bundler + userscript header (version comes from package.json)

@@ -33,8 +33,10 @@ async function build() {
     target: "es2019",
     write: false,
     logLevel: "info",
-    // CHANGELOG.md is imported as a plain string (packages/core/about.js).
-    loader: { ".md": "text" },
+    // CHANGELOG.md is imported as a plain string, and assets/logo.png as
+    // an embedded data: URL (both used by packages/core/about.js), so the
+    // installed script needs no network request for either.
+    loader: { ".md": "text", ".png": "dataurl" },
     define: {
       __WIZASCRIPT_VERSION__: JSON.stringify(pkg.version)
     }

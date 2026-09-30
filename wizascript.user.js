@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.5.1
+// @version      1.5.0
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -24,7 +24,7 @@
   }
 
   // packages/core/version.js
-  var SUITE_VERSION = "1.5.1";
+  var SUITE_VERSION = "1.5.0";
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";

@@ -2,6 +2,7 @@ import { bootstrap } from "./packages/core/bootstrap.js";
 import { flushKeybindRegistrations, initKeybinds } from "./packages/core/keybinds.js";
 import { registerPluginToggles, runMigrations } from "./packages/core/plugins.js";
 import { registerAboutSection, showWhatsNew } from "./packages/core/about.js";
+import { registerBackupSection } from "./packages/core/backup.js";
 import { initTabBar } from "./packages/core/tab-bar.js";
 import { registerStressTabs } from "./packages/core/stress-test.js";
 
@@ -40,6 +41,7 @@ bootstrap(plugin => {
 
   registerPluginToggles(plugin);
   registerAboutSection(plugin);
+  registerBackupSection(plugin);
   initTabBar(plugin);
 
   initPatchMaker(plugin);

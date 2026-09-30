@@ -15,6 +15,12 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
 - Tab names are never cut off. When there are more tabs than fit, they're split into pages, and **◀ ▶ arrows** at the right end of the tab row flip between them.
 - New **Changelog** button (you're reading it), and a one-time popup after each update.
 
+### New
+- **Back up & restore settings**: save all your Wizascript settings and data (toggles, keybinds, controller bindings, Card Tracker presets, Card Tags, Notepad) as one code or file from the General tab, and restore it on another browser or after reinstalling.
+- **Share Card Tags**: in Manage Tags, share some or all of your tags (with the cards they're on) as a code, or import a friend's. Imported tags merge into yours by name and never remove anything.
+- **Keybind warnings**: the Keybinds tab now warns when a shortcut clashes with another shortcut, with your Primary key, or with UnderScript's Space-to-end-turn hotkey.
+- **Controller: L1/R1 switch tabs in Settings**: sidebar categories, or the open plugin's own tabs.
+
 ### Changes
 - **Deck Tracker is now called Card Tracker**, to better describe what it does. Your trackers, presets and settings carry over.
 - New installs start with every plugin switched off. If you were already using Wizascript, the plugins you had on stay on.
@@ -23,7 +29,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
 - UC TV no longer prints its settings to the browser console on every page load unless debug logging is on.
 
 ### Fixes
-- Controller Support: the d-pad works in the settings' **Plugins** section again (UnderScript 0.64 changed how plugin settings are laid out). A plugin's tabs are now one row you move along with left/right, including the ◀ ▶ arrows.
+- Controller Support: the d-pad works in the settings' **Plugins** section again (UnderScript 0.64 changed how plugin settings are laid out). A plugin's tabs are now one row you move along with left/right, including the ◀ ▶ arrows. Moving up from a setting returns to the tab you're on.
 
 ## 1.4.1 and earlier
 

@@ -787,6 +787,61 @@ export function initController(plugin, controllerEnabledSetting) {
     fieldGrid = null; fieldRow = 0; fieldCol = 0;
     if (fieldSubmenu) { fieldSubmenu.onCancel && fieldSubmenu.onCancel(); fieldSubmenu = null; }
   }
+  /* ---------- L1/R1 settings tab switching (1.5.0) ----------
+     Physical shoulder buttons, not remappable, like every console
+     settings screen. Acts on whichever pane has focus: in the sidebar
+     they switch category; in a plugin's settings they switch that
+     plugin's OWN tab row when it has one (e.g. Wizascript's General |
+     Patch Maker | ... - including tabs paged off-screen, which
+     Wizascript's tab bar then pages to), else the category. Wraps
+     around at either end. */
+  const SETTINGS_TAB_PREV_BUTTON = 4; // L1
+  const SETTINGS_TAB_NEXT_BUTTON = 5; // R1
+  let shoulderHeld = { 4: false, 5: false };
+  function pluginTabRow(content) {
+    const view = content && content.querySelector('.tabbedView:not(.single)');
+    if (!view) return null;
+    const labels = Array.from(view.querySelectorAll(':scope > .tabLabel'))
+      .filter((l) => !l.classList.contains('wizascript-tab-arrow'));
+    return labels.length > 1 ? labels : null;
+  }
+  // Returns the label switched to (or null).
+  function cycleSettingsTab(dir, tabbedRoot) {
+    const row = modalPane === 'fields' ? pluginTabRow(queryActiveTabContent(tabbedRoot)) : null;
+    if (row) {
+      const cur = Math.max(0, row.findIndex(isTabLabelChecked));
+      const target = row[(cur + dir + row.length) % row.length];
+      triggerElementClick(target);
+      if (isDebugTextEnabled()) console.log('[Wizascript Controller] settings: tab', dir > 0 ? 'next' : 'previous', '->', target.textContent);
+      return target;
+    }
+    // An open fold ("Plugins") is represented by its sub-tabs; a closed
+    // one is a stop of its own (selecting it opens it and shows its first
+    // plugin).
+    const cats = categoryItems.filter((l) => !isFoldLabel(l) || !isTabLabelChecked(l));
+    if (!cats.length) return null;
+    const curLabel = categoryItems.find((l) => isTabLabelChecked(l) && !isFoldLabel(l));
+    const cur = Math.max(0, cats.indexOf(curLabel));
+    const target = cats[(cur + dir + cats.length) % cats.length];
+    triggerElementClick(target);
+    if (isFoldLabel(target)) {
+      const modalInfo = queryModalRoot();
+      if (modalInfo && modalInfo.tabbedRoot) categoryItems = queryCategoryItems(modalInfo.tabbedRoot);
+      const shown = categoryItems.find((l) => isTabLabelChecked(l) && !isFoldLabel(l));
+      categoryIndex = shown ? categoryItems.indexOf(shown) : categoryItems.indexOf(target);
+    } else {
+      categoryIndex = categoryItems.indexOf(target);
+    }
+    if (isDebugTextEnabled()) console.log('[Wizascript Controller] settings: category', dir > 0 ? 'next' : 'previous', '->', target.textContent);
+    return null;
+  }
+  // A field-grid row that is a tab bar (all .tabLabel) - moving onto it
+  // with up/down lands on the SELECTED tab rather than column 0.
+  function selectedColInTabRow(row) {
+    if (!row || !row.length || !row.every((el) => el.classList && el.classList.contains('tabLabel'))) return -1;
+    return row.findIndex(isTabLabelChecked);
+  }
+
   function findModalDismissButton(root) {
     const byAttr = root.querySelector('[data-dismiss="modal"], .close');
     if (byAttr) return byAttr;
@@ -1961,6 +2016,13 @@ export function initController(plugin, controllerEnabledSetting) {
          handling elsewhere already does, fixes this generally rather than
          special-casing 'openSettings' alone - the same class of
          interference could happen with any of the other 8 shortcuts too. */
+      // 1.5.0: while the Settings dialog is open (and the OSK isn't), the
+      // physical L1/R1 shoulder buttons switch settings tabs instead - see
+      // cycleSettingsTab(). R1's Underscript-menu toggle does nothing there
+      // anyway (Underscript refuses to open its menu over a dialog), and
+      // Primary's hold-combos have no settings-screen use, so both stand
+      // down for the duration.
+      const settingsTabsActive = !oskOpen && isWizascriptSettingsOpen();
       if (!isControllerCaptureActive()) {
         // R1 toggles the OSK's "paused" state whenever the OSK is open
         // (instead of its usual Underscript-menu toggle) - reuses
@@ -1973,7 +2035,7 @@ export function initController(plugin, controllerEnabledSetting) {
             oskEl.style.display = oskPaused ? 'none' : 'block';
             if (!oskPaused && oskTarget) { positionPanelNear(oskEl, oskTarget); updateOskHighlight(); }
             if (isDebugTextEnabled()) console.log('[Wizascript Controller] OSK', oskPaused ? 'paused' : 'resumed');
-          } else {
+          } else if (!settingsTabsActive) {
             document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', code: 'Escape', bubbles: true }));
           }
         }
@@ -2077,7 +2139,9 @@ export function initController(plugin, controllerEnabledSetting) {
          nothing is left stuck "held" for the whole capture session. */
       if ((!oskOpen || oskPaused) && !isControllerCaptureActive()) {
         const primaryBtn = getControllerPrimaryButton();
-        const l1Down = isBoundInputDown(primaryBtn, btn) || (oskOpen && oskPaused);
+        // Primary on a shoulder button is L1/R1 tab switching in Settings.
+        const primaryIsShoulder = primaryBtn === SETTINGS_TAB_PREV_BUTTON || primaryBtn === SETTINGS_TAB_NEXT_BUTTON;
+        const l1Down = (isBoundInputDown(primaryBtn, btn) && !(settingsTabsActive && primaryIsShoulder)) || (oskOpen && oskPaused);
         const viaPause = oskOpen && oskPaused;
         const primaryBase = { key: 'Control', code: 'ControlLeft', keyCode: 17, which: 17, bubbles: true };
         const guideBtnForRelay = getChannelGuideButton();
@@ -2698,6 +2762,24 @@ export function initController(plugin, controllerEnabledSetting) {
             fieldCol = Math.min(fieldCol, fieldGrid[fieldRow].length - 1);
           }
 
+          // L1/R1 - previous/next settings tab (see cycleSettingsTab()).
+          const l1Now = btn(SETTINGS_TAB_PREV_BUTTON), r1Now = btn(SETTINGS_TAB_NEXT_BUTTON);
+          if (!isControllerCaptureActive() && !fieldSubmenu) {
+            const dir = (r1Now && !shoulderHeld[5]) ? 1 : (l1Now && !shoulderHeld[4]) ? -1 : 0;
+            if (dir) {
+              navInputMethod = 'dpad'; // show the highlight, same as a d-pad press
+              const switchedTo = cycleSettingsTab(dir, tabbedRoot);
+              // Put the highlight on the tab just switched to (the grid is
+              // rebuilt next frame; the "keep the same element" logic there
+              // finds it), so the player can see where they are.
+              if (switchedTo && modalPane === 'fields') {
+                fieldGrid = [[switchedTo]];
+                fieldRow = 0; fieldCol = 0;
+              }
+            }
+          }
+          shoulderHeld = { 4: l1Now, 5: r1Now };
+
           if (lx || ly) {
             if (modalPane === 'categories') {
               for (let i = 0; i < categoryItems.length; i++) {
@@ -2751,7 +2833,7 @@ export function initController(plugin, controllerEnabledSetting) {
               else document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', code: 'Escape', bubbles: true }));
             }
             btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
-            hud.textContent = `settings: categories (${categoryItems.length ? categoryIndex + 1 : 0}/${categoryItems.length})\n${btnLabel(0)}/→ open category   ${btnLabel(1)} close dialog`;
+            hud.textContent = `settings: categories (${categoryItems.length ? categoryIndex + 1 : 0}/${categoryItems.length})\n${btnLabel(0)}/→ open category   ${btnLabel(1)} close dialog   ${btnLabel(4)}/${btnLabel(5)} switch tab`;
           } else if (fieldSubmenu) {
             // Trapped inside a custom, non-native floating widget a field
             // row opened (currently just the controller preset picker) -
@@ -2808,9 +2890,14 @@ export function initController(plugin, controllerEnabledSetting) {
                     fieldNeedsReanchor = false;
                   }
                 } else {
+                  const rowBefore = fieldRow;
                   if (up && !dpadHeld.up) fieldRow = Math.max(0, fieldRow - 1);
                   if (down && !dpadHeld.down) fieldRow = Math.min(fieldGrid.length - 1, fieldRow + 1);
                   fieldCol = Math.min(fieldCol, fieldGrid[fieldRow].length - 1);
+                  if (fieldRow !== rowBefore) {
+                    const sel = selectedColInTabRow(fieldGrid[fieldRow]);
+                    if (sel >= 0) fieldCol = sel;
+                  }
                   if (right && !dpadHeld.right) fieldCol = Math.min(fieldGrid[fieldRow].length - 1, fieldCol + 1);
                   if (left && !dpadHeld.left) {
                     if (fieldCol > 0) fieldCol -= 1;
@@ -2843,7 +2930,7 @@ export function initController(plugin, controllerEnabledSetting) {
             }
             btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
             const fieldPos = fieldGrid.length ? `row ${fieldRow + 1}/${fieldGrid.length}, col ${fieldCol + 1}/${fieldGrid[fieldRow].length}` : '(empty)';
-            hud.textContent = `settings: fields ${fieldPos}\n${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   ←/${btnLabel(1)} back to categories`;
+            hud.textContent = `settings: fields ${fieldPos}\n${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   ←/${btnLabel(1)} back to categories   ${btnLabel(4)}/${btnLabel(5)} switch tab`;
           }
           return;
         }

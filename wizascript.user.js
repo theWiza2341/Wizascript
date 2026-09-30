@@ -92,10 +92,10 @@
   var observer = null;
   function scan() {
     enhancers.forEach((enhance, key) => {
-      const el = document.getElementById(ID_PREFIX + key);
-      if (!el || el.hasAttribute(ENHANCED_ATTR)) return;
-      el.setAttribute(ENHANCED_ATTR, "true");
-      enhance(el);
+      const el2 = document.getElementById(ID_PREFIX + key);
+      if (!el2 || el2.hasAttribute(ENHANCED_ATTR)) return;
+      el2.setAttribute(ENHANCED_ATTR, "true");
+      enhance(el2);
     });
   }
   function ensureObserver() {
@@ -109,10 +109,10 @@
     else document.addEventListener("DOMContentLoaded", ensureObserver, { once: true });
   }
   function asButton(label, onClick) {
-    return (el) => {
-      el.readOnly = true;
-      el.value = typeof label === "function" ? label() : label;
-      Object.assign(el.style, {
+    return (el2) => {
+      el2.readOnly = true;
+      el2.value = typeof label === "function" ? label() : label;
+      Object.assign(el2.style, {
         cursor: "pointer",
         backgroundColor: "black",
         color: "white",
@@ -120,24 +120,24 @@
         borderRadius: "3px",
         textAlign: "center"
       });
-      el.addEventListener("click", (e) => {
+      el2.addEventListener("click", (e) => {
         e.preventDefault();
-        onClick(el);
+        onClick(el2);
       });
-      el.addEventListener("keydown", (e) => {
+      el2.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          onClick(el);
+          onClick(el2);
         }
       });
     };
   }
   function asInfo(text) {
-    return (el) => {
-      el.readOnly = true;
-      el.tabIndex = -1;
-      el.value = typeof text === "function" ? text() : text;
-      Object.assign(el.style, {
+    return (el2) => {
+      el2.readOnly = true;
+      el2.tabIndex = -1;
+      el2.value = typeof text === "function" ? text() : text;
+      Object.assign(el2.style, {
         backgroundColor: "transparent",
         border: "none",
         color: "#ccc",
@@ -216,8 +216,8 @@
   function applySubSettingVisibility(pluginId, forceEnabled) {
     const enabled = forceEnabled !== void 0 ? forceEnabled : isPluginEnabled(pluginId);
     (SUB_SETTINGS[pluginId] || []).forEach((key) => {
-      const el = document.getElementById(LS_PREFIX + key);
-      const row = el && el.closest(".flex-start");
+      const el2 = document.getElementById(LS_PREFIX + key);
+      const row = el2 && el2.closest(".flex-start");
       if (row) row.style.display = enabled ? "" : "none";
     });
   }
@@ -255,8 +255,8 @@
       }
     });
     Object.entries(SUB_SETTINGS).forEach(([pluginId, keys]) => {
-      keys.forEach((key) => registerSettingWidget(key, (el) => {
-        const row = el.closest(".flex-start");
+      keys.forEach((key) => registerSettingWidget(key, (el2) => {
+        const row = el2.closest(".flex-start");
         if (row) row.classList.add("wizascript-subsetting");
         applySubSettingVisibility(pluginId);
       }));
@@ -338,6 +338,14 @@
     Shift: "Shift",
     Alt: "Alt",
     Meta: "Meta",
+    ControlLeft: "Left Ctrl",
+    ControlRight: "Right Ctrl",
+    ShiftLeft: "Left Shift",
+    ShiftRight: "Right Shift",
+    AltLeft: "Left Alt",
+    AltRight: "Right Alt",
+    MetaLeft: "Left Meta",
+    MetaRight: "Right Meta",
     ArrowUp: "Up Arrow",
     ArrowDown: "Down Arrow",
     ArrowLeft: "Left Arrow",
@@ -365,15 +373,15 @@
     return !b.pluginId || isPluginEnabled(b.pluginId);
   }
   function isTypingContext() {
-    const el = document.activeElement;
-    if (!el) return false;
-    const tag = el.tagName;
-    return tag === "INPUT" || tag === "TEXTAREA" || el.isContentEditable;
+    const el2 = document.activeElement;
+    if (!el2) return false;
+    const tag = el2.tagName;
+    return tag === "INPUT" || tag === "TEXTAREA" || el2.isContentEditable;
   }
-  function enhanceInput(el, bindingKey, defaultCode) {
-    el.setAttribute("data-wizascript-keybind-enhanced", "true");
-    el.readOnly = true;
-    Object.assign(el.style, {
+  function enhanceInput(el2, bindingKey, defaultCode) {
+    el2.setAttribute("data-wizascript-keybind-enhanced", "true");
+    el2.readOnly = true;
+    Object.assign(el2.style, {
       cursor: "pointer",
       backgroundColor: "black",
       color: "white",
@@ -382,35 +390,36 @@
       textAlign: "center"
     });
     function refreshDisplay() {
-      el.value = codeToDisplay(readCode(bindingKey, defaultCode));
+      el2.value = codeToDisplay(readCode(bindingKey, defaultCode));
     }
     refreshDisplay();
-    el.addEventListener("focus", () => {
-      el.style.border = "1px solid #40E0D0";
-      el.style.boxShadow = "0 0 4px #40E0D0";
-      el.value = "...?";
+    el2.addEventListener("focus", () => {
+      el2.style.border = "1px solid #40E0D0";
+      el2.style.boxShadow = "0 0 4px #40E0D0";
+      el2.value = "...?";
       function capture(e) {
         e.preventDefault();
         const code = e.key === "Escape" ? "unbound" : e.code;
         writeCode(bindingKey, code);
         document.removeEventListener("keydown", capture, true);
-        el.blur();
+        el2.blur();
       }
       document.addEventListener("keydown", capture, true);
-      el.addEventListener("blur", function onBlur() {
-        el.style.border = "1px solid #b4b4b4";
-        el.style.boxShadow = "none";
+      el2.addEventListener("blur", function onBlur() {
+        el2.style.border = "1px solid #b4b4b4";
+        el2.style.boxShadow = "none";
         document.removeEventListener("keydown", capture, true);
         refreshDisplay();
-        el.removeEventListener("blur", onBlur);
+        scheduleConflictRefresh();
+        el2.removeEventListener("blur", onBlur);
       });
     });
   }
-  function enhanceDivider(el) {
-    el.setAttribute("data-wizascript-keybind-enhanced", "true");
-    el.readOnly = true;
-    el.tabIndex = -1;
-    Object.assign(el.style, {
+  function enhanceDivider(el2) {
+    el2.setAttribute("data-wizascript-keybind-enhanced", "true");
+    el2.readOnly = true;
+    el2.tabIndex = -1;
+    Object.assign(el2.style, {
       backgroundColor: "transparent",
       border: "none",
       borderBottom: "1px solid #666",
@@ -425,14 +434,15 @@
     observerStarted = true;
     const observer2 = new MutationObserver(() => {
       if (!bindingDefaults.size && !dividerKeys.size) return;
-      document.querySelectorAll(`input[id^="${ID_PREFIX2}"]:not([data-wizascript-keybind-enhanced])`).forEach((el) => {
-        const bindingKey = el.id.slice(ID_PREFIX2.length);
+      document.querySelectorAll(`input[id^="${ID_PREFIX2}"]:not([data-wizascript-keybind-enhanced])`).forEach((el2) => {
+        const bindingKey = el2.id.slice(ID_PREFIX2.length);
         if (dividerKeys.has(bindingKey)) {
-          enhanceDivider(el);
+          enhanceDivider(el2);
           return;
         }
         if (!bindingDefaults.has(bindingKey)) return;
-        enhanceInput(el, bindingKey, bindingDefaults.get(bindingKey));
+        enhanceInput(el2, bindingKey, bindingDefaults.get(bindingKey));
+        scheduleConflictRefresh();
       });
     });
     observer2.observe(document.body, { childList: true, subtree: true });
@@ -633,7 +643,84 @@
       });
       bindingDefaults.set(key, defaultCode);
     }
-    registry.push({ key, pluginId, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease, onPrimaryDoubleTap });
+    registry.push({ key, name, packageLabel, pluginId, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease, onPrimaryDoubleTap });
+    scheduleConflictRefresh();
+  }
+  var WARNING_CLASS = "wizascript-keybind-warning";
+  function underscriptClash(code, isPrimary) {
+    if (code !== "Space") return null;
+    const v = (k) => {
+      const x = localStorage.getItem(k);
+      return x === "1" || x === "true";
+    };
+    if (v("underscript.disable.endTurn") || v("underscript.disable.endTurn.space")) return null;
+    return isPrimary ? "In matches, Space also ends your turn (UnderScript hotkey), so every Primary tap would end it. You can turn that off in UnderScript's Game settings." : "In matches, Space also ends your turn (UnderScript hotkey). You can turn that off in UnderScript's Game settings.";
+  }
+  function sameKey(a, b) {
+    const base = (c) => String(c).replace(/^(Control|Shift|Alt|Meta)(Left|Right)$/, "$1");
+    return base(a) === base(b);
+  }
+  function canOverlap(a, b) {
+    if (a.scope === "global" && b.scope === "global") return true;
+    if (a.scope === "scoped" && b.scope === "scoped") return a.selector === b.selector;
+    const global = a.scope === "global" ? a : b;
+    return !global.guardTypingContext;
+  }
+  function describe(b) {
+    return b.packageLabel ? `${b.name} (${b.packageLabel})` : b.name;
+  }
+  function computeKeybindConflicts() {
+    const out = /* @__PURE__ */ new Map();
+    const add = (key, msg) => {
+      if (!out.has(key)) out.set(key, []);
+      out.get(key).push(msg);
+    };
+    const primary = getPrimaryCode();
+    const combos = registry.filter((b) => b.onMatch && isBindingActive(b)).map((b) => ({ b, code: readCode(b.key, b.defaultCode) })).filter(({ code }) => code && code !== "unbound");
+    const primaryClash = underscriptClash(primary, true);
+    if (primaryClash && anyKeybindPluginEnabled()) add(PRIMARY_KEY, primaryClash);
+    combos.forEach(({ b, code }, i) => {
+      if (sameKey(code, primary)) add(b.key, `Same key as your Primary key (${codeToDisplay(primary)}), so this shortcut can't be used.`);
+      combos.forEach(({ b: other, code: otherCode }, j) => {
+        if (i === j || !sameKey(code, otherCode) || !canOverlap(b, other)) return;
+        add(b.key, j < i ? `Same key as ${describe(other)}, which takes priority - this one won't fire.` : `Same key as ${describe(other)} - this one takes priority, so that one won't fire.`);
+      });
+      const clash = underscriptClash(code, false);
+      if (clash) add(b.key, clash);
+    });
+    return out;
+  }
+  function refreshConflictWarnings() {
+    if (!document.querySelector(`input[id^="${ID_PREFIX2}"]`)) return;
+    const conflicts = computeKeybindConflicts();
+    bindingDefaults.forEach((_, key) => {
+      const input = document.getElementById(ID_PREFIX2 + key);
+      const row = input && input.closest(".flex-start");
+      if (!row) return;
+      const messages = conflicts.get(key) || [];
+      let warn = row.querySelector(`:scope > .${WARNING_CLASS}`);
+      const text = messages.map((m) => `\u26A0 ${m}`).join("\n");
+      if (!messages.length) {
+        if (warn) warn.remove();
+        return;
+      }
+      if (!warn) {
+        warn = document.createElement("div");
+        warn.className = `setting-description ${WARNING_CLASS}`;
+        Object.assign(warn.style, { color: "#ffb347", opacity: "1", whiteSpace: "pre-line" });
+        row.appendChild(warn);
+      }
+      if (warn.textContent !== text) warn.textContent = text;
+    });
+  }
+  var conflictRefreshQueued = false;
+  function scheduleConflictRefresh() {
+    if (conflictRefreshQueued) return;
+    conflictRefreshQueued = true;
+    setTimeout(() => {
+      conflictRefreshQueued = false;
+      refreshConflictWarnings();
+    }, 0);
   }
   function getPrimaryKeyDisplay() {
     return codeToDisplay(getPrimaryCode());
@@ -646,7 +733,7 @@
   }
 
   // CHANGELOG.md
-  var CHANGELOG_default = "# Changelog\n\nAll notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.\n\n## 1.5.0\n\nWizascript is now listed in UnderScript's plugin directory, so this update is all about making it easy to understand without a readme.\n\n### Settings overhaul\n- New **General** tab (the first tab in Wizascript's settings) with a **Plugins** list and a **Miscellaneous** list. Every feature now has its own on/off switch, with a short description when you hover it.\n- Each enabled plugin gets its **own settings tab**. Plugins you haven't turned on don't show any settings at all.\n- **Keybinds** only appear once you enable a plugin that uses them, and only list the shortcuts for plugins you actually have on.\n- **Controller Support** has its own tab for controller bindings, which likewise only lists actions for plugins you have on.\n- Notepad and Card Tags are listed under Miscellaneous; Controller Support is now listed with the other plugins.\n- Tab names are never cut off. When there are more tabs than fit, they're split into pages, and **\u25C0 \u25B6 arrows** at the right end of the tab row flip between them.\n- New **Changelog** button (you're reading it), and a one-time popup after each update.\n\n### Changes\n- **Deck Tracker is now called Card Tracker**, to better describe what it does. Your trackers, presets and settings carry over.\n- New installs start with every plugin switched off. If you were already using Wizascript, the plugins you had on stay on.\n- Notepad has a new **Open Notepad on Page Load** setting, shown right under Notepad once it's enabled. The Toggle Notepad shortcut now opens/closes the notepad for the current page without switching the plugin off.\n- UC TV's filter settings are disabled (greyed out) while match filtering is turned off.\n- UC TV no longer prints its settings to the browser console on every page load unless debug logging is on.\n\n### Fixes\n- Controller Support: the d-pad works in the settings' **Plugins** section again (UnderScript 0.64 changed how plugin settings are laid out). A plugin's tabs are now one row you move along with left/right, including the \u25C0 \u25B6 arrows.\n\n## 1.4.1 and earlier\n\nWizascript combined several separate plugins into one download: Patch Maker, True Hub Bridge, Deck Tracker, UC TV, Notepad, Card Tags, remappable keybinds, and controller support. Detailed notes weren't kept before 1.5.0.\n";
+  var CHANGELOG_default = "# Changelog\n\nAll notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.\n\n## 1.5.0\n\nWizascript is now listed in UnderScript's plugin directory, so this update is all about making it easy to understand without a readme.\n\n### Settings overhaul\n- New **General** tab (the first tab in Wizascript's settings) with a **Plugins** list and a **Miscellaneous** list. Every feature now has its own on/off switch, with a short description when you hover it.\n- Each enabled plugin gets its **own settings tab**. Plugins you haven't turned on don't show any settings at all.\n- **Keybinds** only appear once you enable a plugin that uses them, and only list the shortcuts for plugins you actually have on.\n- **Controller Support** has its own tab for controller bindings, which likewise only lists actions for plugins you have on.\n- Notepad and Card Tags are listed under Miscellaneous; Controller Support is now listed with the other plugins.\n- Tab names are never cut off. When there are more tabs than fit, they're split into pages, and **\u25C0 \u25B6 arrows** at the right end of the tab row flip between them.\n- New **Changelog** button (you're reading it), and a one-time popup after each update.\n\n### New\n- **Back up & restore settings**: save all your Wizascript settings and data (toggles, keybinds, controller bindings, Card Tracker presets, Card Tags, Notepad) as one code or file from the General tab, and restore it on another browser or after reinstalling.\n- **Share Card Tags**: in Manage Tags, share some or all of your tags (with the cards they're on) as a code, or import a friend's. Imported tags merge into yours by name and never remove anything.\n- **Keybind warnings**: the Keybinds tab now warns when a shortcut clashes with another shortcut, with your Primary key, or with UnderScript's Space-to-end-turn hotkey.\n- **Controller: L1/R1 switch tabs in Settings**: sidebar categories, or the open plugin's own tabs.\n\n### Changes\n- **Deck Tracker is now called Card Tracker**, to better describe what it does. Your trackers, presets and settings carry over.\n- New installs start with every plugin switched off. If you were already using Wizascript, the plugins you had on stay on.\n- Notepad has a new **Open Notepad on Page Load** setting, shown right under Notepad once it's enabled. The Toggle Notepad shortcut now opens/closes the notepad for the current page without switching the plugin off.\n- UC TV's filter settings are disabled (greyed out) while match filtering is turned off.\n- UC TV no longer prints its settings to the browser console on every page load unless debug logging is on.\n\n### Fixes\n- Controller Support: the d-pad works in the settings' **Plugins** section again (UnderScript 0.64 changed how plugin settings are laid out). A plugin's tabs are now one row you move along with left/right, including the \u25C0 \u25B6 arrows. Moving up from a setting returns to the tab you're on.\n\n## 1.4.1 and earlier\n\nWizascript combined several separate plugins into one download: Patch Maker, True Hub Bridge, Deck Tracker, UC TV, Notepad, Card Tags, remappable keybinds, and controller support. Detailed notes weren't kept before 1.5.0.\n";
 
   // packages/core/about.js
   var LAST_SEEN_KEY = "wizascript.lastSeenVersion";
@@ -718,6 +805,360 @@
     });
   }
 
+  // packages/core/share-code.js
+  function bytesToBase64(bytes) {
+    let bin = "";
+    const CHUNK = 32768;
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+    }
+    return btoa(bin);
+  }
+  function base64ToBytes(b64) {
+    const bin = atob(b64);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+  async function pipeThrough(bytes, stream) {
+    const res = new Response(new Blob([bytes]).stream().pipeThrough(stream));
+    return new Uint8Array(await res.arrayBuffer());
+  }
+  function hasGzip() {
+    return typeof CompressionStream === "function" && typeof DecompressionStream === "function" && typeof Response === "function" && typeof Blob === "function";
+  }
+  async function encodeCode(kind, payload) {
+    const raw = new TextEncoder().encode(JSON.stringify(payload));
+    if (hasGzip()) {
+      try {
+        const gz = await pipeThrough(raw, new CompressionStream("gzip"));
+        return `WZ-${kind}-1.${bytesToBase64(gz)}`;
+      } catch (e) {
+      }
+    }
+    return `WZ-${kind}-0.${bytesToBase64(raw)}`;
+  }
+  async function decodeCode(text, kind) {
+    const clean = String(text || "").replace(/\s+/g, "");
+    if (!clean) throw new Error("Paste a code first.");
+    const m = /^WZ-([A-Z]+)-(\d+)\.(.+)$/.exec(clean);
+    if (!m) throw new Error("That doesn't look like a Wizascript code.");
+    if (m[1] !== kind) {
+      const names = { BACKUP: "a settings backup", TAGS: "a Card Tags code" };
+      throw new Error(`That's ${names[m[1]] || `a "${m[1]}" code`}, not ${names[kind] || kind}.`);
+    }
+    let bytes;
+    try {
+      bytes = base64ToBytes(m[3]);
+    } catch (e) {
+      throw new Error("The code is damaged or incomplete (make sure you copied all of it).");
+    }
+    if (m[2] === "1") {
+      if (!hasGzip()) throw new Error("This browser can't read compressed codes. Try a newer browser.");
+      try {
+        bytes = await pipeThrough(bytes, new DecompressionStream("gzip"));
+      } catch (e) {
+        throw new Error("The code is damaged or incomplete (make sure you copied all of it).");
+      }
+    } else if (m[2] !== "0") {
+      throw new Error("This code was made by a newer Wizascript. Update Wizascript and try again.");
+    }
+    try {
+      return JSON.parse(new TextDecoder().decode(bytes));
+    } catch (e) {
+      throw new Error("The code is damaged or incomplete (make sure you copied all of it).");
+    }
+  }
+  function el(tag, props = {}, style = {}) {
+    const node = document.createElement(tag);
+    Object.assign(node, props);
+    Object.assign(node.style, style);
+    return node;
+  }
+  var TEXTAREA_STYLE = {
+    width: "100%",
+    height: "140px",
+    boxSizing: "border-box",
+    resize: "vertical",
+    fontFamily: "monospace",
+    fontSize: "11px",
+    wordBreak: "break-all",
+    backgroundColor: "#111",
+    color: "#ddd",
+    border: "1px solid #666"
+  };
+  function getDialog() {
+    const BootstrapDialog2 = getPageWindow().BootstrapDialog;
+    if (!BootstrapDialog2 || typeof BootstrapDialog2.show !== "function") {
+      console.warn("[Wizascript] BootstrapDialog unavailable - cannot open this dialog here.");
+      return null;
+    }
+    return BootstrapDialog2;
+  }
+  async function copyText(text, textarea) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (e) {
+    }
+    try {
+      textarea.focus();
+      textarea.select();
+      return document.execCommand("copy");
+    } catch (e) {
+      return false;
+    }
+  }
+  function saveFile(text, fileName) {
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = el("a", { href: url, download: fileName });
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1e3);
+  }
+  function showExportDialog({ title, intro, code, fileName }) {
+    const BootstrapDialog2 = getDialog();
+    if (!BootstrapDialog2) return;
+    const wrapper = el("div");
+    wrapper.appendChild(el("p", { textContent: intro }));
+    const box = el("textarea", { readOnly: true, value: code, spellcheck: false }, TEXTAREA_STYLE);
+    box.addEventListener("focus", () => box.select());
+    wrapper.appendChild(box);
+    const status = el("div", { textContent: `${code.length.toLocaleString()} characters` }, { marginTop: "4px", opacity: "0.7", fontSize: "0.9em" });
+    wrapper.appendChild(status);
+    BootstrapDialog2.show({
+      title,
+      message: wrapper,
+      buttons: [
+        {
+          label: "Copy",
+          cssClass: "btn-primary",
+          action: async () => {
+            const ok = await copyText(code, box);
+            status.textContent = ok ? "Copied to your clipboard." : "Couldn't copy automatically - select the text and copy it yourself.";
+          }
+        },
+        { label: "Save as file", action: () => {
+          saveFile(code, fileName);
+          status.textContent = `Saved as ${fileName}.`;
+        } },
+        { label: "Close", action: (d) => d.close() }
+      ]
+    });
+  }
+  function showImportDialog({ title, intro, actionLabel, onSubmit }) {
+    const BootstrapDialog2 = getDialog();
+    if (!BootstrapDialog2) return;
+    const wrapper = el("div");
+    wrapper.appendChild(el("p", { textContent: intro }));
+    const box = el("textarea", { placeholder: "Paste the code here\u2026", spellcheck: false }, TEXTAREA_STYLE);
+    wrapper.appendChild(box);
+    const file = el("input", { type: "file", accept: ".txt,text/plain" }, { display: "none" });
+    file.addEventListener("change", () => {
+      const f = file.files && file.files[0];
+      if (!f) return;
+      f.text().then((t) => {
+        box.value = t.trim();
+        status.textContent = `Loaded ${f.name}.`;
+        status.style.color = "";
+      });
+    });
+    wrapper.appendChild(file);
+    const status = el("div", {}, { marginTop: "4px", minHeight: "1.2em" });
+    wrapper.appendChild(status);
+    let busy = false;
+    BootstrapDialog2.show({
+      title,
+      message: wrapper,
+      buttons: [
+        { label: "Load file\u2026", action: () => file.click() },
+        {
+          label: actionLabel,
+          cssClass: "btn-primary",
+          action: async (d) => {
+            if (busy) return;
+            busy = true;
+            status.style.color = "";
+            status.textContent = "Reading code\u2026";
+            try {
+              await onSubmit(box.value);
+              d.close();
+            } catch (e) {
+              status.style.color = "#f66";
+              status.textContent = e && e.message ? e.message : String(e);
+            } finally {
+              busy = false;
+            }
+          }
+        },
+        { label: "Cancel", action: (d) => d.close() }
+      ]
+    });
+  }
+  function showConfirmDialog({ title, message, confirmLabel, onConfirm, cancelLabel = "Cancel", danger = true }) {
+    const BootstrapDialog2 = getDialog();
+    if (!BootstrapDialog2) return;
+    const wrapper = el("div");
+    (Array.isArray(message) ? message : [message]).forEach((line) => wrapper.appendChild(el("p", { textContent: line })));
+    BootstrapDialog2.show({
+      title,
+      message: wrapper,
+      buttons: [
+        { label: confirmLabel, cssClass: danger ? "btn-danger" : "btn-primary", action: (d) => {
+          d.close();
+          onConfirm();
+        } },
+        { label: cancelLabel, action: (d) => d.close() }
+      ]
+    });
+  }
+  function showInfoDialog({ title, message }) {
+    const BootstrapDialog2 = getDialog();
+    if (!BootstrapDialog2) return;
+    const wrapper = el("div");
+    (Array.isArray(message) ? message : [message]).forEach((line) => wrapper.appendChild(el("p", { textContent: line })));
+    BootstrapDialog2.show({ title, message: wrapper, buttons: [{ label: "OK", cssClass: "btn-primary", action: (d) => d.close() }] });
+  }
+
+  // packages/core/backup.js
+  var LS_PREFIX2 = "underscript.plugin.Wizascript.";
+  var GM_PREFIX2 = "wizascript.";
+  var KIND = "BACKUP";
+  var CATEGORY2 = "Wizascript";
+  var SKIP_GM = /* @__PURE__ */ new Set(["wizascript.migration.v150", "wizascript.lastSeenVersion"]);
+  var SKIP_LS_PREFIXES = ["about.", "backup."];
+  function isBackedUpLsKey(key) {
+    if (!key.startsWith(LS_PREFIX2)) return false;
+    const rest = key.slice(LS_PREFIX2.length);
+    return !SKIP_LS_PREFIXES.some((p) => rest.startsWith(p));
+  }
+  function isBackedUpGmKey(key) {
+    return key.startsWith(GM_PREFIX2) && !SKIP_GM.has(key);
+  }
+  function listGmKeys() {
+    try {
+      return (typeof GM_listValues === "function" ? GM_listValues() : []).filter(isBackedUpGmKey);
+    } catch (e) {
+      return [];
+    }
+  }
+  function collectBackup() {
+    const ls = {};
+    Object.keys(localStorage).filter(isBackedUpLsKey).forEach((k) => {
+      ls[k.slice(LS_PREFIX2.length)] = localStorage.getItem(k);
+    });
+    const gm = {};
+    listGmKeys().forEach((k) => {
+      gm[k.slice(GM_PREFIX2.length)] = GM_getValue(k);
+    });
+    return { format: 1, version: SUITE_VERSION, created: (/* @__PURE__ */ new Date()).toISOString(), ls, gm };
+  }
+  var FEATURE_LABELS = [
+    ["keybinds.", "Keybinds"],
+    ["controller.", "Controller bindings"],
+    ["decktracker.", "Card Tracker"],
+    ["deckTracker.", "Card Tracker"],
+    ["misc.cardTags.", "Card Tags"],
+    ["misc.notepad.", "Notepad"],
+    ["patchmaker.", "Patch Maker"]
+  ];
+  function describe2(backup) {
+    const found = /* @__PURE__ */ new Set();
+    Object.keys(backup.gm || {}).forEach((k) => {
+      const hit = FEATURE_LABELS.find(([p]) => (GM_PREFIX2 + k).startsWith(GM_PREFIX2 + p));
+      if (hit) found.add(hit[1]);
+    });
+    const settings2 = Object.keys(backup.ls || {}).length;
+    const parts = [`${settings2} setting${settings2 === 1 ? "" : "s"}`];
+    if (found.size) parts.push(`saved data for ${Array.from(found).join(", ")}`);
+    return parts.join(", plus ");
+  }
+  function validate(backup) {
+    if (!backup || typeof backup !== "object" || backup.format !== 1 || typeof backup.ls !== "object" || typeof backup.gm !== "object") {
+      throw new Error("That code isn't a Wizascript backup this version understands.");
+    }
+    const badLs = Object.entries(backup.ls).find(([, v]) => typeof v !== "string");
+    if (badLs) throw new Error("The backup is damaged (a setting has an unexpected value).");
+  }
+  function restoreBackup(backup) {
+    validate(backup);
+    Object.keys(localStorage).filter(isBackedUpLsKey).forEach((k) => localStorage.removeItem(k));
+    listGmKeys().forEach((k) => GM_deleteValue(k));
+    Object.entries(backup.ls).forEach(([k, v]) => localStorage.setItem(LS_PREFIX2 + k, v));
+    Object.entries(backup.gm).forEach(([k, v]) => GM_setValue(GM_PREFIX2 + k, v));
+    GM_setValue("wizascript.migration.v150", true);
+  }
+  function formatDate(iso) {
+    const d = new Date(iso);
+    return isNaN(d) ? "an unknown date" : d.toLocaleString();
+  }
+  async function exportBackup() {
+    const backup = collectBackup();
+    const code = await encodeCode(KIND, backup);
+    const day = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+    showExportDialog({
+      title: "Back Up Wizascript Settings",
+      intro: `This code holds all your Wizascript settings and saved data (${describe2(backup)}). Keep it somewhere safe, then use "Restore" on another browser or after reinstalling.`,
+      code,
+      fileName: `wizascript-backup-${day}.txt`
+    });
+  }
+  function importBackup() {
+    showImportDialog({
+      title: "Restore Wizascript Settings",
+      intro: "Paste a Wizascript backup code, or load a saved backup file.",
+      actionLabel: "Next",
+      onSubmit: async (text) => {
+        const backup = await decodeCode(text, KIND);
+        validate(backup);
+        setTimeout(() => showConfirmDialog({
+          title: "Replace your Wizascript settings?",
+          message: [
+            `This backup was made with Wizascript v${backup.version || "?"} on ${formatDate(backup.created)} and contains ${describe2(backup)}.`,
+            "Restoring replaces ALL of your current Wizascript settings and saved data with it. This can't be undone, so back up your current settings first if you might want them."
+          ],
+          confirmLabel: "Replace settings",
+          onConfirm: () => {
+            restoreBackup(backup);
+            showConfirmDialog({
+              title: "Settings restored",
+              message: "Reload the page to finish applying them.",
+              confirmLabel: "Reload now",
+              cancelLabel: "Later",
+              danger: false,
+              onConfirm: () => getPageWindow().location.reload()
+            });
+          }
+        }), 0);
+      }
+    });
+  }
+  function registerBackupSection(plugin) {
+    const settingsApi = plugin.settings();
+    settingsApi.add({
+      key: "backup.export",
+      name: "Back up settings",
+      note: "Save all your Wizascript settings and data as a code or file.",
+      type: "text",
+      default: "Back up\u2026",
+      category: CATEGORY2
+    });
+    registerSettingWidget("backup.export", asButton("Back up\u2026", () => exportBackup().catch((e) => console.error("[Wizascript] backup failed", e))));
+    settingsApi.add({
+      key: "backup.import",
+      name: "Restore settings",
+      note: "Replace your Wizascript settings with a saved backup.",
+      type: "text",
+      default: "Restore\u2026",
+      category: CATEGORY2
+    });
+    registerSettingWidget("backup.import", asButton("Restore\u2026", () => importBackup()));
+  }
+
   // packages/core/tab-bar.js
   var MAIN_TAB_LABEL = "General";
   var MAIN_TAB_MARKER_ID = "underscript.plugin.Wizascript.about.version";
@@ -761,18 +1202,18 @@
     }
   }
   function makeArrow(view, text, dir) {
-    const el = document.createElement("div");
-    el.className = `tabLabel ${ARROW_CLASS}`;
-    el.dataset.dir = String(dir);
-    el.textContent = text;
-    el.title = dir < 0 ? "Previous tabs" : "More tabs";
-    el.addEventListener("click", (e) => {
+    const el2 = document.createElement("div");
+    el2.className = `tabLabel ${ARROW_CLASS}`;
+    el2.dataset.dir = String(dir);
+    el2.textContent = text;
+    el2.title = dir < 0 ? "Previous tabs" : "More tabs";
+    el2.addEventListener("click", (e) => {
       e.preventDefault();
-      if (el.classList.contains("disabled")) return;
+      if (el2.classList.contains("disabled")) return;
       currentPage += dir;
       layout(view);
     });
-    return el;
+    return el2;
   }
   function ensureArrows(view) {
     let left = view.querySelector(`:scope > .${ARROW_CLASS}[data-dir="-1"]`);
@@ -1864,19 +2305,19 @@ html, body { overflow-x: hidden !important; }
     if (!cardNameMap) return null;
     return cardNameMap.get(String(name).toLowerCase()) || null;
   }
-  function attachCardHover(el, cardId) {
+  function attachCardHover(el2, cardId) {
     const pageWindow2 = getPageWindow();
     const displayCardHelp = pageWindow2.displayCardHelp;
     const removeCardHover = pageWindow2.removeCardHover;
     if (typeof displayCardHelp !== "function" || typeof removeCardHover !== "function") {
       return false;
     }
-    el.dataset.ucHoverBound = "true";
-    el.style.cursor = "pointer";
-    el.addEventListener("mouseover", function() {
+    el2.dataset.ucHoverBound = "true";
+    el2.style.cursor = "pointer";
+    el2.addEventListener("mouseover", function() {
       displayCardHelp(this, cardId);
     });
-    el.addEventListener("mouseleave", function() {
+    el2.addEventListener("mouseleave", function() {
       removeCardHover();
     });
     return true;
@@ -2028,33 +2469,33 @@ Version: v${version}`;
     function resetState() {
       GM_deleteValue(STATE_KEY);
     }
-    function makeEditable(el, placeholder) {
-      el.setAttribute("contenteditable", "true");
-      el.spellcheck = false;
-      el.addEventListener("focus", () => {
-        el.dataset.prevText = el.textContent.trim();
+    function makeEditable(el2, placeholder) {
+      el2.setAttribute("contenteditable", "true");
+      el2.spellcheck = false;
+      el2.addEventListener("focus", () => {
+        el2.dataset.prevText = el2.textContent.trim();
         enableInputBlocker();
       });
-      el.addEventListener("blur", () => {
-        let t = sanitizeText(el.textContent);
+      el2.addEventListener("blur", () => {
+        let t = sanitizeText(el2.textContent);
         if (!t) t = placeholder;
-        el.textContent = t;
+        el2.textContent = t;
         saveState();
         disableInputBlocker();
       });
-      el.addEventListener("keydown", (e) => {
+      el2.addEventListener("keydown", (e) => {
         if (overlay.classList.contains("viewer-mode")) return;
         if (e.key === "Enter") {
           e.preventDefault();
-          el.blur();
+          el2.blur();
         }
         if (e.key === "Escape") {
           e.preventDefault();
-          el.textContent = el.dataset.prevText;
-          el.blur();
+          el2.textContent = el2.dataset.prevText;
+          el2.blur();
         }
       });
-      el.addEventListener("paste", (e) => {
+      el2.addEventListener("paste", (e) => {
         if (overlay.classList.contains("viewer-mode")) {
           e.preventDefault();
           return;
@@ -2389,15 +2830,15 @@ Version: v${version}`;
     function bindCardHovers() {
       if (!getCardHoversEnabled()) return;
       const cardNameMap = getCardNameMap();
-      container.querySelectorAll(".uc-card-ref").forEach((el) => {
-        if (el.dataset.ucHoverBound === "true") return;
-        const name = el.textContent.trim();
+      container.querySelectorAll(".uc-card-ref").forEach((el2) => {
+        if (el2.dataset.ucHoverBound === "true") return;
+        const name = el2.textContent.trim();
         const cardId = getCardIdByExactGameLookup(name) || resolveCardId(name, cardNameMap);
         if (!cardId) {
           logger4.warn("hover", "Card not found for hover", name);
           return;
         }
-        attachCardHover(el, cardId);
+        attachCardHover(el2, cardId);
       });
     }
     function applyFormattingOverlay() {
@@ -2493,21 +2934,21 @@ Version: v${version}`;
         ptr = ptr.nextElementSibling;
       }
       let h3 = null, hr1 = null, h2 = null, hr2 = null;
-      for (const el of originalPatchNotesNodes) {
-        if (!h3 && el.tagName === "H3") {
-          h3 = el.cloneNode(true);
+      for (const el2 of originalPatchNotesNodes) {
+        if (!h3 && el2.tagName === "H3") {
+          h3 = el2.cloneNode(true);
           continue;
         }
-        if (!hr1 && el.tagName === "HR") {
-          hr1 = el.cloneNode(true);
+        if (!hr1 && el2.tagName === "HR") {
+          hr1 = el2.cloneNode(true);
           continue;
         }
-        if (!h2 && el.tagName === "H2") {
-          h2 = el.cloneNode(true);
+        if (!h2 && el2.tagName === "H2") {
+          h2 = el2.cloneNode(true);
           continue;
         }
-        if (!hr2 && el.tagName === "HR") {
-          hr2 = el.cloneNode(true);
+        if (!hr2 && el2.tagName === "HR") {
+          hr2 = el2.cloneNode(true);
           continue;
         }
       }
@@ -7541,6 +7982,46 @@ Version: v${version}`;
   function taggedCardIds() {
     return Object.keys(data.cardTags);
   }
+  function exportTags(tagIds) {
+    const wanted = new Set(tagIds);
+    return {
+      format: 1,
+      tags: data.tags.filter((t) => wanted.has(t.id)).map((t) => ({
+        name: t.name,
+        color: t.color,
+        cards: Object.keys(data.cardTags).filter((cardId) => data.cardTags[cardId].includes(t.id))
+      }))
+    };
+  }
+  function importTags(shared) {
+    if (!shared || shared.format !== 1 || !Array.isArray(shared.tags)) {
+      throw new Error("That code isn't a Card Tags code this version understands.");
+    }
+    const summary = { created: [], merged: [], cardsTagged: 0 };
+    shared.tags.forEach((st) => {
+      const name = String(st && st.name || "").trim();
+      if (!name) return;
+      let tag = data.tags.find((t) => t.name.toLowerCase() === name.toLowerCase());
+      if (tag) {
+        summary.merged.push(tag.name);
+      } else {
+        const color = /^#[0-9a-f]{3,8}$/i.test(st.color || "") ? st.color : DEFAULT_COLORS[data.tags.length % DEFAULT_COLORS.length];
+        tag = { id: genTagId(), name, color };
+        data.tags.push(tag);
+        summary.created.push(name);
+      }
+      (Array.isArray(st.cards) ? st.cards : []).forEach((rawId) => {
+        const cardId = String(rawId);
+        if (!/^[\w-]{1,32}$/.test(cardId)) return;
+        const current = data.cardTags[cardId] || [];
+        if (current.includes(tag.id)) return;
+        data.cardTags[cardId] = [...current, tag.id];
+        summary.cardsTagged++;
+      });
+    });
+    writeData(data);
+    return summary;
+  }
 
   // packages/misc/card-tags/indicators.js
   var INDICATOR_ATTR = "data-wiza-tag-dot";
@@ -7577,26 +8058,26 @@ Version: v${version}`;
       holder.style.transform = "translate(0, -50%)";
     }
   }
-  function decorateCorner(el, tags) {
-    const existing = el.querySelector(":scope > [" + INDICATOR_ATTR + '="corner"]');
-    if (getComputedStyle(el).position === "static") el.style.position = "relative";
+  function decorateCorner(el2, tags) {
+    const existing = el2.querySelector(":scope > [" + INDICATOR_ATTR + '="corner"]');
+    if (getComputedStyle(el2).position === "static") el2.style.position = "relative";
     const holder = existing || document.createElement("div");
     if (!existing) {
       holder.setAttribute(INDICATOR_ATTR, "corner");
       Object.assign(holder.style, { position: "absolute", top: "2px", right: "2px", zIndex: "50", display: "flex", gap: "2px", pointerEvents: "none" });
-      el.appendChild(holder);
+      el2.appendChild(holder);
     }
     fillDots(holder, tags.slice(0, 4));
   }
-  function decorateOneCardElement(el, tags) {
-    const leftExisting = el.querySelector(":scope > [" + INDICATOR_ATTR + '="left"]');
-    const rightExisting = el.querySelector(":scope > [" + INDICATOR_ATTR + '="right"]');
-    const cornerExisting = el.querySelector(":scope > [" + INDICATOR_ATTR + '="corner"]');
+  function decorateOneCardElement(el2, tags) {
+    const leftExisting = el2.querySelector(":scope > [" + INDICATOR_ATTR + '="left"]');
+    const rightExisting = el2.querySelector(":scope > [" + INDICATOR_ATTR + '="right"]');
+    const cornerExisting = el2.querySelector(":scope > [" + INDICATOR_ATTR + '="corner"]');
     if (!tags.length) {
       [leftExisting, rightExisting, cornerExisting].forEach((h) => h && h.remove());
       return;
     }
-    const anchor = findRarityAnchor(el);
+    const anchor = findRarityAnchor(el2);
     if (!anchor) {
       if (!rarityAnchorWarned) {
         rarityAnchorWarned = true;
@@ -7604,29 +8085,29 @@ Version: v${version}`;
       }
       if (leftExisting) leftExisting.remove();
       if (rightExisting) rightExisting.remove();
-      decorateCorner(el, tags);
+      decorateCorner(el2, tags);
       return;
     }
     if (cornerExisting) cornerExisting.remove();
-    if (getComputedStyle(el).position === "static") el.style.position = "relative";
+    if (getComputedStyle(el2).position === "static") el2.style.position = "relative";
     const leftTags = tags.slice(0, 2);
     const rightTags = tags.slice(2, 4);
     const leftHolder = leftExisting || makeFlankHolder("left");
     const rightHolder = rightExisting || makeFlankHolder("right");
-    if (!leftExisting) el.appendChild(leftHolder);
-    if (!rightExisting) el.appendChild(rightHolder);
+    if (!leftExisting) el2.appendChild(leftHolder);
+    if (!rightExisting) el2.appendChild(rightHolder);
     fillDots(leftHolder, leftTags);
     fillDots(rightHolder, rightTags);
     leftHolder.style.display = leftTags.length ? "flex" : "none";
     rightHolder.style.display = rightTags.length ? "flex" : "none";
-    positionFlank(el, anchor, leftHolder, "left");
-    positionFlank(el, anchor, rightHolder, "right");
+    positionFlank(el2, anchor, leftHolder, "left");
+    positionFlank(el2, anchor, rightHolder, "right");
   }
   function decorateCard(cardId) {
     const els = Array.from(document.getElementsByClassName("card-" + cardId));
     if (!els.length) return;
     const tags = tagObjectsForCard(cardId);
-    els.forEach((el) => decorateOneCardElement(el, tags));
+    els.forEach((el2) => decorateOneCardElement(el2, tags));
   }
   function decorateAllCards() {
     taggedCardIds().forEach(decorateCard);
@@ -7650,6 +8131,95 @@ Version: v${version}`;
       observer2.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["id"] });
     }
     schedule();
+  }
+
+  // packages/misc/card-tags/share.js
+  var KIND2 = "TAGS";
+  function countCards(tagId) {
+    return exportTags([tagId]).tags[0].cards.length;
+  }
+  function openShareTagsDialog() {
+    const BootstrapDialog2 = getPageWindow().BootstrapDialog;
+    if (!BootstrapDialog2 || typeof BootstrapDialog2.show !== "function") return;
+    const tags = allTags();
+    if (!tags.length) {
+      showInfoDialog({ title: "Share Tags", message: "You don't have any tags to share yet." });
+      return;
+    }
+    const wrapper = document.createElement("div");
+    const intro = document.createElement("p");
+    intro.textContent = "Pick the tags to share. The code includes which cards each tag is on.";
+    wrapper.appendChild(intro);
+    const list = document.createElement("div");
+    list.style.cssText = "max-height:260px;overflow-y:auto;";
+    const boxes = tags.map((tag) => {
+      const row = document.createElement("label");
+      row.style.cssText = "display:flex;align-items:center;gap:8px;padding:4px 0;font-weight:normal;cursor:pointer;";
+      const box = document.createElement("input");
+      box.type = "checkbox";
+      box.checked = true;
+      const dot = document.createElement("span");
+      dot.style.cssText = `width:10px;height:10px;border-radius:50%;flex-shrink:0;background:${tag.color};`;
+      const text = document.createElement("span");
+      const n = countCards(tag.id);
+      text.textContent = `${tag.name} (${n} card${n === 1 ? "" : "s"})`;
+      row.append(box, dot, text);
+      list.appendChild(row);
+      return { tag, box };
+    });
+    wrapper.appendChild(list);
+    const status = document.createElement("div");
+    status.style.cssText = "margin-top:4px;min-height:1.2em;color:#f66;";
+    wrapper.appendChild(status);
+    BootstrapDialog2.show({
+      title: "Share Tags",
+      message: wrapper,
+      cssClass: "mono",
+      buttons: [
+        {
+          label: "Create code",
+          cssClass: "btn-primary",
+          action: async (d) => {
+            const ids = boxes.filter((b) => b.box.checked).map((b) => b.tag.id);
+            if (!ids.length) {
+              status.textContent = "Tick at least one tag.";
+              return;
+            }
+            const payload = exportTags(ids);
+            const code = await encodeCode(KIND2, payload);
+            d.close();
+            const names = payload.tags.map((t) => t.name).join(", ");
+            showExportDialog({
+              title: "Share Tags",
+              intro: `Send this code to anyone with Wizascript. They can add these tags (${names}) with "Import\u2026" in their own Manage Tags.`,
+              code,
+              fileName: "wizascript-card-tags.txt"
+            });
+          }
+        },
+        { label: "Cancel", action: (d) => d.close() }
+      ]
+    });
+  }
+  function listNames(names) {
+    return names.length > 4 ? `${names.slice(0, 4).join(", ")} and ${names.length - 4} more` : names.join(", ");
+  }
+  function openImportTagsDialog(onImported) {
+    showImportDialog({
+      title: "Import Tags",
+      intro: "Paste a Card Tags code from a friend. Tags with the same name as one of yours are combined (keeping your colour); nothing of yours is removed.",
+      actionLabel: "Import",
+      onSubmit: async (text) => {
+        const shared = await decodeCode(text, KIND2);
+        const result = importTags(shared);
+        if (onImported) onImported();
+        const lines = [];
+        if (result.created.length) lines.push(`New tags: ${listNames(result.created)}.`);
+        if (result.merged.length) lines.push(`Added to your existing tags: ${listNames(result.merged)}.`);
+        lines.push(result.cardsTagged ? `${result.cardsTagged} card tag${result.cardsTagged === 1 ? "" : "s"} added.` : "You already had every card in this code tagged.");
+        setTimeout(() => showInfoDialog({ title: "Tags imported", message: lines }), 0);
+      }
+    });
   }
 
   // packages/misc/card-tags/menu.js
@@ -7943,10 +8513,17 @@ Version: v${version}`;
       title: "Manage Tags",
       message: wrapper,
       cssClass: "mono",
-      buttons: [{ label: "Close", action: (d) => {
-        d.close();
-        maybeRefreshSearch();
-      } }]
+      buttons: [
+        { label: "Share\u2026", action: () => openShareTagsDialog() },
+        { label: "Import\u2026", action: () => openImportTagsDialog(() => {
+          decorateAllCards();
+          renderList2();
+        }) },
+        { label: "Close", action: (d) => {
+          d.close();
+          maybeRefreshSearch();
+        } }
+      ]
     });
   }
   function showCardsForTag(tag, cards) {
@@ -8422,10 +8999,10 @@ Version: v${version}`;
   }
 
   // packages/controller/storage.js
-  var GM_PREFIX2 = "wizascript.controller.";
+  var GM_PREFIX3 = "wizascript.controller.";
   function csGet(key, fallback) {
     try {
-      const v = GM_getValue(GM_PREFIX2 + key, null);
+      const v = GM_getValue(GM_PREFIX3 + key, null);
       return v === null || v === void 0 ? fallback : v;
     } catch (e) {
       console.warn("[Wizascript Controller] GM_getValue failed, falling back to default:", e);
@@ -8434,14 +9011,14 @@ Version: v${version}`;
   }
   function csSet(key, value) {
     try {
-      GM_setValue(GM_PREFIX2 + key, value);
+      GM_setValue(GM_PREFIX3 + key, value);
     } catch (e) {
       console.warn("[Wizascript Controller] GM_setValue failed, binding will not persist:", e);
     }
   }
   function csDelete(key) {
     try {
-      GM_deleteValue(GM_PREFIX2 + key);
+      GM_deleteValue(GM_PREFIX3 + key);
     } catch (e) {
       console.warn("[Wizascript Controller] GM_deleteValue failed:", e);
     }
@@ -8639,11 +9216,11 @@ Version: v${version}`;
   }
   var debugTextEnabledSetting = null;
   var debugTextCheckedLive = null;
-  function observeDebugTextCheckbox(el) {
-    el.setAttribute("data-wc-enhanced", "true");
-    debugTextCheckedLive = !!el.checked;
-    el.addEventListener("change", () => {
-      debugTextCheckedLive = !!el.checked;
+  function observeDebugTextCheckbox(el2) {
+    el2.setAttribute("data-wc-enhanced", "true");
+    debugTextCheckedLive = !!el2.checked;
+    el2.addEventListener("change", () => {
+      debugTextCheckedLive = !!el2.checked;
     });
   }
   function isDebugTextEnabled() {
@@ -8675,11 +9252,11 @@ Version: v${version}`;
   var DEFAULT_HIGHLIGHT_COLOR = HIGHLIGHT_COLOR_PRESETS[0][1];
   var highlightColorSetting = null;
   var highlightColorLive = null;
-  function observeHighlightColorSelect(el) {
-    el.setAttribute("data-wc-enhanced", "true");
-    highlightColorLive = el.value || null;
-    el.addEventListener("change", () => {
-      highlightColorLive = el.value || null;
+  function observeHighlightColorSelect(el2) {
+    el2.setAttribute("data-wc-enhanced", "true");
+    highlightColorLive = el2.value || null;
+    el2.addEventListener("change", () => {
+      highlightColorLive = el2.value || null;
     });
   }
   function getHighlightColor() {
@@ -8696,11 +9273,11 @@ Version: v${version}`;
     return controllerCaptureActive;
   }
   var boundInputRefreshers = [];
-  function enhanceControllerDivider(el) {
-    el.setAttribute("data-wc-enhanced", "true");
-    el.readOnly = true;
-    el.tabIndex = -1;
-    Object.assign(el.style, {
+  function enhanceControllerDivider(el2) {
+    el2.setAttribute("data-wc-enhanced", "true");
+    el2.readOnly = true;
+    el2.tabIndex = -1;
+    Object.assign(el2.style, {
       backgroundColor: "transparent",
       border: "none",
       borderBottom: "1px solid #666",
@@ -8718,10 +9295,10 @@ Version: v${version}`;
       paddingTop: "4px"
     });
   }
-  function enhanceControllerCaptureInput(el, readBound, writeBound) {
-    el.setAttribute("data-wc-enhanced", "true");
-    el.readOnly = true;
-    Object.assign(el.style, {
+  function enhanceControllerCaptureInput(el2, readBound, writeBound) {
+    el2.setAttribute("data-wc-enhanced", "true");
+    el2.readOnly = true;
+    Object.assign(el2.style, {
       cursor: "pointer",
       backgroundColor: "black",
       color: "white",
@@ -8730,14 +9307,14 @@ Version: v${version}`;
       textAlign: "center"
     });
     function refreshDisplay() {
-      el.value = bindingToDisplay(readBound());
+      el2.value = bindingToDisplay(readBound());
     }
     refreshDisplay();
     boundInputRefreshers.push(refreshDisplay);
-    el.addEventListener("focus", () => {
-      el.style.border = "1px solid #40E0D0";
-      el.style.boxShadow = "0 0 4px #40E0D0";
-      el.value = "Press a button or key...";
+    el2.addEventListener("focus", () => {
+      el2.style.border = "1px solid #40E0D0";
+      el2.style.boxShadow = "0 0 4px #40E0D0";
+      el2.value = "Press a button or key...";
       controllerCaptureActive = true;
       let cancelled = false;
       let ignoreUntilReleased = /* @__PURE__ */ new Set();
@@ -8766,7 +9343,7 @@ Version: v${version}`;
         cancelled = true;
         writeBound(value);
         cleanup();
-        el.blur();
+        el2.blur();
       }
       function onKeydown(e) {
         if (cancelled) return;
@@ -8775,7 +9352,7 @@ Version: v${version}`;
           cancelled = true;
           writeBound(null);
           cleanup();
-          el.blur();
+          el2.blur();
           return;
         }
         if (e.key === "Shift" || e.key === "Control" || e.key === "Alt" || e.key === "Meta") return;
@@ -8789,14 +9366,14 @@ Version: v${version}`;
       }
       document.addEventListener("keydown", onKeydown, true);
       requestAnimationFrame(captureFrame);
-      el.addEventListener("blur", function onBlur() {
+      el2.addEventListener("blur", function onBlur() {
         cancelled = true;
         controllerCaptureActive = false;
-        el.style.border = "1px solid #b4b4b4";
-        el.style.boxShadow = "none";
+        el2.style.border = "1px solid #b4b4b4";
+        el2.style.boxShadow = "none";
         cleanup();
         refreshDisplay();
-        el.removeEventListener("blur", onBlur);
+        el2.removeEventListener("blur", onBlur);
       });
     });
   }
@@ -8804,11 +9381,11 @@ Version: v${version}`;
   function getPresetMenuState() {
     return presetMenuState;
   }
-  function enhancePresetSelector(el) {
-    el.setAttribute("data-wc-enhanced", "true");
-    el.readOnly = true;
-    el.tabIndex = 0;
-    Object.assign(el.style, {
+  function enhancePresetSelector(el2) {
+    el2.setAttribute("data-wc-enhanced", "true");
+    el2.readOnly = true;
+    el2.tabIndex = 0;
+    Object.assign(el2.style, {
       cursor: "pointer",
       backgroundColor: "black",
       color: "white",
@@ -8817,13 +9394,13 @@ Version: v${version}`;
       textAlign: "center"
     });
     function refreshDisplay() {
-      el.value = getPresetName(getActivePreset());
+      el2.value = getPresetName(getActivePreset());
     }
     refreshDisplay();
     boundInputRefreshers.push(refreshDisplay);
     let menuEl = null;
     function onOutsideClick(e) {
-      if (menuEl && !menuEl.contains(e.target) && e.target !== el) closeMenu();
+      if (menuEl && !menuEl.contains(e.target) && e.target !== el2) closeMenu();
     }
     function onEscape(e) {
       if (e.key === "Escape") closeMenu();
@@ -8841,7 +9418,7 @@ Version: v${version}`;
         closeMenu();
         return;
       }
-      const rect = el.getBoundingClientRect();
+      const rect = el2.getBoundingClientRect();
       menuEl = document.createElement("div");
       Object.assign(menuEl.style, {
         position: "fixed",
@@ -8888,12 +9465,12 @@ Version: v${version}`;
       document.addEventListener("keydown", onEscape, true);
       presetMenuState = { rows: rowEls, activeIndex: Math.max(0, getActivePreset() - 1), close: closeMenu };
     }
-    el.addEventListener("click", openMenu);
+    el2.addEventListener("click", openMenu);
   }
-  function enhancePresetNameInput(el) {
-    el.setAttribute("data-wc-enhanced", "true");
-    el.readOnly = false;
-    Object.assign(el.style, {
+  function enhancePresetNameInput(el2) {
+    el2.setAttribute("data-wc-enhanced", "true");
+    el2.readOnly = false;
+    Object.assign(el2.style, {
       backgroundColor: "black",
       color: "white",
       border: "1px solid #b4b4b4",
@@ -8901,24 +9478,24 @@ Version: v${version}`;
       textAlign: "center"
     });
     function refreshDisplay() {
-      if (document.activeElement !== el) el.value = getPresetName(getActivePreset());
+      if (document.activeElement !== el2) el2.value = getPresetName(getActivePreset());
     }
     refreshDisplay();
     boundInputRefreshers.push(refreshDisplay);
     function commit() {
-      setPresetName(getActivePreset(), el.value);
+      setPresetName(getActivePreset(), el2.value);
       boundInputRefreshers.forEach((fn) => fn());
     }
-    el.addEventListener("blur", commit);
-    el.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") el.blur();
+    el2.addEventListener("blur", commit);
+    el2.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") el2.blur();
     });
   }
-  function enhanceResetButton(el) {
-    el.setAttribute("data-wc-enhanced", "true");
-    el.readOnly = true;
-    el.tabIndex = 0;
-    Object.assign(el.style, {
+  function enhanceResetButton(el2) {
+    el2.setAttribute("data-wc-enhanced", "true");
+    el2.readOnly = true;
+    el2.tabIndex = 0;
+    Object.assign(el2.style, {
       cursor: "pointer",
       backgroundColor: "black",
       color: "white",
@@ -8927,22 +9504,22 @@ Version: v${version}`;
       textAlign: "center"
     });
     function refreshDisplay() {
-      el.value = "Double Click to Reset";
+      el2.value = "Double Click to Reset";
     }
     refreshDisplay();
     boundInputRefreshers.push(refreshDisplay);
-    el.addEventListener("dblclick", () => {
+    el2.addEventListener("dblclick", () => {
       resetPresetBindings(getActivePreset(), CONTROLLER_ACTIONS.map((a) => a.key), HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key));
       boundInputRefreshers.forEach((fn) => fn());
-      el.value = "\u2705 Reset to Defaults";
+      el2.value = "\u2705 Reset to Defaults";
       setTimeout(refreshDisplay, 1500);
     });
   }
-  function enhanceDetectControllerButton(el) {
-    el.setAttribute("data-wc-enhanced", "true");
-    el.readOnly = true;
-    el.tabIndex = 0;
-    Object.assign(el.style, {
+  function enhanceDetectControllerButton(el2) {
+    el2.setAttribute("data-wc-enhanced", "true");
+    el2.readOnly = true;
+    el2.tabIndex = 0;
+    Object.assign(el2.style, {
       cursor: "pointer",
       backgroundColor: "black",
       color: "white",
@@ -8951,13 +9528,13 @@ Version: v${version}`;
       textAlign: "center"
     });
     function refreshDisplay() {
-      el.value = isHidConnected() ? "\u2705 Controller Detected (WebHID)" : "\u{1F3AE} Click to Detect Controller (WebHID)";
+      el2.value = isHidConnected() ? "\u2705 Controller Detected (WebHID)" : "\u{1F3AE} Click to Detect Controller (WebHID)";
     }
     refreshDisplay();
     boundInputRefreshers.push(refreshDisplay);
-    el.addEventListener("click", async () => {
+    el2.addEventListener("click", async () => {
       if (isHidConnected()) return;
-      el.value = "Check your browser's device picker\u2026";
+      el2.value = "Check your browser's device picker\u2026";
       try {
         await connectWebHidController();
       } finally {
@@ -8972,57 +9549,57 @@ Version: v${version}`;
     let everFoundOne = false;
     const observer2 = new MutationObserver(() => {
       const matches = document.querySelectorAll(`input[id^="${idPrefix}"]:not([data-wc-enhanced]), select[id^="${idPrefix}"]:not([data-wc-enhanced])`);
-      matches.forEach((el) => {
+      matches.forEach((el2) => {
         everFoundOne = true;
-        const bindingKey = el.id.slice(idPrefix.length);
+        const bindingKey = el2.id.slice(idPrefix.length);
         if (bindingKey.startsWith("__divider_") || bindingKey.startsWith("__info_")) {
-          enhanceControllerDivider(el);
+          enhanceControllerDivider(el2);
           return;
         }
         if (bindingKey === "detectController") {
-          enhanceDetectControllerButton(el);
+          enhanceDetectControllerButton(el2);
           return;
         }
         if (bindingKey === "presetSelector") {
-          enhancePresetSelector(el);
+          enhancePresetSelector(el2);
           return;
         }
         if (bindingKey === "presetName") {
-          enhancePresetNameInput(el);
+          enhancePresetNameInput(el2);
           return;
         }
         if (bindingKey === "resetPreset") {
-          enhanceResetButton(el);
+          enhanceResetButton(el2);
           return;
         }
         if (bindingKey === "controllerPrimary") {
-          enhanceControllerCaptureInput(el, () => getControllerPrimaryButton(), (v) => setControllerPrimaryButton(v));
+          enhanceControllerCaptureInput(el2, () => getControllerPrimaryButton(), (v) => setControllerPrimaryButton(v));
           return;
         }
         if (bindingKey === "channelGuide") {
-          enhanceControllerCaptureInput(el, () => getChannelGuideButton(), (v) => setChannelGuideButton(v));
+          enhanceControllerCaptureInput(el2, () => getChannelGuideButton(), (v) => setChannelGuideButton(v));
           return;
         }
         if (CONTROLLER_ACTIONS_BY_KEY[bindingKey]) {
-          enhanceControllerCaptureInput(el, () => getBoundButton(bindingKey), (v) => setBoundButton(bindingKey, v));
+          enhanceControllerCaptureInput(el2, () => getBoundButton(bindingKey), (v) => setBoundButton(bindingKey, v));
           return;
         }
         if (bindingKey.startsWith("shortcut_")) {
           const shortcutKey = bindingKey.slice("shortcut_".length);
           if (HARDWARE_SHORTCUT_ACTIONS_BY_KEY[shortcutKey]) {
-            enhanceControllerCaptureInput(el, () => getBoundShortcutButton(shortcutKey), (v) => setBoundShortcutButton(shortcutKey, v));
+            enhanceControllerCaptureInput(el2, () => getBoundShortcutButton(shortcutKey), (v) => setBoundShortcutButton(shortcutKey, v));
             return;
           }
         }
         if (bindingKey === "debugTextEnabled") {
-          observeDebugTextCheckbox(el);
+          observeDebugTextCheckbox(el2);
           return;
         }
         if (bindingKey === "highlightColor") {
-          observeHighlightColorSelect(el);
+          observeHighlightColorSelect(el2);
           return;
         }
-        el.setAttribute("data-wc-enhanced", "true");
+        el2.setAttribute("data-wc-enhanced", "true");
       });
     });
     observer2.observe(document.body, { childList: true, subtree: true });
@@ -9465,9 +10042,9 @@ Version: v${version}`;
       selectEl.appendChild(hint);
     }
     function updateSelectHighlight() {
-      selectRowEls.forEach((el, i) => {
+      selectRowEls.forEach((el2, i) => {
         const active = i === selectIndex;
-        el.style.boxShadow = active ? "inset 0 0 0 999px rgba(255,255,255,0.18)" : "none";
+        el2.style.boxShadow = active ? "inset 0 0 0 999px rgba(255,255,255,0.18)" : "none";
       });
     }
     function mount() {
@@ -9493,7 +10070,7 @@ Version: v${version}`;
       for (const sel of def.containerSelectors) {
         const container = document.querySelector(sel);
         if (!container) continue;
-        const items = Array.from(container.querySelectorAll(def.itemSelector)).filter((el) => el.offsetParent !== null);
+        const items = Array.from(container.querySelectorAll(def.itemSelector)).filter((el2) => el2.offsetParent !== null);
         if (items.length) {
           if (isDebugTextEnabled()) console.log(`[Wizascript Controller] group "${def.name}" found via "${sel}": ${items.length} items`);
           return { name: def.name, container, items };
@@ -9531,7 +10108,7 @@ Version: v${version}`;
       if (!host) return [];
       let els = Array.from(host.querySelectorAll(".card"));
       if (!els.length) els = Array.from(host.children);
-      return els.filter((el) => el.offsetParent !== null);
+      return els.filter((el2) => el2.offsetParent !== null);
     }
     function queryBoardMonsterCards() {
       const slots = Array.from(document.querySelectorAll(".droppableMonster.slot, .droppableMonster"));
@@ -9541,7 +10118,7 @@ Version: v${version}`;
       if (!rows.length) return [];
       let bestRow = rows[0], bestTop = -Infinity;
       for (const row of rows) {
-        const avgTop = row.reduce((sum, el) => sum + el.getBoundingClientRect().top, 0) / row.length;
+        const avgTop = row.reduce((sum, el2) => sum + el2.getBoundingClientRect().top, 0) / row.length;
         if (avgTop > bestTop) {
           bestTop = avgTop;
           bestRow = row;
@@ -9552,11 +10129,11 @@ Version: v${version}`;
     function elArraysEqual(a, b) {
       if (a.length !== b.length) return false;
       const setA = new Set(a);
-      for (const el of b) if (!setA.has(el)) return false;
+      for (const el2 of b) if (!setA.has(el2)) return false;
       return true;
     }
     function buildRowGrid(els, rowTolerance = 28) {
-      const withRect = els.map((el) => ({ el, r: el.getBoundingClientRect() })).sort((a, b) => a.r.top - b.r.top);
+      const withRect = els.map((el2) => ({ el: el2, r: el2.getBoundingClientRect() })).sort((a, b) => a.r.top - b.r.top);
       const rows = [];
       for (const item of withRect) {
         let row = rows.find((r) => Math.abs(r.top - item.r.top) <= rowTolerance);
@@ -9626,7 +10203,7 @@ Version: v${version}`;
       return null;
     }
     function queryModalItems(root) {
-      return Array.from(root.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el) => el.offsetParent !== null);
+      return Array.from(root.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el2) => el2.offsetParent !== null);
     }
     function queryScrollableListItems(root) {
       const scrollable = findScrollableDescendant(root);
@@ -9636,21 +10213,21 @@ Version: v${version}`;
         if (row.tagName !== "DIV") return;
         Array.from(row.children).filter((c) => c.tagName === "SPAN").forEach((s) => items.push(s));
       });
-      return items.filter((el) => el.offsetParent !== null);
+      return items.filter((el2) => el2.offsetParent !== null);
     }
     function sidebarLabels(view) {
       const out = [];
-      Array.from(view.children).forEach((el) => {
-        if (el.classList.contains("tabLabel")) out.push(el);
-        else if (el.classList.contains("tabContent") && el.classList.contains("nested")) {
-          const inner = el.querySelector(":scope > .tabbedView");
+      Array.from(view.children).forEach((el2) => {
+        if (el2.classList.contains("tabLabel")) out.push(el2);
+        else if (el2.classList.contains("tabContent") && el2.classList.contains("nested")) {
+          const inner = el2.querySelector(":scope > .tabbedView");
           if (inner) out.push(...sidebarLabels(inner));
         }
       });
       return out;
     }
     function queryCategoryItems(tabbedRoot) {
-      return sidebarLabels(tabbedRoot).filter((el) => el.offsetParent !== null).sort((a, b) => {
+      return sidebarLabels(tabbedRoot).filter((el2) => el2.offsetParent !== null).sort((a, b) => {
         const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
         if (Math.abs(ra.top - rb.top) > 2) return ra.top - rb.top;
         return ra.left - rb.left;
@@ -9676,12 +10253,12 @@ Version: v${version}`;
       return null;
     }
     function queryFieldRows(root) {
-      const flexRows = Array.from(root.querySelectorAll(".flex-start")).filter((row) => row.offsetParent !== null).map((row) => Array.from(row.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el) => el.offsetParent !== null)).filter((items) => items.length);
+      const flexRows = Array.from(root.querySelectorAll(".flex-start")).filter((row) => row.offsetParent !== null).map((row) => Array.from(row.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el2) => el2.offsetParent !== null)).filter((items) => items.length);
       const labelRows = /* @__PURE__ */ new Map();
-      Array.from(root.querySelectorAll(".tabLabel")).filter((el) => el.offsetParent !== null && !(el.classList.contains("wizascript-tab-arrow") && el.classList.contains("disabled"))).forEach((el) => {
-        const key = el.parentElement;
+      Array.from(root.querySelectorAll(".tabLabel")).filter((el2) => el2.offsetParent !== null && !(el2.classList.contains("wizascript-tab-arrow") && el2.classList.contains("disabled"))).forEach((el2) => {
+        const key = el2.parentElement;
         if (!labelRows.has(key)) labelRows.set(key, []);
-        labelRows.get(key).push(el);
+        labelRows.get(key).push(el2);
       });
       const bareLabels = Array.from(labelRows.values()).map((row) => row.sort((a, b) => {
         const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
@@ -9715,6 +10292,45 @@ Version: v${version}`;
         fieldSubmenu.onCancel && fieldSubmenu.onCancel();
         fieldSubmenu = null;
       }
+    }
+    const SETTINGS_TAB_PREV_BUTTON = 4;
+    const SETTINGS_TAB_NEXT_BUTTON = 5;
+    let shoulderHeld = { 4: false, 5: false };
+    function pluginTabRow(content) {
+      const view = content && content.querySelector(".tabbedView:not(.single)");
+      if (!view) return null;
+      const labels = Array.from(view.querySelectorAll(":scope > .tabLabel")).filter((l) => !l.classList.contains("wizascript-tab-arrow"));
+      return labels.length > 1 ? labels : null;
+    }
+    function cycleSettingsTab(dir, tabbedRoot) {
+      const row = modalPane === "fields" ? pluginTabRow(queryActiveTabContent(tabbedRoot)) : null;
+      if (row) {
+        const cur2 = Math.max(0, row.findIndex(isTabLabelChecked));
+        const target2 = row[(cur2 + dir + row.length) % row.length];
+        triggerElementClick(target2);
+        if (isDebugTextEnabled()) console.log("[Wizascript Controller] settings: tab", dir > 0 ? "next" : "previous", "->", target2.textContent);
+        return target2;
+      }
+      const cats = categoryItems.filter((l) => !isFoldLabel(l) || !isTabLabelChecked(l));
+      if (!cats.length) return null;
+      const curLabel = categoryItems.find((l) => isTabLabelChecked(l) && !isFoldLabel(l));
+      const cur = Math.max(0, cats.indexOf(curLabel));
+      const target = cats[(cur + dir + cats.length) % cats.length];
+      triggerElementClick(target);
+      if (isFoldLabel(target)) {
+        const modalInfo = queryModalRoot();
+        if (modalInfo && modalInfo.tabbedRoot) categoryItems = queryCategoryItems(modalInfo.tabbedRoot);
+        const shown = categoryItems.find((l) => isTabLabelChecked(l) && !isFoldLabel(l));
+        categoryIndex = shown ? categoryItems.indexOf(shown) : categoryItems.indexOf(target);
+      } else {
+        categoryIndex = categoryItems.indexOf(target);
+      }
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] settings: category", dir > 0 ? "next" : "previous", "->", target.textContent);
+      return null;
+    }
+    function selectedColInTabRow(row) {
+      if (!row || !row.length || !row.every((el2) => el2.classList && el2.classList.contains("tabLabel"))) return -1;
+      return row.findIndex(isTabLabelChecked);
     }
     function findModalDismissButton(root) {
       const byAttr = root.querySelector('[data-dismiss="modal"], .close');
@@ -9764,15 +10380,15 @@ Version: v${version}`;
       const idx = itemIndexByGroupName[g.name] || 0;
       return g.items[idx] || null;
     }
-    function setHighlight(el) {
-      if (!el) return;
-      el.style.outline = `${getHighlightThickness()}px solid ${getHighlightColor()}`;
-      el.style.outlineOffset = "2px";
+    function setHighlight(el2) {
+      if (!el2) return;
+      el2.style.outline = `${getHighlightThickness()}px solid ${getHighlightColor()}`;
+      el2.style.outlineOffset = "2px";
     }
-    function clearHighlight(el) {
-      if (!el) return;
-      el.style.outline = "";
-      el.style.outlineOffset = "";
+    function clearHighlight(el2) {
+      if (!el2) return;
+      el2.style.outline = "";
+      el2.style.outlineOffset = "";
     }
     function refreshHighlight() {
       if (navInputMethod !== "dpad") {
@@ -9782,30 +10398,30 @@ Version: v${version}`;
         }
         return;
       }
-      const el = currentFocusedEl();
-      if (el === currentHighlightedEl) return;
+      const el2 = currentFocusedEl();
+      if (el2 === currentHighlightedEl) return;
       if (currentHighlightedEl) clearHighlight(currentHighlightedEl);
-      if (el) setHighlight(el);
-      currentHighlightedEl = el;
+      if (el2) setHighlight(el2);
+      currentHighlightedEl = el2;
     }
-    function isTextInput(el) {
-      if (!el) return false;
-      if (el.readOnly) return false;
-      if (el.tagName === "TEXTAREA") return true;
-      if (el.tagName === "INPUT") {
-        const type = (el.type || "text").toLowerCase();
+    function isTextInput(el2) {
+      if (!el2) return false;
+      if (el2.readOnly) return false;
+      if (el2.tagName === "TEXTAREA") return true;
+      if (el2.tagName === "INPUT") {
+        const type = (el2.type || "text").toLowerCase();
         return ["text", "search", "email", "url", "tel", "password", "number"].includes(type);
       }
-      return !!el.isContentEditable;
+      return !!el2.isContentEditable;
     }
-    function isSlider(el) {
-      return !!el && el.tagName === "INPUT" && (el.type || "").toLowerCase() === "range";
+    function isSlider(el2) {
+      return !!el2 && el2.tagName === "INPUT" && (el2.type || "").toLowerCase() === "range";
     }
-    function isNativeSelect(el) {
-      return !!el && el.tagName === "SELECT";
+    function isNativeSelect(el2) {
+      return !!el2 && el2.tagName === "SELECT";
     }
-    function placeCaretAtPoint(el, cx, cy) {
-      if (!el || !el.isContentEditable) return;
+    function placeCaretAtPoint(el2, cx, cy) {
+      if (!el2 || !el2.isContentEditable) return;
       let range = null;
       if (document.caretRangeFromPoint) {
         range = document.caretRangeFromPoint(cx, cy);
@@ -9817,19 +10433,19 @@ Version: v${version}`;
           range.collapse(true);
         }
       }
-      if (range && el.contains(range.startContainer)) {
+      if (range && el2.contains(range.startContainer)) {
         const sel = pageWindow2.getSelection();
         sel.removeAllRanges();
         sel.addRange(range);
-        if (isDebugTextEnabled()) console.log("[Wizascript Controller] caret repositioned in", el, "at", cx, cy);
+        if (isDebugTextEnabled()) console.log("[Wizascript Controller] caret repositioned in", el2, "at", cx, cy);
       }
     }
-    function firstTextNode(el) {
-      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    function firstTextNode(el2) {
+      const walker = document.createTreeWalker(el2, NodeFilter.SHOW_TEXT);
       return walker.nextNode();
     }
-    function lastTextNode(el) {
-      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    function lastTextNode(el2) {
+      const walker = document.createTreeWalker(el2, NodeFilter.SHOW_TEXT);
       let last = null, node;
       while (node = walker.nextNode()) last = node;
       return last;
@@ -9911,21 +10527,21 @@ Version: v${version}`;
       oskTarget = null;
       if (isDebugTextEnabled()) console.log("[Wizascript Controller] OSK closed");
     }
-    function dispatchEnterKey(el) {
-      el.focus();
-      const scope = el.closest("form") || el.closest(".chat-box") || el.parentElement;
+    function dispatchEnterKey(el2) {
+      el2.focus();
+      const scope = el2.closest("form") || el2.closest(".chat-box") || el2.parentElement;
       const submitEl = scope && scope.querySelector('input[type="submit"]');
       if (submitEl) {
         submitEl.click();
         return;
       }
       const opts = { bubbles: true, cancelable: true, key: "Enter", code: "Enter", keyCode: 13, which: 13, view: pageWindow2 };
-      el.dispatchEvent(new KeyboardEvent("keydown", opts));
-      el.dispatchEvent(new KeyboardEvent("keypress", opts));
-      el.dispatchEvent(new KeyboardEvent("keyup", opts));
+      el2.dispatchEvent(new KeyboardEvent("keydown", opts));
+      el2.dispatchEvent(new KeyboardEvent("keypress", opts));
+      el2.dispatchEvent(new KeyboardEvent("keyup", opts));
     }
     let scrollMirrorEl = null;
-    function measureTextWidth(el, text) {
+    function measureTextWidth(el2, text) {
       if (!scrollMirrorEl) {
         scrollMirrorEl = document.createElement("span");
         Object.assign(scrollMirrorEl.style, {
@@ -9937,43 +10553,43 @@ Version: v${version}`;
         });
         document.body.appendChild(scrollMirrorEl);
       }
-      const cs = getComputedStyle(el);
+      const cs = getComputedStyle(el2);
       scrollMirrorEl.style.font = cs.font;
       scrollMirrorEl.style.letterSpacing = cs.letterSpacing;
       scrollMirrorEl.style.textTransform = cs.textTransform;
       scrollMirrorEl.textContent = text;
       return scrollMirrorEl.getBoundingClientRect().width;
     }
-    function scrollFieldToCaret(el) {
-      if (!el || el.isContentEditable) return;
-      if (typeof el.selectionEnd !== "number") return;
-      const pos = el.selectionEnd;
-      const caretX = measureTextWidth(el, el.value.slice(0, pos));
-      const visibleWidth = el.clientWidth;
+    function scrollFieldToCaret(el2) {
+      if (!el2 || el2.isContentEditable) return;
+      if (typeof el2.selectionEnd !== "number") return;
+      const pos = el2.selectionEnd;
+      const caretX = measureTextWidth(el2, el2.value.slice(0, pos));
+      const visibleWidth = el2.clientWidth;
       const margin = 12;
-      if (caretX - el.scrollLeft > visibleWidth - margin) {
-        el.scrollLeft = caretX - visibleWidth + margin;
-      } else if (caretX - el.scrollLeft < margin) {
-        el.scrollLeft = Math.max(0, caretX - margin);
+      if (caretX - el2.scrollLeft > visibleWidth - margin) {
+        el2.scrollLeft = caretX - visibleWidth + margin;
+      } else if (caretX - el2.scrollLeft < margin) {
+        el2.scrollLeft = Math.max(0, caretX - margin);
       }
     }
-    function typeChar(el, ch) {
-      el.focus();
+    function typeChar(el2, ch) {
+      el2.focus();
       const info = keyInfo(ch);
       const base = { bubbles: true, cancelable: true, key: ch, code: info.code, keyCode: info.keyCode, which: info.keyCode, view: pageWindow2 };
-      el.dispatchEvent(new KeyboardEvent("keydown", base));
-      el.dispatchEvent(new KeyboardEvent("keypress", base));
+      el2.dispatchEvent(new KeyboardEvent("keydown", base));
+      el2.dispatchEvent(new KeyboardEvent("keypress", base));
       document.execCommand("insertText", false, ch);
-      el.dispatchEvent(new KeyboardEvent("keyup", base));
-      scrollFieldToCaret(el);
+      el2.dispatchEvent(new KeyboardEvent("keyup", base));
+      scrollFieldToCaret(el2);
     }
-    function typeBackspace(el) {
-      el.focus();
+    function typeBackspace(el2) {
+      el2.focus();
       const base = { bubbles: true, cancelable: true, key: "Backspace", code: "Backspace", keyCode: 8, which: 8, view: pageWindow2 };
-      el.dispatchEvent(new KeyboardEvent("keydown", base));
+      el2.dispatchEvent(new KeyboardEvent("keydown", base));
       document.execCommand("delete");
-      el.dispatchEvent(new KeyboardEvent("keyup", base));
-      scrollFieldToCaret(el);
+      el2.dispatchEvent(new KeyboardEvent("keyup", base));
+      scrollFieldToCaret(el2);
     }
     function pressKey(label) {
       if (!oskTarget) return;
@@ -9986,11 +10602,11 @@ Version: v${version}`;
     }
     let sliderTarget = null;
     const nativeValueSetter = Object.getOwnPropertyDescriptor(pageWindow2.HTMLInputElement.prototype, "value").set;
-    function openSlider(el) {
-      sliderTarget = el;
-      setHighlight(el);
+    function openSlider(el2) {
+      sliderTarget = el2;
+      setHighlight(el2);
       cursor.style.display = "none";
-      if (isDebugTextEnabled()) console.log("[Wizascript Controller] slider focused", el, "value=", el.value, "min=", el.min, "max=", el.max, "step=", el.step);
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] slider focused", el2, "value=", el2.value, "min=", el2.min, "max=", el2.max, "step=", el2.step);
     }
     function closeSlider() {
       if (sliderTarget) clearHighlight(sliderTarget);
@@ -9998,37 +10614,37 @@ Version: v${version}`;
     }
     function adjustSlider(dir) {
       if (!sliderTarget) return;
-      const el = sliderTarget;
-      const step = parseFloat(el.step) || 1;
-      const min = el.min !== "" ? parseFloat(el.min) : -Infinity;
-      const max = el.max !== "" ? parseFloat(el.max) : Infinity;
-      let val = parseFloat(el.value) || 0;
+      const el2 = sliderTarget;
+      const step = parseFloat(el2.step) || 1;
+      const min = el2.min !== "" ? parseFloat(el2.min) : -Infinity;
+      const max = el2.max !== "" ? parseFloat(el2.max) : Infinity;
+      let val = parseFloat(el2.value) || 0;
       val = Math.max(min, Math.min(max, val + dir * step));
-      nativeValueSetter.call(el, String(val));
-      el.dispatchEvent(new Event("input", { bubbles: true }));
-      el.dispatchEvent(new Event("change", { bubbles: true }));
+      nativeValueSetter.call(el2, String(val));
+      el2.dispatchEvent(new Event("input", { bubbles: true }));
+      el2.dispatchEvent(new Event("change", { bubbles: true }));
     }
-    function setSliderValueFromPointer(el, clientX) {
-      const rect = el.getBoundingClientRect();
+    function setSliderValueFromPointer(el2, clientX) {
+      const rect = el2.getBoundingClientRect();
       if (!rect.width) return;
-      const min = el.min !== "" ? parseFloat(el.min) : 0;
-      const max = el.max !== "" ? parseFloat(el.max) : 100;
-      const step = parseFloat(el.step) || 1;
+      const min = el2.min !== "" ? parseFloat(el2.min) : 0;
+      const max = el2.max !== "" ? parseFloat(el2.max) : 100;
+      const step = parseFloat(el2.step) || 1;
       let frac = (clientX - rect.left) / rect.width;
       frac = Math.max(0, Math.min(1, frac));
       let val = min + frac * (max - min);
       val = Math.round(val / step) * step;
       val = Math.max(min, Math.min(max, val));
-      nativeValueSetter.call(el, String(val));
-      el.dispatchEvent(new Event("input", { bubbles: true }));
-      el.dispatchEvent(new Event("change", { bubbles: true }));
+      nativeValueSetter.call(el2, String(val));
+      el2.dispatchEvent(new Event("input", { bubbles: true }));
+      el2.dispatchEvent(new Event("change", { bubbles: true }));
     }
     let selectTarget = null, selectOptions = [], selectIndex = 0;
-    function openSelectPicker(el) {
-      selectTarget = el;
-      selectOptions = Array.from(el.options);
+    function openSelectPicker(el2) {
+      selectTarget = el2;
+      selectOptions = Array.from(el2.options);
       selectIndex = Math.max(0, selectOptions.findIndex((o) => o.selected));
-      const selCs = getComputedStyle(el);
+      const selCs = getComputedStyle(el2);
       const selBg = selCs.backgroundColor;
       selectEl.style.background = selBg && selBg !== "rgba(0, 0, 0, 0)" ? selBg : "#000";
       selectEl.style.border = `${selCs.borderTopWidth} ${selCs.borderTopStyle} ${selCs.borderTopColor}`;
@@ -10037,10 +10653,10 @@ Version: v${version}`;
       selectEl.style.fontSize = selCs.fontSize;
       renderSelectOptions();
       selectEl.style.display = "block";
-      positionPanelNear(selectEl, el);
+      positionPanelNear(selectEl, el2);
       updateSelectHighlight();
       cursor.style.display = "block";
-      if (isDebugTextEnabled()) console.log("[Wizascript Controller] select picker opened", el, selectOptions.map((o) => o.text));
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] select picker opened", el2, selectOptions.map((o) => o.text));
     }
     function closeSelectPicker() {
       selectEl.style.display = "none";
@@ -10057,15 +10673,15 @@ Version: v${version}`;
       closeSelectPicker();
     }
     function activateHighlighted(button) {
-      const el = currentFocusedEl();
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
+      const el2 = currentFocusedEl();
+      if (!el2) return;
+      const rect = el2.getBoundingClientRect();
       const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
-      if (isPatchMakerResetButton(el)) {
-        activatePatchMakerResetButton(el, cx, cy);
+      if (isPatchMakerResetButton(el2)) {
+        activatePatchMakerResetButton(el2, cx, cy);
         return;
       }
-      dispatchClick(el, cx, cy, button === 2 ? 2 : 0);
+      dispatchClick(el2, cx, cy, button === 2 ? 2 : 0);
       const openPresetMenu = getPresetMenuState();
       if (openPresetMenu) {
         fieldSubmenu = {
@@ -10079,31 +10695,31 @@ Version: v${version}`;
         };
         return;
       }
-      if (isNativeSelect(el)) {
-        openSelectPicker(el);
+      if (isNativeSelect(el2)) {
+        openSelectPicker(el2);
         return;
       }
-      if (isSlider(el)) {
-        openSlider(el);
+      if (isSlider(el2)) {
+        openSlider(el2);
         return;
       }
-      if (el.matches && el.matches(".uc-section-label, .uc-card-item")) {
-        el.focus();
+      if (el2.matches && el2.matches(".uc-section-label, .uc-card-item")) {
+        el2.focus();
         return;
       }
-      if (el.readOnly && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) {
-        el.focus();
+      if (el2.readOnly && (el2.tagName === "INPUT" || el2.tagName === "TEXTAREA")) {
+        el2.focus();
         return;
       }
-      if (isTextInput(el)) {
-        openOsk(el);
-        if (el.isContentEditable) placeCaretAtPoint(el, cx, cy);
+      if (isTextInput(el2)) {
+        openOsk(el2);
+        if (el2.isContentEditable) placeCaretAtPoint(el2, cx, cy);
         return;
       }
-      if (!activeSubmenu && el.classList.contains("dropdown-toggle")) {
-        const items = findDropdownMenuNear(el);
+      if (!activeSubmenu && el2.classList.contains("dropdown-toggle")) {
+        const items = findDropdownMenuNear(el2);
         if (items.length) {
-          activeSubmenu = { toggle: el, items, index: 0 };
+          activeSubmenu = { toggle: el2, items, index: 0 };
           refreshHighlight();
         }
       }
@@ -10146,8 +10762,8 @@ Version: v${version}`;
     function currentCursorSpeedMult() {
       return Math.max(0.3, Math.min(3, 1 - cursorSensitivity * 2));
     }
-    function findRealScrollable(el) {
-      let node = el;
+    function findRealScrollable(el2) {
+      let node = el2;
       while (node && node !== document.documentElement) {
         const cs = getComputedStyle(node);
         if (/(auto|scroll)/.test(cs.overflowY) && node.scrollHeight > node.clientHeight) return node;
@@ -10175,7 +10791,7 @@ Version: v${version}`;
       }
       return rowEls.length - 1;
     }
-    function fire(el, type, ctor, clientX, clientY, button, buttons) {
+    function fire(el2, type, ctor, clientX, clientY, button, buttons) {
       const opts = {
         bubbles: true,
         cancelable: true,
@@ -10190,43 +10806,43 @@ Version: v${version}`;
         opts.isPrimary = true;
         opts.pointerType = "mouse";
       }
-      el.dispatchEvent(new ctor(type, opts));
+      el2.dispatchEvent(new ctor(type, opts));
     }
-    function dispatchClick(el, cx, cy, button) {
+    function dispatchClick(el2, cx, cy, button) {
       if (button === 2) {
-        fire(el, "pointerdown", PointerEvent, cx, cy, 2, 2);
-        fire(el, "mousedown", MouseEvent, cx, cy, 2, 2);
-        fire(el, "pointerup", PointerEvent, cx, cy, 2, 0);
-        fire(el, "mouseup", MouseEvent, cx, cy, 2, 0);
-        fire(el, "contextmenu", MouseEvent, cx, cy, 2, 0);
+        fire(el2, "pointerdown", PointerEvent, cx, cy, 2, 2);
+        fire(el2, "mousedown", MouseEvent, cx, cy, 2, 2);
+        fire(el2, "pointerup", PointerEvent, cx, cy, 2, 0);
+        fire(el2, "mouseup", MouseEvent, cx, cy, 2, 0);
+        fire(el2, "contextmenu", MouseEvent, cx, cy, 2, 0);
         return;
       }
-      fire(el, "pointerdown", PointerEvent, cx, cy, 0, 1);
-      fire(el, "mousedown", MouseEvent, cx, cy, 0, 1);
-      fire(el, "pointerup", PointerEvent, cx, cy, 0, 0);
-      fire(el, "mouseup", MouseEvent, cx, cy, 0, 0);
-      fire(el, "click", MouseEvent, cx, cy, 0, 0);
+      fire(el2, "pointerdown", PointerEvent, cx, cy, 0, 1);
+      fire(el2, "mousedown", MouseEvent, cx, cy, 0, 1);
+      fire(el2, "pointerup", PointerEvent, cx, cy, 0, 0);
+      fire(el2, "mouseup", MouseEvent, cx, cy, 0, 0);
+      fire(el2, "click", MouseEvent, cx, cy, 0, 0);
     }
-    function isPatchMakerResetButton(el) {
-      return !!el && el.tagName === "BUTTON" && el.textContent && el.textContent.trim() === "Reset Data";
+    function isPatchMakerResetButton(el2) {
+      return !!el2 && el2.tagName === "BUTTON" && el2.textContent && el2.textContent.trim() === "Reset Data";
     }
     let lastResetBtnPressTime = 0;
-    function activatePatchMakerResetButton(el, cx, cy) {
+    function activatePatchMakerResetButton(el2, cx, cy) {
       const now = performance.now();
       const isConfirmPress = now - lastResetBtnPressTime < DOUBLE_TAP_WINDOW_MS2;
       const detail = isConfirmPress ? 2 : 1;
-      fire(el, "pointerdown", PointerEvent, cx, cy, 0, 1);
-      fire(el, "mousedown", MouseEvent, cx, cy, 0, 1);
-      fire(el, "pointerup", PointerEvent, cx, cy, 0, 0);
-      fire(el, "mouseup", MouseEvent, cx, cy, 0, 0);
-      el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: pageWindow2, clientX: cx, clientY: cy, button: 0, buttons: 0, detail }));
+      fire(el2, "pointerdown", PointerEvent, cx, cy, 0, 1);
+      fire(el2, "mousedown", MouseEvent, cx, cy, 0, 1);
+      fire(el2, "pointerup", PointerEvent, cx, cy, 0, 0);
+      fire(el2, "mouseup", MouseEvent, cx, cy, 0, 0);
+      el2.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: pageWindow2, clientX: cx, clientY: cy, button: 0, buttons: 0, detail }));
       lastResetBtnPressTime = isConfirmPress ? 0 : now;
       if (isDebugTextEnabled()) console.log("[Wizascript Controller] Reset Data pressed, detail =", detail, isConfirmPress ? "(confirmed - resetting)" : "(press again to confirm)");
     }
-    function triggerElementClick(el) {
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      dispatchClick(el, r.left + r.width / 2, r.top + r.height / 2, 0);
+    function triggerElementClick(el2) {
+      if (!el2) return;
+      const r = el2.getBoundingClientRect();
+      dispatchClick(el2, r.left + r.width / 2, r.top + r.height / 2, 0);
     }
     function triggerConcede() {
       const menu = document.querySelector(".menu-backdrop");
@@ -10352,11 +10968,11 @@ Version: v${version}`;
     }
     const hoverRules = collectHoverRules();
     const hoverStyleMap = /* @__PURE__ */ new Map();
-    function resolveHoverStyle(el) {
+    function resolveHoverStyle(el2) {
       const finalProps = /* @__PURE__ */ new Map();
       for (const { selector, style } of hoverRules) {
         try {
-          if (!el.matches(selector)) continue;
+          if (!el2.matches(selector)) continue;
         } catch (e) {
           continue;
         }
@@ -10366,8 +10982,8 @@ Version: v${version}`;
         }
       }
       if (!finalProps.size) return;
-      const originalProps = Array.from(finalProps.keys()).map((prop) => [prop, el.style.getPropertyValue(prop), el.style.getPropertyPriority(prop)]);
-      hoverStyleMap.set(el, {
+      const originalProps = Array.from(finalProps.keys()).map((prop) => [prop, el2.style.getPropertyValue(prop), el2.style.getPropertyPriority(prop)]);
+      hoverStyleMap.set(el2, {
         finalProps: Array.from(finalProps.entries()).map(([p, [v, pr]]) => [p, v, pr]),
         originalProps
       });
@@ -10379,24 +10995,24 @@ Version: v${version}`;
       });
     });
     if (isDebugTextEnabled()) console.log(`[Wizascript Controller] resolved hover styles for ${hoverStyleMap.size} curated element(s)`);
-    function findHoverTarget(el) {
-      if (!el) return null;
-      if (hoverStyleMap.has(el)) return el;
-      const link = el.closest && el.closest("a");
+    function findHoverTarget(el2) {
+      if (!el2) return null;
+      if (hoverStyleMap.has(el2)) return el2;
+      const link = el2.closest && el2.closest("a");
       if (link && hoverStyleMap.has(link)) return link;
       return null;
     }
-    function applyCuratedHover(el) {
-      const entry = hoverStyleMap.get(el);
+    function applyCuratedHover(el2) {
+      const entry = hoverStyleMap.get(el2);
       if (!entry) return;
-      for (const [prop, val, pr] of entry.finalProps) el.style.setProperty(prop, val, pr);
+      for (const [prop, val, pr] of entry.finalProps) el2.style.setProperty(prop, val, pr);
     }
-    function revertCuratedHover(el) {
-      const entry = hoverStyleMap.get(el);
+    function revertCuratedHover(el2) {
+      const entry = hoverStyleMap.get(el2);
       if (!entry) return;
       for (const [prop, val, pr] of entry.originalProps) {
-        if (val) el.style.setProperty(prop, val, pr);
-        else el.style.removeProperty(prop);
+        if (val) el2.style.setProperty(prop, val, pr);
+        else el2.style.removeProperty(prop);
       }
     }
     let hoverActiveEl = null;
@@ -10407,28 +11023,28 @@ Version: v${version}`;
       hoverActiveEl = target;
     }
     let lastHitEl = null;
-    function updateHover(el, cx, cy) {
-      if (el !== lastHitEl) {
+    function updateHover(el2, cx, cy) {
+      if (el2 !== lastHitEl) {
         if (lastHitEl) {
           fire(lastHitEl, "pointerout", PointerEvent, cx, cy, 0, 0);
           fire(lastHitEl, "mouseout", MouseEvent, cx, cy, 0, 0);
           fire(lastHitEl, "pointerleave", PointerEvent, cx, cy, 0, 0);
           fire(lastHitEl, "mouseleave", MouseEvent, cx, cy, 0, 0);
         }
-        if (el) {
-          fire(el, "pointerover", PointerEvent, cx, cy, 0, 0);
-          fire(el, "mouseover", MouseEvent, cx, cy, 0, 0);
-          fire(el, "pointerenter", PointerEvent, cx, cy, 0, 0);
-          fire(el, "mouseenter", MouseEvent, cx, cy, 0, 0);
+        if (el2) {
+          fire(el2, "pointerover", PointerEvent, cx, cy, 0, 0);
+          fire(el2, "mouseover", MouseEvent, cx, cy, 0, 0);
+          fire(el2, "pointerenter", PointerEvent, cx, cy, 0, 0);
+          fire(el2, "mouseenter", MouseEvent, cx, cy, 0, 0);
         }
-        lastHitEl = el;
+        lastHitEl = el2;
       }
-      if (el) {
-        fire(el, "pointermove", PointerEvent, cx, cy, 0, 0);
-        fire(el, "mousemove", MouseEvent, cx, cy, 0, 0);
+      if (el2) {
+        fire(el2, "pointermove", PointerEvent, cx, cy, 0, 0);
+        fire(el2, "mousemove", MouseEvent, cx, cy, 0, 0);
       }
       const focused = currentFocusedEl();
-      setHoverTarget(findHoverTarget(focused || el));
+      setHoverTarget(findHoverTarget(focused || el2));
     }
     document.addEventListener("mousemove", (e) => {
       if (!e.isTrusted) return;
@@ -10537,6 +11153,7 @@ Version: v${version}`;
           guideBtn0Held = btn(0);
         }
         wasCaptureActiveLastFrame = captureActiveNow;
+        const settingsTabsActive = !oskOpen && isWizascriptSettingsOpen();
         if (!isControllerCaptureActive()) {
           if (btn(5) && !shortcutBtnHeld[5]) {
             if (oskOpen) {
@@ -10547,7 +11164,7 @@ Version: v${version}`;
                 updateOskHighlight();
               }
               if (isDebugTextEnabled()) console.log("[Wizascript Controller] OSK", oskPaused ? "paused" : "resumed");
-            } else {
+            } else if (!settingsTabsActive) {
               document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
             }
           }
@@ -10574,7 +11191,8 @@ Version: v${version}`;
         }
         if ((!oskOpen || oskPaused) && !isControllerCaptureActive()) {
           const primaryBtn = getControllerPrimaryButton();
-          const l1Down = isBoundInputDown(primaryBtn, btn) || oskOpen && oskPaused;
+          const primaryIsShoulder = primaryBtn === SETTINGS_TAB_PREV_BUTTON || primaryBtn === SETTINGS_TAB_NEXT_BUTTON;
+          const l1Down = isBoundInputDown(primaryBtn, btn) && !(settingsTabsActive && primaryIsShoulder) || oskOpen && oskPaused;
           const viaPause = oskOpen && oskPaused;
           const primaryBase = { key: "Control", code: "ControlLeft", keyCode: 17, which: 17, bubbles: true };
           const guideBtnForRelay = getChannelGuideButton();
@@ -10635,18 +11253,18 @@ R1: resume typing   ${btnLabel(1)}: close` : ""}`;
               hud.textContent = `UC TV Guide loading\u2026
 release ${bindingToDisplay(guideBtn)} to cancel`;
             } else {
-              const playerSpans = Array.from(guideEl.querySelectorAll("span")).filter((el) => el.style.cursor === "pointer");
+              const playerSpans = Array.from(guideEl.querySelectorAll("span")).filter((el2) => el2.style.cursor === "pointer");
               const matches = [];
               const rows = [];
               const rowIndex = /* @__PURE__ */ new Map();
-              playerSpans.forEach((el) => {
-                const row = el.parentElement;
+              playerSpans.forEach((el2) => {
+                const row = el2.parentElement;
                 if (!rowIndex.has(row)) {
                   rowIndex.set(row, matches.length);
                   matches.push([]);
                   rows.push(row);
                 }
-                matches[rowIndex.get(row)].push(el);
+                matches[rowIndex.get(row)].push(el2);
               });
               if (!matches.length) {
                 guideMatchIndex = -1;
@@ -10913,7 +11531,7 @@ left/right = fine-tune   ${btnLabel(0)} hold = drag   ${btnLabel(1)} = done`;
           cursor.style.left = x + "px";
           cursor.style.top = y + "px";
           cursor.style.display = cursorRestingDisplay();
-          const mulliganCards = Array.from(mulliganHost.querySelectorAll(":scope > .card")).filter((el) => el.offsetParent !== null);
+          const mulliganCards = Array.from(mulliganHost.querySelectorAll(":scope > .card")).filter((el2) => el2.offsetParent !== null);
           const confirmBtn = document.querySelector(".bootstrap-dialog-footer-buttons .btn-primary") || document.querySelector(".modal-footer .btn-primary");
           const mulliganItems = confirmBtn ? [...mulliganCards, confirmBtn] : mulliganCards;
           if (!mulliganItems.length) {
@@ -10959,10 +11577,10 @@ left/right = fine-tune   ${btnLabel(0)} hold = drag   ${btnLabel(1)} = done`;
             updateHover(mulliganGrid[mulliganRow][mulliganCol], x, y);
           }
           if (btn(0) && !btnHeld[0]) {
-            const el = mulliganGrid[mulliganRow][mulliganCol];
-            const r = el.getBoundingClientRect();
-            dispatchClick(el, r.left + r.width / 2, r.top + r.height / 2, 0);
-            if (isDebugTextEnabled()) console.log("[Wizascript Controller] mulligan item clicked", el);
+            const el2 = mulliganGrid[mulliganRow][mulliganCol];
+            const r = el2.getBoundingClientRect();
+            dispatchClick(el2, r.left + r.width / 2, r.top + r.height / 2, 0);
+            if (isDebugTextEnabled()) console.log("[Wizascript Controller] mulligan item clicked", el2);
           }
           btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
           const focusedIsConfirm = mulliganGrid[mulliganRow][mulliganCol] === confirmBtn;
@@ -11050,8 +11668,8 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
               findPrev:
                 for (let r = 0; r < fieldGrid.length; r++) {
                   for (let c = 0; c < fieldGrid[r].length; c++) {
-                    const el = fieldGrid[r][c];
-                    if (el === prevEl || prevArrowDir && el.classList.contains("wizascript-tab-arrow") && el.dataset.dir === prevArrowDir) {
+                    const el2 = fieldGrid[r][c];
+                    if (el2 === prevEl || prevArrowDir && el2.classList.contains("wizascript-tab-arrow") && el2.dataset.dir === prevArrowDir) {
                       fieldRow = r;
                       fieldCol = c;
                       break findPrev;
@@ -11072,8 +11690,8 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
               }
               if (isDebugTextEnabled()) {
                 const path = [];
-                for (let el = activeContent; el && el !== tabbedRoot; el = el.parentElement) {
-                  if (el.classList.contains("tabContent") && el.previousElementSibling) path.unshift(el.previousElementSibling.textContent.trim());
+                for (let el2 = activeContent; el2 && el2 !== tabbedRoot; el2 = el2.parentElement) {
+                  if (el2.classList.contains("tabContent") && el2.previousElementSibling) path.unshift(el2.previousElementSibling.textContent.trim());
                 }
                 console.log(
                   "[Wizascript Controller] settings: categories =",
@@ -11092,6 +11710,20 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
               fieldRow = Math.min(fieldRow, fieldGrid.length - 1);
               fieldCol = Math.min(fieldCol, fieldGrid[fieldRow].length - 1);
             }
+            const l1Now = btn(SETTINGS_TAB_PREV_BUTTON), r1Now = btn(SETTINGS_TAB_NEXT_BUTTON);
+            if (!isControllerCaptureActive() && !fieldSubmenu) {
+              const dir = r1Now && !shoulderHeld[5] ? 1 : l1Now && !shoulderHeld[4] ? -1 : 0;
+              if (dir) {
+                navInputMethod = "dpad";
+                const switchedTo = cycleSettingsTab(dir, tabbedRoot);
+                if (switchedTo && modalPane === "fields") {
+                  fieldGrid = [[switchedTo]];
+                  fieldRow = 0;
+                  fieldCol = 0;
+                }
+              }
+            }
+            shoulderHeld = { 4: l1Now, 5: r1Now };
             if (lx || ly) {
               if (modalPane === "categories") {
                 for (let i = 0; i < categoryItems.length; i++) {
@@ -11135,7 +11767,7 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
               }
               btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
               hud.textContent = `settings: categories (${categoryItems.length ? categoryIndex + 1 : 0}/${categoryItems.length})
-${btnLabel(0)}/\u2192 open category   ${btnLabel(1)} close dialog`;
+${btnLabel(0)}/\u2192 open category   ${btnLabel(1)} close dialog   ${btnLabel(4)}/${btnLabel(5)} switch tab`;
             } else if (fieldSubmenu) {
               if (up && !dpadHeld.up) fieldSubmenu.index = (fieldSubmenu.index - 1 + fieldSubmenu.items.length) % fieldSubmenu.items.length;
               if (down && !dpadHeld.down) fieldSubmenu.index = (fieldSubmenu.index + 1) % fieldSubmenu.items.length;
@@ -11168,9 +11800,14 @@ ${btnLabel(0)} select   \u2190/${btnLabel(1)} cancel`;
                       fieldNeedsReanchor = false;
                     }
                   } else {
+                    const rowBefore = fieldRow;
                     if (up && !dpadHeld.up) fieldRow = Math.max(0, fieldRow - 1);
                     if (down && !dpadHeld.down) fieldRow = Math.min(fieldGrid.length - 1, fieldRow + 1);
                     fieldCol = Math.min(fieldCol, fieldGrid[fieldRow].length - 1);
+                    if (fieldRow !== rowBefore) {
+                      const sel = selectedColInTabRow(fieldGrid[fieldRow]);
+                      if (sel >= 0) fieldCol = sel;
+                    }
                     if (right && !dpadHeld.right) fieldCol = Math.min(fieldGrid[fieldRow].length - 1, fieldCol + 1);
                     if (left && !dpadHeld.left) {
                       if (fieldCol > 0) fieldCol -= 1;
@@ -11195,7 +11832,7 @@ ${btnLabel(0)} select   \u2190/${btnLabel(1)} cancel`;
               btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
               const fieldPos = fieldGrid.length ? `row ${fieldRow + 1}/${fieldGrid.length}, col ${fieldCol + 1}/${fieldGrid[fieldRow].length}` : "(empty)";
               hud.textContent = `settings: fields ${fieldPos}
-${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   \u2190/${btnLabel(1)} back to categories`;
+${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   \u2190/${btnLabel(1)} back to categories   ${btnLabel(4)}/${btnLabel(5)} switch tab`;
             }
             return;
           }
@@ -11205,7 +11842,7 @@ ${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   \u2190/${btnLabel(1)} ba
             return;
           }
           if (!modalGrid || !elArraysEqual(gridFlat(modalGrid), modalItems)) {
-            modalGrid = kind === "menu" ? modalItems.map((el) => [el]) : buildRowGrid(modalItems);
+            modalGrid = kind === "menu" ? modalItems.map((el2) => [el2]) : buildRowGrid(modalItems);
             modalRow = 0;
             modalCol = 0;
           }
@@ -11380,10 +12017,10 @@ ${btnLabel(0)} drop here   ${btnLabel(1)} cancel`;
             }
             if (btn(0) && !btnHeld[0]) {
               if (navInputMethod === "dpad") {
-                const el = resolveGrid[resolveRow][resolveCol];
-                const r = el.getBoundingClientRect();
-                dispatchClick(el, r.left + r.width / 2, r.top + r.height / 2, 0);
-                if (isDebugTextEnabled()) console.log("[Wizascript Controller] resolve target confirmed (d-pad)", el);
+                const el2 = resolveGrid[resolveRow][resolveCol];
+                const r = el2.getBoundingClientRect();
+                dispatchClick(el2, r.left + r.width / 2, r.top + r.height / 2, 0);
+                if (isDebugTextEnabled()) console.log("[Wizascript Controller] resolve target confirmed (d-pad)", el2);
               } else {
                 cursor.style.display = "none";
                 const hitEl2 = document.elementFromPoint(x, y);
@@ -11659,6 +12296,7 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     const installState = runMigrations();
     registerPluginToggles(plugin);
     registerAboutSection(plugin);
+    registerBackupSection(plugin);
     initTabBar(plugin);
     initPatchMaker(plugin);
     initTrueHubBridge(plugin);

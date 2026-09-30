@@ -11,6 +11,7 @@ import {
   cardHasTag, toggleCardTag, DEFAULT_COLORS
 } from "./storage.js";
 import { decorateCard, decorateAllCards } from "./indicators.js";
+import { openShareTagsDialog, openImportTagsDialog } from "./share.js";
 
 let logger = null;
 export function setMenuLogger(instance) {
@@ -332,7 +333,11 @@ function openManageTagsDialog() {
     title: "Manage Tags",
     message: wrapper,
     cssClass: "mono",
-    buttons: [{ label: "Close", action: d => { d.close(); maybeRefreshSearch(); } }]
+    buttons: [
+      { label: "Share…", action: () => openShareTagsDialog() },
+      { label: "Import…", action: () => openImportTagsDialog(() => { decorateAllCards(); renderList(); }) },
+      { label: "Close", action: d => { d.close(); maybeRefreshSearch(); } }
+    ]
   });
 }
 

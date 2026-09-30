@@ -13,9 +13,9 @@ Wizascript's feature set is intentionally scoped to comply with UC moderation gu
 
 All of Wizascript's settings live under UnderScript's settings menu, in **Plugins → Wizascript**:
 
-- **General** tab: the **Plugins** and **Miscellaneous** lists, one on/off switch per feature (hover each for a short description), plus the version number and a **Changelog** button. New installs start with every plugin switched off. Turning a plugin on or off takes effect after a page refresh.
+- **General** tab: the **Plugins** and **Miscellaneous** lists, one on/off switch per feature (hover each for a short description), plus the version number, a **Changelog** button, and **Back up / Restore settings** (all your Wizascript settings and saved data as one code or file, for moving to another browser or after a reinstall). New installs start with every plugin switched off. Turning a plugin on or off takes effect after a page refresh.
 - **One tab per enabled plugin**, holding only that plugin's settings. Plugins that are switched off don't show a tab at all.
-- **Keybinds** tab: appears once you enable a plugin with keyboard shortcuts (Patch Maker, UC TV, Notepad), and only lists shortcuts for the plugins you have on.
+- **Keybinds** tab: appears once you enable a plugin with keyboard shortcuts (Patch Maker, UC TV, Notepad), and only lists shortcuts for the plugins you have on. A warning appears under any shortcut that clashes with another one, with your Primary key, or with UnderScript's Space-to-end-turn hotkey.
 - **Controller Support** tab: appears when Controller Support is enabled, and likewise only lists controller bindings for the plugins you have on.
 - If more tabs are open than fit in one row, they're split into pages, and **◀ ▶** arrows pinned to the right end of the row flip between pages.
 
@@ -51,10 +51,11 @@ Full gamepad navigation, for players who'd rather not reach for a mouse/keyboard
 
 - **Movement & clicking** — the left stick drives a synthetic cursor. The right stick's horizontal axis is a speed dial for it: push it left to speed the cursor up (up to 3x), push it right to slow down for fine positioning (down to 0.3x). The right stick's vertical axis is separate from cursor movement entirely. It free-scrolls whatever list or panel currently has focus (a settings category, the UC TV channel guide, a scrollable dialog), and the d-pad snaps to whatever's now visible the next time you press it, rather than wherever it was pointed before you scrolled. Face buttons click/alt-click/cancel; the d-pad drives structured step-through navigation (menus, dialogs, hand/board) anywhere Wizascript can detect a clear layout to step through.
 - **In-Game Inputs** — a fixed set of no-hold-required hardware shortcuts, each individually remappable: Concede, End Turn, opening your/the opponent's dustpile, opening Wizascript's settings, opening Card Tracker's tracker-preset picker, and pausing/resuming the on-screen keyboard while it's open.
+- **In Settings** — L1/R1 switch tabs: sidebar categories while the sidebar has focus, or the open plugin's own tabs (e.g. Wizascript's General / Patch Maker / …) while you're in its settings.
 - **Presets** — up to 3 independent sets of button bindings, switchable from a dropdown at the top of the tab (handy for sharing one controller between players, or keeping a couple of layouts around). "Restore Settings to Default" (double-click) resets whichever preset is currently selected back to its defaults.
 
 ### Card Tags
-Custom, user-defined tags for cards in Crafting and Deck-building. That means no preset list, just names you create yourself. Right-click any card to create a tag (with its own color) or toggle it on/off, filter by typing a tag name into the existing search bar, and spot tagged cards at a glance via a small on-card indicator dot. A "Manage Tags…" dialog handles renaming, recoloring, and deleting tags in one place. Enable it from the Miscellaneous list.
+Custom, user-defined tags for cards in Crafting and Deck-building. That means no preset list, just names you create yourself. Right-click any card to create a tag (with its own color) or toggle it on/off, filter by typing a tag name into the existing search bar, and spot tagged cards at a glance via a small on-card indicator dot. A "Manage Tags…" dialog handles renaming, recoloring, and deleting tags in one place, and can **Share…** some or all of your tags (with the cards they're on) as a code, or **Import…** a friend's code. Imported tags merge into yours by name and never remove anything. Enable it from the Miscellaneous list.
 
 ### bot/
 A small Node.js bot that scrapes deck codes and metadata from a Discord server and writes them to `bot/decks.json`, which True Hub Bridge reads. Runs both as a one-off full sync (`bot.js`) and an incremental sync (`new-only-sync.js`), automated via GitHub Actions.
@@ -63,7 +64,7 @@ A small Node.js bot that scrapes deck codes and metadata from a Discord server a
 
 ```
 packages/
-  core/            shared bootstrap, Plugins list + migration, about/changelog, settings wrapper, page-window access, page matching, keybind registry
+  core/            shared bootstrap, Plugins list + migration, about/changelog, backup/restore + share codes, settings wrapper, page-window access, page matching, keybind registry
   patch-maker/
   uc-tv/           spectator-mode channel switching + guide overlay
   true-hub-bridge/

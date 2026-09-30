@@ -90,6 +90,8 @@ function writeCode(bindingKey, code) {
 // drift out of sync with the underlying value.
 const DISPLAY_OVERRIDES = {
   Control: 'Ctrl', Shift: 'Shift', Alt: 'Alt', Meta: 'Meta',
+  ControlLeft: 'Left Ctrl', ControlRight: 'Right Ctrl', ShiftLeft: 'Left Shift', ShiftRight: 'Right Shift',
+  AltLeft: 'Left Alt', AltRight: 'Right Alt', MetaLeft: 'Left Meta', MetaRight: 'Right Meta',
   ArrowUp: 'Up Arrow', ArrowDown: 'Down Arrow', ArrowLeft: 'Left Arrow', ArrowRight: 'Right Arrow',
   Space: 'Space', Escape: 'Esc', Comma: ',', Period: '.', unbound: 'Unbound'
 };
@@ -160,6 +162,7 @@ function enhanceInput(el, bindingKey, defaultCode) {
       el.style.boxShadow = 'none';
       document.removeEventListener('keydown', capture, true);
       refreshDisplay();
+      scheduleConflictRefresh();
       el.removeEventListener('blur', onBlur);
     });
   });
@@ -196,6 +199,7 @@ function startObserver() {
       }
       if (!bindingDefaults.has(bindingKey)) return;
       enhanceInput(el, bindingKey, bindingDefaults.get(bindingKey));
+      scheduleConflictRefresh();
     });
   });
   observer.observe(document.body, { childList: true, subtree: true });
@@ -497,7 +501,103 @@ function registerKeybindNow(plugin, config) {
     bindingDefaults.set(key, defaultCode);
   }
 
-  registry.push({ key, pluginId, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease, onPrimaryDoubleTap });
+  registry.push({ key, name, packageLabel, pluginId, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease, onPrimaryDoubleTap });
+  scheduleConflictRefresh();
+}
+
+/* ---------- Conflict warnings (1.5.0) ----------
+   Shown as a line under a keybind row on the Keybinds tab, recomputed
+   whenever the tab renders and right after a rebind:
+   - two enabled shortcuts on the same key that can fire in the same
+     place (only the first registered one ever fires - see the
+     first-match loop in bindGlobalListeners());
+   - a shortcut on the same key as Primary itself (can never fire);
+   - UnderScript's own hotkeys, which match on the key alone, ignoring
+     Ctrl etc - Space ends your turn in a match (unless that's switched
+     off in UnderScript's Game settings). */
+
+const WARNING_CLASS = 'wizascript-keybind-warning';
+
+// Esc isn't checked: pressing Esc in a keybind box unbinds it, so no
+// shortcut (or Primary) can ever be set to it.
+function underscriptClash(code, isPrimary) {
+  if (code !== 'Space') return null;
+  const v = (k) => { const x = localStorage.getItem(k); return x === '1' || x === 'true'; };
+  if (v('underscript.disable.endTurn') || v('underscript.disable.endTurn.space')) return null;
+  return isPrimary
+    ? "In matches, Space also ends your turn (UnderScript hotkey), so every Primary tap would end it. You can turn that off in UnderScript's Game settings."
+    : "In matches, Space also ends your turn (UnderScript hotkey). You can turn that off in UnderScript's Game settings.";
+}
+// Normalises the shipped side-independent modifier default ('Control')
+// so it compares equal to a captured ControlLeft/ControlRight.
+function sameKey(a, b) {
+  const base = (c) => String(c).replace(/^(Control|Shift|Alt|Meta)(Left|Right)$/, '$1');
+  return base(a) === base(b);
+}
+function canOverlap(a, b) {
+  if (a.scope === 'global' && b.scope === 'global') return true;
+  if (a.scope === 'scoped' && b.scope === 'scoped') return a.selector === b.selector;
+  // Scoped shortcuts fire while one of their own (editable) elements is
+  // focused; a global one only competes there if it doesn't stand down
+  // while typing.
+  const global = a.scope === 'global' ? a : b;
+  return !global.guardTypingContext;
+}
+function describe(b) {
+  return b.packageLabel ? `${b.name} (${b.packageLabel})` : b.name;
+}
+
+export function computeKeybindConflicts() {
+  const out = new Map(); // key -> [message]
+  const add = (key, msg) => { if (!out.has(key)) out.set(key, []); out.get(key).push(msg); };
+  const primary = getPrimaryCode();
+  const combos = registry.filter((b) => b.onMatch && isBindingActive(b))
+    .map((b) => ({ b, code: readCode(b.key, b.defaultCode) }))
+    .filter(({ code }) => code && code !== 'unbound');
+
+  const primaryClash = underscriptClash(primary, true);
+  if (primaryClash && anyKeybindPluginEnabled()) add(PRIMARY_KEY, primaryClash);
+
+  combos.forEach(({ b, code }, i) => {
+    if (sameKey(code, primary)) add(b.key, `Same key as your Primary key (${codeToDisplay(primary)}), so this shortcut can't be used.`);
+    combos.forEach(({ b: other, code: otherCode }, j) => {
+      if (i === j || !sameKey(code, otherCode) || !canOverlap(b, other)) return;
+      add(b.key, j < i
+        ? `Same key as ${describe(other)}, which takes priority - this one won't fire.`
+        : `Same key as ${describe(other)} - this one takes priority, so that one won't fire.`);
+    });
+    const clash = underscriptClash(code, false);
+    if (clash) add(b.key, clash);
+  });
+  return out;
+}
+
+function refreshConflictWarnings() {
+  if (!document.querySelector(`input[id^="${ID_PREFIX}"]`)) return;
+  const conflicts = computeKeybindConflicts();
+  bindingDefaults.forEach((_, key) => {
+    const input = document.getElementById(ID_PREFIX + key);
+    const row = input && input.closest('.flex-start');
+    if (!row) return;
+    const messages = conflicts.get(key) || [];
+    let warn = row.querySelector(`:scope > .${WARNING_CLASS}`);
+    const text = messages.map((m) => `\u26a0 ${m}`).join('\n');
+    if (!messages.length) { if (warn) warn.remove(); return; }
+    if (!warn) {
+      warn = document.createElement('div');
+      warn.className = `setting-description ${WARNING_CLASS}`;
+      Object.assign(warn.style, { color: '#ffb347', opacity: '1', whiteSpace: 'pre-line' });
+      row.appendChild(warn);
+    }
+    if (warn.textContent !== text) warn.textContent = text;
+  });
+}
+
+let conflictRefreshQueued = false;
+function scheduleConflictRefresh() {
+  if (conflictRefreshQueued) return;
+  conflictRefreshQueued = true;
+  setTimeout(() => { conflictRefreshQueued = false; refreshConflictWarnings(); }, 0);
 }
 
 // For UI that wants to display the current Primary key, e.g. a toast

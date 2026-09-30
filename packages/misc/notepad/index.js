@@ -358,6 +358,10 @@ export function hideNotepad() {
 // Undo Drawing / Redo Drawing keybinds registered in misc/index.js,
 // which (like every other package's keybinds) register site-wide but
 // only do anything meaningful when there's actually a notepad to act on.
+export function isNotepadOpen() {
+  return !!mounted;
+}
+
 export function undoNotepad() {
   if (!mounted) return;
   mounted.surface.undo();

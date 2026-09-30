@@ -204,7 +204,7 @@ function openHelpDialog() {
   );
 
   BootstrapDialog.show({
-    title: 'Deck Tracker Help',
+    title: 'Card Tracker Help',
     message: content,
     cssClass: 'mono',
     buttons: [{ label: 'Got it', cssClass: 'btn-primary', action: dialog => dialog.close() }]

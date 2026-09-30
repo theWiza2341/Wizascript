@@ -1,10 +1,17 @@
 // packages/core/keybinds.js
 //
+// 1.5.0: keybinds live on their own "Keybinds" settings tab, grouped
+// into categories: "General" (Primary Key, double-tap) and one per
+// plugin (its packageLabel -> core/plugins.js). A plugin's category is
+// hidden, and its bindings don't fire, unless that plugin is enabled in
+// the Plugins list. General only shows while at least one keybind-using
+// plugin is enabled, so the whole tab disappears when none are.
+//
 // Shared keybind registry used by every package that wants a
 // user-remappable shortcut, instead of each one hardcoding its own
 // keydown listener. One shared "Primary Key" setting (site-wide),
 // plus one settings entry per registered binding, all under a single
-// "Keybinds" category. A single shared document-level listener pair
+// "Keybinds" tab. A single shared document-level listener pair
 // does all the dispatching, so N packages calling registerKeybind()
 // don't each attach their own competing handlers.
 //
@@ -37,8 +44,9 @@
 // e.code captured.
 
 import { createFeatureSettings } from './settings.js';
+import { anyKeybindPluginEnabled, isPluginEnabled, pluginIdForLabel } from './plugins.js';
 
-const CATEGORY = 'Keybinds';
+const TAB = 'Keybinds';
 const HOLD_DELAY_MS = 250;
 const NATIVE_MODIFIERS = new Set(['Control', 'Shift', 'Alt']);
 const DEFAULT_PRIMARY_CODE = 'Control';
@@ -82,6 +90,8 @@ function writeCode(bindingKey, code) {
 // drift out of sync with the underlying value.
 const DISPLAY_OVERRIDES = {
   Control: 'Ctrl', Shift: 'Shift', Alt: 'Alt', Meta: 'Meta',
+  ControlLeft: 'Left Ctrl', ControlRight: 'Right Ctrl', ShiftLeft: 'Left Shift', ShiftRight: 'Right Shift',
+  AltLeft: 'Left Alt', AltRight: 'Right Alt', MetaLeft: 'Left Meta', MetaRight: 'Right Meta',
   ArrowUp: 'Up Arrow', ArrowDown: 'Down Arrow', ArrowLeft: 'Left Arrow', ArrowRight: 'Right Arrow',
   Space: 'Space', Escape: 'Esc', Comma: ',', Period: '.', unbound: 'Unbound'
 };
@@ -96,9 +106,15 @@ function codeToDisplay(code) {
 let settings = null;
 const registry = []; // { key, defaultCode, scope, selector, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease }
 const bindingDefaults = new Map(); // key -> defaultCode, for the observer to match against
-const dividerKeys = new Set(); // keys the observer should style as a group divider, not a capture widget
-const seenPackageLabels = new Set(); // which packageLabels already have a divider inserted
+const infoKeys = new Set(); // keys rendered as a plain text row (no input), not a capture widget
+const GENERAL_CATEGORY = 'General';
 let observerStarted = false;
+
+// A binding with no pluginId (the double-tap-to-open-settings one) is
+// handled separately; everything else follows its plugin's toggle.
+function isBindingActive(b) {
+  return !b.pluginId || isPluginEnabled(b.pluginId);
+}
 
 function isTypingContext() {
   const el = document.activeElement;
@@ -146,42 +162,35 @@ function enhanceInput(el, bindingKey, defaultCode) {
       el.style.boxShadow = 'none';
       document.removeEventListener('keydown', capture, true);
       refreshDisplay();
+      scheduleConflictRefresh();
       el.removeEventListener('blur', onBlur);
     });
   });
 }
 
-// Purely visual, read-only, unfocusable - a group header within the
-// single flat Keybinds list, distinguishing it from the real
-// click-to-capture inputs enhanceInput() styles.
-function enhanceDivider(el) {
+// An informational row: just its label, with the placeholder input
+// UnderScript renders for it hidden.
+function enhanceInfoRow(el) {
   el.setAttribute('data-wizascript-keybind-enhanced', 'true');
   el.readOnly = true;
   el.tabIndex = -1;
-  Object.assign(el.style, {
-    backgroundColor: 'transparent',
-    border: 'none',
-    borderBottom: '1px solid #666',
-    color: '#8ab4f8',
-    fontWeight: 'bold',
-    cursor: 'default',
-    pointerEvents: 'none'
-  });
+  el.style.display = 'none';
 }
 
 function startObserver() {
   if (observerStarted) return;
   observerStarted = true;
   const observer = new MutationObserver(() => {
-    if (!bindingDefaults.size && !dividerKeys.size) return; // cheap bail once there's nothing left to look for
+    if (!bindingDefaults.size && !infoKeys.size) return; // cheap bail once there's nothing left to look for
     document.querySelectorAll(`input[id^="${ID_PREFIX}"]:not([data-wizascript-keybind-enhanced])`).forEach((el) => {
       const bindingKey = el.id.slice(ID_PREFIX.length);
-      if (dividerKeys.has(bindingKey)) {
-        enhanceDivider(el);
+      if (infoKeys.has(bindingKey)) {
+        enhanceInfoRow(el);
         return;
       }
       if (!bindingDefaults.has(bindingKey)) return;
       enhanceInput(el, bindingKey, bindingDefaults.get(bindingKey));
+      scheduleConflictRefresh();
     });
   });
   observer.observe(document.body, { childList: true, subtree: true });
@@ -233,6 +242,7 @@ function bindGlobalListeners() {
         tapCount = 0;
         registry.forEach((b) => {
           if (b.scope !== 'global' || !b.onPrimaryDoubleTap) return;
+          if (!isBindingActive(b)) return;
           if (b.guardTypingContext && isTypingContext()) return;
           b.onPrimaryDoubleTap(e);
         });
@@ -240,6 +250,7 @@ function bindGlobalListeners() {
 
       registry.forEach((b) => {
         if (!b.onPrimaryPress) return;
+        if (!isBindingActive(b)) return;
         if (b.guardTypingContext && isTypingContext()) return;
         b.onPrimaryPress(e);
       });
@@ -249,6 +260,7 @@ function bindGlobalListeners() {
         if (comboFired) return;
         registry.forEach((b) => {
           if (b.scope !== 'global' || !b.onPrimaryAlone) return;
+          if (!isBindingActive(b)) return;
           if (b.guardTypingContext && isTypingContext()) return;
           b.onPrimaryAlone(e);
         });
@@ -265,6 +277,7 @@ function bindGlobalListeners() {
     // binding that happens to share the same key.
     for (const b of registry) {
       if (!b.onMatch) continue; // press/alone/release-only binding - nothing to match here
+      if (!isBindingActive(b)) continue;
       if (!matchesSetting(e, b)) continue;
       if (b.guardTypingContext && isTypingContext()) continue;
       if (b.scope === 'scoped') {
@@ -285,6 +298,7 @@ function bindGlobalListeners() {
       clearTimeout(holdTimer);
       registry.forEach((b) => {
         if (b.scope !== 'global' || !b.onPrimaryRelease) return;
+        if (!isBindingActive(b)) return;
         if (b.guardTypingContext && isTypingContext()) return;
         b.onPrimaryRelease(e);
       });
@@ -294,9 +308,24 @@ function bindGlobalListeners() {
 
 let primaryKeySetting = null; // captured for .show() - see the General/open-settings binding below
 
+// Primary Key + "General" rows only make sense while something uses
+// them. Controller Support counts for the double-tap row too, since its
+// own "Open Wizascript Settings" shortcut is separate but equivalent.
+const generalHidden = () => !anyKeybindPluginEnabled();
+
+// Exported so manifest.js can create the Keybinds tab at a chosen point
+// in the tab order (before Controller Support's tab), even though the
+// individual bindings are only flushed at the very end.
+export function initKeybinds(plugin) {
+  ensureCore(plugin);
+}
+
 function ensureCore(plugin) {
   if (settings) return;
-  settings = createFeatureSettings(plugin, 'keybinds', CATEGORY);
+  // 1.5.0: real categories - "General" plus one per plugin (named after
+  // its packageLabel). A disabled plugin's rows are hidden, and its then-
+  // empty category is hidden too (setting-widgets.js).
+  settings = createFeatureSettings(plugin, 'keybinds', { tab: TAB, categories: true });
 
   startObserver();
   bindGlobalListeners();
@@ -305,46 +334,36 @@ function ensureCore(plugin) {
     name: 'Primary Key',
     note: 'Click to remap. Hold for combos below, or tap alone.',
     type: 'text',
-    default: DEFAULT_PRIMARY_CODE
+    default: DEFAULT_PRIMARY_CODE,
+    category: GENERAL_CATEGORY,
+    hidden: generalHidden
   });
   bindingDefaults.set(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
 
-  // "General" - registered directly here (not through any specific
-  // package's own registerKeybind calls) so it always lands right
-  // under Primary Key, before any package's own divider. Double Tap
-  // Primary has no secondary key to remap (it's not a "Primary +
-  // <key>" combo at all), so there's no capture-widget setting for
-  // it - just an informational row, reusing the same read-only
-  // divider styling. Uses the registry's default guardTypingContext
-  // (true) like everything except Patch Maker, so it stays inert
-  // while typing in chat or editing a Patch Maker field, same as
-  // nearly everything else.
-  const generalDividerKey = '__divider_General';
-  settings.add(generalDividerKey, {
-    name: '\u2014 General \u2014',
-    type: 'text',
-    default: ''
-  });
-  dividerKeys.add(generalDividerKey);
-
+  // Double Tap Primary has no key of its own to remap, so it's a plain
+  // informational row under General (its input is hidden - see
+  // enhanceInfoRow()).
   const openSettingsInfoKey = '__info_openSettings';
   settings.add(openSettingsInfoKey, {
     name: 'Double Tap Primary \u2192 Open Wizascript Settings',
     type: 'text',
-    default: ''
+    default: '',
+    category: GENERAL_CATEGORY,
+    hidden: generalHidden
   });
-  dividerKeys.add(openSettingsInfoKey);
+  infoKeys.add(openSettingsInfoKey);
 
   registry.push({
     key: 'openWizascriptSettings',
     scope: 'global',
     guardTypingContext: true,
+    // Opens the main Wizascript tab (the Plugins list), rather than
+    // Primary Key's own row. Active while any keybind plugin is on, or
+    // while Controller Support is on (its controller Primary relays a
+    // real Primary double-tap).
     onPrimaryDoubleTap: () => {
-      if (primaryKeySetting && typeof primaryKeySetting.show === 'function') {
-        primaryKeySetting.show();
-      } else {
-        console.warn('[Wizascript] Could not open the settings panel - .show() is unavailable on this setting.');
-      }
+      if (!anyKeybindPluginEnabled() && !isPluginEnabled('controller')) return;
+      plugin.settings().open();
     }
   });
 }
@@ -360,7 +379,7 @@ let autoFlushScheduled = false;
 //   defaultCode    - shipped default e.code, e.g. 'ArrowRight'
 //   scope          - 'global' (default) | 'scoped'
 //   selector       - required if scope is 'scoped'
-//   packageLabel   - drives the one-time group divider (e.g. 'UC TV')
+//   packageLabel   - the plugin's category on the Keybinds tab (e.g. 'UC TV')
 //   onMatch        - (e) => void, fires when Primary+secondary matches
 //   onPrimaryAlone   - (e) => void, global-only: Primary held alone past the hold delay
 //   onPrimaryPress   - (e) => void, global-only: fires immediately on Primary keydown
@@ -370,7 +389,7 @@ let autoFlushScheduled = false;
 // Registration is deferred, not immediate - nothing about a package's
 // own registerKeybind() call sites needs to change for that. The
 // actual work happens once flushKeybindRegistrations() runs (see
-// manifest.js), which is what lets the whole "Keybinds" category land
+// manifest.js), which is what lets the whole "Keybinds" tab land
 // after every other package's own settings have already registered,
 // rather than wherever the FIRST package to call this happens to
 // land it.
@@ -422,42 +441,123 @@ function registerKeybindNow(plugin, config) {
 
   ensureCore(plugin);
 
-  // Auto-inserts a one-time visual divider the first time we see a
-  // new package's label, so its bindings stay visually grouped in the
-  // single flat Keybinds list. Happens regardless of whether THIS
-  // particular call has a secondary-key setting of its own (a
-  // press/alone/release-only binding still deserves its group header
-  // if it's the first one registered for its package).
-  if (packageLabel && !seenPackageLabels.has(packageLabel)) {
-    seenPackageLabels.add(packageLabel);
-    const dividerKey = `__divider_${packageLabel.replace(/\s+/g, '_')}`;
-    settings.add(dividerKey, {
-      name: `\u2014 ${packageLabel} \u2014`,
-      type: 'text',
-      default: ''
-    });
-    dividerKeys.add(dividerKey);
-  }
+  const pluginId = pluginIdForLabel(packageLabel);
+  const pluginHidden = () => (pluginId ? !isPluginEnabled(pluginId) : false);
 
   // Only register a secondary-key setting if there's actually a combo
   // to bind it to - a pure "tap/hold Primary alone" binding (like the
   // channel guide) has nothing meaningful to put in a "Primary + <key>"
   // field, and showing one anyway would be actively misleading.
   if (onMatch) {
-    // packageLabel still drives the group divider above (see
-    // registerKeybind's divider-insertion block), but no longer
-    // prefixes the individual name - the divider already makes the
-    // grouping visually clear, and the extra "[Package] " text was
-    // pushing longer names onto a second line in the panel.
+    // packageLabel is the category, so it isn't repeated in each name.
     settings.add(key, {
       name: `${name} - Primary + <key>`,
       type: 'text',
-      default: defaultCode
+      default: defaultCode,
+      // Each plugin's shortcuts get their own category on the tab.
+      category: packageLabel || GENERAL_CATEGORY,
+      hidden: pluginHidden
     });
     bindingDefaults.set(key, defaultCode);
   }
 
-  registry.push({ key, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease, onPrimaryDoubleTap });
+  registry.push({ key, name, packageLabel, pluginId, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease, onPrimaryDoubleTap });
+  scheduleConflictRefresh();
+}
+
+/* ---------- Conflict warnings (1.5.0) ----------
+   Shown as a line under a keybind row on the Keybinds tab, recomputed
+   whenever the tab renders and right after a rebind:
+   - two enabled shortcuts on the same key that can fire in the same
+     place (only the first registered one ever fires - see the
+     first-match loop in bindGlobalListeners());
+   - a shortcut on the same key as Primary itself (can never fire);
+   - UnderScript's own hotkeys, which match on the key alone, ignoring
+     Ctrl etc - Space ends your turn in a match (unless that's switched
+     off in UnderScript's Game settings). */
+
+const WARNING_CLASS = 'wizascript-keybind-warning';
+
+// Esc isn't checked: pressing Esc in a keybind box unbinds it, so no
+// shortcut (or Primary) can ever be set to it.
+function underscriptClash(code, isPrimary) {
+  if (code !== 'Space') return null;
+  const v = (k) => { const x = localStorage.getItem(k); return x === '1' || x === 'true'; };
+  if (v('underscript.disable.endTurn') || v('underscript.disable.endTurn.space')) return null;
+  return isPrimary
+    ? "In matches, Space also ends your turn (UnderScript hotkey), so every Primary tap would end it. You can turn that off in UnderScript's Game settings."
+    : "In matches, Space also ends your turn (UnderScript hotkey). You can turn that off in UnderScript's Game settings.";
+}
+// Normalises the shipped side-independent modifier default ('Control')
+// so it compares equal to a captured ControlLeft/ControlRight.
+function sameKey(a, b) {
+  const base = (c) => String(c).replace(/^(Control|Shift|Alt|Meta)(Left|Right)$/, '$1');
+  return base(a) === base(b);
+}
+function canOverlap(a, b) {
+  if (a.scope === 'global' && b.scope === 'global') return true;
+  if (a.scope === 'scoped' && b.scope === 'scoped') return a.selector === b.selector;
+  // Scoped shortcuts fire while one of their own (editable) elements is
+  // focused; a global one only competes there if it doesn't stand down
+  // while typing.
+  const global = a.scope === 'global' ? a : b;
+  return !global.guardTypingContext;
+}
+function describe(b) {
+  return b.packageLabel ? `${b.name} (${b.packageLabel})` : b.name;
+}
+
+export function computeKeybindConflicts() {
+  const out = new Map(); // key -> [message]
+  const add = (key, msg) => { if (!out.has(key)) out.set(key, []); out.get(key).push(msg); };
+  const primary = getPrimaryCode();
+  const combos = registry.filter((b) => b.onMatch && isBindingActive(b))
+    .map((b) => ({ b, code: readCode(b.key, b.defaultCode) }))
+    .filter(({ code }) => code && code !== 'unbound');
+
+  const primaryClash = underscriptClash(primary, true);
+  if (primaryClash && anyKeybindPluginEnabled()) add(PRIMARY_KEY, primaryClash);
+
+  combos.forEach(({ b, code }, i) => {
+    if (sameKey(code, primary)) add(b.key, `Same key as your Primary key (${codeToDisplay(primary)}), so this shortcut can't be used.`);
+    combos.forEach(({ b: other, code: otherCode }, j) => {
+      if (i === j || !sameKey(code, otherCode) || !canOverlap(b, other)) return;
+      add(b.key, j < i
+        ? `Same key as ${describe(other)}, which takes priority - this one won't fire.`
+        : `Same key as ${describe(other)} - this one takes priority, so that one won't fire.`);
+    });
+    const clash = underscriptClash(code, false);
+    if (clash) add(b.key, clash);
+  });
+  return out;
+}
+
+function refreshConflictWarnings() {
+  if (!document.querySelector(`input[id^="${ID_PREFIX}"]`)) return;
+  const conflicts = computeKeybindConflicts();
+  bindingDefaults.forEach((_, key) => {
+    const input = document.getElementById(ID_PREFIX + key);
+    const row = input && input.closest('.flex-start');
+    if (!row) return;
+    const messages = conflicts.get(key) || [];
+    let warn = row.querySelector(`:scope > .${WARNING_CLASS}`);
+    const text = messages.map((m) => `\u26a0 ${m}`).join('\n');
+    if (!messages.length) { if (warn) warn.remove(); return; }
+    if (!warn) {
+      warn = document.createElement('div');
+      warn.className = `setting-description ${WARNING_CLASS}`;
+      Object.assign(warn.style, { color: '#ffb347', opacity: '1', whiteSpace: 'pre-line' });
+      row.appendChild(warn);
+    }
+    if (warn.textContent !== text) warn.textContent = text;
+  });
+}
+
+let conflictRefreshQueued = false;
+function scheduleConflictRefresh() {
+  if (conflictRefreshQueued) return;
+  conflictRefreshQueued = true;
+  setTimeout(() => { conflictRefreshQueued = false; refreshConflictWarnings(); }, 0);
 }
 
 // For UI that wants to display the current Primary key, e.g. a toast
@@ -478,5 +578,14 @@ export function isRegisteredKeybindEvent(e) {
   const primaryCode = getPrimaryCode();
   if (matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE)) return true;
   if (!primaryHeld) return false;
-  return registry.some((b) => b.onMatch && matchesSetting(e, b));
+  return registry.some((b) => b.onMatch && isBindingActive(b) && matchesSetting(e, b));
+}
+
+// For help text (core/plugin-guides.js): the CURRENT key for a
+// shortcut, e.g. "Ctrl + O", reflecting any remap. Falls back to the
+// given default before registrations have flushed. null if unbound.
+export function describeKeybind(bindingKey, defaultCode) {
+  const code = readCode(bindingKey, bindingDefaults.get(bindingKey) || defaultCode);
+  if (!code || code === 'unbound') return null;
+  return `${getPrimaryKeyDisplay()} + ${codeToDisplay(code)}`;
 }

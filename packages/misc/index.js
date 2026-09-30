@@ -1,7 +1,7 @@
 // packages/misc/index.js
 
 import { registerMiscSettings } from "./settings.js";
-import { showNotepad, hideNotepad, forceResetNotepad, undoNotepad, redoNotepad } from "./notepad/index.js";
+import { showNotepad, hideNotepad, forceResetNotepad, undoNotepad, redoNotepad, isNotepadOpen } from "./notepad/index.js";
 import { initCardTags } from "./card-tags/index.js";
 import { registerKeybind } from "../core/keybinds.js";
 
@@ -10,8 +10,14 @@ export function initMisc(plugin) {
 
   initCardTags(plugin, settings.enableCardTags);
 
+  // null = follow "Open Notepad on Page Load"; true/false once the
+  // Toggle Notepad shortcut has been used on this page. Deliberately not
+  // persisted - the setting decides what happens on the next page load.
+  let shownThisPage = null;
+
   function syncNotepadVisibility() {
-    if (settings.enableNotepad.value()) {
+    const wanted = shownThisPage !== null ? shownThisPage : settings.notepadOpenOnLoad.value();
+    if (settings.enableNotepad.value() && wanted) {
       showNotepad();
     } else {
       hideNotepad();
@@ -23,19 +29,17 @@ export function initMisc(plugin) {
     syncNotepadVisibility();
   });
 
-  // Toggles the underlying "Enable Notepad Overlay" setting itself
-  // (not just showNotepad()/hideNotepad() directly) so a keybind-driven
-  // toggle stays in sync across reloads - otherwise a keybind-opened
-  // notepad would silently vanish again on the next page load, since
-  // the persisted setting never actually changed.
+  // Opens/closes the notepad for this page only. Doesn't touch the
+  // Notepad plugin toggle (that would also disable this very shortcut)
+  // or "Open Notepad on Page Load". Reads the real open state, so it
+  // still works after the notepad's own close button was used.
   registerKeybind(plugin, {
     key: "toggleNotepad",
     name: "Toggle Notepad",
     defaultCode: "KeyO",
     packageLabel: "Notepad",
     onMatch: () => {
-      const next = !settings.enableNotepad.value();
-      settings.enableNotepad.set(next);
+      shownThisPage = !isNotepadOpen();
       syncNotepadVisibility();
     }
   });
@@ -48,10 +52,9 @@ export function initMisc(plugin) {
     defaultCode: "KeyN",
     packageLabel: "Notepad",
     onMatch: () => {
+      const wasOpen = isNotepadOpen();
       forceResetNotepad();
-      if (settings.enableNotepad.value()) {
-        showNotepad();
-      }
+      if (wasOpen) showNotepad();
     }
   });
 
@@ -73,9 +76,7 @@ export function initMisc(plugin) {
     onMatch: () => redoNotepad()
   });
 
-  // Handed back so manifest.js can pass settings.enableController straight
-  // through to initController(plugin, controllerEnabledSetting) - initMisc
-  // runs before initController, so this is already registered under
-  // "Miscellaneous" by the time the controller package reads it.
+  // Handed back so manifest.js can pass settings.enableController (the
+  // Controller Support plugin toggle) through to initController().
   return settings;
 }

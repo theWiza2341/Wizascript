@@ -1,38 +1,19 @@
 // packages/misc/settings.js
+//
+// 1.5.0: Notepad and Card Tags are listed under "Miscellaneous" on the
+// main Wizascript tab, and Controller Support under "Plugins" - all
+// registered centrally in core/plugins.js (same storage keys as the old
+// "Miscellaneous" toggles). Notepad's "Open Notepad on Page Load" is
+// registered there too, so it can sit directly under Notepad's toggle.
+// This just hands the relevant setting objects to the misc package.
 
-import { createFeatureSettings } from "../core/settings.js";
+import { getPluginToggle, getNotepadOpenOnLoadSetting } from "../core/plugins.js";
 
-export function registerMiscSettings(plugin) {
-  const settings = createFeatureSettings(plugin, "misc", "Miscellaneous");
-  const enableNotepad = settings.add("enableNotepad", {
-    name: "Enable Notepad Overlay Option",
-    type: "boolean",
-    default: false
-  });
-
-  // Moved here from its own "Keybinds - Controller" category - off by
-  // default, and packages/controller/settings.js now reads THIS exact
-  // setting object (handed through manifest.js -> initController) to
-  // decide, once at registration time, whether to register the rest of
-  // "Keybinds - Controller" at all. Mirrors packages/uc-tv/settings.js's
-  // own pattern for its "Filter Settings" category: a brand new player
-  // who hasn't turned Controller Support on yet no longer sees an entire
-  // category of gamepad keybind rows they can't use yet.
-  const enableController = settings.add("enableController", {
-    name: "Enable Controller Support",
-    type: "boolean",
-    default: false
-  });
-
-  // Off by default like every other Miscellaneous toggle here. When off,
-  // packages/misc/card-tags/index.js returns before doing any real work
-  // at all (no right-click listener, no search-filter registration, no
-  // MutationObserver) - not just hidden, genuinely inert.
-  const enableCardTags = settings.add("enableCardTags", {
-    name: "Enable Card Tags",
-    type: "boolean",
-    default: false
-  });
-
-  return { settings, enableNotepad, enableController, enableCardTags };
+export function registerMiscSettings() {
+  return {
+    enableNotepad: getPluginToggle("notepad"),
+    enableController: getPluginToggle("controller"),
+    enableCardTags: getPluginToggle("cardTags"),
+    notepadOpenOnLoad: getNotepadOpenOnLoadSetting()
+  };
 }

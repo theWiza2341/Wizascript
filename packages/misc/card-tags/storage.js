@@ -144,3 +144,55 @@ export function toggleCardTag(cardId, tagId) {
 export function taggedCardIds() {
   return Object.keys(data.cardTags);
 }
+
+// ---- Sharing (see share.js) ----
+//
+// Shared form is by tag NAME, not id - ids are random per browser, while
+// names are what players actually recognise. Card ids are Undercards'
+// own card ids, so they mean the same card for everyone.
+
+export function exportTags(tagIds) {
+  const wanted = new Set(tagIds);
+  return {
+    format: 1,
+    tags: data.tags.filter(t => wanted.has(t.id)).map(t => ({
+      name: t.name,
+      color: t.color,
+      cards: Object.keys(data.cardTags).filter(cardId => data.cardTags[cardId].includes(t.id))
+    }))
+  };
+}
+
+// Additive merge: a shared tag whose name matches an existing one
+// (ignoring case) adds its cards to that tag and keeps your colour;
+// anything else becomes a new tag. Never removes anything.
+// Returns { created: [names], merged: [names], cardsTagged: n }.
+export function importTags(shared) {
+  if (!shared || shared.format !== 1 || !Array.isArray(shared.tags)) {
+    throw new Error("That code isn't a Card Tags code this version understands.");
+  }
+  const summary = { created: [], merged: [], cardsTagged: 0 };
+  shared.tags.forEach(st => {
+    const name = String(st && st.name || "").trim();
+    if (!name) return;
+    let tag = data.tags.find(t => t.name.toLowerCase() === name.toLowerCase());
+    if (tag) {
+      summary.merged.push(tag.name);
+    } else {
+      const color = /^#[0-9a-f]{3,8}$/i.test(st.color || "") ? st.color : DEFAULT_COLORS[data.tags.length % DEFAULT_COLORS.length];
+      tag = { id: genTagId(), name, color };
+      data.tags.push(tag);
+      summary.created.push(name);
+    }
+    (Array.isArray(st.cards) ? st.cards : []).forEach(rawId => {
+      const cardId = String(rawId);
+      if (!/^[\w-]{1,32}$/.test(cardId)) return;
+      const current = data.cardTags[cardId] || [];
+      if (current.includes(tag.id)) return;
+      data.cardTags[cardId] = [...current, tag.id];
+      summary.cardsTagged++;
+    });
+  });
+  writeData(data);
+  return summary;
+}

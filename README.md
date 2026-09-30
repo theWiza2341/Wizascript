@@ -2,12 +2,22 @@
 
 Wizascript is an all-in-one UnderScript plugin suite for [Undercards](https://undercards.net) — a single Tampermonkey userscript that combines several previously-separate plugins into one download, one plugin registration, and one settings tab.
 
-**Current version:** 1.4.1
+**Current version:** 1.5.0 (see [CHANGELOG.md](CHANGELOG.md))
 **Repository:** [theWiza2341/Wizascript](https://github.com/theWiza2341/Wizascript) (public)
 
 ## Compliance note
 
-Wizascript's feature set is intentionally scoped to comply with UC moderation guidelines: no automated gameplay assistance, no hooking into game events to calculate or predict hidden information, and no automation of player inputs. Every feature below is either purely manual (the player does the clicking/typing), purely cosmetic, or entirely outside of active matches. UC TV's auto-channel-switching operates only on the spectator list of other players' already-in-progress matches. It never touches an active match the player is themselves in, and never affects anyone's gameplay. A small number of earlier features (several automated Deck Tracker presets, and a Doom-artifact turn reminder) were removed for exactly this reason and are not coming back in their original form.
+Wizascript's feature set is intentionally scoped to comply with UC moderation guidelines: no automated gameplay assistance, no hooking into game events to calculate or predict hidden information, and no automation of player inputs. Every feature below is either purely manual (the player does the clicking/typing), purely cosmetic, or entirely outside of active matches. UC TV's auto-channel-switching operates only on the spectator list of other players' already-in-progress matches. It never touches an active match the player is themselves in, and never affects anyone's gameplay. A small number of earlier features (several automated Card Tracker presets, back when it was called Deck Tracker, and a Doom-artifact turn reminder) were removed for exactly this reason and are not coming back in their original form.
+
+## Settings layout
+
+All of Wizascript's settings live under UnderScript's settings menu, in **Plugins → Wizascript**:
+
+- **General** tab: the **Plugins** and **Miscellaneous** lists, one on/off switch per feature (hover each for a short description), plus the version number, a **Changelog** button, **Back up / Restore settings** (all your Wizascript settings and saved data as one code or file, for moving to another browser or after a reinstall), and a single **Debug logging** switch for the whole suite. New installs start with every plugin switched off. Turning a plugin on or off takes effect after a page refresh.
+- **One tab per enabled plugin**, holding only that plugin's settings, with a short **How to use** guide at the bottom (pages it works on, what it does, its inputs). The **?** next to each plugin in the lists opens the same guide, including for Notepad and Card Tags, which have no tab of their own. Plugins that are switched off don't show a tab at all.
+- **Keybinds** tab: appears once you enable a plugin with keyboard shortcuts (Patch Maker, UC TV, Notepad), with a General section plus one section per plugin you have on. A warning appears under any shortcut that clashes with another one, with your Primary key, or with UnderScript's Space-to-end-turn hotkey.
+- **Controller Support** tab: appears when Controller Support is enabled, split into Setup, General, one section per plugin you have on, and In-Game Inputs. Like the Keybinds tab, it warns under any binding that clashes with another.
+- If more tabs are open than fit in one row, they're split into pages, and **◀ ▶** arrows pinned to the right end of the row flip between pages.
 
 ## Features
 
@@ -20,29 +30,32 @@ A spectator-mode "channel surfer" for browsing other players' live matches. Whil
 ### True Hub Bridge
 Lets players browse published decks from outside of an active match. Deck data is fetched from `bot/decks.json` in this repository, which is kept up to date by a Discord-scraping bot (see `bot/`) and its associated GitHub Actions workflows.
 
-### Deck Tracker
+### Card Tracker
+*(called Deck Tracker before 1.5.0)*
+
 The core in-match feature. Adds a "+" button during games and while spectating, opening a picker where players can spawn small on-screen tracker widgets:
 
 - **Built-in manual counters** — click-driven trackers for things like Enemy HLBs, Enemy Mines, CJester Procs, Pink Laser ATK, Skris Procs, and Noellecoaster. Every one of these is a plain counter the player updates by clicking; nothing is calculated or inferred automatically.
 - **Custom Tracker builder** — lets a player create their own named counter (optionally with a card sprite), and save it as a reusable preset.
-- Widgets support drag-to-reposition (position is remembered), favoriting, and optionally retaining an unclosed widget between matches all via settings under the Deck Tracker category.
+- Widgets support drag-to-reposition (position is remembered), favoriting, and optionally retaining an unclosed widget between matches all via settings on the Card Tracker tab.
 - The "+" button itself is also drag-to-reposition (middle-click to reset it back to its default spot next to your avatar), so a future UC update repositioning its own UI into that space doesn't strand the button underneath something else again.
 
 ### Notepad
-A small freeform drawing canvas, entirely disconnected from match data. Draw, erase, or flood-fill with the pen color, on up to 6 independent layers (start with one, add more from the toolbar up to the limit, remove from the top down). Undo/redo covers the last several actions across every layer (in-memory only, not saved between sessions). An HSL color wheel handles both pen and paper colors, with a row of your most recently used pen colors for quickly switching back and forth. Clear resets the drawing, paper color, pen color, recent colors, and title back to defaults (but leaves the notepad's position alone), same scope as the "Reset Notepad" keybind, just without the position reset, and without closing and reopening the window to do it. The notepad's name is editable in place and doubles as the filename when saving a doodle as a PNG. Position, drawing (all layers), colors, and name all persist between sessions. Lives under Misc settings behind an "Enable Notepad Overlay" toggle (off by default).
+A small freeform drawing canvas, entirely disconnected from match data. Draw, erase, or flood-fill with the pen color, on up to 6 independent layers (start with one, add more from the toolbar up to the limit, remove from the top down). Undo/redo covers the last several actions across every layer (in-memory only, not saved between sessions). An HSL color wheel handles both pen and paper colors, with a row of your most recently used pen colors for quickly switching back and forth. Clear resets the drawing, paper color, pen color, recent colors, and title back to defaults (but leaves the notepad's position alone), same scope as the "Reset Notepad" keybind, just without the position reset, and without closing and reopening the window to do it. The notepad's name is editable in place and doubles as the filename when saving a doodle as a PNG. Position, drawing (all layers), colors, and name all persist between sessions. Enable it from the Miscellaneous list. "Open Notepad on Page Load" (shown under it once enabled) decides whether it opens by itself; the Toggle Notepad shortcut opens/closes it for the current page.
 
 ### Keybinds
-A shared, remappable keybind system used by Patch Maker, UC TV, and Notepad. One "Primary" key (Control by default) combines with a second key to trigger each shortcut: hold Primary and tap the second key, or in a few places just tap or hold Primary alone. Every shortcut, its current key, and which package it belongs to are visible and individually remappable under a single "Keybinds" settings category, grouped by package. By default, shortcuts don't fire while typing anywhere else on the page (chat, forms, etc.). Patch Maker's own shortcuts are the deliberate exception, since they're built to work while editing its own fields. Double-tapping Primary anywhere (except while typing) opens Wizascript's own settings panel directly.
+A shared, remappable keybind system used by Patch Maker, UC TV, and Notepad. One "Primary" key (Control by default) combines with a second key to trigger each shortcut: hold Primary and tap the second key, or in a few places just tap or hold Primary alone. Every shortcut, its current key, and which plugin it belongs to are visible and individually remappable on the "Keybinds" settings tab, grouped by plugin. Only shortcuts for enabled plugins are shown. By default, shortcuts don't fire while typing anywhere else on the page (chat, forms, etc.). Patch Maker's own shortcuts are the deliberate exception, since they're built to work while editing its own fields. Double-tapping Primary anywhere (except while typing) opens Wizascript's own settings panel directly, as long as at least one keybind-using plugin (or Controller Support) is enabled.
 
 ### Controller Support
-Full gamepad navigation, for players who'd rather not reach for a mouse/keyboard, covers Underscript's own settings and dialogs, the in-match hand/board, Deck Tracker's on-screen keyboard, and every feature above. Off by default; turn on "Enable Controller Support" under Miscellaneous, then reload to reveal its own "Keybinds - Controller" settings category, where every binding below is shown live and individually remappable.
+Full gamepad navigation, for players who'd rather not reach for a mouse/keyboard, covers Underscript's own settings and dialogs, the in-match hand/board, the on-screen keyboard, and every feature above. Enable it from the Plugins list, then reload, to use it and reveal its "Controller Support" settings tab, where every binding below is shown live and individually remappable. Bindings for plugins you haven't enabled are hidden.
 
 - **Movement & clicking** — the left stick drives a synthetic cursor. The right stick's horizontal axis is a speed dial for it: push it left to speed the cursor up (up to 3x), push it right to slow down for fine positioning (down to 0.3x). The right stick's vertical axis is separate from cursor movement entirely. It free-scrolls whatever list or panel currently has focus (a settings category, the UC TV channel guide, a scrollable dialog), and the d-pad snaps to whatever's now visible the next time you press it, rather than wherever it was pointed before you scrolled. Face buttons click/alt-click/cancel; the d-pad drives structured step-through navigation (menus, dialogs, hand/board) anywhere Wizascript can detect a clear layout to step through.
-- **In-Game Inputs** — a fixed set of no-hold-required hardware shortcuts, each individually remappable: Concede, End Turn, opening your/the opponent's dustpile, opening Wizascript's settings, opening Deck Tracker's tracker-preset picker, and pausing/resuming the on-screen keyboard while it's open.
-- **Presets** — up to 3 independent sets of button bindings, switchable from a dropdown at the top of the category (handy for sharing one controller between players, or keeping a couple of layouts around). "Restore Settings to Default" (double-click) resets whichever preset is currently selected back to its defaults.
+- **In-Game Inputs** — a fixed set of no-hold-required hardware shortcuts, each individually remappable: Concede, End Turn, opening your/the opponent's dustpile, opening Wizascript's settings, opening Card Tracker's tracker-preset picker, and pausing/resuming the on-screen keyboard while it's open.
+- **In Settings** — L1/R1 switch tabs: sidebar categories while the sidebar has focus, or the open plugin's own tabs (e.g. Wizascript's General / Patch Maker / …) while you're in its settings.
+- **Presets** — up to 3 independent sets of button bindings, switchable from a dropdown at the top of the tab (handy for sharing one controller between players, or keeping a couple of layouts around). "Restore Settings to Default" (double-click) resets whichever preset is currently selected back to its defaults.
 
 ### Card Tags
-Custom, user-defined tags for cards in Crafting and Deck-building. That means no preset list, just names you create yourself. Right-click any card to create a tag (with its own color) or toggle it on/off, filter by typing a tag name into the existing search bar, and spot tagged cards at a glance via a small on-card indicator dot. A "Manage Tags…" dialog handles renaming, recoloring, and deleting tags in one place. Lives under Miscellaneous settings behind an "Enable Card Tags" toggle (off by default).
+Custom, user-defined tags for cards in Crafting and Deck-building. That means no preset list, just names you create yourself. Right-click any card to create a tag (with its own color) or toggle it on/off, filter by typing a tag name into the existing search bar, and spot tagged cards at a glance via a small on-card indicator dot. A "Manage Tags…" dialog handles renaming, recoloring, and deleting tags in one place, and can **Share…** some or all of your tags (with the cards they're on) as a code, or **Import…** a friend's code. Imported tags merge into yours by name and never remove anything. Enable it from the Miscellaneous list.
 
 ### bot/
 A small Node.js bot that scrapes deck codes and metadata from a Discord server and writes them to `bot/decks.json`, which True Hub Bridge reads. Runs both as a one-off full sync (`bot.js`) and an incremental sync (`new-only-sync.js`), automated via GitHub Actions.
@@ -51,17 +64,18 @@ A small Node.js bot that scrapes deck codes and metadata from a Discord server a
 
 ```
 packages/
-  core/            shared bootstrap, settings wrapper, page-window access, page matching, keybind registry
+  core/            shared bootstrap, Plugins list + migration, about/changelog, how-to guides, backup/restore + share codes, debug switch, settings wrapper, page-window access, page matching, keybind registry
   patch-maker/
   uc-tv/           spectator-mode channel switching + guide overlay
   true-hub-bridge/
-  deck-tracker/
+  deck-tracker/    Card Tracker (folder and storage keys keep the old name)
   controller/      full gamepad navigation + remappable controller keybinds (see Controller Support above)
-  misc/            small standalone features
+  misc/            Notepad and Card Tags
     notepad/       freeform drawing canvas (see Notepad above)
     card-tags/     custom card flair tags (see Card Tags above)
 bot/               deck-scraping bot + decks.json
 manifest.js        wires each package's init function together (also flushes the keybind registry once every package has registered its own settings)
-build.js            esbuild bundler + userscript header
+CHANGELOG.md        release notes, bundled into the script for the in-game Changelog button
+build.js            esbuild bundler + userscript header (version comes from package.json)
 wizascript.user.js  the built, installable script
 ```

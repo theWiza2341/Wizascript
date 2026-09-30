@@ -12,9 +12,9 @@
 // resolves to unsafeWindow specifically to avoid that.
 
 import { getPageWindow } from "./page-window.js";
+import { SUITE_VERSION } from "./version.js";
 
 const SUITE_NAME = "Wizascript";
-const SUITE_VERSION = "1.4.1";
 const DOWNLOAD_URL =
   "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
 const RETRY_MS = 250;

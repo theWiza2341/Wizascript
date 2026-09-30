@@ -1,6 +1,8 @@
 // packages/uc-tv/settings.js
 
 import { createFeatureSettings } from '../core/settings.js';
+import { getPluginToggle, isPluginEnabled } from '../core/plugins.js';
+import { debugLoggingSetting } from '../core/debug.js';
 
 export const LOG = '[UC TV]';
 
@@ -17,62 +19,48 @@ export function setSettingsRef(ref) {
 }
 
 export function registerUcTvSettings(plugin, divisionTiers) {
-  const settings = createFeatureSettings(plugin, 'ucTv', 'UC TV');
-
-  const enabled = settings.add('enabled', {
-    name: 'Enable UC TV',
-    type: 'boolean',
-    default: true,
-    page: 'Spectate'
+  const settings = createFeatureSettings(plugin, 'ucTv', {
+    tab: 'UC TV',
+    visible: () => isPluginEnabled('ucTv')
   });
 
-  const debugLogs = settings.add('debugLogs', {
-    name: 'Enable Debug Logs',
-    type: 'boolean',
-    default: false,
-    page: 'Spectate'
-  });
+  // The on/off switch itself now lives in the Plugins list (core/plugins.js).
+  const enabled = getPluginToggle('ucTv');
+
+  // One suite-wide switch on the General tab since 1.5.0 (core/debug.js).
+  const debugLogs = debugLoggingSetting;
 
   const autoMode = settings.add('autoMode', {
     name: 'Enable auto-mode when spectating',
     type: 'boolean',
-    default: false,
-    page: 'Spectate'
+    default: false
   });
 
   const countdownSeconds = settings.add('countdownSeconds', {
     name: 'Auto-continue delay (seconds)',
     type: 'select',
     data: Array.from({ length: 15 }, (_, i) => i + 1).map((n) => [`${n}`, n]),
-    default: 5,
-    page: 'Spectate'
+    default: 5
   });
 
-  // Only the Filter Settings category is conditional - filtering is
-  // meaningless without UC TV actually running, so it disappears when
-  // disabled. The base UC TV settings above always stay visible
-  // regardless, since Debug Logs/auto-mode/countdown aren't specific
-  // to filtering. This only skips *registering* the filter settings
-  // this pass - their stored values aren't touched, so re-enabling
-  // and reloading brings them back exactly as they were.
-  if (!enabled.value()) {
-    return {
-      enabled, debugLogs, autoMode, countdownSeconds,
-      filteringEnabled: null, modeToggles: {},
-      minLevel: null, levelFilterMode: null, minRankTier: null, rankFilterMode: null
-    };
-  }
+  // 1.5.0: plugin tabs are flat lists (no categories), and the filter
+  // settings are always registered. Instead of disappearing, they're
+  // greyed out while "Enable Match Filtering" is off - see the
+  // onChange below, which refreshes their disabled state live.
+  const filterDisabled = () => !filteringEnabled.value();
+  const filterDependents = [];
+  const addFilter = (key, config) => {
+    const setting = settings.add(key, { ...config, disabled: filterDisabled });
+    filterDependents.push(setting);
+    return setting;
+  };
 
-  const FILTER_CATEGORY = 'UC TV - Filter Settings';
-
-  // Registered first so it's the top entry within Filter Settings -
-  // it's the master switch for everything else in that category.
+  // Master switch for the filter settings that follow.
   const filteringEnabled = settings.add('filteringEnabled', {
     name: 'Enable Match Filtering',
     type: 'boolean',
     default: true,
-    category: FILTER_CATEGORY,
-    page: 'Spectate'
+    onChange: () => filterDependents.forEach((d) => d.refresh())
   });
 
   // Yes/No selects rather than native booleans, and one per mode
@@ -84,13 +72,11 @@ export function registerUcTvSettings(plugin, divisionTiers) {
   // gambling on an untested value type in the persistence layer.
   const modeToggles = {};
   KNOWN_MODES.forEach((mode) => {
-    modeToggles[mode] = settings.add(`ignoreMode${mode}`, {
+    modeToggles[mode] = addFilter(`ignoreMode${mode}`, {
       name: `Ignore ${titleCase(mode)} Matches?`,
       type: 'select',
       data: [['Yes', 'yes'], ['No', 'no']],
-      default: 'no',
-      category: FILTER_CATEGORY,
-      page: 'Spectate'
+      default: 'no'
     });
   });
 
@@ -98,7 +84,7 @@ export function registerUcTvSettings(plugin, divisionTiers) {
   // 0 keeps the "no effect" default; 1/50/100/200/400/600/800/1000
   // roughly tracks early (1-200) / mid (200-500) / late (501+) game,
   // without being an overwhelming number of choices.
-  const minLevel = settings.add('minLevel', {
+  const minLevel = addFilter('minLevel', {
     name: 'Minimum Player Level',
     type: 'select',
     data: [
@@ -112,39 +98,31 @@ export function registerUcTvSettings(plugin, divisionTiers) {
       ['800', 800],
       ['1000', 1000]
     ],
-    default: 0,
-    category: FILTER_CATEGORY,
-    page: 'Spectate'
+    default: 0
   });
 
-  const levelFilterMode = settings.add('levelFilterMode', {
+  const levelFilterMode = addFilter('levelFilterMode', {
     name: 'Minimum Level Applies To',
     type: 'select',
     data: [['Either player', 'either'], ['Both players', 'both']],
-    default: 'either',
-    category: FILTER_CATEGORY,
-    page: 'Spectate'
+    default: 'either'
   });
 
   // Default COPPER (the worst tier) is a deliberate no-op, mirroring
   // minLevel's "0 = no effect" - see filters.js's rankMeetsMin for the
   // explicit COPPER bypass this requires.
-  const minRankTier = settings.add('minRankTier', {
+  const minRankTier = addFilter('minRankTier', {
     name: 'Minimum Ranked Mode Level',
     type: 'select',
     data: divisionTiers.map((t) => [titleCase(t.name), t.name]),
-    default: 'COPPER',
-    category: FILTER_CATEGORY,
-    page: 'Spectate'
+    default: 'COPPER'
   });
 
-  const rankFilterMode = settings.add('rankFilterMode', {
+  const rankFilterMode = addFilter('rankFilterMode', {
     name: 'Minimum Rank Applies To',
     type: 'select',
     data: [['Either player', 'either'], ['Both players', 'both']],
-    default: 'either',
-    category: FILTER_CATEGORY,
-    page: 'Spectate'
+    default: 'either'
   });
 
   return {
@@ -203,6 +181,8 @@ export function dumpSettingsState() {
     autoMode: CONFIG.autoMode,
     countdownSeconds: CONFIG.countdownSeconds
   };
+  // Only called automatically when debug logging is on (see index.js);
+  // calling __ucTVSettings() by hand always logs.
   console.log(`${LOG} [settings] Current live values:`, snapshot);
   return snapshot;
 }

@@ -580,3 +580,12 @@ export function isRegisteredKeybindEvent(e) {
   if (!primaryHeld) return false;
   return registry.some((b) => b.onMatch && isBindingActive(b) && matchesSetting(e, b));
 }
+
+// For help text (core/plugin-guides.js): the CURRENT key for a
+// shortcut, e.g. "Ctrl + O", reflecting any remap. Falls back to the
+// given default before registrations have flushed. null if unbound.
+export function describeKeybind(bindingKey, defaultCode) {
+  const code = readCode(bindingKey, bindingDefaults.get(bindingKey) || defaultCode);
+  if (!code || code === 'unbound') return null;
+  return `${getPrimaryKeyDisplay()} + ${codeToDisplay(code)}`;
+}

@@ -25,26 +25,6 @@ function scan() {
     el.setAttribute(ENHANCED_ATTR, "true");
     enhance(el);
   });
-  hideEmptyCategories();
-}
-
-// UnderScript draws a category's box (and its title) before checking
-// whether each setting in it is hidden, so a category whose rows are ALL
-// hidden - e.g. a disabled plugin's section on the Keybinds tab - would
-// show as an empty titled box. Hide those, on Wizascript's tabs only.
-function hideEmptyCategories() {
-  if (!document.querySelector(".tabbedView fieldset")) return; // no settings screen open - cheap exit
-  const contents = new Set();
-  document.querySelectorAll(`[id^="${ID_PREFIX}"]`).forEach((el) => {
-    const content = el.closest(".tabContent");
-    if (content) contents.add(content);
-  });
-  contents.forEach((content) => {
-    content.querySelectorAll(":scope > div > fieldset, :scope > fieldset").forEach((set) => {
-      const empty = !set.querySelector(".flex-start");
-      if (empty && set.style.display !== "none") set.style.display = "none";
-    });
-  });
 }
 
 function ensureObserver() {

@@ -25,8 +25,16 @@ function resolve(v) {
 // `categories: true` keeps each setting's `category` (used by the
 // Keybinds and Controller Support tabs, which group rows per plugin).
 // Everywhere else categories are dropped - plugin tabs are flat lists.
-// A category whose rows are all hidden (a disabled plugin's section) is
-// removed from view by hideEmptyCategories() in setting-widgets.js.
+//
+// UnderScript creates a category's box (title and all) BEFORE checking
+// whether each setting in it is hidden, and a tab whose content isn't
+// empty is kept. So a category of hidden settings would leave an empty
+// titled box - and keep an otherwise-empty tab alive. The category is
+// therefore passed as an object whose text is the real name only while
+// the setting is visible, and UnderScript's own "no category" name
+// ('N/A') otherwise; UnderScript already removes that bucket when it's
+// empty. (UnderScript's own categories are text-converting objects too
+// - its Translation class - so this is a supported shape.)
 export function createFeatureSettings(plugin, featureName, { tab, visible, categories = false } = {}) {
   const settingsApi = tab ? plugin.settings().page(tab) : plugin.settings();
   const registered = {};
@@ -34,11 +42,15 @@ export function createFeatureSettings(plugin, featureName, { tab, visible, categ
   function add(key, config) {
     // `page` is always overridden by the plugin settings API anyway.
     const { category, page, hidden, ...rest } = config;
+    const isHidden = () => (visible ? !visible() : false) || resolve(hidden) === true;
+    const dynamicCategory = categories && category
+      ? { toString: () => (isHidden() ? "N/A" : String(category)), valueOf: () => (isHidden() ? "N/A" : String(category)) }
+      : null;
     const setting = settingsApi.add({
       ...rest,
-      ...(categories && category ? { category } : {}),
+      ...(dynamicCategory ? { category: dynamicCategory } : {}),
       key: `${featureName}.${key}`,
-      hidden: () => (visible ? !visible() : false) || resolve(hidden) === true
+      hidden: isHidden
     });
     registered[key] = setting;
     return setting;

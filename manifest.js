@@ -3,6 +3,8 @@ import { flushKeybindRegistrations, initKeybinds } from "./packages/core/keybind
 import { registerPluginToggles, runMigrations } from "./packages/core/plugins.js";
 import { registerAboutSection, showWhatsNew } from "./packages/core/about.js";
 import { registerBackupSection } from "./packages/core/backup.js";
+import { registerDebugSetting } from "./packages/core/debug.js";
+import { registerPluginGuides } from "./packages/core/plugin-guides.js";
 import { initTabBar } from "./packages/core/tab-bar.js";
 
 import { initPatchMaker } from "./packages/patch-maker/index.js";
@@ -40,6 +42,7 @@ bootstrap(plugin => {
   registerPluginToggles(plugin);
   registerAboutSection(plugin);
   registerBackupSection(plugin);
+  registerDebugSetting(plugin);
   initTabBar(plugin);
 
   initPatchMaker(plugin);
@@ -49,6 +52,8 @@ bootstrap(plugin => {
   const miscSettings = initMisc(plugin);
   initKeybinds(plugin); // creates the Keybinds tab ahead of Controller Support's
   initController(plugin, miscSettings.enableController);
+  // Last on each plugin's tab: the "How to use" box (plus the "?" links).
+  registerPluginGuides(plugin);
   flushKeybindRegistrations(); // must come after all of the above
 
   showWhatsNew(plugin, installState);

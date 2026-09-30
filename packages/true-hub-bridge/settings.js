@@ -1,5 +1,6 @@
 import { createFeatureSettings } from "../core/settings.js";
 import { getPluginToggle, isPluginEnabled } from "../core/plugins.js";
+import { debugLoggingSetting } from "../core/debug.js";
 
 // Fixes a real bug from the original standalone script: it called
 // `thSettings.get?.("autoOpenTrueHub")`, but UnderScript's settings API
@@ -19,14 +20,8 @@ export function registerTrueHubBridgeSettings(plugin) {
     settings,
     // The on/off switch itself now lives in the Plugins list (core/plugins.js).
     enabled: getPluginToggle("trueHub"),
-    // The original script had no debug-logging toggle at all (just
-    // always-on console.log calls) - added here for consistency with
-    // patch-maker, using the same working per-feature debug logger.
-    debugLogging: settings.add("debugLogging", {
-      name: "Enable debug logging",
-      type: "boolean",
-      default: false
-    }),
+    // One suite-wide switch on the General tab since 1.5.0 (core/debug.js).
+    debugLogging: debugLoggingSetting,
     autoOpen: settings.add("autoOpenTrueHub", {
       name: "Auto Open True Hub",
       type: "boolean",

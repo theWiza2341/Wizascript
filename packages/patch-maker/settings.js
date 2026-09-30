@@ -1,5 +1,6 @@
 import { createFeatureSettings } from "../core/settings.js";
 import { getPluginToggle, isPluginEnabled } from "../core/plugins.js";
+import { debugLoggingSetting } from "../core/debug.js";
 
 export function registerPatchMakerSettings(plugin) {
   const settings = createFeatureSettings(plugin, "patchmaker", {
@@ -11,7 +12,8 @@ export function registerPatchMakerSettings(plugin) {
     settings,
     // The on/off switch itself now lives in the Plugins list (core/plugins.js).
     enabled: getPluginToggle("patchMaker"),
-    debugLogging: settings.add("debugLogging", { name: "Enable debug logging", type: "boolean", default: false }),
+    // One suite-wide switch on the General tab since 1.5.0 (core/debug.js).
+    debugLogging: debugLoggingSetting,
     hideControls: settings.add("hideControls", { name: "Hide Patch Maker controls", type: "boolean", default: false }),
     cardHovers: settings.add("enableCardHovers", { name: "Enable card hovers", type: "boolean", default: true }),
     language: settings.add("patchLanguage", {

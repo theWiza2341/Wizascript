@@ -69,19 +69,21 @@
   function createFeatureSettings(plugin, featureName, { tab, visible, categories = false } = {}) {
     const settingsApi = tab ? plugin.settings().page(tab) : plugin.settings();
     const registered = {};
-    function add(key, config) {
+    function add(key2, config) {
       const { category, page, hidden, ...rest } = config;
-      const setting = settingsApi.add({
+      const isHidden = () => (visible ? !visible() : false) || resolve(hidden) === true;
+      const dynamicCategory = categories && category ? { toString: () => isHidden() ? "N/A" : String(category), valueOf: () => isHidden() ? "N/A" : String(category) } : null;
+      const setting2 = settingsApi.add({
         ...rest,
-        ...categories && category ? { category } : {},
-        key: `${featureName}.${key}`,
-        hidden: () => (visible ? !visible() : false) || resolve(hidden) === true
+        ...dynamicCategory ? { category: dynamicCategory } : {},
+        key: `${featureName}.${key2}`,
+        hidden: isHidden
       });
-      registered[key] = setting;
-      return setting;
+      registered[key2] = setting2;
+      return setting2;
     }
-    function value(key) {
-      return registered[key].value();
+    function value(key2) {
+      return registered[key2].value();
     }
     return { add, value };
   }
@@ -92,26 +94,11 @@
   var enhancers = /* @__PURE__ */ new Map();
   var observer = null;
   function scan() {
-    enhancers.forEach((enhance, key) => {
-      const el2 = document.getElementById(ID_PREFIX + key);
+    enhancers.forEach((enhance, key2) => {
+      const el2 = document.getElementById(ID_PREFIX + key2);
       if (!el2 || el2.hasAttribute(ENHANCED_ATTR)) return;
       el2.setAttribute(ENHANCED_ATTR, "true");
       enhance(el2);
-    });
-    hideEmptyCategories();
-  }
-  function hideEmptyCategories() {
-    if (!document.querySelector(".tabbedView fieldset")) return;
-    const contents = /* @__PURE__ */ new Set();
-    document.querySelectorAll(`[id^="${ID_PREFIX}"]`).forEach((el2) => {
-      const content = el2.closest(".tabContent");
-      if (content) contents.add(content);
-    });
-    contents.forEach((content) => {
-      content.querySelectorAll(":scope > div > fieldset, :scope > fieldset").forEach((set) => {
-        const empty = !set.querySelector(".flex-start");
-        if (empty && set.style.display !== "none") set.style.display = "none";
-      });
     });
   }
   function ensureObserver() {
@@ -231,8 +218,8 @@
   };
   function applySubSettingVisibility(pluginId, forceEnabled) {
     const enabled = forceEnabled !== void 0 ? forceEnabled : isPluginEnabled(pluginId);
-    (SUB_SETTINGS[pluginId] || []).forEach((key) => {
-      const el2 = document.getElementById(LS_PREFIX + key);
+    (SUB_SETTINGS[pluginId] || []).forEach((key2) => {
+      const el2 = document.getElementById(LS_PREFIX + key2);
       const row = el2 && el2.closest(".flex-start");
       if (row) row.style.display = enabled ? "" : "none";
     });
@@ -271,7 +258,7 @@
       }
     });
     Object.entries(SUB_SETTINGS).forEach(([pluginId, keys]) => {
-      keys.forEach((key) => registerSettingWidget(key, (el2) => {
+      keys.forEach((key2) => registerSettingWidget(key2, (el2) => {
         const row = el2.closest(".flex-start");
         if (row) row.classList.add("wizascript-subsetting");
         applySubSettingVisibility(pluginId);
@@ -602,7 +589,7 @@
   }
   function registerKeybindNow(plugin, config) {
     const {
-      key,
+      key: key2,
       name,
       defaultCode,
       scope = "global",
@@ -626,7 +613,7 @@
     const pluginId = pluginIdForLabel(packageLabel);
     const pluginHidden = () => pluginId ? !isPluginEnabled(pluginId) : false;
     if (onMatch) {
-      settings.add(key, {
+      settings.add(key2, {
         name: `${name} - Primary + <key>`,
         type: "text",
         default: defaultCode,
@@ -634,9 +621,9 @@
         category: packageLabel || GENERAL_CATEGORY,
         hidden: pluginHidden
       });
-      bindingDefaults.set(key, defaultCode);
+      bindingDefaults.set(key2, defaultCode);
     }
-    registry.push({ key, name, packageLabel, pluginId, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease, onPrimaryDoubleTap });
+    registry.push({ key: key2, name, packageLabel, pluginId, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease, onPrimaryDoubleTap });
     scheduleConflictRefresh();
   }
   var WARNING_CLASS = "wizascript-keybind-warning";
@@ -664,16 +651,16 @@
   }
   function computeKeybindConflicts() {
     const out = /* @__PURE__ */ new Map();
-    const add = (key, msg) => {
-      if (!out.has(key)) out.set(key, []);
-      out.get(key).push(msg);
+    const add = (key2, msg) => {
+      if (!out.has(key2)) out.set(key2, []);
+      out.get(key2).push(msg);
     };
-    const primary = getPrimaryCode();
+    const primary2 = getPrimaryCode();
     const combos = registry.filter((b) => b.onMatch && isBindingActive(b)).map((b) => ({ b, code: readCode(b.key, b.defaultCode) })).filter(({ code }) => code && code !== "unbound");
-    const primaryClash = underscriptClash(primary, true);
+    const primaryClash = underscriptClash(primary2, true);
     if (primaryClash && anyKeybindPluginEnabled()) add(PRIMARY_KEY, primaryClash);
     combos.forEach(({ b, code }, i) => {
-      if (sameKey(code, primary)) add(b.key, `Same key as your Primary key (${codeToDisplay(primary)}), so this shortcut can't be used.`);
+      if (sameKey(code, primary2)) add(b.key, `Same key as your Primary key (${codeToDisplay(primary2)}), so this shortcut can't be used.`);
       combos.forEach(({ b: other, code: otherCode }, j) => {
         if (i === j || !sameKey(code, otherCode) || !canOverlap(b, other)) return;
         add(b.key, j < i ? `Same key as ${describe(other)}, which takes priority - this one won't fire.` : `Same key as ${describe(other)} - this one takes priority, so that one won't fire.`);
@@ -686,11 +673,11 @@
   function refreshConflictWarnings() {
     if (!document.querySelector(`input[id^="${ID_PREFIX2}"]`)) return;
     const conflicts = computeKeybindConflicts();
-    bindingDefaults.forEach((_, key) => {
-      const input = document.getElementById(ID_PREFIX2 + key);
+    bindingDefaults.forEach((_, key2) => {
+      const input = document.getElementById(ID_PREFIX2 + key2);
       const row = input && input.closest(".flex-start");
       if (!row) return;
-      const messages = conflicts.get(key) || [];
+      const messages = conflicts.get(key2) || [];
       let warn = row.querySelector(`:scope > .${WARNING_CLASS}`);
       const text = messages.map((m) => `\u26A0 ${m}`).join("\n");
       if (!messages.length) {
@@ -724,9 +711,53 @@
     if (!primaryHeld) return false;
     return registry.some((b) => b.onMatch && isBindingActive(b) && matchesSetting(e, b));
   }
+  function describeKeybind(bindingKey, defaultCode) {
+    const code = readCode(bindingKey, bindingDefaults.get(bindingKey) || defaultCode);
+    if (!code || code === "unbound") return null;
+    return `${getPrimaryKeyDisplay()} + ${codeToDisplay(code)}`;
+  }
 
   // CHANGELOG.md
-  var CHANGELOG_default = "# Changelog\n\nAll notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.\n\n## 1.5.0\n\nWizascript is now listed in UnderScript's plugin directory, so this update is all about making it easy to understand without a readme.\n\n### Settings overhaul\n- New **General** tab (the first tab in Wizascript's settings) with a **Plugins** list and a **Miscellaneous** list. Every feature now has its own on/off switch, with a short description when you hover it.\n- Each enabled plugin gets its **own settings tab**. Plugins you haven't turned on don't show any settings at all.\n- **Keybinds** only appear once you enable a plugin that uses them, and only list the shortcuts for plugins you actually have on, in a section per plugin.\n- **Controller Support** has its own tab for controller bindings, split into Setup, General, a section per plugin, and In-Game Inputs, and likewise only lists actions for plugins you have on.\n- Notepad and Card Tags are listed under Miscellaneous; Controller Support is now listed with the other plugins.\n- Tab names are never cut off. When there are more tabs than fit, they're split into pages, and **\u25C0 \u25B6 arrows** at the right end of the tab row flip between them.\n- New **Changelog** button (you're reading it), and a one-time popup after each update.\n\n### New\n- **Back up & restore settings**: save all your Wizascript settings and data (toggles, keybinds, controller bindings, Card Tracker presets, Card Tags, Notepad) as one code or file from the General tab, and restore it on another browser or after reinstalling.\n- **Share Card Tags**: in Manage Tags, share some or all of your tags (with the cards they're on) as a code, or import a friend's. Imported tags merge into yours by name and never remove anything.\n- **Keybind warnings**: the Keybinds tab warns when a shortcut clashes with another shortcut, with your Primary key, or with UnderScript's Space-to-end-turn hotkey. The Controller Support tab does the same for controller bindings: two actions on one button, an In-Game Input on a combo's button or on a button that already clicks/goes back/navigates, and Controller Primary or the Channel Guide on a button they'd block.\n- **Controller: L1/R1 switch tabs in Settings**: sidebar categories, or the open plugin's own tabs.\n\n### Changes\n- **Deck Tracker is now called Card Tracker**, to better describe what it does. Your trackers, presets and settings carry over.\n- New installs start with every plugin switched off. If you were already using Wizascript, the plugins you had on stay on.\n- Notepad has a new **Open Notepad on Page Load** setting, shown right under Notepad once it's enabled. The Toggle Notepad shortcut now opens/closes the notepad for the current page without switching the plugin off.\n- UC TV's filter settings are disabled (greyed out) while match filtering is turned off.\n- UC TV no longer prints its settings to the browser console on every page load unless debug logging is on.\n\n### Fixes\n- Controller Support: the d-pad works in the settings' **Plugins** section again (UnderScript 0.64 changed how plugin settings are laid out). A plugin's tabs are now one row you move along with left/right, including the \u25C0 \u25B6 arrows. Moving up from a setting returns to the tab you're on.\n- Controller Support: binding \u2715 or the d-pad now works when you clicked the binding box with the mouse or cursor (before, the press moved the settings sidebar instead of being recorded).\n\n## 1.4.1 and earlier\n\nWizascript combined several separate plugins into one download: Patch Maker, True Hub Bridge, Deck Tracker, UC TV, Notepad, Card Tags, remappable keybinds, and controller support. Detailed notes weren't kept before 1.5.0.\n";
+  var CHANGELOG_default = `# Changelog
+
+All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
+
+## 1.5.0
+
+Wizascript is now listed in UnderScript's plugin directory, so this update is all about making it easy to understand without a readme.
+
+### Settings overhaul
+- New **General** tab (the first tab in Wizascript's settings) with a **Plugins** list and a **Miscellaneous** list. Every feature now has its own on/off switch, with a short description when you hover it.
+- Each enabled plugin gets its **own settings tab**. Plugins you haven't turned on don't show any settings at all.
+- **Keybinds** only appear once you enable a plugin that uses them, and only list the shortcuts for plugins you actually have on, in a section per plugin.
+- **Controller Support** has its own tab for controller bindings, split into Setup, General, a section per plugin, and In-Game Inputs, and likewise only lists actions for plugins you have on.
+- Notepad and Card Tags are listed under Miscellaneous; Controller Support is now listed with the other plugins.
+- Tab names are never cut off. When there are more tabs than fit, they're split into pages, and **\u25C0 \u25B6 arrows** at the right end of the tab row flip between them.
+- New **Changelog** button (you're reading it), and a one-time popup after each update.
+
+### New
+- **How-to guides**: every plugin now explains itself: which pages it works on, what it does, and its inputs (like right-clicking cards for Card Tags). Find it at the bottom of the plugin's settings tab, or click the **?** next to any plugin in the Plugins / Miscellaneous lists, even before turning it on. Keyboard shortcuts are shown with your current keys.
+- **Back up & restore settings**: save all your Wizascript settings and data (toggles, keybinds, controller bindings, Card Tracker presets, Card Tags, Notepad) as one code or file from the General tab, and restore it on another browser or after reinstalling.
+- **Share Card Tags**: in Manage Tags, share some or all of your tags (with the cards they're on) as a code, or import a friend's. Imported tags merge into yours by name and never remove anything.
+- **Keybind warnings**: the Keybinds tab warns when a shortcut clashes with another shortcut, with your Primary key, or with UnderScript's Space-to-end-turn hotkey. The Controller Support tab does the same for controller bindings: two actions on one button, an In-Game Input on a combo's button or on a button that already clicks/goes back/navigates, and Controller Primary or the Channel Guide on a button they'd block.
+- **Controller: L1/R1 switch tabs in Settings**: sidebar categories, or the open plugin's own tabs.
+
+### Changes
+- **Deck Tracker is now called Card Tracker**, to better describe what it does. Your trackers, presets and settings carry over.
+- New installs start with every plugin switched off. If you were already using Wizascript, the plugins you had on stay on.
+- Notepad has a new **Open Notepad on Page Load** setting, shown right under Notepad once it's enabled. The Toggle Notepad shortcut now opens/closes the notepad for the current page without switching the plugin off.
+- UC TV's filter settings are disabled (greyed out) while match filtering is turned off.
+- UC TV no longer prints its settings to the browser console on every page load unless debug logging is on.
+- The separate "Enable debug logging" options on Patch Maker, True Hub Bridge, Card Tracker and UC TV are now one **Debug logging** option at the bottom of the General tab. If you had any of them on, it stays on.
+
+### Fixes
+- Controller Support: the d-pad works in the settings' **Plugins** section again (UnderScript 0.64 changed how plugin settings are laid out). A plugin's tabs are now one row you move along with left/right, including the \u25C0 \u25B6 arrows. Moving up from a setting returns to the tab you're on.
+- Controller Support: binding \u2715 or the d-pad now works when you clicked the binding box with the mouse or cursor (before, the press moved the settings sidebar instead of being recorded).
+
+## 1.4.1 and earlier
+
+Wizascript combined several separate plugins into one download: Patch Maker, True Hub Bridge, Deck Tracker, UC TV, Notepad, Card Tags, remappable keybinds, and controller support. Detailed notes weren't kept before 1.5.0.
+`;
 
   // packages/core/about.js
   var LAST_SEEN_KEY = "wizascript.lastSeenVersion";
@@ -1024,13 +1055,13 @@
   var CATEGORY2 = "Wizascript";
   var SKIP_GM = /* @__PURE__ */ new Set(["wizascript.migration.v150", "wizascript.lastSeenVersion"]);
   var SKIP_LS_PREFIXES = ["about.", "backup."];
-  function isBackedUpLsKey(key) {
-    if (!key.startsWith(LS_PREFIX2)) return false;
-    const rest = key.slice(LS_PREFIX2.length);
+  function isBackedUpLsKey(key2) {
+    if (!key2.startsWith(LS_PREFIX2)) return false;
+    const rest = key2.slice(LS_PREFIX2.length);
     return !SKIP_LS_PREFIXES.some((p) => rest.startsWith(p));
   }
-  function isBackedUpGmKey(key) {
-    return key.startsWith(GM_PREFIX2) && !SKIP_GM.has(key);
+  function isBackedUpGmKey(key2) {
+    return key2.startsWith(GM_PREFIX2) && !SKIP_GM.has(key2);
   }
   function listGmKeys() {
     try {
@@ -1150,6 +1181,526 @@
       category: CATEGORY2
     });
     registerSettingWidget("backup.import", asButton("Restore\u2026", () => importBackup()));
+  }
+
+  // packages/core/debug.js
+  var LS_PREFIX3 = "underscript.plugin.Wizascript.";
+  var KEY = "debugLogging";
+  var OLD_KEYS = ["patchmaker.debugLogging", "truehubbridge.debugLogging", "decktracker.debugLogging", "ucTv.debugLogs"];
+  var setting = null;
+  var isOn = (v) => v === "1" || v === "true";
+  function carryOverOldToggles() {
+    const hadOne = OLD_KEYS.some((k) => isOn(localStorage.getItem(LS_PREFIX3 + k)));
+    if (hadOne && localStorage.getItem(LS_PREFIX3 + KEY) === null) localStorage.setItem(LS_PREFIX3 + KEY, "1");
+    OLD_KEYS.forEach((k) => localStorage.removeItem(LS_PREFIX3 + k));
+  }
+  function registerDebugSetting(plugin) {
+    carryOverOldToggles();
+    setting = plugin.settings().add({
+      key: KEY,
+      name: "Debug logging",
+      note: "Print extra details to the browser console, for bug reports.",
+      type: "boolean",
+      default: false,
+      category: "Wizascript"
+    });
+  }
+  function isDebugLogging() {
+    if (setting) return !!setting.value();
+    return isOn(localStorage.getItem(LS_PREFIX3 + KEY));
+  }
+  var debugLoggingSetting = { value: () => isDebugLogging() };
+
+  // packages/controller/gamepad.js
+  var pageWindow = getPageWindow();
+  var debugLoggingEnabled = false;
+  function setDebugLoggingEnabled(v) {
+    debugLoggingEnabled = !!v;
+  }
+  var pressIndicator = document.createElement("div");
+  Object.assign(pressIndicator.style, {
+    position: "fixed",
+    top: "16px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    zIndex: 2147483647,
+    background: "rgba(0,150,0,0.92)",
+    color: "#fff",
+    font: 'bold 22px -apple-system, "Segoe UI", sans-serif',
+    padding: "10px 22px",
+    borderRadius: "10px",
+    pointerEvents: "none",
+    boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+    display: "none",
+    textAlign: "center"
+  });
+  var pressIndicatorHideTimer = null;
+  function showPressIndicator(text) {
+    if (!debugLoggingEnabled) return;
+    pressIndicator.textContent = text;
+    pressIndicator.style.display = "block";
+    if (pressIndicatorHideTimer) clearTimeout(pressIndicatorHideTimer);
+    pressIndicatorHideTimer = setTimeout(() => {
+      pressIndicator.style.display = "none";
+    }, 1e3);
+  }
+  var BUTTON_LABELS = {
+    0: "\u2715",
+    1: "\u25CB",
+    2: "\u25A1",
+    3: "\u25B3",
+    4: "L1",
+    5: "R1",
+    6: "L2",
+    7: "R2",
+    8: "Select",
+    9: "Start",
+    10: "L3",
+    11: "R3",
+    12: "D-Up",
+    13: "D-Down",
+    14: "D-Left",
+    15: "D-Right",
+    16: "Home",
+    17: "Touchpad"
+  };
+  var BUTTON_LABELS_NINTENDO = {
+    0: "B",
+    1: "A",
+    2: "Y",
+    3: "X",
+    4: "L",
+    5: "R",
+    6: "ZL",
+    7: "ZR",
+    8: "-",
+    9: "+",
+    10: "L3",
+    11: "R3",
+    12: "D-Up",
+    13: "D-Down",
+    14: "D-Left",
+    15: "D-Right",
+    16: "Home",
+    17: "Capture"
+  };
+  function activeButtonLabelTable() {
+    return hidDevice ? BUTTON_LABELS_NINTENDO : BUTTON_LABELS;
+  }
+  function btnLabel(idx) {
+    return activeButtonLabelTable()[idx] || "Button " + idx;
+  }
+  function buttonToDisplay(idx) {
+    if (idx === null || idx === void 0) return "Unbound";
+    return btnLabel(idx);
+  }
+  function prettifyKeyCode(code) {
+    if (code.startsWith("Key") && code.length === 4) return code.slice(3);
+    if (code.startsWith("Digit") && code.length === 6) return code.slice(5);
+    return code;
+  }
+  function bindingToDisplay(value) {
+    if (value === null || value === void 0) return "Unbound";
+    if (typeof value === "number") return btnLabel(value);
+    if (value && value.type === "key") return "Key: " + prettifyKeyCode(value.code);
+    return "Unbound";
+  }
+  var AXIS_CALIBRATION = /* @__PURE__ */ new Map();
+  var AXIS_STABLE_FRAMES_NEEDED = 90;
+  var AXIS_JITTER_EPS = 0.02;
+  var AXIS_CALIBRATION_WINDOW_MS = 4e3;
+  function getCalibratedAxes(pad2) {
+    let cal = AXIS_CALIBRATION.get(pad2.id);
+    if (!cal) {
+      cal = {
+        baseline: pad2.axes.map(() => 0),
+        lastRaw: pad2.axes.slice(),
+        stableFrames: pad2.axes.map(() => 0),
+        calibrateUntil: Date.now() + AXIS_CALIBRATION_WINDOW_MS
+      };
+      AXIS_CALIBRATION.set(pad2.id, cal);
+    }
+    if (Date.now() < cal.calibrateUntil) {
+      pad2.axes.forEach((v, i) => {
+        const prev = cal.lastRaw[i] !== void 0 ? cal.lastRaw[i] : v;
+        if (Math.abs(v - prev) < AXIS_JITTER_EPS) {
+          cal.stableFrames[i] = (cal.stableFrames[i] || 0) + 1;
+        } else {
+          cal.stableFrames[i] = 0;
+        }
+        cal.lastRaw[i] = v;
+        if (cal.stableFrames[i] === AXIS_STABLE_FRAMES_NEEDED && Math.abs(v - (cal.baseline[i] || 0)) > AXIS_JITTER_EPS) {
+          cal.baseline[i] = v;
+          if (debugLoggingEnabled) console.log(`[Wizascript Controller] axis ${i} on "${pad2.id}" recalibrated to neutral=${v.toFixed(3)} after holding steady for ~1.5s (calibration window closes ${((cal.calibrateUntil - Date.now()) / 1e3).toFixed(1)}s from now)`);
+        }
+      });
+    }
+    return pad2.axes.map((v, i) => Math.max(-1, Math.min(1, v - (cal.baseline[i] || 0))));
+  }
+  var WEBHID_VENDOR_ID = 1406;
+  var hidDevice = null;
+  function isHidConnected() {
+    return !!hidDevice;
+  }
+  var hidState = { axes: [0, 0, 0, 0], hat: 8, raw1: 0, raw2: 0 };
+  var lastLoggedHidBits = { raw1: 0, raw2: 0 };
+  function decodeHidReport(dataView) {
+    if (dataView.byteLength < 11) return;
+    const raw1 = dataView.getUint8(0);
+    const raw2 = dataView.getUint8(1);
+    const hat = dataView.getUint8(2);
+    const lh = dataView.getUint16(3, true);
+    const lv = dataView.getUint16(5, true);
+    const rh = dataView.getUint16(7, true);
+    const rv = dataView.getUint16(9, true);
+    const norm = (v) => Math.max(-1, Math.min(1, (v - 32768) / 32768));
+    hidState.axes = [norm(lh), norm(lv), norm(rh), norm(rv)];
+    hidState.hat = hat;
+    hidState.raw1 = raw1;
+    hidState.raw2 = raw2;
+    for (let bit = 0; bit < 8; bit++) {
+      const mask = 1 << bit;
+      const wasR1 = !!(lastLoggedHidBits.raw1 & mask), isR1 = !!(raw1 & mask);
+      if (wasR1 !== isR1) {
+        if (debugLoggingEnabled) console.log(`[Wizascript Controller] WebHID raw bit B1.0x${mask.toString(16).padStart(2, "0")} -> ${isR1 ? "DOWN" : "UP"}`);
+        if (isR1) showPressIndicator(`\u{1F3AE} WebHID B1.0x${mask.toString(16).padStart(2, "0")} pressed`);
+      }
+      const wasR2 = !!(lastLoggedHidBits.raw2 & mask), isR2 = !!(raw2 & mask);
+      if (wasR2 !== isR2) {
+        if (debugLoggingEnabled) console.log(`[Wizascript Controller] WebHID raw bit B2.0x${mask.toString(16).padStart(2, "0")} -> ${isR2 ? "DOWN" : "UP"}`);
+        if (isR2) showPressIndicator(`\u{1F3AE} WebHID B2.0x${mask.toString(16).padStart(2, "0")} pressed`);
+      }
+    }
+    lastLoggedHidBits.raw1 = raw1;
+    lastLoggedHidBits.raw2 = raw2;
+  }
+  function handleHidInputReport(event) {
+    if (event.reportId !== 63) return;
+    decodeHidReport(event.data);
+  }
+  async function openHidDevice(device) {
+    if (hidDevice) {
+      if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID device already connected, ignoring duplicate open call.");
+      return;
+    }
+    try {
+      if (!device.opened) await device.open();
+      device.addEventListener("inputreport", handleHidInputReport);
+      hidDevice = device;
+      if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID device opened:", device.productName || device.vendorId + ":" + device.productId);
+    } catch (e) {
+      if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID open failed:", e);
+    }
+  }
+  async function connectWebHidController() {
+    if (!navigator.hid) {
+      if (debugLoggingEnabled) console.log("[Wizascript Controller] navigator.hid is not available in this browser/context - WebHID cannot be used.");
+      return;
+    }
+    try {
+      const devices = await navigator.hid.requestDevice({ filters: [{ vendorId: WEBHID_VENDOR_ID }] });
+      if (!devices.length) {
+        if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID device picker closed with no selection.");
+        return;
+      }
+      await openHidDevice(devices[0]);
+    } catch (e) {
+      if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID requestDevice failed:", e);
+    }
+  }
+  (async function tryAutoReconnectWebHid() {
+    if (!navigator.hid) return;
+    try {
+      const devices = await navigator.hid.getDevices();
+      const match = devices.find((d) => d.vendorId === WEBHID_VENDOR_ID);
+      if (match) await openHidDevice(match);
+    } catch (e) {
+      if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID auto-reconnect check failed:", e);
+    }
+  })();
+  function getMergedGamepad() {
+    let rawPads = Array.from(navigator.getGamepads()).filter((p) => p);
+    if (hidDevice) {
+      const vidHex = hidDevice.vendorId.toString(16).padStart(4, "0");
+      const pidHex = hidDevice.productId.toString(16).padStart(4, "0");
+      rawPads = rawPads.filter((p) => {
+        const id = (p.id || "").toLowerCase();
+        const isSameDevice = id.includes(vidHex) && id.includes(pidHex);
+        if (isSameDevice && debugLoggingEnabled) console.log("[Wizascript Controller] excluding native Gamepad-API entry for the WebHID-connected device from the merge (buttons unreliable over Bluetooth):", p.id);
+        return !isSameDevice;
+      });
+    }
+    if (hidDevice) {
+      const hidButtons = new Array(18).fill(null).map(() => ({ pressed: false, value: 0 }));
+      const hat = hidState.hat;
+      hidButtons[12] = { pressed: hat === 0 || hat === 1 || hat === 7, value: 0 };
+      hidButtons[15] = { pressed: hat === 1 || hat === 2 || hat === 3, value: 0 };
+      hidButtons[13] = { pressed: hat === 3 || hat === 4 || hat === 5, value: 0 };
+      hidButtons[14] = { pressed: hat === 5 || hat === 6 || hat === 7, value: 0 };
+      const r1 = hidState.raw1, r2 = hidState.raw2;
+      hidButtons[0] = { pressed: !!(r1 & 1), value: 0 };
+      hidButtons[1] = { pressed: !!(r1 & 2), value: 0 };
+      hidButtons[2] = { pressed: !!(r1 & 4), value: 0 };
+      hidButtons[3] = { pressed: !!(r1 & 8), value: 0 };
+      hidButtons[4] = { pressed: !!(r1 & 16), value: r1 & 16 ? 1 : 0 };
+      hidButtons[5] = { pressed: !!(r1 & 32), value: r1 & 32 ? 1 : 0 };
+      hidButtons[6] = { pressed: !!(r1 & 64), value: r1 & 64 ? 1 : 0 };
+      hidButtons[7] = { pressed: !!(r1 & 128), value: r1 & 128 ? 1 : 0 };
+      hidButtons[8] = { pressed: !!(r2 & 1), value: 0 };
+      hidButtons[9] = { pressed: !!(r2 & 2), value: 0 };
+      hidButtons[10] = { pressed: !!(r2 & 4), value: 0 };
+      hidButtons[11] = { pressed: !!(r2 & 8), value: 0 };
+      hidButtons[16] = { pressed: !!(r2 & 16), value: 0 };
+      hidButtons[17] = { pressed: !!(r2 & 32), value: 0 };
+      rawPads.push({ id: "WebHID Switch Pro Controller", buttons: hidButtons, axes: hidState.axes.slice() });
+    }
+    if (!rawPads.length) return null;
+    const pads = rawPads.map((p) => ({ id: p.id, buttons: p.buttons, axes: getCalibratedAxes(p) }));
+    if (pads.length === 1) return pads[0];
+    const buttonCount = Math.max(...pads.map((p) => p.buttons.length));
+    const axesCount = Math.max(...pads.map((p) => p.axes.length));
+    const buttons = [];
+    for (let i = 0; i < buttonCount; i++) {
+      let pressed = false, value = 0;
+      for (const p of pads) {
+        const b = p.buttons[i];
+        if (!b) continue;
+        if (b.pressed) pressed = true;
+        if (b.value > value) value = b.value;
+      }
+      buttons.push({ pressed, value });
+    }
+    const axes = [];
+    for (let i = 0; i < axesCount; i++) {
+      let best = 0;
+      for (const p of pads) {
+        const v = p.axes[i];
+        if (v === void 0) continue;
+        if (Math.abs(v) > Math.abs(best)) best = v;
+      }
+      axes.push(best);
+    }
+    return { buttons, axes, _mergedFrom: pads.map((p) => p.id) };
+  }
+  pageWindow.addEventListener("gamepadconnected", (e) => {
+    if (!debugLoggingEnabled) return;
+    console.log("[Wizascript Controller] gamepadconnected:", {
+      index: e.gamepad.index,
+      id: e.gamepad.id,
+      mapping: e.gamepad.mapping,
+      buttons: e.gamepad.buttons.length,
+      axes: e.gamepad.axes.length
+    });
+  });
+  pageWindow.addEventListener("gamepaddisconnected", (e) => {
+    if (!debugLoggingEnabled) return;
+    console.log("[Wizascript Controller] gamepaddisconnected:", { index: e.gamepad.index, id: e.gamepad.id });
+  });
+  var lastLoggedRawSnapshot = /* @__PURE__ */ new Map();
+  function rawSnapshotsEqual(a, b) {
+    if (!a || !b) return false;
+    if (a.pressedIdx.length !== b.pressedIdx.length) return false;
+    for (let i = 0; i < a.pressedIdx.length; i++) if (a.pressedIdx[i] !== b.pressedIdx[i]) return false;
+    if (a.axes.length !== b.axes.length) return false;
+    for (let i = 0; i < a.axes.length; i++) if (Math.abs(a.axes[i] - b.axes[i]) > 0.03) return false;
+    return true;
+  }
+  function logRawGamepadStateIfChanged() {
+    if (!debugLoggingEnabled) return;
+    const pads = Array.from(navigator.getGamepads()).filter((p) => p);
+    if (!pads.length) return;
+    pads.forEach((p) => {
+      const pressedIdx = p.buttons.map((b, i) => b.pressed ? i : null).filter((i) => i !== null);
+      const snapshot = { pressedIdx, axes: p.axes.slice() };
+      const prev = lastLoggedRawSnapshot.get(p.id);
+      if (rawSnapshotsEqual(prev, snapshot)) return;
+      lastLoggedRawSnapshot.set(p.id, snapshot);
+      console.log(`[Wizascript Controller] raw gamepad[${p.index}] "${p.id}" mapping="${p.mapping}" pressed=[${pressedIdx.join(",")}] axes=[${p.axes.map((v) => v.toFixed(2)).join(",")}]`);
+    });
+  }
+  var lastMergedButtonState = [];
+  var lastUsingControllerLogged = null;
+  var lastAnyStickState = false;
+  function logMergedInputEdges(gp, usingControllerNow, anyStickNow) {
+    if (!debugLoggingEnabled) return;
+    if (lastUsingControllerLogged !== usingControllerNow) {
+      lastUsingControllerLogged = usingControllerNow;
+      console.log(`[Wizascript Controller] usingController -> ${usingControllerNow}`);
+    }
+    gp.buttons.forEach((b, i) => {
+      const was = !!lastMergedButtonState[i];
+      const is = !!(b && b.pressed);
+      if (was !== is) {
+        console.log(`[Wizascript Controller] MERGED button ${i} (${buttonToDisplay(i)}) -> ${is ? "DOWN" : "UP"}`);
+        if (is) showPressIndicator("\u{1F3AE} " + buttonToDisplay(i) + " pressed");
+      }
+      lastMergedButtonState[i] = is;
+    });
+    if (!!anyStickNow !== lastAnyStickState) {
+      lastAnyStickState = !!anyStickNow;
+      if (lastAnyStickState) showPressIndicator("\u{1F579} Stick moved");
+    }
+  }
+
+  // packages/core/plugin-guides.js
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function key(bindingKey, defaultCode) {
+    const d = describeKeybind(bindingKey, defaultCode);
+    return d ? `<b>${esc(d)}</b>` : "<i>(unbound - set it on the Keybinds tab)</i>";
+  }
+  var primary = () => `<b>${esc(getPrimaryKeyDisplay())}</b>`;
+  var pad = (i) => `<b>${esc(bindingToDisplay(i))}</b>`;
+  var GUIDES = {
+    patchMaker: {
+      tab: "Patch Maker",
+      pages: "the Patch Notes page",
+      summary: "Write your own patch notes, formatted like the real ones.",
+      points: () => [
+        "Click <b>Show Custom Patch Notes</b> at the top of the page, then add balance changes, sections and New Cards (with your own card images).",
+        "<b>Switch to Viewer Mode</b> shows the result formatted like an official patch. The <b>Help</b> button lists the formatting codes (e.g. {card names}, [[switch effects]]).",
+        `While editing an entry: ${key("cycleCategoryUp", "Comma")} / ${key("cycleCategoryDown", "Period")} changes its balance category, and ${key("moveEntryUp", "ArrowUp")} / ${key("moveEntryDown", "ArrowDown")} moves the selected entry, section or card.`,
+        "Everything saves automatically. Double-click <b>Reset Data</b> to start over."
+      ]
+    },
+    trueHub: {
+      tab: "True Hub Bridge",
+      pages: "the Hub page",
+      summary: "Browse a much bigger library of community decks, collected from the True Hub Discord.",
+      points: () => [
+        "Use <b>Switch to True Hub</b> / <b>Switch to Classic Hub</b> to swap between deck lists (True Hub opens by itself unless Auto Open is off).",
+        "Filter by Soul, or open <b>Card Filter</b> to require (<b>+ Inc</b>) or exclude (<b>\u2212 Exc</b>) specific cards.",
+        "<b>Info</b> shows the author's notes. The preview button opens the deck like any other Hub deck.",
+        "Change pages with the arrows, or scroll the mouse wheel over the list (Scroll Paging)."
+      ]
+    },
+    cardTracker: {
+      tab: "Card Tracker",
+      pages: "your matches and while spectating",
+      summary: "On-screen counters you update yourself. Nothing is counted automatically.",
+      points: () => [
+        "Click the <b>+</b> next to your avatar to add a tracker: a built-in one, or your own with <b>Custom Tracker</b>. The picker's <b>Help</b> button explains the icons.",
+        "On a tracker: <b>left-click</b> +1, <b>right-click</b> \u22121, <b>middle-click</b> resets to 0. Drag it to move it, drag its corner to resize, <b>\xD7</b> closes it.",
+        "<b>\u2665</b> a tracker in the picker to have it load automatically every match.",
+        "Drag the <b>+</b> itself to move it; middle-click it to put it back."
+      ]
+    },
+    ucTv: {
+      tab: "UC TV",
+      pages: "spectate pages",
+      summary: "Channel-surf between live matches while you spectate.",
+      points: () => [
+        `${key("previousChannel", "ArrowLeft")} / ${key("nextChannel", "ArrowRight")} jumps to the previous / next live match.`,
+        `<b>Hold</b> ${primary()} to open the Channel Guide, then click a player to watch them. Let go to close it.`,
+        `Auto-mode (above) moves on to another match by itself when the current one ends. Tap ${primary()} to cancel the countdown.`,
+        "Match Filtering (above) limits which matches you surf to, by game mode, player level and rank."
+      ]
+    },
+    controller: {
+      tab: "Controller Support",
+      pages: "every page",
+      summary: "Play and navigate Undercards with a gamepad.",
+      points: () => [
+        `Left stick moves a cursor. ${pad(0)} clicks, ${pad(3)} right-clicks, ${pad(1)} goes back. Right stick: left/right changes cursor speed, up/down scrolls.`,
+        "The d-pad steps through menus, dialogs, settings and your hand/board. Text boxes open an on-screen keyboard.",
+        `Hold Controller Primary for the combos listed above; In-Game Inputs need just one press. In Settings, ${pad(4)} / ${pad(5)} switch tabs.`,
+        "To change a binding, click it and press a button (or a key); Esc unbinds. Up to 3 presets. Controller not responding? Try <b>Detect Controller</b> at the top."
+      ]
+    },
+    notepad: {
+      tab: null,
+      pages: "every page",
+      summary: "A drawing notepad you can keep on screen.",
+      points: () => [
+        "<b>Draw</b>, <b>Erase</b> or <b>Fill</b>; pick colours on the wheel and apply them to the pen or the paper. Up to 6 layers (the dashed <b>+</b> adds one; double-click the top layer's number to remove it).",
+        "Drag the title bar to move it. Click the name to rename it. <b>Save PNG</b> uses the name as the filename.",
+        `${key("toggleNotepad", "KeyO")} shows/hides it, ${key("undoNotepad", "KeyZ")} / ${key("redoNotepad", "KeyY")} undo/redo, ${key("resetNotepad", "KeyN")} resets it (including its position).`,
+        "Your drawing, colours, name and position are saved between visits."
+      ]
+    },
+    cardTags: {
+      tab: null,
+      pages: "the Crafting and Decks pages",
+      summary: 'Your own labels for cards, like "Wincon" or "Draw".',
+      points: () => [
+        "<b>Right-click a card</b> to create a tag or switch one on/off for that card.",
+        "Tagged cards show coloured dots. Type a tag's name into the search bar to show only cards with that tag.",
+        "<b>Manage Tags\u2026</b> (in the right-click menu) renames, recolours and deletes tags, and can <b>Share\u2026</b> / <b>Import\u2026</b> tags with friends."
+      ]
+    }
+  };
+  function pluginName(id) {
+    const p = PLUGINS.find((x) => x.id === id);
+    return p ? p.name : id;
+  }
+  function guideHtml(id) {
+    const g = GUIDES[id];
+    if (!g) return "";
+    return `<div style="opacity:.8;margin-bottom:4px">Works on ${esc(g.pages)}.</div><div style="margin-bottom:4px">${g.summary}</div><ul style="margin:0;padding-left:18px">${g.points().map((p) => `<li style="margin:2px 0">${p}</li>`).join("")}</ul>`;
+  }
+  var BOX_STYLE = "flex-basis:100%;margin-top:6px;padding:8px 10px;border:1px solid #555;border-radius:4px;background:rgba(255,255,255,0.04);font-size:0.95em;line-height:1.4;white-space:normal;";
+  function openGuideDialog(id) {
+    const BootstrapDialog2 = getPageWindow().BootstrapDialog;
+    if (!BootstrapDialog2 || typeof BootstrapDialog2.show !== "function") return;
+    const note = isPluginEnabled(id) ? "" : `<div style="margin-top:8px;opacity:.7">Turn it on in the list, then reload the page, to use it.</div>`;
+    BootstrapDialog2.show({
+      title: `How to use ${pluginName(id)}`,
+      message: `<div style="white-space:normal">${guideHtml(id)}${note}</div>`,
+      buttons: [{ label: "Close", cssClass: "btn-primary", action: (d) => d.close() }]
+    });
+  }
+  function registerPluginGuides(plugin) {
+    Object.entries(GUIDES).forEach(([id, g]) => {
+      if (g.tab) {
+        const categorised = g.tab === "Controller Support";
+        const settings2 = createFeatureSettings(plugin, "guide", {
+          tab: g.tab,
+          visible: () => isPluginEnabled(id),
+          categories: categorised
+        });
+        settings2.add(id, {
+          name: `How to use ${pluginName(id)}`,
+          type: "text",
+          default: "",
+          category: "About"
+        });
+        registerSettingWidget(`guide.${id}`, (el2) => {
+          el2.readOnly = true;
+          el2.tabIndex = -1;
+          el2.style.display = "none";
+          const row = el2.closest(".flex-start");
+          if (!row) return;
+          const label = row.querySelector("label");
+          if (label) label.style.fontWeight = "bold";
+          const box = document.createElement("div");
+          box.className = "wizascript-guide";
+          box.style.cssText = BOX_STYLE;
+          box.innerHTML = guideHtml(id);
+          row.appendChild(box);
+        });
+      }
+      const toggle = PLUGINS.find((p) => p.id === id);
+      if (!toggle) return;
+      registerSettingWidget(toggle.key, (el2) => {
+        const row = el2.closest(".flex-start");
+        const label = row && row.querySelector("label");
+        if (!label || row.querySelector(".wizascript-guide-link")) return;
+        const link = document.createElement("a");
+        link.href = "#";
+        link.className = "wizascript-guide-link";
+        link.textContent = "?";
+        link.title = `How to use ${pluginName(id)}`;
+        link.setAttribute("role", "button");
+        link.style.cssText = "margin-left:6px;display:inline-block;width:16px;height:16px;line-height:14px;text-align:center;border:1px solid #888;border-radius:50%;font-size:11px;color:#ccc;text-decoration:none;";
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          openGuideDialog(id);
+        });
+        label.insertAdjacentElement("afterend", link);
+      });
+    });
   }
 
   // packages/core/tab-bar.js
@@ -1342,7 +1893,8 @@
       settings: settings2,
       // The on/off switch itself now lives in the Plugins list (core/plugins.js).
       enabled: getPluginToggle("patchMaker"),
-      debugLogging: settings2.add("debugLogging", { name: "Enable debug logging", type: "boolean", default: false }),
+      // One suite-wide switch on the General tab since 1.5.0 (core/debug.js).
+      debugLogging: debugLoggingSetting,
       hideControls: settings2.add("hideControls", { name: "Hide Patch Maker controls", type: "boolean", default: false }),
       cardHovers: settings2.add("enableCardHovers", { name: "Enable card hovers", type: "boolean", default: true }),
       language: settings2.add("patchLanguage", {
@@ -2167,12 +2719,12 @@ html, body { overflow-x: hidden !important; }
     });
     loadedLanguages.add(lang);
   }
-  function getLocalizedString(key, ...args) {
+  function getLocalizedString(key2, ...args) {
     const i18n = getI18n();
     if (!i18n) return "";
     try {
-      const value = i18n.apply(i18n, [key, ...args]);
-      return !value || value === key ? "" : String(value).trim();
+      const value = i18n.apply(i18n, [key2, ...args]);
+      return !value || value === key2 ? "" : String(value).trim();
     } catch {
       return "";
     }
@@ -3219,14 +3771,8 @@ Version: v${version}`;
       settings: settings2,
       // The on/off switch itself now lives in the Plugins list (core/plugins.js).
       enabled: getPluginToggle("trueHub"),
-      // The original script had no debug-logging toggle at all (just
-      // always-on console.log calls) - added here for consistency with
-      // patch-maker, using the same working per-feature debug logger.
-      debugLogging: settings2.add("debugLogging", {
-        name: "Enable debug logging",
-        type: "boolean",
-        default: false
-      }),
+      // One suite-wide switch on the General tab since 1.5.0 (core/debug.js).
+      debugLogging: debugLoggingSetting,
       autoOpen: settings2.add("autoOpenTrueHub", {
         name: "Auto Open True Hub",
         type: "boolean",
@@ -4339,11 +4885,7 @@ Version: v${version}`;
       visible: () => isPluginEnabled("cardTracker")
     });
     const enabled = getPluginToggle("cardTracker");
-    const debugLogging = settings2.add("debugLogging", {
-      name: "Enable debug logging",
-      type: "boolean",
-      default: false
-    });
+    const debugLogging = debugLoggingSetting;
     const retainUnclosedPresets = settings2.add("retainUnclosedPresets", {
       name: "Retain Unclosed Presets Between Matches",
       type: "boolean",
@@ -5825,11 +6367,7 @@ Version: v${version}`;
       visible: () => isPluginEnabled("ucTv")
     });
     const enabled = getPluginToggle("ucTv");
-    const debugLogs = settings2.add("debugLogs", {
-      name: "Enable Debug Logs",
-      type: "boolean",
-      default: false
-    });
+    const debugLogs = debugLoggingSetting;
     const autoMode = settings2.add("autoMode", {
       name: "Enable auto-mode when spectating",
       type: "boolean",
@@ -5843,10 +6381,10 @@ Version: v${version}`;
     });
     const filterDisabled = () => !filteringEnabled.value();
     const filterDependents = [];
-    const addFilter = (key, config) => {
-      const setting = settings2.add(key, { ...config, disabled: filterDisabled });
-      filterDependents.push(setting);
-      return setting;
+    const addFilter = (key2, config) => {
+      const setting2 = settings2.add(key2, { ...config, disabled: filterDisabled });
+      filterDependents.push(setting2);
+      return setting2;
     };
     const filteringEnabled = settings2.add("filteringEnabled", {
       name: "Enable Match Filtering",
@@ -6625,20 +7163,20 @@ Version: v${version}`;
   var PEN_COLOR_KEY = "wizascript.misc.notepad.penColor";
   var RECENT_COLORS_KEY = "wizascript.misc.notepad.recentColors";
   var TITLE_KEY = "wizascript.misc.notepad.title";
-  function readJSON(key, fallback) {
+  function readJSON(key2, fallback) {
     try {
-      const raw = GM_getValue(key, null);
+      const raw = GM_getValue(key2, null);
       return raw ? JSON.parse(raw) : fallback;
     } catch (e) {
-      console.warn("[Notepad] Failed to read storage key", key, e);
+      console.warn("[Notepad] Failed to read storage key", key2, e);
       return fallback;
     }
   }
-  function writeJSON(key, value) {
+  function writeJSON(key2, value) {
     try {
-      GM_setValue(key, JSON.stringify(value));
+      GM_setValue(key2, JSON.stringify(value));
     } catch (e) {
-      console.warn("[Notepad] Failed to write storage key", key, e);
+      console.warn("[Notepad] Failed to write storage key", key2, e);
     }
   }
   function getSavedPosition2() {
@@ -8660,358 +9198,27 @@ Version: v${version}`;
     return settings2;
   }
 
-  // packages/controller/gamepad.js
-  var pageWindow = getPageWindow();
-  var debugLoggingEnabled = false;
-  function setDebugLoggingEnabled(v) {
-    debugLoggingEnabled = !!v;
-  }
-  var pressIndicator = document.createElement("div");
-  Object.assign(pressIndicator.style, {
-    position: "fixed",
-    top: "16px",
-    left: "50%",
-    transform: "translateX(-50%)",
-    zIndex: 2147483647,
-    background: "rgba(0,150,0,0.92)",
-    color: "#fff",
-    font: 'bold 22px -apple-system, "Segoe UI", sans-serif',
-    padding: "10px 22px",
-    borderRadius: "10px",
-    pointerEvents: "none",
-    boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
-    display: "none",
-    textAlign: "center"
-  });
-  var pressIndicatorHideTimer = null;
-  function showPressIndicator(text) {
-    if (!debugLoggingEnabled) return;
-    pressIndicator.textContent = text;
-    pressIndicator.style.display = "block";
-    if (pressIndicatorHideTimer) clearTimeout(pressIndicatorHideTimer);
-    pressIndicatorHideTimer = setTimeout(() => {
-      pressIndicator.style.display = "none";
-    }, 1e3);
-  }
-  var BUTTON_LABELS = {
-    0: "\u2715",
-    1: "\u25CB",
-    2: "\u25A1",
-    3: "\u25B3",
-    4: "L1",
-    5: "R1",
-    6: "L2",
-    7: "R2",
-    8: "Select",
-    9: "Start",
-    10: "L3",
-    11: "R3",
-    12: "D-Up",
-    13: "D-Down",
-    14: "D-Left",
-    15: "D-Right",
-    16: "Home",
-    17: "Touchpad"
-  };
-  var BUTTON_LABELS_NINTENDO = {
-    0: "B",
-    1: "A",
-    2: "Y",
-    3: "X",
-    4: "L",
-    5: "R",
-    6: "ZL",
-    7: "ZR",
-    8: "-",
-    9: "+",
-    10: "L3",
-    11: "R3",
-    12: "D-Up",
-    13: "D-Down",
-    14: "D-Left",
-    15: "D-Right",
-    16: "Home",
-    17: "Capture"
-  };
-  function activeButtonLabelTable() {
-    return hidDevice ? BUTTON_LABELS_NINTENDO : BUTTON_LABELS;
-  }
-  function btnLabel(idx) {
-    return activeButtonLabelTable()[idx] || "Button " + idx;
-  }
-  function buttonToDisplay(idx) {
-    if (idx === null || idx === void 0) return "Unbound";
-    return btnLabel(idx);
-  }
-  function prettifyKeyCode(code) {
-    if (code.startsWith("Key") && code.length === 4) return code.slice(3);
-    if (code.startsWith("Digit") && code.length === 6) return code.slice(5);
-    return code;
-  }
-  function bindingToDisplay(value) {
-    if (value === null || value === void 0) return "Unbound";
-    if (typeof value === "number") return btnLabel(value);
-    if (value && value.type === "key") return "Key: " + prettifyKeyCode(value.code);
-    return "Unbound";
-  }
-  var AXIS_CALIBRATION = /* @__PURE__ */ new Map();
-  var AXIS_STABLE_FRAMES_NEEDED = 90;
-  var AXIS_JITTER_EPS = 0.02;
-  var AXIS_CALIBRATION_WINDOW_MS = 4e3;
-  function getCalibratedAxes(pad) {
-    let cal = AXIS_CALIBRATION.get(pad.id);
-    if (!cal) {
-      cal = {
-        baseline: pad.axes.map(() => 0),
-        lastRaw: pad.axes.slice(),
-        stableFrames: pad.axes.map(() => 0),
-        calibrateUntil: Date.now() + AXIS_CALIBRATION_WINDOW_MS
-      };
-      AXIS_CALIBRATION.set(pad.id, cal);
-    }
-    if (Date.now() < cal.calibrateUntil) {
-      pad.axes.forEach((v, i) => {
-        const prev = cal.lastRaw[i] !== void 0 ? cal.lastRaw[i] : v;
-        if (Math.abs(v - prev) < AXIS_JITTER_EPS) {
-          cal.stableFrames[i] = (cal.stableFrames[i] || 0) + 1;
-        } else {
-          cal.stableFrames[i] = 0;
-        }
-        cal.lastRaw[i] = v;
-        if (cal.stableFrames[i] === AXIS_STABLE_FRAMES_NEEDED && Math.abs(v - (cal.baseline[i] || 0)) > AXIS_JITTER_EPS) {
-          cal.baseline[i] = v;
-          if (debugLoggingEnabled) console.log(`[Wizascript Controller] axis ${i} on "${pad.id}" recalibrated to neutral=${v.toFixed(3)} after holding steady for ~1.5s (calibration window closes ${((cal.calibrateUntil - Date.now()) / 1e3).toFixed(1)}s from now)`);
-        }
-      });
-    }
-    return pad.axes.map((v, i) => Math.max(-1, Math.min(1, v - (cal.baseline[i] || 0))));
-  }
-  var WEBHID_VENDOR_ID = 1406;
-  var hidDevice = null;
-  function isHidConnected() {
-    return !!hidDevice;
-  }
-  var hidState = { axes: [0, 0, 0, 0], hat: 8, raw1: 0, raw2: 0 };
-  var lastLoggedHidBits = { raw1: 0, raw2: 0 };
-  function decodeHidReport(dataView) {
-    if (dataView.byteLength < 11) return;
-    const raw1 = dataView.getUint8(0);
-    const raw2 = dataView.getUint8(1);
-    const hat = dataView.getUint8(2);
-    const lh = dataView.getUint16(3, true);
-    const lv = dataView.getUint16(5, true);
-    const rh = dataView.getUint16(7, true);
-    const rv = dataView.getUint16(9, true);
-    const norm = (v) => Math.max(-1, Math.min(1, (v - 32768) / 32768));
-    hidState.axes = [norm(lh), norm(lv), norm(rh), norm(rv)];
-    hidState.hat = hat;
-    hidState.raw1 = raw1;
-    hidState.raw2 = raw2;
-    for (let bit = 0; bit < 8; bit++) {
-      const mask = 1 << bit;
-      const wasR1 = !!(lastLoggedHidBits.raw1 & mask), isR1 = !!(raw1 & mask);
-      if (wasR1 !== isR1) {
-        if (debugLoggingEnabled) console.log(`[Wizascript Controller] WebHID raw bit B1.0x${mask.toString(16).padStart(2, "0")} -> ${isR1 ? "DOWN" : "UP"}`);
-        if (isR1) showPressIndicator(`\u{1F3AE} WebHID B1.0x${mask.toString(16).padStart(2, "0")} pressed`);
-      }
-      const wasR2 = !!(lastLoggedHidBits.raw2 & mask), isR2 = !!(raw2 & mask);
-      if (wasR2 !== isR2) {
-        if (debugLoggingEnabled) console.log(`[Wizascript Controller] WebHID raw bit B2.0x${mask.toString(16).padStart(2, "0")} -> ${isR2 ? "DOWN" : "UP"}`);
-        if (isR2) showPressIndicator(`\u{1F3AE} WebHID B2.0x${mask.toString(16).padStart(2, "0")} pressed`);
-      }
-    }
-    lastLoggedHidBits.raw1 = raw1;
-    lastLoggedHidBits.raw2 = raw2;
-  }
-  function handleHidInputReport(event) {
-    if (event.reportId !== 63) return;
-    decodeHidReport(event.data);
-  }
-  async function openHidDevice(device) {
-    if (hidDevice) {
-      if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID device already connected, ignoring duplicate open call.");
-      return;
-    }
-    try {
-      if (!device.opened) await device.open();
-      device.addEventListener("inputreport", handleHidInputReport);
-      hidDevice = device;
-      if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID device opened:", device.productName || device.vendorId + ":" + device.productId);
-    } catch (e) {
-      if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID open failed:", e);
-    }
-  }
-  async function connectWebHidController() {
-    if (!navigator.hid) {
-      if (debugLoggingEnabled) console.log("[Wizascript Controller] navigator.hid is not available in this browser/context - WebHID cannot be used.");
-      return;
-    }
-    try {
-      const devices = await navigator.hid.requestDevice({ filters: [{ vendorId: WEBHID_VENDOR_ID }] });
-      if (!devices.length) {
-        if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID device picker closed with no selection.");
-        return;
-      }
-      await openHidDevice(devices[0]);
-    } catch (e) {
-      if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID requestDevice failed:", e);
-    }
-  }
-  (async function tryAutoReconnectWebHid() {
-    if (!navigator.hid) return;
-    try {
-      const devices = await navigator.hid.getDevices();
-      const match = devices.find((d) => d.vendorId === WEBHID_VENDOR_ID);
-      if (match) await openHidDevice(match);
-    } catch (e) {
-      if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID auto-reconnect check failed:", e);
-    }
-  })();
-  function getMergedGamepad() {
-    let rawPads = Array.from(navigator.getGamepads()).filter((p) => p);
-    if (hidDevice) {
-      const vidHex = hidDevice.vendorId.toString(16).padStart(4, "0");
-      const pidHex = hidDevice.productId.toString(16).padStart(4, "0");
-      rawPads = rawPads.filter((p) => {
-        const id = (p.id || "").toLowerCase();
-        const isSameDevice = id.includes(vidHex) && id.includes(pidHex);
-        if (isSameDevice && debugLoggingEnabled) console.log("[Wizascript Controller] excluding native Gamepad-API entry for the WebHID-connected device from the merge (buttons unreliable over Bluetooth):", p.id);
-        return !isSameDevice;
-      });
-    }
-    if (hidDevice) {
-      const hidButtons = new Array(18).fill(null).map(() => ({ pressed: false, value: 0 }));
-      const hat = hidState.hat;
-      hidButtons[12] = { pressed: hat === 0 || hat === 1 || hat === 7, value: 0 };
-      hidButtons[15] = { pressed: hat === 1 || hat === 2 || hat === 3, value: 0 };
-      hidButtons[13] = { pressed: hat === 3 || hat === 4 || hat === 5, value: 0 };
-      hidButtons[14] = { pressed: hat === 5 || hat === 6 || hat === 7, value: 0 };
-      const r1 = hidState.raw1, r2 = hidState.raw2;
-      hidButtons[0] = { pressed: !!(r1 & 1), value: 0 };
-      hidButtons[1] = { pressed: !!(r1 & 2), value: 0 };
-      hidButtons[2] = { pressed: !!(r1 & 4), value: 0 };
-      hidButtons[3] = { pressed: !!(r1 & 8), value: 0 };
-      hidButtons[4] = { pressed: !!(r1 & 16), value: r1 & 16 ? 1 : 0 };
-      hidButtons[5] = { pressed: !!(r1 & 32), value: r1 & 32 ? 1 : 0 };
-      hidButtons[6] = { pressed: !!(r1 & 64), value: r1 & 64 ? 1 : 0 };
-      hidButtons[7] = { pressed: !!(r1 & 128), value: r1 & 128 ? 1 : 0 };
-      hidButtons[8] = { pressed: !!(r2 & 1), value: 0 };
-      hidButtons[9] = { pressed: !!(r2 & 2), value: 0 };
-      hidButtons[10] = { pressed: !!(r2 & 4), value: 0 };
-      hidButtons[11] = { pressed: !!(r2 & 8), value: 0 };
-      hidButtons[16] = { pressed: !!(r2 & 16), value: 0 };
-      hidButtons[17] = { pressed: !!(r2 & 32), value: 0 };
-      rawPads.push({ id: "WebHID Switch Pro Controller", buttons: hidButtons, axes: hidState.axes.slice() });
-    }
-    if (!rawPads.length) return null;
-    const pads = rawPads.map((p) => ({ id: p.id, buttons: p.buttons, axes: getCalibratedAxes(p) }));
-    if (pads.length === 1) return pads[0];
-    const buttonCount = Math.max(...pads.map((p) => p.buttons.length));
-    const axesCount = Math.max(...pads.map((p) => p.axes.length));
-    const buttons = [];
-    for (let i = 0; i < buttonCount; i++) {
-      let pressed = false, value = 0;
-      for (const p of pads) {
-        const b = p.buttons[i];
-        if (!b) continue;
-        if (b.pressed) pressed = true;
-        if (b.value > value) value = b.value;
-      }
-      buttons.push({ pressed, value });
-    }
-    const axes = [];
-    for (let i = 0; i < axesCount; i++) {
-      let best = 0;
-      for (const p of pads) {
-        const v = p.axes[i];
-        if (v === void 0) continue;
-        if (Math.abs(v) > Math.abs(best)) best = v;
-      }
-      axes.push(best);
-    }
-    return { buttons, axes, _mergedFrom: pads.map((p) => p.id) };
-  }
-  pageWindow.addEventListener("gamepadconnected", (e) => {
-    if (!debugLoggingEnabled) return;
-    console.log("[Wizascript Controller] gamepadconnected:", {
-      index: e.gamepad.index,
-      id: e.gamepad.id,
-      mapping: e.gamepad.mapping,
-      buttons: e.gamepad.buttons.length,
-      axes: e.gamepad.axes.length
-    });
-  });
-  pageWindow.addEventListener("gamepaddisconnected", (e) => {
-    if (!debugLoggingEnabled) return;
-    console.log("[Wizascript Controller] gamepaddisconnected:", { index: e.gamepad.index, id: e.gamepad.id });
-  });
-  var lastLoggedRawSnapshot = /* @__PURE__ */ new Map();
-  function rawSnapshotsEqual(a, b) {
-    if (!a || !b) return false;
-    if (a.pressedIdx.length !== b.pressedIdx.length) return false;
-    for (let i = 0; i < a.pressedIdx.length; i++) if (a.pressedIdx[i] !== b.pressedIdx[i]) return false;
-    if (a.axes.length !== b.axes.length) return false;
-    for (let i = 0; i < a.axes.length; i++) if (Math.abs(a.axes[i] - b.axes[i]) > 0.03) return false;
-    return true;
-  }
-  function logRawGamepadStateIfChanged() {
-    if (!debugLoggingEnabled) return;
-    const pads = Array.from(navigator.getGamepads()).filter((p) => p);
-    if (!pads.length) return;
-    pads.forEach((p) => {
-      const pressedIdx = p.buttons.map((b, i) => b.pressed ? i : null).filter((i) => i !== null);
-      const snapshot = { pressedIdx, axes: p.axes.slice() };
-      const prev = lastLoggedRawSnapshot.get(p.id);
-      if (rawSnapshotsEqual(prev, snapshot)) return;
-      lastLoggedRawSnapshot.set(p.id, snapshot);
-      console.log(`[Wizascript Controller] raw gamepad[${p.index}] "${p.id}" mapping="${p.mapping}" pressed=[${pressedIdx.join(",")}] axes=[${p.axes.map((v) => v.toFixed(2)).join(",")}]`);
-    });
-  }
-  var lastMergedButtonState = [];
-  var lastUsingControllerLogged = null;
-  var lastAnyStickState = false;
-  function logMergedInputEdges(gp, usingControllerNow, anyStickNow) {
-    if (!debugLoggingEnabled) return;
-    if (lastUsingControllerLogged !== usingControllerNow) {
-      lastUsingControllerLogged = usingControllerNow;
-      console.log(`[Wizascript Controller] usingController -> ${usingControllerNow}`);
-    }
-    gp.buttons.forEach((b, i) => {
-      const was = !!lastMergedButtonState[i];
-      const is = !!(b && b.pressed);
-      if (was !== is) {
-        console.log(`[Wizascript Controller] MERGED button ${i} (${buttonToDisplay(i)}) -> ${is ? "DOWN" : "UP"}`);
-        if (is) showPressIndicator("\u{1F3AE} " + buttonToDisplay(i) + " pressed");
-      }
-      lastMergedButtonState[i] = is;
-    });
-    if (!!anyStickNow !== lastAnyStickState) {
-      lastAnyStickState = !!anyStickNow;
-      if (lastAnyStickState) showPressIndicator("\u{1F579} Stick moved");
-    }
-  }
-
   // packages/controller/storage.js
   var GM_PREFIX3 = "wizascript.controller.";
-  function csGet(key, fallback) {
+  function csGet(key2, fallback) {
     try {
-      const v = GM_getValue(GM_PREFIX3 + key, null);
+      const v = GM_getValue(GM_PREFIX3 + key2, null);
       return v === null || v === void 0 ? fallback : v;
     } catch (e) {
       console.warn("[Wizascript Controller] GM_getValue failed, falling back to default:", e);
       return fallback;
     }
   }
-  function csSet(key, value) {
+  function csSet(key2, value) {
     try {
-      GM_setValue(GM_PREFIX3 + key, value);
+      GM_setValue(GM_PREFIX3 + key2, value);
     } catch (e) {
       console.warn("[Wizascript Controller] GM_setValue failed, binding will not persist:", e);
     }
   }
-  function csDelete(key) {
+  function csDelete(key2) {
     try {
-      GM_deleteValue(GM_PREFIX3 + key);
+      GM_deleteValue(GM_PREFIX3 + key2);
     } catch (e) {
       console.warn("[Wizascript Controller] GM_deleteValue failed:", e);
     }
@@ -9069,8 +9276,8 @@ Version: v${version}`;
       csSet(newKey, oldVal);
     };
     migrate("keybinds.__primary");
-    controllerActionKeys.forEach((key) => migrate("keybinds." + key));
-    hardwareShortcutKeys.forEach((key) => migrate("shortcuts." + key));
+    controllerActionKeys.forEach((key2) => migrate("keybinds." + key2));
+    hardwareShortcutKeys.forEach((key2) => migrate("shortcuts." + key2));
     csSet("migratedToPresetsV056", "true");
     console.log("[Wizascript Controller] migrated any pre-preset-system bindings into Preset 1.");
   }
@@ -9078,8 +9285,8 @@ Version: v${version}`;
     const prefix = "preset" + presetN + ".";
     csDelete(prefix + "keybinds.__primary");
     csDelete(prefix + "keybinds.__channelGuide");
-    controllerActionKeys.forEach((key) => csDelete(prefix + "keybinds." + key));
-    hardwareShortcutKeys.forEach((key) => csDelete(prefix + "shortcuts." + key));
+    controllerActionKeys.forEach((key2) => csDelete(prefix + "keybinds." + key2));
+    hardwareShortcutKeys.forEach((key2) => csDelete(prefix + "shortcuts." + key2));
     console.log("[Wizascript Controller] reset preset " + presetN + "'s keybinds/shortcuts to their defaults.");
   }
 
@@ -9545,11 +9752,11 @@ Version: v${version}`;
   }
   function computeControllerConflicts() {
     const out = /* @__PURE__ */ new Map();
-    const add = (key, msg) => {
-      if (!out.has(key)) out.set(key, []);
-      out.get(key).push(msg);
+    const add = (key2, msg) => {
+      if (!out.has(key2)) out.set(key2, []);
+      out.get(key2).push(msg);
     };
-    const primary = getControllerPrimaryButton();
+    const primary2 = getControllerPrimaryButton();
     const guide = isPluginEnabled("ucTv") ? getChannelGuideButton() : null;
     const combos = CONTROLLER_ACTIONS.filter((a) => {
       const id = pluginIdForLabel(a.packageLabel);
@@ -9557,11 +9764,11 @@ Version: v${version}`;
     }).map((a) => ({ a, input: getBoundButton(a.key), code: getBoundKeybindCode(a.key, a.dispatch.code) })).filter((c) => c.input !== null);
     const shortcuts = HARDWARE_SHORTCUT_ACTIONS.filter((a) => !a.pluginId || isPluginEnabled(a.pluginId)).map((a) => ({ a, row: "shortcut_" + a.key, input: getBoundShortcutButton(a.key) })).filter((c) => c.input !== null);
     const comboName = (a) => `${a.name} (Primary + ${bindingToDisplay(getBoundButton(a.key))})`;
-    if (primary !== null && typeof primary === "number" && BUILT_IN_BUTTON_USES[primary]) {
-      add("controllerPrimary", `This button also ${BUILT_IN_BUTTON_USES[primary]}, which stops working while it's your Primary.`);
+    if (primary2 !== null && typeof primary2 === "number" && BUILT_IN_BUTTON_USES[primary2]) {
+      add("controllerPrimary", `This button also ${BUILT_IN_BUTTON_USES[primary2]}, which stops working while it's your Primary.`);
     }
     if (guide !== null) {
-      if (sameInput(guide, primary)) {
+      if (sameInput(guide, primary2)) {
         add("channelGuide", "Same button as Controller Primary.");
         add("controllerPrimary", "Same button as Channel Guide.");
       }
@@ -9570,7 +9777,7 @@ Version: v${version}`;
       }
     }
     shortcuts.forEach(({ a, row, input }, i) => {
-      if (sameInput(input, primary)) {
+      if (sameInput(input, primary2)) {
         add(row, "Same button as Controller Primary - pressing Primary will also do this.");
         add("controllerPrimary", `Same button as ${a.name} - pressing Primary will also do that.`);
       }
@@ -9591,7 +9798,7 @@ Version: v${version}`;
       });
     });
     combos.forEach(({ a, input, code }, i) => {
-      if (sameInput(input, primary)) add(a.key, "Same button as Controller Primary, so this combo can't be pressed.");
+      if (sameInput(input, primary2)) add(a.key, "Same button as Controller Primary, so this combo can't be pressed.");
       if (sameInput(input, guide)) add(a.key, "Same button as Channel Guide - both will happen.");
       combos.forEach(({ a: other, input: otherInput, code: otherCode }, j) => {
         if (i === j || !sameInput(input, otherInput) || code === otherCode) return;
@@ -9606,11 +9813,11 @@ Version: v${version}`;
     if (!document.querySelector(`[id^="${prefix}"]`)) return;
     const conflicts = computeControllerConflicts();
     const rowKeys = ["controllerPrimary", "channelGuide"].concat(CONTROLLER_ACTIONS.map((a) => a.key)).concat(HARDWARE_SHORTCUT_ACTIONS.map((a) => "shortcut_" + a.key));
-    rowKeys.forEach((key) => {
-      const input = document.getElementById(prefix + key);
+    rowKeys.forEach((key2) => {
+      const input = document.getElementById(prefix + key2);
       const row = input && input.closest(".flex-start");
       if (!row) return;
-      const messages = conflicts.get(key) || [];
+      const messages = conflicts.get(key2) || [];
       let warn = row.querySelector(`:scope > .${CONFLICT_CLASS}`);
       if (!messages.length) {
         if (warn) warn.remove();
@@ -10356,9 +10563,9 @@ Version: v${version}`;
       const flexRows = Array.from(root.querySelectorAll(".flex-start")).filter((row) => row.offsetParent !== null).map((row) => Array.from(row.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el2) => el2.offsetParent !== null)).filter((items) => items.length);
       const labelRows = /* @__PURE__ */ new Map();
       Array.from(root.querySelectorAll(".tabLabel")).filter((el2) => el2.offsetParent !== null && !(el2.classList.contains("wizascript-tab-arrow") && el2.classList.contains("disabled"))).forEach((el2) => {
-        const key = el2.parentElement;
-        if (!labelRows.has(key)) labelRows.set(key, []);
-        labelRows.get(key).push(el2);
+        const key2 = el2.parentElement;
+        if (!labelRows.has(key2)) labelRows.set(key2, []);
+        labelRows.get(key2).push(el2);
       });
       const bareLabels = Array.from(labelRows.values()).map((row) => row.sort((a, b) => {
         const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
@@ -11239,8 +11446,8 @@ Version: v${version}`;
             keybindRelayHeld.controlDown = false;
           }
         } else if (wasCaptureActiveLastFrame && !captureActiveNow) {
-          Object.keys(HARDWARE_SHORTCUT_ACTIONS_BY_KEY).forEach((key) => {
-            shortcutHeldByAction[key] = isBoundInputDown(getBoundShortcutButton(key), btn);
+          Object.keys(HARDWARE_SHORTCUT_ACTIONS_BY_KEY).forEach((key2) => {
+            shortcutHeldByAction[key2] = isBoundInputDown(getBoundShortcutButton(key2), btn);
           });
           shortcutBtnHeld = { 1: btn(1), 5: btn(5) };
           keybindRelayHeld.primary = isBoundInputDown(getControllerPrimaryButton(), btn) || oskOpen && oskPaused;
@@ -11306,8 +11513,8 @@ Version: v${version}`;
             keybindRelayHeld.controlDown = false;
           }
           if (l1Down) {
-            const relaySecondary = (code, key) => {
-              const opts = { key, code, bubbles: true };
+            const relaySecondary = (code, key2) => {
+              const opts = { key: key2, code, bubbles: true };
               document.dispatchEvent(new KeyboardEvent("keydown", opts));
               document.dispatchEvent(new KeyboardEvent("keyup", opts));
             };
@@ -12400,6 +12607,7 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     registerPluginToggles(plugin);
     registerAboutSection(plugin);
     registerBackupSection(plugin);
+    registerDebugSetting(plugin);
     initTabBar(plugin);
     initPatchMaker(plugin);
     initTrueHubBridge(plugin);
@@ -12408,6 +12616,7 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     const miscSettings = initMisc(plugin);
     initKeybinds(plugin);
     initController(plugin, miscSettings.enableController);
+    registerPluginGuides(plugin);
     flushKeybindRegistrations();
     showWhatsNew(plugin, installState);
   });

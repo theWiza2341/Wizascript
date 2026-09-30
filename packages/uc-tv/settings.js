@@ -2,6 +2,7 @@
 
 import { createFeatureSettings } from '../core/settings.js';
 import { getPluginToggle, isPluginEnabled } from '../core/plugins.js';
+import { debugLoggingSetting } from '../core/debug.js';
 
 export const LOG = '[UC TV]';
 
@@ -26,11 +27,8 @@ export function registerUcTvSettings(plugin, divisionTiers) {
   // The on/off switch itself now lives in the Plugins list (core/plugins.js).
   const enabled = getPluginToggle('ucTv');
 
-  const debugLogs = settings.add('debugLogs', {
-    name: 'Enable Debug Logs',
-    type: 'boolean',
-    default: false
-  });
+  // One suite-wide switch on the General tab since 1.5.0 (core/debug.js).
+  const debugLogs = debugLoggingSetting;
 
   const autoMode = settings.add('autoMode', {
     name: 'Enable auto-mode when spectating',

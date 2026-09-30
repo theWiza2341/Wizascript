@@ -1,5 +1,6 @@
 import { createFeatureSettings } from "../core/settings.js";
 import { getPluginToggle, isPluginEnabled } from "../core/plugins.js";
+import { debugLoggingSetting } from "../core/debug.js";
 
 export function registerDeckTrackerSettings(plugin) {
   // Shown to players as "Card Tracker" since 1.5.0. Internal names and
@@ -12,11 +13,8 @@ export function registerDeckTrackerSettings(plugin) {
   // The on/off switch itself now lives in the Plugins list (core/plugins.js).
   const enabled = getPluginToggle("cardTracker");
 
-  const debugLogging = settings.add("debugLogging", {
-    name: "Enable debug logging",
-    type: "boolean",
-    default: false
-  });
+  // One suite-wide switch on the General tab since 1.5.0 (core/debug.js).
+  const debugLogging = debugLoggingSetting;
 
   // Independent from favoriting - this remembers whatever was left
   // open (favorited or not) at the end of a session and restores it

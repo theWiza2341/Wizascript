@@ -38,7 +38,7 @@ export function openChangelog() {
   }
   BootstrapDialog.show({
     title: "Wizascript Changelog",
-    message: `<div class="wizascript-changelog">${html}</div>`,
+    message: `<div class="wizascript-changelog" style="white-space:normal">${html}</div>`,
     cssClass: "mono",
     buttons: [{ label: "Close", cssClass: "btn-primary", action: (d) => d.close() }]
   });

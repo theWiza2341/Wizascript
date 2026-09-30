@@ -646,7 +646,7 @@
   }
 
   // CHANGELOG.md
-  var CHANGELOG_default = "# Changelog\n\nAll notable changes to Wizascript are recorded here, newest first. The\nChangelog button in Wizascript's settings shows this file.\n\n## 1.5.0\n\nWizascript is now listed in UnderScript's plugin directory, so this update\nis all about making it easy to understand without a readme.\n\n### Settings overhaul\n- New **General** tab (the first tab in Wizascript's settings) with a\n  **Plugins** list and a **Miscellaneous** list. Every feature now has its\n  own on/off switch, with a short description when you hover it.\n- Each enabled plugin gets its **own settings tab**. Plugins you haven't\n  turned on don't show any settings at all.\n- **Keybinds** only appear once you enable a plugin that uses them, and only\n  list the shortcuts for plugins you actually have on.\n- **Controller Support** has its own tab for controller bindings, which\n  likewise only lists actions for plugins you have on.\n- Notepad and Card Tags are listed under Miscellaneous; Controller Support\n  is now listed with the other plugins.\n- Tab names are never cut off. When there are more tabs than fit, they're\n  split into pages, and **\u25C0 \u25B6 arrows** at the right end of the tab row flip\n  between them.\n- New **Changelog** button (you're reading it), and a one-time popup after\n  each update.\n\n### Changes\n- **Deck Tracker is now called Card Tracker**, to better describe what it\n  does. Your trackers, presets and settings carry over.\n- New installs start with every plugin switched off. If you were already\n  using Wizascript, the plugins you had on stay on.\n- Notepad has a new **Open Notepad on Page Load** setting, shown right under\n  Notepad once it's enabled. The Toggle Notepad shortcut now opens/closes\n  the notepad for the current page without switching the plugin off.\n- UC TV's filter settings are disabled (greyed out) while match filtering\n  is turned off.\n- UC TV no longer prints its settings to the browser console on every page\n  load unless debug logging is on.\n\n## 1.4.1 and earlier\n\nWizascript combined several separate plugins into one download: Patch\nMaker, True Hub Bridge, Deck Tracker, UC TV, Notepad, Card Tags, remappable\nkeybinds, and controller support. Detailed notes weren't kept before 1.5.0.\n";
+  var CHANGELOG_default = "# Changelog\n\nAll notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.\n\n## 1.5.0\n\nWizascript is now listed in UnderScript's plugin directory, so this update is all about making it easy to understand without a readme.\n\n### Settings overhaul\n- New **General** tab (the first tab in Wizascript's settings) with a **Plugins** list and a **Miscellaneous** list. Every feature now has its own on/off switch, with a short description when you hover it.\n- Each enabled plugin gets its **own settings tab**. Plugins you haven't turned on don't show any settings at all.\n- **Keybinds** only appear once you enable a plugin that uses them, and only list the shortcuts for plugins you actually have on.\n- **Controller Support** has its own tab for controller bindings, which likewise only lists actions for plugins you have on.\n- Notepad and Card Tags are listed under Miscellaneous; Controller Support is now listed with the other plugins.\n- Tab names are never cut off. When there are more tabs than fit, they're split into pages, and **\u25C0 \u25B6 arrows** at the right end of the tab row flip between them.\n- New **Changelog** button (you're reading it), and a one-time popup after each update.\n\n### Changes\n- **Deck Tracker is now called Card Tracker**, to better describe what it does. Your trackers, presets and settings carry over.\n- New installs start with every plugin switched off. If you were already using Wizascript, the plugins you had on stay on.\n- Notepad has a new **Open Notepad on Page Load** setting, shown right under Notepad once it's enabled. The Toggle Notepad shortcut now opens/closes the notepad for the current page without switching the plugin off.\n- UC TV's filter settings are disabled (greyed out) while match filtering is turned off.\n- UC TV no longer prints its settings to the browser console on every page load unless debug logging is on.\n\n### Fixes\n- Controller Support: the d-pad works in the settings' **Plugins** section again (UnderScript 0.64 changed how plugin settings are laid out). A plugin's tabs are now one row you move along with left/right, including the \u25C0 \u25B6 arrows.\n\n## 1.4.1 and earlier\n\nWizascript combined several separate plugins into one download: Patch Maker, True Hub Bridge, Deck Tracker, UC TV, Notepad, Card Tags, remappable keybinds, and controller support. Detailed notes weren't kept before 1.5.0.\n";
 
   // packages/core/about.js
   var LAST_SEEN_KEY = "wizascript.lastSeenVersion";
@@ -670,7 +670,7 @@
     }
     BootstrapDialog2.show({
       title: "Wizascript Changelog",
-      message: `<div class="wizascript-changelog">${html}</div>`,
+      message: `<div class="wizascript-changelog" style="white-space:normal">${html}</div>`,
       cssClass: "mono",
       buttons: [{ label: "Close", cssClass: "btn-primary", action: (d) => d.close() }]
     });
@@ -9638,19 +9638,56 @@ Version: v${version}`;
       });
       return items.filter((el) => el.offsetParent !== null);
     }
+    function sidebarLabels(view) {
+      const out = [];
+      Array.from(view.children).forEach((el) => {
+        if (el.classList.contains("tabLabel")) out.push(el);
+        else if (el.classList.contains("tabContent") && el.classList.contains("nested")) {
+          const inner = el.querySelector(":scope > .tabbedView");
+          if (inner) out.push(...sidebarLabels(inner));
+        }
+      });
+      return out;
+    }
     function queryCategoryItems(tabbedRoot) {
-      return Array.from(tabbedRoot.querySelectorAll(":scope > .tabLabel")).filter((el) => el.offsetParent !== null).sort((a, b) => {
+      return sidebarLabels(tabbedRoot).filter((el) => el.offsetParent !== null).sort((a, b) => {
         const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
         if (Math.abs(ra.top - rb.top) > 2) return ra.top - rb.top;
         return ra.left - rb.left;
       });
     }
+    function isTabLabelChecked(label) {
+      const radio = label && label.previousElementSibling;
+      return !!(radio && radio.tagName === "INPUT" && radio.checked);
+    }
+    function isFoldLabel(label) {
+      const content = label && label.nextElementSibling;
+      return !!(content && content.classList.contains("tabContent") && content.classList.contains("nested"));
+    }
     function queryActiveTabContent(tabbedRoot) {
-      return Array.from(tabbedRoot.querySelectorAll(":scope > .tabContent")).find((el) => el.offsetParent !== null) || null;
+      let view = tabbedRoot;
+      for (let depth = 0; view && depth < 5; depth++) {
+        const label = Array.from(view.querySelectorAll(":scope > .tabLabel")).find(isTabLabelChecked);
+        const content = label && label.nextElementSibling;
+        if (!content || !content.classList.contains("tabContent")) return null;
+        if (!content.classList.contains("nested")) return content;
+        view = content.querySelector(":scope > .tabbedView");
+      }
+      return null;
     }
     function queryFieldRows(root) {
       const flexRows = Array.from(root.querySelectorAll(".flex-start")).filter((row) => row.offsetParent !== null).map((row) => Array.from(row.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el) => el.offsetParent !== null)).filter((items) => items.length);
-      const bareLabels = Array.from(root.querySelectorAll(".tabLabel")).filter((el) => el.offsetParent !== null).map((el) => [el]);
+      const labelRows = /* @__PURE__ */ new Map();
+      Array.from(root.querySelectorAll(".tabLabel")).filter((el) => el.offsetParent !== null && !(el.classList.contains("wizascript-tab-arrow") && el.classList.contains("disabled"))).forEach((el) => {
+        const key = el.parentElement;
+        if (!labelRows.has(key)) labelRows.set(key, []);
+        labelRows.get(key).push(el);
+      });
+      const bareLabels = Array.from(labelRows.values()).map((row) => row.sort((a, b) => {
+        const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+        if (Math.abs(ra.top - rb.top) > 2) return ra.top - rb.top;
+        return ra.left - rb.left;
+      }));
       const rows = [...bareLabels, ...flexRows];
       if (rows.length) return rows;
       return buildRowGrid(queryModalItems(root));
@@ -9659,6 +9696,17 @@ Version: v${version}`;
       const cat = categoryItems[categoryIndex];
       if (!cat) return;
       triggerElementClick(cat);
+      if (isFoldLabel(cat)) {
+        const modalInfo = queryModalRoot();
+        if (modalInfo && modalInfo.tabbedRoot) {
+          categoryItems = queryCategoryItems(modalInfo.tabbedRoot);
+          const inner = cat.nextElementSibling.querySelector(":scope > .tabbedView");
+          const firstChild = categoryItems.findIndex((l) => inner && l.parentElement === inner);
+          if (firstChild >= 0) categoryIndex = firstChild;
+          if (isDebugTextEnabled()) console.log("[Wizascript Controller] settings: unfolded", JSON.stringify(cat.textContent), "->", categoryItems.map((l) => l.textContent));
+        }
+        return;
+      }
       modalPane = "fields";
       fieldGrid = null;
       fieldRow = 0;
@@ -10982,10 +11030,8 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
               categoryIndex = keep >= 0 ? keep : Math.min(categoryIndex, Math.max(0, categoryItems.length - 1));
             }
             if (categoryItems.length) {
-              const activeIdx = categoryItems.findIndex((label) => {
-                const radio = label.previousElementSibling;
-                return radio && radio.tagName === "INPUT" && radio.checked;
-              });
+              let activeIdx = categoryItems.findIndex((label) => isTabLabelChecked(label) && !isFoldLabel(label));
+              if (activeIdx < 0) activeIdx = categoryItems.findIndex(isTabLabelChecked);
               if (activeIdx >= 0) {
                 if (activeIdx !== lastKnownActiveCategoryIdx) categoryIndex = activeIdx;
                 lastKnownActiveCategoryIdx = activeIdx;
@@ -10995,10 +11041,52 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
             const liveFieldRows = activeContent ? queryFieldRows(activeContent) : [];
             const liveFieldsFlat = liveFieldRows.flat();
             if (!fieldGrid || !elArraysEqual(gridFlat(fieldGrid), liveFieldsFlat)) {
+              const prevEl = fieldGrid && (fieldGrid[fieldRow] || [])[fieldCol];
+              const prevArrowDir = prevEl && prevEl.classList && prevEl.classList.contains("wizascript-tab-arrow") ? prevEl.dataset.dir : null;
               fieldGrid = liveFieldRows;
               fieldRow = 0;
               fieldCol = 0;
               fieldNeedsReanchor = false;
+              findPrev:
+                for (let r = 0; r < fieldGrid.length; r++) {
+                  for (let c = 0; c < fieldGrid[r].length; c++) {
+                    const el = fieldGrid[r][c];
+                    if (el === prevEl || prevArrowDir && el.classList.contains("wizascript-tab-arrow") && el.dataset.dir === prevArrowDir) {
+                      fieldRow = r;
+                      fieldCol = c;
+                      break findPrev;
+                    }
+                  }
+                }
+              if (prevArrowDir && fieldRow === 0 && fieldCol === 0) {
+                findArrow:
+                  for (let r = 0; r < fieldGrid.length; r++) {
+                    for (let c = 0; c < fieldGrid[r].length; c++) {
+                      if (fieldGrid[r][c].classList.contains("wizascript-tab-arrow")) {
+                        fieldRow = r;
+                        fieldCol = c;
+                        break findArrow;
+                      }
+                    }
+                  }
+              }
+              if (isDebugTextEnabled()) {
+                const path = [];
+                for (let el = activeContent; el && el !== tabbedRoot; el = el.parentElement) {
+                  if (el.classList.contains("tabContent") && el.previousElementSibling) path.unshift(el.previousElementSibling.textContent.trim());
+                }
+                console.log(
+                  "[Wizascript Controller] settings: categories =",
+                  categoryItems.map((l) => l.textContent.trim()),
+                  "| showing =",
+                  path.join(" > ") || "(none found)",
+                  "| field rows =",
+                  fieldGrid.length,
+                  fieldGrid.map((row) => row.length),
+                  "| selected =",
+                  `${fieldRow},${fieldCol}`
+                );
+              }
             }
             if (fieldGrid.length) {
               fieldRow = Math.min(fieldRow, fieldGrid.length - 1);

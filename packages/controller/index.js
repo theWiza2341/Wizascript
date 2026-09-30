@@ -664,14 +664,29 @@ export function initController(plugin, controllerEnabledSetting) {
     });
     return items.filter((el) => el.offsetParent !== null);
   }
-  // The category sidebar is Underscript's `TabManager` output - direct
-  // `.tabLabel` children of the `.tabbedView.left` element itself. Sorted
-  // by actual rendered position (top-to-bottom, then left-to-right as a
-  // tiebreak) rather than DOM order, since Underscript's own CSS
-  // (`.tabLabel.end { order: 1 }`) can reposition a tab (e.g. "Plugins")
-  // visually without touching DOM order at all.
+  // The category sidebar is Underscript's `TabManager` output - `.tabLabel`
+  // children of the `.tabbedView.left` element. Since UnderScript 0.64 the
+  // "Plugins" category is a FOLDED tab: its content is a
+  // `.tabContent.nested` wrapping another TabManager whose labels (one per
+  // plugin - Wizascript, Galascript, ...) render as indented rows in the
+  // same sidebar, but only while "Plugins" is selected. Those nested labels
+  // are NOT direct children of the root, so they're collected recursively
+  // here. Sorted by actual rendered position (top-to-bottom, then
+  // left-to-right as a tiebreak) rather than DOM order, since Underscript's
+  // own CSS (`.tabLabel.end { order: 1 }`) repositions tabs visually.
+  function sidebarLabels(view) {
+    const out = [];
+    Array.from(view.children).forEach((el) => {
+      if (el.classList.contains('tabLabel')) out.push(el);
+      else if (el.classList.contains('tabContent') && el.classList.contains('nested')) {
+        const inner = el.querySelector(':scope > .tabbedView');
+        if (inner) out.push(...sidebarLabels(inner));
+      }
+    });
+    return out;
+  }
   function queryCategoryItems(tabbedRoot) {
-    return Array.from(tabbedRoot.querySelectorAll(':scope > .tabLabel'))
+    return sidebarLabels(tabbedRoot)
       .filter(el => el.offsetParent !== null)
       .sort((a, b) => {
         const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
@@ -679,11 +694,32 @@ export function initController(plugin, controllerEnabledSetting) {
         return ra.left - rb.left;
       });
   }
-  // The whole tab system is pure CSS - exactly one `.tabContent` is ever
-  // visible at a time.
+  function isTabLabelChecked(label) {
+    const radio = label && label.previousElementSibling;
+    return !!(radio && radio.tagName === 'INPUT' && radio.checked);
+  }
+  function isFoldLabel(label) {
+    const content = label && label.nextElementSibling;
+    return !!(content && content.classList.contains('tabContent') && content.classList.contains('nested'));
+  }
+  // The whole tab system is pure CSS - exactly one `.tabContent` per
+  // TabManager is shown, picked by its checked radio. Deliberately NOT an
+  // `offsetParent` check: a folded tab's `.tabContent.nested` is
+  // `display: contents`, which has no box, so offsetParent is always null
+  // for it (this is what broke d-pad navigation in the Plugins section on
+  // UnderScript 0.64). A folded tab is followed down to whichever of its
+  // own sub-tabs is selected, so this returns the content actually on
+  // screen.
   function queryActiveTabContent(tabbedRoot) {
-    return Array.from(tabbedRoot.querySelectorAll(':scope > .tabContent'))
-      .find(el => el.offsetParent !== null) || null;
+    let view = tabbedRoot;
+    for (let depth = 0; view && depth < 5; depth++) {
+      const label = Array.from(view.querySelectorAll(':scope > .tabLabel')).find(isTabLabelChecked);
+      const content = label && label.nextElementSibling;
+      if (!content || !content.classList.contains('tabContent')) return null;
+      if (!content.classList.contains('nested')) return content;
+      view = content.querySelector(':scope > .tabbedView');
+    }
+    return null;
   }
   // Groups by Underscript's own real DOM structure instead of guessing
   // from pixel positions: every registered setting, regardless of
@@ -701,9 +737,24 @@ export function initController(plugin, controllerEnabledSetting) {
     // sub-tabs) isn't wrapped in `.flex-start` at all, since it's
     // TabManager output, not a setting row - surfaced here as one-item
     // rows of their own so they stay reachable.
-    const bareLabels = Array.from(root.querySelectorAll('.tabLabel'))
-      .filter((el) => el.offsetParent !== null)
-      .map((el) => [el]);
+    // Labels that share a tab row (a plugin's own sub-tabs, e.g.
+    // Wizascript's General | Patch Maker | ... | ◀ ▶) are grouped into ONE
+    // row, so left/right steps along the tab bar and up/down leaves it.
+    const labelRows = new Map();
+    Array.from(root.querySelectorAll('.tabLabel'))
+      // A greyed-out ◀/▶ (first/last page of Wizascript's tab row) does
+      // nothing, so it isn't a d-pad stop.
+      .filter((el) => el.offsetParent !== null && !(el.classList.contains('wizascript-tab-arrow') && el.classList.contains('disabled')))
+      .forEach((el) => {
+        const key = el.parentElement;
+        if (!labelRows.has(key)) labelRows.set(key, []);
+        labelRows.get(key).push(el);
+      });
+    const bareLabels = Array.from(labelRows.values()).map((row) => row.sort((a, b) => {
+      const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+      if (Math.abs(ra.top - rb.top) > 2) return ra.top - rb.top;
+      return ra.left - rb.left;
+    }));
     const rows = [...bareLabels, ...flexRows];
     if (rows.length) return rows;
     // Fallback for any 'tabbed'-shaped content that ISN'T built from
@@ -717,6 +768,21 @@ export function initController(plugin, controllerEnabledSetting) {
     const cat = categoryItems[categoryIndex];
     if (!cat) return;
     triggerElementClick(cat);
+    // A folded category ("Plugins") has no settings of its own - opening
+    // it just unfolds its sub-tabs into the sidebar. Stay in the
+    // categories pane and move onto the first of them instead of jumping
+    // into a fields pane.
+    if (isFoldLabel(cat)) {
+      const modalInfo = queryModalRoot();
+      if (modalInfo && modalInfo.tabbedRoot) {
+        categoryItems = queryCategoryItems(modalInfo.tabbedRoot);
+        const inner = cat.nextElementSibling.querySelector(':scope > .tabbedView');
+        const firstChild = categoryItems.findIndex((l) => inner && l.parentElement === inner);
+        if (firstChild >= 0) categoryIndex = firstChild;
+        if (isDebugTextEnabled()) console.log('[Wizascript Controller] settings: unfolded', JSON.stringify(cat.textContent), '->', categoryItems.map((l) => l.textContent));
+      }
+      return;
+    }
     modalPane = 'fields';
     fieldGrid = null; fieldRow = 0; fieldCol = 0;
     if (fieldSubmenu) { fieldSubmenu.onCancel && fieldSubmenu.onCancel(); fieldSubmenu = null; }
@@ -2572,10 +2638,11 @@ export function initController(plugin, controllerEnabledSetting) {
           // not-yet-entered category (a deliberate look-before-committing,
           // same as hovering) isn't stomped back to the actually-open tab.
           if (categoryItems.length) {
-            const activeIdx = categoryItems.findIndex((label) => {
-              const radio = label.previousElementSibling;
-              return radio && radio.tagName === 'INPUT' && radio.checked;
-            });
+            // With a folded "Plugins" tab open, both it AND the selected
+            // plugin's label are checked - the plugin (the deepest one,
+            // i.e. not itself a fold) is the one actually showing.
+            let activeIdx = categoryItems.findIndex((label) => isTabLabelChecked(label) && !isFoldLabel(label));
+            if (activeIdx < 0) activeIdx = categoryItems.findIndex(isTabLabelChecked);
             if (activeIdx >= 0) {
               if (activeIdx !== lastKnownActiveCategoryIdx) categoryIndex = activeIdx;
               lastKnownActiveCategoryIdx = activeIdx;
@@ -2585,9 +2652,46 @@ export function initController(plugin, controllerEnabledSetting) {
           const liveFieldRows = activeContent ? queryFieldRows(activeContent) : [];
           const liveFieldsFlat = liveFieldRows.flat();
           if (!fieldGrid || !elArraysEqual(gridFlat(fieldGrid), liveFieldsFlat)) {
+            // Keep the highlight on the same element when the grid is
+            // rebuilt under it - e.g. selecting one of a plugin's sub-tabs
+            // swaps every row below the tab bar, and paging with ◀ ▶
+            // swaps the visible tabs (Wizascript's tab-bar.js recreates
+            // the arrows, so an arrow is matched by direction instead).
+            const prevEl = fieldGrid && (fieldGrid[fieldRow] || [])[fieldCol];
+            const prevArrowDir = prevEl && prevEl.classList && prevEl.classList.contains('wizascript-tab-arrow') ? prevEl.dataset.dir : null;
             fieldGrid = liveFieldRows;
             fieldRow = 0; fieldCol = 0;
             fieldNeedsReanchor = false;
+            findPrev:
+            for (let r = 0; r < fieldGrid.length; r++) {
+              for (let c = 0; c < fieldGrid[r].length; c++) {
+                const el = fieldGrid[r][c];
+                if (el === prevEl || (prevArrowDir && el.classList.contains('wizascript-tab-arrow') && el.dataset.dir === prevArrowDir)) {
+                  fieldRow = r; fieldCol = c;
+                  break findPrev;
+                }
+              }
+            }
+            // Paged onto the first/last page - the arrow just used is now
+            // greyed out (and skipped), so land on the other one.
+            if (prevArrowDir && fieldRow === 0 && fieldCol === 0) {
+              findArrow:
+              for (let r = 0; r < fieldGrid.length; r++) {
+                for (let c = 0; c < fieldGrid[r].length; c++) {
+                  if (fieldGrid[r][c].classList.contains('wizascript-tab-arrow')) { fieldRow = r; fieldCol = c; break findArrow; }
+                }
+              }
+            }
+            if (isDebugTextEnabled()) {
+              const path = [];
+              for (let el = activeContent; el && el !== tabbedRoot; el = el.parentElement) {
+                if (el.classList.contains('tabContent') && el.previousElementSibling) path.unshift(el.previousElementSibling.textContent.trim());
+              }
+              console.log('[Wizascript Controller] settings: categories =', categoryItems.map((l) => l.textContent.trim()),
+                '| showing =', path.join(' > ') || '(none found)',
+                '| field rows =', fieldGrid.length, fieldGrid.map((row) => row.length),
+                '| selected =', `${fieldRow},${fieldCol}`);
+            }
           }
           if (fieldGrid.length) {
             fieldRow = Math.min(fieldRow, fieldGrid.length - 1);

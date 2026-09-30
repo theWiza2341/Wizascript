@@ -12,6 +12,7 @@ on:
       - 'wizascript.user.js'
       - 'bot/**'
       - 'README.md'
+      - 'CHANGELOG.md'
   workflow_dispatch:
 
 permissions:

@@ -9,16 +9,19 @@ Wizascript is now listed in UnderScript's plugin directory, so this update
 is all about making it easy to understand without a readme.
 
 ### Settings overhaul
-- New **Plugins** list on the main Wizascript settings tab. Every feature
-  now has its own on/off switch, with a short description when you hover it.
+- New **General** tab (the first tab in Wizascript's settings) with a
+  **Plugins** list and a **Miscellaneous** list. Every feature now has its
+  own on/off switch, with a short description when you hover it.
 - Each enabled plugin gets its **own settings tab**. Plugins you haven't
   turned on don't show any settings at all.
 - **Keybinds** only appear once you enable a plugin that uses them, and only
   list the shortcuts for plugins you actually have on.
 - **Controller Support** has its own tab for controller bindings, which
   likewise only lists actions for plugins you have on.
-- The old "Miscellaneous" section is gone: Notepad, Card Tags and Controller
-  Support are now regular plugins in the list.
+- Notepad and Card Tags are listed under Miscellaneous; Controller Support
+  is now listed with the other plugins.
+- When there are more tabs than fit, **◀ ▶ arrows** at the end of the tab
+  row let you scroll through them, so tab names are never cut off.
 - New **Changelog** button (you're reading it), and a one-time popup after
   each update.
 
@@ -27,8 +30,9 @@ is all about making it easy to understand without a readme.
   does. Your trackers, presets and settings carry over.
 - New installs start with every plugin switched off. If you were already
   using Wizascript, the plugins you had on stay on.
-- Notepad has a new "Show Notepad" setting. The Toggle Notepad shortcut now
-  shows/hides the notepad without switching the plugin itself off.
+- Notepad has a new **Open Notepad on Page Load** setting, shown right under
+  Notepad once it's enabled. The Toggle Notepad shortcut now opens/closes
+  the notepad for the current page without switching the plugin off.
 - UC TV's filter settings are disabled (greyed out) while match filtering
   is turned off.
 - UC TV no longer prints its settings to the browser console on every page

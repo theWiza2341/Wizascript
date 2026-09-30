@@ -11,12 +11,17 @@
 // keeps whatever they already had switched on or off. See
 // runMigrations() for the one case that needs help.
 //
+// `category` is the box the toggle appears in on the main tab. Order
+// matters: categories render in the order they're first used, and
+// toggles in array order within them.
+//
 // `note` is the hover tooltip in the settings list - keep it at or under
 // 75 characters so it stays a one-liner.
 
 export const PLUGINS = [
   {
     id: "patchMaker",
+    category: "Plugins",
     name: "Patch Maker",
     key: "patchmaker.enabled",
     note: "Write your own patch notes on the Patch Notes page.",
@@ -25,6 +30,7 @@ export const PLUGINS = [
   },
   {
     id: "trueHub",
+    category: "Plugins",
     name: "True Hub Bridge",
     key: "truehubbridge.enabled",
     note: "Browse a larger library of community decks on the Hub page.",
@@ -32,6 +38,7 @@ export const PLUGINS = [
   },
   {
     id: "cardTracker",
+    category: "Plugins",
     name: "Card Tracker",
     key: "decktracker.enabled",
     note: "Add click-to-count card counters to your screen during matches.",
@@ -39,6 +46,7 @@ export const PLUGINS = [
   },
   {
     id: "ucTv",
+    category: "Plugins",
     name: "UC TV",
     key: "ucTv.enabled",
     note: "Channel-surf other players' live matches while spectating.",
@@ -46,7 +54,15 @@ export const PLUGINS = [
     legacyDefaultOn: true
   },
   {
+    id: "controller",
+    category: "Plugins",
+    name: "Controller Support",
+    key: "misc.enableController",
+    note: "Play and navigate Undercards with a gamepad."
+  },
+  {
     id: "notepad",
+    category: "Miscellaneous",
     name: "Notepad",
     key: "misc.enableNotepad",
     note: "A small drawing notepad you can keep on screen anywhere.",
@@ -54,25 +70,49 @@ export const PLUGINS = [
   },
   {
     id: "cardTags",
+    category: "Miscellaneous",
     name: "Card Tags",
     key: "misc.enableCardTags",
     note: "Right-click cards in Crafting/Decks to tag and search them."
-  },
-  {
-    id: "controller",
-    name: "Controller Support",
-    key: "misc.enableController",
-    note: "Play and navigate Undercards with a gamepad."
   }
 ];
+
+import { registerSettingWidget } from "./setting-widgets.js";
 
 const LS_PREFIX = "underscript.plugin.Wizascript.";
 const MIGRATION_FLAG = "wizascript.migration.v150";
 
 const toggles = {}; // plugin id -> UnderScript setting object
+let notepadOpenOnLoad = null;
+
+// Sub-settings shown indented directly under a plugin's toggle, and
+// only while that toggle is ticked. Shown/hidden live via the DOM (see
+// applySubSettingVisibility) rather than UnderScript's `hidden`, which
+// only takes effect when the settings dialog is reopened.
+const SUB_SETTINGS = {
+  notepad: ["misc.notepadOpenOnLoad"]
+};
+
+function applySubSettingVisibility(pluginId, forceEnabled) {
+  const enabled = forceEnabled !== undefined ? forceEnabled : isPluginEnabled(pluginId);
+  (SUB_SETTINGS[pluginId] || []).forEach((key) => {
+    const el = document.getElementById(LS_PREFIX + key);
+    const row = el && el.closest(".flex-start");
+    if (row) row.style.display = enabled ? "" : "none";
+  });
+}
+
+function injectSubSettingStyle() {
+  if (document.getElementById("wizascript-subsetting-style")) return;
+  const style = document.createElement("style");
+  style.id = "wizascript-subsetting-style";
+  style.textContent = ".underscript-dialog .wizascript-subsetting { margin-left: 22px; }";
+  (document.head || document.documentElement).appendChild(style);
+}
 
 export function registerPluginToggles(plugin) {
   const settingsApi = plugin.settings();
+  injectSubSettingStyle();
   PLUGINS.forEach((p) => {
     toggles[p.id] = settingsApi.add({
       key: p.key,
@@ -82,9 +122,34 @@ export function registerPluginToggles(plugin) {
       default: false,
       // Appends UnderScript's own "requires a page refresh" note.
       refresh: true,
-      category: "Plugins"
+      category: p.category,
+      onChange: (value) => applySubSettingVisibility(p.id, !!value)
     });
+
+    if (p.id === "notepad") {
+      // Same storage-key namespace as the rest of Notepad ("misc.").
+      notepadOpenOnLoad = settingsApi.add({
+        key: "misc.notepadOpenOnLoad",
+        name: "Open Notepad on Page Load",
+        note: "Show the notepad automatically whenever a page loads.",
+        type: "boolean",
+        default: true,
+        category: p.category
+      });
+    }
   });
+
+  Object.entries(SUB_SETTINGS).forEach(([pluginId, keys]) => {
+    keys.forEach((key) => registerSettingWidget(key, (el) => {
+      const row = el.closest(".flex-start");
+      if (row) row.classList.add("wizascript-subsetting");
+      applySubSettingVisibility(pluginId);
+    }));
+  });
+}
+
+export function getNotepadOpenOnLoadSetting() {
+  return notepadOpenOnLoad;
 }
 
 export function getPluginToggle(id) {

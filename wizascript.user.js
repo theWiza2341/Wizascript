@@ -85,10 +85,73 @@
     return { add, value };
   }
 
+  // packages/core/setting-widgets.js
+  var ID_PREFIX = "underscript.plugin.Wizascript.";
+  var ENHANCED_ATTR = "data-wizascript-widget";
+  var enhancers = /* @__PURE__ */ new Map();
+  var observer = null;
+  function scan() {
+    enhancers.forEach((enhance, key) => {
+      const el = document.getElementById(ID_PREFIX + key);
+      if (!el || el.hasAttribute(ENHANCED_ATTR)) return;
+      el.setAttribute(ENHANCED_ATTR, "true");
+      enhance(el);
+    });
+  }
+  function ensureObserver() {
+    if (observer || !document.body) return;
+    observer = new MutationObserver(scan);
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+  function registerSettingWidget(fullKey, enhance) {
+    enhancers.set(fullKey, enhance);
+    if (document.body) ensureObserver();
+    else document.addEventListener("DOMContentLoaded", ensureObserver, { once: true });
+  }
+  function asButton(label, onClick) {
+    return (el) => {
+      el.readOnly = true;
+      el.value = typeof label === "function" ? label() : label;
+      Object.assign(el.style, {
+        cursor: "pointer",
+        backgroundColor: "black",
+        color: "white",
+        border: "1px solid #b4b4b4",
+        borderRadius: "3px",
+        textAlign: "center"
+      });
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        onClick(el);
+      });
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick(el);
+        }
+      });
+    };
+  }
+  function asInfo(text) {
+    return (el) => {
+      el.readOnly = true;
+      el.tabIndex = -1;
+      el.value = typeof text === "function" ? text() : text;
+      Object.assign(el.style, {
+        backgroundColor: "transparent",
+        border: "none",
+        color: "#ccc",
+        cursor: "default",
+        pointerEvents: "none"
+      });
+    };
+  }
+
   // packages/core/plugins.js
   var PLUGINS = [
     {
       id: "patchMaker",
+      category: "Plugins",
       name: "Patch Maker",
       key: "patchmaker.enabled",
       note: "Write your own patch notes on the Patch Notes page.",
@@ -97,6 +160,7 @@
     },
     {
       id: "trueHub",
+      category: "Plugins",
       name: "True Hub Bridge",
       key: "truehubbridge.enabled",
       note: "Browse a larger library of community decks on the Hub page.",
@@ -104,6 +168,7 @@
     },
     {
       id: "cardTracker",
+      category: "Plugins",
       name: "Card Tracker",
       key: "decktracker.enabled",
       note: "Add click-to-count card counters to your screen during matches.",
@@ -111,6 +176,7 @@
     },
     {
       id: "ucTv",
+      category: "Plugins",
       name: "UC TV",
       key: "ucTv.enabled",
       note: "Channel-surf other players' live matches while spectating.",
@@ -118,7 +184,15 @@
       legacyDefaultOn: true
     },
     {
+      id: "controller",
+      category: "Plugins",
+      name: "Controller Support",
+      key: "misc.enableController",
+      note: "Play and navigate Undercards with a gamepad."
+    },
+    {
       id: "notepad",
+      category: "Miscellaneous",
       name: "Notepad",
       key: "misc.enableNotepad",
       note: "A small drawing notepad you can keep on screen anywhere.",
@@ -126,22 +200,37 @@
     },
     {
       id: "cardTags",
+      category: "Miscellaneous",
       name: "Card Tags",
       key: "misc.enableCardTags",
       note: "Right-click cards in Crafting/Decks to tag and search them."
-    },
-    {
-      id: "controller",
-      name: "Controller Support",
-      key: "misc.enableController",
-      note: "Play and navigate Undercards with a gamepad."
     }
   ];
   var LS_PREFIX = "underscript.plugin.Wizascript.";
   var MIGRATION_FLAG = "wizascript.migration.v150";
   var toggles = {};
+  var notepadOpenOnLoad = null;
+  var SUB_SETTINGS = {
+    notepad: ["misc.notepadOpenOnLoad"]
+  };
+  function applySubSettingVisibility(pluginId, forceEnabled) {
+    const enabled = forceEnabled !== void 0 ? forceEnabled : isPluginEnabled(pluginId);
+    (SUB_SETTINGS[pluginId] || []).forEach((key) => {
+      const el = document.getElementById(LS_PREFIX + key);
+      const row = el && el.closest(".flex-start");
+      if (row) row.style.display = enabled ? "" : "none";
+    });
+  }
+  function injectSubSettingStyle() {
+    if (document.getElementById("wizascript-subsetting-style")) return;
+    const style = document.createElement("style");
+    style.id = "wizascript-subsetting-style";
+    style.textContent = ".underscript-dialog .wizascript-subsetting { margin-left: 22px; }";
+    (document.head || document.documentElement).appendChild(style);
+  }
   function registerPluginToggles(plugin) {
     const settingsApi = plugin.settings();
+    injectSubSettingStyle();
     PLUGINS.forEach((p) => {
       toggles[p.id] = settingsApi.add({
         key: p.key,
@@ -151,9 +240,30 @@
         default: false,
         // Appends UnderScript's own "requires a page refresh" note.
         refresh: true,
-        category: "Plugins"
+        category: p.category,
+        onChange: (value) => applySubSettingVisibility(p.id, !!value)
       });
+      if (p.id === "notepad") {
+        notepadOpenOnLoad = settingsApi.add({
+          key: "misc.notepadOpenOnLoad",
+          name: "Open Notepad on Page Load",
+          note: "Show the notepad automatically whenever a page loads.",
+          type: "boolean",
+          default: true,
+          category: p.category
+        });
+      }
     });
+    Object.entries(SUB_SETTINGS).forEach(([pluginId, keys]) => {
+      keys.forEach((key) => registerSettingWidget(key, (el) => {
+        const row = el.closest(".flex-start");
+        if (row) row.classList.add("wizascript-subsetting");
+        applySubSettingVisibility(pluginId);
+      }));
+    });
+  }
+  function getNotepadOpenOnLoadSetting() {
+    return notepadOpenOnLoad;
   }
   function getPluginToggle(id) {
     return toggles[id];
@@ -210,7 +320,7 @@
   var DEFAULT_PRIMARY_CODE = "Control";
   var PRIMARY_KEY = "primaryKey";
   var GM_PREFIX = "wizascript.keybinds.";
-  var ID_PREFIX = "underscript.plugin.Wizascript.keybinds.";
+  var ID_PREFIX2 = "underscript.plugin.Wizascript.keybinds.";
   function storageKey(bindingKey) {
     return `${GM_PREFIX}${bindingKey}`;
   }
@@ -313,10 +423,10 @@
   function startObserver() {
     if (observerStarted) return;
     observerStarted = true;
-    const observer2 = new MutationObserver(() => {
+    const observer3 = new MutationObserver(() => {
       if (!bindingDefaults.size && !dividerKeys.size) return;
-      document.querySelectorAll(`input[id^="${ID_PREFIX}"]:not([data-wizascript-keybind-enhanced])`).forEach((el) => {
-        const bindingKey = el.id.slice(ID_PREFIX.length);
+      document.querySelectorAll(`input[id^="${ID_PREFIX2}"]:not([data-wizascript-keybind-enhanced])`).forEach((el) => {
+        const bindingKey = el.id.slice(ID_PREFIX2.length);
         if (dividerKeys.has(bindingKey)) {
           enhanceDivider(el);
           return;
@@ -325,7 +435,7 @@
         enhanceInput(el, bindingKey, bindingDefaults.get(bindingKey));
       });
     });
-    observer2.observe(document.body, { childList: true, subtree: true });
+    observer3.observe(document.body, { childList: true, subtree: true });
   }
   function matchesCode(e, code, defaultCode) {
     if (code === defaultCode && NATIVE_MODIFIERS.has(defaultCode)) {
@@ -536,110 +646,7 @@
   }
 
   // CHANGELOG.md
-  var CHANGELOG_default = `# Changelog
-
-All notable changes to Wizascript are recorded here, newest first. The
-Changelog button in Wizascript's settings shows this file.
-
-## 1.5.0
-
-Wizascript is now listed in UnderScript's plugin directory, so this update
-is all about making it easy to understand without a readme.
-
-### Settings overhaul
-- New **Plugins** list on the main Wizascript settings tab. Every feature
-  now has its own on/off switch, with a short description when you hover it.
-- Each enabled plugin gets its **own settings tab**. Plugins you haven't
-  turned on don't show any settings at all.
-- **Keybinds** only appear once you enable a plugin that uses them, and only
-  list the shortcuts for plugins you actually have on.
-- **Controller Support** has its own tab for controller bindings, which
-  likewise only lists actions for plugins you have on.
-- The old "Miscellaneous" section is gone: Notepad, Card Tags and Controller
-  Support are now regular plugins in the list.
-- New **Changelog** button (you're reading it), and a one-time popup after
-  each update.
-
-### Changes
-- **Deck Tracker is now called Card Tracker**, to better describe what it
-  does. Your trackers, presets and settings carry over.
-- New installs start with every plugin switched off. If you were already
-  using Wizascript, the plugins you had on stay on.
-- Notepad has a new "Show Notepad" setting. The Toggle Notepad shortcut now
-  shows/hides the notepad without switching the plugin itself off.
-- UC TV's filter settings are disabled (greyed out) while match filtering
-  is turned off.
-- UC TV no longer prints its settings to the browser console on every page
-  load unless debug logging is on.
-
-## 1.4.1 and earlier
-
-Wizascript combined several separate plugins into one download: Patch
-Maker, True Hub Bridge, Deck Tracker, UC TV, Notepad, Card Tags, remappable
-keybinds, and controller support. Detailed notes weren't kept before 1.5.0.
-`;
-
-  // packages/core/setting-widgets.js
-  var ID_PREFIX2 = "underscript.plugin.Wizascript.";
-  var ENHANCED_ATTR = "data-wizascript-widget";
-  var enhancers = /* @__PURE__ */ new Map();
-  var observer = null;
-  function scan() {
-    enhancers.forEach((enhance, key) => {
-      const el = document.getElementById(ID_PREFIX2 + key);
-      if (!el || el.hasAttribute(ENHANCED_ATTR)) return;
-      el.setAttribute(ENHANCED_ATTR, "true");
-      enhance(el);
-    });
-  }
-  function ensureObserver() {
-    if (observer || !document.body) return;
-    observer = new MutationObserver(scan);
-    observer.observe(document.body, { childList: true, subtree: true });
-  }
-  function registerSettingWidget(fullKey, enhance) {
-    enhancers.set(fullKey, enhance);
-    if (document.body) ensureObserver();
-    else document.addEventListener("DOMContentLoaded", ensureObserver, { once: true });
-  }
-  function asButton(label, onClick) {
-    return (el) => {
-      el.readOnly = true;
-      el.value = typeof label === "function" ? label() : label;
-      Object.assign(el.style, {
-        cursor: "pointer",
-        backgroundColor: "black",
-        color: "white",
-        border: "1px solid #b4b4b4",
-        borderRadius: "3px",
-        textAlign: "center"
-      });
-      el.addEventListener("click", (e) => {
-        e.preventDefault();
-        onClick(el);
-      });
-      el.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onClick(el);
-        }
-      });
-    };
-  }
-  function asInfo(text) {
-    return (el) => {
-      el.readOnly = true;
-      el.tabIndex = -1;
-      el.value = typeof text === "function" ? text() : text;
-      Object.assign(el.style, {
-        backgroundColor: "transparent",
-        border: "none",
-        color: "#ccc",
-        cursor: "default",
-        pointerEvents: "none"
-      });
-    };
-  }
+  var CHANGELOG_default = "# Changelog\n\nAll notable changes to Wizascript are recorded here, newest first. The\nChangelog button in Wizascript's settings shows this file.\n\n## 1.5.0\n\nWizascript is now listed in UnderScript's plugin directory, so this update\nis all about making it easy to understand without a readme.\n\n### Settings overhaul\n- New **General** tab (the first tab in Wizascript's settings) with a\n  **Plugins** list and a **Miscellaneous** list. Every feature now has its\n  own on/off switch, with a short description when you hover it.\n- Each enabled plugin gets its **own settings tab**. Plugins you haven't\n  turned on don't show any settings at all.\n- **Keybinds** only appear once you enable a plugin that uses them, and only\n  list the shortcuts for plugins you actually have on.\n- **Controller Support** has its own tab for controller bindings, which\n  likewise only lists actions for plugins you have on.\n- Notepad and Card Tags are listed under Miscellaneous; Controller Support\n  is now listed with the other plugins.\n- When there are more tabs than fit, **\u25C0 \u25B6 arrows** at the end of the tab\n  row let you scroll through them, so tab names are never cut off.\n- New **Changelog** button (you're reading it), and a one-time popup after\n  each update.\n\n### Changes\n- **Deck Tracker is now called Card Tracker**, to better describe what it\n  does. Your trackers, presets and settings carry over.\n- New installs start with every plugin switched off. If you were already\n  using Wizascript, the plugins you had on stay on.\n- Notepad has a new **Open Notepad on Page Load** setting, shown right under\n  Notepad once it's enabled. The Toggle Notepad shortcut now opens/closes\n  the notepad for the current page without switching the plugin off.\n- UC TV's filter settings are disabled (greyed out) while match filtering\n  is turned off.\n- UC TV no longer prints its settings to the browser console on every page\n  load unless debug logging is on.\n\n## 1.4.1 and earlier\n\nWizascript combined several separate plugins into one download: Patch\nMaker, True Hub Bridge, Deck Tracker, UC TV, Notepad, Card Tags, remappable\nkeybinds, and controller support. Detailed notes weren't kept before 1.5.0.\n";
 
   // packages/core/about.js
   var LAST_SEEN_KEY = "wizascript.lastSeenVersion";
@@ -708,6 +715,164 @@ keybinds, and controller support. Detailed notes weren't kept before 1.5.0.
       onClose: () => {
         markSeen();
       }
+    });
+  }
+
+  // packages/core/tab-bar.js
+  var MAIN_TAB_LABEL = "General";
+  var MAIN_TAB_MARKER_ID = "underscript.plugin.Wizascript.about.version";
+  var ARROW_CLASS = "wizascript-tab-arrow";
+  var HIDDEN_CLASS = "wizascript-tab-offscreen";
+  var GAP_PX = 5;
+  var firstVisible = 0;
+  var observedView = null;
+  var observer2 = null;
+  var applying = false;
+  function injectStyle() {
+    if (document.getElementById("wizascript-tab-bar-style")) return;
+    const style = document.createElement("style");
+    style.id = "wizascript-tab-bar-style";
+    style.textContent = `
+.tabbedView > .tabLabel.${HIDDEN_CLASS} { display: none; }
+.tabbedView > .tabLabel.${ARROW_CLASS} { order: 10; cursor: pointer; user-select: none; text-align: center; min-width: 26px; }
+.tabbedView > .tabLabel.${ARROW_CLASS}.disabled { opacity: 0.35; cursor: default; }
+`;
+    (document.head || document.documentElement).appendChild(style);
+  }
+  function findView() {
+    const marker = document.getElementById(MAIN_TAB_MARKER_ID);
+    const content = marker && marker.closest(".tabContent");
+    const view = content && content.parentElement;
+    return view && view.classList.contains("tabbedView") ? { view, mainContent: content } : null;
+  }
+  function realLabels(view) {
+    return Array.from(view.querySelectorAll(":scope > .tabLabel")).filter((l) => !l.classList.contains(ARROW_CLASS));
+  }
+  function renameMainTab(mainContent) {
+    const label = mainContent.previousElementSibling;
+    if (label && label.classList.contains("tabLabel") && label.textContent !== MAIN_TAB_LABEL) {
+      label.textContent = MAIN_TAB_LABEL;
+    }
+  }
+  function makeArrow(view, text, dir) {
+    const el = document.createElement("div");
+    el.className = `tabLabel ${ARROW_CLASS}`;
+    el.dataset.dir = String(dir);
+    el.textContent = text;
+    el.title = dir < 0 ? "Previous tabs" : "More tabs";
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (el.classList.contains("disabled")) return;
+      firstVisible += dir;
+      layout(view);
+    });
+    return el;
+  }
+  function ensureArrows(view) {
+    let left = view.querySelector(`:scope > .${ARROW_CLASS}[data-dir="-1"]`);
+    let right = view.querySelector(`:scope > .${ARROW_CLASS}[data-dir="1"]`);
+    if (!left) {
+      left = makeArrow(view, "\u25C0", -1);
+      view.appendChild(left);
+    }
+    if (!right) {
+      right = makeArrow(view, "\u25B6", 1);
+      view.appendChild(right);
+    }
+    view.appendChild(left);
+    view.appendChild(right);
+    return { left, right };
+  }
+  function removeArrows(view) {
+    view.querySelectorAll(`:scope > .${ARROW_CLASS}`).forEach((a) => a.remove());
+  }
+  function activeIndex(labels) {
+    return labels.findIndex((l) => {
+      const radio = l.previousElementSibling;
+      return radio && radio.tagName === "INPUT" && radio.checked;
+    });
+  }
+  function layout(view, { revealActive = false } = {}) {
+    applying = true;
+    try {
+      const labels = realLabels(view);
+      labels.forEach((l) => l.classList.remove(HIDDEN_CLASS));
+      removeArrows(view);
+      view.style.gridTemplateColumns = "";
+      const available = view.clientWidth;
+      if (!labels.length || !available) return;
+      view.style.gridTemplateColumns = `repeat(${labels.length}, max-content) 1fr`;
+      const widths = labels.map((l) => l.getBoundingClientRect().width);
+      const total = widths.reduce((a, b) => a + b, 0) + GAP_PX * (labels.length - 1);
+      if (total <= available) {
+        view.style.gridTemplateColumns = "";
+        return;
+      }
+      const { left, right } = ensureArrows(view);
+      const arrowsWidth = left.getBoundingClientRect().width + right.getBoundingClientRect().width + GAP_PX * 2;
+      const room = available - arrowsWidth;
+      const fitFrom = (start) => {
+        let used = 0;
+        let count = 0;
+        for (let i = start; i < labels.length; i++) {
+          const next = used + widths[i] + (count ? GAP_PX : 0);
+          if (next > room && count) break;
+          used = next;
+          count++;
+        }
+        return count;
+      };
+      firstVisible = Math.max(0, Math.min(firstVisible, labels.length - 1));
+      while (firstVisible > 0 && firstVisible + fitFrom(firstVisible) >= labels.length && fitFrom(firstVisible - 1) > labels.length - firstVisible) {
+        firstVisible--;
+      }
+      if (revealActive) {
+        const active = activeIndex(labels);
+        if (active >= 0 && active < firstVisible) firstVisible = active;
+        while (active >= 0 && active >= firstVisible + fitFrom(firstVisible)) firstVisible++;
+      }
+      const shown = fitFrom(firstVisible);
+      labels.forEach((l, i) => {
+        l.classList.toggle(HIDDEN_CLASS, i < firstVisible || i >= firstVisible + shown);
+      });
+      left.classList.toggle("disabled", firstVisible === 0);
+      right.classList.toggle("disabled", firstVisible + shown >= labels.length);
+      view.style.gridTemplateColumns = `repeat(${shown}, max-content) max-content max-content 1fr`;
+    } finally {
+      setTimeout(() => {
+        applying = false;
+      }, 0);
+    }
+  }
+  function apply() {
+    const found = findView();
+    if (!found) return;
+    const { view, mainContent } = found;
+    renameMainTab(mainContent);
+    if (observedView !== view) {
+      if (observer2) observer2.disconnect();
+      observedView = view;
+      observer2 = new MutationObserver(() => {
+        if (applying) return;
+        const again = findView();
+        if (again) renameMainTab(again.mainContent);
+        layout(view, { revealActive: true });
+      });
+      observer2.observe(view, { childList: true, subtree: false });
+      realLabels(view).forEach((l) => observer2.observe(l, { childList: true, characterData: true, subtree: true }));
+    }
+    layout(view, { revealActive: true });
+  }
+  function initTabBar(plugin) {
+    injectStyle();
+    plugin.events.on("Settings:open", () => setTimeout(apply, 0));
+    document.addEventListener("change", (e) => {
+      if (e.target && e.target.classList && e.target.classList.contains("tabButton") && observedView && observedView.contains(e.target)) {
+        layout(observedView, { revealActive: true });
+      }
+    });
+    window.addEventListener("resize", () => {
+      if (observedView && observedView.isConnected) layout(observedView);
     });
   }
 
@@ -3930,9 +4095,9 @@ Version: v${version}`;
   function getSavedPosition(id) {
     return loadPositions()[id] || null;
   }
-  function setSavedPosition(id, layout) {
+  function setSavedPosition(id, layout2) {
     const positions = loadPositions();
-    positions[id] = layout;
+    positions[id] = layout2;
     savePositions();
   }
   function clearSavedPosition(id) {
@@ -4257,9 +4422,9 @@ Version: v${version}`;
       widget.css("cursor", "grab");
       if (dragMoved) {
         const rect = widget[0].getBoundingClientRect();
-        const layout = { left: rect.left, top: rect.top, width: getWidth() };
+        const layout2 = { left: rect.left, top: rect.top, width: getWidth() };
         if (trackRetain) {
-          setSavedPosition(id, layout);
+          setSavedPosition(id, layout2);
           markRetained(id);
         }
       } else {
@@ -4286,9 +4451,9 @@ Version: v${version}`;
       if (!resizing) return;
       resizing = false;
       const rect = widget[0].getBoundingClientRect();
-      const layout = { left: rect.left, top: rect.top, width: getWidth() };
+      const layout2 = { left: rect.left, top: rect.top, width: getWidth() };
       if (trackRetain) {
-        setSavedPosition(id, layout);
+        setSavedPosition(id, layout2);
         markRetained(id);
       }
     });
@@ -5989,22 +6154,12 @@ Version: v${version}`;
   }
 
   // packages/misc/settings.js
-  function registerMiscSettings(plugin, { onNotepadVisibilityChange } = {}) {
-    const notepadSettings = createFeatureSettings(plugin, "misc", {
-      tab: "Notepad",
-      visible: () => isPluginEnabled("notepad")
-    });
-    const notepadVisible = notepadSettings.add("notepadVisible", {
-      name: "Show Notepad",
-      type: "boolean",
-      default: true,
-      onChange: () => onNotepadVisibilityChange && onNotepadVisibilityChange()
-    });
+  function registerMiscSettings() {
     return {
       enableNotepad: getPluginToggle("notepad"),
       enableController: getPluginToggle("controller"),
       enableCardTags: getPluginToggle("cardTags"),
-      notepadVisible
+      notepadOpenOnLoad: getNotepadOpenOnLoadSetting()
     };
   }
 
@@ -6033,8 +6188,8 @@ Version: v${version}`;
   function getSavedPosition2() {
     return readJSON(POSITION_KEY, null);
   }
-  function setSavedPosition2(layout) {
-    writeJSON(POSITION_KEY, layout);
+  function setSavedPosition2(layout2) {
+    writeJSON(POSITION_KEY, layout2);
   }
   function clearSavedPosition2() {
     try {
@@ -6712,7 +6867,7 @@ Version: v${version}`;
   function showNotepad() {
     var _a;
     if (mounted) return;
-    injectStyle();
+    injectStyle2();
     const controller = new AbortController();
     const { signal } = controller;
     const { root, body, headerButtons, titleInput } = buildNotepadShell(signal);
@@ -6943,6 +7098,9 @@ Version: v${version}`;
     mounted.root.remove();
     mounted = null;
   }
+  function isNotepadOpen() {
+    return !!mounted;
+  }
   function undoNotepad() {
     if (!mounted) return;
     mounted.surface.undo();
@@ -6960,7 +7118,7 @@ Version: v${version}`;
     clearSavedTitle();
     console.log("[Wizascript] Notepad forcibly reset - drawing, position, colors, and title cleared.");
   }
-  function injectStyle() {
+  function injectStyle2() {
     if (document.getElementById("wizascript-notepad-style")) return;
     const style = document.createElement("style");
     style.id = "wizascript-notepad-style";
@@ -7463,11 +7621,11 @@ Version: v${version}`;
       }, 100);
     }
     const containers = document.querySelectorAll(CARD_LIST_SELECTOR);
-    const observer2 = new MutationObserver(schedule);
+    const observer3 = new MutationObserver(schedule);
     if (containers.length) {
-      containers.forEach((c) => observer2.observe(c, { childList: true, subtree: true, attributes: true, attributeFilter: ["id"] }));
+      containers.forEach((c) => observer3.observe(c, { childList: true, subtree: true, attributes: true, attributeFilter: ["id"] }));
     } else {
-      observer2.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["id"] });
+      observer3.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["id"] });
     }
     schedule();
   }
@@ -7857,12 +8015,12 @@ Version: v${version}`;
 
   // packages/misc/index.js
   function initMisc(plugin) {
-    const settings2 = registerMiscSettings(plugin, {
-      onNotepadVisibilityChange: () => syncNotepadVisibility()
-    });
+    const settings2 = registerMiscSettings(plugin);
     initCardTags(plugin, settings2.enableCardTags);
+    let shownThisPage = null;
     function syncNotepadVisibility() {
-      if (settings2.enableNotepad.value() && settings2.notepadVisible.value()) {
+      const wanted = shownThisPage !== null ? shownThisPage : settings2.notepadOpenOnLoad.value();
+      if (settings2.enableNotepad.value() && wanted) {
         showNotepad();
       } else {
         hideNotepad();
@@ -7878,7 +8036,7 @@ Version: v${version}`;
       defaultCode: "KeyO",
       packageLabel: "Notepad",
       onMatch: () => {
-        settings2.notepadVisible.set(!settings2.notepadVisible.value());
+        shownThisPage = !isNotepadOpen();
         syncNotepadVisibility();
       }
     });
@@ -7888,8 +8046,9 @@ Version: v${version}`;
       defaultCode: "KeyN",
       packageLabel: "Notepad",
       onMatch: () => {
+        const wasOpen = isNotepadOpen();
         forceResetNotepad();
-        syncNotepadVisibility();
+        if (wasOpen) showNotepad();
       }
     });
     registerKeybind(plugin, {
@@ -8789,7 +8948,7 @@ Version: v${version}`;
     if (controllerObserverStarted) return;
     controllerObserverStarted = true;
     let everFoundOne = false;
-    const observer2 = new MutationObserver(() => {
+    const observer3 = new MutationObserver(() => {
       const matches = document.querySelectorAll(`input[id^="${idPrefix}"]:not([data-wc-enhanced]), select[id^="${idPrefix}"]:not([data-wc-enhanced])`);
       matches.forEach((el) => {
         everFoundOne = true;
@@ -8844,7 +9003,7 @@ Version: v${version}`;
         el.setAttribute("data-wc-enhanced", "true");
       });
     });
-    observer2.observe(document.body, { childList: true, subtree: true });
+    observer3.observe(document.body, { childList: true, subtree: true });
     setTimeout(() => {
       if (!everFoundOne) {
         console.warn('[Wizascript Controller] never found any "Keybinds - Controller" <input> elements to enhance after 15s - either the category never rendered, or the assumed id pattern (' + idPrefix + "<key>) is wrong.");
@@ -11390,6 +11549,7 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     const installState = runMigrations();
     registerPluginToggles(plugin);
     registerAboutSection(plugin);
+    initTabBar(plugin);
     initPatchMaker(plugin);
     initTrueHubBridge(plugin);
     initDeckTracker(plugin);

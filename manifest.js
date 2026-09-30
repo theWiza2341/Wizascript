@@ -2,6 +2,7 @@ import { bootstrap } from "./packages/core/bootstrap.js";
 import { flushKeybindRegistrations, initKeybinds } from "./packages/core/keybinds.js";
 import { registerPluginToggles, runMigrations } from "./packages/core/plugins.js";
 import { registerAboutSection, showWhatsNew } from "./packages/core/about.js";
+import { initTabBar } from "./packages/core/tab-bar.js";
 import { initPatchMaker } from "./packages/patch-maker/index.js";
 import { initTrueHubBridge } from "./packages/true-hub-bridge/index.js";
 import { initDeckTracker } from "./packages/deck-tracker/index.js";
@@ -23,7 +24,8 @@ import { initController } from "./packages/controller/index.js";
 // toggles.
 
 // 1.5.0 settings layout (see packages/core/plugins.js):
-//   Wizascript tab  - "Plugins" list (one on/off per feature) + "Wizascript" (version, changelog)
+//   General tab     - "Plugins" + "Miscellaneous" lists (one on/off per feature) + "Wizascript" (version, changelog)
+//                     (UnderScript names it "Wizascript"; core/tab-bar.js relabels it and adds paging arrows)
 //   one tab per ENABLED plugin, in the order registered below
 //   Keybinds tab    - only while a keybind-using plugin is enabled
 //   Controller tab  - only while Controller Support is enabled
@@ -35,6 +37,7 @@ bootstrap(plugin => {
 
   registerPluginToggles(plugin);
   registerAboutSection(plugin);
+  initTabBar(plugin);
 
   initPatchMaker(plugin);
   initTrueHubBridge(plugin);

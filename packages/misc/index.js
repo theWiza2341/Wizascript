@@ -1,21 +1,23 @@
 // packages/misc/index.js
 
 import { registerMiscSettings } from "./settings.js";
-import { showNotepad, hideNotepad, forceResetNotepad, undoNotepad, redoNotepad } from "./notepad/index.js";
+import { showNotepad, hideNotepad, forceResetNotepad, undoNotepad, redoNotepad, isNotepadOpen } from "./notepad/index.js";
 import { initCardTags } from "./card-tags/index.js";
 import { registerKeybind } from "../core/keybinds.js";
 
 export function initMisc(plugin) {
-  const settings = registerMiscSettings(plugin, {
-    onNotepadVisibilityChange: () => syncNotepadVisibility()
-  });
+  const settings = registerMiscSettings(plugin);
 
   initCardTags(plugin, settings.enableCardTags);
 
-  // Shown only while the Notepad plugin is enabled AND "Show Notepad"
-  // is on.
+  // null = follow "Open Notepad on Page Load"; true/false once the
+  // Toggle Notepad shortcut has been used on this page. Deliberately not
+  // persisted - the setting decides what happens on the next page load.
+  let shownThisPage = null;
+
   function syncNotepadVisibility() {
-    if (settings.enableNotepad.value() && settings.notepadVisible.value()) {
+    const wanted = shownThisPage !== null ? shownThisPage : settings.notepadOpenOnLoad.value();
+    if (settings.enableNotepad.value() && wanted) {
       showNotepad();
     } else {
       hideNotepad();
@@ -27,17 +29,17 @@ export function initMisc(plugin) {
     syncNotepadVisibility();
   });
 
-  // Toggles the persisted "Show Notepad" setting (not just
-  // showNotepad()/hideNotepad() directly) so a keybind-driven toggle
-  // sticks across reloads. It deliberately does NOT touch the Notepad
-  // plugin toggle itself - that would also hide this very shortcut.
+  // Opens/closes the notepad for this page only. Doesn't touch the
+  // Notepad plugin toggle (that would also disable this very shortcut)
+  // or "Open Notepad on Page Load". Reads the real open state, so it
+  // still works after the notepad's own close button was used.
   registerKeybind(plugin, {
     key: "toggleNotepad",
     name: "Toggle Notepad",
     defaultCode: "KeyO",
     packageLabel: "Notepad",
     onMatch: () => {
-      settings.notepadVisible.set(!settings.notepadVisible.value());
+      shownThisPage = !isNotepadOpen();
       syncNotepadVisibility();
     }
   });
@@ -50,8 +52,9 @@ export function initMisc(plugin) {
     defaultCode: "KeyN",
     packageLabel: "Notepad",
     onMatch: () => {
+      const wasOpen = isNotepadOpen();
       forceResetNotepad();
-      syncNotepadVisibility();
+      if (wasOpen) showNotepad();
     }
   });
 

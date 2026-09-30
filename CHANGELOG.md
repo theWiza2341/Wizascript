@@ -2,10 +2,6 @@
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
 
-## 1.5.1
-
-Added Logo to main settings page (and removed a few leftover dev notes).
-
 ## 1.5.0
 
 Wizascript is now listed in UnderScript's plugin directory, so this update is all about making it easy to understand without a readme.
@@ -25,6 +21,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
 - **Share Card Tags**: in Manage Tags, share some or all of your tags (with the cards they're on) as a code, or import a friend's. Imported tags merge into yours by name and never remove anything.
 - **Keybind warnings**: the Keybinds tab warns when a shortcut clashes with another shortcut, with your Primary key, or with UnderScript's Space-to-end-turn hotkey. The Controller Support tab does the same for controller bindings: two actions on one button, an In-Game Input on a combo's button or on a button that already clicks/goes back/navigates, and Controller Primary or the Channel Guide on a button they'd block.
 - **Controller: L1/R1 switch tabs in Settings**: sidebar categories, or the open plugin's own tabs.
+- Added Logo to main settings tab.
 
 ### Changes
 - **Deck Tracker is now called Card Tracker**, to better describe what it does. Your trackers, presets and settings carry over.

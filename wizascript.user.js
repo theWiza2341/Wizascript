@@ -646,7 +646,7 @@
   }
 
   // CHANGELOG.md
-  var CHANGELOG_default = "# Changelog\n\nAll notable changes to Wizascript are recorded here, newest first. The\nChangelog button in Wizascript's settings shows this file.\n\n## 1.5.0\n\nWizascript is now listed in UnderScript's plugin directory, so this update\nis all about making it easy to understand without a readme.\n\n### Settings overhaul\n- New **General** tab (the first tab in Wizascript's settings) with a\n  **Plugins** list and a **Miscellaneous** list. Every feature now has its\n  own on/off switch, with a short description when you hover it.\n- Each enabled plugin gets its **own settings tab**. Plugins you haven't\n  turned on don't show any settings at all.\n- **Keybinds** only appear once you enable a plugin that uses them, and only\n  list the shortcuts for plugins you actually have on.\n- **Controller Support** has its own tab for controller bindings, which\n  likewise only lists actions for plugins you have on.\n- Notepad and Card Tags are listed under Miscellaneous; Controller Support\n  is now listed with the other plugins.\n- When there are more tabs than fit, **\u25C0 \u25B6 arrows** at the end of the tab\n  row let you scroll through them, so tab names are never cut off.\n- New **Changelog** button (you're reading it), and a one-time popup after\n  each update.\n\n### Changes\n- **Deck Tracker is now called Card Tracker**, to better describe what it\n  does. Your trackers, presets and settings carry over.\n- New installs start with every plugin switched off. If you were already\n  using Wizascript, the plugins you had on stay on.\n- Notepad has a new **Open Notepad on Page Load** setting, shown right under\n  Notepad once it's enabled. The Toggle Notepad shortcut now opens/closes\n  the notepad for the current page without switching the plugin off.\n- UC TV's filter settings are disabled (greyed out) while match filtering\n  is turned off.\n- UC TV no longer prints its settings to the browser console on every page\n  load unless debug logging is on.\n\n## 1.4.1 and earlier\n\nWizascript combined several separate plugins into one download: Patch\nMaker, True Hub Bridge, Deck Tracker, UC TV, Notepad, Card Tags, remappable\nkeybinds, and controller support. Detailed notes weren't kept before 1.5.0.\n";
+  var CHANGELOG_default = "# Changelog\n\nAll notable changes to Wizascript are recorded here, newest first. The\nChangelog button in Wizascript's settings shows this file.\n\n## 1.5.0\n\nWizascript is now listed in UnderScript's plugin directory, so this update\nis all about making it easy to understand without a readme.\n\n### Settings overhaul\n- New **General** tab (the first tab in Wizascript's settings) with a\n  **Plugins** list and a **Miscellaneous** list. Every feature now has its\n  own on/off switch, with a short description when you hover it.\n- Each enabled plugin gets its **own settings tab**. Plugins you haven't\n  turned on don't show any settings at all.\n- **Keybinds** only appear once you enable a plugin that uses them, and only\n  list the shortcuts for plugins you actually have on.\n- **Controller Support** has its own tab for controller bindings, which\n  likewise only lists actions for plugins you have on.\n- Notepad and Card Tags are listed under Miscellaneous; Controller Support\n  is now listed with the other plugins.\n- Tab names are never cut off. When there are more tabs than fit, they're\n  split into pages, and **\u25C0 \u25B6 arrows** at the right end of the tab row flip\n  between them.\n- New **Changelog** button (you're reading it), and a one-time popup after\n  each update.\n\n### Changes\n- **Deck Tracker is now called Card Tracker**, to better describe what it\n  does. Your trackers, presets and settings carry over.\n- New installs start with every plugin switched off. If you were already\n  using Wizascript, the plugins you had on stay on.\n- Notepad has a new **Open Notepad on Page Load** setting, shown right under\n  Notepad once it's enabled. The Toggle Notepad shortcut now opens/closes\n  the notepad for the current page without switching the plugin off.\n- UC TV's filter settings are disabled (greyed out) while match filtering\n  is turned off.\n- UC TV no longer prints its settings to the browser console on every page\n  load unless debug logging is on.\n\n## 1.4.1 and earlier\n\nWizascript combined several separate plugins into one download: Patch\nMaker, True Hub Bridge, Deck Tracker, UC TV, Notepad, Card Tags, remappable\nkeybinds, and controller support. Detailed notes weren't kept before 1.5.0.\n";
 
   // packages/core/about.js
   var LAST_SEEN_KEY = "wizascript.lastSeenVersion";
@@ -725,7 +725,7 @@
   var ARROW_CLASS = "wizascript-tab-arrow";
   var HIDDEN_CLASS = "wizascript-tab-offscreen";
   var GAP_PX = 5;
-  var firstVisible = 0;
+  var currentPage = 0;
   var observedView = null;
   var mutationObserver = null;
   var resizeObserver = null;
@@ -738,7 +738,9 @@
     style.textContent = `
 .tabbedView.${VIEW_CLASS} > .tabLabel { overflow: visible; text-overflow: clip; max-width: none; }
 .tabbedView.${VIEW_CLASS} > .tabLabel.${HIDDEN_CLASS} { display: none; }
-.tabbedView.${VIEW_CLASS} > .tabLabel.${ARROW_CLASS} { order: 10; cursor: pointer; user-select: none; text-align: center; min-width: 26px; }
+.tabbedView.${VIEW_CLASS} > .tabLabel.${ARROW_CLASS} { grid-row: 1; cursor: pointer; user-select: none; text-align: center; min-width: 26px; }
+.tabbedView.${VIEW_CLASS} > .tabLabel.${ARROW_CLASS}[data-dir="-1"] { grid-column: -3 / -2; }
+.tabbedView.${VIEW_CLASS} > .tabLabel.${ARROW_CLASS}[data-dir="1"] { grid-column: -2 / -1; }
 .tabbedView.${VIEW_CLASS} > .tabLabel.${ARROW_CLASS}.disabled { opacity: 0.35; cursor: default; }
 `;
     (document.head || document.documentElement).appendChild(style);
@@ -767,7 +769,7 @@
     el.addEventListener("click", (e) => {
       e.preventDefault();
       if (el.classList.contains("disabled")) return;
-      firstVisible += dir;
+      currentPage += dir;
       layout(view);
     });
     return el;
@@ -790,6 +792,23 @@
       return radio && radio.tagName === "INPUT" && radio.checked;
     });
   }
+  function paginate(widths, room) {
+    const pages = [];
+    let start = 0;
+    while (start < widths.length) {
+      let used = 0;
+      let end = start;
+      while (end < widths.length) {
+        const next = used + widths[end] + (end > start ? GAP_PX : 0);
+        if (next > room && end > start) break;
+        used = next;
+        end++;
+      }
+      pages.push({ start, end });
+      start = end;
+    }
+    return pages;
+  }
   function layout(view, { revealActive = false } = {}) {
     const available = view.clientWidth;
     if (!available) return;
@@ -804,37 +823,27 @@
       view.style.gridTemplateColumns = `repeat(${labels.length}, max-content) 1fr`;
       const widths = labels.map((l) => l.getBoundingClientRect().width);
       const total = widths.reduce((a, b) => a + b, 0) + GAP_PX * (labels.length - 1);
-      if (total <= available) return;
-      const { left, right } = ensureArrows(view);
-      const arrowsWidth = left.getBoundingClientRect().width + right.getBoundingClientRect().width + GAP_PX * 2;
-      const room = available - arrowsWidth;
-      const fitFrom = (start) => {
-        let used = 0;
-        let count = 0;
-        for (let i = start; i < labels.length; i++) {
-          const next = used + widths[i] + (count ? GAP_PX : 0);
-          if (next > room && count) break;
-          used = next;
-          count++;
-        }
-        return count;
-      };
-      firstVisible = Math.max(0, Math.min(firstVisible, labels.length - 1));
-      while (firstVisible > 0 && firstVisible + fitFrom(firstVisible) >= labels.length && fitFrom(firstVisible - 1) > labels.length - firstVisible) {
-        firstVisible--;
+      if (total <= available) {
+        currentPage = 0;
+        return;
       }
+      const { left, right } = ensureArrows(view);
+      view.style.gridTemplateColumns = `repeat(${labels.length}, max-content) 1fr max-content max-content`;
+      const arrowsWidth = left.getBoundingClientRect().width + right.getBoundingClientRect().width + GAP_PX * 2;
+      const pages = paginate(widths, available - arrowsWidth);
+      currentPage = Math.max(0, Math.min(currentPage, pages.length - 1));
       if (revealActive) {
         const active = activeIndex(labels);
-        if (active >= 0 && active < firstVisible) firstVisible = active;
-        while (active >= 0 && active >= firstVisible + fitFrom(firstVisible)) firstVisible++;
+        const page = pages.findIndex((p) => active >= p.start && active < p.end);
+        if (page >= 0) currentPage = page;
       }
-      const shown = fitFrom(firstVisible);
-      labels.forEach((l, i) => {
-        l.classList.toggle(HIDDEN_CLASS, i < firstVisible || i >= firstVisible + shown);
-      });
-      left.classList.toggle("disabled", firstVisible === 0);
-      right.classList.toggle("disabled", firstVisible + shown >= labels.length);
-      view.style.gridTemplateColumns = `repeat(${shown}, max-content) max-content max-content 1fr`;
+      const { start, end } = pages[currentPage];
+      labels.forEach((l, i) => l.classList.toggle(HIDDEN_CLASS, i < start || i >= end));
+      left.classList.toggle("disabled", currentPage === 0);
+      right.classList.toggle("disabled", currentPage === pages.length - 1);
+      left.title = `Previous tabs (page ${currentPage + 1} of ${pages.length})`;
+      right.title = `More tabs (page ${currentPage + 1} of ${pages.length})`;
+      view.style.gridTemplateColumns = `repeat(${end - start}, max-content) 1fr max-content max-content`;
     } finally {
       setTimeout(() => {
         applying = false;
@@ -3239,7 +3248,7 @@ Version: v${version}`;
   function createTrueHubOverlay({ logger: logger4, getAutoOpen, getScrollPaging }) {
     let allDecks = [];
     let filteredDecks = [];
-    let currentPage = 1;
+    let currentPage2 = 1;
     let mode = "classic";
     let includeCards = [];
     let excludeCards = [];
@@ -3266,7 +3275,7 @@ Version: v${version}`;
     }
     function applyFilters2() {
       filteredDecks = filterDecks(allDecks, { activeSoulFilter, activeSearch, includeCards, excludeCards });
-      currentPage = 1;
+      currentPage2 = 1;
       renderPage();
     }
     function waitForHub(cb) {
@@ -3385,7 +3394,7 @@ Version: v${version}`;
     }
     function renderPage() {
       trueHubList.innerHTML = "";
-      const start = (currentPage - 1) * DECKS_PER_PAGE;
+      const start = (currentPage2 - 1) * DECKS_PER_PAGE;
       const visible = filteredDecks.slice(start, start + DECKS_PER_PAGE);
       visible.forEach((deck) => trueHubList.appendChild(buildCard(deck)));
       syncNav();
@@ -3663,18 +3672,18 @@ Version: v${version}`;
         applyFilters2();
       });
       btnPrev.onclick = () => {
-        if (currentPage <= 1) return;
-        currentPage--;
+        if (currentPage2 <= 1) return;
+        currentPage2--;
         renderPage();
       };
       btnNext2.onclick = () => {
         const total = Math.ceil(filteredDecks.length / DECKS_PER_PAGE);
-        if (currentPage >= total) return;
-        currentPage++;
+        if (currentPage2 >= total) return;
+        currentPage2++;
         renderPage();
       };
       pageSelect.onchange = (e) => {
-        currentPage = Number(e.target.value) + 1;
+        currentPage2 = Number(e.target.value) + 1;
         renderPage();
       };
       trueHubNavEl = nav;
@@ -3691,12 +3700,12 @@ Version: v${version}`;
         const opt = document.createElement("option");
         opt.value = i - 1;
         opt.textContent = i;
-        if (i === currentPage) opt.selected = true;
+        if (i === currentPage2) opt.selected = true;
         thSelect.appendChild(opt);
       }
       thMax.textContent = total;
-      thPrev.disabled = currentPage <= 1;
-      thNext.disabled = currentPage >= total;
+      thPrev.disabled = currentPage2 <= 1;
+      thNext.disabled = currentPage2 >= total;
     }
     function enableTrueHubNav() {
       if (ucNavRow) ucNavRow.style.display = "none";
@@ -3760,7 +3769,7 @@ Version: v${version}`;
           }
           originalDecks.style.display = "none";
           trueHubWrapper.style.display = "";
-          currentPage = 1;
+          currentPage2 = 1;
           enableTrueHubNav();
           renderPage();
           btn.textContent = "Switch to Classic Hub";
@@ -3807,13 +3816,13 @@ Version: v${version}`;
           e.preventDefault();
           const totalPages = Math.max(1, Math.ceil(filteredDecks.length / DECKS_PER_PAGE));
           if (e.deltaY > 0) {
-            if (currentPage < totalPages) {
-              currentPage++;
+            if (currentPage2 < totalPages) {
+              currentPage2++;
               renderPage();
             }
           } else if (e.deltaY < 0) {
-            if (currentPage > 1) {
-              currentPage--;
+            if (currentPage2 > 1) {
+              currentPage2--;
               renderPage();
             }
           }

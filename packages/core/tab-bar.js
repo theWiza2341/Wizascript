@@ -32,7 +32,7 @@ const ARROW_CLASS = "wizascript-tab-arrow";
 const HIDDEN_CLASS = "wizascript-tab-offscreen";
 const GAP_PX = 5; // UnderScript's --tab-label-gap
 
-let firstVisible = 0; // index of the first label shown, kept for the session
+let currentPage = 0; // page of tabs shown, kept for the session
 let observedView = null;
 let mutationObserver = null;
 let resizeObserver = null;
@@ -46,7 +46,9 @@ function injectStyle() {
   style.textContent = `
 .tabbedView.${VIEW_CLASS} > .tabLabel { overflow: visible; text-overflow: clip; max-width: none; }
 .tabbedView.${VIEW_CLASS} > .tabLabel.${HIDDEN_CLASS} { display: none; }
-.tabbedView.${VIEW_CLASS} > .tabLabel.${ARROW_CLASS} { order: 10; cursor: pointer; user-select: none; text-align: center; min-width: 26px; }
+.tabbedView.${VIEW_CLASS} > .tabLabel.${ARROW_CLASS} { grid-row: 1; cursor: pointer; user-select: none; text-align: center; min-width: 26px; }
+.tabbedView.${VIEW_CLASS} > .tabLabel.${ARROW_CLASS}[data-dir="-1"] { grid-column: -3 / -2; }
+.tabbedView.${VIEW_CLASS} > .tabLabel.${ARROW_CLASS}[data-dir="1"] { grid-column: -2 / -1; }
 .tabbedView.${VIEW_CLASS} > .tabLabel.${ARROW_CLASS}.disabled { opacity: 0.35; cursor: default; }
 `;
   (document.head || document.documentElement).appendChild(style);
@@ -79,7 +81,7 @@ function makeArrow(view, text, dir) {
   el.addEventListener("click", (e) => {
     e.preventDefault();
     if (el.classList.contains("disabled")) return;
-    firstVisible += dir;
+    currentPage += dir;
     layout(view);
   });
   return el;
@@ -107,6 +109,26 @@ function activeIndex(labels) {
   });
 }
 
+// Splits the labels into pages: each page is as many consecutive tabs
+// as fit next to the arrows, and every tab is on exactly one page.
+function paginate(widths, room) {
+  const pages = [];
+  let start = 0;
+  while (start < widths.length) {
+    let used = 0;
+    let end = start;
+    while (end < widths.length) {
+      const next = used + widths[end] + (end > start ? GAP_PX : 0);
+      if (next > room && end > start) break; // always at least one tab per page
+      used = next;
+      end++;
+    }
+    pages.push({ start, end });
+    start = end;
+  }
+  return pages;
+}
+
 function layout(view, { revealActive = false } = {}) {
   const available = view.clientWidth;
   if (!available) return; // hidden right now - the ResizeObserver re-runs this once it's shown
@@ -124,48 +146,34 @@ function layout(view, { revealActive = false } = {}) {
     view.style.gridTemplateColumns = `repeat(${labels.length}, max-content) 1fr`;
     const widths = labels.map((l) => l.getBoundingClientRect().width);
     const total = widths.reduce((a, b) => a + b, 0) + GAP_PX * (labels.length - 1);
-    if (total <= available) return; // everything fits at full width
+    if (total <= available) { currentPage = 0; return; } // everything fits at full width
 
     const { left, right } = ensureArrows(view);
+    // Give the arrows their own columns before measuring them.
+    view.style.gridTemplateColumns = `repeat(${labels.length}, max-content) 1fr max-content max-content`;
     const arrowsWidth = left.getBoundingClientRect().width + right.getBoundingClientRect().width + GAP_PX * 2;
-    const room = available - arrowsWidth;
+    const pages = paginate(widths, available - arrowsWidth);
 
-    // How many labels fit starting at `start` (always at least one).
-    const fitFrom = (start) => {
-      let used = 0;
-      let count = 0;
-      for (let i = start; i < labels.length; i++) {
-        const next = used + widths[i] + (count ? GAP_PX : 0);
-        if (next > room && count) break;
-        used = next;
-        count++;
-      }
-      return count;
-    };
-
-    // Clamp, and don't leave empty space at the end of the row.
-    firstVisible = Math.max(0, Math.min(firstVisible, labels.length - 1));
-    while (firstVisible > 0 && firstVisible + fitFrom(firstVisible) >= labels.length
-      && fitFrom(firstVisible - 1) > labels.length - firstVisible) {
-      firstVisible--;
-    }
-
-    // Bring the selected tab on screen when the row first appears or a
+    currentPage = Math.max(0, Math.min(currentPage, pages.length - 1));
+    // Jump to the selected tab's page when the row first appears or a
     // different tab gets selected - but not while paging with the
-    // arrows, which may deliberately scroll it out of view.
+    // arrows, which may deliberately page away from it.
     if (revealActive) {
       const active = activeIndex(labels);
-      if (active >= 0 && active < firstVisible) firstVisible = active;
-      while (active >= 0 && active >= firstVisible + fitFrom(firstVisible)) firstVisible++;
+      const page = pages.findIndex((p) => active >= p.start && active < p.end);
+      if (page >= 0) currentPage = page;
     }
 
-    const shown = fitFrom(firstVisible);
-    labels.forEach((l, i) => {
-      l.classList.toggle(HIDDEN_CLASS, i < firstVisible || i >= firstVisible + shown);
-    });
-    left.classList.toggle("disabled", firstVisible === 0);
-    right.classList.toggle("disabled", firstVisible + shown >= labels.length);
-    view.style.gridTemplateColumns = `repeat(${shown}, max-content) max-content max-content 1fr`;
+    const { start, end } = pages[currentPage];
+    labels.forEach((l, i) => l.classList.toggle(HIDDEN_CLASS, i < start || i >= end));
+    left.classList.toggle("disabled", currentPage === 0);
+    right.classList.toggle("disabled", currentPage === pages.length - 1);
+    left.title = `Previous tabs (page ${currentPage + 1} of ${pages.length})`;
+    right.title = `More tabs (page ${currentPage + 1} of ${pages.length})`;
+    // Shown tabs, then an empty stretch column, then the two arrows -
+    // the arrows are pinned to the last two columns (see the CSS), so
+    // they stay at the far right whatever the page holds.
+    view.style.gridTemplateColumns = `repeat(${end - start}, max-content) 1fr max-content max-content`;
   } finally {
     // Let the MutationObserver ignore the mutations we just made.
     setTimeout(() => { applying = false; }, 0);

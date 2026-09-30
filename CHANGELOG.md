@@ -20,8 +20,9 @@ is all about making it easy to understand without a readme.
   likewise only lists actions for plugins you have on.
 - Notepad and Card Tags are listed under Miscellaneous; Controller Support
   is now listed with the other plugins.
-- When there are more tabs than fit, **◀ ▶ arrows** at the end of the tab
-  row let you scroll through them, so tab names are never cut off.
+- Tab names are never cut off. When there are more tabs than fit, they're
+  split into pages, and **◀ ▶ arrows** at the right end of the tab row flip
+  between them.
 - New **Changelog** button (you're reading it), and a one-time popup after
   each update.
 

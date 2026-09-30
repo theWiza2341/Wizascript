@@ -17,7 +17,7 @@ All of Wizascript's settings live under UnderScript's settings menu, in **Plugin
 - **One tab per enabled plugin**, holding only that plugin's settings. Plugins that are switched off don't show a tab at all.
 - **Keybinds** tab: appears once you enable a plugin with keyboard shortcuts (Patch Maker, UC TV, Notepad), and only lists shortcuts for the plugins you have on.
 - **Controller Support** tab: appears when Controller Support is enabled, and likewise only lists controller bindings for the plugins you have on.
-- If more tabs are open than fit in one row, **◀ ▶** arrows at the end of the row scroll through them.
+- If more tabs are open than fit in one row, they're split into pages, and **◀ ▶** arrows pinned to the right end of the row flip between pages.
 
 ## Features
 

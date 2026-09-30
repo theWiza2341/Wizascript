@@ -3,6 +3,9 @@ import { flushKeybindRegistrations, initKeybinds } from "./packages/core/keybind
 import { registerPluginToggles, runMigrations } from "./packages/core/plugins.js";
 import { registerAboutSection, showWhatsNew } from "./packages/core/about.js";
 import { initTabBar } from "./packages/core/tab-bar.js";
+import { registerStressTabs } from "./packages/core/stress-test.js";
+
+/* global __WIZASCRIPT_STRESS_TABS__ */
 import { initPatchMaker } from "./packages/patch-maker/index.js";
 import { initTrueHubBridge } from "./packages/true-hub-bridge/index.js";
 import { initDeckTracker } from "./packages/deck-tracker/index.js";
@@ -46,6 +49,8 @@ bootstrap(plugin => {
   const miscSettings = initMisc(plugin);
   initKeybinds(plugin); // creates the Keybinds tab ahead of Controller Support's
   initController(plugin, miscSettings.enableController);
+  // Dev-only test tabs - 0 (stripped out) in normal builds; see stress-test.js.
+  if (__WIZASCRIPT_STRESS_TABS__) registerStressTabs(plugin, __WIZASCRIPT_STRESS_TABS__);
   flushKeybindRegistrations(); // must come after all of the above
 
   showWhatsNew(plugin, installState);

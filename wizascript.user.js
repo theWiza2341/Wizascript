@@ -423,7 +423,7 @@
   function startObserver() {
     if (observerStarted) return;
     observerStarted = true;
-    const observer3 = new MutationObserver(() => {
+    const observer2 = new MutationObserver(() => {
       if (!bindingDefaults.size && !dividerKeys.size) return;
       document.querySelectorAll(`input[id^="${ID_PREFIX2}"]:not([data-wizascript-keybind-enhanced])`).forEach((el) => {
         const bindingKey = el.id.slice(ID_PREFIX2.length);
@@ -435,7 +435,7 @@
         enhanceInput(el, bindingKey, bindingDefaults.get(bindingKey));
       });
     });
-    observer3.observe(document.body, { childList: true, subtree: true });
+    observer2.observe(document.body, { childList: true, subtree: true });
   }
   function matchesCode(e, code, defaultCode) {
     if (code === defaultCode && NATIVE_MODIFIERS.has(defaultCode)) {
@@ -721,21 +721,25 @@
   // packages/core/tab-bar.js
   var MAIN_TAB_LABEL = "General";
   var MAIN_TAB_MARKER_ID = "underscript.plugin.Wizascript.about.version";
+  var VIEW_CLASS = "wizascript-tabs";
   var ARROW_CLASS = "wizascript-tab-arrow";
   var HIDDEN_CLASS = "wizascript-tab-offscreen";
   var GAP_PX = 5;
   var firstVisible = 0;
   var observedView = null;
-  var observer2 = null;
+  var mutationObserver = null;
+  var resizeObserver = null;
+  var lastWidth = 0;
   var applying = false;
   function injectStyle() {
     if (document.getElementById("wizascript-tab-bar-style")) return;
     const style = document.createElement("style");
     style.id = "wizascript-tab-bar-style";
     style.textContent = `
-.tabbedView > .tabLabel.${HIDDEN_CLASS} { display: none; }
-.tabbedView > .tabLabel.${ARROW_CLASS} { order: 10; cursor: pointer; user-select: none; text-align: center; min-width: 26px; }
-.tabbedView > .tabLabel.${ARROW_CLASS}.disabled { opacity: 0.35; cursor: default; }
+.tabbedView.${VIEW_CLASS} > .tabLabel { overflow: visible; text-overflow: clip; max-width: none; }
+.tabbedView.${VIEW_CLASS} > .tabLabel.${HIDDEN_CLASS} { display: none; }
+.tabbedView.${VIEW_CLASS} > .tabLabel.${ARROW_CLASS} { order: 10; cursor: pointer; user-select: none; text-align: center; min-width: 26px; }
+.tabbedView.${VIEW_CLASS} > .tabLabel.${ARROW_CLASS}.disabled { opacity: 0.35; cursor: default; }
 `;
     (document.head || document.documentElement).appendChild(style);
   }
@@ -771,14 +775,8 @@
   function ensureArrows(view) {
     let left = view.querySelector(`:scope > .${ARROW_CLASS}[data-dir="-1"]`);
     let right = view.querySelector(`:scope > .${ARROW_CLASS}[data-dir="1"]`);
-    if (!left) {
-      left = makeArrow(view, "\u25C0", -1);
-      view.appendChild(left);
-    }
-    if (!right) {
-      right = makeArrow(view, "\u25B6", 1);
-      view.appendChild(right);
-    }
+    if (!left) left = makeArrow(view, "\u25C0", -1);
+    if (!right) right = makeArrow(view, "\u25B6", 1);
     view.appendChild(left);
     view.appendChild(right);
     return { left, right };
@@ -793,21 +791,20 @@
     });
   }
   function layout(view, { revealActive = false } = {}) {
+    const available = view.clientWidth;
+    if (!available) return;
+    lastWidth = available;
     applying = true;
     try {
+      view.classList.add(VIEW_CLASS);
       const labels = realLabels(view);
       labels.forEach((l) => l.classList.remove(HIDDEN_CLASS));
       removeArrows(view);
-      view.style.gridTemplateColumns = "";
-      const available = view.clientWidth;
-      if (!labels.length || !available) return;
+      if (!labels.length) return;
       view.style.gridTemplateColumns = `repeat(${labels.length}, max-content) 1fr`;
       const widths = labels.map((l) => l.getBoundingClientRect().width);
       const total = widths.reduce((a, b) => a + b, 0) + GAP_PX * (labels.length - 1);
-      if (total <= available) {
-        view.style.gridTemplateColumns = "";
-        return;
-      }
+      if (total <= available) return;
       const { left, right } = ensureArrows(view);
       const arrowsWidth = left.getBoundingClientRect().width + right.getBoundingClientRect().width + GAP_PX * 2;
       const room = available - arrowsWidth;
@@ -844,32 +841,48 @@
       }, 0);
     }
   }
+  function watch(view) {
+    if (observedView === view) return;
+    if (mutationObserver) mutationObserver.disconnect();
+    if (resizeObserver) resizeObserver.disconnect();
+    observedView = view;
+    lastWidth = 0;
+    mutationObserver = new MutationObserver(() => {
+      if (applying) return;
+      const found = findView();
+      if (found) renameMainTab(found.mainContent);
+      layout(view, { revealActive: true });
+    });
+    mutationObserver.observe(view, { childList: true });
+    const main = findView();
+    if (main && main.mainContent.previousElementSibling) {
+      mutationObserver.observe(main.mainContent.previousElementSibling, { childList: true, characterData: true, subtree: true });
+    }
+    if (typeof ResizeObserver === "function") {
+      resizeObserver = new ResizeObserver(() => {
+        const width = view.clientWidth;
+        if (width && width !== lastWidth) layout(view, { revealActive: true });
+      });
+      resizeObserver.observe(view);
+    }
+  }
   function apply() {
     const found = findView();
     if (!found) return;
-    const { view, mainContent } = found;
-    renameMainTab(mainContent);
-    if (observedView !== view) {
-      if (observer2) observer2.disconnect();
-      observedView = view;
-      observer2 = new MutationObserver(() => {
-        if (applying) return;
-        const again = findView();
-        if (again) renameMainTab(again.mainContent);
-        layout(view, { revealActive: true });
-      });
-      observer2.observe(view, { childList: true, subtree: false });
-      realLabels(view).forEach((l) => observer2.observe(l, { childList: true, characterData: true, subtree: true }));
-    }
-    layout(view, { revealActive: true });
+    renameMainTab(found.mainContent);
+    watch(found.view);
+    layout(found.view, { revealActive: true });
   }
   function initTabBar(plugin) {
     injectStyle();
     plugin.events.on("Settings:open", () => setTimeout(apply, 0));
     document.addEventListener("change", (e) => {
-      if (e.target && e.target.classList && e.target.classList.contains("tabButton") && observedView && observedView.contains(e.target)) {
-        layout(observedView, { revealActive: true });
-      }
+      const t = e.target;
+      if (!t || !t.classList || !t.classList.contains("tabButton")) return;
+      setTimeout(() => {
+        if (observedView && observedView.isConnected) layout(observedView, { revealActive: true });
+        else apply();
+      }, 0);
     });
     window.addEventListener("resize", () => {
       if (observedView && observedView.isConnected) layout(observedView);
@@ -7621,11 +7634,11 @@ Version: v${version}`;
       }, 100);
     }
     const containers = document.querySelectorAll(CARD_LIST_SELECTOR);
-    const observer3 = new MutationObserver(schedule);
+    const observer2 = new MutationObserver(schedule);
     if (containers.length) {
-      containers.forEach((c) => observer3.observe(c, { childList: true, subtree: true, attributes: true, attributeFilter: ["id"] }));
+      containers.forEach((c) => observer2.observe(c, { childList: true, subtree: true, attributes: true, attributeFilter: ["id"] }));
     } else {
-      observer3.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["id"] });
+      observer2.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["id"] });
     }
     schedule();
   }
@@ -8948,7 +8961,7 @@ Version: v${version}`;
     if (controllerObserverStarted) return;
     controllerObserverStarted = true;
     let everFoundOne = false;
-    const observer3 = new MutationObserver(() => {
+    const observer2 = new MutationObserver(() => {
       const matches = document.querySelectorAll(`input[id^="${idPrefix}"]:not([data-wc-enhanced]), select[id^="${idPrefix}"]:not([data-wc-enhanced])`);
       matches.forEach((el) => {
         everFoundOne = true;
@@ -9003,7 +9016,7 @@ Version: v${version}`;
         el.setAttribute("data-wc-enhanced", "true");
       });
     });
-    observer3.observe(document.body, { childList: true, subtree: true });
+    observer2.observe(document.body, { childList: true, subtree: true });
     setTimeout(() => {
       if (!everFoundOne) {
         console.warn('[Wizascript Controller] never found any "Keybinds - Controller" <input> elements to enhance after 15s - either the category never rendered, or the assumed id pattern (' + idPrefix + "<key>) is wrong.");
@@ -11557,6 +11570,7 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     const miscSettings = initMisc(plugin);
     initKeybinds(plugin);
     initController(plugin, miscSettings.enableController);
+    if (0) registerStressTabs(plugin, 0);
     flushKeybindRegistrations();
     showWhatsNew(plugin, installState);
   });

@@ -753,10 +753,6 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
 ### Fixes
 - Controller Support: the d-pad works in the settings' **Plugins** section again (UnderScript 0.64 changed how plugin settings are laid out). A plugin's tabs are now one row you move along with left/right, including the \u25C0 \u25B6 arrows. Moving up from a setting returns to the tab you're on.
 - Controller Support: binding \u2715 or the d-pad now works when you clicked the binding box with the mouse or cursor (before, the press moved the settings sidebar instead of being recorded).
-
-## 1.4.1 and earlier
-
-Wizascript combined several separate plugins into one download: Patch Maker, True Hub Bridge, Deck Tracker, UC TV, Notepad, Card Tags, remappable keybinds, and controller support. Detailed notes weren't kept before 1.5.0.
 `;
 
   // packages/core/about.js

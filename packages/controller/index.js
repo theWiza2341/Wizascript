@@ -1691,19 +1691,13 @@ export function initController(plugin, controllerEnabledSetting) {
   // reading keybinds.js's own GM-stored value directly, which it
   // deliberately doesn't reach into (that's a private implementation
   // detail of another package, not something this one should couple to).
+  // 1.5.0: opens the settings directly instead of relaying a synthetic
+  // Primary double-tap - the keyboard double-tap now only works while a
+  // keybind-using plugin is enabled, and this shortcut shouldn't depend
+  // on that. (The comment above describes the old relay approach.)
   function openWizascriptSettings() {
-    const base = { key: 'Control', code: 'ControlLeft', keyCode: 17, which: 17, bubbles: true };
-    document.dispatchEvent(new KeyboardEvent('keydown', base));
-    requestAnimationFrame(() => {
-      document.dispatchEvent(new KeyboardEvent('keyup', base));
-      requestAnimationFrame(() => {
-        document.dispatchEvent(new KeyboardEvent('keydown', base));
-        requestAnimationFrame(() => {
-          document.dispatchEvent(new KeyboardEvent('keyup', base));
-        });
-      });
-    });
-    if (isDebugTextEnabled()) console.log('[Wizascript Controller] relayed a real Primary (Control) double-tap for Wizascript settings');
+    plugin.settings().open();
+    if (isDebugTextEnabled()) console.log('[Wizascript Controller] opened Wizascript settings');
   }
 
   function frame() {
@@ -2104,8 +2098,8 @@ export function initController(plugin, controllerEnabledSetting) {
           keybindRelayHeld.actions = nextActionHeld;
 
           hud.textContent = inPatchMakerFieldForContext
-            ? `Patch Maker (${viaPause ? 'OSK paused' : 'Primary held'})\nmove entry/section/card, cycle category — see Settings > Keybinds - Controller${viaPause ? `\nR1: resume typing   ${btnLabel(1)}: close` : ''}`
-            : `Wizascript keybind relay (${viaPause ? 'OSK paused' : 'Primary held'})\nchannel / notepad redo-undo-toggle-reset — see Settings > Keybinds - Controller${viaPause ? `\nR1: resume typing   ${btnLabel(1)}: close` : ''}`;
+            ? `Patch Maker (${viaPause ? 'OSK paused' : 'Primary held'})\nmove entry/section/card, cycle category — see Settings > Controller Support${viaPause ? `\nR1: resume typing   ${btnLabel(1)}: close` : ''}`
+            : `Wizascript keybind relay (${viaPause ? 'OSK paused' : 'Primary held'})\nchannel / notepad redo-undo-toggle-reset — see Settings > Controller Support${viaPause ? `\nR1: resume typing   ${btnLabel(1)}: close` : ''}`;
         } else {
           keybindRelayHeld.actions = {};
         }

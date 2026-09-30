@@ -1,5 +1,7 @@
 import { bootstrap } from "./packages/core/bootstrap.js";
-import { flushKeybindRegistrations } from "./packages/core/keybinds.js";
+import { flushKeybindRegistrations, initKeybinds } from "./packages/core/keybinds.js";
+import { registerPluginToggles, runMigrations } from "./packages/core/plugins.js";
+import { registerAboutSection, showWhatsNew } from "./packages/core/about.js";
 import { initPatchMaker } from "./packages/patch-maker/index.js";
 import { initTrueHubBridge } from "./packages/true-hub-bridge/index.js";
 import { initDeckTracker } from "./packages/deck-tracker/index.js";
@@ -15,29 +17,33 @@ import { initController } from "./packages/controller/index.js";
 // case a future, compliant feature ends up reusing them, but the
 // feature's own source code has been deleted, not just unwired.
 //
-// The "misc" package houses the Notepad feature - moved out of
-// deck-tracker specifically so it works outside of matches too, not
-// gated behind deck-tracker's isGamePage() check - plus the "Enable
-// Controller Support" master toggle itself, and now Card Tags
-// (right-click a card in Crafting/Deck-building to apply custom flair
-// tags, filterable via the existing search bar, with an on-card
-// indicator). Both toggles live under Miscellaneous rather than their
-// own category so a player who hasn't turned a feature on yet isn't
-// shown a whole category of settings for something they can't use -
-// initMisc must run BEFORE initController so the setting object it
-// returns (miscSettings.enableController) exists in time for
-// registerControllerSettings() to read it and decide whether to
-// register the rest of "Keybinds - Controller" at all this load. Card
-// Tags itself is wired entirely inside initMisc (no manifest.js
-// involvement needed) since, unlike Controller, nothing outside the
-// misc package needs to read its setting.
+// The "misc" package houses Notepad and Card Tags, and hands back the
+// Controller Support toggle for initController(). Since 1.5.0 all three
+// are regular entries in the Plugins list rather than "Miscellaneous"
+// toggles.
 
+// 1.5.0 settings layout (see packages/core/plugins.js):
+//   Wizascript tab  - "Plugins" list (one on/off per feature) + "Wizascript" (version, changelog)
+//   one tab per ENABLED plugin, in the order registered below
+//   Keybinds tab    - only while a keybind-using plugin is enabled
+//   Controller tab  - only while Controller Support is enabled
+// Tabs appear in the order their first setting is registered, so the
+// order of calls here is the order players see.
 bootstrap(plugin => {
+  // Must run before anything reads a plugin toggle.
+  const installState = runMigrations();
+
+  registerPluginToggles(plugin);
+  registerAboutSection(plugin);
+
   initPatchMaker(plugin);
   initTrueHubBridge(plugin);
-  initDeckTracker(plugin);
+  initDeckTracker(plugin); // shown to players as "Card Tracker"
   initUcTv(plugin);
   const miscSettings = initMisc(plugin);
+  initKeybinds(plugin); // creates the Keybinds tab ahead of Controller Support's
   initController(plugin, miscSettings.enableController);
   flushKeybindRegistrations(); // must come after all of the above
+
+  showWhatsNew(plugin, installState);
 });

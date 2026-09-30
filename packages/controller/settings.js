@@ -1,6 +1,6 @@
 // packages/controller/settings.js
 //
-// Registers the "Keybinds - Controller" settings category and everything
+// Registers the "Controller Support" settings tab and everything
 // needed to remap a gamepad button (or, as of this round, a keyboard key -
 // see enhanceControllerCaptureInput's keydown-as-capture support) to a
 // Wizascript action: the preset selector/name widgets, the master "Enable
@@ -13,6 +13,7 @@
 // persist.
 
 import { createFeatureSettings } from '../core/settings.js';
+import { isPluginEnabled, pluginIdForLabel } from '../core/plugins.js';
 import {
   PRESET_COUNT, getActivePreset, setActivePreset, getPresetName, setPresetName,
   presetKey, migrateFlatBindingsToPresetOne, resetPresetBindings, csGet, csSet
@@ -90,7 +91,8 @@ export const HARDWARE_SHORTCUT_ACTIONS = [
   { key: 'openWizascriptSettings', name: 'Open Wizascript Settings' },
   { key: 'concede', name: 'Concede' },
   { key: 'goHome', name: 'Go to Home Page' },
-  { key: 'openDeckTrackerPresets', name: 'Open Deck Tracker Presets' }
+  // Key kept as-is (stored bindings use it); shown as Card Tracker since 1.5.0.
+  { key: 'openDeckTrackerPresets', name: 'Open Card Tracker Presets', pluginId: 'cardTracker' }
 ];
 export const HARDWARE_SHORTCUT_DEFAULTS = {
   openSettings: 9, yourDustpile: 10, opponentDustpile: 11, endTurn: 17,
@@ -162,20 +164,11 @@ export function setBoundShortcutButton(actionKey, value) {
   csSet(presetKey('shortcuts.' + actionKey), encodeBoundInput(value));
 }
 
-// Master toggle. Lives under "Miscellaneous" now, not this package's own
-// "Keybinds - Controller" category - registered by packages/misc/settings.js
-// and handed in as registerControllerSettings(plugin, controllerEnabledSetting)'s
-// second argument (manifest.js wires initMisc's return value through to
-// initController), the same setting object either way. Moved so a brand
-// new user (off by default) doesn't see an entire category of gamepad
-// keybind rows before they've even connected a controller - see
-// registerControllerSettings() below, which now skips registering the
-// rest of "Keybinds - Controller" entirely while this reads false,
-// mirroring exactly how packages/uc-tv/settings.js hides its own
-// "Filter Settings" category while UC TV itself is disabled. Fails OPEN
-// (treated as enabled) if settings registration itself never completes,
-// rather than silently bricking every feature with no way to turn it
-// back on.
+// Master toggle: the "Controller Support" entry in the Plugins list
+// (core/plugins.js), handed in as registerControllerSettings(plugin,
+// controllerEnabledSetting)'s second argument. Fails OPEN (treated as
+// enabled) if settings registration itself never completes, rather than
+// silently bricking every feature with no way to turn it back on.
 let controllerEnabledSetting = null;
 export function isControllerSupportEnabled() {
   if (!controllerEnabledSetting || typeof controllerEnabledSetting.value !== 'function') return true;
@@ -679,7 +672,7 @@ function startControllerKeybindObserver(idPrefix) {
   }, 15000);
 }
 
-// Registers the whole "Keybinds - Controller" category. Called once from
+// Registers the "Controller Support" settings tab. Called once from
 // index.js's initController(plugin, controllerEnabledSetting), directly
 // (not deferred) - unlike the standalone prototype, `plugin` here is
 // already guaranteed ready by bootstrap.js's contract by the time
@@ -698,22 +691,15 @@ export function registerControllerSettings(plugin, controllerEnabledSettingIn) {
   // category gets registered below depends on it.
   controllerEnabledSetting = controllerEnabledSettingIn;
 
-  // Mirrors packages/uc-tv/settings.js's own "only register Filter
-  // Settings while UC TV itself is enabled" pattern exactly: read the
-  // master toggle once, right here at registration time, and skip
-  // registering every remaining row in this category entirely while it's
-  // off (default off) rather than showing an entire settings category
-  // for a feature a new user hasn't turned on yet. Like UC TV's version,
-  // this only skips *registering* - stored bindings/presets aren't
-  // touched, so turning Controller Support back on and reloading brings
-  // everything back exactly as it was left.
-  if (!controllerEnabledSetting || typeof controllerEnabledSetting.value !== 'function' || !controllerEnabledSetting.value()) {
-    console.log('[Wizascript Controller] Enable Controller Support is off - "Keybinds - Controller" category not registered this load. Turn it on under Miscellaneous, then reload, to configure it.');
-    return;
-  }
-
-  const CATEGORY = 'Keybinds - Controller';
-  const settings = createFeatureSettings(plugin, 'controller', CATEGORY);
+  // 1.5.0: always registered, on its own "Controller Support" tab, and
+  // hidden unless the Controller Support plugin is enabled. Rows for a
+  // specific feature (UC TV, Notepad, Patch Maker, Card Tracker) are
+  // additionally hidden unless that feature's plugin is enabled.
+  const settings = createFeatureSettings(plugin, 'controller', {
+    tab: 'Controller Support',
+    visible: () => isPluginEnabled('controller')
+  });
+  const hiddenUnless = (pluginId) => () => (pluginId ? !isPluginEnabled(pluginId) : false);
 
   // "Detect Controller" - deliberately the very first row in the whole
   // category, above even the preset selector, since checking whether a
@@ -784,7 +770,8 @@ export function registerControllerSettings(plugin, controllerEnabledSettingIn) {
       seenLabels.add(action.packageLabel);
       settings.add('__divider_' + action.packageLabel.replace(/\s+/g, '_'), {
         name: '— <b>' + action.packageLabel + '</b> —',
-        type: 'text', default: ''
+        type: 'text', default: '',
+        hidden: hiddenUnless(pluginIdForLabel(action.packageLabel))
       });
       // "Channel Guide (hold)" moved here, at the very top of the UC TV
       // section, right under its own divider - it's a UC TV keybind
@@ -798,7 +785,8 @@ export function registerControllerSettings(plugin, controllerEnabledSettingIn) {
         settings.add('channelGuide', {
           name: 'Channel Guide (hold)',
           type: 'text',
-          default: buttonToDisplay(null)
+          default: buttonToDisplay(null),
+          hidden: hiddenUnless('ucTv')
         });
       }
     }
@@ -813,7 +801,8 @@ export function registerControllerSettings(plugin, controllerEnabledSettingIn) {
     settings.add(action.key, {
       name: action.name + ' - Primary + <btn>',
       type: 'text',
-      default: buttonToDisplay(action.defaultButton)
+      default: buttonToDisplay(action.defaultButton),
+      hidden: hiddenUnless(pluginIdForLabel(action.packageLabel))
     });
   });
 
@@ -828,11 +817,11 @@ export function registerControllerSettings(plugin, controllerEnabledSettingIn) {
     settings.add('shortcut_' + action.key, {
       name: action.name,
       type: 'text',
-      default: buttonToDisplay(HARDWARE_SHORTCUT_DEFAULTS[action.key])
+      default: buttonToDisplay(HARDWARE_SHORTCUT_DEFAULTS[action.key]),
+      hidden: hiddenUnless(action.pluginId)
     });
   });
 
-  console.log('[Wizascript Controller] controller keybind settings registered under "Keybinds - Controller".');
   // Real DOM id shape, matching every other Wizascript settings input
   // (confirmed directly from packages/core/keybinds.js's own ID_PREFIX):
   // underscript.plugin.Wizascript.<featureName>.<key> - "Wizascript" is

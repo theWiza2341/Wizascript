@@ -1,4 +1,5 @@
 import { createFeatureSettings } from "../core/settings.js";
+import { getPluginToggle, isPluginEnabled } from "../core/plugins.js";
 
 // Fixes a real bug from the original standalone script: it called
 // `thSettings.get?.("autoOpenTrueHub")`, but UnderScript's settings API
@@ -9,18 +10,15 @@ import { createFeatureSettings } from "../core/settings.js";
 // capturing the real setting object and reading `.value()` from it,
 // same pattern as patch-maker/settings.js.
 export function registerTrueHubBridgeSettings(plugin) {
-  const settings = createFeatureSettings(plugin, "truehubbridge", "True Hub Bridge");
+  const settings = createFeatureSettings(plugin, "truehubbridge", {
+    tab: "True Hub Bridge",
+    visible: () => isPluginEnabled("trueHub")
+  });
 
   return {
     settings,
-    // Master toggle - lets the whole feature be turned off from within
-    // Wizascript's settings, per the "one plugin, categories as boxes"
-    // model the rest of the suite follows.
-    enabled: settings.add("enabled", {
-      name: "Enable True Hub Bridge",
-      type: "boolean",
-      default: true
-    }),
+    // The on/off switch itself now lives in the Plugins list (core/plugins.js).
+    enabled: getPluginToggle("trueHub"),
     // The original script had no debug-logging toggle at all (just
     // always-on console.log calls) - added here for consistency with
     // patch-maker, using the same working per-feature debug logger.

@@ -1,13 +1,16 @@
 import { createFeatureSettings } from "../core/settings.js";
+import { getPluginToggle, isPluginEnabled } from "../core/plugins.js";
 
 export function registerDeckTrackerSettings(plugin) {
-  const settings = createFeatureSettings(plugin, "decktracker", "Deck Tracker");
-
-  const enabled = settings.add("enabled", {
-    name: "Enable Deck Tracker",
-    type: "boolean",
-    default: true
+  // Shown to players as "Card Tracker" since 1.5.0. Internal names and
+  // storage keys stay "decktracker" so nobody loses saved trackers.
+  const settings = createFeatureSettings(plugin, "decktracker", {
+    tab: "Card Tracker",
+    visible: () => isPluginEnabled("cardTracker")
   });
+
+  // The on/off switch itself now lives in the Plugins list (core/plugins.js).
+  const enabled = getPluginToggle("cardTracker");
 
   const debugLogging = settings.add("debugLogging", {
     name: "Enable debug logging",

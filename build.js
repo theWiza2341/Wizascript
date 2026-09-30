@@ -1,11 +1,13 @@
 const esbuild = require("esbuild");
 const fs = require("fs");
 const path = require("path");
+const pkg = require("./package.json");
 
+// Version comes from package.json - the only place a release needs editing.
 const HEADER = `// ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.4.1
+// @version      ${pkg.version}
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -16,6 +18,7 @@ const HEADER = `// ==UserScript==
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_deleteValue
+// @grant        GM_listValues
 // @grant        GM_xmlhttpRequest
 // @connect      raw.githubusercontent.com
 // ==/UserScript==
@@ -29,7 +32,10 @@ async function build() {
     format: "iife",
     target: "es2019",
     write: false,
-    logLevel: "info"
+    logLevel: "info",
+    // CHANGELOG.md is imported as a plain string (packages/core/about.js).
+    loader: { ".md": "text" },
+    define: { __WIZASCRIPT_VERSION__: JSON.stringify(pkg.version) }
   });
 
   const bundled = result.outputFiles[0].text;

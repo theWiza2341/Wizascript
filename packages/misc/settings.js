@@ -1,38 +1,36 @@
 // packages/misc/settings.js
+//
+// 1.5.0: Notepad, Card Tags and Controller Support are regular plugins
+// now - their on/off switches live in the Plugins list (core/plugins.js,
+// same storage keys as the old "Miscellaneous" toggles). The only
+// setting left here is Notepad's own "Show Notepad", on the Notepad tab.
 
 import { createFeatureSettings } from "../core/settings.js";
+import { getPluginToggle, isPluginEnabled } from "../core/plugins.js";
 
-export function registerMiscSettings(plugin) {
-  const settings = createFeatureSettings(plugin, "misc", "Miscellaneous");
-  const enableNotepad = settings.add("enableNotepad", {
-    name: "Enable Notepad Overlay Option",
-    type: "boolean",
-    default: false
+export function registerMiscSettings(plugin, { onNotepadVisibilityChange } = {}) {
+  const notepadSettings = createFeatureSettings(plugin, "misc", {
+    tab: "Notepad",
+    visible: () => isPluginEnabled("notepad")
   });
 
-  // Moved here from its own "Keybinds - Controller" category - off by
-  // default, and packages/controller/settings.js now reads THIS exact
-  // setting object (handed through manifest.js -> initController) to
-  // decide, once at registration time, whether to register the rest of
-  // "Keybinds - Controller" at all. Mirrors packages/uc-tv/settings.js's
-  // own pattern for its "Filter Settings" category: a brand new player
-  // who hasn't turned Controller Support on yet no longer sees an entire
-  // category of gamepad keybind rows they can't use yet.
-  const enableController = settings.add("enableController", {
-    name: "Enable Controller Support",
+  // Whether the notepad window is currently shown, separate from the
+  // plugin itself being enabled - so the Toggle Notepad shortcut can
+  // hide the window without the plugin (and its shortcuts) switching
+  // off. Defaults to shown, so enabling the plugin shows the notepad
+  // straight away, and anyone who had the old "Enable Notepad Overlay
+  // Option" on still sees it after updating.
+  const notepadVisible = notepadSettings.add("notepadVisible", {
+    name: "Show Notepad",
     type: "boolean",
-    default: false
+    default: true,
+    onChange: () => onNotepadVisibilityChange && onNotepadVisibilityChange()
   });
 
-  // Off by default like every other Miscellaneous toggle here. When off,
-  // packages/misc/card-tags/index.js returns before doing any real work
-  // at all (no right-click listener, no search-filter registration, no
-  // MutationObserver) - not just hidden, genuinely inert.
-  const enableCardTags = settings.add("enableCardTags", {
-    name: "Enable Card Tags",
-    type: "boolean",
-    default: false
-  });
-
-  return { settings, enableNotepad, enableController, enableCardTags };
+  return {
+    enableNotepad: getPluginToggle("notepad"),
+    enableController: getPluginToggle("controller"),
+    enableCardTags: getPluginToggle("cardTags"),
+    notepadVisible
+  };
 }

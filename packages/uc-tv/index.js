@@ -32,8 +32,8 @@ function isSpectatePage() {
 export function initUcTv(plugin) {
   const settings = registerUcTvSettings(plugin, DIVISION_TIERS);
   setSettingsRef(settings);
-  console.log('[UC TV] Settings registered.');
-  dumpSettingsState();
+  // Previously logged unconditionally on every page load.
+  if (CONFIG.debugLogs) dumpSettingsState();
 
   // Debug console commands - available from anywhere, same as the
   // settings themselves, not just while actively spectating.

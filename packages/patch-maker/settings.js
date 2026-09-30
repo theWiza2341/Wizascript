@@ -1,11 +1,16 @@
 import { createFeatureSettings } from "../core/settings.js";
+import { getPluginToggle, isPluginEnabled } from "../core/plugins.js";
 
 export function registerPatchMakerSettings(plugin) {
-  const settings = createFeatureSettings(plugin, "patchmaker", "Patch Maker");
+  const settings = createFeatureSettings(plugin, "patchmaker", {
+    tab: "Patch Maker",
+    visible: () => isPluginEnabled("patchMaker")
+  });
 
   return {
     settings,
-    enabled: settings.add("enabled", { name: "Enable Patch Maker", type: "boolean", default: true }),
+    // The on/off switch itself now lives in the Plugins list (core/plugins.js).
+    enabled: getPluginToggle("patchMaker"),
     debugLogging: settings.add("debugLogging", { name: "Enable debug logging", type: "boolean", default: false }),
     hideControls: settings.add("hideControls", { name: "Hide Patch Maker controls", type: "boolean", default: false }),
     cardHovers: settings.add("enableCardHovers", { name: "Enable card hovers", type: "boolean", default: true }),

@@ -6,12 +6,16 @@ import { initCardTags } from "./card-tags/index.js";
 import { registerKeybind } from "../core/keybinds.js";
 
 export function initMisc(plugin) {
-  const settings = registerMiscSettings(plugin);
+  const settings = registerMiscSettings(plugin, {
+    onNotepadVisibilityChange: () => syncNotepadVisibility()
+  });
 
   initCardTags(plugin, settings.enableCardTags);
 
+  // Shown only while the Notepad plugin is enabled AND "Show Notepad"
+  // is on.
   function syncNotepadVisibility() {
-    if (settings.enableNotepad.value()) {
+    if (settings.enableNotepad.value() && settings.notepadVisible.value()) {
       showNotepad();
     } else {
       hideNotepad();
@@ -23,19 +27,17 @@ export function initMisc(plugin) {
     syncNotepadVisibility();
   });
 
-  // Toggles the underlying "Enable Notepad Overlay" setting itself
-  // (not just showNotepad()/hideNotepad() directly) so a keybind-driven
-  // toggle stays in sync across reloads - otherwise a keybind-opened
-  // notepad would silently vanish again on the next page load, since
-  // the persisted setting never actually changed.
+  // Toggles the persisted "Show Notepad" setting (not just
+  // showNotepad()/hideNotepad() directly) so a keybind-driven toggle
+  // sticks across reloads. It deliberately does NOT touch the Notepad
+  // plugin toggle itself - that would also hide this very shortcut.
   registerKeybind(plugin, {
     key: "toggleNotepad",
     name: "Toggle Notepad",
     defaultCode: "KeyO",
     packageLabel: "Notepad",
     onMatch: () => {
-      const next = !settings.enableNotepad.value();
-      settings.enableNotepad.set(next);
+      settings.notepadVisible.set(!settings.notepadVisible.value());
       syncNotepadVisibility();
     }
   });
@@ -49,9 +51,7 @@ export function initMisc(plugin) {
     packageLabel: "Notepad",
     onMatch: () => {
       forceResetNotepad();
-      if (settings.enableNotepad.value()) {
-        showNotepad();
-      }
+      syncNotepadVisibility();
     }
   });
 
@@ -73,9 +73,7 @@ export function initMisc(plugin) {
     onMatch: () => redoNotepad()
   });
 
-  // Handed back so manifest.js can pass settings.enableController straight
-  // through to initController(plugin, controllerEnabledSetting) - initMisc
-  // runs before initController, so this is already registered under
-  // "Miscellaneous" by the time the controller package reads it.
+  // Handed back so manifest.js can pass settings.enableController (the
+  // Controller Support plugin toggle) through to initController().
   return settings;
 }

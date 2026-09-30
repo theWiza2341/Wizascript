@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.4.1
+// @version      1.5.0
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -12,6 +12,7 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_deleteValue
+// @grant        GM_listValues
 // @grant        GM_xmlhttpRequest
 // @connect      raw.githubusercontent.com
 // ==/UserScript==
@@ -22,9 +23,11 @@
     return typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
   }
 
+  // packages/core/version.js
+  var SUITE_VERSION = "1.5.0";
+
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
-  var SUITE_VERSION = "1.4.1";
   var DOWNLOAD_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js";
   var RETRY_MS = 250;
   var WARN_AFTER_ATTEMPTS = 40;
@@ -60,14 +63,18 @@
   }
 
   // packages/core/settings.js
-  function createFeatureSettings(plugin, featureName, categoryLabel) {
-    const settingsApi = plugin.settings();
+  function resolve(v) {
+    return typeof v === "function" ? v() : v;
+  }
+  function createFeatureSettings(plugin, featureName, { tab, visible } = {}) {
+    const settingsApi = tab ? plugin.settings().page(tab) : plugin.settings();
     const registered = {};
     function add(key, config) {
+      const { category, page, hidden, ...rest } = config;
       const setting = settingsApi.add({
-        ...config,
+        ...rest,
         key: `${featureName}.${key}`,
-        category: config.category || categoryLabel
+        hidden: () => (visible ? !visible() : false) || resolve(hidden) === true
       });
       registered[key] = setting;
       return setting;
@@ -78,8 +85,126 @@
     return { add, value };
   }
 
+  // packages/core/plugins.js
+  var PLUGINS = [
+    {
+      id: "patchMaker",
+      name: "Patch Maker",
+      key: "patchmaker.enabled",
+      note: "Write your own patch notes on the Patch Notes page.",
+      usesKeybinds: true,
+      legacyDefaultOn: true
+    },
+    {
+      id: "trueHub",
+      name: "True Hub Bridge",
+      key: "truehubbridge.enabled",
+      note: "Browse a larger library of community decks on the Hub page.",
+      legacyDefaultOn: true
+    },
+    {
+      id: "cardTracker",
+      name: "Card Tracker",
+      key: "decktracker.enabled",
+      note: "Add click-to-count card counters to your screen during matches.",
+      legacyDefaultOn: true
+    },
+    {
+      id: "ucTv",
+      name: "UC TV",
+      key: "ucTv.enabled",
+      note: "Channel-surf other players' live matches while spectating.",
+      usesKeybinds: true,
+      legacyDefaultOn: true
+    },
+    {
+      id: "notepad",
+      name: "Notepad",
+      key: "misc.enableNotepad",
+      note: "A small drawing notepad you can keep on screen anywhere.",
+      usesKeybinds: true
+    },
+    {
+      id: "cardTags",
+      name: "Card Tags",
+      key: "misc.enableCardTags",
+      note: "Right-click cards in Crafting/Decks to tag and search them."
+    },
+    {
+      id: "controller",
+      name: "Controller Support",
+      key: "misc.enableController",
+      note: "Play and navigate Undercards with a gamepad."
+    }
+  ];
+  var LS_PREFIX = "underscript.plugin.Wizascript.";
+  var MIGRATION_FLAG = "wizascript.migration.v150";
+  var toggles = {};
+  function registerPluginToggles(plugin) {
+    const settingsApi = plugin.settings();
+    PLUGINS.forEach((p) => {
+      toggles[p.id] = settingsApi.add({
+        key: p.key,
+        name: p.name,
+        note: p.note,
+        type: "boolean",
+        default: false,
+        // Appends UnderScript's own "requires a page refresh" note.
+        refresh: true,
+        category: "Plugins"
+      });
+    });
+  }
+  function getPluginToggle(id) {
+    return toggles[id];
+  }
+  function isPluginEnabled(id) {
+    const toggle = toggles[id];
+    if (toggle) return !!toggle.value();
+    const p = PLUGINS.find((x) => x.id === id);
+    if (!p) return false;
+    const raw = localStorage.getItem(LS_PREFIX + p.key);
+    return raw === "1" || raw === "true";
+  }
+  function anyKeybindPluginEnabled() {
+    return PLUGINS.some((p) => p.usesKeybinds && isPluginEnabled(p.id));
+  }
+  var LABEL_TO_PLUGIN = {
+    "Patch Maker": "patchMaker",
+    "UC TV": "ucTv",
+    "Notepad": "notepad",
+    "Card Tracker": "cardTracker"
+  };
+  function pluginIdForLabel(label) {
+    return LABEL_TO_PLUGIN[label] || null;
+  }
+  function runMigrations() {
+    if (GM_getValue(MIGRATION_FLAG, false)) return "done";
+    let existing = false;
+    try {
+      existing = Object.keys(localStorage).some((k) => k.startsWith(LS_PREFIX));
+    } catch (e) {
+    }
+    if (!existing && typeof GM_listValues === "function") {
+      try {
+        existing = GM_listValues().some((k) => k.startsWith("wizascript.") && k !== MIGRATION_FLAG);
+      } catch (e) {
+      }
+    }
+    if (existing) {
+      PLUGINS.forEach((p) => {
+        if (!p.legacyDefaultOn) return;
+        if (localStorage.getItem(LS_PREFIX + p.key) === null) {
+          localStorage.setItem(LS_PREFIX + p.key, "1");
+        }
+      });
+    }
+    GM_setValue(MIGRATION_FLAG, true);
+    return existing ? "upgrade" : "fresh";
+  }
+
   // packages/core/keybinds.js
-  var CATEGORY = "Keybinds";
+  var TAB = "Keybinds";
   var HOLD_DELAY_MS = 250;
   var NATIVE_MODIFIERS = /* @__PURE__ */ new Set(["Control", "Shift", "Alt"]);
   var DEFAULT_PRIMARY_CODE = "Control";
@@ -126,6 +251,9 @@
   var dividerKeys = /* @__PURE__ */ new Set();
   var seenPackageLabels = /* @__PURE__ */ new Set();
   var observerStarted = false;
+  function isBindingActive(b) {
+    return !b.pluginId || isPluginEnabled(b.pluginId);
+  }
   function isTypingContext() {
     const el = document.activeElement;
     if (!el) return false;
@@ -185,7 +313,7 @@
   function startObserver() {
     if (observerStarted) return;
     observerStarted = true;
-    const observer = new MutationObserver(() => {
+    const observer2 = new MutationObserver(() => {
       if (!bindingDefaults.size && !dividerKeys.size) return;
       document.querySelectorAll(`input[id^="${ID_PREFIX}"]:not([data-wizascript-keybind-enhanced])`).forEach((el) => {
         const bindingKey = el.id.slice(ID_PREFIX.length);
@@ -197,7 +325,7 @@
         enhanceInput(el, bindingKey, bindingDefaults.get(bindingKey));
       });
     });
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer2.observe(document.body, { childList: true, subtree: true });
   }
   function matchesCode(e, code, defaultCode) {
     if (code === defaultCode && NATIVE_MODIFIERS.has(defaultCode)) {
@@ -233,12 +361,14 @@
           tapCount = 0;
           registry.forEach((b) => {
             if (b.scope !== "global" || !b.onPrimaryDoubleTap) return;
+            if (!isBindingActive(b)) return;
             if (b.guardTypingContext && isTypingContext()) return;
             b.onPrimaryDoubleTap(e);
           });
         }
         registry.forEach((b) => {
           if (!b.onPrimaryPress) return;
+          if (!isBindingActive(b)) return;
           if (b.guardTypingContext && isTypingContext()) return;
           b.onPrimaryPress(e);
         });
@@ -247,6 +377,7 @@
           if (comboFired) return;
           registry.forEach((b) => {
             if (b.scope !== "global" || !b.onPrimaryAlone) return;
+            if (!isBindingActive(b)) return;
             if (b.guardTypingContext && isTypingContext()) return;
             b.onPrimaryAlone(e);
           });
@@ -257,6 +388,7 @@
       clearTimeout(holdTimer);
       for (const b of registry) {
         if (!b.onMatch) continue;
+        if (!isBindingActive(b)) continue;
         if (!matchesSetting(e, b)) continue;
         if (b.guardTypingContext && isTypingContext()) continue;
         if (b.scope === "scoped") {
@@ -276,6 +408,7 @@
         clearTimeout(holdTimer);
         registry.forEach((b) => {
           if (b.scope !== "global" || !b.onPrimaryRelease) return;
+          if (!isBindingActive(b)) return;
           if (b.guardTypingContext && isTypingContext()) return;
           b.onPrimaryRelease(e);
         });
@@ -283,42 +416,50 @@
     });
   }
   var primaryKeySetting = null;
+  var generalHidden = () => !anyKeybindPluginEnabled();
+  function initKeybinds(plugin) {
+    ensureCore(plugin);
+  }
   function ensureCore(plugin) {
     if (settings) return;
-    settings = createFeatureSettings(plugin, "keybinds", CATEGORY);
+    settings = createFeatureSettings(plugin, "keybinds", { tab: TAB });
     startObserver();
     bindGlobalListeners();
     primaryKeySetting = settings.add(PRIMARY_KEY, {
       name: "Primary Key",
       note: "Click to remap. Hold for combos below, or tap alone.",
       type: "text",
-      default: DEFAULT_PRIMARY_CODE
+      default: DEFAULT_PRIMARY_CODE,
+      hidden: generalHidden
     });
     bindingDefaults.set(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
     const generalDividerKey = "__divider_General";
     settings.add(generalDividerKey, {
       name: "\u2014 General \u2014",
       type: "text",
-      default: ""
+      default: "",
+      hidden: generalHidden
     });
     dividerKeys.add(generalDividerKey);
     const openSettingsInfoKey = "__info_openSettings";
     settings.add(openSettingsInfoKey, {
       name: "Double Tap Primary \u2192 Open Wizascript Settings",
       type: "text",
-      default: ""
+      default: "",
+      hidden: generalHidden
     });
     dividerKeys.add(openSettingsInfoKey);
     registry.push({
       key: "openWizascriptSettings",
       scope: "global",
       guardTypingContext: true,
+      // Opens the main Wizascript tab (the Plugins list), rather than
+      // Primary Key's own row. Active while any keybind plugin is on, or
+      // while Controller Support is on (its controller Primary relays a
+      // real Primary double-tap).
       onPrimaryDoubleTap: () => {
-        if (primaryKeySetting && typeof primaryKeySetting.show === "function") {
-          primaryKeySetting.show();
-        } else {
-          console.warn("[Wizascript] Could not open the settings panel - .show() is unavailable on this setting.");
-        }
+        if (!anyKeybindPluginEnabled() && !isPluginEnabled("controller")) return;
+        plugin.settings().open();
       }
     });
   }
@@ -360,13 +501,16 @@
       onPrimaryDoubleTap
     } = config;
     ensureCore(plugin);
+    const pluginId = pluginIdForLabel(packageLabel);
+    const pluginHidden = () => pluginId ? !isPluginEnabled(pluginId) : false;
     if (packageLabel && !seenPackageLabels.has(packageLabel)) {
       seenPackageLabels.add(packageLabel);
       const dividerKey = `__divider_${packageLabel.replace(/\s+/g, "_")}`;
       settings.add(dividerKey, {
         name: `\u2014 ${packageLabel} \u2014`,
         type: "text",
-        default: ""
+        default: "",
+        hidden: pluginHidden
       });
       dividerKeys.add(dividerKey);
     }
@@ -374,11 +518,12 @@
       settings.add(key, {
         name: `${name} - Primary + <key>`,
         type: "text",
-        default: defaultCode
+        default: defaultCode,
+        hidden: pluginHidden
       });
       bindingDefaults.set(key, defaultCode);
     }
-    registry.push({ key, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease, onPrimaryDoubleTap });
+    registry.push({ key, pluginId, defaultCode, scope, selector, guardTypingContext, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease, onPrimaryDoubleTap });
   }
   function getPrimaryKeyDisplay() {
     return codeToDisplay(getPrimaryCode());
@@ -387,15 +532,195 @@
     const primaryCode = getPrimaryCode();
     if (matchesCode(e, primaryCode, DEFAULT_PRIMARY_CODE)) return true;
     if (!primaryHeld) return false;
-    return registry.some((b) => b.onMatch && matchesSetting(e, b));
+    return registry.some((b) => b.onMatch && isBindingActive(b) && matchesSetting(e, b));
+  }
+
+  // CHANGELOG.md
+  var CHANGELOG_default = `# Changelog
+
+All notable changes to Wizascript are recorded here, newest first. The
+Changelog button in Wizascript's settings shows this file.
+
+## 1.5.0
+
+Wizascript is now listed in UnderScript's plugin directory, so this update
+is all about making it easy to understand without a readme.
+
+### Settings overhaul
+- New **Plugins** list on the main Wizascript settings tab. Every feature
+  now has its own on/off switch, with a short description when you hover it.
+- Each enabled plugin gets its **own settings tab**. Plugins you haven't
+  turned on don't show any settings at all.
+- **Keybinds** only appear once you enable a plugin that uses them, and only
+  list the shortcuts for plugins you actually have on.
+- **Controller Support** has its own tab for controller bindings, which
+  likewise only lists actions for plugins you have on.
+- The old "Miscellaneous" section is gone: Notepad, Card Tags and Controller
+  Support are now regular plugins in the list.
+- New **Changelog** button (you're reading it), and a one-time popup after
+  each update.
+
+### Changes
+- **Deck Tracker is now called Card Tracker**, to better describe what it
+  does. Your trackers, presets and settings carry over.
+- New installs start with every plugin switched off. If you were already
+  using Wizascript, the plugins you had on stay on.
+- Notepad has a new "Show Notepad" setting. The Toggle Notepad shortcut now
+  shows/hides the notepad without switching the plugin itself off.
+- UC TV's filter settings are disabled (greyed out) while match filtering
+  is turned off.
+- UC TV no longer prints its settings to the browser console on every page
+  load unless debug logging is on.
+
+## 1.4.1 and earlier
+
+Wizascript combined several separate plugins into one download: Patch
+Maker, True Hub Bridge, Deck Tracker, UC TV, Notepad, Card Tags, remappable
+keybinds, and controller support. Detailed notes weren't kept before 1.5.0.
+`;
+
+  // packages/core/setting-widgets.js
+  var ID_PREFIX2 = "underscript.plugin.Wizascript.";
+  var ENHANCED_ATTR = "data-wizascript-widget";
+  var enhancers = /* @__PURE__ */ new Map();
+  var observer = null;
+  function scan() {
+    enhancers.forEach((enhance, key) => {
+      const el = document.getElementById(ID_PREFIX2 + key);
+      if (!el || el.hasAttribute(ENHANCED_ATTR)) return;
+      el.setAttribute(ENHANCED_ATTR, "true");
+      enhance(el);
+    });
+  }
+  function ensureObserver() {
+    if (observer || !document.body) return;
+    observer = new MutationObserver(scan);
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+  function registerSettingWidget(fullKey, enhance) {
+    enhancers.set(fullKey, enhance);
+    if (document.body) ensureObserver();
+    else document.addEventListener("DOMContentLoaded", ensureObserver, { once: true });
+  }
+  function asButton(label, onClick) {
+    return (el) => {
+      el.readOnly = true;
+      el.value = typeof label === "function" ? label() : label;
+      Object.assign(el.style, {
+        cursor: "pointer",
+        backgroundColor: "black",
+        color: "white",
+        border: "1px solid #b4b4b4",
+        borderRadius: "3px",
+        textAlign: "center"
+      });
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        onClick(el);
+      });
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick(el);
+        }
+      });
+    };
+  }
+  function asInfo(text) {
+    return (el) => {
+      el.readOnly = true;
+      el.tabIndex = -1;
+      el.value = typeof text === "function" ? text() : text;
+      Object.assign(el.style, {
+        backgroundColor: "transparent",
+        border: "none",
+        color: "#ccc",
+        cursor: "default",
+        pointerEvents: "none"
+      });
+    };
+  }
+
+  // packages/core/about.js
+  var LAST_SEEN_KEY = "wizascript.lastSeenVersion";
+  var CATEGORY = "Wizascript";
+  function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function markdownToHtml(md) {
+    const lib = getPageWindow().underscript && getPageWindow().underscript.lib;
+    if (lib && lib.showdown && lib.showdown.Converter) {
+      return new lib.showdown.Converter({ noHeaderId: true, strikethrough: true }).makeHtml(md);
+    }
+    return `<pre style="white-space:pre-wrap">${escapeHtml(md)}</pre>`;
+  }
+  function openChangelog() {
+    const BootstrapDialog2 = getPageWindow().BootstrapDialog;
+    const html = markdownToHtml(CHANGELOG_default);
+    if (!BootstrapDialog2 || typeof BootstrapDialog2.show !== "function") {
+      console.warn("[Wizascript] BootstrapDialog unavailable - cannot show the changelog here.");
+      return;
+    }
+    BootstrapDialog2.show({
+      title: "Wizascript Changelog",
+      message: `<div class="wizascript-changelog">${html}</div>`,
+      cssClass: "mono",
+      buttons: [{ label: "Close", cssClass: "btn-primary", action: (d) => d.close() }]
+    });
+  }
+  function registerAboutSection(plugin) {
+    const settingsApi = plugin.settings();
+    settingsApi.add({
+      key: "about.version",
+      name: "Version",
+      type: "text",
+      default: SUITE_VERSION,
+      category: CATEGORY
+    });
+    registerSettingWidget("about.version", asInfo(SUITE_VERSION));
+    settingsApi.add({
+      key: "about.changelog",
+      name: "Changelog",
+      note: "See what's changed in each Wizascript update.",
+      type: "text",
+      default: "View",
+      category: CATEGORY
+    });
+    registerSettingWidget("about.changelog", asButton("View", () => openChangelog()));
+  }
+  function showWhatsNew(plugin, installState) {
+    const lastSeen = GM_getValue(LAST_SEEN_KEY, null);
+    if (lastSeen === SUITE_VERSION) return;
+    const markSeen = () => GM_setValue(LAST_SEEN_KEY, SUITE_VERSION);
+    const isFresh = installState === "fresh";
+    const toast = isFresh ? {
+      title: "Welcome to Wizascript!",
+      text: "Wizascript's features start switched off. Turn on the ones you want in the Plugins list.",
+      buttons: [{ text: "Open Wizascript settings", className: "dismiss", onclick: () => plugin.settings().open() }]
+    } : {
+      title: `Wizascript updated to v${SUITE_VERSION}`,
+      text: "See what's new in this version.",
+      buttons: [{ text: "View changelog", className: "dismiss", onclick: () => openChangelog() }]
+    };
+    plugin.toast({
+      ...toast,
+      className: "dismissable",
+      onClose: () => {
+        markSeen();
+      }
+    });
   }
 
   // packages/patch-maker/settings.js
   function registerPatchMakerSettings(plugin) {
-    const settings2 = createFeatureSettings(plugin, "patchmaker", "Patch Maker");
+    const settings2 = createFeatureSettings(plugin, "patchmaker", {
+      tab: "Patch Maker",
+      visible: () => isPluginEnabled("patchMaker")
+    });
     return {
       settings: settings2,
-      enabled: settings2.add("enabled", { name: "Enable Patch Maker", type: "boolean", default: true }),
+      // The on/off switch itself now lives in the Plugins list (core/plugins.js).
+      enabled: getPluginToggle("patchMaker"),
       debugLogging: settings2.add("debugLogging", { name: "Enable debug logging", type: "boolean", default: false }),
       hideControls: settings2.add("hideControls", { name: "Hide Patch Maker controls", type: "boolean", default: false }),
       cardHovers: settings2.add("enableCardHovers", { name: "Enable card hovers", type: "boolean", default: true }),
@@ -415,17 +740,17 @@
   var TARGET_H = 246;
   var FIELDMARKER_WATERMARK_CROP_PX = 14;
   function readFileAsDataURL(file) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve2, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
+      reader.onload = () => resolve2(reader.result);
       reader.onerror = () => reject(reader.error);
       reader.readAsDataURL(file);
     });
   }
   function loadImageFromDataURL(dataUrl) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve2, reject) => {
       const img = new Image();
-      img.onload = () => resolve(img);
+      img.onload = () => resolve2(img);
       img.onerror = reject;
       img.src = dataUrl;
     });
@@ -663,7 +988,7 @@
   function escapeRegExp(str) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
-  function escapeHtml(str) {
+  function escapeHtml2(str) {
     return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
   }
   function sanitizeText(str) {
@@ -704,7 +1029,7 @@
     const cardColor = wordColors.PATIENCE || "#41fcff";
     return seg.replace(CARD_REF_REGEX, (match, inner) => {
       const cleaned = inner.replace(new RegExp(UL_OPEN, "g"), "").replace(new RegExp(UL_CLOSE, "g"), "").replace(/<[^>]*>/g, "").trim();
-      return `<span class="uc-card-ref" style="color:${cardColor};">${escapeHtml(cleaned)}</span>`;
+      return `<span class="uc-card-ref" style="color:${cardColor};">${escapeHtml2(cleaned)}</span>`;
     });
   }
   function applyStatFormatting(seg, wordColors) {
@@ -729,10 +1054,10 @@
     return parts.map((part) => {
       let seg = part.text;
       if (part.manual) {
-        return `<span style="text-decoration:underline;">${escapeHtml(seg.trim())}</span>`;
+        return `<span style="text-decoration:underline;">${escapeHtml2(seg.trim())}</span>`;
       }
       seg = insertUnderlineMarkers(seg, underlineTokens);
-      seg = escapeHtml(seg);
+      seg = escapeHtml2(seg);
       seg = applyColorWords(seg, wordColors);
       seg = applyCardFormatting(seg, wordColors);
       seg = applyStatFormatting(seg, wordColors);
@@ -770,7 +1095,7 @@
       switchIndex++;
       return `<span style="background-color:${bgColor};">${innerHtml}</span>`;
     });
-    formatted = formatted.replace(/UCSK(\d+)Z/g, (m, idx) => escapeHtml(skipData.skipped[Number(idx)] || ""));
+    formatted = formatted.replace(/UCSK(\d+)Z/g, (m, idx) => escapeHtml2(skipData.skipped[Number(idx)] || ""));
     return formatted;
   }
 
@@ -1210,13 +1535,13 @@ html, body { overflow-x: hidden !important; }
     if (!i18n) return;
     const version = getTranslateVersion();
     const path = `/translation/${lang}.json${version ? "?v=" + version : ""}`;
-    await new Promise((resolve, reject) => {
+    await new Promise((resolve2, reject) => {
       const deferred = i18n().load({ [lang]: path });
       if (deferred && typeof deferred.done === "function") {
-        deferred.done(resolve);
+        deferred.done(resolve2);
         if (typeof deferred.fail === "function") deferred.fail(reject);
       } else {
-        resolve();
+        resolve2();
       }
     });
     loadedLanguages.add(lang);
@@ -2265,17 +2590,14 @@ Version: v${version}`;
 
   // packages/true-hub-bridge/settings.js
   function registerTrueHubBridgeSettings(plugin) {
-    const settings2 = createFeatureSettings(plugin, "truehubbridge", "True Hub Bridge");
+    const settings2 = createFeatureSettings(plugin, "truehubbridge", {
+      tab: "True Hub Bridge",
+      visible: () => isPluginEnabled("trueHub")
+    });
     return {
       settings: settings2,
-      // Master toggle - lets the whole feature be turned off from within
-      // Wizascript's settings, per the "one plugin, categories as boxes"
-      // model the rest of the suite follows.
-      enabled: settings2.add("enabled", {
-        name: "Enable True Hub Bridge",
-        type: "boolean",
-        default: true
-      }),
+      // The on/off switch itself now lives in the Plugins list (core/plugins.js).
+      enabled: getPluginToggle("trueHub"),
       // The original script had no debug-logging toggle at all (just
       // always-on console.log calls) - added here for consistency with
       // patch-maker, using the same working per-feature debug logger.
@@ -3336,7 +3658,7 @@ Version: v${version}`;
   // packages/true-hub-bridge/decks-api.js
   var DECKS_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/bot/decks.json";
   function loadDecks() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve2, reject) => {
       GM_xmlhttpRequest({
         method: "GET",
         url: DECKS_URL,
@@ -3349,7 +3671,7 @@ Version: v${version}`;
           }
           try {
             const raw = JSON.parse(res.responseText);
-            resolve(Array.isArray(raw) ? raw : raw.decks || []);
+            resolve2(Array.isArray(raw) ? raw : raw.decks || []);
           } catch (e) {
             reject(e);
           }
@@ -3391,12 +3713,11 @@ Version: v${version}`;
 
   // packages/deck-tracker/settings.js
   function registerDeckTrackerSettings(plugin) {
-    const settings2 = createFeatureSettings(plugin, "decktracker", "Deck Tracker");
-    const enabled = settings2.add("enabled", {
-      name: "Enable Deck Tracker",
-      type: "boolean",
-      default: true
+    const settings2 = createFeatureSettings(plugin, "decktracker", {
+      tab: "Card Tracker",
+      visible: () => isPluginEnabled("cardTracker")
     });
+    const enabled = getPluginToggle("cardTracker");
     const debugLogging = settings2.add("debugLogging", {
       name: "Enable debug logging",
       type: "boolean",
@@ -4313,7 +4634,7 @@ Version: v${version}`;
       "Drag a tracker by its body to move it, or its bottom-right corner to resize it - it'll remember exactly where you left it until you close it."
     );
     BootstrapDialog.show({
-      title: "Deck Tracker Help",
+      title: "Card Tracker Help",
       message: content,
       cssClass: "mono",
       buttons: [{ label: "Got it", cssClass: "btn-primary", action: (dialog) => dialog.close() }]
@@ -4878,66 +5199,50 @@ Version: v${version}`;
     settingsRef = ref;
   }
   function registerUcTvSettings(plugin, divisionTiers) {
-    const settings2 = createFeatureSettings(plugin, "ucTv", "UC TV");
-    const enabled = settings2.add("enabled", {
-      name: "Enable UC TV",
-      type: "boolean",
-      default: true,
-      page: "Spectate"
+    const settings2 = createFeatureSettings(plugin, "ucTv", {
+      tab: "UC TV",
+      visible: () => isPluginEnabled("ucTv")
     });
+    const enabled = getPluginToggle("ucTv");
     const debugLogs = settings2.add("debugLogs", {
       name: "Enable Debug Logs",
       type: "boolean",
-      default: false,
-      page: "Spectate"
+      default: false
     });
     const autoMode = settings2.add("autoMode", {
       name: "Enable auto-mode when spectating",
       type: "boolean",
-      default: false,
-      page: "Spectate"
+      default: false
     });
     const countdownSeconds = settings2.add("countdownSeconds", {
       name: "Auto-continue delay (seconds)",
       type: "select",
       data: Array.from({ length: 15 }, (_, i) => i + 1).map((n) => [`${n}`, n]),
-      default: 5,
-      page: "Spectate"
+      default: 5
     });
-    if (!enabled.value()) {
-      return {
-        enabled,
-        debugLogs,
-        autoMode,
-        countdownSeconds,
-        filteringEnabled: null,
-        modeToggles: {},
-        minLevel: null,
-        levelFilterMode: null,
-        minRankTier: null,
-        rankFilterMode: null
-      };
-    }
-    const FILTER_CATEGORY = "UC TV - Filter Settings";
+    const filterDisabled = () => !filteringEnabled.value();
+    const filterDependents = [];
+    const addFilter = (key, config) => {
+      const setting = settings2.add(key, { ...config, disabled: filterDisabled });
+      filterDependents.push(setting);
+      return setting;
+    };
     const filteringEnabled = settings2.add("filteringEnabled", {
       name: "Enable Match Filtering",
       type: "boolean",
       default: true,
-      category: FILTER_CATEGORY,
-      page: "Spectate"
+      onChange: () => filterDependents.forEach((d) => d.refresh())
     });
     const modeToggles = {};
     KNOWN_MODES.forEach((mode) => {
-      modeToggles[mode] = settings2.add(`ignoreMode${mode}`, {
+      modeToggles[mode] = addFilter(`ignoreMode${mode}`, {
         name: `Ignore ${titleCase(mode)} Matches?`,
         type: "select",
         data: [["Yes", "yes"], ["No", "no"]],
-        default: "no",
-        category: FILTER_CATEGORY,
-        page: "Spectate"
+        default: "no"
       });
     });
-    const minLevel = settings2.add("minLevel", {
+    const minLevel = addFilter("minLevel", {
       name: "Minimum Player Level",
       type: "select",
       data: [
@@ -4951,33 +5256,25 @@ Version: v${version}`;
         ["800", 800],
         ["1000", 1e3]
       ],
-      default: 0,
-      category: FILTER_CATEGORY,
-      page: "Spectate"
+      default: 0
     });
-    const levelFilterMode = settings2.add("levelFilterMode", {
+    const levelFilterMode = addFilter("levelFilterMode", {
       name: "Minimum Level Applies To",
       type: "select",
       data: [["Either player", "either"], ["Both players", "both"]],
-      default: "either",
-      category: FILTER_CATEGORY,
-      page: "Spectate"
+      default: "either"
     });
-    const minRankTier = settings2.add("minRankTier", {
+    const minRankTier = addFilter("minRankTier", {
       name: "Minimum Ranked Mode Level",
       type: "select",
       data: divisionTiers.map((t) => [titleCase(t.name), t.name]),
-      default: "COPPER",
-      category: FILTER_CATEGORY,
-      page: "Spectate"
+      default: "COPPER"
     });
-    const rankFilterMode = settings2.add("rankFilterMode", {
+    const rankFilterMode = addFilter("rankFilterMode", {
       name: "Minimum Rank Applies To",
       type: "select",
       data: [["Either player", "either"], ["Both players", "both"]],
-      default: "either",
-      category: FILTER_CATEGORY,
-      page: "Spectate"
+      default: "either"
     });
     return {
       enabled,
@@ -5667,8 +5964,7 @@ Version: v${version}`;
   function initUcTv(plugin) {
     const settings2 = registerUcTvSettings(plugin, DIVISION_TIERS);
     setSettingsRef(settings2);
-    console.log("[UC TV] Settings registered.");
-    dumpSettingsState();
+    if (CONFIG.debugLogs) dumpSettingsState();
     window.__ucTVScope = scopeActiveGames;
     window.__ucTVSettings = dumpSettingsState;
     bindChannelKeybinds(plugin);
@@ -5693,24 +5989,23 @@ Version: v${version}`;
   }
 
   // packages/misc/settings.js
-  function registerMiscSettings(plugin) {
-    const settings2 = createFeatureSettings(plugin, "misc", "Miscellaneous");
-    const enableNotepad = settings2.add("enableNotepad", {
-      name: "Enable Notepad Overlay Option",
-      type: "boolean",
-      default: false
+  function registerMiscSettings(plugin, { onNotepadVisibilityChange } = {}) {
+    const notepadSettings = createFeatureSettings(plugin, "misc", {
+      tab: "Notepad",
+      visible: () => isPluginEnabled("notepad")
     });
-    const enableController = settings2.add("enableController", {
-      name: "Enable Controller Support",
+    const notepadVisible = notepadSettings.add("notepadVisible", {
+      name: "Show Notepad",
       type: "boolean",
-      default: false
+      default: true,
+      onChange: () => onNotepadVisibilityChange && onNotepadVisibilityChange()
     });
-    const enableCardTags = settings2.add("enableCardTags", {
-      name: "Enable Card Tags",
-      type: "boolean",
-      default: false
-    });
-    return { settings: settings2, enableNotepad, enableController, enableCardTags };
+    return {
+      enableNotepad: getPluginToggle("notepad"),
+      enableController: getPluginToggle("controller"),
+      enableCardTags: getPluginToggle("cardTags"),
+      notepadVisible
+    };
   }
 
   // packages/misc/notepad/storage.js
@@ -6043,19 +6338,19 @@ Version: v${version}`;
       }, SAVE_DEBOUNCE_MS);
     }
     function loadLayerContent(ctx, dataUrl) {
-      return new Promise((resolve) => {
+      return new Promise((resolve2) => {
         if (!dataUrl) {
-          resolve();
+          resolve2();
           return;
         }
         const img = new Image();
         img.onload = () => {
           ctx.drawImage(img, 0, 0);
-          resolve();
+          resolve2();
         };
         img.onerror = () => {
           console.warn("[Notepad] A saved layer failed to load - leaving it blank.");
-          resolve();
+          resolve2();
         };
         img.src = dataUrl;
       });
@@ -7168,11 +7463,11 @@ Version: v${version}`;
       }, 100);
     }
     const containers = document.querySelectorAll(CARD_LIST_SELECTOR);
-    const observer = new MutationObserver(schedule);
+    const observer2 = new MutationObserver(schedule);
     if (containers.length) {
-      containers.forEach((c) => observer.observe(c, { childList: true, subtree: true, attributes: true, attributeFilter: ["id"] }));
+      containers.forEach((c) => observer2.observe(c, { childList: true, subtree: true, attributes: true, attributeFilter: ["id"] }));
     } else {
-      observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["id"] });
+      observer2.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["id"] });
     }
     schedule();
   }
@@ -7562,10 +7857,12 @@ Version: v${version}`;
 
   // packages/misc/index.js
   function initMisc(plugin) {
-    const settings2 = registerMiscSettings(plugin);
+    const settings2 = registerMiscSettings(plugin, {
+      onNotepadVisibilityChange: () => syncNotepadVisibility()
+    });
     initCardTags(plugin, settings2.enableCardTags);
     function syncNotepadVisibility() {
-      if (settings2.enableNotepad.value()) {
+      if (settings2.enableNotepad.value() && settings2.notepadVisible.value()) {
         showNotepad();
       } else {
         hideNotepad();
@@ -7581,8 +7878,7 @@ Version: v${version}`;
       defaultCode: "KeyO",
       packageLabel: "Notepad",
       onMatch: () => {
-        const next = !settings2.enableNotepad.value();
-        settings2.enableNotepad.set(next);
+        settings2.notepadVisible.set(!settings2.notepadVisible.value());
         syncNotepadVisibility();
       }
     });
@@ -7593,9 +7889,7 @@ Version: v${version}`;
       packageLabel: "Notepad",
       onMatch: () => {
         forceResetNotepad();
-        if (settings2.enableNotepad.value()) {
-          showNotepad();
-        }
+        syncNotepadVisibility();
       }
     });
     registerKeybind(plugin, {
@@ -8096,7 +8390,8 @@ Version: v${version}`;
     { key: "openWizascriptSettings", name: "Open Wizascript Settings" },
     { key: "concede", name: "Concede" },
     { key: "goHome", name: "Go to Home Page" },
-    { key: "openDeckTrackerPresets", name: "Open Deck Tracker Presets" }
+    // Key kept as-is (stored bindings use it); shown as Card Tracker since 1.5.0.
+    { key: "openDeckTrackerPresets", name: "Open Card Tracker Presets", pluginId: "cardTracker" }
   ];
   var HARDWARE_SHORTCUT_DEFAULTS = {
     openSettings: 9,
@@ -8494,7 +8789,7 @@ Version: v${version}`;
     if (controllerObserverStarted) return;
     controllerObserverStarted = true;
     let everFoundOne = false;
-    const observer = new MutationObserver(() => {
+    const observer2 = new MutationObserver(() => {
       const matches = document.querySelectorAll(`input[id^="${idPrefix}"]:not([data-wc-enhanced]), select[id^="${idPrefix}"]:not([data-wc-enhanced])`);
       matches.forEach((el) => {
         everFoundOne = true;
@@ -8549,7 +8844,7 @@ Version: v${version}`;
         el.setAttribute("data-wc-enhanced", "true");
       });
     });
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer2.observe(document.body, { childList: true, subtree: true });
     setTimeout(() => {
       if (!everFoundOne) {
         console.warn('[Wizascript Controller] never found any "Keybinds - Controller" <input> elements to enhance after 15s - either the category never rendered, or the assumed id pattern (' + idPrefix + "<key>) is wrong.");
@@ -8562,12 +8857,11 @@ Version: v${version}`;
       HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key)
     );
     controllerEnabledSetting = controllerEnabledSettingIn;
-    if (!controllerEnabledSetting || typeof controllerEnabledSetting.value !== "function" || !controllerEnabledSetting.value()) {
-      console.log('[Wizascript Controller] Enable Controller Support is off - "Keybinds - Controller" category not registered this load. Turn it on under Miscellaneous, then reload, to configure it.');
-      return;
-    }
-    const CATEGORY2 = "Keybinds - Controller";
-    const settings2 = createFeatureSettings(plugin, "controller", CATEGORY2);
+    const settings2 = createFeatureSettings(plugin, "controller", {
+      tab: "Controller Support",
+      visible: () => isPluginEnabled("controller")
+    });
+    const hiddenUnless = (pluginId) => () => pluginId ? !isPluginEnabled(pluginId) : false;
     settings2.add("detectController", {
       name: "Detect Controller",
       note: "Click if your controller isn't responding.",
@@ -8619,20 +8913,23 @@ Version: v${version}`;
         settings2.add("__divider_" + action.packageLabel.replace(/\s+/g, "_"), {
           name: "\u2014 <b>" + action.packageLabel + "</b> \u2014",
           type: "text",
-          default: ""
+          default: "",
+          hidden: hiddenUnless(pluginIdForLabel(action.packageLabel))
         });
         if (action.packageLabel === "UC TV") {
           settings2.add("channelGuide", {
             name: "Channel Guide (hold)",
             type: "text",
-            default: buttonToDisplay(null)
+            default: buttonToDisplay(null),
+            hidden: hiddenUnless("ucTv")
           });
         }
       }
       settings2.add(action.key, {
         name: action.name + " - Primary + <btn>",
         type: "text",
-        default: buttonToDisplay(action.defaultButton)
+        default: buttonToDisplay(action.defaultButton),
+        hidden: hiddenUnless(pluginIdForLabel(action.packageLabel))
       });
     });
     settings2.add("__divider_HardwareShortcuts", { name: "\u2014 In-Game Inputs \u2014", type: "text", default: "" });
@@ -8640,10 +8937,10 @@ Version: v${version}`;
       settings2.add("shortcut_" + action.key, {
         name: action.name,
         type: "text",
-        default: buttonToDisplay(HARDWARE_SHORTCUT_DEFAULTS[action.key])
+        default: buttonToDisplay(HARDWARE_SHORTCUT_DEFAULTS[action.key]),
+        hidden: hiddenUnless(action.pluginId)
       });
     });
-    console.log('[Wizascript Controller] controller keybind settings registered under "Keybinds - Controller".');
     startControllerKeybindObserver("underscript.plugin.Wizascript.controller.");
   }
 
@@ -9937,18 +10234,8 @@ Version: v${version}`;
     let leftHeldSince = 0, rightHeldSince = 0, lastPageTurnTime = 0;
     let dpadText = "";
     function openWizascriptSettings() {
-      const base = { key: "Control", code: "ControlLeft", keyCode: 17, which: 17, bubbles: true };
-      document.dispatchEvent(new KeyboardEvent("keydown", base));
-      requestAnimationFrame(() => {
-        document.dispatchEvent(new KeyboardEvent("keyup", base));
-        requestAnimationFrame(() => {
-          document.dispatchEvent(new KeyboardEvent("keydown", base));
-          requestAnimationFrame(() => {
-            document.dispatchEvent(new KeyboardEvent("keyup", base));
-          });
-        });
-      });
-      if (isDebugTextEnabled()) console.log("[Wizascript Controller] relayed a real Primary (Control) double-tap for Wizascript settings");
+      plugin.settings().open();
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] opened Wizascript settings");
     }
     function frame() {
       try {
@@ -10100,9 +10387,9 @@ Version: v${version}`;
             });
             keybindRelayHeld.actions = nextActionHeld;
             hud.textContent = inPatchMakerFieldForContext ? `Patch Maker (${viaPause ? "OSK paused" : "Primary held"})
-move entry/section/card, cycle category \u2014 see Settings > Keybinds - Controller${viaPause ? `
+move entry/section/card, cycle category \u2014 see Settings > Controller Support${viaPause ? `
 R1: resume typing   ${btnLabel(1)}: close` : ""}` : `Wizascript keybind relay (${viaPause ? "OSK paused" : "Primary held"})
-channel / notepad redo-undo-toggle-reset \u2014 see Settings > Keybinds - Controller${viaPause ? `
+channel / notepad redo-undo-toggle-reset \u2014 see Settings > Controller Support${viaPause ? `
 R1: resume typing   ${btnLabel(1)}: close` : ""}`;
           } else {
             keybindRelayHeld.actions = {};
@@ -11100,12 +11387,17 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
 
   // manifest.js
   bootstrap((plugin) => {
+    const installState = runMigrations();
+    registerPluginToggles(plugin);
+    registerAboutSection(plugin);
     initPatchMaker(plugin);
     initTrueHubBridge(plugin);
     initDeckTracker(plugin);
     initUcTv(plugin);
     const miscSettings = initMisc(plugin);
+    initKeybinds(plugin);
     initController(plugin, miscSettings.enableController);
     flushKeybindRegistrations();
+    showWhatsNew(plugin, installState);
   });
 })();

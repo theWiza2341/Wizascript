@@ -66,13 +66,14 @@
   function resolve(v) {
     return typeof v === "function" ? v() : v;
   }
-  function createFeatureSettings(plugin, featureName, { tab, visible } = {}) {
+  function createFeatureSettings(plugin, featureName, { tab, visible, categories = false } = {}) {
     const settingsApi = tab ? plugin.settings().page(tab) : plugin.settings();
     const registered = {};
     function add(key, config) {
       const { category, page, hidden, ...rest } = config;
       const setting = settingsApi.add({
         ...rest,
+        ...categories && category ? { category } : {},
         key: `${featureName}.${key}`,
         hidden: () => (visible ? !visible() : false) || resolve(hidden) === true
       });
@@ -96,6 +97,21 @@
       if (!el2 || el2.hasAttribute(ENHANCED_ATTR)) return;
       el2.setAttribute(ENHANCED_ATTR, "true");
       enhance(el2);
+    });
+    hideEmptyCategories();
+  }
+  function hideEmptyCategories() {
+    if (!document.querySelector(".tabbedView fieldset")) return;
+    const contents = /* @__PURE__ */ new Set();
+    document.querySelectorAll(`[id^="${ID_PREFIX}"]`).forEach((el2) => {
+      const content = el2.closest(".tabContent");
+      if (content) contents.add(content);
+    });
+    contents.forEach((content) => {
+      content.querySelectorAll(":scope > div > fieldset, :scope > fieldset").forEach((set) => {
+        const empty = !set.querySelector(".flex-start");
+        if (empty && set.style.display !== "none") set.style.display = "none";
+      });
     });
   }
   function ensureObserver() {
@@ -366,8 +382,8 @@
   var settings = null;
   var registry = [];
   var bindingDefaults = /* @__PURE__ */ new Map();
-  var dividerKeys = /* @__PURE__ */ new Set();
-  var seenPackageLabels = /* @__PURE__ */ new Set();
+  var infoKeys = /* @__PURE__ */ new Set();
+  var GENERAL_CATEGORY = "General";
   var observerStarted = false;
   function isBindingActive(b) {
     return !b.pluginId || isPluginEnabled(b.pluginId);
@@ -415,29 +431,21 @@
       });
     });
   }
-  function enhanceDivider(el2) {
+  function enhanceInfoRow(el2) {
     el2.setAttribute("data-wizascript-keybind-enhanced", "true");
     el2.readOnly = true;
     el2.tabIndex = -1;
-    Object.assign(el2.style, {
-      backgroundColor: "transparent",
-      border: "none",
-      borderBottom: "1px solid #666",
-      color: "#8ab4f8",
-      fontWeight: "bold",
-      cursor: "default",
-      pointerEvents: "none"
-    });
+    el2.style.display = "none";
   }
   function startObserver() {
     if (observerStarted) return;
     observerStarted = true;
     const observer2 = new MutationObserver(() => {
-      if (!bindingDefaults.size && !dividerKeys.size) return;
+      if (!bindingDefaults.size && !infoKeys.size) return;
       document.querySelectorAll(`input[id^="${ID_PREFIX2}"]:not([data-wizascript-keybind-enhanced])`).forEach((el2) => {
         const bindingKey = el2.id.slice(ID_PREFIX2.length);
-        if (dividerKeys.has(bindingKey)) {
-          enhanceDivider(el2);
+        if (infoKeys.has(bindingKey)) {
+          enhanceInfoRow(el2);
           return;
         }
         if (!bindingDefaults.has(bindingKey)) return;
@@ -542,7 +550,7 @@
   }
   function ensureCore(plugin) {
     if (settings) return;
-    settings = createFeatureSettings(plugin, "keybinds", { tab: TAB });
+    settings = createFeatureSettings(plugin, "keybinds", { tab: TAB, categories: true });
     startObserver();
     bindGlobalListeners();
     primaryKeySetting = settings.add(PRIMARY_KEY, {
@@ -550,25 +558,19 @@
       note: "Click to remap. Hold for combos below, or tap alone.",
       type: "text",
       default: DEFAULT_PRIMARY_CODE,
+      category: GENERAL_CATEGORY,
       hidden: generalHidden
     });
     bindingDefaults.set(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
-    const generalDividerKey = "__divider_General";
-    settings.add(generalDividerKey, {
-      name: "\u2014 General \u2014",
-      type: "text",
-      default: "",
-      hidden: generalHidden
-    });
-    dividerKeys.add(generalDividerKey);
     const openSettingsInfoKey = "__info_openSettings";
     settings.add(openSettingsInfoKey, {
       name: "Double Tap Primary \u2192 Open Wizascript Settings",
       type: "text",
       default: "",
+      category: GENERAL_CATEGORY,
       hidden: generalHidden
     });
-    dividerKeys.add(openSettingsInfoKey);
+    infoKeys.add(openSettingsInfoKey);
     registry.push({
       key: "openWizascriptSettings",
       scope: "global",
@@ -623,22 +625,13 @@
     ensureCore(plugin);
     const pluginId = pluginIdForLabel(packageLabel);
     const pluginHidden = () => pluginId ? !isPluginEnabled(pluginId) : false;
-    if (packageLabel && !seenPackageLabels.has(packageLabel)) {
-      seenPackageLabels.add(packageLabel);
-      const dividerKey = `__divider_${packageLabel.replace(/\s+/g, "_")}`;
-      settings.add(dividerKey, {
-        name: `\u2014 ${packageLabel} \u2014`,
-        type: "text",
-        default: "",
-        hidden: pluginHidden
-      });
-      dividerKeys.add(dividerKey);
-    }
     if (onMatch) {
       settings.add(key, {
         name: `${name} - Primary + <key>`,
         type: "text",
         default: defaultCode,
+        // Each plugin's shortcuts get their own category on the tab.
+        category: packageLabel || GENERAL_CATEGORY,
         hidden: pluginHidden
       });
       bindingDefaults.set(key, defaultCode);
@@ -733,7 +726,7 @@
   }
 
   // CHANGELOG.md
-  var CHANGELOG_default = "# Changelog\n\nAll notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.\n\n## 1.5.0\n\nWizascript is now listed in UnderScript's plugin directory, so this update is all about making it easy to understand without a readme.\n\n### Settings overhaul\n- New **General** tab (the first tab in Wizascript's settings) with a **Plugins** list and a **Miscellaneous** list. Every feature now has its own on/off switch, with a short description when you hover it.\n- Each enabled plugin gets its **own settings tab**. Plugins you haven't turned on don't show any settings at all.\n- **Keybinds** only appear once you enable a plugin that uses them, and only list the shortcuts for plugins you actually have on.\n- **Controller Support** has its own tab for controller bindings, which likewise only lists actions for plugins you have on.\n- Notepad and Card Tags are listed under Miscellaneous; Controller Support is now listed with the other plugins.\n- Tab names are never cut off. When there are more tabs than fit, they're split into pages, and **\u25C0 \u25B6 arrows** at the right end of the tab row flip between them.\n- New **Changelog** button (you're reading it), and a one-time popup after each update.\n\n### New\n- **Back up & restore settings**: save all your Wizascript settings and data (toggles, keybinds, controller bindings, Card Tracker presets, Card Tags, Notepad) as one code or file from the General tab, and restore it on another browser or after reinstalling.\n- **Share Card Tags**: in Manage Tags, share some or all of your tags (with the cards they're on) as a code, or import a friend's. Imported tags merge into yours by name and never remove anything.\n- **Keybind warnings**: the Keybinds tab now warns when a shortcut clashes with another shortcut, with your Primary key, or with UnderScript's Space-to-end-turn hotkey.\n- **Controller: L1/R1 switch tabs in Settings**: sidebar categories, or the open plugin's own tabs.\n\n### Changes\n- **Deck Tracker is now called Card Tracker**, to better describe what it does. Your trackers, presets and settings carry over.\n- New installs start with every plugin switched off. If you were already using Wizascript, the plugins you had on stay on.\n- Notepad has a new **Open Notepad on Page Load** setting, shown right under Notepad once it's enabled. The Toggle Notepad shortcut now opens/closes the notepad for the current page without switching the plugin off.\n- UC TV's filter settings are disabled (greyed out) while match filtering is turned off.\n- UC TV no longer prints its settings to the browser console on every page load unless debug logging is on.\n\n### Fixes\n- Controller Support: the d-pad works in the settings' **Plugins** section again (UnderScript 0.64 changed how plugin settings are laid out). A plugin's tabs are now one row you move along with left/right, including the \u25C0 \u25B6 arrows. Moving up from a setting returns to the tab you're on.\n\n## 1.4.1 and earlier\n\nWizascript combined several separate plugins into one download: Patch Maker, True Hub Bridge, Deck Tracker, UC TV, Notepad, Card Tags, remappable keybinds, and controller support. Detailed notes weren't kept before 1.5.0.\n";
+  var CHANGELOG_default = "# Changelog\n\nAll notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.\n\n## 1.5.0\n\nWizascript is now listed in UnderScript's plugin directory, so this update is all about making it easy to understand without a readme.\n\n### Settings overhaul\n- New **General** tab (the first tab in Wizascript's settings) with a **Plugins** list and a **Miscellaneous** list. Every feature now has its own on/off switch, with a short description when you hover it.\n- Each enabled plugin gets its **own settings tab**. Plugins you haven't turned on don't show any settings at all.\n- **Keybinds** only appear once you enable a plugin that uses them, and only list the shortcuts for plugins you actually have on, in a section per plugin.\n- **Controller Support** has its own tab for controller bindings, split into Setup, General, a section per plugin, and In-Game Inputs, and likewise only lists actions for plugins you have on.\n- Notepad and Card Tags are listed under Miscellaneous; Controller Support is now listed with the other plugins.\n- Tab names are never cut off. When there are more tabs than fit, they're split into pages, and **\u25C0 \u25B6 arrows** at the right end of the tab row flip between them.\n- New **Changelog** button (you're reading it), and a one-time popup after each update.\n\n### New\n- **Back up & restore settings**: save all your Wizascript settings and data (toggles, keybinds, controller bindings, Card Tracker presets, Card Tags, Notepad) as one code or file from the General tab, and restore it on another browser or after reinstalling.\n- **Share Card Tags**: in Manage Tags, share some or all of your tags (with the cards they're on) as a code, or import a friend's. Imported tags merge into yours by name and never remove anything.\n- **Keybind warnings**: the Keybinds tab warns when a shortcut clashes with another shortcut, with your Primary key, or with UnderScript's Space-to-end-turn hotkey. The Controller Support tab does the same for controller bindings: two actions on one button, an In-Game Input on a combo's button or on a button that already clicks/goes back/navigates, and Controller Primary or the Channel Guide on a button they'd block.\n- **Controller: L1/R1 switch tabs in Settings**: sidebar categories, or the open plugin's own tabs.\n\n### Changes\n- **Deck Tracker is now called Card Tracker**, to better describe what it does. Your trackers, presets and settings carry over.\n- New installs start with every plugin switched off. If you were already using Wizascript, the plugins you had on stay on.\n- Notepad has a new **Open Notepad on Page Load** setting, shown right under Notepad once it's enabled. The Toggle Notepad shortcut now opens/closes the notepad for the current page without switching the plugin off.\n- UC TV's filter settings are disabled (greyed out) while match filtering is turned off.\n- UC TV no longer prints its settings to the browser console on every page load unless debug logging is on.\n\n### Fixes\n- Controller Support: the d-pad works in the settings' **Plugins** section again (UnderScript 0.64 changed how plugin settings are laid out). A plugin's tabs are now one row you move along with left/right, including the \u25C0 \u25B6 arrows. Moving up from a setting returns to the tab you're on.\n- Controller Support: binding \u2715 or the d-pad now works when you clicked the binding box with the mouse or cursor (before, the press moved the settings sidebar instead of being recorded).\n\n## 1.4.1 and earlier\n\nWizascript combined several separate plugins into one download: Patch Maker, True Hub Bridge, Deck Tracker, UC TV, Notepad, Card Tags, remappable keybinds, and controller support. Detailed notes weren't kept before 1.5.0.\n";
 
   // packages/core/about.js
   var LAST_SEEN_KEY = "wizascript.lastSeenVersion";
@@ -9273,27 +9266,11 @@ Version: v${version}`;
     return controllerCaptureActive;
   }
   var boundInputRefreshers = [];
-  function enhanceControllerDivider(el2) {
+  function enhanceControllerInfoRow(el2) {
     el2.setAttribute("data-wc-enhanced", "true");
     el2.readOnly = true;
     el2.tabIndex = -1;
-    Object.assign(el2.style, {
-      backgroundColor: "transparent",
-      border: "none",
-      borderBottom: "1px solid #666",
-      color: "#8ab4f8",
-      fontWeight: "bold",
-      cursor: "default",
-      pointerEvents: "none",
-      // A bit of breathing room above/below each section header - without
-      // it every divider sat flush against the row before it, and with
-      // "— In-Game Inputs —" no longer followed by its own info row (see
-      // registerControllerSettings), that section in particular read as
-      // visually cramped against "Move Section Down" right above it.
-      marginTop: "14px",
-      marginBottom: "2px",
-      paddingTop: "4px"
-    });
+    el2.style.display = "none";
   }
   function enhanceControllerCaptureInput(el2, readBound, writeBound) {
     el2.setAttribute("data-wc-enhanced", "true");
@@ -9373,6 +9350,7 @@ Version: v${version}`;
         el2.style.boxShadow = "none";
         cleanup();
         refreshDisplay();
+        scheduleControllerConflictRefresh();
         el2.removeEventListener("blur", onBlur);
       });
     });
@@ -9542,6 +9520,122 @@ Version: v${version}`;
       }
     });
   }
+  var CONFLICT_CLASS = "wizascript-controller-warning";
+  var BUILT_IN_BUTTON_USES = {
+    0: "clicks / selects",
+    1: "goes back / cancels",
+    3: "right-clicks",
+    12: "navigates up",
+    13: "navigates down",
+    14: "navigates left",
+    15: "navigates right",
+    5: "opens UnderScript's menu (and switches tabs in Settings)"
+  };
+  var GUIDE_BUTTONS = /* @__PURE__ */ new Set([0, 12, 13, 14, 15]);
+  function sameInput(a, b) {
+    if (a === null || a === void 0 || b === null || b === void 0) return false;
+    if (typeof a === "number" || typeof b === "number") return a === b;
+    return a.type === "key" && b.type === "key" && a.code === b.code;
+  }
+  function contextsOverlap(a, b) {
+    if (a === "always" || b === "always") return true;
+    const outside = (c) => c === "channelSwitch" || c === "default";
+    if (outside(a) && outside(b)) return true;
+    return a === "patchMaker" && b === "patchMaker";
+  }
+  function computeControllerConflicts() {
+    const out = /* @__PURE__ */ new Map();
+    const add = (key, msg) => {
+      if (!out.has(key)) out.set(key, []);
+      out.get(key).push(msg);
+    };
+    const primary = getControllerPrimaryButton();
+    const guide = isPluginEnabled("ucTv") ? getChannelGuideButton() : null;
+    const combos = CONTROLLER_ACTIONS.filter((a) => {
+      const id = pluginIdForLabel(a.packageLabel);
+      return !id || isPluginEnabled(id);
+    }).map((a) => ({ a, input: getBoundButton(a.key), code: getBoundKeybindCode(a.key, a.dispatch.code) })).filter((c) => c.input !== null);
+    const shortcuts = HARDWARE_SHORTCUT_ACTIONS.filter((a) => !a.pluginId || isPluginEnabled(a.pluginId)).map((a) => ({ a, row: "shortcut_" + a.key, input: getBoundShortcutButton(a.key) })).filter((c) => c.input !== null);
+    const comboName = (a) => `${a.name} (Primary + ${bindingToDisplay(getBoundButton(a.key))})`;
+    if (primary !== null && typeof primary === "number" && BUILT_IN_BUTTON_USES[primary]) {
+      add("controllerPrimary", `This button also ${BUILT_IN_BUTTON_USES[primary]}, which stops working while it's your Primary.`);
+    }
+    if (guide !== null) {
+      if (sameInput(guide, primary)) {
+        add("channelGuide", "Same button as Controller Primary.");
+        add("controllerPrimary", "Same button as Channel Guide.");
+      }
+      if (typeof guide === "number" && GUIDE_BUTTONS.has(guide)) {
+        add("channelGuide", "The channel guide uses the d-pad and " + bindingToDisplay(0) + " to pick a channel, so this button would clash with it.");
+      }
+    }
+    shortcuts.forEach(({ a, row, input }, i) => {
+      if (sameInput(input, primary)) {
+        add(row, "Same button as Controller Primary - pressing Primary will also do this.");
+        add("controllerPrimary", `Same button as ${a.name} - pressing Primary will also do that.`);
+      }
+      if (sameInput(input, guide)) {
+        add(row, "Same button as Channel Guide - both will happen.");
+        add("channelGuide", `Same button as ${a.name} - both will happen.`);
+      }
+      shortcuts.forEach(({ a: other, input: otherInput }, j) => {
+        if (i !== j && sameInput(input, otherInput)) add(row, `Same button as ${other.name} - both will happen.`);
+      });
+      if (typeof input === "number" && BUILT_IN_BUTTON_USES[input]) {
+        add(row, `This button also ${BUILT_IN_BUTTON_USES[input]}, so pressing it will do both.`);
+      }
+      combos.forEach(({ a: combo, input: comboInput }) => {
+        if (!sameInput(input, comboInput)) return;
+        add(row, `Also used by ${comboName(combo)} - that combo will trigger this too.`);
+        add(combo.key, `This button is also ${a.name} (In-Game Inputs), which will trigger too.`);
+      });
+    });
+    combos.forEach(({ a, input, code }, i) => {
+      if (sameInput(input, primary)) add(a.key, "Same button as Controller Primary, so this combo can't be pressed.");
+      if (sameInput(input, guide)) add(a.key, "Same button as Channel Guide - both will happen.");
+      combos.forEach(({ a: other, input: otherInput, code: otherCode }, j) => {
+        if (i === j || !sameInput(input, otherInput) || code === otherCode) return;
+        if (!contextsOverlap(a.context, other.context)) return;
+        add(a.key, `Same button as ${other.name} - both will happen.`);
+      });
+    });
+    return out;
+  }
+  function refreshControllerConflictWarnings() {
+    const prefix = "underscript.plugin.Wizascript.controller.";
+    if (!document.querySelector(`[id^="${prefix}"]`)) return;
+    const conflicts = computeControllerConflicts();
+    const rowKeys = ["controllerPrimary", "channelGuide"].concat(CONTROLLER_ACTIONS.map((a) => a.key)).concat(HARDWARE_SHORTCUT_ACTIONS.map((a) => "shortcut_" + a.key));
+    rowKeys.forEach((key) => {
+      const input = document.getElementById(prefix + key);
+      const row = input && input.closest(".flex-start");
+      if (!row) return;
+      const messages = conflicts.get(key) || [];
+      let warn = row.querySelector(`:scope > .${CONFLICT_CLASS}`);
+      if (!messages.length) {
+        if (warn) warn.remove();
+        return;
+      }
+      const text = messages.map((m) => "\u26A0 " + m).join("\n");
+      if (!warn) {
+        warn = document.createElement("div");
+        warn.className = `setting-description ${CONFLICT_CLASS}`;
+        Object.assign(warn.style, { color: "#ffb347", opacity: "1", whiteSpace: "pre-line" });
+        row.appendChild(warn);
+      }
+      if (warn.textContent !== text) warn.textContent = text;
+    });
+  }
+  var controllerConflictRefreshQueued = false;
+  function scheduleControllerConflictRefresh() {
+    if (controllerConflictRefreshQueued) return;
+    controllerConflictRefreshQueued = true;
+    setTimeout(() => {
+      controllerConflictRefreshQueued = false;
+      refreshControllerConflictWarnings();
+    }, 0);
+  }
+  boundInputRefreshers.push(scheduleControllerConflictRefresh);
   var controllerObserverStarted = false;
   function startControllerKeybindObserver(idPrefix) {
     if (controllerObserverStarted) return;
@@ -9549,11 +9643,12 @@ Version: v${version}`;
     let everFoundOne = false;
     const observer2 = new MutationObserver(() => {
       const matches = document.querySelectorAll(`input[id^="${idPrefix}"]:not([data-wc-enhanced]), select[id^="${idPrefix}"]:not([data-wc-enhanced])`);
+      if (matches.length) scheduleControllerConflictRefresh();
       matches.forEach((el2) => {
         everFoundOne = true;
         const bindingKey = el2.id.slice(idPrefix.length);
-        if (bindingKey.startsWith("__divider_") || bindingKey.startsWith("__info_")) {
-          enhanceControllerDivider(el2);
+        if (bindingKey.startsWith("__info_")) {
+          enhanceControllerInfoRow(el2);
           return;
         }
         if (bindingKey === "detectController") {
@@ -9617,68 +9712,72 @@ Version: v${version}`;
     controllerEnabledSetting = controllerEnabledSettingIn;
     const settings2 = createFeatureSettings(plugin, "controller", {
       tab: "Controller Support",
-      visible: () => isPluginEnabled("controller")
+      visible: () => isPluginEnabled("controller"),
+      categories: true
     });
+    const SETUP = "Setup";
+    const GENERAL = "General";
+    const IN_GAME = "In-Game Inputs";
     const hiddenUnless = (pluginId) => () => pluginId ? !isPluginEnabled(pluginId) : false;
     settings2.add("detectController", {
       name: "Detect Controller",
       note: "Click if your controller isn't responding.",
       type: "text",
-      default: "Click to Detect Controller (WebHID)"
+      default: "Click to Detect Controller (WebHID)",
+      category: SETUP
     });
     settings2.add("presetSelector", {
       name: "Settings Preset",
       note: "Click to switch presets.",
       type: "text",
-      default: getPresetName(getActivePreset())
+      default: getPresetName(getActivePreset()),
+      category: SETUP
     });
     settings2.add("presetName", {
       name: "Preset Name",
       note: "Renames whichever preset is currently selected above.",
       type: "text",
-      default: getPresetName(getActivePreset())
+      default: getPresetName(getActivePreset()),
+      category: SETUP
     });
     settings2.add("resetPreset", {
       name: "Restore Settings to Default",
       note: "Double Click to reset selected preset settings",
       type: "text",
-      default: "Double Click to Reset"
+      default: "Double Click to Reset",
+      category: SETUP
     });
-    settings2.add("__divider_top", { name: "\u2014 \u2014 \u2014", type: "text", default: "" });
     debugTextEnabledSetting = settings2.add("debugTextEnabled", {
       name: "Enable Debug Text",
       type: "boolean",
-      default: false
+      default: false,
+      category: GENERAL
     });
     highlightColorSetting = settings2.add("highlightColor", {
       name: "Selection Outline Color",
       type: "select",
       data: HIGHLIGHT_COLOR_PRESETS,
-      default: DEFAULT_HIGHLIGHT_COLOR
+      default: DEFAULT_HIGHLIGHT_COLOR,
+      category: GENERAL
     });
     settings2.add("controllerPrimary", {
       name: "Controller Primary",
       note: "Click to remap. Hold for combos below, same as Wizascript's own Primary Key.",
       type: "text",
-      default: buttonToDisplay(DEFAULT_PRIMARY_BUTTON)
+      default: buttonToDisplay(DEFAULT_PRIMARY_BUTTON),
+      category: GENERAL
     });
-    settings2.add("__divider_General", { name: "\u2014 General \u2014", type: "text", default: "" });
-    settings2.add("__info_openSettings", { name: "Double Tap Primary \u2192 Open Wizascript Settings", type: "text", default: "" });
+    settings2.add("__info_openSettings", { name: "Double Tap Primary \u2192 Open Wizascript Settings", type: "text", default: "", category: GENERAL });
     const seenLabels = /* @__PURE__ */ new Set();
     CONTROLLER_ACTIONS.forEach((action) => {
       if (!seenLabels.has(action.packageLabel)) {
         seenLabels.add(action.packageLabel);
-        settings2.add("__divider_" + action.packageLabel.replace(/\s+/g, "_"), {
-          name: "\u2014 <b>" + action.packageLabel + "</b> \u2014",
-          type: "text",
-          default: "",
-          hidden: hiddenUnless(pluginIdForLabel(action.packageLabel))
-        });
         if (action.packageLabel === "UC TV") {
           settings2.add("channelGuide", {
             name: "Channel Guide (hold)",
             type: "text",
             default: buttonToDisplay(null),
+            category: "UC TV",
             hidden: hiddenUnless("ucTv")
           });
         }
@@ -9687,15 +9786,16 @@ Version: v${version}`;
         name: action.name + " - Primary + <btn>",
         type: "text",
         default: buttonToDisplay(action.defaultButton),
+        category: action.packageLabel,
         hidden: hiddenUnless(pluginIdForLabel(action.packageLabel))
       });
     });
-    settings2.add("__divider_HardwareShortcuts", { name: "\u2014 In-Game Inputs \u2014", type: "text", default: "" });
     HARDWARE_SHORTCUT_ACTIONS.forEach((action) => {
       settings2.add("shortcut_" + action.key, {
         name: action.name,
         type: "text",
         default: buttonToDisplay(HARDWARE_SHORTCUT_DEFAULTS[action.key]),
+        category: IN_GAME,
         hidden: hiddenUnless(action.pluginId)
       });
     });
@@ -11754,13 +11854,16 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
               if (modalPane === "fields") fieldNeedsReanchor = true;
             }
             if (modalPane === "categories") {
-              if (up && !dpadHeld.up && categoryItems.length) categoryIndex = Math.max(0, categoryIndex - 1);
-              if (down && !dpadHeld.down && categoryItems.length) categoryIndex = Math.min(categoryItems.length - 1, categoryIndex + 1);
-              if (right && !dpadHeld.right) enterCategory();
+              const capturing = isControllerCaptureActive();
+              if (!capturing) {
+                if (up && !dpadHeld.up && categoryItems.length) categoryIndex = Math.max(0, categoryIndex - 1);
+                if (down && !dpadHeld.down && categoryItems.length) categoryIndex = Math.min(categoryItems.length - 1, categoryIndex + 1);
+                if (right && !dpadHeld.right) enterCategory();
+              }
               dpadHeld = { up, down, left, right };
               refreshHighlight();
-              if (btn(0) && !btnHeld[0]) enterCategory();
-              if (btn(1) && !btnHeld[1] && !isControllerCaptureActive()) {
+              if (btn(0) && !btnHeld[0] && !capturing) enterCategory();
+              if (btn(1) && !btnHeld[1] && !capturing) {
                 const dismiss = findModalDismissButton(root);
                 if (dismiss) triggerElementClick(dismiss);
                 else document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
@@ -12305,7 +12408,6 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     const miscSettings = initMisc(plugin);
     initKeybinds(plugin);
     initController(plugin, miscSettings.enableController);
-    if (0) registerStressTabs(plugin, 0);
     flushKeybindRegistrations();
     showWhatsNew(plugin, installState);
   });

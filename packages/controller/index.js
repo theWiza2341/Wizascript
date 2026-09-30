@@ -2810,20 +2810,24 @@ export function initController(plugin, controllerEnabledSetting) {
           }
 
           if (modalPane === 'categories') {
-            if (up && !dpadHeld.up && categoryItems.length) categoryIndex = Math.max(0, categoryIndex - 1);
-            if (down && !dpadHeld.down && categoryItems.length) categoryIndex = Math.min(categoryItems.length - 1, categoryIndex + 1);
-            if (right && !dpadHeld.right) enterCategory();
+            // A capture box can be focused while this pane "has focus" -
+            // by mouse or free-cursor click, which doesn't move modalPane -
+            // so every input here stands down while one is listening, or
+            // ✕ / the d-pad would act on the sidebar (blurring the box)
+            // instead of being captured.
+            const capturing = isControllerCaptureActive();
+            if (!capturing) {
+              if (up && !dpadHeld.up && categoryItems.length) categoryIndex = Math.max(0, categoryIndex - 1);
+              if (down && !dpadHeld.down && categoryItems.length) categoryIndex = Math.min(categoryItems.length - 1, categoryIndex + 1);
+              if (right && !dpadHeld.right) enterCategory();
+            }
             dpadHeld = { up, down, left, right };
             refreshHighlight();
 
-            if (btn(0) && !btnHeld[0]) enterCategory();
-            // isControllerCaptureActive() can't actually be true while
-            // browsing categories (a capture widget only exists as a row
-            // INSIDE a category's own fields pane), but the guard is kept
-            // explicit here anyway rather than relying on that being true
-            // by construction - Cancel closing a dialog must never be
-            // able to race a capture widget waiting on this same press.
-            if (btn(1) && !btnHeld[1] && !isControllerCaptureActive()) {
+            if (btn(0) && !btnHeld[0] && !capturing) enterCategory();
+            // Cancel closing the dialog must never race a capture widget
+            // waiting on this same press (see `capturing` above).
+            if (btn(1) && !btnHeld[1] && !capturing) {
               // Categories is the "outermost" pane for a tabbed dialog -
               // Circle here closes the whole dialog, matching the
               // fields-pane Circle backing out ONE level at a time

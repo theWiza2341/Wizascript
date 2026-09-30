@@ -19,6 +19,7 @@ import {
   presetKey, migrateFlatBindingsToPresetOne, resetPresetBindings, csGet, csSet
 } from './storage.js';
 import { getMergedGamepad, buttonToDisplay, bindingToDisplay, connectWebHidController, isHidConnected } from './gamepad.js';
+import { getBoundKeybindCode } from '../core/keybinds.js';
 
 // One entry per real Wizascript keybind this package's Primary+<button>
 // relay dispatches (see actions.js). `context` decides which subset of
@@ -284,20 +285,14 @@ export function isControllerCaptureActive() { return controllerCaptureActive; }
 // the user to close and reopen the Settings dialog.
 const boundInputRefreshers = [];
 
-function enhanceControllerDivider(el) {
+// An informational row (e.g. "Double Tap Primary → Open Wizascript
+// Settings"): just its label, with UnderScript's placeholder input hidden.
+// 1.5.0: section headers are real categories now, not divider rows.
+function enhanceControllerInfoRow(el) {
   el.setAttribute('data-wc-enhanced', 'true');
   el.readOnly = true;
   el.tabIndex = -1;
-  Object.assign(el.style, {
-    backgroundColor: 'transparent', border: 'none', borderBottom: '1px solid #666',
-    color: '#8ab4f8', fontWeight: 'bold', cursor: 'default', pointerEvents: 'none',
-    // A bit of breathing room above/below each section header - without
-    // it every divider sat flush against the row before it, and with
-    // "— In-Game Inputs —" no longer followed by its own info row (see
-    // registerControllerSettings), that section in particular read as
-    // visually cramped against "Move Section Down" right above it.
-    marginTop: '14px', marginBottom: '2px', paddingTop: '4px'
-  });
+  el.style.display = 'none';
 }
 
 function enhanceControllerCaptureInput(el, readBound, writeBound) {
@@ -396,6 +391,7 @@ function enhanceControllerCaptureInput(el, readBound, writeBound) {
       el.style.boxShadow = 'none';
       cleanup();
       refreshDisplay();
+      scheduleControllerConflictRefresh();
       el.removeEventListener('blur', onBlur);
     });
   });
@@ -592,6 +588,143 @@ function enhanceDetectControllerButton(el) {
   });
 }
 
+
+/* ---------- Conflict warnings (1.5.0) ----------
+   The controller-side twin of core/keybinds.js's keyboard warnings: an
+   orange line under any Controller Support row whose button (or key)
+   clashes with something else, recomputed when the tab renders, after
+   every rebind, and on preset switch. Rules follow what index.js's frame
+   loop actually does with each kind of binding:
+   - In-Game Inputs fire on press, every frame, regardless of Primary -
+     so they clash with each other, with Controller Primary, with the
+     Channel Guide, with the button half of any Primary+<btn> combo, and
+     with the buttons the controller itself uses to click/back/alt-click/
+     navigate/open UnderScript's menu.
+   - Controller Primary, while held, takes over the frame (combos only),
+     so putting it on one of those navigation buttons disables that
+     button's normal job; and a combo can't use Primary's own button.
+   - The Channel Guide, while held, drives its list with the d-pad and ✕.
+   - Two combos clash only if both can apply in the same place (their
+     `context`s overlap) AND would relay different keys - the Patch Maker
+     Move Entry/Section/Card Up trio deliberately share D-Up and relay one
+     key, which the frame loop de-dupes. */
+const CONFLICT_CLASS = 'wizascript-controller-warning';
+// What a button already does when pressed on its own (outside Primary).
+const BUILT_IN_BUTTON_USES = {
+  0: 'clicks / selects', 1: 'goes back / cancels', 3: 'right-clicks',
+  12: 'navigates up', 13: 'navigates down', 14: 'navigates left', 15: 'navigates right',
+  5: "opens UnderScript's menu (and switches tabs in Settings)"
+};
+const GUIDE_BUTTONS = new Set([0, 12, 13, 14, 15]);
+
+function sameInput(a, b) {
+  if (a === null || a === undefined || b === null || b === undefined) return false;
+  if (typeof a === 'number' || typeof b === 'number') return a === b;
+  return a.type === 'key' && b.type === 'key' && a.code === b.code;
+}
+function contextsOverlap(a, b) {
+  if (a === 'always' || b === 'always') return true;
+  const outside = (c) => c === 'channelSwitch' || c === 'default';
+  if (outside(a) && outside(b)) return true;
+  return a === 'patchMaker' && b === 'patchMaker';
+}
+
+export function computeControllerConflicts() {
+  const out = new Map(); // row key -> [message]
+  const add = (key, msg) => { if (!out.has(key)) out.set(key, []); out.get(key).push(msg); };
+  const primary = getControllerPrimaryButton();
+  const guide = isPluginEnabled('ucTv') ? getChannelGuideButton() : null;
+  const combos = CONTROLLER_ACTIONS
+    .filter((a) => { const id = pluginIdForLabel(a.packageLabel); return !id || isPluginEnabled(id); })
+    .map((a) => ({ a, input: getBoundButton(a.key), code: getBoundKeybindCode(a.key, a.dispatch.code) }))
+    .filter((c) => c.input !== null);
+  const shortcuts = HARDWARE_SHORTCUT_ACTIONS
+    .filter((a) => !a.pluginId || isPluginEnabled(a.pluginId))
+    .map((a) => ({ a, row: 'shortcut_' + a.key, input: getBoundShortcutButton(a.key) }))
+    .filter((c) => c.input !== null);
+  const comboName = (a) => `${a.name} (Primary + ${bindingToDisplay(getBoundButton(a.key))})`;
+
+  if (primary !== null && typeof primary === 'number' && BUILT_IN_BUTTON_USES[primary]) {
+    add('controllerPrimary', `This button also ${BUILT_IN_BUTTON_USES[primary]}, which stops working while it's your Primary.`);
+  }
+  if (guide !== null) {
+    if (sameInput(guide, primary)) {
+      add('channelGuide', 'Same button as Controller Primary.');
+      add('controllerPrimary', 'Same button as Channel Guide.');
+    }
+    if (typeof guide === 'number' && GUIDE_BUTTONS.has(guide)) {
+      add('channelGuide', 'The channel guide uses the d-pad and ' + bindingToDisplay(0) + ' to pick a channel, so this button would clash with it.');
+    }
+  }
+
+  shortcuts.forEach(({ a, row, input }, i) => {
+    if (sameInput(input, primary)) {
+      add(row, 'Same button as Controller Primary - pressing Primary will also do this.');
+      add('controllerPrimary', `Same button as ${a.name} - pressing Primary will also do that.`);
+    }
+    if (sameInput(input, guide)) {
+      add(row, 'Same button as Channel Guide - both will happen.');
+      add('channelGuide', `Same button as ${a.name} - both will happen.`);
+    }
+    shortcuts.forEach(({ a: other, input: otherInput }, j) => {
+      if (i !== j && sameInput(input, otherInput)) add(row, `Same button as ${other.name} - both will happen.`);
+    });
+    if (typeof input === 'number' && BUILT_IN_BUTTON_USES[input]) {
+      add(row, `This button also ${BUILT_IN_BUTTON_USES[input]}, so pressing it will do both.`);
+    }
+    combos.forEach(({ a: combo, input: comboInput }) => {
+      if (!sameInput(input, comboInput)) return;
+      add(row, `Also used by ${comboName(combo)} - that combo will trigger this too.`);
+      add(combo.key, `This button is also ${a.name} (In-Game Inputs), which will trigger too.`);
+    });
+  });
+
+  combos.forEach(({ a, input, code }, i) => {
+    if (sameInput(input, primary)) add(a.key, "Same button as Controller Primary, so this combo can't be pressed.");
+    if (sameInput(input, guide)) add(a.key, 'Same button as Channel Guide - both will happen.');
+    combos.forEach(({ a: other, input: otherInput, code: otherCode }, j) => {
+      if (i === j || !sameInput(input, otherInput) || code === otherCode) return;
+      if (!contextsOverlap(a.context, other.context)) return;
+      add(a.key, `Same button as ${other.name} - both will happen.`);
+    });
+  });
+  return out;
+}
+
+function refreshControllerConflictWarnings() {
+  const prefix = 'underscript.plugin.Wizascript.controller.';
+  if (!document.querySelector(`[id^="${prefix}"]`)) return;
+  const conflicts = computeControllerConflicts();
+  const rowKeys = ['controllerPrimary', 'channelGuide']
+    .concat(CONTROLLER_ACTIONS.map((a) => a.key))
+    .concat(HARDWARE_SHORTCUT_ACTIONS.map((a) => 'shortcut_' + a.key));
+  rowKeys.forEach((key) => {
+    const input = document.getElementById(prefix + key);
+    const row = input && input.closest('.flex-start');
+    if (!row) return;
+    const messages = conflicts.get(key) || [];
+    let warn = row.querySelector(`:scope > .${CONFLICT_CLASS}`);
+    if (!messages.length) { if (warn) warn.remove(); return; }
+    const text = messages.map((m) => '⚠ ' + m).join('\n');
+    if (!warn) {
+      warn = document.createElement('div');
+      warn.className = `setting-description ${CONFLICT_CLASS}`;
+      Object.assign(warn.style, { color: '#ffb347', opacity: '1', whiteSpace: 'pre-line' });
+      row.appendChild(warn);
+    }
+    if (warn.textContent !== text) warn.textContent = text;
+  });
+}
+
+let controllerConflictRefreshQueued = false;
+function scheduleControllerConflictRefresh() {
+  if (controllerConflictRefreshQueued) return;
+  controllerConflictRefreshQueued = true;
+  setTimeout(() => { controllerConflictRefreshQueued = false; refreshControllerConflictWarnings(); }, 0);
+}
+// Preset switches re-run every boundInputRefreshers entry - recheck then too.
+boundInputRefreshers.push(scheduleControllerConflictRefresh);
+
 let controllerObserverStarted = false;
 function startControllerKeybindObserver(idPrefix) {
   if (controllerObserverStarted) return;
@@ -606,11 +739,12 @@ function startControllerKeybindObserver(idPrefix) {
     // tag Underscript renders that as. Costs nothing for the existing
     // input-based bindings either way.
     const matches = document.querySelectorAll(`input[id^="${idPrefix}"]:not([data-wc-enhanced]), select[id^="${idPrefix}"]:not([data-wc-enhanced])`);
+    if (matches.length) scheduleControllerConflictRefresh();
     matches.forEach((el) => {
       everFoundOne = true;
       const bindingKey = el.id.slice(idPrefix.length);
-      if (bindingKey.startsWith('__divider_') || bindingKey.startsWith('__info_')) {
-        enhanceControllerDivider(el);
+      if (bindingKey.startsWith('__info_')) {
+        enhanceControllerInfoRow(el);
         return;
       }
       if (bindingKey === 'detectController') {
@@ -695,10 +829,17 @@ export function registerControllerSettings(plugin, controllerEnabledSettingIn) {
   // hidden unless the Controller Support plugin is enabled. Rows for a
   // specific feature (UC TV, Notepad, Patch Maker, Card Tracker) are
   // additionally hidden unless that feature's plugin is enabled.
+  // Grouped into categories: Setup, General, one per plugin (named after
+  // its packageLabel), and In-Game Inputs. A disabled plugin's rows are
+  // hidden, and so is its then-empty category (setting-widgets.js).
   const settings = createFeatureSettings(plugin, 'controller', {
     tab: 'Controller Support',
-    visible: () => isPluginEnabled('controller')
+    visible: () => isPluginEnabled('controller'),
+    categories: true
   });
+  const SETUP = 'Setup';
+  const GENERAL = 'General';
+  const IN_GAME = 'In-Game Inputs';
   const hiddenUnless = (pluginId) => () => (pluginId ? !isPluginEnabled(pluginId) : false);
 
   // "Detect Controller" - deliberately the very first row in the whole
@@ -710,7 +851,8 @@ export function registerControllerSettings(plugin, controllerEnabledSettingIn) {
     name: 'Detect Controller',
     note: 'Click if your controller isn\'t responding.',
     type: 'text',
-    default: 'Click to Detect Controller (WebHID)'
+    default: 'Click to Detect Controller (WebHID)',
+    category: SETUP
   });
 
   // Preset selector/name, deliberately registered next so they render at
@@ -719,60 +861,59 @@ export function registerControllerSettings(plugin, controllerEnabledSettingIn) {
     name: 'Settings Preset',
     note: 'Click to switch presets.',
     type: 'text',
-    default: getPresetName(getActivePreset())
+    default: getPresetName(getActivePreset()),
+    category: SETUP
   });
   settings.add('presetName', {
     name: 'Preset Name',
     note: 'Renames whichever preset is currently selected above.',
     type: 'text',
-    default: getPresetName(getActivePreset())
+    default: getPresetName(getActivePreset()),
+    category: SETUP
   });
   settings.add('resetPreset', {
     name: 'Restore Settings to Default',
     note: 'Double Click to reset selected preset settings',
     type: 'text',
-    default: 'Double Click to Reset'
+    default: 'Double Click to Reset',
+    category: SETUP
   });
-  settings.add('__divider_top', { name: '— — —', type: 'text', default: '' });
 
   debugTextEnabledSetting = settings.add('debugTextEnabled', {
     name: 'Enable Debug Text',
     type: 'boolean',
-    default: false
+    default: false,
+    category: GENERAL
   });
 
   highlightColorSetting = settings.add('highlightColor', {
     name: 'Selection Outline Color',
     type: 'select',
     data: HIGHLIGHT_COLOR_PRESETS,
-    default: DEFAULT_HIGHLIGHT_COLOR
+    default: DEFAULT_HIGHLIGHT_COLOR,
+    category: GENERAL
   });
 
   settings.add('controllerPrimary', {
     name: 'Controller Primary',
     note: 'Click to remap. Hold for combos below, same as Wizascript\'s own Primary Key.',
     type: 'text',
-    default: buttonToDisplay(DEFAULT_PRIMARY_BUTTON)
+    default: buttonToDisplay(DEFAULT_PRIMARY_BUTTON),
+    category: GENERAL
   });
 
-  settings.add('__divider_General', { name: '— General —', type: 'text', default: '' });
   // Shortened from "Double Tap CONTROLLER Primary → ..." - dropping the
   // redundant word (this whole category is already controller-only)
   // both fixes the horizontal-scroll outlier AND matches the wording
   // packages/core/keybinds.js already uses for the equivalent KEYBOARD
   // shortcut ('Double Tap Primary → Open Wizascript Settings'), so the
   // two now read consistently if a player has both open at once.
-  settings.add('__info_openSettings', { name: 'Double Tap Primary → Open Wizascript Settings', type: 'text', default: '' });
+  settings.add('__info_openSettings', { name: 'Double Tap Primary → Open Wizascript Settings', type: 'text', default: '', category: GENERAL });
 
   const seenLabels = new Set();
   CONTROLLER_ACTIONS.forEach((action) => {
     if (!seenLabels.has(action.packageLabel)) {
       seenLabels.add(action.packageLabel);
-      settings.add('__divider_' + action.packageLabel.replace(/\s+/g, '_'), {
-        name: '— <b>' + action.packageLabel + '</b> —',
-        type: 'text', default: '',
-        hidden: hiddenUnless(pluginIdForLabel(action.packageLabel))
-      });
       // "Channel Guide (hold)" moved here, at the very top of the UC TV
       // section, right under its own divider - it's a UC TV keybind
       // (separate from Controller Primary, see getChannelGuideButton()
@@ -786,6 +927,7 @@ export function registerControllerSettings(plugin, controllerEnabledSettingIn) {
           name: 'Channel Guide (hold)',
           type: 'text',
           default: buttonToDisplay(null),
+          category: 'UC TV',
           hidden: hiddenUnless('ucTv')
         });
       }
@@ -802,6 +944,7 @@ export function registerControllerSettings(plugin, controllerEnabledSettingIn) {
       name: action.name + ' - Primary + <btn>',
       type: 'text',
       default: buttonToDisplay(action.defaultButton),
+      category: action.packageLabel,
       hidden: hiddenUnless(pluginIdForLabel(action.packageLabel))
     });
   });
@@ -812,12 +955,12 @@ export function registerControllerSettings(plugin, controllerEnabledSettingIn) {
   // mechanism (no Primary hold), which needed its own separate info row
   // to explain and was still one of the widest rows in the category. That
   // info row is gone now that the section name itself carries the point.
-  settings.add('__divider_HardwareShortcuts', { name: '— In-Game Inputs —', type: 'text', default: '' });
   HARDWARE_SHORTCUT_ACTIONS.forEach((action) => {
     settings.add('shortcut_' + action.key, {
       name: action.name,
       type: 'text',
       default: buttonToDisplay(HARDWARE_SHORTCUT_DEFAULTS[action.key]),
+      category: IN_GAME,
       hidden: hiddenUnless(action.pluginId)
     });
   });

@@ -1,17 +1,17 @@
 // packages/core/keybinds.js
 //
-// 1.5.0: keybinds live on their own "Keybinds" settings tab, and every
-// row on it is tied to the plugin it belongs to (via packageLabel ->
-// core/plugins.js). A package's rows are hidden, and its bindings don't
-// fire, unless that plugin is enabled in the Plugins list. Primary Key
-// and the "General" rows only show while at least one keybind-using
+// 1.5.0: keybinds live on their own "Keybinds" settings tab, grouped
+// into categories: "General" (Primary Key, double-tap) and one per
+// plugin (its packageLabel -> core/plugins.js). A plugin's category is
+// hidden, and its bindings don't fire, unless that plugin is enabled in
+// the Plugins list. General only shows while at least one keybind-using
 // plugin is enabled, so the whole tab disappears when none are.
 //
 // Shared keybind registry used by every package that wants a
 // user-remappable shortcut, instead of each one hardcoding its own
 // keydown listener. One shared "Primary Key" setting (site-wide),
 // plus one settings entry per registered binding, all under a single
-// "Keybinds" category. A single shared document-level listener pair
+// "Keybinds" tab. A single shared document-level listener pair
 // does all the dispatching, so N packages calling registerKeybind()
 // don't each attach their own competing handlers.
 //
@@ -106,8 +106,8 @@ function codeToDisplay(code) {
 let settings = null;
 const registry = []; // { key, defaultCode, scope, selector, onMatch, onPrimaryAlone, onPrimaryPress, onPrimaryRelease }
 const bindingDefaults = new Map(); // key -> defaultCode, for the observer to match against
-const dividerKeys = new Set(); // keys the observer should style as a group divider, not a capture widget
-const seenPackageLabels = new Set(); // which packageLabels already have a divider inserted
+const infoKeys = new Set(); // keys rendered as a plain text row (no input), not a capture widget
+const GENERAL_CATEGORY = 'General';
 let observerStarted = false;
 
 // A binding with no pluginId (the double-tap-to-open-settings one) is
@@ -168,33 +168,24 @@ function enhanceInput(el, bindingKey, defaultCode) {
   });
 }
 
-// Purely visual, read-only, unfocusable - a group header within the
-// single flat Keybinds list, distinguishing it from the real
-// click-to-capture inputs enhanceInput() styles.
-function enhanceDivider(el) {
+// An informational row: just its label, with the placeholder input
+// UnderScript renders for it hidden.
+function enhanceInfoRow(el) {
   el.setAttribute('data-wizascript-keybind-enhanced', 'true');
   el.readOnly = true;
   el.tabIndex = -1;
-  Object.assign(el.style, {
-    backgroundColor: 'transparent',
-    border: 'none',
-    borderBottom: '1px solid #666',
-    color: '#8ab4f8',
-    fontWeight: 'bold',
-    cursor: 'default',
-    pointerEvents: 'none'
-  });
+  el.style.display = 'none';
 }
 
 function startObserver() {
   if (observerStarted) return;
   observerStarted = true;
   const observer = new MutationObserver(() => {
-    if (!bindingDefaults.size && !dividerKeys.size) return; // cheap bail once there's nothing left to look for
+    if (!bindingDefaults.size && !infoKeys.size) return; // cheap bail once there's nothing left to look for
     document.querySelectorAll(`input[id^="${ID_PREFIX}"]:not([data-wizascript-keybind-enhanced])`).forEach((el) => {
       const bindingKey = el.id.slice(ID_PREFIX.length);
-      if (dividerKeys.has(bindingKey)) {
-        enhanceDivider(el);
+      if (infoKeys.has(bindingKey)) {
+        enhanceInfoRow(el);
         return;
       }
       if (!bindingDefaults.has(bindingKey)) return;
@@ -331,7 +322,10 @@ export function initKeybinds(plugin) {
 
 function ensureCore(plugin) {
   if (settings) return;
-  settings = createFeatureSettings(plugin, 'keybinds', { tab: TAB });
+  // 1.5.0: real categories - "General" plus one per plugin (named after
+  // its packageLabel). A disabled plugin's rows are hidden, and its then-
+  // empty category is hidden too (setting-widgets.js).
+  settings = createFeatureSettings(plugin, 'keybinds', { tab: TAB, categories: true });
 
   startObserver();
   bindGlobalListeners();
@@ -341,37 +335,23 @@ function ensureCore(plugin) {
     note: 'Click to remap. Hold for combos below, or tap alone.',
     type: 'text',
     default: DEFAULT_PRIMARY_CODE,
+    category: GENERAL_CATEGORY,
     hidden: generalHidden
   });
   bindingDefaults.set(PRIMARY_KEY, DEFAULT_PRIMARY_CODE);
 
-  // "General" - registered directly here (not through any specific
-  // package's own registerKeybind calls) so it always lands right
-  // under Primary Key, before any package's own divider. Double Tap
-  // Primary has no secondary key to remap (it's not a "Primary +
-  // <key>" combo at all), so there's no capture-widget setting for
-  // it - just an informational row, reusing the same read-only
-  // divider styling. Uses the registry's default guardTypingContext
-  // (true) like everything except Patch Maker, so it stays inert
-  // while typing in chat or editing a Patch Maker field, same as
-  // nearly everything else.
-  const generalDividerKey = '__divider_General';
-  settings.add(generalDividerKey, {
-    name: '\u2014 General \u2014',
-    type: 'text',
-    default: '',
-    hidden: generalHidden
-  });
-  dividerKeys.add(generalDividerKey);
-
+  // Double Tap Primary has no key of its own to remap, so it's a plain
+  // informational row under General (its input is hidden - see
+  // enhanceInfoRow()).
   const openSettingsInfoKey = '__info_openSettings';
   settings.add(openSettingsInfoKey, {
     name: 'Double Tap Primary \u2192 Open Wizascript Settings',
     type: 'text',
     default: '',
+    category: GENERAL_CATEGORY,
     hidden: generalHidden
   });
-  dividerKeys.add(openSettingsInfoKey);
+  infoKeys.add(openSettingsInfoKey);
 
   registry.push({
     key: 'openWizascriptSettings',
@@ -399,7 +379,7 @@ let autoFlushScheduled = false;
 //   defaultCode    - shipped default e.code, e.g. 'ArrowRight'
 //   scope          - 'global' (default) | 'scoped'
 //   selector       - required if scope is 'scoped'
-//   packageLabel   - drives the one-time group divider (e.g. 'UC TV')
+//   packageLabel   - the plugin's category on the Keybinds tab (e.g. 'UC TV')
 //   onMatch        - (e) => void, fires when Primary+secondary matches
 //   onPrimaryAlone   - (e) => void, global-only: Primary held alone past the hold delay
 //   onPrimaryPress   - (e) => void, global-only: fires immediately on Primary keydown
@@ -409,7 +389,7 @@ let autoFlushScheduled = false;
 // Registration is deferred, not immediate - nothing about a package's
 // own registerKeybind() call sites needs to change for that. The
 // actual work happens once flushKeybindRegistrations() runs (see
-// manifest.js), which is what lets the whole "Keybinds" category land
+// manifest.js), which is what lets the whole "Keybinds" tab land
 // after every other package's own settings have already registered,
 // rather than wherever the FIRST package to call this happens to
 // land it.
@@ -464,38 +444,18 @@ function registerKeybindNow(plugin, config) {
   const pluginId = pluginIdForLabel(packageLabel);
   const pluginHidden = () => (pluginId ? !isPluginEnabled(pluginId) : false);
 
-  // Auto-inserts a one-time visual divider the first time we see a
-  // new package's label, so its bindings stay visually grouped in the
-  // single flat Keybinds list. Happens regardless of whether THIS
-  // particular call has a secondary-key setting of its own (a
-  // press/alone/release-only binding still deserves its group header
-  // if it's the first one registered for its package).
-  if (packageLabel && !seenPackageLabels.has(packageLabel)) {
-    seenPackageLabels.add(packageLabel);
-    const dividerKey = `__divider_${packageLabel.replace(/\s+/g, '_')}`;
-    settings.add(dividerKey, {
-      name: `\u2014 ${packageLabel} \u2014`,
-      type: 'text',
-      default: '',
-      hidden: pluginHidden
-    });
-    dividerKeys.add(dividerKey);
-  }
-
   // Only register a secondary-key setting if there's actually a combo
   // to bind it to - a pure "tap/hold Primary alone" binding (like the
   // channel guide) has nothing meaningful to put in a "Primary + <key>"
   // field, and showing one anyway would be actively misleading.
   if (onMatch) {
-    // packageLabel still drives the group divider above (see
-    // registerKeybind's divider-insertion block), but no longer
-    // prefixes the individual name - the divider already makes the
-    // grouping visually clear, and the extra "[Package] " text was
-    // pushing longer names onto a second line in the panel.
+    // packageLabel is the category, so it isn't repeated in each name.
     settings.add(key, {
       name: `${name} - Primary + <key>`,
       type: 'text',
       default: defaultCode,
+      // Each plugin's shortcuts get their own category on the tab.
+      category: packageLabel || GENERAL_CATEGORY,
       hidden: pluginHidden
     });
     bindingDefaults.set(key, defaultCode);

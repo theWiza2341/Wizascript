@@ -22,16 +22,21 @@ function resolve(v) {
   return typeof v === "function" ? v() : v;
 }
 
-export function createFeatureSettings(plugin, featureName, { tab, visible } = {}) {
+// `categories: true` keeps each setting's `category` (used by the
+// Keybinds and Controller Support tabs, which group rows per plugin).
+// Everywhere else categories are dropped - plugin tabs are flat lists.
+// A category whose rows are all hidden (a disabled plugin's section) is
+// removed from view by hideEmptyCategories() in setting-widgets.js.
+export function createFeatureSettings(plugin, featureName, { tab, visible, categories = false } = {}) {
   const settingsApi = tab ? plugin.settings().page(tab) : plugin.settings();
   const registered = {};
 
   function add(key, config) {
-    // Deliberately drops any `category` - plugin tabs are flat lists.
-    // Also drops `page`, which the plugin settings API always overrides.
+    // `page` is always overridden by the plugin settings API anyway.
     const { category, page, hidden, ...rest } = config;
     const setting = settingsApi.add({
       ...rest,
+      ...(categories && category ? { category } : {}),
       key: `${featureName}.${key}`,
       hidden: () => (visible ? !visible() : false) || resolve(hidden) === true
     });

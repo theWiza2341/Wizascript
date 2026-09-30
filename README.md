@@ -15,8 +15,8 @@ All of Wizascript's settings live under UnderScript's settings menu, in **Plugin
 
 - **General** tab: the **Plugins** and **Miscellaneous** lists, one on/off switch per feature (hover each for a short description), plus the version number, a **Changelog** button, and **Back up / Restore settings** (all your Wizascript settings and saved data as one code or file, for moving to another browser or after a reinstall). New installs start with every plugin switched off. Turning a plugin on or off takes effect after a page refresh.
 - **One tab per enabled plugin**, holding only that plugin's settings. Plugins that are switched off don't show a tab at all.
-- **Keybinds** tab: appears once you enable a plugin with keyboard shortcuts (Patch Maker, UC TV, Notepad), and only lists shortcuts for the plugins you have on. A warning appears under any shortcut that clashes with another one, with your Primary key, or with UnderScript's Space-to-end-turn hotkey.
-- **Controller Support** tab: appears when Controller Support is enabled, and likewise only lists controller bindings for the plugins you have on.
+- **Keybinds** tab: appears once you enable a plugin with keyboard shortcuts (Patch Maker, UC TV, Notepad), with a General section plus one section per plugin you have on. A warning appears under any shortcut that clashes with another one, with your Primary key, or with UnderScript's Space-to-end-turn hotkey.
+- **Controller Support** tab: appears when Controller Support is enabled, split into Setup, General, one section per plugin you have on, and In-Game Inputs. Like the Keybinds tab, it warns under any binding that clashes with another.
 - If more tabs are open than fit in one row, they're split into pages, and **◀ ▶** arrows pinned to the right end of the row flip between pages.
 
 ## Features

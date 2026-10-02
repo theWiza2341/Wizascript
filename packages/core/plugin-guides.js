@@ -113,6 +113,17 @@ const GUIDES = {
       'Tagged cards show coloured dots. Type a tag\'s name into the search bar to show only cards with that tag.',
       '<b>Manage Tags…</b> (in the right-click menu) renames, recolours and deletes tags, and can <b>Share…</b> / <b>Import…</b> tags with friends.'
     ]
+  },
+  tierList: {
+    tab: "Tier List",
+    pages: "every page, including matches",
+    summary: "Rank cards in your own tier lists, made from the game's current cards.",
+    points: () => [
+      `${key("toggleTierList", "KeyL")} shows/hides the window. Drag its title bar to move it, its edges to resize it; <b>□</b> fills the screen.`,
+      'Search or pick a filter in the <b>Cards</b> panel, then drag cards into a tier. Drag a card back to the panel to unrank it.',
+      'Click a tier\'s label (or <b>⚙</b>) to rename, recolour, move, clear or delete it. <b>+ Add tier</b> adds one.',
+      'Saves automatically. <b>↶</b> undoes; <b>Reset</b> (click twice) starts the tiers over.'
+    ]
   }
 };
 

@@ -207,6 +207,14 @@
       name: "Card Tags",
       key: "misc.enableCardTags",
       note: "Right-click cards in Crafting/Decks to tag and search them."
+    },
+    {
+      id: "tierList",
+      category: "Miscellaneous",
+      name: "Tier List Maker",
+      key: "misc.enableTierList",
+      note: "Rank cards in your own drag-and-drop tier lists, on any page.",
+      usesKeybinds: true
     }
   ];
   var LS_PREFIX = "underscript.plugin.Wizascript.";
@@ -286,7 +294,8 @@
     "Patch Maker": "patchMaker",
     "UC TV": "ucTv",
     "Notepad": "notepad",
-    "Card Tracker": "cardTracker"
+    "Card Tracker": "cardTracker",
+    "Tier List": "tierList"
   };
   function pluginIdForLabel(label) {
     return LABEL_TO_PLUGIN[label] || null;
@@ -1123,8 +1132,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       const hit = FEATURE_LABELS.find(([p]) => (GM_PREFIX2 + k).startsWith(GM_PREFIX2 + p));
       if (hit) found.add(hit[1]);
     });
-    const settings2 = Object.keys(backup.ls || {}).length;
-    const parts = [`${settings2} setting${settings2 === 1 ? "" : "s"}`];
+    const settings3 = Object.keys(backup.ls || {}).length;
+    const parts = [`${settings3} setting${settings3 === 1 ? "" : "s"}`];
     if (found.size) parts.push(`saved data for ${Array.from(found).join(", ")}`);
     return parts.join(", plus ");
   }
@@ -1655,6 +1664,17 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         "Tagged cards show coloured dots. Type a tag's name into the search bar to show only cards with that tag.",
         "<b>Manage Tags\u2026</b> (in the right-click menu) renames, recolours and deletes tags, and can <b>Share\u2026</b> / <b>Import\u2026</b> tags with friends."
       ]
+    },
+    tierList: {
+      tab: "Tier List",
+      pages: "every page, including matches",
+      summary: "Rank cards in your own tier lists, made from the game's current cards.",
+      points: () => [
+        `${key("toggleTierList", "KeyL")} shows/hides the window. Drag its title bar to move it, its edges to resize it; <b>\u25A1</b> fills the screen.`,
+        "Search or pick a filter in the <b>Cards</b> panel, then drag cards into a tier. Drag a card back to the panel to unrank it.",
+        "Click a tier's label (or <b>\u2699</b>) to rename, recolour, move, clear or delete it. <b>+ Add tier</b> adds one.",
+        "Saves automatically. <b>\u21B6</b> undoes; <b>Reset</b> (click twice) starts the tiers over."
+      ]
     }
   };
   function pluginName(id) {
@@ -1681,12 +1701,12 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     Object.entries(GUIDES).forEach(([id, g]) => {
       if (g.tab) {
         const categorised = g.tab === "Controller Support";
-        const settings2 = createFeatureSettings(plugin, "guide", {
+        const settings3 = createFeatureSettings(plugin, "guide", {
           tab: g.tab,
           visible: () => isPluginEnabled(id),
           categories: categorised
         });
-        settings2.add(id, {
+        settings3.add(id, {
           name: `How to use ${pluginName(id)}`,
           type: "text",
           default: "",
@@ -1912,26 +1932,26 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
 
   // packages/patch-maker/settings.js
   function registerPatchMakerSettings(plugin) {
-    const settings2 = createFeatureSettings(plugin, "patchmaker", {
+    const settings3 = createFeatureSettings(plugin, "patchmaker", {
       tab: "Patch Maker",
       visible: () => isPluginEnabled("patchMaker")
     });
     return {
-      settings: settings2,
+      settings: settings3,
       // The on/off switch itself now lives in the Plugins list (core/plugins.js).
       enabled: getPluginToggle("patchMaker"),
       // One suite-wide switch on the General tab since 1.5.0 (core/debug.js).
       debugLogging: debugLoggingSetting,
-      hideControls: settings2.add("hideControls", { name: "Hide Patch Maker controls", type: "boolean", default: false }),
-      cardHovers: settings2.add("enableCardHovers", { name: "Enable card hovers", type: "boolean", default: true }),
-      language: settings2.add("patchLanguage", {
+      hideControls: settings3.add("hideControls", { name: "Hide Patch Maker controls", type: "boolean", default: false }),
+      cardHovers: settings3.add("enableCardHovers", { name: "Enable card hovers", type: "boolean", default: true }),
+      language: settings3.add("patchLanguage", {
         name: "Select Language",
         type: "select",
         options: ["Auto / Default", "English", "French", "Spanish", "Portuguese", "Chinese", "Italian", "Polish", "German", "Russian"],
         default: "Auto / Default",
         onChange: () => location.reload()
       }),
-      openOnLoad: settings2.add("openPatchNotesOnPageLoad", { name: "Auto-Load Patch Maker", type: "boolean", default: false })
+      openOnLoad: settings3.add("openPatchNotesOnPageLoad", { name: "Auto-Load Patch Maker", type: "boolean", default: false })
     };
   }
 
@@ -2825,20 +2845,20 @@ html, body { overflow-x: hidden !important; }
   async function buildLocalizedCardNameMap(selectedLanguageLabel, attempt = 0) {
     const lang = getResolvedLanguage(selectedLanguageLabel);
     const i18n = getI18n();
-    const cards = getAllCards();
-    if (!cards.length && attempt < 40) {
+    const cards2 = getAllCards();
+    if (!cards2.length && attempt < 40) {
       await new Promise((r) => setTimeout(r, 250));
       return buildLocalizedCardNameMap(selectedLanguageLabel, attempt + 1);
     }
     const map = /* @__PURE__ */ new Map();
-    if (!cards.length) return map;
+    if (!cards2.length) return map;
     const originalLocale = i18n ? i18n().locale : null;
     try {
       if (i18n) {
         await ensureLanguageLoaded(lang);
         i18n().locale = lang;
       }
-      cards.forEach((card) => {
+      cards2.forEach((card) => {
         if (!card || !card.id) return;
         if (card.name) {
           addNameMapping(map, card.name, card.id);
@@ -3013,10 +3033,10 @@ Version: v${version}`;
     });
     function saveState() {
       try {
-        const state = collectState();
-        if (state) {
-          GM_setValue(STATE_KEY, JSON.stringify(state));
-          logger4.log("save", "State saved.", { sections: state.sections.length });
+        const state2 = collectState();
+        if (state2) {
+          GM_setValue(STATE_KEY, JSON.stringify(state2));
+          logger4.log("save", "State saved.", { sections: state2.sections.length });
         }
       } catch (e) {
         logger4.error("save", "Failed to save state", e);
@@ -3434,14 +3454,14 @@ Version: v${version}`;
     }
     function collectState() {
       if (!container) return null;
-      const state = { title: "", sections: [], newCards: newCards.collectState(container) };
+      const state2 = { title: "", sections: [], newCards: newCards.collectState(container) };
       const h2 = container.querySelector("h2");
-      if (h2) state.title = h2.textContent.trim();
+      if (h2) state2.title = h2.textContent.trim();
       container.querySelectorAll("p.uc-section-header").forEach((p) => {
         const labelEl = p.querySelector(".uc-section-label");
         const ul = p.nextElementSibling;
         if (!ul) return;
-        state.sections.push({
+        state2.sections.push({
           label: labelEl ? labelEl.textContent.trim() : "",
           custom: p.dataset.custom === "true",
           collapsed: ul.style.display === "none",
@@ -3451,7 +3471,7 @@ Version: v${version}`;
           }))
         });
       });
-      return state;
+      return state2;
     }
     function restoreState(saved) {
       const h2 = container.querySelector("h2");
@@ -3748,15 +3768,15 @@ Version: v${version}`;
     return matchesPage("/gameUpdates.jsp");
   }
   function initPatchMaker(plugin) {
-    const settings2 = registerPatchMakerSettings(plugin);
+    const settings3 = registerPatchMakerSettings(plugin);
     const logger4 = createLogger("PatchMaker");
     const originalWarn = logger4.warn.bind(logger4);
     const originalLog = logger4.log.bind(logger4);
     logger4.log = (...args) => {
-      if (settings2.debugLogging.value()) originalLog(...args);
+      if (settings3.debugLogging.value()) originalLog(...args);
     };
     logger4.warn = (...args) => {
-      if (settings2.debugLogging.value()) originalWarn(...args);
+      if (settings3.debugLogging.value()) originalWarn(...args);
     };
     let wordColors = { ...BASE_WORD_COLORS };
     let underlineTokens = [];
@@ -3767,16 +3787,16 @@ Version: v${version}`;
       version: FEATURE_VERSION,
       getWordColors: () => wordColors,
       getUnderlineTokens: () => underlineTokens,
-      getCardHoversEnabled: () => settings2.cardHovers.value(),
+      getCardHoversEnabled: () => settings3.cardHovers.value(),
       getCardNameMap: () => cardNameMap,
-      getHideControlsEnabled: () => settings2.hideControls.value(),
-      getOpenOnLoad: () => settings2.openOnLoad.value()
+      getHideControlsEnabled: () => settings3.hideControls.value(),
+      getOpenOnLoad: () => settings3.openOnLoad.value()
     });
-    settings2.hideControls.on((value) => overlay.setControlsHidden(value));
-    if (!settings2.enabled.value()) return;
+    settings3.hideControls.on((value) => overlay.setControlsHidden(value));
+    if (!settings3.enabled.value()) return;
     if (!isPatchNotesPage()) return;
     async function refreshLocalizedData() {
-      const languageLabel = settings2.language.value();
+      const languageLabel = settings3.language.value();
       const { tokens, localizedColors } = await buildLocalizedFormattingData(languageLabel, BASE_WORD_COLORS);
       underlineTokens = tokens;
       wordColors = { ...BASE_WORD_COLORS, ...localizedColors };
@@ -3790,22 +3810,22 @@ Version: v${version}`;
 
   // packages/true-hub-bridge/settings.js
   function registerTrueHubBridgeSettings(plugin) {
-    const settings2 = createFeatureSettings(plugin, "truehubbridge", {
+    const settings3 = createFeatureSettings(plugin, "truehubbridge", {
       tab: "True Hub Bridge",
       visible: () => isPluginEnabled("trueHub")
     });
     return {
-      settings: settings2,
+      settings: settings3,
       // The on/off switch itself now lives in the Plugins list (core/plugins.js).
       enabled: getPluginToggle("trueHub"),
       // One suite-wide switch on the General tab since 1.5.0 (core/debug.js).
       debugLogging: debugLoggingSetting,
-      autoOpen: settings2.add("autoOpenTrueHub", {
+      autoOpen: settings3.add("autoOpenTrueHub", {
         name: "Auto Open True Hub",
         type: "boolean",
         default: true
       }),
-      scrollPaging: settings2.add("enableScrollPaging", {
+      scrollPaging: settings3.add("enableScrollPaging", {
         name: "Enable Scroll Paging",
         type: "boolean",
         default: true
@@ -4148,10 +4168,10 @@ Version: v${version}`;
     }
   }
   function getCardById(id) {
-    const getCard = getPageWindow().getCard;
-    if (typeof getCard !== "function") return null;
+    const getCard2 = getPageWindow().getCard;
+    if (typeof getCard2 !== "function") return null;
     try {
-      return getCard(id);
+      return getCard2(id);
     } catch {
       return null;
     }
@@ -4882,22 +4902,22 @@ Version: v${version}`;
     return matchesPage("/Hub");
   }
   function initTrueHubBridge(plugin) {
-    const settings2 = registerTrueHubBridgeSettings(plugin);
-    if (!settings2.enabled.value()) return;
+    const settings3 = registerTrueHubBridgeSettings(plugin);
+    if (!settings3.enabled.value()) return;
     if (!isHubPage()) return;
     const logger4 = createLogger("TrueHubBridge");
     const originalWarn = logger4.warn.bind(logger4);
     const originalLog = logger4.log.bind(logger4);
     logger4.log = (...args) => {
-      if (settings2.debugLogging.value()) originalLog(...args);
+      if (settings3.debugLogging.value()) originalLog(...args);
     };
     logger4.warn = (...args) => {
-      if (settings2.debugLogging.value()) originalWarn(...args);
+      if (settings3.debugLogging.value()) originalWarn(...args);
     };
     const overlay = createTrueHubOverlay({
       logger: logger4,
-      getAutoOpen: () => settings2.autoOpen.value(),
-      getScrollPaging: () => settings2.scrollPaging.value()
+      getAutoOpen: () => settings3.autoOpen.value(),
+      getScrollPaging: () => settings3.scrollPaging.value()
     });
     loadDecks().then((decks) => {
       overlay.setDecks(decks);
@@ -4907,24 +4927,24 @@ Version: v${version}`;
 
   // packages/deck-tracker/settings.js
   function registerDeckTrackerSettings(plugin) {
-    const settings2 = createFeatureSettings(plugin, "decktracker", {
+    const settings3 = createFeatureSettings(plugin, "decktracker", {
       tab: "Card Tracker",
       visible: () => isPluginEnabled("cardTracker")
     });
     const enabled = getPluginToggle("cardTracker");
     const debugLogging = debugLoggingSetting;
-    const retainUnclosedPresets = settings2.add("retainUnclosedPresets", {
+    const retainUnclosedPresets = settings3.add("retainUnclosedPresets", {
       name: "Retain Unclosed Presets Between Matches",
       type: "boolean",
       default: false
     });
-    const allowFavoritedRetainedWhileSpectating = settings2.add("allowFavoritedRetainedWhileSpectating", {
+    const allowFavoritedRetainedWhileSpectating = settings3.add("allowFavoritedRetainedWhileSpectating", {
       name: "Auto-load Presets While Spectating",
       note: "Applies to your own favorited/retained tracker presets specifically.",
       type: "boolean",
       default: false
     });
-    const dimOpacity = settings2.add("dimOpacity", {
+    const dimOpacity = settings3.add("dimOpacity", {
       name: "Tracker Dim Opacity",
       type: "slider",
       default: 0.4,
@@ -4933,7 +4953,7 @@ Version: v${version}`;
       step: 0.05
     });
     return {
-      settings: settings2,
+      settings: settings3,
       enabled,
       debugLogging,
       retainUnclosedPresets,
@@ -6099,19 +6119,19 @@ Version: v${version}`;
     GM_deleteValue(BUTTON_POSITION_KEY);
   }
   function initDeckTracker(plugin) {
-    const settings2 = registerDeckTrackerSettings(plugin);
-    if (!settings2.enabled.value()) return;
+    const settings3 = registerDeckTrackerSettings(plugin);
+    if (!settings3.enabled.value()) return;
     if (!isGamePage()) return;
     const logger4 = createLogger("DeckTracker");
     const originalWarn = logger4.warn.bind(logger4);
     const originalLog = logger4.log.bind(logger4);
     logger4.log = (...args) => {
-      if (settings2.debugLogging.value()) originalLog(...args);
+      if (settings3.debugLogging.value()) originalLog(...args);
     };
     logger4.warn = (...args) => {
-      if (settings2.debugLogging.value()) originalWarn(...args);
+      if (settings3.debugLogging.value()) originalWarn(...args);
     };
-    setRetainEnabledGetter(() => settings2.retainUnclosedPresets.value());
+    setRetainEnabledGetter(() => settings3.retainUnclosedPresets.value());
     registerBuiltInPresets();
     function handleAddPreset(id) {
       spawnPreset(id);
@@ -6231,7 +6251,7 @@ Version: v${version}`;
         const shouldDim = isBlockingModalOpen();
         if (shouldDim !== isDimmed) {
           isDimmed = shouldDim;
-          btn.style.opacity = shouldDim ? String(settings2.dimOpacity.value()) : "1";
+          btn.style.opacity = shouldDim ? String(settings3.dimOpacity.value()) : "1";
           btn.style.pointerEvents = shouldDim ? "none" : "auto";
         }
       }, 250);
@@ -6313,7 +6333,7 @@ Version: v${version}`;
       }
     });
     function restoreFavoritedAndRetained() {
-      if (isSpectating() && !settings2.allowFavoritedRetainedWhileSpectating.value()) return;
+      if (isSpectating() && !settings3.allowFavoritedRetainedWhileSpectating.value()) return;
       const favoritedIds = getFavoritedPresetIds();
       const spawnedFavorites = favoritedIds.filter((id) => spawnPreset(id) !== null);
       if (spawnedFavorites.length) {
@@ -6326,7 +6346,7 @@ Version: v${version}`;
           favoritedIds.filter((id) => !spawnedFavorites.includes(id))
         );
       }
-      if (settings2.retainUnclosedPresets.value()) {
+      if (settings3.retainUnclosedPresets.value()) {
         const retainedIds = getRetainedPresetIds().filter((id) => !favoritedIds.includes(id));
         retainedIds.forEach((id) => spawnPreset(id));
         if (retainedIds.length) {
@@ -6389,18 +6409,18 @@ Version: v${version}`;
     settingsRef = ref;
   }
   function registerUcTvSettings(plugin, divisionTiers) {
-    const settings2 = createFeatureSettings(plugin, "ucTv", {
+    const settings3 = createFeatureSettings(plugin, "ucTv", {
       tab: "UC TV",
       visible: () => isPluginEnabled("ucTv")
     });
     const enabled = getPluginToggle("ucTv");
     const debugLogs = debugLoggingSetting;
-    const autoMode = settings2.add("autoMode", {
+    const autoMode = settings3.add("autoMode", {
       name: "Enable auto-mode when spectating",
       type: "boolean",
       default: false
     });
-    const countdownSeconds = settings2.add("countdownSeconds", {
+    const countdownSeconds = settings3.add("countdownSeconds", {
       name: "Auto-continue delay (seconds)",
       type: "select",
       data: Array.from({ length: 15 }, (_, i) => i + 1).map((n) => [`${n}`, n]),
@@ -6409,11 +6429,11 @@ Version: v${version}`;
     const filterDisabled = () => !filteringEnabled.value();
     const filterDependents = [];
     const addFilter = (key2, config) => {
-      const setting2 = settings2.add(key2, { ...config, disabled: filterDisabled });
+      const setting2 = settings3.add(key2, { ...config, disabled: filterDisabled });
       filterDependents.push(setting2);
       return setting2;
     };
-    const filteringEnabled = settings2.add("filteringEnabled", {
+    const filteringEnabled = settings3.add("filteringEnabled", {
       name: "Enable Match Filtering",
       type: "boolean",
       default: true,
@@ -7148,8 +7168,8 @@ Version: v${version}`;
     return matchesPage({ prefix: "/Spectate" });
   }
   function initUcTv(plugin) {
-    const settings2 = registerUcTvSettings(plugin, DIVISION_TIERS);
-    setSettingsRef(settings2);
+    const settings3 = registerUcTvSettings(plugin, DIVISION_TIERS);
+    setSettingsRef(settings3);
     if (CONFIG.debugLogs) dumpSettingsState();
     window.__ucTVScope = scopeActiveGames;
     window.__ucTVSettings = dumpSettingsState;
@@ -7233,8 +7253,8 @@ Version: v${version}`;
   function getSavedPenColor() {
     return readJSON(PEN_COLOR_KEY, null);
   }
-  function setSavedPenColor(state) {
-    writeJSON(PEN_COLOR_KEY, state);
+  function setSavedPenColor(state2) {
+    writeJSON(PEN_COLOR_KEY, state2);
   }
   function clearSavedPenColor() {
     try {
@@ -7436,7 +7456,7 @@ Version: v${version}`;
     cursorIndicator.className = "wizascript-notepad-cursor-indicator";
     let backgroundColor = DEFAULT_BACKGROUND;
     let strokeColor = "rgb(26, 26, 26)";
-    let saveTimer = null;
+    let saveTimer2 = null;
     let lastX = null;
     let lastY = null;
     const layers = [];
@@ -7466,7 +7486,7 @@ Version: v${version}`;
       if (layers.length >= MAX_LAYERS) return false;
       addLayerInternal();
       activeLayerIndex = layers.length;
-      scheduleSave();
+      scheduleSave2();
       notifyLayersChange();
       return true;
     }
@@ -7475,7 +7495,7 @@ Version: v${version}`;
       const removed = layers.pop();
       removed.canvas.remove();
       if (activeLayerIndex > layers.length) activeLayerIndex = layers.length;
-      scheduleSave();
+      scheduleSave2();
       notifyLayersChange();
       return true;
     }
@@ -7507,9 +7527,9 @@ Version: v${version}`;
         backgroundColor
       };
     }
-    function scheduleSave() {
-      clearTimeout(saveTimer);
-      saveTimer = setTimeout(() => {
+    function scheduleSave2() {
+      clearTimeout(saveTimer2);
+      saveTimer2 = setTimeout(() => {
         setSavedDrawing(snapshotState());
       }, SAVE_DEBOUNCE_MS);
     }
@@ -7544,38 +7564,38 @@ Version: v${version}`;
     }
     const initialLoad = loadInitial();
     wrapper.append(interactionCanvas, cursorIndicator);
-    let undoStack = [];
+    let undoStack2 = [];
     let redoStack = [];
     let onHistoryChange = null;
     let restoreGeneration = 0;
     function notifyHistoryChange() {
-      if (onHistoryChange) onHistoryChange(undoStack.length > 0, redoStack.length > 0);
+      if (onHistoryChange) onHistoryChange(undoStack2.length > 0, redoStack.length > 0);
     }
-    async function restoreState(state) {
+    async function restoreState(state2) {
       const myGeneration = ++restoreGeneration;
-      paintBackground(state.backgroundColor);
-      while (layers.length < state.layers.length) addLayerInternal();
-      while (layers.length > state.layers.length) {
+      paintBackground(state2.backgroundColor);
+      while (layers.length < state2.layers.length) addLayerInternal();
+      while (layers.length > state2.layers.length) {
         const removed = layers.pop();
         removed.canvas.remove();
       }
       if (activeLayerIndex > layers.length) activeLayerIndex = layers.length || 1;
       layers.forEach((l) => l.ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT));
-      await Promise.all(layers.map((l, i) => loadLayerContent(l.ctx, state.layers[i])));
+      await Promise.all(layers.map((l, i) => loadLayerContent(l.ctx, state2.layers[i])));
       if (myGeneration !== restoreGeneration) return;
-      scheduleSave();
+      scheduleSave2();
       notifyLayersChange();
     }
     function pushUndoSnapshot() {
-      undoStack.push(snapshotState());
-      if (undoStack.length > MAX_HISTORY) undoStack.shift();
+      undoStack2.push(snapshotState());
+      if (undoStack2.length > MAX_HISTORY) undoStack2.shift();
       redoStack = [];
       notifyHistoryChange();
     }
-    function undo() {
-      if (!undoStack.length) return false;
+    function undo2() {
+      if (!undoStack2.length) return false;
       const current = snapshotState();
-      const previous = undoStack.pop();
+      const previous = undoStack2.pop();
       redoStack.push(current);
       if (redoStack.length > MAX_HISTORY) redoStack.shift();
       restoreState(previous);
@@ -7586,8 +7606,8 @@ Version: v${version}`;
       if (!redoStack.length) return false;
       const current = snapshotState();
       const next = redoStack.pop();
-      undoStack.push(current);
-      if (undoStack.length > MAX_HISTORY) undoStack.shift();
+      undoStack2.push(current);
+      if (undoStack2.length > MAX_HISTORY) undoStack2.shift();
       restoreState(next);
       notifyHistoryChange();
       return true;
@@ -7600,9 +7620,9 @@ Version: v${version}`;
       layers[0].ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
       activeLayerIndex = 1;
       paintBackground(DEFAULT_BACKGROUND);
-      undoStack = [];
+      undoStack2 = [];
       redoStack = [];
-      clearTimeout(saveTimer);
+      clearTimeout(saveTimer2);
       clearSavedDrawing();
       notifyLayersChange();
       notifyHistoryChange();
@@ -7610,13 +7630,13 @@ Version: v${version}`;
     function clear() {
       pushUndoSnapshot();
       activeCtx().clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-      scheduleSave();
+      scheduleSave2();
     }
     function setBackgroundColor(color) {
       if (color === backgroundColor) return;
       pushUndoSnapshot();
       paintBackground(color);
-      scheduleSave();
+      scheduleSave2();
     }
     function strokeTo(x, y, { erase, size }) {
       const ctx = activeCtx();
@@ -7641,7 +7661,7 @@ Version: v${version}`;
     function endStroke() {
       lastX = null;
       lastY = null;
-      scheduleSave();
+      scheduleSave2();
     }
     function fill(x, y) {
       pushUndoSnapshot();
@@ -7650,12 +7670,12 @@ Version: v${version}`;
       const imageData = ctx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
       const changed = floodFillPixels(imageData.data, CANVAS_WIDTH, CANVAS_HEIGHT, x, y, fillRgb);
       if (!changed) {
-        undoStack.pop();
+        undoStack2.pop();
         notifyHistoryChange();
         return;
       }
       ctx.putImageData(imageData, 0, 0);
-      scheduleSave();
+      scheduleSave2();
     }
     function downloadAsPng(filename = "notepad-doodle.png") {
       const flattened = document.createElement("canvas");
@@ -7686,7 +7706,7 @@ Version: v${version}`;
       clear,
       fill,
       resetAll,
-      undo,
+      undo: undo2,
       redo,
       setOnHistoryChange: (cb) => {
         onHistoryChange = cb;
@@ -7804,9 +7824,9 @@ Version: v${version}`;
       lightness = nextLightness;
       lightnessSlider.value = String(Math.round(lightness * 100));
       updateIndicatorPosition();
-      notify();
+      notify2();
     }
-    function notify() {
+    function notify2() {
       const color = currentColor();
       preview.style.background = color;
       onChange(color);
@@ -7822,7 +7842,7 @@ Version: v${version}`;
       hue = angle;
       saturation = Math.min(1, dist / WHEEL_RADIUS);
       updateIndicatorPosition();
-      notify();
+      notify2();
     }
     let picking = false;
     wheelCanvas.addEventListener("mousedown", (e) => {
@@ -7837,10 +7857,10 @@ Version: v${version}`;
     }, { signal });
     lightnessSlider.addEventListener("input", () => {
       lightness = Number(lightnessSlider.value) / 100;
-      notify();
+      notify2();
     }, { signal });
     updateIndicatorPosition();
-    notify();
+    notify2();
     container.append(wheelWrapper, lightnessRow, preview);
     return { element: container, getColor: currentColor, getState: currentState, setState };
   }
@@ -8087,8 +8107,8 @@ Version: v${version}`;
     redoBtn.addEventListener("click", () => surface.redo(), { signal });
     undoBtn.classList.add("wizascript-notepad-history-btn-disabled");
     redoBtn.classList.add("wizascript-notepad-history-btn-disabled");
-    surface.setOnHistoryChange((canUndo, canRedo) => {
-      undoBtn.classList.toggle("wizascript-notepad-history-btn-disabled", !canUndo);
+    surface.setOnHistoryChange((canUndo2, canRedo) => {
+      undoBtn.classList.toggle("wizascript-notepad-history-btn-disabled", !canUndo2);
       redoBtn.classList.toggle("wizascript-notepad-history-btn-disabled", !canRedo);
     });
     clearBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
@@ -8812,7 +8832,7 @@ Version: v${version}`;
     openMenuEl = null;
     maybeRefreshSearch();
   }
-  function openTagMenu(card, cards, x, y) {
+  function openTagMenu(card, cards2, x, y) {
     closeTagMenu();
     const menu = document.createElement("div");
     menu.className = "wiza-tag-menu";
@@ -8920,7 +8940,7 @@ Version: v${version}`;
           secondary: {
             label: "\u{1F441}",
             title: 'See cards tagged "' + tag.name + '"',
-            onClick: () => showCardsForTag(tag, cards)
+            onClick: () => showCardsForTag(tag, cards2)
           }
         }));
       });
@@ -8933,7 +8953,7 @@ Version: v${version}`;
     menu.appendChild(divider);
     const newTagRow = makeRow({ label: "+ New Tag", onClick: () => {
       closeTagMenu();
-      promptNewTag(card, cards, x, y);
+      promptNewTag(card, cards2, x, y);
     } });
     newTagRow.style.color = "#8f8";
     menu.appendChild(newTagRow);
@@ -8961,7 +8981,7 @@ Version: v${version}`;
     document.addEventListener("click", outsideClick);
     document.addEventListener("contextmenu", outsideContext);
   }
-  function promptNewTag(card, cards, reopenX, reopenY) {
+  function promptNewTag(card, cards2, reopenX, reopenY) {
     const pageWindow2 = getPageWindow();
     const BootstrapDialog2 = pageWindow2.BootstrapDialog;
     if (typeof BootstrapDialog2 === "undefined" || typeof BootstrapDialog2.show !== "function") {
@@ -8997,7 +9017,7 @@ Version: v${version}`;
             toggleCardTag(card.id, tag.id);
             decorateCard(card.id);
             d.close();
-            openTagMenu(card, cards, reopenX, reopenY);
+            openTagMenu(card, cards2, reopenX, reopenY);
           }
         }
       ]
@@ -9084,10 +9104,10 @@ Version: v${version}`;
       ]
     });
   }
-  function showCardsForTag(tag, cards) {
+  function showCardsForTag(tag, cards2) {
     const pageWindow2 = getPageWindow();
     const BootstrapDialog2 = pageWindow2.BootstrapDialog;
-    const matches = cards.filter((c) => c && c.id != null && cardHasTag(c.id, tag.id));
+    const matches = cards2.filter((c) => c && c.id != null && cardHasTag(c.id, tag.id));
     const listText = matches.length ? matches.map((c) => c.name).join(", ") : '(nothing tagged "' + tag.name + '" yet)';
     if (typeof BootstrapDialog2 === "undefined" || typeof BootstrapDialog2.show !== "function") {
       alert('Cards tagged "' + tag.name + '": ' + listText);
@@ -9105,20 +9125,20 @@ Version: v${version}`;
   }
 
   // packages/misc/card-tags/right-click.js
-  function getCardById2(cards, id) {
-    return cards.find((c) => c && String(c.id) === String(id)) || null;
+  function getCardById2(cards2, id) {
+    return cards2.find((c) => c && String(c.id) === String(id)) || null;
   }
-  function wireRightClick(cards) {
+  function wireRightClick(cards2) {
     document.addEventListener("contextmenu", function(e) {
       const container = e.target.closest(CARD_LIST_SELECTOR);
       if (!container) return;
       if (e.defaultPrevented) return;
       const cardEl = e.target.closest(".card");
-      const card = cardEl && cardEl.id ? getCardById2(cards, cardEl.id) : null;
+      const card = cardEl && cardEl.id ? getCardById2(cards2, cardEl.id) : null;
       if (!card) return;
       e.preventDefault();
       e.stopImmediatePropagation();
-      openTagMenu(card, cards, e.clientX, e.clientY);
+      openTagMenu(card, cards2, e.clientX, e.clientY);
     });
   }
 
@@ -9147,9 +9167,9 @@ Version: v${version}`;
     return matchesPage(["/Crafting", "/Decks"]);
   }
   function waitForCards(callback, attempt = 0) {
-    const cards = getAllCards();
-    if (cards.length) {
-      callback(cards);
+    const cards2 = getAllCards();
+    if (cards2.length) {
+      callback(cards2);
       return;
     }
     if (attempt > 80) {
@@ -9162,22 +9182,1491 @@ Version: v${version}`;
     if (!enableCardTagsSetting.value()) return;
     if (!isCardTagsPage()) return;
     setMenuLogger(logger3);
-    waitForCards((cards) => {
+    waitForCards((cards2) => {
       wireSearchFilter(plugin, logger3);
-      wireRightClick(cards);
+      wireRightClick(cards2);
       initIndicators(logger3);
       decorateAllCards();
     });
   }
 
+  // packages/misc/tier-list/styles.js
+  var STYLE_ID = "wizascript-tierlist-style";
+  var Z_WINDOW = 2147482e3;
+  var Z_FLOATING = 2147483100;
+  function injectTierListStyle() {
+    if (document.getElementById(STYLE_ID)) return;
+    const style = document.createElement("style");
+    style.id = STYLE_ID;
+    style.textContent = CSS;
+    (document.head || document.documentElement).appendChild(style);
+  }
+  var CSS = `
+.wz-tl {
+  --wz-tl-tile: 72px;
+  --wz-tl-tile-h: calc(var(--wz-tl-tile) * 0.8);
+  --wz-tl-label: max(56px, var(--wz-tl-tile));
+  position: fixed;
+  z-index: ${Z_WINDOW};
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  background: #0d0d0d;
+  color: #fff;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.7);
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  user-select: none;
+}
+.wz-tl *, .wz-tl *::before, .wz-tl *::after { box-sizing: border-box; }
+.wz-tl.wz-tl-max { left: 0 !important; top: 0 !important; width: 100vw !important; height: 100vh !important; border-radius: 0; }
+.wz-tl.wz-tl-max .wz-tl-resize { display: none; }
+
+.wz-tl-header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  background: #222;
+  border-bottom: 1px solid #555;
+  cursor: grab;
+  touch-action: none;
+}
+.wz-tl.wz-tl-max .wz-tl-header { cursor: default; }
+.wz-tl-grip { flex: 1 1 auto; min-width: 16px; align-self: stretch; }
+.wz-tl-title {
+  flex: 0 1 220px;
+  min-width: 60px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: #fff;
+  font: bold 13px Arial, sans-serif;
+  padding: 2px 4px;
+  outline: none;
+  text-overflow: ellipsis;
+}
+.wz-tl-title:hover, .wz-tl-title:focus { border-color: #666; background: rgba(255,255,255,0.06); }
+.wz-tl-btn {
+  flex: none;
+  padding: 2px 7px;
+  border: 1px solid #777;
+  border-radius: 3px;
+  background: #333;
+  color: #fff;
+  font: 12px Arial, sans-serif;
+  line-height: 16px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.wz-tl-btn:hover { background: #444; border-color: #aaa; }
+.wz-tl-btn:disabled { opacity: 0.35; cursor: default; background: #333; border-color: #777; }
+.wz-tl-btn.wz-tl-active { background: #4464bd; border-color: #8ea6e8; }
+.wz-tl-btn.wz-tl-danger { background: #8b1e1e; border-color: #e05555; }
+
+.wz-tl-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+
+.wz-tl-tiers { flex: 1 1 0; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+.wz-tl-row { display: flex; align-items: stretch; border-bottom: 1px solid #000; background: #1a1a1a; }
+.wz-tl-row-label {
+  flex: none;
+  width: var(--wz-tl-label);
+  min-height: calc(var(--wz-tl-tile-h) + 6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  color: #000;
+  font-weight: bold;
+  font-size: max(12px, calc(var(--wz-tl-tile) * 0.22));
+  text-align: center;
+  word-break: break-word;
+  cursor: pointer;
+}
+.wz-tl-row-items {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 3px;
+  padding: 3px;
+  min-height: calc(var(--wz-tl-tile-h) + 6px);
+}
+.wz-tl-row-tools {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  padding: 1px 3px;
+  background: #000;
+}
+.wz-tl-row-tools button {
+  width: 20px;
+  height: 15px;
+  padding: 0;
+  border: 1px solid #555;
+  border-radius: 3px;
+  background: #222;
+  color: #ddd;
+  font-size: 9px;
+  line-height: 13px;
+  cursor: pointer;
+}
+.wz-tl-row-tools button:hover { background: #3a3a3a; color: #fff; }
+.wz-tl-add-row { display: block; margin: 6px auto; }
+
+.wz-tl-tile {
+  position: relative;
+  flex: none;
+  width: var(--wz-tl-tile);
+  height: var(--wz-tl-tile-h);
+  border: 2px solid var(--wz-tl-rarity, #888);
+  border-radius: 3px;
+  background: #000 center / contain no-repeat;
+  image-rendering: pixelated;
+  cursor: grab;
+  touch-action: none;
+  overflow: hidden;
+}
+.wz-tl-tile-name {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 1px 2px;
+  background: rgba(0,0,0,0.72);
+  color: #fff;
+  font-size: max(9px, calc(var(--wz-tl-tile) * 0.12));
+  line-height: 1.15;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+.wz-tl-tile.wz-tl-noimg .wz-tl-tile-name { top: 0; display: flex; align-items: center; justify-content: center; white-space: normal; }
+.wz-tl-tile.wz-tl-placed { opacity: 0.35; }
+.wz-tl-tile.wz-tl-placed::after {
+  content: "\\2713";
+  position: absolute;
+  top: 1px; right: 3px;
+  color: #7fff7f;
+  font-weight: bold;
+  font-size: 12px;
+  text-shadow: 0 0 2px #000;
+}
+.wz-tl-tile.wz-tl-dragging { opacity: 0.25; }
+.wz-tl-marker {
+  flex: none;
+  width: 4px;
+  height: var(--wz-tl-tile-h);
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: 0 0 6px #8ea6e8;
+}
+.wz-tl-ghost {
+  position: fixed;
+  z-index: ${Z_FLOATING};
+  pointer-events: none;
+  opacity: 0.9;
+  transform: rotate(-3deg);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.7);
+}
+.wz-tl-drop-out { outline: 2px dashed #e05555; outline-offset: -2px; }
+.wz-tl-drop-in { outline: 2px dashed #8ea6e8; outline-offset: -2px; }
+
+.wz-tl-picker {
+  flex: 0 1 auto;
+  max-height: 60%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-top: 2px solid #555;
+  background: #141414;
+}
+.wz-tl-picker.wz-tl-hidden { display: none; }
+.wz-tl-filters { flex: none; display: flex; flex-wrap: wrap; gap: 4px; padding: 5px 6px; }
+.wz-tl-filters input, .wz-tl-filters select {
+  height: 24px;
+  padding: 2px 4px;
+  border: 1px solid #666;
+  border-radius: 3px;
+  background: #000;
+  color: #fff;
+  font: 12px Arial, sans-serif;
+}
+.wz-tl-filters input { flex: 1 1 140px; min-width: 100px; }
+.wz-tl-filters select { flex: 0 1 auto; max-width: 150px; }
+.wz-tl-results { flex: 1 1 auto; min-height: min(calc(var(--wz-tl-tile-h) + 8px), 40px); overflow-y: auto; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 3px; padding: 0 6px 6px; }
+.wz-tl-hint { flex: none; padding: 0 8px 4px; color: #aaa; font-size: 12px; }
+
+.wz-tl-resize { position: absolute; z-index: 2; touch-action: none; }
+.wz-tl-resize-n, .wz-tl-resize-s { left: 8px; right: 8px; height: 7px; cursor: ns-resize; }
+.wz-tl-resize-n { top: -4px; }
+.wz-tl-resize-s { bottom: -4px; }
+.wz-tl-resize-e, .wz-tl-resize-w { top: 8px; bottom: 8px; width: 7px; cursor: ew-resize; }
+.wz-tl-resize-e { right: -4px; }
+.wz-tl-resize-w { left: -4px; }
+.wz-tl-resize-ne, .wz-tl-resize-nw, .wz-tl-resize-se, .wz-tl-resize-sw { width: 14px; height: 14px; }
+.wz-tl-resize-ne { top: -5px; right: -5px; cursor: nesw-resize; }
+.wz-tl-resize-sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
+.wz-tl-resize-nw { top: -5px; left: -5px; cursor: nwse-resize; }
+.wz-tl-resize-se { bottom: -5px; right: -5px; cursor: nwse-resize; }
+
+.wz-tl-editor {
+  position: absolute;
+  z-index: 5;
+  width: 230px;
+  max-width: calc(100% - 12px);
+  padding: 8px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  background: #1c1c1c;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+}
+.wz-tl-editor input[type="text"] {
+  width: 100%;
+  margin-bottom: 6px;
+  padding: 3px 5px;
+  border: 1px solid #666;
+  border-radius: 3px;
+  background: #000;
+  color: #fff;
+  font: 13px Arial, sans-serif;
+}
+.wz-tl-swatches { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; align-items: center; }
+.wz-tl-swatch { width: 20px; height: 20px; border: 1px solid #000; border-radius: 3px; cursor: pointer; }
+.wz-tl-swatch.wz-tl-active { box-shadow: 0 0 0 2px #fff; }
+.wz-tl-swatches input[type="color"] { width: 24px; height: 22px; padding: 0; border: none; background: none; cursor: pointer; }
+.wz-tl-editor-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.wz-tl-editor-buttons .wz-tl-btn { width: 100%; }
+
+.wz-tl-preview {
+  position: fixed;
+  z-index: ${Z_FLOATING};
+  pointer-events: none;
+}
+.wz-tl-preview-fallback {
+  width: 200px;
+  padding: 4px;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  background: #000;
+  color: #fff;
+  font: bold 13px Arial, sans-serif;
+  text-align: center;
+}
+.wz-tl-preview-fallback div {
+  height: 120px;
+  margin-bottom: 4px;
+  background: center / contain no-repeat;
+  image-rendering: pixelated;
+}
+`;
+
+  // packages/misc/tier-list/storage.js
+  var LISTS_KEY = "wizascript.tierlist.lists";
+  var WINDOW_KEY = "wizascript.tierlist.window";
+  function readJSON2(key2, fallback) {
+    try {
+      const raw = GM_getValue(key2, null);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) {
+      console.warn("[Tier List] Failed to read storage key", key2, e);
+      return fallback;
+    }
+  }
+  function writeJSON2(key2, value) {
+    try {
+      GM_setValue(key2, JSON.stringify(value));
+    } catch (e) {
+      console.warn("[Tier List] Failed to write storage key", key2, e);
+    }
+  }
+  function loadLists() {
+    return readJSON2(LISTS_KEY, null);
+  }
+  function saveLists(data2) {
+    writeJSON2(LISTS_KEY, data2);
+  }
+  function loadWindowState() {
+    return readJSON2(WINDOW_KEY, null);
+  }
+  function saveWindowState(state2) {
+    writeJSON2(WINDOW_KEY, state2);
+  }
+
+  // packages/misc/tier-list/model.js
+  var DEFAULT_TIERS = [
+    ["S", "#ff7f7f"],
+    ["A", "#ffbf7f"],
+    ["B", "#ffdf7f"],
+    ["C", "#ffff7f"],
+    ["D", "#bfff7f"]
+  ];
+  var TIER_COLORS = [
+    "#ff7f7f",
+    "#ffbf7f",
+    "#ffdf7f",
+    "#ffff7f",
+    "#bfff7f",
+    "#7fff7f",
+    "#7fffff",
+    "#7fbfff",
+    "#7f7fff",
+    "#ff7fff",
+    "#bf7fbf",
+    "#cfcfcf"
+  ];
+  var MAX_UNDO = 50;
+  var SAVE_DELAY_MS = 300;
+  var MAX_LABEL = 40;
+  var MAX_TITLE = 60;
+  var DEFAULT_TITLE2 = "My Tier List";
+  var state = null;
+  var undoStack = [];
+  var listeners = /* @__PURE__ */ new Set();
+  var saveTimer = null;
+  function uid(prefix) {
+    return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+  function makeTier(label, color) {
+    return { id: uid("t"), label, color, items: [] };
+  }
+  function makeList(title = DEFAULT_TITLE2) {
+    return { id: uid("l"), title, tiers: DEFAULT_TIERS.map(([l, c]) => makeTier(l, c)) };
+  }
+  function sanitize(raw) {
+    if (!raw || !Array.isArray(raw.lists) || !raw.lists.length) {
+      const list = makeList();
+      return { version: 1, active: list.id, lists: [list] };
+    }
+    const lists = raw.lists.map((l) => ({
+      id: typeof l.id === "string" ? l.id : uid("l"),
+      title: typeof l.title === "string" ? l.title.slice(0, MAX_TITLE) : DEFAULT_TITLE2,
+      tiers: (Array.isArray(l.tiers) ? l.tiers : []).map((t) => ({
+        id: typeof t.id === "string" ? t.id : uid("t"),
+        label: typeof t.label === "string" ? t.label.slice(0, MAX_LABEL) : "?",
+        color: /^#[0-9a-f]{6}$/i.test(t.color) ? t.color : "#cfcfcf",
+        items: (Array.isArray(t.items) ? t.items : []).filter((k) => typeof k === "string")
+      }))
+    }));
+    lists.forEach((l) => {
+      const seen = /* @__PURE__ */ new Set();
+      l.tiers.forEach((t) => {
+        t.items = t.items.filter((k) => seen.has(k) ? false : (seen.add(k), true));
+      });
+    });
+    const active = lists.some((l) => l.id === raw.active) ? raw.active : lists[0].id;
+    return { version: 1, active, lists };
+  }
+  function ensureLoaded() {
+    if (!state) state = sanitize(loadLists());
+  }
+  function scheduleSave() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => saveLists(state), SAVE_DELAY_MS);
+  }
+  function flushSave() {
+    if (!state) return;
+    clearTimeout(saveTimer);
+    saveLists(state);
+  }
+  function notify() {
+    listeners.forEach((fn) => {
+      try {
+        fn();
+      } catch (e) {
+        console.error("[Tier List] listener failed", e);
+      }
+    });
+  }
+  function change(mutator) {
+    ensureLoaded();
+    const before = JSON.stringify(state);
+    const result = mutator(activeList());
+    if (result === false) return false;
+    if (JSON.stringify(state) === before) return false;
+    undoStack.push(before);
+    if (undoStack.length > MAX_UNDO) undoStack.shift();
+    scheduleSave();
+    notify();
+    return true;
+  }
+  function activeList() {
+    return state.lists.find((l) => l.id === state.active) || state.lists[0];
+  }
+  function findTier(list, tierId) {
+    return list.tiers.find((t) => t.id === tierId) || null;
+  }
+  function removeEverywhere(list, key2) {
+    list.tiers.forEach((t) => {
+      const i = t.items.indexOf(key2);
+      if (i !== -1) t.items.splice(i, 1);
+    });
+  }
+  function subscribe(fn) {
+    listeners.add(fn);
+    return () => listeners.delete(fn);
+  }
+  function getActiveList() {
+    ensureLoaded();
+    return activeList();
+  }
+  function isPlaced(key2) {
+    return getActiveList().tiers.some((t) => t.items.includes(key2));
+  }
+  function canUndo() {
+    return undoStack.length > 0;
+  }
+  function placeItem(key2, tierId, index) {
+    return change((list) => {
+      const tier = findTier(list, tierId);
+      if (!tier || typeof key2 !== "string") return false;
+      removeEverywhere(list, key2);
+      const at = Math.max(0, Math.min(typeof index === "number" ? index : tier.items.length, tier.items.length));
+      tier.items.splice(at, 0, key2);
+    });
+  }
+  function removeItem(key2) {
+    return change((list) => removeEverywhere(list, key2));
+  }
+  function addTier(atIndex) {
+    return change((list) => {
+      const used = new Set(list.tiers.map((t) => t.color));
+      const color = TIER_COLORS.find((c) => !used.has(c)) || "#cfcfcf";
+      const at = typeof atIndex === "number" ? Math.max(0, Math.min(atIndex, list.tiers.length)) : list.tiers.length;
+      list.tiers.splice(at, 0, makeTier("New", color));
+    });
+  }
+  function deleteTier(tierId) {
+    return change((list) => {
+      const i = list.tiers.findIndex((t) => t.id === tierId);
+      if (i === -1) return false;
+      list.tiers.splice(i, 1);
+    });
+  }
+  function renameTier(tierId, label) {
+    return change((list) => {
+      const tier = findTier(list, tierId);
+      if (!tier) return false;
+      tier.label = String(label).slice(0, MAX_LABEL);
+    });
+  }
+  function recolorTier(tierId, color) {
+    if (!/^#[0-9a-f]{6}$/i.test(color)) return false;
+    return change((list) => {
+      const tier = findTier(list, tierId);
+      if (!tier) return false;
+      tier.color = color.toLowerCase();
+    });
+  }
+  function moveTier(tierId, delta) {
+    return change((list) => {
+      const i = list.tiers.findIndex((t) => t.id === tierId);
+      const j = i + delta;
+      if (i === -1 || j < 0 || j >= list.tiers.length) return false;
+      const [tier] = list.tiers.splice(i, 1);
+      list.tiers.splice(j, 0, tier);
+    });
+  }
+  function clearTier(tierId) {
+    return change((list) => {
+      const tier = findTier(list, tierId);
+      if (!tier) return false;
+      tier.items = [];
+    });
+  }
+  function setTitle(title) {
+    return change((list) => {
+      list.title = String(title).trim().slice(0, MAX_TITLE) || DEFAULT_TITLE2;
+    });
+  }
+  function resetList() {
+    return change((list) => {
+      list.tiers = DEFAULT_TIERS.map(([l, c]) => makeTier(l, c));
+    });
+  }
+  function undo() {
+    ensureLoaded();
+    const prev = undoStack.pop();
+    if (!prev) return false;
+    state = sanitize(JSON.parse(prev));
+    scheduleSave();
+    notify();
+    return true;
+  }
+
+  // packages/misc/tier-list/items.js
+  var cards = [];
+  var byId = /* @__PURE__ */ new Map();
+  var nameCache = /* @__PURE__ */ new Map();
+  var readyListeners = /* @__PURE__ */ new Set();
+  var EXTENSION_LABELS = { BASE: "Undertale", DELTARUNE: "Deltarune", UTY: "Undertale Yellow" };
+  var RARITY_ORDER = ["BASE", "COMMON", "RARE", "EPIC", "LEGENDARY", "DETERMINATION", "TOKEN", "GENERATED"];
+  var HIDDEN_BY_DEFAULT = /* @__PURE__ */ new Set(["TOKEN", "GENERATED"]);
+  var RARITY_COLORS = {
+    BASE: "#9a9a9a",
+    COMMON: "#e8e8e8",
+    RARE: "#58b4ff",
+    EPIC: "#c86bff",
+    LEGENDARY: "#ffcc00",
+    DETERMINATION: "#ff3030",
+    TOKEN: "#6b6b6b",
+    GENERATED: "#6b6b6b"
+  };
+  function setCards(list) {
+    if (!Array.isArray(list) || !list.length) return false;
+    cards = list.filter((c) => c && c.id !== void 0 && c.id !== null);
+    byId = new Map(cards.map((c) => [String(c.id), c]));
+    nameCache.clear();
+    readyListeners.forEach((fn) => {
+      try {
+        fn();
+      } catch (e) {
+      }
+    });
+    return true;
+  }
+  function readCachedCards() {
+    try {
+      const raw = getPageWindow().localStorage.getItem("allCards");
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function initItemData(plugin) {
+    if (!setCards(getAllCards())) setCards(readCachedCards());
+    if (plugin && plugin.events) {
+      plugin.events.on("allCardsReady", (list) => setCards(list));
+    }
+  }
+  function onCardsReady(fn) {
+    readyListeners.add(fn);
+    return () => readyListeners.delete(fn);
+  }
+  function hasCards() {
+    return cards.length > 0;
+  }
+  function getCard(id) {
+    return byId.get(String(id)) || null;
+  }
+  function stripHtml(text) {
+    const el2 = document.createElement("div");
+    el2.innerHTML = String(text);
+    return el2.textContent.trim();
+  }
+  function cardName(card) {
+    const cached = nameCache.get(card.id);
+    if (cached) return cached;
+    let name = "";
+    try {
+      const $2 = getPageWindow().$;
+      if ($2 && $2.i18n) {
+        const key2 = `card-name-${card.fixedId || card.id}`;
+        const value = $2.i18n(key2, 1);
+        if (value && value !== key2) name = stripHtml(value);
+      }
+    } catch (e) {
+    }
+    if (!name) name = stripHtml(card.name || `Card ${card.id}`);
+    nameCache.set(card.id, name);
+    return name;
+  }
+  function cardImage(card) {
+    return card && card.image ? `/images/cards/${card.image}.png` : "";
+  }
+  function cardKey(card) {
+    return `card:${card.id}`;
+  }
+  function resolveItem(key2) {
+    const [kind, id] = String(key2).split(":");
+    if (kind === "card") {
+      const card = getCard(id);
+      if (card) {
+        return { key: key2, kind, card, label: cardName(card), image: cardImage(card), rarity: card.rarity };
+      }
+      return { key: key2, kind, card: null, label: "Unknown card", image: "", rarity: null };
+    }
+    return { key: key2, kind, card: null, label: "Unknown item", image: "", rarity: null };
+  }
+  function filterOptions() {
+    const exts = [...new Set(cards.map((c) => c.extension).filter(Boolean))];
+    const rarities = [...new Set(cards.map((c) => c.rarity).filter(Boolean))].sort((a, b) => {
+      const ia = RARITY_ORDER.indexOf(a);
+      const ib = RARITY_ORDER.indexOf(b);
+      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    });
+    return {
+      sets: exts.map((e) => ({ value: e, label: EXTENSION_LABELS[e] || e })),
+      rarities: rarities.map((r) => ({ value: r, label: r.charAt(0) + r.slice(1).toLowerCase() }))
+    };
+  }
+  function isFilterActive(f) {
+    return !!(String(f.text || "").trim() || f.set || f.rarity || f.type || f.cost);
+  }
+  function searchCards(f, limit = 150) {
+    if (!isFilterActive(f)) return { results: [], total: 0 };
+    const text = String(f.text || "").trim().toLowerCase();
+    const matches = cards.filter((c) => {
+      if (f.set && c.extension !== f.set) return false;
+      if (f.rarity) {
+        if (c.rarity !== f.rarity) return false;
+      } else if (HIDDEN_BY_DEFAULT.has(c.rarity)) {
+        return false;
+      }
+      if (f.type !== "" && f.type !== void 0 && String(c.typeCard) !== String(f.type)) return false;
+      if (f.cost !== "" && f.cost !== void 0) {
+        const cost = Number(c.cost);
+        if (f.cost === "10" ? !(cost >= 10) : cost !== Number(f.cost)) return false;
+      }
+      if (text) {
+        const local = cardName(c).toLowerCase();
+        const english = stripHtml(c.name || "").toLowerCase();
+        if (!local.includes(text) && !english.includes(text)) return false;
+      }
+      return true;
+    });
+    matches.sort((a, b) => Number(a.cost) - Number(b.cost) || cardName(a).localeCompare(cardName(b)));
+    return { results: matches.slice(0, limit), total: matches.length };
+  }
+
+  // packages/misc/tier-list/window.js
+  var MIN_W = 400;
+  var MIN_H = 340;
+  var DEFAULT_W = 680;
+  var DEFAULT_H = 500;
+  var MIN_TILE = 52;
+  var EDGES = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
+  function viewport() {
+    return { w: document.documentElement.clientWidth || window.innerWidth, h: document.documentElement.clientHeight || window.innerHeight };
+  }
+  function clampGeometry(g) {
+    const vp = viewport();
+    const width = Math.max(Math.min(MIN_W, vp.w), Math.min(g.width, vp.w));
+    const height = Math.max(Math.min(MIN_H, vp.h), Math.min(g.height, vp.h));
+    const left = Math.max(0, Math.min(g.left, vp.w - width));
+    const top = Math.max(0, Math.min(g.top, vp.h - height));
+    return { left, top, width, height };
+  }
+  function defaultGeometry() {
+    const vp = viewport();
+    const width = Math.min(DEFAULT_W, vp.w);
+    const height = Math.min(DEFAULT_H, vp.h);
+    return { left: Math.round((vp.w - width) / 2), top: Math.round((vp.h - height) / 2), width, height };
+  }
+  function buildWindow({ signal, getPreferredTile, onTitleChange }) {
+    const saved = loadWindowState() || {};
+    const ui = {
+      geometry: clampGeometry(saved.geometry || defaultGeometry()),
+      maximised: !!saved.maximised,
+      pickerOpen: saved.pickerOpen !== false
+    };
+    const root = document.createElement("div");
+    root.className = "wz-tl";
+    const header = document.createElement("div");
+    header.className = "wz-tl-header";
+    const title = document.createElement("input");
+    title.type = "text";
+    title.className = "wz-tl-title";
+    title.maxLength = 60;
+    title.spellcheck = false;
+    title.title = "Click to rename this list";
+    title.addEventListener("change", () => onTitleChange(title.value), { signal });
+    title.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") title.blur();
+    }, { signal });
+    const buttons = document.createElement("span");
+    buttons.style.cssText = "display:flex;gap:4px;flex:none;";
+    const body = document.createElement("div");
+    body.className = "wz-tl-body";
+    const grip = document.createElement("div");
+    grip.className = "wz-tl-grip";
+    grip.title = "Drag to move, double-click to fill the screen";
+    header.append(title, grip, buttons);
+    root.append(header, body);
+    EDGES.forEach((edge) => {
+      const h = document.createElement("div");
+      h.className = `wz-tl-resize wz-tl-resize-${edge}`;
+      h.dataset.edge = edge;
+      root.appendChild(h);
+    });
+    function persist() {
+      saveWindowState({ geometry: ui.geometry, maximised: ui.maximised, pickerOpen: ui.pickerOpen });
+    }
+    function updateTileSize() {
+      const width = ui.maximised ? viewport().w : ui.geometry.width;
+      const preferred = getPreferredTile();
+      const tile = Math.round(Math.max(MIN_TILE, Math.min(preferred, (width - 120) / 9)));
+      root.style.setProperty("--wz-tl-tile", tile + "px");
+    }
+    function apply2() {
+      const g = ui.geometry;
+      root.style.left = g.left + "px";
+      root.style.top = g.top + "px";
+      root.style.width = g.width + "px";
+      root.style.height = g.height + "px";
+      root.classList.toggle("wz-tl-max", ui.maximised);
+      updateTileSize();
+    }
+    function setMaximised(value) {
+      ui.maximised = !!value;
+      apply2();
+      persist();
+      onMaximiseChange.forEach((fn) => fn(ui.maximised));
+    }
+    const onMaximiseChange = /* @__PURE__ */ new Set();
+    header.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0 || ui.maximised) return;
+      if (e.target.closest("input, button, select")) return;
+      e.preventDefault();
+      const start = { x: e.clientX, y: e.clientY, left: ui.geometry.left, top: ui.geometry.top };
+      header.setPointerCapture(e.pointerId);
+      header.style.cursor = "grabbing";
+      const move = (ev) => {
+        ui.geometry = clampGeometry({ ...ui.geometry, left: start.left + ev.clientX - start.x, top: start.top + ev.clientY - start.y });
+        apply2();
+      };
+      const end = () => {
+        header.style.cursor = "";
+        header.removeEventListener("pointermove", move);
+        header.removeEventListener("pointerup", end);
+        header.removeEventListener("pointercancel", end);
+        persist();
+      };
+      header.addEventListener("pointermove", move, { signal });
+      header.addEventListener("pointerup", end, { signal });
+      header.addEventListener("pointercancel", end, { signal });
+    }, { signal });
+    header.addEventListener("dblclick", (e) => {
+      if (e.target.closest("input, button, select")) return;
+      setMaximised(!ui.maximised);
+    }, { signal });
+    root.addEventListener("pointerdown", (e) => {
+      const handle = e.target.closest(".wz-tl-resize");
+      if (!handle || e.button !== 0 || ui.maximised) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const edge = handle.dataset.edge;
+      const start = { x: e.clientX, y: e.clientY, ...ui.geometry };
+      const vp = viewport();
+      handle.setPointerCapture(e.pointerId);
+      const move = (ev) => {
+        const dx = ev.clientX - start.x;
+        const dy = ev.clientY - start.y;
+        let { left, top, width, height } = start;
+        if (edge.includes("e")) width = Math.min(start.width + dx, vp.w - start.left);
+        if (edge.includes("s")) height = Math.min(start.height + dy, vp.h - start.top);
+        if (edge.includes("w")) {
+          width = Math.min(start.width - dx, start.left + start.width);
+          width = Math.max(width, MIN_W);
+          left = start.left + start.width - width;
+        }
+        if (edge.includes("n")) {
+          height = Math.min(start.height - dy, start.top + start.height);
+          height = Math.max(height, MIN_H);
+          top = start.top + start.height - height;
+        }
+        ui.geometry = clampGeometry({ left, top, width: Math.max(MIN_W, width), height: Math.max(MIN_H, height) });
+        apply2();
+      };
+      const end = () => {
+        handle.removeEventListener("pointermove", move);
+        handle.removeEventListener("pointerup", end);
+        handle.removeEventListener("pointercancel", end);
+        persist();
+      };
+      handle.addEventListener("pointermove", move, { signal });
+      handle.addEventListener("pointerup", end, { signal });
+      handle.addEventListener("pointercancel", end, { signal });
+    }, { signal });
+    window.addEventListener("resize", () => {
+      ui.geometry = clampGeometry(ui.geometry);
+      apply2();
+    }, { signal });
+    apply2();
+    return {
+      root,
+      header,
+      body,
+      buttons,
+      title,
+      isMaximised: () => ui.maximised,
+      setMaximised,
+      onMaximiseChange: (fn) => onMaximiseChange.add(fn),
+      isPickerOpen: () => ui.pickerOpen,
+      setPickerOpen(value) {
+        ui.pickerOpen = !!value;
+        persist();
+      },
+      refreshTileSize: updateTileSize
+    };
+  }
+
+  // packages/misc/tier-list/tiers-view.js
+  function buildTile(key2, { placed = false } = {}) {
+    const item = resolveItem(key2);
+    const tile = document.createElement("div");
+    tile.className = "wz-tl-tile";
+    tile.dataset.key = key2;
+    tile.tabIndex = -1;
+    if (item.image) tile.style.backgroundImage = `url("${item.image}")`;
+    else tile.classList.add("wz-tl-noimg");
+    if (item.rarity && RARITY_COLORS[item.rarity]) tile.style.setProperty("--wz-tl-rarity", RARITY_COLORS[item.rarity]);
+    if (placed) tile.classList.add("wz-tl-placed");
+    const name = document.createElement("div");
+    name.className = "wz-tl-tile-name";
+    name.textContent = item.label;
+    tile.appendChild(name);
+    return tile;
+  }
+  function createTiersView({ body, signal }) {
+    const container = document.createElement("div");
+    container.className = "wz-tl-tiers";
+    body.appendChild(container);
+    let editor = null;
+    function closeEditor() {
+      if (editor) editor.el.remove();
+      editor = null;
+    }
+    function openEditor(tierId, anchor) {
+      closeEditor();
+      const list = getActiveList();
+      const index = list.tiers.findIndex((t) => t.id === tierId);
+      const tier = list.tiers[index];
+      if (!tier) return;
+      const el2 = document.createElement("div");
+      el2.className = "wz-tl-editor";
+      el2.dataset.tierId = tierId;
+      const name = document.createElement("input");
+      name.type = "text";
+      name.maxLength = 40;
+      name.value = tier.label;
+      name.placeholder = "Tier name";
+      const commitName = () => renameTier(tierId, name.value);
+      name.addEventListener("change", commitName);
+      name.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          commitName();
+          closeEditor();
+        }
+        if (e.key === "Escape") closeEditor();
+      });
+      const swatches = document.createElement("div");
+      swatches.className = "wz-tl-swatches";
+      TIER_COLORS.forEach((color) => {
+        const s = document.createElement("div");
+        s.className = "wz-tl-swatch" + (color === tier.color ? " wz-tl-active" : "");
+        s.style.background = color;
+        s.title = color;
+        s.addEventListener("click", () => {
+          recolorTier(tierId, color);
+          swatches.querySelectorAll(".wz-tl-swatch").forEach((n) => n.classList.toggle("wz-tl-active", n === s));
+          custom.value = color;
+        });
+        swatches.appendChild(s);
+      });
+      const custom = document.createElement("input");
+      custom.type = "color";
+      custom.value = tier.color;
+      custom.title = "Custom colour";
+      custom.addEventListener("change", () => recolorTier(tierId, custom.value));
+      swatches.appendChild(custom);
+      const grid = document.createElement("div");
+      grid.className = "wz-tl-editor-buttons";
+      const btn = (label, fn, opts = {}) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "wz-tl-btn";
+        b.textContent = label;
+        if (opts.disabled) b.disabled = true;
+        b.addEventListener("click", () => {
+          commitName();
+          fn();
+          if (opts.close) closeEditor();
+          else reopen();
+        });
+        grid.appendChild(b);
+        return b;
+      };
+      const reopen = () => {
+        const row = container.querySelector(`.wz-tl-row[data-tier-id="${tierId}"]`);
+        if (row) openEditor(tierId, row);
+        else closeEditor();
+      };
+      btn("\u25B2 Move up", () => moveTier(tierId, -1), { disabled: index === 0 });
+      btn("\u25BC Move down", () => moveTier(tierId, 1), { disabled: index === list.tiers.length - 1 });
+      btn("+ Row above", () => addTier(index), { close: true });
+      btn("+ Row below", () => addTier(index + 1), { close: true });
+      btn("Clear row", () => clearTier(tierId), { disabled: !tier.items.length });
+      const del = btn("Delete row", () => deleteTier(tierId), { close: true });
+      del.classList.add("wz-tl-danger");
+      btn("Done", () => {
+      }, { close: true }).style.gridColumn = "1 / -1";
+      el2.append(name, swatches, grid);
+      body.appendChild(el2);
+      const bodyRect = body.getBoundingClientRect();
+      const aRect = anchor.getBoundingClientRect();
+      let top = aRect.bottom - bodyRect.top + 2;
+      if (top + el2.offsetHeight > body.clientHeight) top = Math.max(2, aRect.top - bodyRect.top - el2.offsetHeight - 2);
+      el2.style.top = Math.max(2, top) + "px";
+      el2.style.left = "6px";
+      editor = { el: el2, tierId };
+      name.focus();
+      name.select();
+    }
+    function render() {
+      const list = getActiveList();
+      const scroll = container.scrollTop;
+      container.innerHTML = "";
+      list.tiers.forEach((tier) => {
+        const row = document.createElement("div");
+        row.className = "wz-tl-row";
+        row.dataset.tierId = tier.id;
+        const label = document.createElement("div");
+        label.className = "wz-tl-row-label";
+        label.style.background = tier.color;
+        label.textContent = tier.label;
+        label.title = "Click to edit this tier";
+        label.addEventListener("click", () => openEditor(tier.id, row));
+        const items = document.createElement("div");
+        items.className = "wz-tl-row-items";
+        tier.items.forEach((key2) => items.appendChild(buildTile(key2)));
+        const tools = document.createElement("div");
+        tools.className = "wz-tl-row-tools";
+        const gear = document.createElement("button");
+        gear.type = "button";
+        gear.textContent = "\u2699";
+        gear.title = "Edit this tier";
+        gear.addEventListener("click", () => openEditor(tier.id, row));
+        const up = document.createElement("button");
+        up.type = "button";
+        up.textContent = "\u25B2";
+        up.title = "Move tier up";
+        up.addEventListener("click", () => moveTier(tier.id, -1));
+        const down = document.createElement("button");
+        down.type = "button";
+        down.textContent = "\u25BC";
+        down.title = "Move tier down";
+        down.addEventListener("click", () => moveTier(tier.id, 1));
+        tools.append(up, gear, down);
+        row.append(label, items, tools);
+        container.appendChild(row);
+      });
+      const add = document.createElement("button");
+      add.type = "button";
+      add.className = "wz-tl-btn wz-tl-add-row";
+      add.textContent = "+ Add tier";
+      add.addEventListener("click", () => addTier());
+      container.appendChild(add);
+      container.scrollTop = scroll;
+      if (editor && !list.tiers.some((t) => t.id === editor.tierId)) closeEditor();
+    }
+    document.addEventListener("pointerdown", (e) => {
+      if (!editor) return;
+      if (editor.el.contains(e.target)) return;
+      if (e.target.closest(".wz-tl-row-label, .wz-tl-row-tools")) return;
+      closeEditor();
+    }, { signal, capture: true });
+    return { render, closeEditor, element: container };
+  }
+
+  // packages/misc/tier-list/picker.js
+  var RESULT_LIMIT = 150;
+  var SEARCH_DELAY_MS = 150;
+  function createPicker({ body, signal }) {
+    const panel = document.createElement("div");
+    panel.className = "wz-tl-picker";
+    const filters = document.createElement("div");
+    filters.className = "wz-tl-filters";
+    const search = document.createElement("input");
+    search.type = "text";
+    search.placeholder = "Search cards\u2026";
+    search.spellcheck = false;
+    function select(title, options) {
+      const s = document.createElement("select");
+      s.title = title;
+      options.forEach(([value, label]) => {
+        const o = document.createElement("option");
+        o.value = value;
+        o.textContent = label;
+        s.appendChild(o);
+      });
+      return s;
+    }
+    const setSel = select("Set", [["", "Any set"]]);
+    const raritySel = select("Rarity", [["", "Any rarity"]]);
+    const typeSel = select("Type", [["", "Any type"], ["0", "Monster"], ["1", "Spell"]]);
+    const costSel = select("Cost", [["", "Any cost"], ...Array.from({ length: 10 }, (_, i) => [String(i), `Cost ${i}`]), ["10", "Cost 10+"]]);
+    const clear = document.createElement("button");
+    clear.type = "button";
+    clear.className = "wz-tl-btn";
+    clear.textContent = "Clear";
+    clear.title = "Clear the search and filters";
+    filters.append(search, setSel, raritySel, typeSel, costSel, clear);
+    const hint = document.createElement("div");
+    hint.className = "wz-tl-hint";
+    const results = document.createElement("div");
+    results.className = "wz-tl-results";
+    panel.append(filters, hint, results);
+    body.appendChild(panel);
+    function fillDynamicOptions() {
+      const { sets, rarities } = filterOptions();
+      const refill = (sel, first, opts) => {
+        const keep = sel.value;
+        sel.innerHTML = "";
+        [["", first], ...opts.map((o) => [o.value, o.label])].forEach(([v, l]) => {
+          const o = document.createElement("option");
+          o.value = v;
+          o.textContent = l;
+          sel.appendChild(o);
+        });
+        sel.value = opts.some((o) => o.value === keep) ? keep : "";
+      };
+      refill(setSel, "Any set", sets);
+      refill(raritySel, "Any rarity", rarities);
+    }
+    function currentFilters() {
+      return { text: search.value, set: setSel.value, rarity: raritySel.value, type: typeSel.value, cost: costSel.value };
+    }
+    function render() {
+      results.innerHTML = "";
+      if (!hasCards()) {
+        hint.textContent = "No card data yet. Open the Decks or Crafting page once, then come back.";
+        return;
+      }
+      const f = currentFilters();
+      clear.disabled = !isFilterActive(f);
+      if (!isFilterActive(f)) {
+        hint.textContent = "Search or pick a filter to list cards, then drag them into a tier.";
+        return;
+      }
+      const { results: cards2, total } = searchCards(f, RESULT_LIMIT);
+      if (!total) {
+        hint.textContent = "No cards match.";
+        return;
+      }
+      hint.textContent = total > cards2.length ? `Showing ${cards2.length} of ${total} cards. Narrow the search to see the rest.` : `${total} card${total === 1 ? "" : "s"}. Drag one into a tier.`;
+      const frag = document.createDocumentFragment();
+      cards2.forEach((card) => {
+        const key2 = cardKey(card);
+        frag.appendChild(buildTile(key2, { placed: isPlaced(key2) }));
+      });
+      results.appendChild(frag);
+    }
+    let searchTimer = null;
+    search.addEventListener("input", () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(render, SEARCH_DELAY_MS);
+    }, { signal });
+    search.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && search.value) {
+        search.value = "";
+        render();
+      }
+    }, { signal });
+    [setSel, raritySel, typeSel, costSel].forEach((s) => s.addEventListener("change", render, { signal }));
+    clear.addEventListener("click", () => {
+      search.value = "";
+      [setSel, raritySel, typeSel, costSel].forEach((s) => {
+        s.value = "";
+      });
+      render();
+    }, { signal });
+    const stopListening = onCardsReady(() => {
+      fillDynamicOptions();
+      render();
+    });
+    signal.addEventListener("abort", stopListening);
+    fillDynamicOptions();
+    render();
+    return {
+      element: panel,
+      render,
+      setOpen(open) {
+        panel.classList.toggle("wz-tl-hidden", !open);
+      },
+      focusSearch() {
+        search.focus();
+      }
+    };
+  }
+
+  // packages/misc/tier-list/drag.js
+  var DRAG_THRESHOLD = 6;
+  function insertionIndex(tiles, x, y) {
+    for (let i = 0; i < tiles.length; i++) {
+      const r = tiles[i].getBoundingClientRect();
+      if (y < r.top) return i;
+      if (y <= r.bottom && x < r.left + r.width / 2) return i;
+    }
+    return tiles.length;
+  }
+  function attachDrag({ root, signal, onDrop, onDragStart }) {
+    let pending = null;
+    let active = null;
+    let suppressClick = false;
+    function targetAt(x, y) {
+      const el2 = document.elementFromPoint(x, y);
+      if (!el2 || !root.contains(el2)) return { type: "outside" };
+      const row = el2.closest(".wz-tl-row");
+      if (row) return { type: "tier", tierId: row.dataset.tierId, rowItems: row.querySelector(".wz-tl-row-items") };
+      if (el2.closest(".wz-tl-picker")) return { type: "picker" };
+      return { type: "none" };
+    }
+    function clearHighlights() {
+      if (!active) return;
+      if (active.marker) active.marker.remove();
+      active.marker = null;
+      root.querySelectorAll(".wz-tl-drop-out, .wz-tl-drop-in").forEach((n) => n.classList.remove("wz-tl-drop-out", "wz-tl-drop-in"));
+    }
+    function update(x, y) {
+      active.ghost.style.left = x - active.offsetX + "px";
+      active.ghost.style.top = y - active.offsetY + "px";
+      const t = targetAt(x, y);
+      clearHighlights();
+      active.target = t;
+      if (t.type === "tier") {
+        const tiles = [...t.rowItems.querySelectorAll(".wz-tl-tile")].filter((n) => n !== active.tile);
+        t.index = insertionIndex(tiles, x, y);
+        const marker = document.createElement("div");
+        marker.className = "wz-tl-marker";
+        if (t.index < tiles.length) t.rowItems.insertBefore(marker, tiles[t.index]);
+        else t.rowItems.appendChild(marker);
+        active.marker = marker;
+      } else if (t.type === "picker" && active.from.type === "tier") {
+        const picker = root.querySelector(".wz-tl-picker");
+        if (picker) picker.classList.add("wz-tl-drop-in");
+      } else if (t.type === "outside" && active.from.type === "tier") {
+        root.classList.add("wz-tl-drop-out");
+      }
+    }
+    function begin(x, y) {
+      const { tile, key: key2, from, offsetX, offsetY } = pending;
+      const rect = tile.getBoundingClientRect();
+      const ghost = tile.cloneNode(true);
+      ghost.classList.add("wz-tl-ghost");
+      ghost.classList.remove("wz-tl-placed");
+      ghost.style.width = rect.width + "px";
+      ghost.style.height = rect.height + "px";
+      ghost.style.zIndex = String(Z_FLOATING);
+      ghost.style.setProperty("--wz-tl-tile", getComputedStyle(root).getPropertyValue("--wz-tl-tile"));
+      document.body.appendChild(ghost);
+      tile.classList.add("wz-tl-dragging");
+      active = { tile, key: key2, from, ghost, offsetX, offsetY, target: null, marker: null };
+      pending = null;
+      if (onDragStart) onDragStart();
+      update(x, y);
+    }
+    function finish(cancelled) {
+      if (!active) return;
+      const { key: key2, from, target, tile, ghost } = active;
+      clearHighlights();
+      ghost.remove();
+      tile.classList.remove("wz-tl-dragging");
+      active = null;
+      suppressClick = true;
+      setTimeout(() => {
+        suppressClick = false;
+      }, 0);
+      if (cancelled || !target) return;
+      const clean = target.type === "tier" ? { type: "tier", tierId: target.tierId, index: target.index } : { type: target.type };
+      onDrop({ key: key2, from, target: clean });
+    }
+    root.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      const tile = e.target.closest(".wz-tl-tile");
+      if (!tile || !root.contains(tile) || !tile.dataset.key) return;
+      e.preventDefault();
+      const row = tile.closest(".wz-tl-row");
+      const rect = tile.getBoundingClientRect();
+      pending = {
+        tile,
+        key: tile.dataset.key,
+        from: row ? { type: "tier", tierId: row.dataset.tierId } : { type: "picker" },
+        startX: e.clientX,
+        startY: e.clientY,
+        offsetX: e.clientX - rect.left,
+        offsetY: e.clientY - rect.top
+      };
+    }, { signal });
+    document.addEventListener("pointermove", (e) => {
+      if (pending) {
+        if (Math.hypot(e.clientX - pending.startX, e.clientY - pending.startY) < DRAG_THRESHOLD) return;
+        begin(e.clientX, e.clientY);
+      }
+      if (active) {
+        e.preventDefault();
+        update(e.clientX, e.clientY);
+      }
+    }, { signal });
+    document.addEventListener("pointerup", (e) => {
+      pending = null;
+      if (active) {
+        update(e.clientX, e.clientY);
+        finish(false);
+      }
+    }, { signal });
+    document.addEventListener("pointercancel", () => {
+      pending = null;
+      finish(true);
+    }, { signal });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && active) finish(true);
+    }, { signal });
+    document.addEventListener("click", (e) => {
+      if (!suppressClick) return;
+      suppressClick = false;
+      e.preventDefault();
+      e.stopPropagation();
+    }, { signal, capture: true });
+    return {
+      isDragging: () => !!active,
+      cancel: () => {
+        pending = null;
+        finish(true);
+      }
+    };
+  }
+
+  // packages/misc/tier-list/preview.js
+  var DELAY_MS = 300;
+  function attachPreview({ root, signal, isDragging }) {
+    let timer = null;
+    let box = null;
+    let lastX = 0;
+    let lastY = 0;
+    function hide() {
+      clearTimeout(timer);
+      timer = null;
+      if (box) box.remove();
+      box = null;
+    }
+    function position() {
+      if (!box) return;
+      const r = box.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      let left = lastX + 18;
+      let top = lastY + 12;
+      if (left + r.width > vw - 4) left = Math.max(4, lastX - r.width - 18);
+      if (top + r.height > vh - 4) top = Math.max(4, vh - r.height - 4);
+      box.style.left = left + "px";
+      box.style.top = top + "px";
+    }
+    function render(item) {
+      const el2 = document.createElement("div");
+      el2.className = "wz-tl-preview";
+      const pageWindow2 = getPageWindow();
+      const $2 = pageWindow2.$;
+      if (item.card && typeof pageWindow2.appendCard === "function" && $2) {
+        try {
+          const holder = $2("<div>");
+          pageWindow2.appendCard(JSON.parse(JSON.stringify(item.card)), holder);
+          if (holder.children().length) {
+            el2.appendChild(holder[0]);
+            return el2;
+          }
+        } catch (e) {
+        }
+      }
+      const fallback = document.createElement("div");
+      fallback.className = "wz-tl-preview-fallback";
+      const pic = document.createElement("div");
+      if (item.image) pic.style.backgroundImage = `url("${item.image}")`;
+      else pic.style.display = "none";
+      fallback.append(pic, item.label);
+      el2.appendChild(fallback);
+      return el2;
+    }
+    root.addEventListener("pointerover", (e) => {
+      const tile = e.target.closest(".wz-tl-tile");
+      if (!tile || !tile.dataset.key || isDragging()) return;
+      if (box && box.dataset.key === tile.dataset.key) return;
+      hide();
+      timer = setTimeout(() => {
+        if (isDragging() || !tile.isConnected) return;
+        const item = resolveItem(tile.dataset.key);
+        box = render(item);
+        box.dataset.key = tile.dataset.key;
+        document.body.appendChild(box);
+        position();
+      }, DELAY_MS);
+    }, { signal });
+    root.addEventListener("pointerout", (e) => {
+      const tile = e.target.closest(".wz-tl-tile");
+      if (!tile) return;
+      if (e.relatedTarget && tile.contains(e.relatedTarget)) return;
+      hide();
+    }, { signal });
+    root.addEventListener("pointermove", (e) => {
+      lastX = e.clientX;
+      lastY = e.clientY;
+      position();
+    }, { signal });
+    root.addEventListener("pointerdown", hide, { signal });
+    signal.addEventListener("abort", hide);
+    return { hide };
+  }
+
+  // packages/misc/tier-list/index.js
+  var CARD_SIZES = { Small: 64, Medium: 88, Large: 120 };
+  var settings2 = null;
+  var mounted2 = null;
+  function preferredTile() {
+    const v = settings2 ? settings2.value("cardSize") : "Medium";
+    return CARD_SIZES[v] || CARD_SIZES.Medium;
+  }
+  function headerButton(label, title) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "wz-tl-btn";
+    b.textContent = label;
+    b.title = title;
+    return b;
+  }
+  function showTierList() {
+    if (mounted2) return;
+    injectTierListStyle();
+    const controller = new AbortController();
+    const { signal } = controller;
+    const win = buildWindow({
+      signal,
+      getPreferredTile: preferredTile,
+      onTitleChange: (value) => setTitle(value)
+    });
+    const undoBtn = headerButton("\u21B6", "Undo");
+    const resetBtn = headerButton("Reset", "Clear every tier back to S\u2013D (click twice)");
+    const pickerBtn = headerButton("Cards", "Show or hide the card search panel");
+    const maxBtn = headerButton("\u25A1", "Fill the screen");
+    const closeBtn = headerButton("\xD7", "Close");
+    win.buttons.append(undoBtn, resetBtn, pickerBtn, maxBtn, closeBtn);
+    const tiers = createTiersView({ body: win.body, signal });
+    const picker = createPicker({ body: win.body, signal });
+    function syncHeader() {
+      const list = getActiveList();
+      if (document.activeElement !== win.title) win.title.value = list.title;
+      undoBtn.disabled = !canUndo();
+      pickerBtn.classList.toggle("wz-tl-active", win.isPickerOpen());
+      maxBtn.textContent = win.isMaximised() ? "\u2750" : "\u25A1";
+      maxBtn.title = win.isMaximised() ? "Restore the window size" : "Fill the screen";
+    }
+    function renderAll() {
+      tiers.render();
+      picker.render();
+      syncHeader();
+    }
+    undoBtn.addEventListener("click", () => undo(), { signal });
+    let resetArmed = null;
+    resetBtn.addEventListener("click", () => {
+      if (resetArmed) {
+        clearTimeout(resetArmed);
+        resetArmed = null;
+        resetBtn.textContent = "Reset";
+        resetBtn.classList.remove("wz-tl-danger");
+        tiers.closeEditor();
+        resetList();
+        return;
+      }
+      resetBtn.textContent = "Sure?";
+      resetBtn.classList.add("wz-tl-danger");
+      resetArmed = setTimeout(() => {
+        resetArmed = null;
+        resetBtn.textContent = "Reset";
+        resetBtn.classList.remove("wz-tl-danger");
+      }, 3e3);
+    }, { signal });
+    pickerBtn.addEventListener("click", () => {
+      const open = !win.isPickerOpen();
+      win.setPickerOpen(open);
+      picker.setOpen(open);
+      syncHeader();
+      if (open) picker.focusSearch();
+    }, { signal });
+    picker.setOpen(win.isPickerOpen());
+    maxBtn.addEventListener("click", () => win.setMaximised(!win.isMaximised()), { signal });
+    win.onMaximiseChange(syncHeader);
+    closeBtn.addEventListener("click", () => hideTierList(), { signal });
+    ["keydown", "keyup", "keypress"].forEach((type) => {
+      win.root.addEventListener(type, (e) => {
+        if (e.target.closest("input, select, textarea")) e.stopPropagation();
+      }, { signal });
+    });
+    let preview = null;
+    const drag = attachDrag({
+      root: win.root,
+      signal,
+      onDragStart: () => {
+        if (preview) preview.hide();
+        tiers.closeEditor();
+      },
+      onDrop: ({ key: key2, from, target }) => {
+        if (target.type === "tier") {
+          placeItem(key2, target.tierId, target.index);
+        } else if ((target.type === "picker" || target.type === "outside") && from.type === "tier") {
+          removeItem(key2);
+        }
+      }
+    });
+    preview = attachPreview({ root: win.root, signal, isDragging: drag.isDragging });
+    const unsubscribe = subscribe(renderAll);
+    signal.addEventListener("abort", unsubscribe);
+    window.addEventListener("beforeunload", () => flushSave(), { signal });
+    document.body.appendChild(win.root);
+    renderAll();
+    mounted2 = { controller, win };
+  }
+  function hideTierList() {
+    if (!mounted2) return;
+    flushSave();
+    mounted2.controller.abort();
+    mounted2.win.root.remove();
+    mounted2 = null;
+  }
+  function initTierList(plugin) {
+    settings2 = createFeatureSettings(plugin, "tierlist", {
+      tab: "Tier List",
+      visible: () => isPluginEnabled("tierList")
+    });
+    settings2.add("cardSize", {
+      name: "Card Size",
+      note: "How big cards get in a large window. They shrink in a small one.",
+      type: "select",
+      options: Object.keys(CARD_SIZES),
+      default: "Medium",
+      onChange: () => {
+        if (mounted2) mounted2.win.refreshTileSize();
+      }
+    });
+    registerKeybind(plugin, {
+      key: "toggleTierList",
+      name: "Toggle Tier List",
+      defaultCode: "KeyL",
+      packageLabel: "Tier List",
+      onMatch: () => {
+        if (!isPluginEnabled("tierList")) return;
+        if (mounted2) hideTierList();
+        else showTierList();
+      }
+    });
+    if (!isPluginEnabled("tierList")) return;
+    initItemData(plugin);
+  }
+
   // packages/misc/index.js
   function initMisc(plugin) {
-    const settings2 = registerMiscSettings(plugin);
-    initCardTags(plugin, settings2.enableCardTags);
+    const settings3 = registerMiscSettings(plugin);
+    initCardTags(plugin, settings3.enableCardTags);
+    initTierList(plugin);
     let shownThisPage = null;
     function syncNotepadVisibility() {
-      const wanted = shownThisPage !== null ? shownThisPage : settings2.notepadOpenOnLoad.value();
-      if (settings2.enableNotepad.value() && wanted) {
+      const wanted = shownThisPage !== null ? shownThisPage : settings3.notepadOpenOnLoad.value();
+      if (settings3.enableNotepad.value() && wanted) {
         showNotepad();
       } else {
         hideNotepad();
@@ -9222,7 +10711,7 @@ Version: v${version}`;
       packageLabel: "Notepad",
       onMatch: () => redoNotepad()
     });
-    return settings2;
+    return settings3;
   }
 
   // packages/controller/storage.js
@@ -9944,7 +11433,7 @@ Version: v${version}`;
       HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key)
     );
     controllerEnabledSetting = controllerEnabledSettingIn;
-    const settings2 = createFeatureSettings(plugin, "controller", {
+    const settings3 = createFeatureSettings(plugin, "controller", {
       tab: "Controller Support",
       visible: () => isPluginEnabled("controller"),
       categories: true
@@ -9953,61 +11442,61 @@ Version: v${version}`;
     const GENERAL = "General";
     const IN_GAME = "In-Game Inputs";
     const hiddenUnless = (pluginId) => () => pluginId ? !isPluginEnabled(pluginId) : false;
-    settings2.add("detectController", {
+    settings3.add("detectController", {
       name: "Detect Controller",
       note: "Click if your controller isn't responding.",
       type: "text",
       default: "Click to Detect Controller (WebHID)",
       category: SETUP
     });
-    settings2.add("presetSelector", {
+    settings3.add("presetSelector", {
       name: "Settings Preset",
       note: "Click to switch presets.",
       type: "text",
       default: getPresetName(getActivePreset()),
       category: SETUP
     });
-    settings2.add("presetName", {
+    settings3.add("presetName", {
       name: "Preset Name",
       note: "Renames whichever preset is currently selected above.",
       type: "text",
       default: getPresetName(getActivePreset()),
       category: SETUP
     });
-    settings2.add("resetPreset", {
+    settings3.add("resetPreset", {
       name: "Restore Settings to Default",
       note: "Double Click to reset selected preset settings",
       type: "text",
       default: "Double Click to Reset",
       category: SETUP
     });
-    debugTextEnabledSetting = settings2.add("debugTextEnabled", {
+    debugTextEnabledSetting = settings3.add("debugTextEnabled", {
       name: "Enable Debug Text",
       type: "boolean",
       default: false,
       category: GENERAL
     });
-    highlightColorSetting = settings2.add("highlightColor", {
+    highlightColorSetting = settings3.add("highlightColor", {
       name: "Selection Outline Color",
       type: "select",
       data: HIGHLIGHT_COLOR_PRESETS,
       default: DEFAULT_HIGHLIGHT_COLOR,
       category: GENERAL
     });
-    settings2.add("controllerPrimary", {
+    settings3.add("controllerPrimary", {
       name: "Controller Primary",
       note: "Click to remap. Hold for combos below, same as Wizascript's own Primary Key.",
       type: "text",
       default: buttonToDisplay(DEFAULT_PRIMARY_BUTTON),
       category: GENERAL
     });
-    settings2.add("__info_openSettings", { name: "Double Tap Primary \u2192 Open Wizascript Settings", type: "text", default: "", category: GENERAL });
+    settings3.add("__info_openSettings", { name: "Double Tap Primary \u2192 Open Wizascript Settings", type: "text", default: "", category: GENERAL });
     const seenLabels = /* @__PURE__ */ new Set();
     CONTROLLER_ACTIONS.forEach((action) => {
       if (!seenLabels.has(action.packageLabel)) {
         seenLabels.add(action.packageLabel);
         if (action.packageLabel === "UC TV") {
-          settings2.add("channelGuide", {
+          settings3.add("channelGuide", {
             name: "Channel Guide (hold)",
             type: "text",
             default: buttonToDisplay(null),
@@ -10016,7 +11505,7 @@ Version: v${version}`;
           });
         }
       }
-      settings2.add(action.key, {
+      settings3.add(action.key, {
         name: action.name + " - Primary + <btn>",
         type: "text",
         default: buttonToDisplay(action.defaultButton),
@@ -10025,7 +11514,7 @@ Version: v${version}`;
       });
     });
     HARDWARE_SHORTCUT_ACTIONS.forEach((action) => {
-      settings2.add("shortcut_" + action.key, {
+      settings3.add("shortcut_" + action.key, {
         name: action.name,
         type: "text",
         default: buttonToDisplay(HARDWARE_SHORTCUT_DEFAULTS[action.key]),
@@ -10446,9 +11935,9 @@ Version: v${version}`;
     }
     function queryBoardMonsterCards() {
       const slots = Array.from(document.querySelectorAll(".droppableMonster.slot, .droppableMonster"));
-      const cards = slots.map((s) => s.querySelector(".card")).filter((c) => c && c.offsetParent !== null);
-      if (!cards.length) return [];
-      const rows = buildRowGrid(cards);
+      const cards2 = slots.map((s) => s.querySelector(".card")).filter((c) => c && c.offsetParent !== null);
+      if (!cards2.length) return [];
+      const rows = buildRowGrid(cards2);
       if (!rows.length) return [];
       let bestRow = rows[0], bestTop = -Infinity;
       for (const row of rows) {
@@ -10708,9 +12197,9 @@ Version: v${version}`;
         return handItems[handIndex] || null;
       }
       if (activeSubmenu) return activeSubmenu.items[activeSubmenu.index] || null;
-      const state = chromeStates[chromeIndex];
-      if (!state || state.type !== "group") return null;
-      const g = state.group;
+      const state2 = chromeStates[chromeIndex];
+      if (!state2 || state2.type !== "group") return null;
+      const g = state2.group;
       const idx = itemIndexByGroupName[g.name] || 0;
       return g.items[idx] || null;
     }
@@ -11261,9 +12750,9 @@ Version: v${version}`;
       }
     }
     function endPress(side, button) {
-      const state = drag[side];
+      const state2 = drag[side];
       drag[side] = null;
-      if (!state) return;
+      if (!state2) return;
       cursor.style.display = "none";
       const hitEl = document.elementFromPoint(x, y);
       cursor.style.display = "block";
@@ -11271,11 +12760,11 @@ Version: v${version}`;
       if (button === 2) {
         fire(hitEl, "pointerup", PointerEvent, x, y, 2, 0);
         fire(hitEl, "mouseup", MouseEvent, x, y, 2, 0);
-        if (hitEl === state.downEl) fire(hitEl, "contextmenu", MouseEvent, x, y, 2, 0);
+        if (hitEl === state2.downEl) fire(hitEl, "contextmenu", MouseEvent, x, y, 2, 0);
       } else {
         fire(hitEl, "pointerup", PointerEvent, x, y, 0, 0);
         fire(hitEl, "mouseup", MouseEvent, x, y, 0, 0);
-        if (hitEl === state.downEl) fire(hitEl, "click", MouseEvent, x, y, 0, 0);
+        if (hitEl === state2.downEl) fire(hitEl, "click", MouseEvent, x, y, 0, 0);
       }
     }
     function collectHoverRules() {
@@ -12494,7 +13983,7 @@ ${btnLabel(0)} select attacker   \u2193/${btnLabel(1)} hand`;
             refreshHighlight();
           }
         }
-        const state = chromeStates[chromeIndex];
+        const state2 = chromeStates[chromeIndex];
         if (activeSubmenu) {
           if (up && !dpadHeld.up) {
             activeSubmenu.index = (activeSubmenu.index - 1 + activeSubmenu.items.length) % activeSubmenu.items.length;
@@ -12505,7 +13994,7 @@ ${btnLabel(0)} select attacker   \u2193/${btnLabel(1)} hand`;
             refreshHighlight();
           }
           dpadText = `submenu (${activeSubmenu.index + 1}/${activeSubmenu.items.length})`;
-        } else if (state && state.type === "group") {
+        } else if (state2 && state2.type === "group") {
           if (up && !dpadHeld.up) {
             chromeIndex = Math.max(0, chromeIndex - 1);
             refreshHighlight();
@@ -12514,7 +14003,7 @@ ${btnLabel(0)} select attacker   \u2193/${btnLabel(1)} hand`;
             chromeIndex = Math.min(chromeStates.length - 1, chromeIndex + 1);
             refreshHighlight();
           }
-          const g = state.group;
+          const g = state2.group;
           if (left && !dpadHeld.left) {
             itemIndexByGroupName[g.name] = ((itemIndexByGroupName[g.name] || 0) - 1 + g.items.length) % g.items.length;
             refreshHighlight();

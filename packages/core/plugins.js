@@ -74,6 +74,14 @@ export const PLUGINS = [
     name: "Card Tags",
     key: "misc.enableCardTags",
     note: "Right-click cards in Crafting/Decks to tag and search them."
+  },
+  {
+    id: "tierList",
+    category: "Miscellaneous",
+    name: "Tier List Maker",
+    key: "misc.enableTierList",
+    note: "Rank cards in your own drag-and-drop tier lists, on any page.",
+    usesKeybinds: true
   }
 ];
 
@@ -177,7 +185,8 @@ const LABEL_TO_PLUGIN = {
   "Patch Maker": "patchMaker",
   "UC TV": "ucTv",
   "Notepad": "notepad",
-  "Card Tracker": "cardTracker"
+  "Card Tracker": "cardTracker",
+  "Tier List": "tierList"
 };
 
 export function pluginIdForLabel(label) {

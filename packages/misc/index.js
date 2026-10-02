@@ -3,12 +3,15 @@
 import { registerMiscSettings } from "./settings.js";
 import { showNotepad, hideNotepad, forceResetNotepad, undoNotepad, redoNotepad, isNotepadOpen } from "./notepad/index.js";
 import { initCardTags } from "./card-tags/index.js";
+import { initTierList } from "./tier-list/index.js";
 import { registerKeybind } from "../core/keybinds.js";
 
 export function initMisc(plugin) {
   const settings = registerMiscSettings(plugin);
 
   initCardTags(plugin, settings.enableCardTags);
+  // Registers its own "Tier List" settings tab, so it lands after UC TV's.
+  initTierList(plugin);
 
   // null = follow "Open Notepad on Page Load"; true/false once the
   // Toggle Notepad shortcut has been used on this page. Deliberately not

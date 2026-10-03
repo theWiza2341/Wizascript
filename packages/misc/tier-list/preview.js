@@ -1,6 +1,10 @@
 // packages/misc/tier-list/preview.js
 //
-// Hovering a card tile shows the full card. The site's own hover
+// Resting the pointer on the same tile for HOLD_MS (without pressing a
+// button) shows the full card - long enough that moving the mouse
+// around, or dragging, never pops it up by accident.
+//
+// The site's own hover
 // preview sits far below our window's z-index, so we draw our own:
 // the game's appendCard() (the same renderer UnderScript's battle log
 // uses) when the page has it, otherwise a big picture + name.
@@ -8,7 +12,7 @@
 import { getPageWindow } from "../../core/page-window.js";
 import { resolveItem } from "./items.js";
 
-const DELAY_MS = 300;
+const HOLD_MS = 3000;
 
 export function attachPreview({ root, signal, isDragging }) {
   let timer = null;
@@ -61,25 +65,39 @@ export function attachPreview({ root, signal, isDragging }) {
     return el;
   }
 
-  root.addEventListener("pointerover", (e) => {
-    const tile = e.target.closest(".wz-tl-tile");
-    if (!tile || !tile.dataset.key || isDragging()) return;
-    if (box && box.dataset.key === tile.dataset.key) return;
-    hide();
+  let overTile = null; // tile the pointer is resting on
+  let pressed = false;
+
+  function arm() {
+    clearTimeout(timer);
+    timer = null;
+    const tile = overTile;
+    if (!tile || pressed || isDragging() || box) return;
+    // Text items are just their label - nothing more to show.
+    if (tile.classList.contains("wz-tl-text")) return;
     timer = setTimeout(() => {
-      if (isDragging() || !tile.isConnected) return;
+      if (pressed || isDragging() || !tile.isConnected || overTile !== tile) return;
       const item = resolveItem(tile.dataset.key);
       box = render(item);
       box.dataset.key = tile.dataset.key;
       document.body.appendChild(box);
       position();
-    }, DELAY_MS);
+    }, HOLD_MS);
+  }
+
+  root.addEventListener("pointerover", (e) => {
+    const tile = e.target.closest(".wz-tl-tile");
+    if (!tile || !tile.dataset.key || tile === overTile) return;
+    hide();
+    overTile = tile;
+    arm();
   }, { signal });
 
   root.addEventListener("pointerout", (e) => {
     const tile = e.target.closest(".wz-tl-tile");
-    if (!tile) return;
+    if (!tile || tile !== overTile) return;
     if (e.relatedTarget && tile.contains(e.relatedTarget)) return;
+    overTile = null;
     hide();
   }, { signal });
 
@@ -89,7 +107,17 @@ export function attachPreview({ root, signal, isDragging }) {
     position();
   }, { signal });
 
-  root.addEventListener("pointerdown", hide, { signal });
+  // Any press cancels it; letting go over the same tile starts the wait again.
+  document.addEventListener("pointerdown", () => {
+    pressed = true;
+    hide();
+  }, { signal, capture: true });
+  document.addEventListener("pointerup", () => {
+    pressed = false;
+    if (overTile && overTile.isConnected) arm();
+    else overTile = null;
+  }, { signal, capture: true });
+
   signal.addEventListener("abort", hide);
 
   return { hide };

@@ -27,9 +27,16 @@ function insertionIndex(tiles, x, y) {
 }
 
 // root: the tier list window. onDrop({ key, from, target }) where
-// target is { type: "tier", tierId, index } | { type: "picker" } |
+// from is { type: "tier", tierId } | { type: "picker" } | { type: "page" }
+// and target is { type: "tier", tierId, index } | { type: "picker" } |
 // { type: "outside" }. onDragStart() is called once a drag really starts.
-export function attachDrag({ root, signal, onDrop, onDragStart }) {
+//
+// Dragging cards in from the page: pageItemKey(element) returns an item
+// key for a press on a real card on the page (null otherwise), and
+// buildGhost(key) draws the tile that follows the pointer. A press on a
+// page card is left completely alone (its normal click still works)
+// unless the pointer then moves past the threshold.
+export function attachDrag({ root, signal, onDrop, onDragStart, pageItemKey, buildGhost }) {
   let pending = null; // pointer is down on a tile, not moved enough yet
   let active = null;  // a drag is in progress
   let suppressClick = false;
@@ -78,18 +85,25 @@ export function attachDrag({ root, signal, onDrop, onDragStart }) {
 
   function begin(x, y) {
     const { tile, key, from, offsetX, offsetY } = pending;
-    const rect = tile.getBoundingClientRect();
-    const ghost = tile.cloneNode(true);
+    const fromPage = from.type === "page";
+    const ghost = fromPage ? buildGhost(key) : tile.cloneNode(true);
     ghost.classList.add("wz-tl-ghost");
     ghost.classList.remove("wz-tl-placed");
-    ghost.style.width = rect.width + "px";
-    ghost.style.height = rect.height + "px";
-    ghost.style.zIndex = String(Z_FLOATING);
     // The ghost lives on <body>, outside the window, so it needs the
     // window's size variable copied over.
-    ghost.style.setProperty("--wz-tl-tile", getComputedStyle(root).getPropertyValue("--wz-tl-tile"));
+    const size = getComputedStyle(root).getPropertyValue("--wz-tl-tile");
+    ghost.style.setProperty("--wz-tl-tile", size);
+    if (fromPage) {
+      ghost.style.width = size;
+      ghost.style.height = `calc(${size} * 0.8)`;
+    } else {
+      const rect = tile.getBoundingClientRect();
+      ghost.style.width = rect.width + "px";
+      ghost.style.height = rect.height + "px";
+    }
+    ghost.style.zIndex = String(Z_FLOATING);
     document.body.appendChild(ghost);
-    tile.classList.add("wz-tl-dragging");
+    if (tile) tile.classList.add("wz-tl-dragging");
     active = { tile, key, from, ghost, offsetX, offsetY, target: null, marker: null };
     pending = null;
     if (onDragStart) onDragStart();
@@ -101,7 +115,7 @@ export function attachDrag({ root, signal, onDrop, onDragStart }) {
     const { key, from, target, tile, ghost } = active;
     clearHighlights();
     ghost.remove();
-    tile.classList.remove("wz-tl-dragging");
+    if (tile) tile.classList.remove("wz-tl-dragging");
     active = null;
     suppressClick = true;
     setTimeout(() => { suppressClick = false; }, 0);
@@ -112,8 +126,33 @@ export function attachDrag({ root, signal, onDrop, onDragStart }) {
     onDrop({ key, from, target: clean });
   }
 
+  // Press on a card on the page itself (outside our window).
+  document.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0 || !pageItemKey || root.contains(e.target)) return;
+    const key = pageItemKey(e.target);
+    if (!key) return;
+    pending = {
+      tile: null,
+      key,
+      from: { type: "page" },
+      startX: e.clientX,
+      startY: e.clientY,
+      offsetX: 20,
+      offsetY: 20
+    };
+  }, { signal, capture: true });
+
+  // While dragging a page card, the browser's own image drag and text
+  // selection would fight ours.
+  ["dragstart", "selectstart"].forEach((type) => {
+    document.addEventListener(type, (e) => {
+      if (active || (pending && pending.from.type === "page")) e.preventDefault();
+    }, { signal, capture: true });
+  });
+
   root.addEventListener("pointerdown", (e) => {
     if (e.button !== 0) return;
+    if (e.target.closest(".wz-tl-tile-del, input")) return;
     const tile = e.target.closest(".wz-tl-tile");
     if (!tile || !root.contains(tile) || !tile.dataset.key) return;
     e.preventDefault(); // no text selection / native image drag

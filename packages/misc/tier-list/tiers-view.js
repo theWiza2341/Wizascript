@@ -16,7 +16,12 @@ export function buildTile(key, { placed = false } = {}) {
   tile.tabIndex = -1;
   if (item.image) tile.style.backgroundImage = `url("${item.image}")`;
   else tile.classList.add("wz-tl-noimg");
-  if (item.rarity && RARITY_COLORS[item.rarity]) tile.style.setProperty("--wz-tl-rarity", RARITY_COLORS[item.rarity]);
+  if (item.color) tile.style.setProperty("--wz-tl-rarity", item.color);
+  else if (item.rarity && RARITY_COLORS[item.rarity]) tile.style.setProperty("--wz-tl-rarity", RARITY_COLORS[item.rarity]);
+  if (item.text) {
+    tile.classList.add("wz-tl-text");
+    tile.title = "Double-click to edit";
+  }
   if (placed) tile.classList.add("wz-tl-placed");
   const name = document.createElement("div");
   name.className = "wz-tl-tile-name";

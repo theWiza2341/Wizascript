@@ -1668,12 +1668,12 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     tierList: {
       tab: "Tier List",
       pages: "every page, including matches",
-      summary: "Rank cards in your own tier lists, made from the game's current cards.",
+      summary: "Rank cards, souls and artifacts in your own tier lists.",
       points: () => [
         `${key("toggleTierList", "KeyL")} shows/hides the window. Drag its title bar to move it, its edges to resize it; <b>\u25A1</b> fills the screen.`,
-        "Search or pick a filter in the <b>Cards</b> panel, then drag cards into a tier. Drag a card back to the panel to unrank it.",
-        "Click a tier's label (or <b>\u2699</b>) to rename, recolour, move, clear or delete it. <b>+ Add tier</b> adds one.",
-        "Saves automatically. <b>\u21B6</b> undoes; <b>Reset</b> (click twice) starts the tiers over."
+        "Pick <b>Cards</b>, <b>Souls</b>, <b>Artifacts</b> or <b>Text</b> in the bottom panel, then drag items into a tier. On Crafting/Decks you can also drag cards straight from the page.",
+        "Click a tier's label (or <b>\u2699</b>) to edit it. Drag an item back to the panel to unrank it. Rest the mouse on a card for 3s to see it in full.",
+        "<b>Lists \u25BE</b> switches between lists or adds one. Saves automatically; <b>\u21B6</b> undoes."
       ]
     }
   };
@@ -2751,12 +2751,12 @@ html, body { overflow-x: hidden !important; }
   }
   async function ensureLanguageLoaded(lang) {
     if (!lang || lang === "en" || loadedLanguages.has(lang)) return;
-    const i18n = getI18n();
-    if (!i18n) return;
+    const i18n2 = getI18n();
+    if (!i18n2) return;
     const version = getTranslateVersion();
     const path = `/translation/${lang}.json${version ? "?v=" + version : ""}`;
     await new Promise((resolve2, reject) => {
-      const deferred = i18n().load({ [lang]: path });
+      const deferred = i18n2().load({ [lang]: path });
       if (deferred && typeof deferred.done === "function") {
         deferred.done(resolve2);
         if (typeof deferred.fail === "function") deferred.fail(reject);
@@ -2767,10 +2767,10 @@ html, body { overflow-x: hidden !important; }
     loadedLanguages.add(lang);
   }
   function getLocalizedString(key2, ...args) {
-    const i18n = getI18n();
-    if (!i18n) return "";
+    const i18n2 = getI18n();
+    if (!i18n2) return "";
     try {
-      const value = i18n.apply(i18n, [key2, ...args]);
+      const value = i18n2.apply(i18n2, [key2, ...args]);
       return !value || value === key2 ? "" : String(value).trim();
     } catch {
       return "";
@@ -2778,16 +2778,16 @@ html, body { overflow-x: hidden !important; }
   }
   async function buildLocalizedFormattingData(selectedLanguageLabel, baseWordColors) {
     const lang = getResolvedLanguage(selectedLanguageLabel);
-    const i18n = getI18n();
+    const i18n2 = getI18n();
     const tokens = FALLBACK_KEYWORDS.concat(FALLBACK_TRIBES);
     const localizedColors = {};
-    if (!i18n) {
+    if (!i18n2) {
       return { tokens: [...new Set(tokens)].filter(Boolean).sort((a, b) => b.length - a.length), localizedColors };
     }
-    const originalLocale = i18n().locale;
+    const originalLocale = i18n2().locale;
     try {
       await ensureLanguageLoaded(lang);
-      i18n().locale = lang;
+      i18n2().locale = lang;
       KEYWORD_IDS.forEach((id) => {
         const text = getLocalizedString(`kw-${id}`);
         if (text) tokens.push(text);
@@ -2821,7 +2821,7 @@ html, body { overflow-x: hidden !important; }
       }
     } finally {
       try {
-        i18n().locale = originalLocale;
+        i18n2().locale = originalLocale;
       } catch {
       }
     }
@@ -2844,7 +2844,7 @@ html, body { overflow-x: hidden !important; }
   }
   async function buildLocalizedCardNameMap(selectedLanguageLabel, attempt = 0) {
     const lang = getResolvedLanguage(selectedLanguageLabel);
-    const i18n = getI18n();
+    const i18n2 = getI18n();
     const cards2 = getAllCards();
     if (!cards2.length && attempt < 40) {
       await new Promise((r) => setTimeout(r, 250));
@@ -2852,11 +2852,11 @@ html, body { overflow-x: hidden !important; }
     }
     const map = /* @__PURE__ */ new Map();
     if (!cards2.length) return map;
-    const originalLocale = i18n ? i18n().locale : null;
+    const originalLocale = i18n2 ? i18n2().locale : null;
     try {
-      if (i18n) {
+      if (i18n2) {
         await ensureLanguageLoaded(lang);
-        i18n().locale = lang;
+        i18n2().locale = lang;
       }
       cards2.forEach((card) => {
         if (!card || !card.id) return;
@@ -2865,7 +2865,7 @@ html, body { overflow-x: hidden !important; }
           const englishPlural = getLocalizedString(`card-name-${card.id}`, 2);
           if (englishPlural) addNameMapping(map, englishPlural, card.id);
         }
-        if (i18n) {
+        if (i18n2) {
           const singular = getLocalizedString(`card-name-${card.id}`, 1);
           const plural = getLocalizedString(`card-name-${card.id}`, 2);
           if (singular) addNameMapping(map, singular, card.id);
@@ -2873,9 +2873,9 @@ html, body { overflow-x: hidden !important; }
         }
       });
     } finally {
-      if (i18n && originalLocale) {
+      if (i18n2 && originalLocale) {
         try {
-          i18n().locale = originalLocale;
+          i18n2().locale = originalLocale;
         } catch {
         }
       }
@@ -4350,13 +4350,13 @@ Version: v${version}`;
         artifactContainer.innerHTML = "";
         try {
           const decoded = decodeDeck(deck.deckCode);
-          const artifacts = ((decoded == null ? void 0 : decoded.artifactIds) || []).map((id) => getArtifactById(id)).filter(Boolean);
-          artifacts.forEach((artifact, index) => {
+          const artifacts2 = ((decoded == null ? void 0 : decoded.artifactIds) || []).map((id) => getArtifactById(id)).filter(Boolean);
+          artifacts2.forEach((artifact, index) => {
             const img = document.createElement("img");
             img.src = `images/artifacts/${artifact.image}.png`;
             img.title = artifact.name;
             artifactContainer.appendChild(img);
-            if (index < artifacts.length - 1) artifactContainer.append(" ");
+            if (index < artifacts2.length - 1) artifactContainer.append(" ");
           });
         } catch (err) {
           logger4.error("card", "Artifact decode failed", err, deck);
@@ -9412,6 +9412,46 @@ Version: v${version}`;
   color: #fff;
   font: 12px Arial, sans-serif;
 }
+.wz-tl-card-toggles { display: contents; }
+.wz-tl-type-tabs { flex: none; display: flex; border: 1px solid #555; border-radius: 4px; overflow: hidden; }
+.wz-tl-type-tab {
+  height: 26px;
+  padding: 0 7px;
+  border: none;
+  border-right: 1px solid #555;
+  background: #1c1c1c;
+  color: #bbb;
+  font: 12px Arial, sans-serif;
+  cursor: pointer;
+}
+.wz-tl-type-tab:last-child { border-right: none; }
+.wz-tl-type-tab:hover { background: #2a2a2a; color: #fff; }
+.wz-tl-type-tab.wz-tl-active { background: #4464bd; color: #fff; }
+.wz-tl-tile-del {
+  position: absolute;
+  z-index: 2;
+  top: 1px; left: 1px;
+  width: 16px; height: 16px;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: rgba(0,0,0,0.75);
+  color: #ff8080;
+  font: bold 13px/16px Arial, sans-serif;
+  cursor: pointer;
+}
+.wz-tl-tile-del:hover { background: #8b1e1e; color: #fff; }
+.wz-tl-tile.wz-tl-text { background: #262626; }
+.wz-tl-tile.wz-tl-text .wz-tl-tile-name { background: transparent; font-weight: bold; padding: 2px; line-height: 1.1; word-break: break-word; }
+.wz-tl-tile.wz-tl-text .wz-tl-tile-name input {
+  width: 100%;
+  border: 1px solid #8ea6e8;
+  background: #000;
+  color: #fff;
+  font: inherit;
+  text-align: center;
+  pointer-events: auto;
+}
 .wz-tl-toggle-group { flex: none; display: flex; gap: 2px; padding: 1px; border-radius: 4px; background: rgba(255,255,255,0.05); }
 .wz-tl-toggle {
   height: 26px;
@@ -9475,6 +9515,38 @@ Version: v${version}`;
 .wz-tl-editor-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
 .wz-tl-editor-buttons .wz-tl-btn { width: 100%; }
 
+.wz-tl-menu {
+  position: absolute;
+  z-index: 6;
+  min-width: 200px;
+  max-width: calc(100% - 8px);
+  max-height: 60%;
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  background: #1c1c1c;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+}
+.wz-tl-menu-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 4px 6px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: #ddd;
+  font: 12px Arial, sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+.wz-tl-menu-item span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wz-tl-menu-item:hover { background: #2e2e2e; color: #fff; }
+.wz-tl-menu-item.wz-tl-active { background: #4464bd; color: #fff; }
+.wz-tl-menu-count { flex: none; opacity: 0.6; }
+.wz-tl-menu-actions { display: flex; gap: 4px; margin-top: 4px; padding-top: 4px; border-top: 1px solid #444; }
 .wz-tl-preview {
   position: fixed;
   z-index: ${Z_FLOATING};
@@ -9556,6 +9628,8 @@ Version: v${version}`;
   var SAVE_DELAY_MS = 300;
   var MAX_LABEL = 40;
   var MAX_TITLE = 60;
+  var MAX_TEXT = 40;
+  var MAX_LISTS = 50;
   var DEFAULT_TITLE2 = "My Tier List";
   var state = null;
   var undoStack = [];
@@ -9568,7 +9642,7 @@ Version: v${version}`;
     return { id: uid("t"), label, color, items: [] };
   }
   function makeList(title = DEFAULT_TITLE2) {
-    return { id: uid("l"), title, tiers: DEFAULT_TIERS.map(([l, c]) => makeTier(l, c)) };
+    return { id: uid("l"), title, texts: {}, tiers: DEFAULT_TIERS.map(([l, c]) => makeTier(l, c)) };
   }
   function sanitize(raw) {
     if (!raw || !Array.isArray(raw.lists) || !raw.lists.length) {
@@ -9578,6 +9652,7 @@ Version: v${version}`;
     const lists = raw.lists.map((l) => ({
       id: typeof l.id === "string" ? l.id : uid("l"),
       title: typeof l.title === "string" ? l.title.slice(0, MAX_TITLE) : DEFAULT_TITLE2,
+      texts: Object.fromEntries(Object.entries(l.texts && typeof l.texts === "object" ? l.texts : {}).filter(([, v]) => typeof v === "string").map(([k, v]) => [k, v.slice(0, MAX_TEXT)])),
       tiers: (Array.isArray(l.tiers) ? l.tiers : []).map((t) => ({
         id: typeof t.id === "string" ? t.id : uid("t"),
         label: typeof t.label === "string" ? t.label.slice(0, MAX_LABEL) : "?",
@@ -9653,6 +9728,22 @@ Version: v${version}`;
   function canUndo() {
     return undoStack.length > 0;
   }
+  function getLists() {
+    ensureLoaded();
+    return state.lists.map((l) => ({
+      id: l.id,
+      title: l.title,
+      count: l.tiers.reduce((n, t) => n + t.items.length, 0),
+      active: l.id === state.active
+    }));
+  }
+  function getTextLabel(textId) {
+    const t = getActiveList().texts[textId];
+    return typeof t === "string" ? t : null;
+  }
+  function getTextIds() {
+    return Object.keys(getActiveList().texts);
+  }
   function placeItem(key2, tierId, index) {
     return change((list) => {
       const tier = findTier(list, tierId);
@@ -9720,6 +9811,71 @@ Version: v${version}`;
     return change((list) => {
       list.tiers = DEFAULT_TIERS.map(([l, c]) => makeTier(l, c));
     });
+  }
+  function addText(label) {
+    const clean = String(label || "").trim().slice(0, MAX_TEXT);
+    if (!clean) return null;
+    const id = uid("x");
+    const ok = change((list) => {
+      list.texts[id] = clean;
+    });
+    return ok ? `text:${id}` : null;
+  }
+  function renameText(textId, label) {
+    const clean = String(label || "").trim().slice(0, MAX_TEXT);
+    if (!clean) return false;
+    return change((list) => {
+      if (!(textId in list.texts)) return false;
+      list.texts[textId] = clean;
+    });
+  }
+  function deleteText(textId) {
+    return change((list) => {
+      if (!(textId in list.texts)) return false;
+      delete list.texts[textId];
+      removeEverywhere(list, `text:${textId}`);
+    });
+  }
+  function setActiveList(listId) {
+    ensureLoaded();
+    if (state.active === listId || !state.lists.some((l) => l.id === listId)) return false;
+    state.active = listId;
+    undoStack.length = 0;
+    scheduleSave();
+    notify();
+    return true;
+  }
+  function createList() {
+    ensureLoaded();
+    if (state.lists.length >= MAX_LISTS) return false;
+    const list = makeList(`Tier List ${state.lists.length + 1}`);
+    state.lists.push(list);
+    return setActiveList(list.id);
+  }
+  function duplicateList() {
+    ensureLoaded();
+    if (state.lists.length >= MAX_LISTS) return false;
+    const copy = JSON.parse(JSON.stringify(activeList()));
+    copy.id = uid("l");
+    copy.title = `${copy.title} (copy)`.slice(0, MAX_TITLE);
+    copy.tiers.forEach((t) => {
+      t.id = uid("t");
+    });
+    state.lists.push(copy);
+    return setActiveList(copy.id);
+  }
+  function deleteActiveList() {
+    ensureLoaded();
+    const before = JSON.stringify(state);
+    const i = state.lists.findIndex((l) => l.id === state.active);
+    state.lists.splice(i, 1);
+    if (!state.lists.length) state.lists.push(makeList());
+    state.active = state.lists[Math.max(0, i - 1)].id;
+    undoStack.length = 0;
+    undoStack.push(before);
+    scheduleSave();
+    notify();
+    return true;
   }
   function undo() {
     ensureLoaded();
@@ -9813,8 +9969,82 @@ Version: v${version}`;
   function cardKey(card) {
     return `card:${card.id}`;
   }
+  var SOULS = ["DETERMINATION", "PATIENCE", "BRAVERY", "INTEGRITY", "PERSEVERANCE", "KINDNESS", "JUSTICE"];
+  var SOUL_COLORS3 = {
+    DETERMINATION: "#ff0000",
+    PATIENCE: "#41fcff",
+    BRAVERY: "#fca500",
+    INTEGRITY: "#0064ff",
+    PERSEVERANCE: "#d535d9",
+    KINDNESS: "#00c000",
+    JUSTICE: "#ffff00"
+  };
+  function i18n(key2, ...args) {
+    try {
+      const $2 = getPageWindow().$;
+      if ($2 && $2.i18n) {
+        const value = $2.i18n(key2, ...args);
+        if (value && value !== key2) return stripHtml(value);
+      }
+    } catch (e) {
+    }
+    return "";
+  }
+  function soulName(soul) {
+    return i18n(`soul-${soul.toLowerCase()}`, 1) || soul.charAt(0) + soul.slice(1).toLowerCase();
+  }
+  var ARTIFACT_CACHE_KEY = "wizascript.tierlist.artifacts";
+  var ARTIFACT_CACHE_MS = 24 * 60 * 60 * 1e3;
+  var artifacts = [];
+  var artifactsById = /* @__PURE__ */ new Map();
+  var artifactLoad = null;
+  function setArtifacts(list) {
+    if (!Array.isArray(list) || !list.length) return false;
+    artifacts = list.filter((a) => a && a.id !== void 0 && a.id !== null).map((a) => ({ id: a.id, name: a.name, image: a.image, rarity: a.rarity }));
+    artifactsById = new Map(artifacts.map((a) => [String(a.id), a]));
+    return true;
+  }
+  function readArtifactCache() {
+    try {
+      const raw = GM_getValue(ARTIFACT_CACHE_KEY, null);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function loadArtifacts() {
+    if (artifactLoad) return artifactLoad;
+    const cached = readArtifactCache();
+    if (cached && setArtifacts(cached.list) && Date.now() - cached.time < ARTIFACT_CACHE_MS) {
+      artifactLoad = Promise.resolve(true);
+      return artifactLoad;
+    }
+    artifactLoad = fetch("/DecksConfig", { credentials: "same-origin" }).then((r) => r.json()).then((data2) => {
+      const raw = data2 && data2.allArtifacts;
+      const list = typeof raw === "string" ? JSON.parse(raw) : raw;
+      if (!setArtifacts(list)) return artifacts.length > 0;
+      try {
+        GM_setValue(ARTIFACT_CACHE_KEY, JSON.stringify({ time: Date.now(), list: artifacts }));
+      } catch (e) {
+      }
+      return true;
+    }).catch(() => artifacts.length > 0).then((ok) => {
+      if (!ok) artifactLoad = null;
+      return ok;
+    });
+    return artifactLoad;
+  }
+  function hasArtifacts() {
+    return artifacts.length > 0;
+  }
+  function artifactName(a) {
+    return i18n(`artifact-name-${a.id}`, 1) || stripHtml(a.name || `Artifact ${a.id}`);
+  }
   function resolveItem(key2) {
-    const [kind, id] = String(key2).split(":");
+    const str = String(key2);
+    const at = str.indexOf(":");
+    const kind = str.slice(0, at);
+    const id = str.slice(at + 1);
     if (kind === "card") {
       const card = getCard(id);
       if (card) {
@@ -9822,7 +10052,27 @@ Version: v${version}`;
       }
       return { key: key2, kind, card: null, label: "Unknown card", image: "", rarity: null };
     }
+    if (kind === "soul" && SOULS.includes(id)) {
+      return { key: key2, kind, card: null, label: soulName(id), image: `/images/souls/${id}.png`, rarity: null, color: SOUL_COLORS3[id] };
+    }
+    if (kind === "artifact") {
+      const a = artifactsById.get(id);
+      if (a) return { key: key2, kind, card: null, label: artifactName(a), image: a.image ? `/images/artifacts/${a.image}.png` : "", rarity: a.rarity };
+      return { key: key2, kind, card: null, label: "Artifact", image: "", rarity: null };
+    }
+    if (kind === "text") {
+      const label = getTextLabel(id);
+      return { key: key2, kind, card: null, label: label === null ? "(deleted text)" : label, image: "", rarity: null, text: true };
+    }
     return { key: key2, kind, card: null, label: "Unknown item", image: "", rarity: null };
+  }
+  function searchSouls(text) {
+    const q = String(text || "").trim().toLowerCase();
+    return SOULS.filter((s) => !q || soulName(s).toLowerCase().includes(q) || s.toLowerCase().includes(q)).map((s) => `soul:${s}`);
+  }
+  function searchArtifacts(text) {
+    const q = String(text || "").trim().toLowerCase();
+    return artifacts.filter((a) => !q || artifactName(a).toLowerCase().includes(q) || String(a.name || "").toLowerCase().includes(q)).sort((a, b) => artifactName(a).localeCompare(artifactName(b))).map((a) => `artifact:${a.id}`);
   }
   function isFilterActive(f) {
     return !!(String(f.text || "").trim() || f.rarities.size || f.tribes || f.monster || f.spell || f.sets.size);
@@ -10034,7 +10284,12 @@ Version: v${version}`;
     tile.tabIndex = -1;
     if (item.image) tile.style.backgroundImage = `url("${item.image}")`;
     else tile.classList.add("wz-tl-noimg");
-    if (item.rarity && RARITY_COLORS[item.rarity]) tile.style.setProperty("--wz-tl-rarity", RARITY_COLORS[item.rarity]);
+    if (item.color) tile.style.setProperty("--wz-tl-rarity", item.color);
+    else if (item.rarity && RARITY_COLORS[item.rarity]) tile.style.setProperty("--wz-tl-rarity", RARITY_COLORS[item.rarity]);
+    if (item.text) {
+      tile.classList.add("wz-tl-text");
+      tile.title = "Double-click to edit";
+    }
     if (placed) tile.classList.add("wz-tl-placed");
     const name = document.createElement("div");
     name.className = "wz-tl-tile-name";
@@ -10216,17 +10471,42 @@ Version: v${version}`;
     ["DELTARUNE", "images/rarity/DELTARUNE.png", "Deltarune cards"],
     ["UTY", "images/rarity/UTY.png", "Undertale Yellow cards"]
   ];
+  var TYPES = [
+    ["cards", "Cards"],
+    ["souls", "Souls"],
+    ["artifacts", "Artifacts"],
+    ["text", "Text"]
+  ];
   function createPicker({ body, signal }) {
     const panel = document.createElement("div");
     panel.className = "wz-tl-picker";
+    let type = "cards";
     const state2 = { rarities: /* @__PURE__ */ new Set(), sets: /* @__PURE__ */ new Set(), tribes: false, monster: false, spell: false };
     const toggles2 = [];
+    const searchText = { cards: "", souls: "", artifacts: "", text: "" };
     const filters = document.createElement("div");
     filters.className = "wz-tl-filters";
+    const tabs = document.createElement("div");
+    tabs.className = "wz-tl-type-tabs";
+    const tabButtons = TYPES.map(([value, label]) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "wz-tl-type-tab";
+      b.dataset.type = value;
+      b.textContent = label;
+      b.addEventListener("click", () => setType(value), { signal });
+      tabs.appendChild(b);
+      return b;
+    });
     const search = document.createElement("input");
     search.type = "text";
-    search.placeholder = "Search cards\u2026";
     search.spellcheck = false;
+    const clear = document.createElement("button");
+    clear.type = "button";
+    clear.className = "wz-tl-btn";
+    const searchRow = document.createElement("div");
+    searchRow.className = "wz-tl-search-row";
+    searchRow.append(search, clear);
     function makeToggle([value, src, title], isOn2, flip) {
       const b = document.createElement("button");
       b.type = "button";
@@ -10245,7 +10525,6 @@ Version: v${version}`;
       b.appendChild(img);
       b.addEventListener("click", () => {
         flip(value);
-        sync();
         render();
       }, { signal });
       toggles2.push({ el: b, isOn: () => isOn2(value) });
@@ -10258,41 +10537,81 @@ Version: v${version}`;
       return g;
     }
     const flipSet = (set) => (v) => set.has(v) ? set.delete(v) : set.add(v);
-    const rarityGroup = group(RARITY_TOGGLES, (v) => state2.rarities.has(v), flipSet(state2.rarities));
-    const kindGroup = group(KIND_TOGGLES, (v) => state2[v], (v) => {
-      state2[v] = !state2[v];
-    });
-    const setGroup = group(SET_TOGGLES, (v) => state2.sets.has(v), flipSet(state2.sets));
-    const clear = document.createElement("button");
-    clear.type = "button";
-    clear.className = "wz-tl-btn";
-    clear.textContent = "Clear";
-    clear.title = "Clear the search and filters";
-    const searchRow = document.createElement("div");
-    searchRow.className = "wz-tl-search-row";
-    searchRow.append(search, clear);
-    filters.append(searchRow, rarityGroup, kindGroup, setGroup);
+    const cardToggles = document.createElement("div");
+    cardToggles.className = "wz-tl-card-toggles";
+    cardToggles.append(
+      group(RARITY_TOGGLES, (v) => state2.rarities.has(v), flipSet(state2.rarities)),
+      group(KIND_TOGGLES, (v) => state2[v], (v) => {
+        state2[v] = !state2[v];
+      }),
+      group(SET_TOGGLES, (v) => state2.sets.has(v), flipSet(state2.sets))
+    );
+    filters.append(tabs, searchRow, cardToggles);
     const hint = document.createElement("div");
     hint.className = "wz-tl-hint";
     const results = document.createElement("div");
     results.className = "wz-tl-results";
     panel.append(filters, hint, results);
     body.appendChild(panel);
-    function currentFilters() {
+    function cardFilters() {
       return { text: search.value, ...state2 };
     }
-    function sync() {
-      toggles2.forEach((t) => t.el.classList.toggle("wz-tl-on", t.isOn()));
-      clear.disabled = !isFilterActive(currentFilters());
+    function setType(value) {
+      searchText[type] = search.value;
+      type = value;
+      search.value = searchText[type];
+      if (type === "artifacts" && !hasArtifacts()) {
+        loadArtifacts().then(() => {
+          if (type === "artifacts") render();
+        });
+      }
+      render();
+      search.focus();
     }
-    function render() {
-      results.innerHTML = "";
-      sync();
+    function syncControls() {
+      tabButtons.forEach((b) => b.classList.toggle("wz-tl-active", b.dataset.type === type));
+      cardToggles.style.visibility = type === "cards" ? "" : "hidden";
+      toggles2.forEach((t) => t.el.classList.toggle("wz-tl-on", t.isOn()));
+      if (type === "text") {
+        search.placeholder = "New text item\u2026";
+        search.maxLength = MAX_TEXT;
+        clear.textContent = "Add";
+        clear.title = "Add this text as an item you can rank";
+        clear.disabled = !search.value.trim();
+      } else {
+        search.placeholder = type === "cards" ? "Search cards\u2026" : type === "souls" ? "Search souls\u2026" : "Search artifacts\u2026";
+        search.removeAttribute("maxLength");
+        clear.textContent = "Clear";
+        clear.title = "Clear the search and filters";
+        clear.disabled = type === "cards" ? !isFilterActive(cardFilters()) : !search.value;
+      }
+    }
+    function showKeys(keys, { deletable = false } = {}) {
+      const frag = document.createDocumentFragment();
+      keys.forEach((key2) => {
+        const tile = buildTile(key2, { placed: isPlaced(key2) });
+        if (deletable) {
+          const del = document.createElement("button");
+          del.type = "button";
+          del.className = "wz-tl-tile-del";
+          del.textContent = "\xD7";
+          del.title = "Delete this text item";
+          del.addEventListener("click", (e) => {
+            e.stopPropagation();
+            deleteText(key2.slice(5));
+          });
+          tile.appendChild(del);
+        }
+        frag.appendChild(tile);
+      });
+      results.appendChild(frag);
+    }
+    function renderCards() {
       if (!hasCards()) {
         hint.textContent = "No card data yet. Open the Decks or Crafting page once, then come back.";
         return;
       }
-      const f = currentFilters();
+      const f = cardFilters();
       if (!isFilterActive(f)) {
         hint.textContent = "Search or tick a filter to list cards, then drag them into a tier.";
         return;
@@ -10303,32 +10622,76 @@ Version: v${version}`;
         return;
       }
       hint.textContent = total > cards2.length ? `Showing ${cards2.length} of ${total} cards. Narrow the search to see the rest.` : `${total} card${total === 1 ? "" : "s"}. Drag one into a tier.`;
-      const frag = document.createDocumentFragment();
-      cards2.forEach((card) => {
-        const key2 = cardKey(card);
-        frag.appendChild(buildTile(key2, { placed: isPlaced(key2) }));
-      });
-      results.appendChild(frag);
+      showKeys(cards2.map(cardKey));
+    }
+    function renderSouls() {
+      const keys = searchSouls(search.value);
+      hint.textContent = keys.length ? "Drag a soul into a tier." : "No souls match.";
+      showKeys(keys);
+    }
+    function renderArtifacts() {
+      if (!hasArtifacts()) {
+        hint.textContent = "Loading artifacts\u2026 (if this stays, open the Decks page once, then try again)";
+        return;
+      }
+      const keys = searchArtifacts(search.value);
+      hint.textContent = keys.length ? `${keys.length} artifact${keys.length === 1 ? "" : "s"}. Drag one into a tier.` : "No artifacts match.";
+      showKeys(keys);
+    }
+    function renderText() {
+      const keys = getTextIds().map((id) => `text:${id}`);
+      hint.textContent = keys.length ? "Drag a text item into a tier. Double-click one to edit it." : "Type a label (e.g. an archetype) and press Add to make a text item.";
+      showKeys(keys, { deletable: true });
+    }
+    function render() {
+      results.innerHTML = "";
+      syncControls();
+      if (type === "cards") renderCards();
+      else if (type === "souls") renderSouls();
+      else if (type === "artifacts") renderArtifacts();
+      else renderText();
+    }
+    function addTextItem() {
+      if (addText(search.value)) {
+        search.value = "";
+        render();
+      }
     }
     let searchTimer = null;
     search.addEventListener("input", () => {
+      if (type === "text") {
+        syncControls();
+        return;
+      }
       clearTimeout(searchTimer);
       searchTimer = setTimeout(render, SEARCH_DELAY_MS);
     }, { signal });
     search.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && type === "text") {
+        addTextItem();
+        return;
+      }
       if (e.key === "Escape" && search.value) {
         search.value = "";
         render();
       }
     }, { signal });
     clear.addEventListener("click", () => {
+      if (type === "text") {
+        addTextItem();
+        return;
+      }
       search.value = "";
-      state2.rarities.clear();
-      state2.sets.clear();
-      state2.tribes = state2.monster = state2.spell = false;
+      if (type === "cards") {
+        state2.rarities.clear();
+        state2.sets.clear();
+        state2.tribes = state2.monster = state2.spell = false;
+      }
       render();
     }, { signal });
-    const stopListening = onCardsReady(render);
+    const stopListening = onCardsReady(() => {
+      if (type === "cards") render();
+    });
     signal.addEventListener("abort", stopListening);
     render();
     return {
@@ -10353,7 +10716,7 @@ Version: v${version}`;
     }
     return tiles.length;
   }
-  function attachDrag({ root, signal, onDrop, onDragStart }) {
+  function attachDrag({ root, signal, onDrop, onDragStart, pageItemKey: pageItemKey2, buildGhost }) {
     let pending = null;
     let active = null;
     let suppressClick = false;
@@ -10396,16 +10759,23 @@ Version: v${version}`;
     }
     function begin(x, y) {
       const { tile, key: key2, from, offsetX, offsetY } = pending;
-      const rect = tile.getBoundingClientRect();
-      const ghost = tile.cloneNode(true);
+      const fromPage = from.type === "page";
+      const ghost = fromPage ? buildGhost(key2) : tile.cloneNode(true);
       ghost.classList.add("wz-tl-ghost");
       ghost.classList.remove("wz-tl-placed");
-      ghost.style.width = rect.width + "px";
-      ghost.style.height = rect.height + "px";
+      const size = getComputedStyle(root).getPropertyValue("--wz-tl-tile");
+      ghost.style.setProperty("--wz-tl-tile", size);
+      if (fromPage) {
+        ghost.style.width = size;
+        ghost.style.height = `calc(${size} * 0.8)`;
+      } else {
+        const rect = tile.getBoundingClientRect();
+        ghost.style.width = rect.width + "px";
+        ghost.style.height = rect.height + "px";
+      }
       ghost.style.zIndex = String(Z_FLOATING);
-      ghost.style.setProperty("--wz-tl-tile", getComputedStyle(root).getPropertyValue("--wz-tl-tile"));
       document.body.appendChild(ghost);
-      tile.classList.add("wz-tl-dragging");
+      if (tile) tile.classList.add("wz-tl-dragging");
       active = { tile, key: key2, from, ghost, offsetX, offsetY, target: null, marker: null };
       pending = null;
       if (onDragStart) onDragStart();
@@ -10416,7 +10786,7 @@ Version: v${version}`;
       const { key: key2, from, target, tile, ghost } = active;
       clearHighlights();
       ghost.remove();
-      tile.classList.remove("wz-tl-dragging");
+      if (tile) tile.classList.remove("wz-tl-dragging");
       active = null;
       suppressClick = true;
       setTimeout(() => {
@@ -10426,8 +10796,28 @@ Version: v${version}`;
       const clean = target.type === "tier" ? { type: "tier", tierId: target.tierId, index: target.index } : { type: target.type };
       onDrop({ key: key2, from, target: clean });
     }
+    document.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0 || !pageItemKey2 || root.contains(e.target)) return;
+      const key2 = pageItemKey2(e.target);
+      if (!key2) return;
+      pending = {
+        tile: null,
+        key: key2,
+        from: { type: "page" },
+        startX: e.clientX,
+        startY: e.clientY,
+        offsetX: 20,
+        offsetY: 20
+      };
+    }, { signal, capture: true });
+    ["dragstart", "selectstart"].forEach((type) => {
+      document.addEventListener(type, (e) => {
+        if (active || pending && pending.from.type === "page") e.preventDefault();
+      }, { signal, capture: true });
+    });
     root.addEventListener("pointerdown", (e) => {
       if (e.button !== 0) return;
+      if (e.target.closest(".wz-tl-tile-del, input")) return;
       const tile = e.target.closest(".wz-tl-tile");
       if (!tile || !root.contains(tile) || !tile.dataset.key) return;
       e.preventDefault();
@@ -10483,7 +10873,7 @@ Version: v${version}`;
   }
 
   // packages/misc/tier-list/preview.js
-  var DELAY_MS = 300;
+  var HOLD_MS = 3e3;
   function attachPreview({ root, signal, isDragging }) {
     let timer = null;
     let box = null;
@@ -10532,24 +10922,35 @@ Version: v${version}`;
       el2.appendChild(fallback);
       return el2;
     }
-    root.addEventListener("pointerover", (e) => {
-      const tile = e.target.closest(".wz-tl-tile");
-      if (!tile || !tile.dataset.key || isDragging()) return;
-      if (box && box.dataset.key === tile.dataset.key) return;
-      hide();
+    let overTile = null;
+    let pressed = false;
+    function arm() {
+      clearTimeout(timer);
+      timer = null;
+      const tile = overTile;
+      if (!tile || pressed || isDragging() || box) return;
+      if (tile.classList.contains("wz-tl-text")) return;
       timer = setTimeout(() => {
-        if (isDragging() || !tile.isConnected) return;
+        if (pressed || isDragging() || !tile.isConnected || overTile !== tile) return;
         const item = resolveItem(tile.dataset.key);
         box = render(item);
         box.dataset.key = tile.dataset.key;
         document.body.appendChild(box);
         position();
-      }, DELAY_MS);
+      }, HOLD_MS);
+    }
+    root.addEventListener("pointerover", (e) => {
+      const tile = e.target.closest(".wz-tl-tile");
+      if (!tile || !tile.dataset.key || tile === overTile) return;
+      hide();
+      overTile = tile;
+      arm();
     }, { signal });
     root.addEventListener("pointerout", (e) => {
       const tile = e.target.closest(".wz-tl-tile");
-      if (!tile) return;
+      if (!tile || tile !== overTile) return;
       if (e.relatedTarget && tile.contains(e.relatedTarget)) return;
+      overTile = null;
       hide();
     }, { signal });
     root.addEventListener("pointermove", (e) => {
@@ -10557,12 +10958,27 @@ Version: v${version}`;
       lastY = e.clientY;
       position();
     }, { signal });
-    root.addEventListener("pointerdown", hide, { signal });
+    document.addEventListener("pointerdown", () => {
+      pressed = true;
+      hide();
+    }, { signal, capture: true });
+    document.addEventListener("pointerup", () => {
+      pressed = false;
+      if (overTile && overTile.isConnected) arm();
+      else overTile = null;
+    }, { signal, capture: true });
     signal.addEventListener("abort", hide);
     return { hide };
   }
 
   // packages/misc/tier-list/index.js
+  var CARD_PAGES = ["/Crafting", "/Decks"];
+  function pageItemKey(target) {
+    if (!matchesPage(CARD_PAGES)) return null;
+    const el2 = target.closest && target.closest(".card[id]");
+    if (!el2 || !getCard(el2.id)) return null;
+    return `card:${el2.id}`;
+  }
   var CARD_SIZES = { Small: 64, Medium: 88, Large: 120 };
   var settings2 = null;
   var mounted2 = null;
@@ -10588,9 +11004,11 @@ Version: v${version}`;
       getPreferredTile: preferredTile,
       onTitleChange: (value) => setTitle(value)
     });
+    const listsBtn = headerButton("Lists \u25BE", "Switch, add, copy or delete tier lists");
+    win.title.after(listsBtn);
     const undoBtn = headerButton("\u21B6", "Undo");
     const resetBtn = headerButton("Reset", "Clear every tier back to S\u2013D (click twice)");
-    const pickerBtn = headerButton("Cards", "Show or hide the card search panel");
+    const pickerBtn = headerButton("Items", "Show or hide the item panel");
     const maxBtn = headerButton("\u25A1", "Fill the screen");
     const closeBtn = headerButton("\xD7", "Close");
     win.buttons.append(undoBtn, resetBtn, pickerBtn, maxBtn, closeBtn);
@@ -10610,6 +11028,99 @@ Version: v${version}`;
       syncHeader();
     }
     undoBtn.addEventListener("click", () => undo(), { signal });
+    let listsMenu = null;
+    function closeListsMenu() {
+      if (listsMenu) listsMenu.remove();
+      listsMenu = null;
+      listsBtn.classList.remove("wz-tl-active");
+    }
+    function openListsMenu() {
+      closeListsMenu();
+      const menu = document.createElement("div");
+      menu.className = "wz-tl-menu";
+      getLists().forEach((l) => {
+        const row = document.createElement("button");
+        row.type = "button";
+        row.className = "wz-tl-menu-item" + (l.active ? " wz-tl-active" : "");
+        row.dataset.listId = l.id;
+        const name = document.createElement("span");
+        name.textContent = l.title;
+        const count = document.createElement("span");
+        count.className = "wz-tl-menu-count";
+        count.textContent = String(l.count);
+        row.append(name, count);
+        row.addEventListener("click", () => {
+          setActiveList(l.id);
+          closeListsMenu();
+        });
+        menu.appendChild(row);
+      });
+      const actions = document.createElement("div");
+      actions.className = "wz-tl-menu-actions";
+      const act = (label, title, fn) => {
+        const b = headerButton(label, title);
+        b.addEventListener("click", fn);
+        actions.appendChild(b);
+        return b;
+      };
+      act("+ New", "Start a new, empty tier list", () => {
+        createList();
+        closeListsMenu();
+      });
+      act("Copy", "Make a copy of this list", () => {
+        duplicateList();
+        closeListsMenu();
+      });
+      const del = act("Delete", "Delete this list (click twice; \u21B6 brings it back)", () => {
+        if (!del.classList.contains("wz-tl-danger")) {
+          del.classList.add("wz-tl-danger");
+          del.textContent = "Sure?";
+          return;
+        }
+        deleteActiveList();
+        closeListsMenu();
+      });
+      menu.appendChild(actions);
+      win.root.appendChild(menu);
+      const r = listsBtn.getBoundingClientRect();
+      const rr = win.root.getBoundingClientRect();
+      menu.style.left = Math.max(4, r.left - rr.left) + "px";
+      menu.style.top = r.bottom - rr.top + 4 + "px";
+      listsMenu = menu;
+      listsBtn.classList.add("wz-tl-active");
+    }
+    listsBtn.addEventListener("click", () => listsMenu ? closeListsMenu() : openListsMenu(), { signal });
+    document.addEventListener("pointerdown", (e) => {
+      if (listsMenu && !listsMenu.contains(e.target) && e.target !== listsBtn) closeListsMenu();
+    }, { signal, capture: true });
+    win.root.addEventListener("dblclick", (e) => {
+      const tile = e.target.closest(".wz-tl-tile.wz-tl-text");
+      if (!tile || e.target.closest("input, .wz-tl-tile-del")) return;
+      const textId = tile.dataset.key.slice(5);
+      const current = getTextLabel(textId);
+      if (current === null) return;
+      const label = tile.querySelector(".wz-tl-tile-name");
+      const input = document.createElement("input");
+      input.type = "text";
+      input.maxLength = MAX_TEXT;
+      input.value = current;
+      label.textContent = "";
+      label.appendChild(input);
+      input.focus();
+      input.select();
+      let done = false;
+      const commit = (save) => {
+        if (done) return;
+        done = true;
+        if (save && input.value.trim() && input.value.trim() !== current) renameText(textId, input.value);
+        else renderAll();
+      };
+      input.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter") commit(true);
+        if (ev.key === "Escape") commit(false);
+      });
+      input.addEventListener("blur", () => commit(true));
+    }, { signal });
     let resetArmed = null;
     resetBtn.addEventListener("click", () => {
       if (resetArmed) {
@@ -10649,9 +11160,12 @@ Version: v${version}`;
     const drag = attachDrag({
       root: win.root,
       signal,
+      pageItemKey,
+      buildGhost: (key2) => buildTile(key2),
       onDragStart: () => {
         if (preview) preview.hide();
         tiers.closeEditor();
+        closeListsMenu();
       },
       onDrop: ({ key: key2, from, target }) => {
         if (target.type === "tier") {

@@ -12,9 +12,12 @@
 //
 // Storage shape (GM wizascript.tierlist.lists):
 //   { version: 1, active: "<listId>", lists: [
-//       { id, title, tiers: [ { id, label, color, items: ["card:512", ...] } ] }
+//       { id, title, texts: { "<textId>": "label" },
+//         tiers: [ { id, label, color, items: ["card:512", "soul:PATIENCE", "text:<textId>", ...] } ] }
 //   ] }
-// dev1 only shows the active list, but the shape already holds several.
+// Item kinds: card:<cardId>, soul:<SOUL>, artifact:<artifactId>,
+// text:<textId> (the text itself lives in the list's `texts`, so each
+// list has its own text items).
 
 import { loadLists, saveLists } from "./storage.js";
 
@@ -35,6 +38,8 @@ const MAX_UNDO = 50;
 const SAVE_DELAY_MS = 300;
 const MAX_LABEL = 40;
 const MAX_TITLE = 60;
+export const MAX_TEXT = 40;
+const MAX_LISTS = 50;
 export const DEFAULT_TITLE = "My Tier List";
 
 let state = null;
@@ -51,7 +56,7 @@ function makeTier(label, color) {
 }
 
 function makeList(title = DEFAULT_TITLE) {
-  return { id: uid("l"), title, tiers: DEFAULT_TIERS.map(([l, c]) => makeTier(l, c)) };
+  return { id: uid("l"), title, texts: {}, tiers: DEFAULT_TIERS.map(([l, c]) => makeTier(l, c)) };
 }
 
 // Repairs anything malformed rather than throwing - a broken save (or a
@@ -64,6 +69,8 @@ function sanitize(raw) {
   const lists = raw.lists.map((l) => ({
     id: typeof l.id === "string" ? l.id : uid("l"),
     title: typeof l.title === "string" ? l.title.slice(0, MAX_TITLE) : DEFAULT_TITLE,
+    texts: Object.fromEntries(Object.entries(l.texts && typeof l.texts === "object" ? l.texts : {})
+      .filter(([, v]) => typeof v === "string").map(([k, v]) => [k, v.slice(0, MAX_TEXT)])),
     tiers: (Array.isArray(l.tiers) ? l.tiers : []).map((t) => ({
       id: typeof t.id === "string" ? t.id : uid("t"),
       label: typeof t.label === "string" ? t.label.slice(0, MAX_LABEL) : "?",
@@ -153,6 +160,26 @@ export function canUndo() {
   return undoStack.length > 0;
 }
 
+// [{ id, title, count }] for the list menu.
+export function getLists() {
+  ensureLoaded();
+  return state.lists.map((l) => ({
+    id: l.id,
+    title: l.title,
+    count: l.tiers.reduce((n, t) => n + t.items.length, 0),
+    active: l.id === state.active
+  }));
+}
+
+export function getTextLabel(textId) {
+  const t = getActiveList().texts[textId];
+  return typeof t === "string" ? t : null;
+}
+
+export function getTextIds() {
+  return Object.keys(getActiveList().texts);
+}
+
 // ---------- actions ----------
 
 // Puts an item into a tier at a position (0 = first). If it's already
@@ -237,6 +264,82 @@ export function resetList() {
   return change((list) => {
     list.tiers = DEFAULT_TIERS.map(([l, c]) => makeTier(l, c));
   });
+}
+
+// ---------- text items ----------
+
+export function addText(label) {
+  const clean = String(label || "").trim().slice(0, MAX_TEXT);
+  if (!clean) return null;
+  const id = uid("x");
+  const ok = change((list) => { list.texts[id] = clean; });
+  return ok ? `text:${id}` : null;
+}
+
+export function renameText(textId, label) {
+  const clean = String(label || "").trim().slice(0, MAX_TEXT);
+  if (!clean) return false;
+  return change((list) => {
+    if (!(textId in list.texts)) return false;
+    list.texts[textId] = clean;
+  });
+}
+
+// Removes the text item completely (from the tiers too).
+export function deleteText(textId) {
+  return change((list) => {
+    if (!(textId in list.texts)) return false;
+    delete list.texts[textId];
+    removeEverywhere(list, `text:${textId}`);
+  });
+}
+
+// ---------- lists ----------
+// Switching lists isn't an undoable change, and clears undo - undoing
+// edits from a list you're no longer looking at would be confusing.
+
+export function setActiveList(listId) {
+  ensureLoaded();
+  if (state.active === listId || !state.lists.some((l) => l.id === listId)) return false;
+  state.active = listId;
+  undoStack.length = 0;
+  scheduleSave();
+  notify();
+  return true;
+}
+
+export function createList() {
+  ensureLoaded();
+  if (state.lists.length >= MAX_LISTS) return false;
+  const list = makeList(`Tier List ${state.lists.length + 1}`);
+  state.lists.push(list);
+  return setActiveList(list.id);
+}
+
+export function duplicateList() {
+  ensureLoaded();
+  if (state.lists.length >= MAX_LISTS) return false;
+  const copy = JSON.parse(JSON.stringify(activeList()));
+  copy.id = uid("l");
+  copy.title = `${copy.title} (copy)`.slice(0, MAX_TITLE);
+  copy.tiers.forEach((t) => { t.id = uid("t"); });
+  state.lists.push(copy);
+  return setActiveList(copy.id);
+}
+
+// Undoable (brings the list back). Always keeps at least one list.
+export function deleteActiveList() {
+  ensureLoaded();
+  const before = JSON.stringify(state);
+  const i = state.lists.findIndex((l) => l.id === state.active);
+  state.lists.splice(i, 1);
+  if (!state.lists.length) state.lists.push(makeList());
+  state.active = state.lists[Math.max(0, i - 1)].id;
+  undoStack.length = 0;
+  undoStack.push(before);
+  scheduleSave();
+  notify();
+  return true;
 }
 
 export function undo() {

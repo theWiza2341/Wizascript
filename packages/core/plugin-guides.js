@@ -117,12 +117,12 @@ const GUIDES = {
   tierList: {
     tab: "Tier List",
     pages: "every page, including matches",
-    summary: "Rank cards in your own tier lists, made from the game's current cards.",
+    summary: "Rank cards, souls and artifacts in your own tier lists.",
     points: () => [
       `${key("toggleTierList", "KeyL")} shows/hides the window. Drag its title bar to move it, its edges to resize it; <b>□</b> fills the screen.`,
-      'Search or pick a filter in the <b>Cards</b> panel, then drag cards into a tier. Drag a card back to the panel to unrank it.',
-      'Click a tier\'s label (or <b>⚙</b>) to rename, recolour, move, clear or delete it. <b>+ Add tier</b> adds one.',
-      'Saves automatically. <b>↶</b> undoes; <b>Reset</b> (click twice) starts the tiers over.'
+      'Pick <b>Cards</b>, <b>Souls</b>, <b>Artifacts</b> or <b>Text</b> in the bottom panel, then drag items into a tier. On Crafting/Decks you can also drag cards straight from the page.',
+      'Click a tier\'s label (or <b>⚙</b>) to edit it. Drag an item back to the panel to unrank it. Rest the mouse on a card for 3s to see it in full.',
+      '<b>Lists ▾</b> switches between lists or adds one. Saves automatically; <b>↶</b> undoes.'
     ]
   }
 };

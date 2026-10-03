@@ -27,6 +27,21 @@ import { createTiersView } from "./tiers-view.js";
 import { createPicker } from "./picker.js";
 import { attachDrag } from "./drag.js";
 import { attachPreview } from "./preview.js";
+import { buildTile } from "./tiers-view.js";
+import { getCard } from "./items.js";
+import { matchesPage } from "../../core/page-match.js";
+
+// Pages whose card elements carry real card ids (<div id="<cardId>"
+// class="card">). In matches/Spectate the ids are per-match instances,
+// so dragging in from the page is limited to these.
+const CARD_PAGES = ["/Crafting", "/Decks"];
+
+function pageItemKey(target) {
+  if (!matchesPage(CARD_PAGES)) return null;
+  const el = target.closest && target.closest(".card[id]");
+  if (!el || !getCard(el.id)) return null;
+  return `card:${el.id}`;
+}
 
 const CARD_SIZES = { Small: 64, Medium: 88, Large: 120 };
 
@@ -64,9 +79,11 @@ export function showTierList() {
   });
 
   // ---- header buttons ----
-  const undoBtn = headerButton("↶", "Undo");
+  const listsBtn = headerButton("Lists \u25BE", "Switch, add, copy or delete tier lists");
+  win.title.after(listsBtn);
+  const undoBtn = headerButton("\u21B6", "Undo");
   const resetBtn = headerButton("Reset", "Clear every tier back to S–D (click twice)");
-  const pickerBtn = headerButton("Cards", "Show or hide the card search panel");
+  const pickerBtn = headerButton("Items", "Show or hide the item panel");
   const maxBtn = headerButton("□", "Fill the screen");
   const closeBtn = headerButton("×", "Close");
   win.buttons.append(undoBtn, resetBtn, pickerBtn, maxBtn, closeBtn);
@@ -90,6 +107,94 @@ export function showTierList() {
   }
 
   undoBtn.addEventListener("click", () => model.undo(), { signal });
+
+  // ---- lists menu ----
+  let listsMenu = null;
+  function closeListsMenu() {
+    if (listsMenu) listsMenu.remove();
+    listsMenu = null;
+    listsBtn.classList.remove("wz-tl-active");
+  }
+  function openListsMenu() {
+    closeListsMenu();
+    const menu = document.createElement("div");
+    menu.className = "wz-tl-menu";
+    model.getLists().forEach((l) => {
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = "wz-tl-menu-item" + (l.active ? " wz-tl-active" : "");
+      row.dataset.listId = l.id;
+      const name = document.createElement("span");
+      name.textContent = l.title;
+      const count = document.createElement("span");
+      count.className = "wz-tl-menu-count";
+      count.textContent = String(l.count);
+      row.append(name, count);
+      row.addEventListener("click", () => { model.setActiveList(l.id); closeListsMenu(); });
+      menu.appendChild(row);
+    });
+    const actions = document.createElement("div");
+    actions.className = "wz-tl-menu-actions";
+    const act = (label, title, fn) => {
+      const b = headerButton(label, title);
+      b.addEventListener("click", fn);
+      actions.appendChild(b);
+      return b;
+    };
+    act("+ New", "Start a new, empty tier list", () => { model.createList(); closeListsMenu(); });
+    act("Copy", "Make a copy of this list", () => { model.duplicateList(); closeListsMenu(); });
+    const del = act("Delete", "Delete this list (click twice; \u21B6 brings it back)", () => {
+      if (!del.classList.contains("wz-tl-danger")) {
+        del.classList.add("wz-tl-danger");
+        del.textContent = "Sure?";
+        return;
+      }
+      model.deleteActiveList();
+      closeListsMenu();
+    });
+    menu.appendChild(actions);
+    win.root.appendChild(menu);
+    const r = listsBtn.getBoundingClientRect();
+    const rr = win.root.getBoundingClientRect();
+    menu.style.left = Math.max(4, r.left - rr.left) + "px";
+    menu.style.top = r.bottom - rr.top + 4 + "px";
+    listsMenu = menu;
+    listsBtn.classList.add("wz-tl-active");
+  }
+  listsBtn.addEventListener("click", () => (listsMenu ? closeListsMenu() : openListsMenu()), { signal });
+  document.addEventListener("pointerdown", (e) => {
+    if (listsMenu && !listsMenu.contains(e.target) && e.target !== listsBtn) closeListsMenu();
+  }, { signal, capture: true });
+
+  // ---- editing text items (double-click) ----
+  win.root.addEventListener("dblclick", (e) => {
+    const tile = e.target.closest(".wz-tl-tile.wz-tl-text");
+    if (!tile || e.target.closest("input, .wz-tl-tile-del")) return;
+    const textId = tile.dataset.key.slice(5);
+    const current = model.getTextLabel(textId);
+    if (current === null) return;
+    const label = tile.querySelector(".wz-tl-tile-name");
+    const input = document.createElement("input");
+    input.type = "text";
+    input.maxLength = model.MAX_TEXT;
+    input.value = current;
+    label.textContent = "";
+    label.appendChild(input);
+    input.focus();
+    input.select();
+    let done = false;
+    const commit = (save) => {
+      if (done) return;
+      done = true;
+      if (save && input.value.trim() && input.value.trim() !== current) model.renameText(textId, input.value);
+      else renderAll();
+    };
+    input.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") commit(true);
+      if (ev.key === "Escape") commit(false);
+    });
+    input.addEventListener("blur", () => commit(true));
+  }, { signal });
 
   let resetArmed = null;
   resetBtn.addEventListener("click", () => {
@@ -137,7 +242,9 @@ export function showTierList() {
   const drag = attachDrag({
     root: win.root,
     signal,
-    onDragStart: () => { if (preview) preview.hide(); tiers.closeEditor(); },
+    pageItemKey,
+    buildGhost: (key) => buildTile(key),
+    onDragStart: () => { if (preview) preview.hide(); tiers.closeEditor(); closeListsMenu(); },
     onDrop: ({ key, from, target }) => {
       if (target.type === "tier") {
         model.placeItem(key, target.tierId, target.index);

@@ -28,7 +28,8 @@ import { createPicker } from "./picker.js";
 import { attachDrag } from "./drag.js";
 import { attachPreview } from "./preview.js";
 import { buildTile } from "./tiers-view.js";
-import { getCard } from "./items.js";
+import { getCard, loadArtifacts, hasArtifacts } from "./items.js";
+import { encodeCode, decodeCode, showExportDialog, showImportDialog } from "../../core/share-code.js";
 import { matchesPage } from "../../core/page-match.js";
 
 // Pages whose card elements carry real card ids (<div id="<cardId>"
@@ -152,6 +153,8 @@ export function showTierList() {
       model.deleteActiveList();
       closeListsMenu();
     });
+    act("Share\u2026", "Get a code for this list to send to someone", () => { closeListsMenu(); shareList(); });
+    act("Import\u2026", "Add a list from a code someone sent you", () => { closeListsMenu(); importListDialog(); });
     menu.appendChild(actions);
     win.root.appendChild(menu);
     const r = listsBtn.getBoundingClientRect();
@@ -165,6 +168,47 @@ export function showTierList() {
   document.addEventListener("pointerdown", (e) => {
     if (listsMenu && !listsMenu.contains(e.target) && e.target !== listsBtn) closeListsMenu();
   }, { signal, capture: true });
+
+  // ---- share / import ----
+  async function shareList() {
+    const data = model.exportActiveList();
+    const code = await encodeCode("TIER", data);
+    const safe = (data.title || "tier-list").replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, " ").trim().slice(0, 60) || "tier-list";
+    showExportDialog({
+      title: "Share Tier List",
+      intro: `Send this code to share "${data.title}". They can add it with Lists \u25BE \u2192 Import\u2026`,
+      code,
+      fileName: `${safe}.txt`
+    });
+  }
+  function importListDialog() {
+    showImportDialog({
+      title: "Import Tier List",
+      intro: "Paste a tier list code. It's added as a new list; your own lists aren't changed.",
+      actionLabel: "Import",
+      onSubmit: async (text) => {
+        const data = await decodeCode(text, "TIER");
+        model.importList(data);
+        ensureArtifacts();
+      }
+    });
+  }
+
+  // Artifact tiles need the artifact list for their pictures/names.
+  // Tried at most once per opening, so an offline page doesn't refetch on every change.
+  let artifactsTried = false;
+  function ensureArtifacts() {
+    if (artifactsTried || hasArtifacts() || !model.listUsesKind("artifact")) return;
+    artifactsTried = true;
+    loadArtifacts().then((ok) => { if (ok) renderAll(); });
+  }
+
+  // Bootstrap dialogs sit far below our window - step behind while one is open.
+  const modalWatch = new MutationObserver(() => {
+    win.root.classList.toggle("wz-tl-under-modal", document.body.classList.contains("modal-open") || !!document.querySelector(".bootstrap-dialog.in, .modal.in"));
+  });
+  modalWatch.observe(document.body, { attributes: true, attributeFilter: ["class"], childList: true });
+  signal.addEventListener("abort", () => modalWatch.disconnect());
 
   // ---- editing text items (double-click) ----
   win.root.addEventListener("dblclick", (e) => {
@@ -255,12 +299,13 @@ export function showTierList() {
   });
   preview = attachPreview({ root: win.root, signal, isDragging: drag.isDragging });
 
-  const unsubscribe = model.subscribe(renderAll);
+  const unsubscribe = model.subscribe(() => { renderAll(); ensureArtifacts(); });
   signal.addEventListener("abort", unsubscribe);
   window.addEventListener("beforeunload", () => model.flushSave(), { signal });
 
   document.body.appendChild(win.root);
   renderAll();
+  ensureArtifacts();
 
   mounted = { controller, win };
 }

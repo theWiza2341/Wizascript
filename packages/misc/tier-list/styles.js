@@ -260,6 +260,12 @@ const CSS = `
 }
 .wz-tl-tile-del:hover { background: #8b1e1e; color: #fff; }
 .wz-tl-tile.wz-tl-text { background: #262626; }
+/* Soul sprites are much bigger than card art for their content - shrink
+   them so the heart sits above the name instead of filling the tile. */
+.wz-tl-results .wz-tl-tile.wz-tl-text .wz-tl-tile-name { padding-top: 16px; }
+.wz-tl-tile.wz-tl-soul { background-size: auto 46%; background-position: center 30%; }
+/* While any dialog (e.g. Share / Import) is open, sit under it. */
+.wz-tl.wz-tl-under-modal { z-index: 1030; }
 .wz-tl-tile.wz-tl-text .wz-tl-tile-name { background: transparent; font-weight: bold; padding: 2px; line-height: 1.1; word-break: break-word; }
 .wz-tl-tile.wz-tl-text .wz-tl-tile-name input {
   width: 100%;
@@ -337,6 +343,7 @@ const CSS = `
   position: absolute;
   z-index: 6;
   min-width: 200px;
+  width: 260px;
   max-width: calc(100% - 8px);
   max-height: 60%;
   overflow-y: auto;
@@ -364,7 +371,7 @@ const CSS = `
 .wz-tl-menu-item:hover { background: #2e2e2e; color: #fff; }
 .wz-tl-menu-item.wz-tl-active { background: #4464bd; color: #fff; }
 .wz-tl-menu-count { flex: none; opacity: 0.6; }
-.wz-tl-menu-actions { display: flex; gap: 4px; margin-top: 4px; padding-top: 4px; border-top: 1px solid #444; }
+.wz-tl-menu-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; padding-top: 4px; border-top: 1px solid #444; }
 .wz-tl-preview {
   position: fixed;
   z-index: ${Z_FLOATING};

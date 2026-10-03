@@ -46,6 +46,10 @@ function readCachedCards() {
 
 export function initItemData(plugin) {
   if (!setCards(getAllCards())) setCards(readCachedCards());
+  // Artifacts saved from an earlier visit, even if older than a day, so
+  // artifact tiles show their picture straight away on any page.
+  const cachedArtifacts = readArtifactCache();
+  if (cachedArtifacts) setArtifacts(cachedArtifacts.list);
   if (plugin && plugin.events) {
     plugin.events.on("allCardsReady", (list) => setCards(list));
   }

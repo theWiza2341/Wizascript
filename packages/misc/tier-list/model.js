@@ -342,6 +342,79 @@ export function deleteActiveList() {
   return true;
 }
 
+// ---------- sharing ----------
+// A share code holds one list: its title, tiers and the text items it
+// uses. Importing always adds it as a NEW list (never overwrites).
+
+const ITEM_KEY = /^(card|soul|artifact|text):[A-Za-z0-9_-]{1,40}$/;
+const MAX_TIERS = 30;
+const MAX_ITEMS = 3000;
+
+export function exportActiveList() {
+  const list = getActiveList();
+  // All text items travel, ranked or not, so the receiver gets the whole list.
+  return {
+    v: 1,
+    title: list.title,
+    texts: { ...list.texts },
+    tiers: list.tiers.map((t) => ({ label: t.label, color: t.color, items: t.items.slice() }))
+  };
+}
+
+// Throws an Error with a player-readable message if the data is unusable.
+// Returns the new list's title.
+export function importList(data) {
+  ensureLoaded();
+  if (!data || typeof data !== "object" || !Array.isArray(data.tiers)) throw new Error("That code doesn't contain a tier list.");
+  if (state.lists.length >= MAX_LISTS) throw new Error(`You already have ${MAX_LISTS} lists. Delete one first.`);
+  const list = makeList();
+  const textMap = {};
+  Object.entries(data.texts && typeof data.texts === "object" ? data.texts : {}).forEach(([oldId, label]) => {
+    if (typeof label !== "string" || !label.trim()) return;
+    const id = uid("x");
+    textMap[oldId] = id;
+    list.texts[id] = label.trim().slice(0, MAX_TEXT);
+  });
+  let count = 0;
+  const seen = new Set();
+  list.tiers = data.tiers.slice(0, MAX_TIERS).map((t) => {
+    const tier = makeTier(
+      typeof t.label === "string" ? t.label.slice(0, MAX_LABEL) : "?",
+      /^#[0-9a-f]{6}$/i.test(t && t.color) ? t.color.toLowerCase() : "#cfcfcf"
+    );
+    (Array.isArray(t.items) ? t.items : []).forEach((k) => {
+      if (typeof k !== "string" || !ITEM_KEY.test(k) || count >= MAX_ITEMS) return;
+      let key = k;
+      if (k.startsWith("text:")) {
+        const id = textMap[k.slice(5)];
+        if (!id) return;
+        key = `text:${id}`;
+      }
+      if (seen.has(key)) return;
+      seen.add(key);
+      tier.items.push(key);
+      count += 1;
+    });
+    return tier;
+  });
+  if (!list.tiers.length) list.tiers = DEFAULT_TIERS.map(([l, c]) => makeTier(l, c));
+  let title = typeof data.title === "string" && data.title.trim() ? data.title.trim().slice(0, MAX_TITLE) : "Imported list";
+  const titles = new Set(state.lists.map((l) => l.title));
+  if (titles.has(title)) {
+    let n = 2;
+    while (titles.has(`${title} (${n})`)) n += 1;
+    title = `${title} (${n})`.slice(0, MAX_TITLE);
+  }
+  list.title = title;
+  state.lists.push(list);
+  setActiveList(list.id);
+  return title;
+}
+
+export function listUsesKind(kind) {
+  return getActiveList().tiers.some((t) => t.items.some((k) => k.startsWith(kind + ":")));
+}
+
 export function undo() {
   ensureLoaded();
   const prev = undoStack.pop();

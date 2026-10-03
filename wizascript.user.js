@@ -904,7 +904,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     const m = /^WZ-([A-Z]+)-(\d+)\.(.+)$/.exec(clean);
     if (!m) throw new Error("That doesn't look like a Wizascript code.");
     if (m[1] !== kind) {
-      const names = { BACKUP: "a settings backup", TAGS: "a Card Tags code" };
+      const names = { BACKUP: "a settings backup", TAGS: "a Card Tags code", TIER: "a tier list code" };
       throw new Error(`That's ${names[m[1]] || `a "${m[1]}" code`}, not ${names[kind] || kind}.`);
     }
     let bytes;
@@ -1673,7 +1673,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         `${key("toggleTierList", "KeyL")} shows/hides the window. Drag its title bar to move it, its edges to resize it; <b>\u25A1</b> fills the screen.`,
         "Pick <b>Cards</b>, <b>Souls</b>, <b>Artifacts</b> or <b>Text</b> in the bottom panel, then drag items into a tier. On Crafting/Decks you can also drag cards straight from the page.",
         "Click a tier's label (or <b>\u2699</b>) to edit it. Drag an item back to the panel to unrank it. Rest the mouse on a card for 3s to see it in full.",
-        "<b>Lists \u25BE</b> switches between lists or adds one. Saves automatically; <b>\u21B6</b> undoes."
+        "<b>Lists \u25BE</b> switches or adds lists, and <b>Share\u2026</b> / <b>Import\u2026</b> swaps them with friends as codes. Saves automatically; <b>\u21B6</b> undoes."
       ]
     }
   };
@@ -9442,6 +9442,12 @@ Version: v${version}`;
 }
 .wz-tl-tile-del:hover { background: #8b1e1e; color: #fff; }
 .wz-tl-tile.wz-tl-text { background: #262626; }
+/* Soul sprites are much bigger than card art for their content - shrink
+   them so the heart sits above the name instead of filling the tile. */
+.wz-tl-results .wz-tl-tile.wz-tl-text .wz-tl-tile-name { padding-top: 16px; }
+.wz-tl-tile.wz-tl-soul { background-size: auto 46%; background-position: center 30%; }
+/* While any dialog (e.g. Share / Import) is open, sit under it. */
+.wz-tl.wz-tl-under-modal { z-index: 1030; }
 .wz-tl-tile.wz-tl-text .wz-tl-tile-name { background: transparent; font-weight: bold; padding: 2px; line-height: 1.1; word-break: break-word; }
 .wz-tl-tile.wz-tl-text .wz-tl-tile-name input {
   width: 100%;
@@ -9519,6 +9525,7 @@ Version: v${version}`;
   position: absolute;
   z-index: 6;
   min-width: 200px;
+  width: 260px;
   max-width: calc(100% - 8px);
   max-height: 60%;
   overflow-y: auto;
@@ -9546,7 +9553,7 @@ Version: v${version}`;
 .wz-tl-menu-item:hover { background: #2e2e2e; color: #fff; }
 .wz-tl-menu-item.wz-tl-active { background: #4464bd; color: #fff; }
 .wz-tl-menu-count { flex: none; opacity: 0.6; }
-.wz-tl-menu-actions { display: flex; gap: 4px; margin-top: 4px; padding-top: 4px; border-top: 1px solid #444; }
+.wz-tl-menu-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; padding-top: 4px; border-top: 1px solid #444; }
 .wz-tl-preview {
   position: fixed;
   z-index: ${Z_FLOATING};
@@ -9877,6 +9884,68 @@ Version: v${version}`;
     notify();
     return true;
   }
+  var ITEM_KEY = /^(card|soul|artifact|text):[A-Za-z0-9_-]{1,40}$/;
+  var MAX_TIERS = 30;
+  var MAX_ITEMS = 3e3;
+  function exportActiveList() {
+    const list = getActiveList();
+    return {
+      v: 1,
+      title: list.title,
+      texts: { ...list.texts },
+      tiers: list.tiers.map((t) => ({ label: t.label, color: t.color, items: t.items.slice() }))
+    };
+  }
+  function importList(data2) {
+    ensureLoaded();
+    if (!data2 || typeof data2 !== "object" || !Array.isArray(data2.tiers)) throw new Error("That code doesn't contain a tier list.");
+    if (state.lists.length >= MAX_LISTS) throw new Error(`You already have ${MAX_LISTS} lists. Delete one first.`);
+    const list = makeList();
+    const textMap = {};
+    Object.entries(data2.texts && typeof data2.texts === "object" ? data2.texts : {}).forEach(([oldId, label]) => {
+      if (typeof label !== "string" || !label.trim()) return;
+      const id = uid("x");
+      textMap[oldId] = id;
+      list.texts[id] = label.trim().slice(0, MAX_TEXT);
+    });
+    let count = 0;
+    const seen = /* @__PURE__ */ new Set();
+    list.tiers = data2.tiers.slice(0, MAX_TIERS).map((t) => {
+      const tier = makeTier(
+        typeof t.label === "string" ? t.label.slice(0, MAX_LABEL) : "?",
+        /^#[0-9a-f]{6}$/i.test(t && t.color) ? t.color.toLowerCase() : "#cfcfcf"
+      );
+      (Array.isArray(t.items) ? t.items : []).forEach((k) => {
+        if (typeof k !== "string" || !ITEM_KEY.test(k) || count >= MAX_ITEMS) return;
+        let key2 = k;
+        if (k.startsWith("text:")) {
+          const id = textMap[k.slice(5)];
+          if (!id) return;
+          key2 = `text:${id}`;
+        }
+        if (seen.has(key2)) return;
+        seen.add(key2);
+        tier.items.push(key2);
+        count += 1;
+      });
+      return tier;
+    });
+    if (!list.tiers.length) list.tiers = DEFAULT_TIERS.map(([l, c]) => makeTier(l, c));
+    let title = typeof data2.title === "string" && data2.title.trim() ? data2.title.trim().slice(0, MAX_TITLE) : "Imported list";
+    const titles = new Set(state.lists.map((l) => l.title));
+    if (titles.has(title)) {
+      let n = 2;
+      while (titles.has(`${title} (${n})`)) n += 1;
+      title = `${title} (${n})`.slice(0, MAX_TITLE);
+    }
+    list.title = title;
+    state.lists.push(list);
+    setActiveList(list.id);
+    return title;
+  }
+  function listUsesKind(kind) {
+    return getActiveList().tiers.some((t) => t.items.some((k) => k.startsWith(kind + ":")));
+  }
   function undo() {
     ensureLoaded();
     const prev = undoStack.pop();
@@ -9927,6 +9996,8 @@ Version: v${version}`;
   }
   function initItemData(plugin) {
     if (!setCards(getAllCards())) setCards(readCachedCards());
+    const cachedArtifacts = readArtifactCache();
+    if (cachedArtifacts) setArtifacts(cachedArtifacts.list);
     if (plugin && plugin.events) {
       plugin.events.on("allCardsReady", (list) => setCards(list));
     }
@@ -10286,6 +10357,7 @@ Version: v${version}`;
     else tile.classList.add("wz-tl-noimg");
     if (item.color) tile.style.setProperty("--wz-tl-rarity", item.color);
     else if (item.rarity && RARITY_COLORS[item.rarity]) tile.style.setProperty("--wz-tl-rarity", RARITY_COLORS[item.rarity]);
+    if (item.kind === "soul") tile.classList.add("wz-tl-soul");
     if (item.text) {
       tile.classList.add("wz-tl-text");
       tile.title = "Double-click to edit";
@@ -11080,6 +11152,14 @@ Version: v${version}`;
         deleteActiveList();
         closeListsMenu();
       });
+      act("Share\u2026", "Get a code for this list to send to someone", () => {
+        closeListsMenu();
+        shareList();
+      });
+      act("Import\u2026", "Add a list from a code someone sent you", () => {
+        closeListsMenu();
+        importListDialog();
+      });
       menu.appendChild(actions);
       win.root.appendChild(menu);
       const r = listsBtn.getBoundingClientRect();
@@ -11093,6 +11173,42 @@ Version: v${version}`;
     document.addEventListener("pointerdown", (e) => {
       if (listsMenu && !listsMenu.contains(e.target) && e.target !== listsBtn) closeListsMenu();
     }, { signal, capture: true });
+    async function shareList() {
+      const data2 = exportActiveList();
+      const code = await encodeCode("TIER", data2);
+      const safe = (data2.title || "tier-list").replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, " ").trim().slice(0, 60) || "tier-list";
+      showExportDialog({
+        title: "Share Tier List",
+        intro: `Send this code to share "${data2.title}". They can add it with Lists \u25BE \u2192 Import\u2026`,
+        code,
+        fileName: `${safe}.txt`
+      });
+    }
+    function importListDialog() {
+      showImportDialog({
+        title: "Import Tier List",
+        intro: "Paste a tier list code. It's added as a new list; your own lists aren't changed.",
+        actionLabel: "Import",
+        onSubmit: async (text) => {
+          const data2 = await decodeCode(text, "TIER");
+          importList(data2);
+          ensureArtifacts();
+        }
+      });
+    }
+    let artifactsTried = false;
+    function ensureArtifacts() {
+      if (artifactsTried || hasArtifacts() || !listUsesKind("artifact")) return;
+      artifactsTried = true;
+      loadArtifacts().then((ok) => {
+        if (ok) renderAll();
+      });
+    }
+    const modalWatch = new MutationObserver(() => {
+      win.root.classList.toggle("wz-tl-under-modal", document.body.classList.contains("modal-open") || !!document.querySelector(".bootstrap-dialog.in, .modal.in"));
+    });
+    modalWatch.observe(document.body, { attributes: true, attributeFilter: ["class"], childList: true });
+    signal.addEventListener("abort", () => modalWatch.disconnect());
     win.root.addEventListener("dblclick", (e) => {
       const tile = e.target.closest(".wz-tl-tile.wz-tl-text");
       if (!tile || e.target.closest("input, .wz-tl-tile-del")) return;
@@ -11176,11 +11292,15 @@ Version: v${version}`;
       }
     });
     preview = attachPreview({ root: win.root, signal, isDragging: drag.isDragging });
-    const unsubscribe = subscribe(renderAll);
+    const unsubscribe = subscribe(() => {
+      renderAll();
+      ensureArtifacts();
+    });
     signal.addEventListener("abort", unsubscribe);
     window.addEventListener("beforeunload", () => flushSave(), { signal });
     document.body.appendChild(win.root);
     renderAll();
+    ensureArtifacts();
     mounted2 = { controller, win };
   }
   function hideTierList() {

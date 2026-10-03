@@ -18,6 +18,7 @@ export function buildTile(key, { placed = false } = {}) {
   else tile.classList.add("wz-tl-noimg");
   if (item.color) tile.style.setProperty("--wz-tl-rarity", item.color);
   else if (item.rarity && RARITY_COLORS[item.rarity]) tile.style.setProperty("--wz-tl-rarity", RARITY_COLORS[item.rarity]);
+  if (item.kind === "soul") tile.classList.add("wz-tl-soul");
   if (item.text) {
     tile.classList.add("wz-tl-text");
     tile.title = "Double-click to edit";

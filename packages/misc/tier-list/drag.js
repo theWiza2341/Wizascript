@@ -47,7 +47,8 @@ export function attachDrag({ root, signal, onDrop, onDragStart }) {
     if (!active) return;
     if (active.marker) active.marker.remove();
     active.marker = null;
-    root.querySelectorAll(".wz-tl-drop-out, .wz-tl-drop-in").forEach((n) => n.classList.remove("wz-tl-drop-out", "wz-tl-drop-in"));
+    root.querySelectorAll(".wz-tl-drop-in").forEach((n) => n.classList.remove("wz-tl-drop-in"));
+    active.ghost.classList.remove("wz-tl-ghost-remove");
   }
 
   function update(x, y) {
@@ -64,11 +65,14 @@ export function attachDrag({ root, signal, onDrop, onDragStart }) {
       if (t.index < tiles.length) t.rowItems.insertBefore(marker, tiles[t.index]);
       else t.rowItems.appendChild(marker);
       active.marker = marker;
-    } else if (t.type === "picker" && active.from.type === "tier") {
-      const picker = root.querySelector(".wz-tl-picker");
-      if (picker) picker.classList.add("wz-tl-drop-in");
-    } else if (t.type === "outside" && active.from.type === "tier") {
-      root.classList.add("wz-tl-drop-out");
+    } else if ((t.type === "picker" || t.type === "outside") && active.from.type === "tier") {
+      // Dropping here unranks the card: the ghost fades and shows an x
+      // (no outline on the window - that was too loud).
+      active.ghost.classList.add("wz-tl-ghost-remove");
+      if (t.type === "picker") {
+        const picker = root.querySelector(".wz-tl-picker");
+        if (picker) picker.classList.add("wz-tl-drop-in");
+      }
     }
   }
 

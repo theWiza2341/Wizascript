@@ -17,16 +17,12 @@ let byId = new Map();
 const nameCache = new Map();
 const readyListeners = new Set();
 
-// Known extensions get friendly names; anything new still appears,
-// under its raw name, without needing a Wizascript update.
-const EXTENSION_LABELS = { BASE: "Undertale", DELTARUNE: "Deltarune", UTY: "Undertale Yellow" };
-const RARITY_ORDER = ["BASE", "COMMON", "RARE", "EPIC", "LEGENDARY", "DETERMINATION", "TOKEN", "GENERATED"];
 // Hidden unless their rarity is picked explicitly.
-const HIDDEN_BY_DEFAULT = new Set(["TOKEN", "GENERATED"]);
+const HIDDEN_BY_DEFAULT = new Set(["TOKEN", "GENERATED", "STORY"]);
 
 export const RARITY_COLORS = {
   BASE: "#9a9a9a", COMMON: "#e8e8e8", RARE: "#58b4ff", EPIC: "#c86bff",
-  LEGENDARY: "#ffcc00", DETERMINATION: "#ff3030", TOKEN: "#6b6b6b", GENERATED: "#6b6b6b"
+  LEGENDARY: "#ffcc00", DETERMINATION: "#ff3030", TOKEN: "#6b6b6b", GENERATED: "#6b6b6b", STORY: "#6b6b6b"
 };
 
 function setCards(list) {
@@ -116,42 +112,34 @@ export function resolveItem(key) {
 }
 
 // ---------- picker search ----------
+//
+// Same filters as the Crafting/Decks pages, with the same icons:
+//  - rarity toggles (any ticked = only those rarities; none ticked =
+//    everything except Token, Generated and Story cards);
+//  - "monsters with tribes", monster, spell (monster/spell: either one);
+//  - Undertale / Deltarune / Undertale Yellow (any ticked = only those).
+// Groups combine with AND, like the game's own filter.
 
-export function filterOptions() {
-  const exts = [...new Set(cards.map((c) => c.extension).filter(Boolean))];
-  const rarities = [...new Set(cards.map((c) => c.rarity).filter(Boolean))]
-    .sort((a, b) => {
-      const ia = RARITY_ORDER.indexOf(a);
-      const ib = RARITY_ORDER.indexOf(b);
-      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-    });
-  return {
-    sets: exts.map((e) => ({ value: e, label: EXTENSION_LABELS[e] || e })),
-    rarities: rarities.map((r) => ({ value: r, label: r.charAt(0) + r.slice(1).toLowerCase() }))
-  };
-}
-
-// filters: { text, set, rarity, type, cost } - "" means "any".
-// type: "0" monster, "1" spell. cost: "0".."9" or "10" for 10+.
+// filters: { text, rarities: Set, tribes: bool, monster: bool, spell: bool, sets: Set }
 export function isFilterActive(f) {
-  return !!(String(f.text || "").trim() || f.set || f.rarity || f.type || f.cost);
+  return !!(String(f.text || "").trim() || f.rarities.size || f.tribes || f.monster || f.spell || f.sets.size);
 }
 
 export function searchCards(f, limit = 150) {
   if (!isFilterActive(f)) return { results: [], total: 0 };
   const text = String(f.text || "").trim().toLowerCase();
   const matches = cards.filter((c) => {
-    if (f.set && c.extension !== f.set) return false;
-    if (f.rarity) {
-      if (c.rarity !== f.rarity) return false;
+    if (f.rarities.size) {
+      if (!f.rarities.has(c.rarity)) return false;
     } else if (HIDDEN_BY_DEFAULT.has(c.rarity)) {
       return false;
     }
-    if (f.type !== "" && f.type !== undefined && String(c.typeCard) !== String(f.type)) return false;
-    if (f.cost !== "" && f.cost !== undefined) {
-      const cost = Number(c.cost);
-      if (f.cost === "10" ? !(cost >= 10) : cost !== Number(f.cost)) return false;
+    if (f.monster || f.spell) {
+      const isSpell = Number(c.typeCard) === 1;
+      if (!((f.monster && !isSpell) || (f.spell && isSpell))) return false;
     }
+    if (f.tribes && !(Number(c.typeCard) !== 1 && Array.isArray(c.tribes) && c.tribes.length)) return false;
+    if (f.sets.size && !f.sets.has(c.extension)) return false;
     if (text) {
       const local = cardName(c).toLowerCase();
       const english = stripHtml(c.name || "").toLowerCase();

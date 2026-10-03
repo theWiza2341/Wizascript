@@ -9389,18 +9389,38 @@ Version: v${version}`;
   background: #141414;
 }
 .wz-tl-picker.wz-tl-hidden { display: none; }
-.wz-tl-filters { flex: none; display: flex; flex-wrap: wrap; gap: 4px; padding: 5px 6px; }
-.wz-tl-filters input, .wz-tl-filters select {
-  height: 24px;
-  padding: 2px 4px;
+.wz-tl-filters { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 5px 6px; }
+.wz-tl-search-row { flex: 1 1 180px; min-width: 150px; display: flex; gap: 4px; }
+.wz-tl-search-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 26px;
+  padding: 2px 6px;
   border: 1px solid #666;
   border-radius: 3px;
   background: #000;
   color: #fff;
   font: 12px Arial, sans-serif;
 }
-.wz-tl-filters input { flex: 1 1 140px; min-width: 100px; }
-.wz-tl-filters select { flex: 0 1 auto; max-width: 150px; }
+.wz-tl-toggle-group { flex: none; display: flex; gap: 2px; padding: 1px; border-radius: 4px; background: rgba(255,255,255,0.05); }
+.wz-tl-toggle {
+  height: 26px;
+  min-width: 26px;
+  padding: 2px 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.45;
+  filter: grayscale(0.7);
+}
+.wz-tl-toggle img { max-height: 20px; max-width: 32px; image-rendering: pixelated; pointer-events: none; }
+.wz-tl-toggle:hover { opacity: 0.8; filter: none; }
+.wz-tl-toggle.wz-tl-on { opacity: 1; filter: none; border-color: #fff; background: rgba(68,100,189,0.55); }
+.wz-tl-toggle-text { color: #fff; font: bold 10px Arial, sans-serif; }
 .wz-tl-results { flex: 1 1 auto; min-height: min(calc(var(--wz-tl-tile-h) + 8px), 40px); overflow-y: auto; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 3px; padding: 0 6px 6px; }
 .wz-tl-hint { flex: none; padding: 0 8px 4px; color: #aaa; font-size: 12px; }
 
@@ -9706,9 +9726,7 @@ Version: v${version}`;
   var byId = /* @__PURE__ */ new Map();
   var nameCache = /* @__PURE__ */ new Map();
   var readyListeners = /* @__PURE__ */ new Set();
-  var EXTENSION_LABELS = { BASE: "Undertale", DELTARUNE: "Deltarune", UTY: "Undertale Yellow" };
-  var RARITY_ORDER = ["BASE", "COMMON", "RARE", "EPIC", "LEGENDARY", "DETERMINATION", "TOKEN", "GENERATED"];
-  var HIDDEN_BY_DEFAULT = /* @__PURE__ */ new Set(["TOKEN", "GENERATED"]);
+  var HIDDEN_BY_DEFAULT = /* @__PURE__ */ new Set(["TOKEN", "GENERATED", "STORY"]);
   var RARITY_COLORS = {
     BASE: "#9a9a9a",
     COMMON: "#e8e8e8",
@@ -9717,7 +9735,8 @@ Version: v${version}`;
     LEGENDARY: "#ffcc00",
     DETERMINATION: "#ff3030",
     TOKEN: "#6b6b6b",
-    GENERATED: "#6b6b6b"
+    GENERATED: "#6b6b6b",
+    STORY: "#6b6b6b"
   };
   function setCards(list) {
     if (!Array.isArray(list) || !list.length) return false;
@@ -9795,36 +9814,24 @@ Version: v${version}`;
     }
     return { key: key2, kind, card: null, label: "Unknown item", image: "", rarity: null };
   }
-  function filterOptions() {
-    const exts = [...new Set(cards.map((c) => c.extension).filter(Boolean))];
-    const rarities = [...new Set(cards.map((c) => c.rarity).filter(Boolean))].sort((a, b) => {
-      const ia = RARITY_ORDER.indexOf(a);
-      const ib = RARITY_ORDER.indexOf(b);
-      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-    });
-    return {
-      sets: exts.map((e) => ({ value: e, label: EXTENSION_LABELS[e] || e })),
-      rarities: rarities.map((r) => ({ value: r, label: r.charAt(0) + r.slice(1).toLowerCase() }))
-    };
-  }
   function isFilterActive(f) {
-    return !!(String(f.text || "").trim() || f.set || f.rarity || f.type || f.cost);
+    return !!(String(f.text || "").trim() || f.rarities.size || f.tribes || f.monster || f.spell || f.sets.size);
   }
   function searchCards(f, limit = 150) {
     if (!isFilterActive(f)) return { results: [], total: 0 };
     const text = String(f.text || "").trim().toLowerCase();
     const matches = cards.filter((c) => {
-      if (f.set && c.extension !== f.set) return false;
-      if (f.rarity) {
-        if (c.rarity !== f.rarity) return false;
+      if (f.rarities.size) {
+        if (!f.rarities.has(c.rarity)) return false;
       } else if (HIDDEN_BY_DEFAULT.has(c.rarity)) {
         return false;
       }
-      if (f.type !== "" && f.type !== void 0 && String(c.typeCard) !== String(f.type)) return false;
-      if (f.cost !== "" && f.cost !== void 0) {
-        const cost = Number(c.cost);
-        if (f.cost === "10" ? !(cost >= 10) : cost !== Number(f.cost)) return false;
+      if (f.monster || f.spell) {
+        const isSpell = Number(c.typeCard) === 1;
+        if (!(f.monster && !isSpell || f.spell && isSpell)) return false;
       }
+      if (f.tribes && !(Number(c.typeCard) !== 1 && Array.isArray(c.tribes) && c.tribes.length)) return false;
+      if (f.sets.size && !f.sets.has(c.extension)) return false;
       if (text) {
         const local = cardName(c).toLowerCase();
         const english = stripHtml(c.name || "").toLowerCase();
@@ -10179,71 +10186,105 @@ Version: v${version}`;
   // packages/misc/tier-list/picker.js
   var RESULT_LIMIT = 150;
   var SEARCH_DELAY_MS = 150;
+  var RARITY_TOGGLES = [
+    ["BASE", "images/rarity/BASE_BASE.png", "Base"],
+    ["TOKEN", "images/rarity/BASE_TOKEN.png", "Token"],
+    ["COMMON", "images/rarity/BASE_COMMON.png", "Common"],
+    ["RARE", "images/rarity/BASE_RARE.png", "Rare"],
+    ["EPIC", "images/rarity/BASE_EPIC.png", "Epic"],
+    ["LEGENDARY", "images/rarity/BASE_LEGENDARY.png", "Legendary"],
+    ["DETERMINATION", "images/rarity/BASE_DETERMINATION.png", "Determination"],
+    ["STORY", "images/rarity/BASE_STORY.png", "Story"]
+  ];
+  var KIND_TOGGLES = [
+    ["tribes", "images/tribes/ALL.png", "Monsters with tribes"],
+    ["monster", "images/souls/MONSTER.png", "Monsters"],
+    ["spell", "images/artifacts/Arcane_Scepter.png", "Spells"]
+  ];
+  var SET_TOGGLES = [
+    ["BASE", "images/rarity/BASE.png", "Undertale cards"],
+    ["DELTARUNE", "images/rarity/DELTARUNE.png", "Deltarune cards"],
+    ["UTY", "images/rarity/UTY.png", "Undertale Yellow cards"]
+  ];
   function createPicker({ body, signal }) {
     const panel = document.createElement("div");
     panel.className = "wz-tl-picker";
+    const state2 = { rarities: /* @__PURE__ */ new Set(), sets: /* @__PURE__ */ new Set(), tribes: false, monster: false, spell: false };
+    const toggles2 = [];
     const filters = document.createElement("div");
     filters.className = "wz-tl-filters";
     const search = document.createElement("input");
     search.type = "text";
     search.placeholder = "Search cards\u2026";
     search.spellcheck = false;
-    function select(title, options) {
-      const s = document.createElement("select");
-      s.title = title;
-      options.forEach(([value, label]) => {
-        const o = document.createElement("option");
-        o.value = value;
-        o.textContent = label;
-        s.appendChild(o);
-      });
-      return s;
+    function makeToggle([value, src, title], isOn2, flip) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "wz-tl-toggle";
+      b.title = title;
+      b.dataset.filter = value;
+      const img = document.createElement("img");
+      img.src = "/" + src;
+      img.alt = title;
+      img.draggable = false;
+      img.addEventListener("error", () => {
+        img.remove();
+        b.textContent = title;
+        b.classList.add("wz-tl-toggle-text");
+      }, { once: true });
+      b.appendChild(img);
+      b.addEventListener("click", () => {
+        flip(value);
+        sync();
+        render();
+      }, { signal });
+      toggles2.push({ el: b, isOn: () => isOn2(value) });
+      return b;
     }
-    const setSel = select("Set", [["", "Any set"]]);
-    const raritySel = select("Rarity", [["", "Any rarity"]]);
-    const typeSel = select("Type", [["", "Any type"], ["0", "Monster"], ["1", "Spell"]]);
-    const costSel = select("Cost", [["", "Any cost"], ...Array.from({ length: 10 }, (_, i) => [String(i), `Cost ${i}`]), ["10", "Cost 10+"]]);
+    function group(defs, isOn2, flip) {
+      const g = document.createElement("div");
+      g.className = "wz-tl-toggle-group";
+      defs.forEach((d) => g.appendChild(makeToggle(d, isOn2, flip)));
+      return g;
+    }
+    const flipSet = (set) => (v) => set.has(v) ? set.delete(v) : set.add(v);
+    const rarityGroup = group(RARITY_TOGGLES, (v) => state2.rarities.has(v), flipSet(state2.rarities));
+    const kindGroup = group(KIND_TOGGLES, (v) => state2[v], (v) => {
+      state2[v] = !state2[v];
+    });
+    const setGroup = group(SET_TOGGLES, (v) => state2.sets.has(v), flipSet(state2.sets));
     const clear = document.createElement("button");
     clear.type = "button";
     clear.className = "wz-tl-btn";
     clear.textContent = "Clear";
     clear.title = "Clear the search and filters";
-    filters.append(search, setSel, raritySel, typeSel, costSel, clear);
+    const searchRow = document.createElement("div");
+    searchRow.className = "wz-tl-search-row";
+    searchRow.append(search, clear);
+    filters.append(searchRow, rarityGroup, kindGroup, setGroup);
     const hint = document.createElement("div");
     hint.className = "wz-tl-hint";
     const results = document.createElement("div");
     results.className = "wz-tl-results";
     panel.append(filters, hint, results);
     body.appendChild(panel);
-    function fillDynamicOptions() {
-      const { sets, rarities } = filterOptions();
-      const refill = (sel, first, opts) => {
-        const keep = sel.value;
-        sel.innerHTML = "";
-        [["", first], ...opts.map((o) => [o.value, o.label])].forEach(([v, l]) => {
-          const o = document.createElement("option");
-          o.value = v;
-          o.textContent = l;
-          sel.appendChild(o);
-        });
-        sel.value = opts.some((o) => o.value === keep) ? keep : "";
-      };
-      refill(setSel, "Any set", sets);
-      refill(raritySel, "Any rarity", rarities);
-    }
     function currentFilters() {
-      return { text: search.value, set: setSel.value, rarity: raritySel.value, type: typeSel.value, cost: costSel.value };
+      return { text: search.value, ...state2 };
+    }
+    function sync() {
+      toggles2.forEach((t) => t.el.classList.toggle("wz-tl-on", t.isOn()));
+      clear.disabled = !isFilterActive(currentFilters());
     }
     function render() {
       results.innerHTML = "";
+      sync();
       if (!hasCards()) {
         hint.textContent = "No card data yet. Open the Decks or Crafting page once, then come back.";
         return;
       }
       const f = currentFilters();
-      clear.disabled = !isFilterActive(f);
       if (!isFilterActive(f)) {
-        hint.textContent = "Search or pick a filter to list cards, then drag them into a tier.";
+        hint.textContent = "Search or tick a filter to list cards, then drag them into a tier.";
         return;
       }
       const { results: cards2, total } = searchCards(f, RESULT_LIMIT);
@@ -10270,20 +10311,15 @@ Version: v${version}`;
         render();
       }
     }, { signal });
-    [setSel, raritySel, typeSel, costSel].forEach((s) => s.addEventListener("change", render, { signal }));
     clear.addEventListener("click", () => {
       search.value = "";
-      [setSel, raritySel, typeSel, costSel].forEach((s) => {
-        s.value = "";
-      });
+      state2.rarities.clear();
+      state2.sets.clear();
+      state2.tribes = state2.monster = state2.spell = false;
       render();
     }, { signal });
-    const stopListening = onCardsReady(() => {
-      fillDynamicOptions();
-      render();
-    });
+    const stopListening = onCardsReady(render);
     signal.addEventListener("abort", stopListening);
-    fillDynamicOptions();
     render();
     return {
       element: panel,

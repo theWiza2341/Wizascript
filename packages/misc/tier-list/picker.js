@@ -55,7 +55,9 @@ const TYPES = [
   ["text", "Text"]
 ];
 
-export function createPicker({ body, signal }) {
+// getOptions() -> { hideRanked: bool, tagsFor: fn | null }, read on
+// every render so setting changes apply straight away.
+export function createPicker({ body, signal, getOptions = () => ({}) }) {
   const panel = document.createElement("div");
   panel.className = "wz-tl-picker";
 
@@ -173,12 +175,17 @@ export function createPicker({ body, signal }) {
       clear.title = "Add this text as an item you can rank";
       clear.disabled = !search.value.trim();
     } else {
-      search.placeholder = type === "cards" ? "Search cards…" : type === "souls" ? "Search souls…" : "Search artifacts…";
+      search.placeholder = type === "cards" ? (getOptions().tagsFor ? "Cards or tags…" : "Search cards…") : type === "souls" ? "Search souls…" : "Search artifacts…";
       search.removeAttribute("maxLength");
       clear.textContent = "Clear";
       clear.title = "Clear the search and filters";
       clear.disabled = type === "cards" ? !isFilterActive(cardFilters()) : !search.value;
     }
+  }
+
+  // Ranked items: greyed with a tick, or left out entirely (setting).
+  function unranked(keys) {
+    return getOptions().hideRanked ? keys.filter((k) => !model.isPlaced(k)) : keys;
   }
 
   function showKeys(keys, { deletable = false } = {}) {
@@ -212,19 +219,24 @@ export function createPicker({ body, signal }) {
       hint.textContent = "Search or tick a filter to list cards, then drag them into a tier.";
       return;
     }
-    const { results: cards, total } = searchCards(f, RESULT_LIMIT);
+    const opts = getOptions();
+    const { results: cards, total, tagHits } = searchCards(f, RESULT_LIMIT, {
+      tagsFor: opts.tagsFor,
+      exclude: opts.hideRanked ? (k) => model.isPlaced(k) : null
+    });
     if (!total) {
-      hint.textContent = "No cards match.";
+      hint.textContent = opts.hideRanked ? "No unranked cards match." : "No cards match.";
       return;
     }
+    const tagNote = tagHits ? ` (${tagHits} by Card Tag)` : "";
     hint.textContent = total > cards.length
-      ? `Showing ${cards.length} of ${total} cards. Narrow the search to see the rest.`
-      : `${total} card${total === 1 ? "" : "s"}. Drag one into a tier.`;
+      ? `Showing ${cards.length} of ${total} cards${tagNote}. Narrow the search to see the rest.`
+      : `${total} card${total === 1 ? "" : "s"}${tagNote}. Drag one into a tier.`;
     showKeys(cards.map(cardKey));
   }
 
   function renderSouls() {
-    const keys = searchSouls(search.value);
+    const keys = unranked(searchSouls(search.value));
     hint.textContent = keys.length ? "Drag a soul into a tier." : "No souls match.";
     showKeys(keys);
   }
@@ -234,16 +246,19 @@ export function createPicker({ body, signal }) {
       hint.textContent = "Loading artifacts… (if this stays, open the Decks page once, then try again)";
       return;
     }
-    const keys = searchArtifacts(search.value);
+    const keys = unranked(searchArtifacts(search.value));
     hint.textContent = keys.length ? `${keys.length} artifact${keys.length === 1 ? "" : "s"}. Drag one into a tier.` : "No artifacts match.";
     showKeys(keys);
   }
 
   function renderText() {
-    const keys = model.getTextIds().map((id) => `text:${id}`);
+    const all = model.getTextIds().map((id) => `text:${id}`);
+    const keys = unranked(all);
     hint.textContent = keys.length
       ? "Drag a text item into a tier. Double-click one to edit it."
-      : "Type a label (e.g. an archetype) and press Add to make a text item.";
+      : all.length
+        ? "All your text items are ranked. Type a label and press Add for a new one."
+        : "Type a label (e.g. an archetype) and press Add to make a text item.";
     showKeys(keys, { deletable: true });
   }
 

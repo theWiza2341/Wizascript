@@ -39,6 +39,14 @@ const CSS = `
   user-select: none;
 }
 .wz-tl *, .wz-tl *::before, .wz-tl *::after { box-sizing: border-box; }
+/* Window Opacity setting: see-through only while the mouse is elsewhere
+   (and never mid-drag or with a menu/editor open), so it stays readable
+   while you use it. */
+.wz-tl { opacity: var(--wz-tl-opacity, 1); transition: opacity 0.15s; }
+.wz-tl:hover, .wz-tl:focus-within, .wz-tl.wz-tl-busy { opacity: 1; }
+/* Show Names on Tiles = off. Text items keep their label (it IS the tile). */
+.wz-tl-nonames .wz-tl-tile:not(.wz-tl-text) .wz-tl-tile-name,
+.wz-tl-ghost.wz-tl-nonames:not(.wz-tl-text) .wz-tl-tile-name { display: none; }
 .wz-tl.wz-tl-max { left: 0 !important; top: 0 !important; width: 100vw !important; height: 100vh !important; border-radius: 0; }
 .wz-tl.wz-tl-max .wz-tl-resize { display: none; }
 

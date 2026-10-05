@@ -11,6 +11,9 @@ import { initPatchMaker } from "./packages/patch-maker/index.js";
 import { initTrueHubBridge } from "./packages/true-hub-bridge/index.js";
 import { initDeckTracker } from "./packages/deck-tracker/index.js";
 import { initUcTv } from "./packages/uc-tv/index.js";
+// Tier List Maker is a full plugin with its own tab; its files live in
+// packages/misc/tier-list/ because it started out as a Misc feature.
+import { initTierList } from "./packages/misc/tier-list/index.js";
 import { initMisc } from "./packages/misc/index.js";
 import { initController } from "./packages/controller/index.js";
 
@@ -49,6 +52,7 @@ bootstrap(plugin => {
   initTrueHubBridge(plugin);
   initDeckTracker(plugin); // shown to players as "Card Tracker"
   initUcTv(plugin);
+  initTierList(plugin);
   const miscSettings = initMisc(plugin);
   initKeybinds(plugin); // creates the Keybinds tab ahead of Controller Support's
   initController(plugin, miscSettings.enableController);

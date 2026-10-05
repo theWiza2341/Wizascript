@@ -2,6 +2,19 @@
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
 
+## 1.6.0
+
+### New: Tier List Maker
+Make your own tier lists right inside Undercards, using the game's current cards, so they never go out of date. Turn it on in the **Plugins** list.
+- Press **Primary + L** (Ctrl+L by default) on any page, even during matches, to show or hide the window. Move it by its title bar, resize it from any edge, or fill the screen with **□**.
+- Drag cards, souls, artifacts and your own text labels into tiers. Find cards with the same rarity, type and set icons as the Crafting page, or by name.
+- On Crafting and Decks, you can drag a card straight from the page into your list.
+- With **Card Tags** on, the card search also finds your tags. Type "wincon" to see every card you've tagged Wincon.
+- Rename, recolour, reorder, add or delete tiers. Undo with **↶**.
+- Keep as many lists as you like with **Lists ▾**, and swap them with friends using **Share…** and **Import…** codes.
+- Rest the mouse on a card to see it in full.
+- Its own settings tab: card size, window opacity, names on tiles, preview delay, whether ranked items are greyed out or hidden in the panel, dragging from Crafting/Decks, and turning it off during your own matches.
+
 ## 1.5.0
 
 Wizascript is now listed in UnderScript's plugin directory, so this update is all about making it easy to understand without a readme.

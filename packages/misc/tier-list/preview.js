@@ -1,8 +1,9 @@
 // packages/misc/tier-list/preview.js
 //
-// Resting the pointer on the same tile for HOLD_MS (without pressing a
-// button) shows the full card - long enough that moving the mouse
-// around, or dragging, never pops it up by accident.
+// Resting the pointer on the same tile for a while (the "Card Preview
+// Delay" setting, 1-5s; without pressing a button) shows the full card -
+// long enough that moving the mouse around, or dragging, never pops it
+// up by accident.
 //
 // The site's own hover
 // preview sits far below our window's z-index, so we draw our own:
@@ -12,9 +13,9 @@
 import { getPageWindow } from "../../core/page-window.js";
 import { resolveItem } from "./items.js";
 
-const HOLD_MS = 3000;
-
-export function attachPreview({ root, signal, isDragging }) {
+// getDelayMs() is read each time a wait starts, so a changed setting
+// applies straight away.
+export function attachPreview({ root, signal, isDragging, getDelayMs = () => 2000 }) {
   let timer = null;
   let box = null;
   let lastX = 0;
@@ -82,7 +83,7 @@ export function attachPreview({ root, signal, isDragging }) {
       box.dataset.key = tile.dataset.key;
       document.body.appendChild(box);
       position();
-    }, HOLD_MS);
+    }, getDelayMs());
   }
 
   root.addEventListener("pointerover", (e) => {

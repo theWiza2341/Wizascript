@@ -54,6 +54,16 @@ export const PLUGINS = [
     legacyDefaultOn: true
   },
   {
+    id: "tierList",
+    category: "Plugins",
+    name: "Tier List Maker",
+    // Stored under "misc." because it started as a Miscellaneous
+    // feature in 1.6.0 development - kept so nobody's toggle resets.
+    key: "misc.enableTierList",
+    note: "Rank cards in your own drag-and-drop tier lists, on any page.",
+    usesKeybinds: true
+  },
+  {
     id: "controller",
     category: "Plugins",
     name: "Controller Support",
@@ -74,14 +84,6 @@ export const PLUGINS = [
     name: "Card Tags",
     key: "misc.enableCardTags",
     note: "Right-click cards in Crafting/Decks to tag and search them."
-  },
-  {
-    id: "tierList",
-    category: "Miscellaneous",
-    name: "Tier List Maker",
-    key: "misc.enableTierList",
-    note: "Rank cards in your own drag-and-drop tier lists, on any page.",
-    usesKeybinds: true
   }
 ];
 

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.5.0
+// @version      1.6.0
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -24,7 +24,7 @@
   }
 
   // packages/core/version.js
-  var SUITE_VERSION = "1.5.0";
+  var SUITE_VERSION = "1.6.0";
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
@@ -73,14 +73,14 @@
       const { category, page, hidden, ...rest } = config;
       const isHidden = () => (visible ? !visible() : false) || resolve(hidden) === true;
       const dynamicCategory = categories && category ? { toString: () => isHidden() ? "N/A" : String(category), valueOf: () => isHidden() ? "N/A" : String(category) } : null;
-      const setting2 = settingsApi.add({
+      const setting3 = settingsApi.add({
         ...rest,
         ...dynamicCategory ? { category: dynamicCategory } : {},
         key: `${featureName}.${key2}`,
         hidden: isHidden
       });
-      registered[key2] = setting2;
-      return setting2;
+      registered[key2] = setting3;
+      return setting3;
     }
     function value(key2) {
       return registered[key2].value();
@@ -187,6 +187,16 @@
       legacyDefaultOn: true
     },
     {
+      id: "tierList",
+      category: "Plugins",
+      name: "Tier List Maker",
+      // Stored under "misc." because it started as a Miscellaneous
+      // feature in 1.6.0 development - kept so nobody's toggle resets.
+      key: "misc.enableTierList",
+      note: "Rank cards in your own drag-and-drop tier lists, on any page.",
+      usesKeybinds: true
+    },
+    {
       id: "controller",
       category: "Plugins",
       name: "Controller Support",
@@ -207,14 +217,6 @@
       name: "Card Tags",
       key: "misc.enableCardTags",
       note: "Right-click cards in Crafting/Decks to tag and search them."
-    },
-    {
-      id: "tierList",
-      category: "Miscellaneous",
-      name: "Tier List Maker",
-      key: "misc.enableTierList",
-      note: "Rank cards in your own drag-and-drop tier lists, on any page.",
-      usesKeybinds: true
     }
   ];
   var LS_PREFIX = "underscript.plugin.Wizascript.";
@@ -730,6 +732,19 @@
   var CHANGELOG_default = `# Changelog
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
+
+## 1.6.0
+
+### New: Tier List Maker
+Make your own tier lists right inside Undercards, using the game's current cards, so they never go out of date. Turn it on in the **Plugins** list.
+- Press **Primary + L** (Ctrl+L by default) on any page, even during matches, to show or hide the window. Move it by its title bar, resize it from any edge, or fill the screen with **\u25A1**.
+- Drag cards, souls, artifacts and your own text labels into tiers. Find cards with the same rarity, type and set icons as the Crafting page, or by name.
+- On Crafting and Decks, you can drag a card straight from the page into your list.
+- With **Card Tags** on, the card search also finds your tags. Type "wincon" to see every card you've tagged Wincon.
+- Rename, recolour, reorder, add or delete tiers. Undo with **\u21B6**.
+- Keep as many lists as you like with **Lists \u25BE**, and swap them with friends using **Share\u2026** and **Import\u2026** codes.
+- Rest the mouse on a card to see it in full.
+- Its own settings tab: card size, window opacity, names on tiles, preview delay, whether ranked items are greyed out or hidden in the panel, dragging from Crafting/Decks, and turning it off during your own matches.
 
 ## 1.5.0
 
@@ -1671,8 +1686,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       summary: "Rank cards, souls and artifacts in your own tier lists.",
       points: () => [
         `${key("toggleTierList", "KeyL")} shows/hides the window. Drag its title bar to move it, its edges to resize it; <b>\u25A1</b> fills the screen.`,
-        "Pick <b>Cards</b>, <b>Souls</b>, <b>Artifacts</b> or <b>Text</b> in the bottom panel, then drag items into a tier. On Crafting/Decks you can also drag cards straight from the page.",
-        "Click a tier's label (or <b>\u2699</b>) to edit it. Drag an item back to the panel to unrank it. Rest the mouse on a card for 3s to see it in full.",
+        "Pick <b>Cards</b>, <b>Souls</b>, <b>Artifacts</b> or <b>Text</b> in the bottom panel, then drag items into a tier. With Card Tags on, the card search also finds your tags. On Crafting/Decks you can drag cards straight from the page.",
+        "Click a tier's label (or <b>\u2699</b>) to edit it. Drag an item back to the panel to unrank it. Rest the mouse on a card to see it in full.",
         "<b>Lists \u25BE</b> switches or adds lists, and <b>Share\u2026</b> / <b>Import\u2026</b> swaps them with friends as codes. Saves automatically; <b>\u21B6</b> undoes."
       ]
     }
@@ -6429,9 +6444,9 @@ Version: v${version}`;
     const filterDisabled = () => !filteringEnabled.value();
     const filterDependents = [];
     const addFilter = (key2, config) => {
-      const setting2 = settings3.add(key2, { ...config, disabled: filterDisabled });
-      filterDependents.push(setting2);
-      return setting2;
+      const setting3 = settings3.add(key2, { ...config, disabled: filterDisabled });
+      filterDependents.push(setting3);
+      return setting3;
     };
     const filteringEnabled = settings3.add("filteringEnabled", {
       name: "Enable Match Filtering",
@@ -7194,6 +7209,2407 @@ Version: v${version}`;
     });
   }
 
+  // packages/misc/tier-list/styles.js
+  var STYLE_ID = "wizascript-tierlist-style";
+  var Z_WINDOW = 2147482e3;
+  var Z_FLOATING = 2147483100;
+  function injectTierListStyle() {
+    if (document.getElementById(STYLE_ID)) return;
+    const style = document.createElement("style");
+    style.id = STYLE_ID;
+    style.textContent = CSS;
+    (document.head || document.documentElement).appendChild(style);
+  }
+  var CSS = `
+.wz-tl {
+  --wz-tl-tile: 72px;
+  --wz-tl-tile-h: calc(var(--wz-tl-tile) * 0.8);
+  --wz-tl-label: max(56px, var(--wz-tl-tile));
+  position: fixed;
+  z-index: ${Z_WINDOW};
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  background: #0d0d0d;
+  color: #fff;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.7);
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  user-select: none;
+}
+.wz-tl *, .wz-tl *::before, .wz-tl *::after { box-sizing: border-box; }
+/* Window Opacity setting: see-through only while the mouse is elsewhere
+   (and never mid-drag or with a menu/editor open), so it stays readable
+   while you use it. */
+.wz-tl { opacity: var(--wz-tl-opacity, 1); transition: opacity 0.15s; }
+.wz-tl:hover, .wz-tl:focus-within, .wz-tl.wz-tl-busy { opacity: 1; }
+/* Show Names on Tiles = off. Text items keep their label (it IS the tile). */
+.wz-tl-nonames .wz-tl-tile:not(.wz-tl-text) .wz-tl-tile-name,
+.wz-tl-ghost.wz-tl-nonames:not(.wz-tl-text) .wz-tl-tile-name { display: none; }
+.wz-tl.wz-tl-max { left: 0 !important; top: 0 !important; width: 100vw !important; height: 100vh !important; border-radius: 0; }
+.wz-tl.wz-tl-max .wz-tl-resize { display: none; }
+
+.wz-tl-header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  background: #222;
+  border-bottom: 1px solid #555;
+  cursor: grab;
+  touch-action: none;
+}
+.wz-tl.wz-tl-max .wz-tl-header { cursor: default; }
+.wz-tl-grip { flex: 1 1 auto; min-width: 16px; align-self: stretch; }
+.wz-tl-title {
+  flex: 0 1 220px;
+  min-width: 60px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: #fff;
+  font: bold 13px Arial, sans-serif;
+  padding: 2px 4px;
+  outline: none;
+  text-overflow: ellipsis;
+}
+.wz-tl-title:hover, .wz-tl-title:focus { border-color: #666; background: rgba(255,255,255,0.06); }
+.wz-tl-btn {
+  flex: none;
+  padding: 2px 7px;
+  border: 1px solid #777;
+  border-radius: 3px;
+  background: #333;
+  color: #fff;
+  font: 12px Arial, sans-serif;
+  line-height: 16px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.wz-tl-btn:hover { background: #444; border-color: #aaa; }
+.wz-tl-btn:disabled { opacity: 0.35; cursor: default; background: #333; border-color: #777; }
+.wz-tl-btn.wz-tl-active { background: #4464bd; border-color: #8ea6e8; }
+.wz-tl-btn.wz-tl-danger { background: #8b1e1e; border-color: #e05555; }
+
+.wz-tl-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+
+.wz-tl-tiers { flex: 1 1 0; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+.wz-tl-row { display: flex; align-items: stretch; border-bottom: 1px solid #000; background: #1a1a1a; }
+.wz-tl-row-label {
+  flex: none;
+  width: var(--wz-tl-label);
+  min-height: calc(var(--wz-tl-tile-h) + 6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  color: #000;
+  font-weight: bold;
+  font-size: max(12px, calc(var(--wz-tl-tile) * 0.22));
+  text-align: center;
+  word-break: break-word;
+  cursor: pointer;
+}
+.wz-tl-row-items {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 3px;
+  padding: 3px;
+  min-height: calc(var(--wz-tl-tile-h) + 6px);
+}
+.wz-tl-row-tools {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  padding: 1px 3px;
+  background: #000;
+}
+.wz-tl-row-tools button {
+  width: 20px;
+  height: 15px;
+  padding: 0;
+  border: 1px solid #555;
+  border-radius: 3px;
+  background: #222;
+  color: #ddd;
+  font-size: 9px;
+  line-height: 13px;
+  cursor: pointer;
+}
+.wz-tl-row-tools button:hover { background: #3a3a3a; color: #fff; }
+.wz-tl-add-row { display: block; margin: 6px auto; }
+
+.wz-tl-tile {
+  position: relative;
+  flex: none;
+  width: var(--wz-tl-tile);
+  height: var(--wz-tl-tile-h);
+  border: 2px solid var(--wz-tl-rarity, #888);
+  border-radius: 3px;
+  background: #000 center / contain no-repeat;
+  image-rendering: pixelated;
+  cursor: grab;
+  touch-action: none;
+  overflow: hidden;
+}
+.wz-tl-tile-name {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 1px 2px;
+  background: rgba(0,0,0,0.72);
+  color: #fff;
+  font-size: max(9px, calc(var(--wz-tl-tile) * 0.12));
+  line-height: 1.15;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+.wz-tl-tile.wz-tl-noimg .wz-tl-tile-name { top: 0; display: flex; align-items: center; justify-content: center; white-space: normal; }
+.wz-tl-tile.wz-tl-placed { opacity: 0.35; }
+.wz-tl-tile.wz-tl-placed::after {
+  content: "\\2713";
+  position: absolute;
+  top: 1px; right: 3px;
+  color: #7fff7f;
+  font-weight: bold;
+  font-size: 12px;
+  text-shadow: 0 0 2px #000;
+}
+.wz-tl-tile.wz-tl-dragging { opacity: 0.25; }
+.wz-tl-marker {
+  flex: none;
+  width: 4px;
+  height: var(--wz-tl-tile-h);
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: 0 0 6px #8ea6e8;
+}
+.wz-tl-ghost {
+  position: fixed;
+  z-index: ${Z_FLOATING};
+  pointer-events: none;
+  opacity: 0.9;
+  transform: rotate(-3deg);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.7);
+}
+.wz-tl-ghost.wz-tl-ghost-remove { opacity: 0.55; filter: grayscale(1); }
+.wz-tl-ghost.wz-tl-ghost-remove::before {
+  content: "\\00D7";
+  position: absolute;
+  z-index: 1;
+  top: 1px; right: 3px;
+  color: #ff6b6b;
+  font: bold 16px Arial, sans-serif;
+  text-shadow: 0 0 3px #000;
+}
+.wz-tl-picker.wz-tl-drop-in { background: #1b2238; }
+
+.wz-tl-picker {
+  flex: 0 1 auto;
+  max-height: 60%;
+  transition: background 0.1s;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-top: 2px solid #555;
+  background: #141414;
+}
+.wz-tl-picker.wz-tl-hidden { display: none; }
+.wz-tl-filters { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 5px 6px; }
+.wz-tl-search-row { flex: none; display: flex; gap: 4px; }
+.wz-tl-search-row input {
+  flex: none;
+  width: 150px;
+  height: 26px;
+  padding: 2px 6px;
+  border: 1px solid #666;
+  border-radius: 3px;
+  background: #000;
+  color: #fff;
+  font: 12px Arial, sans-serif;
+}
+.wz-tl-card-toggles { display: contents; }
+.wz-tl-type-tabs { flex: none; display: flex; border: 1px solid #555; border-radius: 4px; overflow: hidden; }
+.wz-tl-type-tab {
+  height: 26px;
+  padding: 0 7px;
+  border: none;
+  border-right: 1px solid #555;
+  background: #1c1c1c;
+  color: #bbb;
+  font: 12px Arial, sans-serif;
+  cursor: pointer;
+}
+.wz-tl-type-tab:last-child { border-right: none; }
+.wz-tl-type-tab:hover { background: #2a2a2a; color: #fff; }
+.wz-tl-type-tab.wz-tl-active { background: #4464bd; color: #fff; }
+.wz-tl-tile-del {
+  position: absolute;
+  z-index: 2;
+  top: 1px; left: 1px;
+  width: 16px; height: 16px;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: rgba(0,0,0,0.75);
+  color: #ff8080;
+  font: bold 13px/16px Arial, sans-serif;
+  cursor: pointer;
+}
+.wz-tl-tile-del:hover { background: #8b1e1e; color: #fff; }
+.wz-tl-tile.wz-tl-text { background: #262626; }
+/* Soul sprites are much bigger than card art for their content - shrink
+   them so the heart sits above the name instead of filling the tile. */
+.wz-tl-results .wz-tl-tile.wz-tl-text .wz-tl-tile-name { padding-top: 16px; }
+.wz-tl-tile.wz-tl-soul { background-size: auto 46%; background-position: center 30%; }
+/* While any dialog (e.g. Share / Import) is open, sit under it. */
+.wz-tl.wz-tl-under-modal { z-index: 1030; }
+.wz-tl-tile.wz-tl-text .wz-tl-tile-name { background: transparent; font-weight: bold; padding: 2px; line-height: 1.1; word-break: break-word; }
+.wz-tl-tile.wz-tl-text .wz-tl-tile-name input {
+  width: 100%;
+  border: 1px solid #8ea6e8;
+  background: #000;
+  color: #fff;
+  font: inherit;
+  text-align: center;
+  pointer-events: auto;
+}
+.wz-tl-toggle-group { flex: none; display: flex; gap: 2px; padding: 1px; border-radius: 4px; background: rgba(255,255,255,0.05); }
+.wz-tl-toggle {
+  height: 26px;
+  min-width: 26px;
+  padding: 2px 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.45;
+  filter: grayscale(0.7);
+}
+.wz-tl-toggle img { max-height: 20px; max-width: 32px; image-rendering: pixelated; pointer-events: none; }
+.wz-tl-toggle:hover { opacity: 0.8; filter: none; }
+.wz-tl-toggle.wz-tl-on { opacity: 1; filter: none; border-color: #fff; background: rgba(68,100,189,0.55); }
+.wz-tl-toggle-text { color: #fff; font: bold 10px Arial, sans-serif; }
+.wz-tl-results { flex: 0 1 auto; height: calc(var(--wz-tl-tile-h) * 2 + 9px); min-height: min(calc(var(--wz-tl-tile-h) + 6px), 40px); overflow-y: auto; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 3px; padding: 0 6px 6px; }
+.wz-tl-hint { flex: none; padding: 0 8px 4px; color: #aaa; font-size: 12px; line-height: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.wz-tl-resize { position: absolute; z-index: 2; touch-action: none; }
+.wz-tl-resize-n, .wz-tl-resize-s { left: 8px; right: 8px; height: 7px; cursor: ns-resize; }
+.wz-tl-resize-n { top: -4px; }
+.wz-tl-resize-s { bottom: -4px; }
+.wz-tl-resize-e, .wz-tl-resize-w { top: 8px; bottom: 8px; width: 7px; cursor: ew-resize; }
+.wz-tl-resize-e { right: -4px; }
+.wz-tl-resize-w { left: -4px; }
+.wz-tl-resize-ne, .wz-tl-resize-nw, .wz-tl-resize-se, .wz-tl-resize-sw { width: 14px; height: 14px; }
+.wz-tl-resize-ne { top: -5px; right: -5px; cursor: nesw-resize; }
+.wz-tl-resize-sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
+.wz-tl-resize-nw { top: -5px; left: -5px; cursor: nwse-resize; }
+.wz-tl-resize-se { bottom: -5px; right: -5px; cursor: nwse-resize; }
+
+.wz-tl-editor {
+  position: absolute;
+  z-index: 5;
+  width: 230px;
+  max-width: calc(100% - 12px);
+  padding: 8px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  background: #1c1c1c;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+}
+.wz-tl-editor input[type="text"] {
+  width: 100%;
+  margin-bottom: 6px;
+  padding: 3px 5px;
+  border: 1px solid #666;
+  border-radius: 3px;
+  background: #000;
+  color: #fff;
+  font: 13px Arial, sans-serif;
+}
+.wz-tl-swatches { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; align-items: center; }
+.wz-tl-swatch { width: 20px; height: 20px; border: 1px solid #000; border-radius: 3px; cursor: pointer; }
+.wz-tl-swatch.wz-tl-active { box-shadow: 0 0 0 2px #fff; }
+.wz-tl-swatches input[type="color"] { width: 24px; height: 22px; padding: 0; border: none; background: none; cursor: pointer; }
+.wz-tl-editor-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.wz-tl-editor-buttons .wz-tl-btn { width: 100%; }
+
+.wz-tl-menu {
+  position: absolute;
+  z-index: 6;
+  min-width: 200px;
+  width: 260px;
+  max-width: calc(100% - 8px);
+  max-height: 60%;
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  background: #1c1c1c;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+}
+.wz-tl-menu-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 4px 6px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: #ddd;
+  font: 12px Arial, sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+.wz-tl-menu-item span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wz-tl-menu-item:hover { background: #2e2e2e; color: #fff; }
+.wz-tl-menu-item.wz-tl-active { background: #4464bd; color: #fff; }
+.wz-tl-menu-count { flex: none; opacity: 0.6; }
+.wz-tl-menu-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; padding-top: 4px; border-top: 1px solid #444; }
+.wz-tl-preview {
+  position: fixed;
+  z-index: ${Z_FLOATING};
+  pointer-events: none;
+}
+.wz-tl-preview-fallback {
+  width: 200px;
+  padding: 4px;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  background: #000;
+  color: #fff;
+  font: bold 13px Arial, sans-serif;
+  text-align: center;
+}
+.wz-tl-preview-fallback div {
+  height: 120px;
+  margin-bottom: 4px;
+  background: center / contain no-repeat;
+  image-rendering: pixelated;
+}
+`;
+
+  // packages/misc/tier-list/storage.js
+  var LISTS_KEY = "wizascript.tierlist.lists";
+  var WINDOW_KEY = "wizascript.tierlist.window";
+  function readJSON(key2, fallback) {
+    try {
+      const raw = GM_getValue(key2, null);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) {
+      console.warn("[Tier List] Failed to read storage key", key2, e);
+      return fallback;
+    }
+  }
+  function writeJSON(key2, value) {
+    try {
+      GM_setValue(key2, JSON.stringify(value));
+    } catch (e) {
+      console.warn("[Tier List] Failed to write storage key", key2, e);
+    }
+  }
+  function loadLists() {
+    return readJSON(LISTS_KEY, null);
+  }
+  function saveLists(data2) {
+    writeJSON(LISTS_KEY, data2);
+  }
+  function loadWindowState() {
+    return readJSON(WINDOW_KEY, null);
+  }
+  function saveWindowState(state2) {
+    writeJSON(WINDOW_KEY, state2);
+  }
+
+  // packages/misc/tier-list/model.js
+  var DEFAULT_TIERS = [
+    ["S", "#ff7f7f"],
+    ["A", "#ffbf7f"],
+    ["B", "#ffdf7f"],
+    ["C", "#ffff7f"],
+    ["D", "#bfff7f"]
+  ];
+  var TIER_COLORS = [
+    "#ff7f7f",
+    "#ffbf7f",
+    "#ffdf7f",
+    "#ffff7f",
+    "#bfff7f",
+    "#7fff7f",
+    "#7fffff",
+    "#7fbfff",
+    "#7f7fff",
+    "#ff7fff",
+    "#bf7fbf",
+    "#cfcfcf"
+  ];
+  var MAX_UNDO = 50;
+  var SAVE_DELAY_MS = 300;
+  var MAX_LABEL = 40;
+  var MAX_TITLE = 60;
+  var MAX_TEXT = 40;
+  var MAX_LISTS = 50;
+  var DEFAULT_TITLE = "My Tier List";
+  var state = null;
+  var undoStack = [];
+  var listeners = /* @__PURE__ */ new Set();
+  var saveTimer = null;
+  function uid(prefix) {
+    return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+  function makeTier(label, color) {
+    return { id: uid("t"), label, color, items: [] };
+  }
+  function makeList(title = DEFAULT_TITLE) {
+    return { id: uid("l"), title, texts: {}, tiers: DEFAULT_TIERS.map(([l, c]) => makeTier(l, c)) };
+  }
+  function sanitize(raw) {
+    if (!raw || !Array.isArray(raw.lists) || !raw.lists.length) {
+      const list = makeList();
+      return { version: 1, active: list.id, lists: [list] };
+    }
+    const lists = raw.lists.map((l) => ({
+      id: typeof l.id === "string" ? l.id : uid("l"),
+      title: typeof l.title === "string" ? l.title.slice(0, MAX_TITLE) : DEFAULT_TITLE,
+      texts: Object.fromEntries(Object.entries(l.texts && typeof l.texts === "object" ? l.texts : {}).filter(([, v]) => typeof v === "string").map(([k, v]) => [k, v.slice(0, MAX_TEXT)])),
+      tiers: (Array.isArray(l.tiers) ? l.tiers : []).map((t) => ({
+        id: typeof t.id === "string" ? t.id : uid("t"),
+        label: typeof t.label === "string" ? t.label.slice(0, MAX_LABEL) : "?",
+        color: /^#[0-9a-f]{6}$/i.test(t.color) ? t.color : "#cfcfcf",
+        items: (Array.isArray(t.items) ? t.items : []).filter((k) => typeof k === "string")
+      }))
+    }));
+    lists.forEach((l) => {
+      const seen = /* @__PURE__ */ new Set();
+      l.tiers.forEach((t) => {
+        t.items = t.items.filter((k) => seen.has(k) ? false : (seen.add(k), true));
+      });
+    });
+    const active = lists.some((l) => l.id === raw.active) ? raw.active : lists[0].id;
+    return { version: 1, active, lists };
+  }
+  function ensureLoaded() {
+    if (!state) state = sanitize(loadLists());
+  }
+  function scheduleSave() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => saveLists(state), SAVE_DELAY_MS);
+  }
+  function flushSave() {
+    if (!state) return;
+    clearTimeout(saveTimer);
+    saveLists(state);
+  }
+  function notify() {
+    listeners.forEach((fn) => {
+      try {
+        fn();
+      } catch (e) {
+        console.error("[Tier List] listener failed", e);
+      }
+    });
+  }
+  function change(mutator) {
+    ensureLoaded();
+    const before = JSON.stringify(state);
+    const result = mutator(activeList());
+    if (result === false) return false;
+    if (JSON.stringify(state) === before) return false;
+    undoStack.push(before);
+    if (undoStack.length > MAX_UNDO) undoStack.shift();
+    scheduleSave();
+    notify();
+    return true;
+  }
+  function activeList() {
+    return state.lists.find((l) => l.id === state.active) || state.lists[0];
+  }
+  function findTier(list, tierId) {
+    return list.tiers.find((t) => t.id === tierId) || null;
+  }
+  function removeEverywhere(list, key2) {
+    list.tiers.forEach((t) => {
+      const i = t.items.indexOf(key2);
+      if (i !== -1) t.items.splice(i, 1);
+    });
+  }
+  function subscribe(fn) {
+    listeners.add(fn);
+    return () => listeners.delete(fn);
+  }
+  function getActiveList() {
+    ensureLoaded();
+    return activeList();
+  }
+  function isPlaced(key2) {
+    return getActiveList().tiers.some((t) => t.items.includes(key2));
+  }
+  function canUndo() {
+    return undoStack.length > 0;
+  }
+  function getLists() {
+    ensureLoaded();
+    return state.lists.map((l) => ({
+      id: l.id,
+      title: l.title,
+      count: l.tiers.reduce((n, t) => n + t.items.length, 0),
+      active: l.id === state.active
+    }));
+  }
+  function getTextLabel(textId) {
+    const t = getActiveList().texts[textId];
+    return typeof t === "string" ? t : null;
+  }
+  function getTextIds() {
+    return Object.keys(getActiveList().texts);
+  }
+  function placeItem(key2, tierId, index) {
+    return change((list) => {
+      const tier = findTier(list, tierId);
+      if (!tier || typeof key2 !== "string") return false;
+      removeEverywhere(list, key2);
+      const at = Math.max(0, Math.min(typeof index === "number" ? index : tier.items.length, tier.items.length));
+      tier.items.splice(at, 0, key2);
+    });
+  }
+  function removeItem(key2) {
+    return change((list) => removeEverywhere(list, key2));
+  }
+  function addTier(atIndex) {
+    return change((list) => {
+      const used = new Set(list.tiers.map((t) => t.color));
+      const color = TIER_COLORS.find((c) => !used.has(c)) || "#cfcfcf";
+      const at = typeof atIndex === "number" ? Math.max(0, Math.min(atIndex, list.tiers.length)) : list.tiers.length;
+      list.tiers.splice(at, 0, makeTier("New", color));
+    });
+  }
+  function deleteTier(tierId) {
+    return change((list) => {
+      const i = list.tiers.findIndex((t) => t.id === tierId);
+      if (i === -1) return false;
+      list.tiers.splice(i, 1);
+    });
+  }
+  function renameTier(tierId, label) {
+    return change((list) => {
+      const tier = findTier(list, tierId);
+      if (!tier) return false;
+      tier.label = String(label).slice(0, MAX_LABEL);
+    });
+  }
+  function recolorTier(tierId, color) {
+    if (!/^#[0-9a-f]{6}$/i.test(color)) return false;
+    return change((list) => {
+      const tier = findTier(list, tierId);
+      if (!tier) return false;
+      tier.color = color.toLowerCase();
+    });
+  }
+  function moveTier(tierId, delta) {
+    return change((list) => {
+      const i = list.tiers.findIndex((t) => t.id === tierId);
+      const j = i + delta;
+      if (i === -1 || j < 0 || j >= list.tiers.length) return false;
+      const [tier] = list.tiers.splice(i, 1);
+      list.tiers.splice(j, 0, tier);
+    });
+  }
+  function clearTier(tierId) {
+    return change((list) => {
+      const tier = findTier(list, tierId);
+      if (!tier) return false;
+      tier.items = [];
+    });
+  }
+  function setTitle(title) {
+    return change((list) => {
+      list.title = String(title).trim().slice(0, MAX_TITLE) || DEFAULT_TITLE;
+    });
+  }
+  function resetList() {
+    return change((list) => {
+      list.tiers = DEFAULT_TIERS.map(([l, c]) => makeTier(l, c));
+    });
+  }
+  function addText(label) {
+    const clean = String(label || "").trim().slice(0, MAX_TEXT);
+    if (!clean) return null;
+    const id = uid("x");
+    const ok = change((list) => {
+      list.texts[id] = clean;
+    });
+    return ok ? `text:${id}` : null;
+  }
+  function renameText(textId, label) {
+    const clean = String(label || "").trim().slice(0, MAX_TEXT);
+    if (!clean) return false;
+    return change((list) => {
+      if (!(textId in list.texts)) return false;
+      list.texts[textId] = clean;
+    });
+  }
+  function deleteText(textId) {
+    return change((list) => {
+      if (!(textId in list.texts)) return false;
+      delete list.texts[textId];
+      removeEverywhere(list, `text:${textId}`);
+    });
+  }
+  function setActiveList(listId) {
+    ensureLoaded();
+    if (state.active === listId || !state.lists.some((l) => l.id === listId)) return false;
+    state.active = listId;
+    undoStack.length = 0;
+    scheduleSave();
+    notify();
+    return true;
+  }
+  function createList() {
+    ensureLoaded();
+    if (state.lists.length >= MAX_LISTS) return false;
+    const list = makeList(`Tier List ${state.lists.length + 1}`);
+    state.lists.push(list);
+    return setActiveList(list.id);
+  }
+  function duplicateList() {
+    ensureLoaded();
+    if (state.lists.length >= MAX_LISTS) return false;
+    const copy = JSON.parse(JSON.stringify(activeList()));
+    copy.id = uid("l");
+    copy.title = `${copy.title} (copy)`.slice(0, MAX_TITLE);
+    copy.tiers.forEach((t) => {
+      t.id = uid("t");
+    });
+    state.lists.push(copy);
+    return setActiveList(copy.id);
+  }
+  function deleteActiveList() {
+    ensureLoaded();
+    const before = JSON.stringify(state);
+    const i = state.lists.findIndex((l) => l.id === state.active);
+    state.lists.splice(i, 1);
+    if (!state.lists.length) state.lists.push(makeList());
+    state.active = state.lists[Math.max(0, i - 1)].id;
+    undoStack.length = 0;
+    undoStack.push(before);
+    scheduleSave();
+    notify();
+    return true;
+  }
+  var ITEM_KEY = /^(card|soul|artifact|text):[A-Za-z0-9_-]{1,40}$/;
+  var MAX_TIERS = 30;
+  var MAX_ITEMS = 3e3;
+  function exportActiveList() {
+    const list = getActiveList();
+    return {
+      v: 1,
+      title: list.title,
+      texts: { ...list.texts },
+      tiers: list.tiers.map((t) => ({ label: t.label, color: t.color, items: t.items.slice() }))
+    };
+  }
+  function importList(data2) {
+    ensureLoaded();
+    if (!data2 || typeof data2 !== "object" || !Array.isArray(data2.tiers)) throw new Error("That code doesn't contain a tier list.");
+    if (state.lists.length >= MAX_LISTS) throw new Error(`You already have ${MAX_LISTS} lists. Delete one first.`);
+    const list = makeList();
+    const textMap = {};
+    Object.entries(data2.texts && typeof data2.texts === "object" ? data2.texts : {}).forEach(([oldId, label]) => {
+      if (typeof label !== "string" || !label.trim()) return;
+      const id = uid("x");
+      textMap[oldId] = id;
+      list.texts[id] = label.trim().slice(0, MAX_TEXT);
+    });
+    let count = 0;
+    const seen = /* @__PURE__ */ new Set();
+    list.tiers = data2.tiers.slice(0, MAX_TIERS).map((t) => {
+      const tier = makeTier(
+        typeof t.label === "string" ? t.label.slice(0, MAX_LABEL) : "?",
+        /^#[0-9a-f]{6}$/i.test(t && t.color) ? t.color.toLowerCase() : "#cfcfcf"
+      );
+      (Array.isArray(t.items) ? t.items : []).forEach((k) => {
+        if (typeof k !== "string" || !ITEM_KEY.test(k) || count >= MAX_ITEMS) return;
+        let key2 = k;
+        if (k.startsWith("text:")) {
+          const id = textMap[k.slice(5)];
+          if (!id) return;
+          key2 = `text:${id}`;
+        }
+        if (seen.has(key2)) return;
+        seen.add(key2);
+        tier.items.push(key2);
+        count += 1;
+      });
+      return tier;
+    });
+    if (!list.tiers.length) list.tiers = DEFAULT_TIERS.map(([l, c]) => makeTier(l, c));
+    let title = typeof data2.title === "string" && data2.title.trim() ? data2.title.trim().slice(0, MAX_TITLE) : "Imported list";
+    const titles = new Set(state.lists.map((l) => l.title));
+    if (titles.has(title)) {
+      let n = 2;
+      while (titles.has(`${title} (${n})`)) n += 1;
+      title = `${title} (${n})`.slice(0, MAX_TITLE);
+    }
+    list.title = title;
+    state.lists.push(list);
+    setActiveList(list.id);
+    return title;
+  }
+  function listUsesKind(kind) {
+    return getActiveList().tiers.some((t) => t.items.some((k) => k.startsWith(kind + ":")));
+  }
+  function undo() {
+    ensureLoaded();
+    const prev = undoStack.pop();
+    if (!prev) return false;
+    state = sanitize(JSON.parse(prev));
+    scheduleSave();
+    notify();
+    return true;
+  }
+
+  // packages/misc/tier-list/items.js
+  var cards = [];
+  var byId = /* @__PURE__ */ new Map();
+  var nameCache = /* @__PURE__ */ new Map();
+  var readyListeners = /* @__PURE__ */ new Set();
+  var HIDDEN_BY_DEFAULT = /* @__PURE__ */ new Set(["TOKEN", "GENERATED", "STORY"]);
+  var RARITY_COLORS = {
+    BASE: "#9a9a9a",
+    COMMON: "#e8e8e8",
+    RARE: "#58b4ff",
+    EPIC: "#c86bff",
+    LEGENDARY: "#ffcc00",
+    DETERMINATION: "#ff3030",
+    TOKEN: "#6b6b6b",
+    GENERATED: "#6b6b6b",
+    STORY: "#6b6b6b"
+  };
+  function setCards(list) {
+    if (!Array.isArray(list) || !list.length) return false;
+    cards = list.filter((c) => c && c.id !== void 0 && c.id !== null);
+    byId = new Map(cards.map((c) => [String(c.id), c]));
+    nameCache.clear();
+    readyListeners.forEach((fn) => {
+      try {
+        fn();
+      } catch (e) {
+      }
+    });
+    return true;
+  }
+  function readCachedCards() {
+    try {
+      const raw = getPageWindow().localStorage.getItem("allCards");
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function initItemData(plugin) {
+    if (!setCards(getAllCards())) setCards(readCachedCards());
+    const cachedArtifacts = readArtifactCache();
+    if (cachedArtifacts) setArtifacts(cachedArtifacts.list);
+    if (plugin && plugin.events) {
+      plugin.events.on("allCardsReady", (list) => setCards(list));
+    }
+  }
+  function onCardsReady(fn) {
+    readyListeners.add(fn);
+    return () => readyListeners.delete(fn);
+  }
+  function hasCards() {
+    return cards.length > 0;
+  }
+  function getCard(id) {
+    return byId.get(String(id)) || null;
+  }
+  function stripHtml(text) {
+    const el2 = document.createElement("div");
+    el2.innerHTML = String(text);
+    return el2.textContent.trim();
+  }
+  function cardName(card) {
+    const cached = nameCache.get(card.id);
+    if (cached) return cached;
+    let name = "";
+    try {
+      const $2 = getPageWindow().$;
+      if ($2 && $2.i18n) {
+        const key2 = `card-name-${card.fixedId || card.id}`;
+        const value = $2.i18n(key2, 1);
+        if (value && value !== key2) name = stripHtml(value);
+      }
+    } catch (e) {
+    }
+    if (!name) name = stripHtml(card.name || `Card ${card.id}`);
+    nameCache.set(card.id, name);
+    return name;
+  }
+  function cardImage(card) {
+    return card && card.image ? `/images/cards/${card.image}.png` : "";
+  }
+  function cardKey(card) {
+    return `card:${card.id}`;
+  }
+  var SOULS = ["DETERMINATION", "PATIENCE", "BRAVERY", "INTEGRITY", "PERSEVERANCE", "KINDNESS", "JUSTICE"];
+  var SOUL_COLORS3 = {
+    DETERMINATION: "#ff0000",
+    PATIENCE: "#41fcff",
+    BRAVERY: "#fca500",
+    INTEGRITY: "#0064ff",
+    PERSEVERANCE: "#d535d9",
+    KINDNESS: "#00c000",
+    JUSTICE: "#ffff00"
+  };
+  function i18n(key2, ...args) {
+    try {
+      const $2 = getPageWindow().$;
+      if ($2 && $2.i18n) {
+        const value = $2.i18n(key2, ...args);
+        if (value && value !== key2) return stripHtml(value);
+      }
+    } catch (e) {
+    }
+    return "";
+  }
+  function soulName(soul) {
+    return i18n(`soul-${soul.toLowerCase()}`, 1) || soul.charAt(0) + soul.slice(1).toLowerCase();
+  }
+  var ARTIFACT_CACHE_KEY = "wizascript.tierlist.artifacts";
+  var ARTIFACT_CACHE_MS = 24 * 60 * 60 * 1e3;
+  var artifacts = [];
+  var artifactsById = /* @__PURE__ */ new Map();
+  var artifactLoad = null;
+  function setArtifacts(list) {
+    if (!Array.isArray(list) || !list.length) return false;
+    artifacts = list.filter((a) => a && a.id !== void 0 && a.id !== null).map((a) => ({ id: a.id, name: a.name, image: a.image, rarity: a.rarity }));
+    artifactsById = new Map(artifacts.map((a) => [String(a.id), a]));
+    return true;
+  }
+  function readArtifactCache() {
+    try {
+      const raw = GM_getValue(ARTIFACT_CACHE_KEY, null);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function loadArtifacts() {
+    if (artifactLoad) return artifactLoad;
+    const cached = readArtifactCache();
+    if (cached && setArtifacts(cached.list) && Date.now() - cached.time < ARTIFACT_CACHE_MS) {
+      artifactLoad = Promise.resolve(true);
+      return artifactLoad;
+    }
+    artifactLoad = fetch("/DecksConfig", { credentials: "same-origin" }).then((r) => r.json()).then((data2) => {
+      const raw = data2 && data2.allArtifacts;
+      const list = typeof raw === "string" ? JSON.parse(raw) : raw;
+      if (!setArtifacts(list)) return artifacts.length > 0;
+      try {
+        GM_setValue(ARTIFACT_CACHE_KEY, JSON.stringify({ time: Date.now(), list: artifacts }));
+      } catch (e) {
+      }
+      return true;
+    }).catch(() => artifacts.length > 0).then((ok) => {
+      if (!ok) artifactLoad = null;
+      return ok;
+    });
+    return artifactLoad;
+  }
+  function hasArtifacts() {
+    return artifacts.length > 0;
+  }
+  function artifactName(a) {
+    return i18n(`artifact-name-${a.id}`, 1) || stripHtml(a.name || `Artifact ${a.id}`);
+  }
+  function resolveItem(key2) {
+    const str = String(key2);
+    const at = str.indexOf(":");
+    const kind = str.slice(0, at);
+    const id = str.slice(at + 1);
+    if (kind === "card") {
+      const card = getCard(id);
+      if (card) {
+        return { key: key2, kind, card, label: cardName(card), image: cardImage(card), rarity: card.rarity };
+      }
+      return { key: key2, kind, card: null, label: "Unknown card", image: "", rarity: null };
+    }
+    if (kind === "soul" && SOULS.includes(id)) {
+      return { key: key2, kind, card: null, label: soulName(id), image: `/images/souls/${id}.png`, rarity: null, color: SOUL_COLORS3[id] };
+    }
+    if (kind === "artifact") {
+      const a = artifactsById.get(id);
+      if (a) return { key: key2, kind, card: null, label: artifactName(a), image: a.image ? `/images/artifacts/${a.image}.png` : "", rarity: a.rarity };
+      return { key: key2, kind, card: null, label: "Artifact", image: "", rarity: null };
+    }
+    if (kind === "text") {
+      const label = getTextLabel(id);
+      return { key: key2, kind, card: null, label: label === null ? "(deleted text)" : label, image: "", rarity: null, text: true };
+    }
+    return { key: key2, kind, card: null, label: "Unknown item", image: "", rarity: null };
+  }
+  function searchSouls(text) {
+    const q = String(text || "").trim().toLowerCase();
+    return SOULS.filter((s) => !q || soulName(s).toLowerCase().includes(q) || s.toLowerCase().includes(q)).map((s) => `soul:${s}`);
+  }
+  function searchArtifacts(text) {
+    const q = String(text || "").trim().toLowerCase();
+    return artifacts.filter((a) => !q || artifactName(a).toLowerCase().includes(q) || String(a.name || "").toLowerCase().includes(q)).sort((a, b) => artifactName(a).localeCompare(artifactName(b))).map((a) => `artifact:${a.id}`);
+  }
+  function isFilterActive(f) {
+    return !!(String(f.text || "").trim() || f.rarities.size || f.tribes || f.monster || f.spell || f.sets.size);
+  }
+  function searchCards(f, limit = 150, opts = {}) {
+    if (!isFilterActive(f)) return { results: [], total: 0, tagHits: 0 };
+    const text = String(f.text || "").trim().toLowerCase();
+    let tagHits = 0;
+    const matches = cards.filter((c) => {
+      if (f.rarities.size) {
+        if (!f.rarities.has(c.rarity)) return false;
+      } else if (HIDDEN_BY_DEFAULT.has(c.rarity)) {
+        return false;
+      }
+      if (f.monster || f.spell) {
+        const isSpell = Number(c.typeCard) === 1;
+        if (!(f.monster && !isSpell || f.spell && isSpell)) return false;
+      }
+      if (f.tribes && !(Number(c.typeCard) !== 1 && Array.isArray(c.tribes) && c.tribes.length)) return false;
+      if (f.sets.size && !f.sets.has(c.extension)) return false;
+      if (opts.exclude && opts.exclude(cardKey(c))) return false;
+      if (text) {
+        const local = cardName(c).toLowerCase();
+        const english = stripHtml(c.name || "").toLowerCase();
+        if (!local.includes(text) && !english.includes(text)) {
+          const tags = opts.tagsFor ? opts.tagsFor(c.id) : [];
+          if (!tags.some((name) => name.toLowerCase().includes(text))) return false;
+          tagHits += 1;
+        }
+      }
+      return true;
+    });
+    matches.sort((a, b) => Number(a.cost) - Number(b.cost) || cardName(a).localeCompare(cardName(b)));
+    return { results: matches.slice(0, limit), total: matches.length, tagHits };
+  }
+
+  // packages/misc/tier-list/window.js
+  var MIN_W = 400;
+  var MIN_H = 340;
+  var DEFAULT_W = 680;
+  var DEFAULT_H = 500;
+  var MIN_TILE = 52;
+  var EDGES = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
+  function viewport() {
+    return { w: document.documentElement.clientWidth || window.innerWidth, h: document.documentElement.clientHeight || window.innerHeight };
+  }
+  function clampGeometry(g) {
+    const vp = viewport();
+    const width = Math.max(Math.min(MIN_W, vp.w), Math.min(g.width, vp.w));
+    const height = Math.max(Math.min(MIN_H, vp.h), Math.min(g.height, vp.h));
+    const left = Math.max(0, Math.min(g.left, vp.w - width));
+    const top = Math.max(0, Math.min(g.top, vp.h - height));
+    return { left, top, width, height };
+  }
+  function defaultGeometry() {
+    const vp = viewport();
+    const width = Math.min(DEFAULT_W, vp.w);
+    const height = Math.min(DEFAULT_H, vp.h);
+    return { left: Math.round((vp.w - width) / 2), top: Math.round((vp.h - height) / 2), width, height };
+  }
+  function buildWindow({ signal, getPreferredTile, onTitleChange }) {
+    const saved = loadWindowState() || {};
+    const ui = {
+      geometry: clampGeometry(saved.geometry || defaultGeometry()),
+      maximised: !!saved.maximised,
+      pickerOpen: saved.pickerOpen !== false
+    };
+    const root = document.createElement("div");
+    root.className = "wz-tl";
+    const header = document.createElement("div");
+    header.className = "wz-tl-header";
+    const title = document.createElement("input");
+    title.type = "text";
+    title.className = "wz-tl-title";
+    title.maxLength = 60;
+    title.spellcheck = false;
+    title.title = "Click to rename this list";
+    title.addEventListener("change", () => onTitleChange(title.value), { signal });
+    title.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") title.blur();
+    }, { signal });
+    const buttons = document.createElement("span");
+    buttons.style.cssText = "display:flex;gap:4px;flex:none;";
+    const body = document.createElement("div");
+    body.className = "wz-tl-body";
+    const grip = document.createElement("div");
+    grip.className = "wz-tl-grip";
+    grip.title = "Drag to move, double-click to fill the screen";
+    header.append(title, grip, buttons);
+    root.append(header, body);
+    EDGES.forEach((edge) => {
+      const h = document.createElement("div");
+      h.className = `wz-tl-resize wz-tl-resize-${edge}`;
+      h.dataset.edge = edge;
+      root.appendChild(h);
+    });
+    function persist() {
+      saveWindowState({ geometry: ui.geometry, maximised: ui.maximised, pickerOpen: ui.pickerOpen });
+    }
+    function updateTileSize() {
+      const width = ui.maximised ? viewport().w : ui.geometry.width;
+      const preferred = getPreferredTile();
+      const tile = Math.round(Math.max(MIN_TILE, Math.min(preferred, (width - 120) / 9)));
+      root.style.setProperty("--wz-tl-tile", tile + "px");
+    }
+    function apply2() {
+      const g = ui.geometry;
+      root.style.left = g.left + "px";
+      root.style.top = g.top + "px";
+      root.style.width = g.width + "px";
+      root.style.height = g.height + "px";
+      root.classList.toggle("wz-tl-max", ui.maximised);
+      updateTileSize();
+    }
+    function setMaximised(value) {
+      ui.maximised = !!value;
+      apply2();
+      persist();
+      onMaximiseChange.forEach((fn) => fn(ui.maximised));
+    }
+    const onMaximiseChange = /* @__PURE__ */ new Set();
+    header.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0 || ui.maximised) return;
+      if (e.target.closest("input, button, select")) return;
+      e.preventDefault();
+      const start = { x: e.clientX, y: e.clientY, left: ui.geometry.left, top: ui.geometry.top };
+      header.setPointerCapture(e.pointerId);
+      header.style.cursor = "grabbing";
+      const move = (ev) => {
+        ui.geometry = clampGeometry({ ...ui.geometry, left: start.left + ev.clientX - start.x, top: start.top + ev.clientY - start.y });
+        apply2();
+      };
+      const end = () => {
+        header.style.cursor = "";
+        header.removeEventListener("pointermove", move);
+        header.removeEventListener("pointerup", end);
+        header.removeEventListener("pointercancel", end);
+        persist();
+      };
+      header.addEventListener("pointermove", move, { signal });
+      header.addEventListener("pointerup", end, { signal });
+      header.addEventListener("pointercancel", end, { signal });
+    }, { signal });
+    header.addEventListener("dblclick", (e) => {
+      if (e.target.closest("input, button, select")) return;
+      setMaximised(!ui.maximised);
+    }, { signal });
+    root.addEventListener("pointerdown", (e) => {
+      const handle = e.target.closest(".wz-tl-resize");
+      if (!handle || e.button !== 0 || ui.maximised) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const edge = handle.dataset.edge;
+      const start = { x: e.clientX, y: e.clientY, ...ui.geometry };
+      const vp = viewport();
+      handle.setPointerCapture(e.pointerId);
+      const move = (ev) => {
+        const dx = ev.clientX - start.x;
+        const dy = ev.clientY - start.y;
+        let { left, top, width, height } = start;
+        if (edge.includes("e")) width = Math.min(start.width + dx, vp.w - start.left);
+        if (edge.includes("s")) height = Math.min(start.height + dy, vp.h - start.top);
+        if (edge.includes("w")) {
+          width = Math.min(start.width - dx, start.left + start.width);
+          width = Math.max(width, MIN_W);
+          left = start.left + start.width - width;
+        }
+        if (edge.includes("n")) {
+          height = Math.min(start.height - dy, start.top + start.height);
+          height = Math.max(height, MIN_H);
+          top = start.top + start.height - height;
+        }
+        ui.geometry = clampGeometry({ left, top, width: Math.max(MIN_W, width), height: Math.max(MIN_H, height) });
+        apply2();
+      };
+      const end = () => {
+        handle.removeEventListener("pointermove", move);
+        handle.removeEventListener("pointerup", end);
+        handle.removeEventListener("pointercancel", end);
+        persist();
+      };
+      handle.addEventListener("pointermove", move, { signal });
+      handle.addEventListener("pointerup", end, { signal });
+      handle.addEventListener("pointercancel", end, { signal });
+    }, { signal });
+    window.addEventListener("resize", () => {
+      ui.geometry = clampGeometry(ui.geometry);
+      apply2();
+    }, { signal });
+    apply2();
+    return {
+      root,
+      header,
+      body,
+      buttons,
+      title,
+      isMaximised: () => ui.maximised,
+      setMaximised,
+      onMaximiseChange: (fn) => onMaximiseChange.add(fn),
+      isPickerOpen: () => ui.pickerOpen,
+      setPickerOpen(value) {
+        ui.pickerOpen = !!value;
+        persist();
+      },
+      refreshTileSize: updateTileSize
+    };
+  }
+
+  // packages/misc/tier-list/tiers-view.js
+  function buildTile(key2, { placed = false } = {}) {
+    const item = resolveItem(key2);
+    const tile = document.createElement("div");
+    tile.className = "wz-tl-tile";
+    tile.dataset.key = key2;
+    tile.tabIndex = -1;
+    if (item.image) tile.style.backgroundImage = `url("${item.image}")`;
+    else tile.classList.add("wz-tl-noimg");
+    if (item.color) tile.style.setProperty("--wz-tl-rarity", item.color);
+    else if (item.rarity && RARITY_COLORS[item.rarity]) tile.style.setProperty("--wz-tl-rarity", RARITY_COLORS[item.rarity]);
+    if (item.kind === "soul") tile.classList.add("wz-tl-soul");
+    if (item.text) {
+      tile.classList.add("wz-tl-text");
+      tile.title = "Double-click to edit";
+    }
+    if (placed) tile.classList.add("wz-tl-placed");
+    const name = document.createElement("div");
+    name.className = "wz-tl-tile-name";
+    name.textContent = item.label;
+    tile.appendChild(name);
+    return tile;
+  }
+  function createTiersView({ body, signal }) {
+    const container = document.createElement("div");
+    container.className = "wz-tl-tiers";
+    body.appendChild(container);
+    let editor = null;
+    function closeEditor() {
+      if (editor) editor.el.remove();
+      editor = null;
+    }
+    function openEditor(tierId, anchor) {
+      closeEditor();
+      const list = getActiveList();
+      const index = list.tiers.findIndex((t) => t.id === tierId);
+      const tier = list.tiers[index];
+      if (!tier) return;
+      const el2 = document.createElement("div");
+      el2.className = "wz-tl-editor";
+      el2.dataset.tierId = tierId;
+      const name = document.createElement("input");
+      name.type = "text";
+      name.maxLength = 40;
+      name.value = tier.label;
+      name.placeholder = "Tier name";
+      const commitName = () => renameTier(tierId, name.value);
+      name.addEventListener("change", commitName);
+      name.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          commitName();
+          closeEditor();
+        }
+        if (e.key === "Escape") closeEditor();
+      });
+      const swatches = document.createElement("div");
+      swatches.className = "wz-tl-swatches";
+      TIER_COLORS.forEach((color) => {
+        const s = document.createElement("div");
+        s.className = "wz-tl-swatch" + (color === tier.color ? " wz-tl-active" : "");
+        s.style.background = color;
+        s.title = color;
+        s.addEventListener("click", () => {
+          recolorTier(tierId, color);
+          swatches.querySelectorAll(".wz-tl-swatch").forEach((n) => n.classList.toggle("wz-tl-active", n === s));
+          custom.value = color;
+        });
+        swatches.appendChild(s);
+      });
+      const custom = document.createElement("input");
+      custom.type = "color";
+      custom.value = tier.color;
+      custom.title = "Custom colour";
+      custom.addEventListener("change", () => recolorTier(tierId, custom.value));
+      swatches.appendChild(custom);
+      const grid = document.createElement("div");
+      grid.className = "wz-tl-editor-buttons";
+      const btn = (label, fn, opts = {}) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "wz-tl-btn";
+        b.textContent = label;
+        if (opts.disabled) b.disabled = true;
+        b.addEventListener("click", () => {
+          commitName();
+          fn();
+          if (opts.close) closeEditor();
+          else reopen();
+        });
+        grid.appendChild(b);
+        return b;
+      };
+      const reopen = () => {
+        const row = container.querySelector(`.wz-tl-row[data-tier-id="${tierId}"]`);
+        if (row) openEditor(tierId, row);
+        else closeEditor();
+      };
+      btn("\u25B2 Move up", () => moveTier(tierId, -1), { disabled: index === 0 });
+      btn("\u25BC Move down", () => moveTier(tierId, 1), { disabled: index === list.tiers.length - 1 });
+      btn("+ Row above", () => addTier(index), { close: true });
+      btn("+ Row below", () => addTier(index + 1), { close: true });
+      btn("Clear row", () => clearTier(tierId), { disabled: !tier.items.length });
+      const del = btn("Delete row", () => deleteTier(tierId), { close: true });
+      del.classList.add("wz-tl-danger");
+      btn("Done", () => {
+      }, { close: true }).style.gridColumn = "1 / -1";
+      el2.append(name, swatches, grid);
+      body.appendChild(el2);
+      const bodyRect = body.getBoundingClientRect();
+      const aRect = anchor.getBoundingClientRect();
+      let top = aRect.bottom - bodyRect.top + 2;
+      if (top + el2.offsetHeight > body.clientHeight) top = Math.max(2, aRect.top - bodyRect.top - el2.offsetHeight - 2);
+      el2.style.top = Math.max(2, top) + "px";
+      el2.style.left = "6px";
+      editor = { el: el2, tierId };
+      name.focus();
+      name.select();
+    }
+    function render() {
+      const list = getActiveList();
+      const scroll = container.scrollTop;
+      container.innerHTML = "";
+      list.tiers.forEach((tier) => {
+        const row = document.createElement("div");
+        row.className = "wz-tl-row";
+        row.dataset.tierId = tier.id;
+        const label = document.createElement("div");
+        label.className = "wz-tl-row-label";
+        label.style.background = tier.color;
+        label.textContent = tier.label;
+        label.title = "Click to edit this tier";
+        label.addEventListener("click", () => openEditor(tier.id, row));
+        const items = document.createElement("div");
+        items.className = "wz-tl-row-items";
+        tier.items.forEach((key2) => items.appendChild(buildTile(key2)));
+        const tools = document.createElement("div");
+        tools.className = "wz-tl-row-tools";
+        const gear = document.createElement("button");
+        gear.type = "button";
+        gear.textContent = "\u2699";
+        gear.title = "Edit this tier";
+        gear.addEventListener("click", () => openEditor(tier.id, row));
+        const up = document.createElement("button");
+        up.type = "button";
+        up.textContent = "\u25B2";
+        up.title = "Move tier up";
+        up.addEventListener("click", () => moveTier(tier.id, -1));
+        const down = document.createElement("button");
+        down.type = "button";
+        down.textContent = "\u25BC";
+        down.title = "Move tier down";
+        down.addEventListener("click", () => moveTier(tier.id, 1));
+        tools.append(up, gear, down);
+        row.append(label, items, tools);
+        container.appendChild(row);
+      });
+      const add = document.createElement("button");
+      add.type = "button";
+      add.className = "wz-tl-btn wz-tl-add-row";
+      add.textContent = "+ Add tier";
+      add.addEventListener("click", () => addTier());
+      container.appendChild(add);
+      container.scrollTop = scroll;
+      if (editor && !list.tiers.some((t) => t.id === editor.tierId)) closeEditor();
+    }
+    document.addEventListener("pointerdown", (e) => {
+      if (!editor) return;
+      if (editor.el.contains(e.target)) return;
+      if (e.target.closest(".wz-tl-row-label, .wz-tl-row-tools")) return;
+      closeEditor();
+    }, { signal, capture: true });
+    return { render, closeEditor, element: container };
+  }
+
+  // packages/misc/tier-list/picker.js
+  var RESULT_LIMIT = 150;
+  var SEARCH_DELAY_MS = 150;
+  var RARITY_TOGGLES = [
+    ["BASE", "images/rarity/BASE_BASE.png", "Base"],
+    ["TOKEN", "images/rarity/BASE_TOKEN.png", "Token"],
+    ["COMMON", "images/rarity/BASE_COMMON.png", "Common"],
+    ["RARE", "images/rarity/BASE_RARE.png", "Rare"],
+    ["EPIC", "images/rarity/BASE_EPIC.png", "Epic"],
+    ["LEGENDARY", "images/rarity/BASE_LEGENDARY.png", "Legendary"],
+    ["DETERMINATION", "images/rarity/BASE_DETERMINATION.png", "Determination"],
+    ["STORY", "images/rarity/BASE_STORY.png", "Story"]
+  ];
+  var KIND_TOGGLES = [
+    ["tribes", "images/tribes/ALL.png", "Monsters with tribes"],
+    ["monster", "images/souls/MONSTER.png", "Monsters"],
+    ["spell", "images/artifacts/Arcane_Scepter.png", "Spells"]
+  ];
+  var SET_TOGGLES = [
+    ["BASE", "images/rarity/BASE.png", "Undertale cards"],
+    ["DELTARUNE", "images/rarity/DELTARUNE.png", "Deltarune cards"],
+    ["UTY", "images/rarity/UTY.png", "Undertale Yellow cards"]
+  ];
+  var TYPES = [
+    ["cards", "Cards"],
+    ["souls", "Souls"],
+    ["artifacts", "Artifacts"],
+    ["text", "Text"]
+  ];
+  function createPicker({ body, signal, getOptions = () => ({}) }) {
+    const panel = document.createElement("div");
+    panel.className = "wz-tl-picker";
+    let type = "cards";
+    const state2 = { rarities: /* @__PURE__ */ new Set(), sets: /* @__PURE__ */ new Set(), tribes: false, monster: false, spell: false };
+    const toggles2 = [];
+    const searchText = { cards: "", souls: "", artifacts: "", text: "" };
+    const filters = document.createElement("div");
+    filters.className = "wz-tl-filters";
+    const tabs = document.createElement("div");
+    tabs.className = "wz-tl-type-tabs";
+    const tabButtons = TYPES.map(([value, label]) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "wz-tl-type-tab";
+      b.dataset.type = value;
+      b.textContent = label;
+      b.addEventListener("click", () => setType(value), { signal });
+      tabs.appendChild(b);
+      return b;
+    });
+    const search = document.createElement("input");
+    search.type = "text";
+    search.spellcheck = false;
+    const clear = document.createElement("button");
+    clear.type = "button";
+    clear.className = "wz-tl-btn";
+    const searchRow = document.createElement("div");
+    searchRow.className = "wz-tl-search-row";
+    searchRow.append(search, clear);
+    function makeToggle([value, src, title], isOn2, flip) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "wz-tl-toggle";
+      b.title = title;
+      b.dataset.filter = value;
+      const img = document.createElement("img");
+      img.src = "/" + src;
+      img.alt = title;
+      img.draggable = false;
+      img.addEventListener("error", () => {
+        img.remove();
+        b.textContent = title;
+        b.classList.add("wz-tl-toggle-text");
+      }, { once: true });
+      b.appendChild(img);
+      b.addEventListener("click", () => {
+        flip(value);
+        render();
+      }, { signal });
+      toggles2.push({ el: b, isOn: () => isOn2(value) });
+      return b;
+    }
+    function group(defs, isOn2, flip) {
+      const g = document.createElement("div");
+      g.className = "wz-tl-toggle-group";
+      defs.forEach((d) => g.appendChild(makeToggle(d, isOn2, flip)));
+      return g;
+    }
+    const flipSet = (set) => (v) => set.has(v) ? set.delete(v) : set.add(v);
+    const cardToggles = document.createElement("div");
+    cardToggles.className = "wz-tl-card-toggles";
+    cardToggles.append(
+      group(RARITY_TOGGLES, (v) => state2.rarities.has(v), flipSet(state2.rarities)),
+      group(KIND_TOGGLES, (v) => state2[v], (v) => {
+        state2[v] = !state2[v];
+      }),
+      group(SET_TOGGLES, (v) => state2.sets.has(v), flipSet(state2.sets))
+    );
+    filters.append(tabs, searchRow, cardToggles);
+    const hint = document.createElement("div");
+    hint.className = "wz-tl-hint";
+    const results = document.createElement("div");
+    results.className = "wz-tl-results";
+    panel.append(filters, hint, results);
+    body.appendChild(panel);
+    function cardFilters() {
+      return { text: search.value, ...state2 };
+    }
+    function setType(value) {
+      searchText[type] = search.value;
+      type = value;
+      search.value = searchText[type];
+      if (type === "artifacts" && !hasArtifacts()) {
+        loadArtifacts().then(() => {
+          if (type === "artifacts") render();
+        });
+      }
+      render();
+      search.focus();
+    }
+    function syncControls() {
+      tabButtons.forEach((b) => b.classList.toggle("wz-tl-active", b.dataset.type === type));
+      cardToggles.style.visibility = type === "cards" ? "" : "hidden";
+      toggles2.forEach((t) => t.el.classList.toggle("wz-tl-on", t.isOn()));
+      if (type === "text") {
+        search.placeholder = "New text item\u2026";
+        search.maxLength = MAX_TEXT;
+        clear.textContent = "Add";
+        clear.title = "Add this text as an item you can rank";
+        clear.disabled = !search.value.trim();
+      } else {
+        search.placeholder = type === "cards" ? getOptions().tagsFor ? "Cards or tags\u2026" : "Search cards\u2026" : type === "souls" ? "Search souls\u2026" : "Search artifacts\u2026";
+        search.removeAttribute("maxLength");
+        clear.textContent = "Clear";
+        clear.title = "Clear the search and filters";
+        clear.disabled = type === "cards" ? !isFilterActive(cardFilters()) : !search.value;
+      }
+    }
+    function unranked(keys) {
+      return getOptions().hideRanked ? keys.filter((k) => !isPlaced(k)) : keys;
+    }
+    function showKeys(keys, { deletable = false } = {}) {
+      const frag = document.createDocumentFragment();
+      keys.forEach((key2) => {
+        const tile = buildTile(key2, { placed: isPlaced(key2) });
+        if (deletable) {
+          const del = document.createElement("button");
+          del.type = "button";
+          del.className = "wz-tl-tile-del";
+          del.textContent = "\xD7";
+          del.title = "Delete this text item";
+          del.addEventListener("click", (e) => {
+            e.stopPropagation();
+            deleteText(key2.slice(5));
+          });
+          tile.appendChild(del);
+        }
+        frag.appendChild(tile);
+      });
+      results.appendChild(frag);
+    }
+    function renderCards() {
+      if (!hasCards()) {
+        hint.textContent = "No card data yet. Open the Decks or Crafting page once, then come back.";
+        return;
+      }
+      const f = cardFilters();
+      if (!isFilterActive(f)) {
+        hint.textContent = "Search or tick a filter to list cards, then drag them into a tier.";
+        return;
+      }
+      const opts = getOptions();
+      const { results: cards2, total, tagHits } = searchCards(f, RESULT_LIMIT, {
+        tagsFor: opts.tagsFor,
+        exclude: opts.hideRanked ? (k) => isPlaced(k) : null
+      });
+      if (!total) {
+        hint.textContent = opts.hideRanked ? "No unranked cards match." : "No cards match.";
+        return;
+      }
+      const tagNote = tagHits ? ` (${tagHits} by Card Tag)` : "";
+      hint.textContent = total > cards2.length ? `Showing ${cards2.length} of ${total} cards${tagNote}. Narrow the search to see the rest.` : `${total} card${total === 1 ? "" : "s"}${tagNote}. Drag one into a tier.`;
+      showKeys(cards2.map(cardKey));
+    }
+    function renderSouls() {
+      const keys = unranked(searchSouls(search.value));
+      hint.textContent = keys.length ? "Drag a soul into a tier." : "No souls match.";
+      showKeys(keys);
+    }
+    function renderArtifacts() {
+      if (!hasArtifacts()) {
+        hint.textContent = "Loading artifacts\u2026 (if this stays, open the Decks page once, then try again)";
+        return;
+      }
+      const keys = unranked(searchArtifacts(search.value));
+      hint.textContent = keys.length ? `${keys.length} artifact${keys.length === 1 ? "" : "s"}. Drag one into a tier.` : "No artifacts match.";
+      showKeys(keys);
+    }
+    function renderText() {
+      const all = getTextIds().map((id) => `text:${id}`);
+      const keys = unranked(all);
+      hint.textContent = keys.length ? "Drag a text item into a tier. Double-click one to edit it." : all.length ? "All your text items are ranked. Type a label and press Add for a new one." : "Type a label (e.g. an archetype) and press Add to make a text item.";
+      showKeys(keys, { deletable: true });
+    }
+    function render() {
+      results.innerHTML = "";
+      syncControls();
+      if (type === "cards") renderCards();
+      else if (type === "souls") renderSouls();
+      else if (type === "artifacts") renderArtifacts();
+      else renderText();
+    }
+    function addTextItem() {
+      if (addText(search.value)) {
+        search.value = "";
+        render();
+      }
+    }
+    let searchTimer = null;
+    search.addEventListener("input", () => {
+      if (type === "text") {
+        syncControls();
+        return;
+      }
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(render, SEARCH_DELAY_MS);
+    }, { signal });
+    search.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && type === "text") {
+        addTextItem();
+        return;
+      }
+      if (e.key === "Escape" && search.value) {
+        search.value = "";
+        render();
+      }
+    }, { signal });
+    clear.addEventListener("click", () => {
+      if (type === "text") {
+        addTextItem();
+        return;
+      }
+      search.value = "";
+      if (type === "cards") {
+        state2.rarities.clear();
+        state2.sets.clear();
+        state2.tribes = state2.monster = state2.spell = false;
+      }
+      render();
+    }, { signal });
+    const stopListening = onCardsReady(() => {
+      if (type === "cards") render();
+    });
+    signal.addEventListener("abort", stopListening);
+    render();
+    return {
+      element: panel,
+      render,
+      setOpen(open) {
+        panel.classList.toggle("wz-tl-hidden", !open);
+      },
+      focusSearch() {
+        search.focus();
+      }
+    };
+  }
+
+  // packages/misc/tier-list/drag.js
+  var DRAG_THRESHOLD = 6;
+  function insertionIndex(tiles, x, y) {
+    for (let i = 0; i < tiles.length; i++) {
+      const r = tiles[i].getBoundingClientRect();
+      if (y < r.top) return i;
+      if (y <= r.bottom && x < r.left + r.width / 2) return i;
+    }
+    return tiles.length;
+  }
+  function attachDrag({ root, signal, onDrop, onDragStart, pageItemKey: pageItemKey2, buildGhost }) {
+    let pending = null;
+    let active = null;
+    let suppressClick = false;
+    function targetAt(x, y) {
+      const el2 = document.elementFromPoint(x, y);
+      if (!el2 || !root.contains(el2)) return { type: "outside" };
+      const row = el2.closest(".wz-tl-row");
+      if (row) return { type: "tier", tierId: row.dataset.tierId, rowItems: row.querySelector(".wz-tl-row-items") };
+      if (el2.closest(".wz-tl-picker")) return { type: "picker" };
+      return { type: "none" };
+    }
+    function clearHighlights() {
+      if (!active) return;
+      if (active.marker) active.marker.remove();
+      active.marker = null;
+      root.querySelectorAll(".wz-tl-drop-in").forEach((n) => n.classList.remove("wz-tl-drop-in"));
+      active.ghost.classList.remove("wz-tl-ghost-remove");
+    }
+    function update(x, y) {
+      active.ghost.style.left = x - active.offsetX + "px";
+      active.ghost.style.top = y - active.offsetY + "px";
+      const t = targetAt(x, y);
+      clearHighlights();
+      active.target = t;
+      if (t.type === "tier") {
+        const tiles = [...t.rowItems.querySelectorAll(".wz-tl-tile")].filter((n) => n !== active.tile);
+        t.index = insertionIndex(tiles, x, y);
+        const marker = document.createElement("div");
+        marker.className = "wz-tl-marker";
+        if (t.index < tiles.length) t.rowItems.insertBefore(marker, tiles[t.index]);
+        else t.rowItems.appendChild(marker);
+        active.marker = marker;
+      } else if ((t.type === "picker" || t.type === "outside") && active.from.type === "tier") {
+        active.ghost.classList.add("wz-tl-ghost-remove");
+        if (t.type === "picker") {
+          const picker = root.querySelector(".wz-tl-picker");
+          if (picker) picker.classList.add("wz-tl-drop-in");
+        }
+      }
+    }
+    function begin(x, y) {
+      const { tile, key: key2, from, offsetX, offsetY } = pending;
+      const fromPage = from.type === "page";
+      const ghost = fromPage ? buildGhost(key2) : tile.cloneNode(true);
+      ghost.classList.add("wz-tl-ghost");
+      ghost.classList.remove("wz-tl-placed");
+      const size = getComputedStyle(root).getPropertyValue("--wz-tl-tile");
+      ghost.style.setProperty("--wz-tl-tile", size);
+      if (fromPage) {
+        ghost.style.width = size;
+        ghost.style.height = `calc(${size} * 0.8)`;
+      } else {
+        const rect = tile.getBoundingClientRect();
+        ghost.style.width = rect.width + "px";
+        ghost.style.height = rect.height + "px";
+      }
+      ghost.style.zIndex = String(Z_FLOATING);
+      if (root.classList.contains("wz-tl-nonames")) ghost.classList.add("wz-tl-nonames");
+      root.classList.add("wz-tl-busy");
+      document.body.appendChild(ghost);
+      if (tile) tile.classList.add("wz-tl-dragging");
+      active = { tile, key: key2, from, ghost, offsetX, offsetY, target: null, marker: null };
+      pending = null;
+      if (onDragStart) onDragStart();
+      update(x, y);
+    }
+    function finish(cancelled) {
+      if (!active) return;
+      const { key: key2, from, target, tile, ghost } = active;
+      clearHighlights();
+      ghost.remove();
+      root.classList.remove("wz-tl-busy");
+      if (tile) tile.classList.remove("wz-tl-dragging");
+      active = null;
+      suppressClick = true;
+      setTimeout(() => {
+        suppressClick = false;
+      }, 0);
+      if (cancelled || !target) return;
+      const clean = target.type === "tier" ? { type: "tier", tierId: target.tierId, index: target.index } : { type: target.type };
+      onDrop({ key: key2, from, target: clean });
+    }
+    document.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0 || !pageItemKey2 || root.contains(e.target)) return;
+      const key2 = pageItemKey2(e.target);
+      if (!key2) return;
+      pending = {
+        tile: null,
+        key: key2,
+        from: { type: "page" },
+        startX: e.clientX,
+        startY: e.clientY,
+        offsetX: 20,
+        offsetY: 20
+      };
+    }, { signal, capture: true });
+    ["dragstart", "selectstart"].forEach((type) => {
+      document.addEventListener(type, (e) => {
+        if (active || pending && pending.from.type === "page") e.preventDefault();
+      }, { signal, capture: true });
+    });
+    root.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      if (e.target.closest(".wz-tl-tile-del, input")) return;
+      const tile = e.target.closest(".wz-tl-tile");
+      if (!tile || !root.contains(tile) || !tile.dataset.key) return;
+      e.preventDefault();
+      const row = tile.closest(".wz-tl-row");
+      const rect = tile.getBoundingClientRect();
+      pending = {
+        tile,
+        key: tile.dataset.key,
+        from: row ? { type: "tier", tierId: row.dataset.tierId } : { type: "picker" },
+        startX: e.clientX,
+        startY: e.clientY,
+        offsetX: e.clientX - rect.left,
+        offsetY: e.clientY - rect.top
+      };
+    }, { signal });
+    document.addEventListener("pointermove", (e) => {
+      if (pending) {
+        if (Math.hypot(e.clientX - pending.startX, e.clientY - pending.startY) < DRAG_THRESHOLD) return;
+        begin(e.clientX, e.clientY);
+      }
+      if (active) {
+        e.preventDefault();
+        update(e.clientX, e.clientY);
+      }
+    }, { signal });
+    document.addEventListener("pointerup", (e) => {
+      pending = null;
+      if (active) {
+        update(e.clientX, e.clientY);
+        finish(false);
+      }
+    }, { signal });
+    document.addEventListener("pointercancel", () => {
+      pending = null;
+      finish(true);
+    }, { signal });
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape" || !active) return;
+      e.preventDefault();
+      e.stopPropagation();
+      finish(true);
+    }, { signal, capture: true });
+    document.addEventListener("click", (e) => {
+      if (!suppressClick) return;
+      suppressClick = false;
+      e.preventDefault();
+      e.stopPropagation();
+    }, { signal, capture: true });
+    return {
+      isDragging: () => !!active,
+      cancel: () => {
+        pending = null;
+        finish(true);
+      }
+    };
+  }
+
+  // packages/misc/tier-list/preview.js
+  function attachPreview({ root, signal, isDragging, getDelayMs = () => 2e3 }) {
+    let timer = null;
+    let box = null;
+    let lastX = 0;
+    let lastY = 0;
+    function hide() {
+      clearTimeout(timer);
+      timer = null;
+      if (box) box.remove();
+      box = null;
+    }
+    function position() {
+      if (!box) return;
+      const r = box.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      let left = lastX + 18;
+      let top = lastY + 12;
+      if (left + r.width > vw - 4) left = Math.max(4, lastX - r.width - 18);
+      if (top + r.height > vh - 4) top = Math.max(4, vh - r.height - 4);
+      box.style.left = left + "px";
+      box.style.top = top + "px";
+    }
+    function render(item) {
+      const el2 = document.createElement("div");
+      el2.className = "wz-tl-preview";
+      const pageWindow2 = getPageWindow();
+      const $2 = pageWindow2.$;
+      if (item.card && typeof pageWindow2.appendCard === "function" && $2) {
+        try {
+          const holder = $2("<div>");
+          pageWindow2.appendCard(JSON.parse(JSON.stringify(item.card)), holder);
+          if (holder.children().length) {
+            el2.appendChild(holder[0]);
+            return el2;
+          }
+        } catch (e) {
+        }
+      }
+      const fallback = document.createElement("div");
+      fallback.className = "wz-tl-preview-fallback";
+      const pic = document.createElement("div");
+      if (item.image) pic.style.backgroundImage = `url("${item.image}")`;
+      else pic.style.display = "none";
+      fallback.append(pic, item.label);
+      el2.appendChild(fallback);
+      return el2;
+    }
+    let overTile = null;
+    let pressed = false;
+    function arm() {
+      clearTimeout(timer);
+      timer = null;
+      const tile = overTile;
+      if (!tile || pressed || isDragging() || box) return;
+      if (tile.classList.contains("wz-tl-text")) return;
+      timer = setTimeout(() => {
+        if (pressed || isDragging() || !tile.isConnected || overTile !== tile) return;
+        const item = resolveItem(tile.dataset.key);
+        box = render(item);
+        box.dataset.key = tile.dataset.key;
+        document.body.appendChild(box);
+        position();
+      }, getDelayMs());
+    }
+    root.addEventListener("pointerover", (e) => {
+      const tile = e.target.closest(".wz-tl-tile");
+      if (!tile || !tile.dataset.key || tile === overTile) return;
+      hide();
+      overTile = tile;
+      arm();
+    }, { signal });
+    root.addEventListener("pointerout", (e) => {
+      const tile = e.target.closest(".wz-tl-tile");
+      if (!tile || tile !== overTile) return;
+      if (e.relatedTarget && tile.contains(e.relatedTarget)) return;
+      overTile = null;
+      hide();
+    }, { signal });
+    root.addEventListener("pointermove", (e) => {
+      lastX = e.clientX;
+      lastY = e.clientY;
+      position();
+    }, { signal });
+    document.addEventListener("pointerdown", () => {
+      pressed = true;
+      hide();
+    }, { signal, capture: true });
+    document.addEventListener("pointerup", () => {
+      pressed = false;
+      if (overTile && overTile.isConnected) arm();
+      else overTile = null;
+    }, { signal, capture: true });
+    signal.addEventListener("abort", hide);
+    return { hide };
+  }
+
+  // packages/misc/card-tags/storage.js
+  var DATA_KEY = "wizascript.misc.cardTags.data";
+  var DEFAULT_COLORS = ["#4dabf7", "#51cf66", "#ffa94d", "#ff6b6b", "#cc5de8", "#20c997", "#ffd43b"];
+  function genTagId() {
+    return "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+  function emptyData() {
+    return { tags: [], cardTags: {} };
+  }
+  function readData() {
+    let raw;
+    try {
+      raw = GM_getValue(DATA_KEY, null);
+    } catch (e) {
+      console.warn("[CardTags] Failed to read storage key", DATA_KEY, e);
+      return emptyData();
+    }
+    if (!raw) return emptyData();
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (e) {
+      console.warn("[CardTags] Failed to parse stored data, starting fresh.", e);
+      return emptyData();
+    }
+    if (Array.isArray(parsed.tags) && parsed.tags.length && typeof parsed.tags[0] === "string") {
+      const nameToId = {};
+      const upgradedTags = parsed.tags.map((name, i) => {
+        const id = genTagId();
+        nameToId[name] = id;
+        return { id, name, color: DEFAULT_COLORS[i % DEFAULT_COLORS.length] };
+      });
+      const upgradedCardTags = {};
+      Object.keys(parsed.cardTags || {}).forEach((cardId) => {
+        const ids = (parsed.cardTags[cardId] || []).map((name) => nameToId[name]).filter(Boolean);
+        if (ids.length) upgradedCardTags[cardId] = ids;
+      });
+      const upgraded = { tags: upgradedTags, cardTags: upgradedCardTags };
+      writeData(upgraded);
+      return upgraded;
+    }
+    return {
+      tags: Array.isArray(parsed.tags) ? parsed.tags : [],
+      cardTags: parsed.cardTags && typeof parsed.cardTags === "object" ? parsed.cardTags : {}
+    };
+  }
+  function writeData(value) {
+    try {
+      GM_setValue(DATA_KEY, JSON.stringify(value));
+    } catch (e) {
+      console.warn("[CardTags] Failed to write storage key", DATA_KEY, e);
+    }
+  }
+  var data = readData();
+  function allTags() {
+    return data.tags;
+  }
+  function findTag(id) {
+    return data.tags.find((t) => t.id === id) || null;
+  }
+  function createTag(name, color) {
+    const tag = {
+      id: genTagId(),
+      name: name.trim(),
+      color: color || DEFAULT_COLORS[data.tags.length % DEFAULT_COLORS.length]
+    };
+    data.tags.push(tag);
+    writeData(data);
+    return tag;
+  }
+  function updateTag(id, patch) {
+    const tag = findTag(id);
+    if (!tag) return;
+    Object.assign(tag, patch);
+    writeData(data);
+  }
+  function deleteTag(id) {
+    data.tags = data.tags.filter((t) => t.id !== id);
+    Object.keys(data.cardTags).forEach((cardId) => {
+      data.cardTags[cardId] = data.cardTags[cardId].filter((tagId) => tagId !== id);
+      if (!data.cardTags[cardId].length) delete data.cardTags[cardId];
+    });
+    writeData(data);
+  }
+  function tagIdsForCard(cardId) {
+    return data.cardTags[cardId] || [];
+  }
+  function tagObjectsForCard(cardId) {
+    return tagIdsForCard(cardId).map(findTag).filter(Boolean);
+  }
+  function cardHasTag(cardId, tagId) {
+    return tagIdsForCard(cardId).includes(tagId);
+  }
+  function toggleCardTag(cardId, tagId) {
+    const current = data.cardTags[cardId] || [];
+    const has = current.includes(tagId);
+    const next = has ? current.filter((t) => t !== tagId) : [...current, tagId];
+    if (next.length) {
+      data.cardTags[cardId] = next;
+    } else {
+      delete data.cardTags[cardId];
+    }
+    writeData(data);
+  }
+  function taggedCardIds() {
+    return Object.keys(data.cardTags);
+  }
+  function exportTags(tagIds) {
+    const wanted = new Set(tagIds);
+    return {
+      format: 1,
+      tags: data.tags.filter((t) => wanted.has(t.id)).map((t) => ({
+        name: t.name,
+        color: t.color,
+        cards: Object.keys(data.cardTags).filter((cardId) => data.cardTags[cardId].includes(t.id))
+      }))
+    };
+  }
+  function importTags(shared) {
+    if (!shared || shared.format !== 1 || !Array.isArray(shared.tags)) {
+      throw new Error("That code isn't a Card Tags code this version understands.");
+    }
+    const summary = { created: [], merged: [], cardsTagged: 0 };
+    shared.tags.forEach((st) => {
+      const name = String(st && st.name || "").trim();
+      if (!name) return;
+      let tag = data.tags.find((t) => t.name.toLowerCase() === name.toLowerCase());
+      if (tag) {
+        summary.merged.push(tag.name);
+      } else {
+        const color = /^#[0-9a-f]{3,8}$/i.test(st.color || "") ? st.color : DEFAULT_COLORS[data.tags.length % DEFAULT_COLORS.length];
+        tag = { id: genTagId(), name, color };
+        data.tags.push(tag);
+        summary.created.push(name);
+      }
+      (Array.isArray(st.cards) ? st.cards : []).forEach((rawId) => {
+        const cardId = String(rawId);
+        if (!/^[\w-]{1,32}$/.test(cardId)) return;
+        const current = data.cardTags[cardId] || [];
+        if (current.includes(tag.id)) return;
+        data.cardTags[cardId] = [...current, tag.id];
+        summary.cardsTagged++;
+      });
+    });
+    writeData(data);
+    return summary;
+  }
+
+  // packages/misc/tier-list/index.js
+  var CARD_PAGES = ["/Crafting", "/Decks"];
+  function pageItemKey(target) {
+    if (!setting2("pageDrag", true) || !matchesPage(CARD_PAGES)) return null;
+    const el2 = target.closest && target.closest(".card[id]");
+    if (!el2 || !getCard(el2.id)) return null;
+    return `card:${el2.id}`;
+  }
+  var CARD_SIZES = { Small: 64, Medium: 88, Large: 120 };
+  var PREVIEW_DELAYS = ["1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "5"];
+  var OPACITIES = ["100%", "90%", "80%", "70%", "60%", "50%"];
+  var RANKED_SHOW = "Greyed out";
+  var RANKED_HIDE = "Hidden";
+  var settings2 = null;
+  var mounted = null;
+  function preferredTile() {
+    const v = settings2 ? settings2.value("cardSize") : "Medium";
+    return CARD_SIZES[v] || CARD_SIZES.Medium;
+  }
+  function setting2(key2, fallback) {
+    return settings2 ? settings2.value(key2) : fallback;
+  }
+  function blockedHere() {
+    return !!setting2("hideInMatches", false) && matchesPage("/Game");
+  }
+  function applyLook() {
+    if (!mounted) return;
+    const root = mounted.win.root;
+    const pct = parseInt(setting2("opacity", "100%"), 10);
+    root.style.setProperty("--wz-tl-opacity", String((Number.isFinite(pct) ? Math.min(100, Math.max(50, pct)) : 100) / 100));
+    root.classList.toggle("wz-tl-nonames", !setting2("showNames", true));
+  }
+  function previewDelayMs() {
+    const v = parseFloat(settings2 ? settings2.value("previewDelay") : "2");
+    return (Number.isFinite(v) ? Math.min(5, Math.max(1, v)) : 2) * 1e3;
+  }
+  function pickerOptions() {
+    return {
+      hideRanked: !!settings2 && settings2.value("rankedInPanel") === RANKED_HIDE,
+      tagsFor: isPluginEnabled("cardTags") ? (id) => tagObjectsForCard(id).map((t) => t.name) : null
+    };
+  }
+  function headerButton(label, title) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "wz-tl-btn";
+    b.textContent = label;
+    b.title = title;
+    return b;
+  }
+  function showTierList() {
+    if (mounted || blockedHere()) return;
+    injectTierListStyle();
+    const controller = new AbortController();
+    const { signal } = controller;
+    const win = buildWindow({
+      signal,
+      getPreferredTile: preferredTile,
+      onTitleChange: (value) => setTitle(value)
+    });
+    const listsBtn = headerButton("Lists \u25BE", "Switch, add, copy or delete tier lists");
+    win.title.after(listsBtn);
+    const undoBtn = headerButton("\u21B6", "Undo");
+    const resetBtn = headerButton("Reset", "Clear every tier back to S\u2013D (click twice)");
+    const pickerBtn = headerButton("Items", "Show or hide the item panel");
+    const maxBtn = headerButton("\u25A1", "Fill the screen");
+    const closeBtn = headerButton("\xD7", "Close");
+    win.buttons.append(undoBtn, resetBtn, pickerBtn, maxBtn, closeBtn);
+    const tiers = createTiersView({ body: win.body, signal });
+    const picker = createPicker({ body: win.body, signal, getOptions: pickerOptions });
+    function syncHeader() {
+      const list = getActiveList();
+      if (document.activeElement !== win.title) win.title.value = list.title;
+      undoBtn.disabled = !canUndo();
+      pickerBtn.classList.toggle("wz-tl-active", win.isPickerOpen());
+      maxBtn.textContent = win.isMaximised() ? "\u2750" : "\u25A1";
+      maxBtn.title = win.isMaximised() ? "Restore the window size" : "Fill the screen";
+    }
+    function renderAll() {
+      tiers.render();
+      picker.render();
+      syncHeader();
+    }
+    undoBtn.addEventListener("click", () => undo(), { signal });
+    let listsMenu = null;
+    function closeListsMenu() {
+      if (listsMenu) listsMenu.remove();
+      listsMenu = null;
+      listsBtn.classList.remove("wz-tl-active");
+    }
+    function openListsMenu() {
+      closeListsMenu();
+      const menu = document.createElement("div");
+      menu.className = "wz-tl-menu";
+      getLists().forEach((l) => {
+        const row = document.createElement("button");
+        row.type = "button";
+        row.className = "wz-tl-menu-item" + (l.active ? " wz-tl-active" : "");
+        row.dataset.listId = l.id;
+        const name = document.createElement("span");
+        name.textContent = l.title;
+        const count = document.createElement("span");
+        count.className = "wz-tl-menu-count";
+        count.textContent = String(l.count);
+        row.append(name, count);
+        row.addEventListener("click", () => {
+          setActiveList(l.id);
+          closeListsMenu();
+        });
+        menu.appendChild(row);
+      });
+      const actions = document.createElement("div");
+      actions.className = "wz-tl-menu-actions";
+      const act = (label, title, fn) => {
+        const b = headerButton(label, title);
+        b.addEventListener("click", fn);
+        actions.appendChild(b);
+        return b;
+      };
+      act("+ New", "Start a new, empty tier list", () => {
+        createList();
+        closeListsMenu();
+      });
+      act("Copy", "Make a copy of this list", () => {
+        duplicateList();
+        closeListsMenu();
+      });
+      const del = act("Delete", "Delete this list (click twice; \u21B6 brings it back)", () => {
+        if (!del.classList.contains("wz-tl-danger")) {
+          del.classList.add("wz-tl-danger");
+          del.textContent = "Sure?";
+          return;
+        }
+        deleteActiveList();
+        closeListsMenu();
+      });
+      act("Share\u2026", "Get a code for this list to send to someone", () => {
+        closeListsMenu();
+        shareList();
+      });
+      act("Import\u2026", "Add a list from a code someone sent you", () => {
+        closeListsMenu();
+        importListDialog();
+      });
+      menu.appendChild(actions);
+      win.root.appendChild(menu);
+      const r = listsBtn.getBoundingClientRect();
+      const rr = win.root.getBoundingClientRect();
+      menu.style.left = Math.max(4, r.left - rr.left) + "px";
+      menu.style.top = r.bottom - rr.top + 4 + "px";
+      listsMenu = menu;
+      listsBtn.classList.add("wz-tl-active");
+    }
+    listsBtn.addEventListener("click", () => listsMenu ? closeListsMenu() : openListsMenu(), { signal });
+    document.addEventListener("pointerdown", (e) => {
+      if (listsMenu && !listsMenu.contains(e.target) && e.target !== listsBtn) closeListsMenu();
+    }, { signal, capture: true });
+    async function shareList() {
+      const data2 = exportActiveList();
+      const code = await encodeCode("TIER", data2);
+      const safe = (data2.title || "tier-list").replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, " ").trim().slice(0, 60) || "tier-list";
+      showExportDialog({
+        title: "Share Tier List",
+        intro: `Send this code to share "${data2.title}". They can add it with Lists \u25BE \u2192 Import\u2026`,
+        code,
+        fileName: `${safe}.txt`
+      });
+    }
+    function importListDialog() {
+      showImportDialog({
+        title: "Import Tier List",
+        intro: "Paste a tier list code. It's added as a new list; your own lists aren't changed.",
+        actionLabel: "Import",
+        onSubmit: async (text) => {
+          const data2 = await decodeCode(text, "TIER");
+          importList(data2);
+          ensureArtifacts();
+        }
+      });
+    }
+    let artifactsTried = false;
+    function ensureArtifacts() {
+      if (artifactsTried || hasArtifacts() || !listUsesKind("artifact")) return;
+      artifactsTried = true;
+      loadArtifacts().then((ok) => {
+        if (ok) renderAll();
+      });
+    }
+    const modalWatch = new MutationObserver(() => {
+      win.root.classList.toggle("wz-tl-under-modal", document.body.classList.contains("modal-open") || !!document.querySelector(".bootstrap-dialog.in, .modal.in"));
+    });
+    modalWatch.observe(document.body, { attributes: true, attributeFilter: ["class"], childList: true });
+    signal.addEventListener("abort", () => modalWatch.disconnect());
+    win.root.addEventListener("dblclick", (e) => {
+      const tile = e.target.closest(".wz-tl-tile.wz-tl-text");
+      if (!tile || e.target.closest("input, .wz-tl-tile-del")) return;
+      const textId = tile.dataset.key.slice(5);
+      const current = getTextLabel(textId);
+      if (current === null) return;
+      const label = tile.querySelector(".wz-tl-tile-name");
+      const input = document.createElement("input");
+      input.type = "text";
+      input.maxLength = MAX_TEXT;
+      input.value = current;
+      label.textContent = "";
+      label.appendChild(input);
+      input.focus();
+      input.select();
+      let done = false;
+      const commit = (save) => {
+        if (done) return;
+        done = true;
+        if (save && input.value.trim() && input.value.trim() !== current) renameText(textId, input.value);
+        else renderAll();
+      };
+      input.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter") commit(true);
+        if (ev.key === "Escape") commit(false);
+      });
+      input.addEventListener("blur", () => commit(true));
+    }, { signal });
+    let resetArmed = null;
+    resetBtn.addEventListener("click", () => {
+      if (resetArmed) {
+        clearTimeout(resetArmed);
+        resetArmed = null;
+        resetBtn.textContent = "Reset";
+        resetBtn.classList.remove("wz-tl-danger");
+        tiers.closeEditor();
+        resetList();
+        return;
+      }
+      resetBtn.textContent = "Sure?";
+      resetBtn.classList.add("wz-tl-danger");
+      resetArmed = setTimeout(() => {
+        resetArmed = null;
+        resetBtn.textContent = "Reset";
+        resetBtn.classList.remove("wz-tl-danger");
+      }, 3e3);
+    }, { signal });
+    pickerBtn.addEventListener("click", () => {
+      const open = !win.isPickerOpen();
+      win.setPickerOpen(open);
+      picker.setOpen(open);
+      syncHeader();
+      if (open) picker.focusSearch();
+    }, { signal });
+    picker.setOpen(win.isPickerOpen());
+    maxBtn.addEventListener("click", () => win.setMaximised(!win.isMaximised()), { signal });
+    win.onMaximiseChange(syncHeader);
+    closeBtn.addEventListener("click", () => hideTierList(), { signal });
+    ["keydown", "keyup", "keypress"].forEach((type) => {
+      win.root.addEventListener(type, (e) => {
+        if (e.target.closest("input, select, textarea")) e.stopPropagation();
+      }, { signal });
+    });
+    let preview = null;
+    const drag = attachDrag({
+      root: win.root,
+      signal,
+      pageItemKey,
+      buildGhost: (key2) => buildTile(key2),
+      onDragStart: () => {
+        if (preview) preview.hide();
+        tiers.closeEditor();
+        closeListsMenu();
+      },
+      onDrop: ({ key: key2, from, target }) => {
+        if (target.type === "tier") {
+          placeItem(key2, target.tierId, target.index);
+        } else if ((target.type === "picker" || target.type === "outside") && from.type === "tier") {
+          removeItem(key2);
+        }
+      }
+    });
+    preview = attachPreview({ root: win.root, signal, isDragging: drag.isDragging, getDelayMs: previewDelayMs });
+    const unsubscribe = subscribe(() => {
+      renderAll();
+      ensureArtifacts();
+    });
+    signal.addEventListener("abort", unsubscribe);
+    window.addEventListener("beforeunload", () => flushSave(), { signal });
+    document.body.appendChild(win.root);
+    renderAll();
+    ensureArtifacts();
+    mounted = { controller, win, picker };
+    applyLook();
+  }
+  function hideTierList() {
+    if (!mounted) return;
+    flushSave();
+    mounted.controller.abort();
+    mounted.win.root.remove();
+    mounted = null;
+  }
+  function initTierList(plugin) {
+    settings2 = createFeatureSettings(plugin, "tierlist", {
+      tab: "Tier List",
+      visible: () => isPluginEnabled("tierList")
+    });
+    settings2.add("cardSize", {
+      name: "Card Size",
+      note: "How big cards get in a large window. They shrink in a small one.",
+      type: "select",
+      options: Object.keys(CARD_SIZES),
+      default: "Medium",
+      onChange: () => {
+        if (mounted) mounted.win.refreshTileSize();
+      }
+    });
+    settings2.add("opacity", {
+      name: "Window Opacity",
+      note: "See-through when the mouse is elsewhere; solid while you use it.",
+      type: "select",
+      options: OPACITIES,
+      default: "100%",
+      onChange: () => applyLook()
+    });
+    settings2.add("showNames", {
+      name: "Show Names on Tiles",
+      note: "Turn off for art-only tiles. Text items always show their words.",
+      type: "boolean",
+      default: true,
+      onChange: () => applyLook()
+    });
+    settings2.add("previewDelay", {
+      name: "Card Preview Delay (seconds)",
+      note: "How long to rest the mouse on a card before its full preview shows.",
+      type: "select",
+      options: PREVIEW_DELAYS,
+      default: "2"
+    });
+    settings2.add("rankedInPanel", {
+      name: "Ranked Items in the Item Panel",
+      note: "Grey out items already in a tier, or hide them from the panel.",
+      type: "select",
+      options: [RANKED_SHOW, RANKED_HIDE],
+      default: RANKED_SHOW,
+      onChange: () => {
+        if (mounted) mounted.picker.render();
+      }
+    });
+    settings2.add("pageDrag", {
+      name: "Drag Cards In From Crafting/Decks",
+      note: "Hold and drag a card on those pages into the open tier list.",
+      type: "boolean",
+      default: true
+    });
+    settings2.add("hideInMatches", {
+      name: "Turn Off During Your Matches",
+      note: "Closes it and ignores the shortcut while you play. Spectating is fine.",
+      type: "boolean",
+      default: false,
+      onChange: () => {
+        if (blockedHere()) hideTierList();
+      }
+    });
+    registerKeybind(plugin, {
+      key: "toggleTierList",
+      name: "Toggle Tier List",
+      defaultCode: "KeyL",
+      packageLabel: "Tier List",
+      onMatch: () => {
+        if (!isPluginEnabled("tierList")) return;
+        if (mounted) hideTierList();
+        else showTierList();
+      }
+    });
+    if (!isPluginEnabled("tierList")) return;
+    initItemData(plugin);
+  }
+
   // packages/misc/settings.js
   function registerMiscSettings() {
     return {
@@ -7210,7 +9626,7 @@ Version: v${version}`;
   var PEN_COLOR_KEY = "wizascript.misc.notepad.penColor";
   var RECENT_COLORS_KEY = "wizascript.misc.notepad.recentColors";
   var TITLE_KEY = "wizascript.misc.notepad.title";
-  function readJSON(key2, fallback) {
+  function readJSON2(key2, fallback) {
     try {
       const raw = GM_getValue(key2, null);
       return raw ? JSON.parse(raw) : fallback;
@@ -7219,7 +9635,7 @@ Version: v${version}`;
       return fallback;
     }
   }
-  function writeJSON(key2, value) {
+  function writeJSON2(key2, value) {
     try {
       GM_setValue(key2, JSON.stringify(value));
     } catch (e) {
@@ -7227,10 +9643,10 @@ Version: v${version}`;
     }
   }
   function getSavedPosition2() {
-    return readJSON(POSITION_KEY, null);
+    return readJSON2(POSITION_KEY, null);
   }
   function setSavedPosition2(layout2) {
-    writeJSON(POSITION_KEY, layout2);
+    writeJSON2(POSITION_KEY, layout2);
   }
   function clearSavedPosition2() {
     try {
@@ -7239,10 +9655,10 @@ Version: v${version}`;
     }
   }
   function getSavedDrawing() {
-    return readJSON(DRAWING_KEY, null);
+    return readJSON2(DRAWING_KEY, null);
   }
   function setSavedDrawing(drawing) {
-    writeJSON(DRAWING_KEY, drawing);
+    writeJSON2(DRAWING_KEY, drawing);
   }
   function clearSavedDrawing() {
     try {
@@ -7251,10 +9667,10 @@ Version: v${version}`;
     }
   }
   function getSavedPenColor() {
-    return readJSON(PEN_COLOR_KEY, null);
+    return readJSON2(PEN_COLOR_KEY, null);
   }
   function setSavedPenColor(state2) {
-    writeJSON(PEN_COLOR_KEY, state2);
+    writeJSON2(PEN_COLOR_KEY, state2);
   }
   function clearSavedPenColor() {
     try {
@@ -7263,10 +9679,10 @@ Version: v${version}`;
     }
   }
   function getRecentColors() {
-    return readJSON(RECENT_COLORS_KEY, []);
+    return readJSON2(RECENT_COLORS_KEY, []);
   }
   function setRecentColors(list) {
-    writeJSON(RECENT_COLORS_KEY, list);
+    writeJSON2(RECENT_COLORS_KEY, list);
   }
   function clearRecentColors() {
     try {
@@ -7275,10 +9691,10 @@ Version: v${version}`;
     }
   }
   function getSavedTitle() {
-    return readJSON(TITLE_KEY, null);
+    return readJSON2(TITLE_KEY, null);
   }
   function setSavedTitle(title) {
-    writeJSON(TITLE_KEY, title);
+    writeJSON2(TITLE_KEY, title);
   }
   function clearSavedTitle() {
     try {
@@ -7290,7 +9706,7 @@ Version: v${version}`;
   // packages/misc/notepad/widget.js
   var DEFAULT_RIGHT = 16;
   var DEFAULT_BOTTOM = 16;
-  var DEFAULT_TITLE = "Notepad";
+  var DEFAULT_TITLE2 = "Notepad";
   var TITLE_SAVE_DEBOUNCE_MS = 400;
   function buildNotepadShell(signal) {
     const root = document.createElement("div");
@@ -7310,13 +9726,13 @@ Version: v${version}`;
     titleInput.className = "wizascript-notepad-title-input";
     titleInput.maxLength = 60;
     titleInput.spellcheck = false;
-    titleInput.value = getSavedTitle() || DEFAULT_TITLE;
+    titleInput.value = getSavedTitle() || DEFAULT_TITLE2;
     titleInput.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
     let titleSaveTimer = null;
     titleInput.addEventListener("input", () => {
       clearTimeout(titleSaveTimer);
       titleSaveTimer = setTimeout(() => {
-        setSavedTitle(titleInput.value.trim() || DEFAULT_TITLE);
+        setSavedTitle(titleInput.value.trim() || DEFAULT_TITLE2);
       }, TITLE_SAVE_DEBOUNCE_MS);
     }, { signal });
     const headerButtons = document.createElement("span");
@@ -7900,14 +10316,14 @@ Version: v${version}`;
 
   // packages/misc/notepad/index.js
   var DEFAULT_THICKNESS = 5;
-  var mounted = null;
+  var mounted2 = null;
   function sanitizeFilename(rawTitle) {
     const cleaned = (rawTitle || "").trim().replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, " ").slice(0, 60);
     return cleaned || "notepad-doodle";
   }
   function showNotepad() {
     var _a;
-    if (mounted) return;
+    if (mounted2) return;
     injectStyle2();
     const controller = new AbortController();
     const { signal } = controller;
@@ -8122,7 +10538,7 @@ Version: v${version}`;
       clearSavedPenColor();
       clearRecentColors();
       recentColorsRow.render([]);
-      titleInput.value = DEFAULT_TITLE;
+      titleInput.value = DEFAULT_TITLE2;
       clearSavedTitle();
     }, { signal });
     saveBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
@@ -8131,24 +10547,24 @@ Version: v${version}`;
     }, { signal });
     closeBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
     closeBtn.addEventListener("click", () => hideNotepad(), { signal });
-    mounted = { root, controller, surface };
+    mounted2 = { root, controller, surface };
   }
   function hideNotepad() {
-    if (!mounted) return;
-    mounted.controller.abort();
-    mounted.root.remove();
-    mounted = null;
+    if (!mounted2) return;
+    mounted2.controller.abort();
+    mounted2.root.remove();
+    mounted2 = null;
   }
   function isNotepadOpen() {
-    return !!mounted;
+    return !!mounted2;
   }
   function undoNotepad() {
-    if (!mounted) return;
-    mounted.surface.undo();
+    if (!mounted2) return;
+    mounted2.surface.undo();
   }
   function redoNotepad() {
-    if (!mounted) return;
-    mounted.surface.redo();
+    if (!mounted2) return;
+    mounted2.surface.redo();
   }
   function forceResetNotepad() {
     hideNotepad();
@@ -8452,154 +10868,6 @@ Version: v${version}`;
 
   // packages/misc/card-tags/constants.js
   var CARD_LIST_SELECTOR = ".cardsList, .cardSkinList, #loadDeckCards";
-
-  // packages/misc/card-tags/storage.js
-  var DATA_KEY = "wizascript.misc.cardTags.data";
-  var DEFAULT_COLORS = ["#4dabf7", "#51cf66", "#ffa94d", "#ff6b6b", "#cc5de8", "#20c997", "#ffd43b"];
-  function genTagId() {
-    return "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-  }
-  function emptyData() {
-    return { tags: [], cardTags: {} };
-  }
-  function readData() {
-    let raw;
-    try {
-      raw = GM_getValue(DATA_KEY, null);
-    } catch (e) {
-      console.warn("[CardTags] Failed to read storage key", DATA_KEY, e);
-      return emptyData();
-    }
-    if (!raw) return emptyData();
-    let parsed;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (e) {
-      console.warn("[CardTags] Failed to parse stored data, starting fresh.", e);
-      return emptyData();
-    }
-    if (Array.isArray(parsed.tags) && parsed.tags.length && typeof parsed.tags[0] === "string") {
-      const nameToId = {};
-      const upgradedTags = parsed.tags.map((name, i) => {
-        const id = genTagId();
-        nameToId[name] = id;
-        return { id, name, color: DEFAULT_COLORS[i % DEFAULT_COLORS.length] };
-      });
-      const upgradedCardTags = {};
-      Object.keys(parsed.cardTags || {}).forEach((cardId) => {
-        const ids = (parsed.cardTags[cardId] || []).map((name) => nameToId[name]).filter(Boolean);
-        if (ids.length) upgradedCardTags[cardId] = ids;
-      });
-      const upgraded = { tags: upgradedTags, cardTags: upgradedCardTags };
-      writeData(upgraded);
-      return upgraded;
-    }
-    return {
-      tags: Array.isArray(parsed.tags) ? parsed.tags : [],
-      cardTags: parsed.cardTags && typeof parsed.cardTags === "object" ? parsed.cardTags : {}
-    };
-  }
-  function writeData(value) {
-    try {
-      GM_setValue(DATA_KEY, JSON.stringify(value));
-    } catch (e) {
-      console.warn("[CardTags] Failed to write storage key", DATA_KEY, e);
-    }
-  }
-  var data = readData();
-  function allTags() {
-    return data.tags;
-  }
-  function findTag(id) {
-    return data.tags.find((t) => t.id === id) || null;
-  }
-  function createTag(name, color) {
-    const tag = {
-      id: genTagId(),
-      name: name.trim(),
-      color: color || DEFAULT_COLORS[data.tags.length % DEFAULT_COLORS.length]
-    };
-    data.tags.push(tag);
-    writeData(data);
-    return tag;
-  }
-  function updateTag(id, patch) {
-    const tag = findTag(id);
-    if (!tag) return;
-    Object.assign(tag, patch);
-    writeData(data);
-  }
-  function deleteTag(id) {
-    data.tags = data.tags.filter((t) => t.id !== id);
-    Object.keys(data.cardTags).forEach((cardId) => {
-      data.cardTags[cardId] = data.cardTags[cardId].filter((tagId) => tagId !== id);
-      if (!data.cardTags[cardId].length) delete data.cardTags[cardId];
-    });
-    writeData(data);
-  }
-  function tagIdsForCard(cardId) {
-    return data.cardTags[cardId] || [];
-  }
-  function tagObjectsForCard(cardId) {
-    return tagIdsForCard(cardId).map(findTag).filter(Boolean);
-  }
-  function cardHasTag(cardId, tagId) {
-    return tagIdsForCard(cardId).includes(tagId);
-  }
-  function toggleCardTag(cardId, tagId) {
-    const current = data.cardTags[cardId] || [];
-    const has = current.includes(tagId);
-    const next = has ? current.filter((t) => t !== tagId) : [...current, tagId];
-    if (next.length) {
-      data.cardTags[cardId] = next;
-    } else {
-      delete data.cardTags[cardId];
-    }
-    writeData(data);
-  }
-  function taggedCardIds() {
-    return Object.keys(data.cardTags);
-  }
-  function exportTags(tagIds) {
-    const wanted = new Set(tagIds);
-    return {
-      format: 1,
-      tags: data.tags.filter((t) => wanted.has(t.id)).map((t) => ({
-        name: t.name,
-        color: t.color,
-        cards: Object.keys(data.cardTags).filter((cardId) => data.cardTags[cardId].includes(t.id))
-      }))
-    };
-  }
-  function importTags(shared) {
-    if (!shared || shared.format !== 1 || !Array.isArray(shared.tags)) {
-      throw new Error("That code isn't a Card Tags code this version understands.");
-    }
-    const summary = { created: [], merged: [], cardsTagged: 0 };
-    shared.tags.forEach((st) => {
-      const name = String(st && st.name || "").trim();
-      if (!name) return;
-      let tag = data.tags.find((t) => t.name.toLowerCase() === name.toLowerCase());
-      if (tag) {
-        summary.merged.push(tag.name);
-      } else {
-        const color = /^#[0-9a-f]{3,8}$/i.test(st.color || "") ? st.color : DEFAULT_COLORS[data.tags.length % DEFAULT_COLORS.length];
-        tag = { id: genTagId(), name, color };
-        data.tags.push(tag);
-        summary.created.push(name);
-      }
-      (Array.isArray(st.cards) ? st.cards : []).forEach((rawId) => {
-        const cardId = String(rawId);
-        if (!/^[\w-]{1,32}$/.test(cardId)) return;
-        const current = data.cardTags[cardId] || [];
-        if (current.includes(tag.id)) return;
-        data.cardTags[cardId] = [...current, tag.id];
-        summary.cardsTagged++;
-      });
-    });
-    writeData(data);
-    return summary;
-  }
 
   // packages/misc/card-tags/indicators.js
   var INDICATOR_ATTR = "data-wiza-tag-dot";
@@ -9190,2161 +11458,10 @@ Version: v${version}`;
     });
   }
 
-  // packages/misc/tier-list/styles.js
-  var STYLE_ID = "wizascript-tierlist-style";
-  var Z_WINDOW = 2147482e3;
-  var Z_FLOATING = 2147483100;
-  function injectTierListStyle() {
-    if (document.getElementById(STYLE_ID)) return;
-    const style = document.createElement("style");
-    style.id = STYLE_ID;
-    style.textContent = CSS;
-    (document.head || document.documentElement).appendChild(style);
-  }
-  var CSS = `
-.wz-tl {
-  --wz-tl-tile: 72px;
-  --wz-tl-tile-h: calc(var(--wz-tl-tile) * 0.8);
-  --wz-tl-label: max(56px, var(--wz-tl-tile));
-  position: fixed;
-  z-index: ${Z_WINDOW};
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  background: #0d0d0d;
-  color: #fff;
-  border: 2px solid #fff;
-  border-radius: 4px;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.7);
-  font-family: Arial, sans-serif;
-  font-size: 12px;
-  user-select: none;
-}
-.wz-tl *, .wz-tl *::before, .wz-tl *::after { box-sizing: border-box; }
-.wz-tl.wz-tl-max { left: 0 !important; top: 0 !important; width: 100vw !important; height: 100vh !important; border-radius: 0; }
-.wz-tl.wz-tl-max .wz-tl-resize { display: none; }
-
-.wz-tl-header {
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 6px;
-  background: #222;
-  border-bottom: 1px solid #555;
-  cursor: grab;
-  touch-action: none;
-}
-.wz-tl.wz-tl-max .wz-tl-header { cursor: default; }
-.wz-tl-grip { flex: 1 1 auto; min-width: 16px; align-self: stretch; }
-.wz-tl-title {
-  flex: 0 1 220px;
-  min-width: 60px;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 3px;
-  color: #fff;
-  font: bold 13px Arial, sans-serif;
-  padding: 2px 4px;
-  outline: none;
-  text-overflow: ellipsis;
-}
-.wz-tl-title:hover, .wz-tl-title:focus { border-color: #666; background: rgba(255,255,255,0.06); }
-.wz-tl-btn {
-  flex: none;
-  padding: 2px 7px;
-  border: 1px solid #777;
-  border-radius: 3px;
-  background: #333;
-  color: #fff;
-  font: 12px Arial, sans-serif;
-  line-height: 16px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.wz-tl-btn:hover { background: #444; border-color: #aaa; }
-.wz-tl-btn:disabled { opacity: 0.35; cursor: default; background: #333; border-color: #777; }
-.wz-tl-btn.wz-tl-active { background: #4464bd; border-color: #8ea6e8; }
-.wz-tl-btn.wz-tl-danger { background: #8b1e1e; border-color: #e05555; }
-
-.wz-tl-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; position: relative; overflow: hidden; }
-
-.wz-tl-tiers { flex: 1 1 0; min-height: 0; overflow-y: auto; overflow-x: hidden; }
-.wz-tl-row { display: flex; align-items: stretch; border-bottom: 1px solid #000; background: #1a1a1a; }
-.wz-tl-row-label {
-  flex: none;
-  width: var(--wz-tl-label);
-  min-height: calc(var(--wz-tl-tile-h) + 6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px;
-  color: #000;
-  font-weight: bold;
-  font-size: max(12px, calc(var(--wz-tl-tile) * 0.22));
-  text-align: center;
-  word-break: break-word;
-  cursor: pointer;
-}
-.wz-tl-row-items {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  gap: 3px;
-  padding: 3px;
-  min-height: calc(var(--wz-tl-tile-h) + 6px);
-}
-.wz-tl-row-tools {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 1px;
-  padding: 1px 3px;
-  background: #000;
-}
-.wz-tl-row-tools button {
-  width: 20px;
-  height: 15px;
-  padding: 0;
-  border: 1px solid #555;
-  border-radius: 3px;
-  background: #222;
-  color: #ddd;
-  font-size: 9px;
-  line-height: 13px;
-  cursor: pointer;
-}
-.wz-tl-row-tools button:hover { background: #3a3a3a; color: #fff; }
-.wz-tl-add-row { display: block; margin: 6px auto; }
-
-.wz-tl-tile {
-  position: relative;
-  flex: none;
-  width: var(--wz-tl-tile);
-  height: var(--wz-tl-tile-h);
-  border: 2px solid var(--wz-tl-rarity, #888);
-  border-radius: 3px;
-  background: #000 center / contain no-repeat;
-  image-rendering: pixelated;
-  cursor: grab;
-  touch-action: none;
-  overflow: hidden;
-}
-.wz-tl-tile-name {
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  padding: 1px 2px;
-  background: rgba(0,0,0,0.72);
-  color: #fff;
-  font-size: max(9px, calc(var(--wz-tl-tile) * 0.12));
-  line-height: 1.15;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  pointer-events: none;
-}
-.wz-tl-tile.wz-tl-noimg .wz-tl-tile-name { top: 0; display: flex; align-items: center; justify-content: center; white-space: normal; }
-.wz-tl-tile.wz-tl-placed { opacity: 0.35; }
-.wz-tl-tile.wz-tl-placed::after {
-  content: "\\2713";
-  position: absolute;
-  top: 1px; right: 3px;
-  color: #7fff7f;
-  font-weight: bold;
-  font-size: 12px;
-  text-shadow: 0 0 2px #000;
-}
-.wz-tl-tile.wz-tl-dragging { opacity: 0.25; }
-.wz-tl-marker {
-  flex: none;
-  width: 4px;
-  height: var(--wz-tl-tile-h);
-  border-radius: 2px;
-  background: #fff;
-  box-shadow: 0 0 6px #8ea6e8;
-}
-.wz-tl-ghost {
-  position: fixed;
-  z-index: ${Z_FLOATING};
-  pointer-events: none;
-  opacity: 0.9;
-  transform: rotate(-3deg);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.7);
-}
-.wz-tl-ghost.wz-tl-ghost-remove { opacity: 0.55; filter: grayscale(1); }
-.wz-tl-ghost.wz-tl-ghost-remove::before {
-  content: "\\00D7";
-  position: absolute;
-  z-index: 1;
-  top: 1px; right: 3px;
-  color: #ff6b6b;
-  font: bold 16px Arial, sans-serif;
-  text-shadow: 0 0 3px #000;
-}
-.wz-tl-picker.wz-tl-drop-in { background: #1b2238; }
-
-.wz-tl-picker {
-  flex: 0 1 auto;
-  max-height: 60%;
-  transition: background 0.1s;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border-top: 2px solid #555;
-  background: #141414;
-}
-.wz-tl-picker.wz-tl-hidden { display: none; }
-.wz-tl-filters { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 5px 6px; }
-.wz-tl-search-row { flex: none; display: flex; gap: 4px; }
-.wz-tl-search-row input {
-  flex: none;
-  width: 150px;
-  height: 26px;
-  padding: 2px 6px;
-  border: 1px solid #666;
-  border-radius: 3px;
-  background: #000;
-  color: #fff;
-  font: 12px Arial, sans-serif;
-}
-.wz-tl-card-toggles { display: contents; }
-.wz-tl-type-tabs { flex: none; display: flex; border: 1px solid #555; border-radius: 4px; overflow: hidden; }
-.wz-tl-type-tab {
-  height: 26px;
-  padding: 0 7px;
-  border: none;
-  border-right: 1px solid #555;
-  background: #1c1c1c;
-  color: #bbb;
-  font: 12px Arial, sans-serif;
-  cursor: pointer;
-}
-.wz-tl-type-tab:last-child { border-right: none; }
-.wz-tl-type-tab:hover { background: #2a2a2a; color: #fff; }
-.wz-tl-type-tab.wz-tl-active { background: #4464bd; color: #fff; }
-.wz-tl-tile-del {
-  position: absolute;
-  z-index: 2;
-  top: 1px; left: 1px;
-  width: 16px; height: 16px;
-  padding: 0;
-  border: none;
-  border-radius: 3px;
-  background: rgba(0,0,0,0.75);
-  color: #ff8080;
-  font: bold 13px/16px Arial, sans-serif;
-  cursor: pointer;
-}
-.wz-tl-tile-del:hover { background: #8b1e1e; color: #fff; }
-.wz-tl-tile.wz-tl-text { background: #262626; }
-/* Soul sprites are much bigger than card art for their content - shrink
-   them so the heart sits above the name instead of filling the tile. */
-.wz-tl-results .wz-tl-tile.wz-tl-text .wz-tl-tile-name { padding-top: 16px; }
-.wz-tl-tile.wz-tl-soul { background-size: auto 46%; background-position: center 30%; }
-/* While any dialog (e.g. Share / Import) is open, sit under it. */
-.wz-tl.wz-tl-under-modal { z-index: 1030; }
-.wz-tl-tile.wz-tl-text .wz-tl-tile-name { background: transparent; font-weight: bold; padding: 2px; line-height: 1.1; word-break: break-word; }
-.wz-tl-tile.wz-tl-text .wz-tl-tile-name input {
-  width: 100%;
-  border: 1px solid #8ea6e8;
-  background: #000;
-  color: #fff;
-  font: inherit;
-  text-align: center;
-  pointer-events: auto;
-}
-.wz-tl-toggle-group { flex: none; display: flex; gap: 2px; padding: 1px; border-radius: 4px; background: rgba(255,255,255,0.05); }
-.wz-tl-toggle {
-  height: 26px;
-  min-width: 26px;
-  padding: 2px 3px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid transparent;
-  border-radius: 3px;
-  background: transparent;
-  cursor: pointer;
-  opacity: 0.45;
-  filter: grayscale(0.7);
-}
-.wz-tl-toggle img { max-height: 20px; max-width: 32px; image-rendering: pixelated; pointer-events: none; }
-.wz-tl-toggle:hover { opacity: 0.8; filter: none; }
-.wz-tl-toggle.wz-tl-on { opacity: 1; filter: none; border-color: #fff; background: rgba(68,100,189,0.55); }
-.wz-tl-toggle-text { color: #fff; font: bold 10px Arial, sans-serif; }
-.wz-tl-results { flex: 0 1 auto; height: calc(var(--wz-tl-tile-h) * 2 + 9px); min-height: min(calc(var(--wz-tl-tile-h) + 6px), 40px); overflow-y: auto; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 3px; padding: 0 6px 6px; }
-.wz-tl-hint { flex: none; padding: 0 8px 4px; color: #aaa; font-size: 12px; line-height: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.wz-tl-resize { position: absolute; z-index: 2; touch-action: none; }
-.wz-tl-resize-n, .wz-tl-resize-s { left: 8px; right: 8px; height: 7px; cursor: ns-resize; }
-.wz-tl-resize-n { top: -4px; }
-.wz-tl-resize-s { bottom: -4px; }
-.wz-tl-resize-e, .wz-tl-resize-w { top: 8px; bottom: 8px; width: 7px; cursor: ew-resize; }
-.wz-tl-resize-e { right: -4px; }
-.wz-tl-resize-w { left: -4px; }
-.wz-tl-resize-ne, .wz-tl-resize-nw, .wz-tl-resize-se, .wz-tl-resize-sw { width: 14px; height: 14px; }
-.wz-tl-resize-ne { top: -5px; right: -5px; cursor: nesw-resize; }
-.wz-tl-resize-sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
-.wz-tl-resize-nw { top: -5px; left: -5px; cursor: nwse-resize; }
-.wz-tl-resize-se { bottom: -5px; right: -5px; cursor: nwse-resize; }
-
-.wz-tl-editor {
-  position: absolute;
-  z-index: 5;
-  width: 230px;
-  max-width: calc(100% - 12px);
-  padding: 8px;
-  border: 1px solid #aaa;
-  border-radius: 4px;
-  background: #1c1c1c;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.7);
-}
-.wz-tl-editor input[type="text"] {
-  width: 100%;
-  margin-bottom: 6px;
-  padding: 3px 5px;
-  border: 1px solid #666;
-  border-radius: 3px;
-  background: #000;
-  color: #fff;
-  font: 13px Arial, sans-serif;
-}
-.wz-tl-swatches { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; align-items: center; }
-.wz-tl-swatch { width: 20px; height: 20px; border: 1px solid #000; border-radius: 3px; cursor: pointer; }
-.wz-tl-swatch.wz-tl-active { box-shadow: 0 0 0 2px #fff; }
-.wz-tl-swatches input[type="color"] { width: 24px; height: 22px; padding: 0; border: none; background: none; cursor: pointer; }
-.wz-tl-editor-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-.wz-tl-editor-buttons .wz-tl-btn { width: 100%; }
-
-.wz-tl-menu {
-  position: absolute;
-  z-index: 6;
-  min-width: 200px;
-  width: 260px;
-  max-width: calc(100% - 8px);
-  max-height: 60%;
-  overflow-y: auto;
-  padding: 4px;
-  border: 1px solid #aaa;
-  border-radius: 4px;
-  background: #1c1c1c;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.7);
-}
-.wz-tl-menu-item {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  width: 100%;
-  padding: 4px 6px;
-  border: none;
-  border-radius: 3px;
-  background: transparent;
-  color: #ddd;
-  font: 12px Arial, sans-serif;
-  text-align: left;
-  cursor: pointer;
-}
-.wz-tl-menu-item span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.wz-tl-menu-item:hover { background: #2e2e2e; color: #fff; }
-.wz-tl-menu-item.wz-tl-active { background: #4464bd; color: #fff; }
-.wz-tl-menu-count { flex: none; opacity: 0.6; }
-.wz-tl-menu-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; padding-top: 4px; border-top: 1px solid #444; }
-.wz-tl-preview {
-  position: fixed;
-  z-index: ${Z_FLOATING};
-  pointer-events: none;
-}
-.wz-tl-preview-fallback {
-  width: 200px;
-  padding: 4px;
-  border: 2px solid #fff;
-  border-radius: 4px;
-  background: #000;
-  color: #fff;
-  font: bold 13px Arial, sans-serif;
-  text-align: center;
-}
-.wz-tl-preview-fallback div {
-  height: 120px;
-  margin-bottom: 4px;
-  background: center / contain no-repeat;
-  image-rendering: pixelated;
-}
-`;
-
-  // packages/misc/tier-list/storage.js
-  var LISTS_KEY = "wizascript.tierlist.lists";
-  var WINDOW_KEY = "wizascript.tierlist.window";
-  function readJSON2(key2, fallback) {
-    try {
-      const raw = GM_getValue(key2, null);
-      return raw ? JSON.parse(raw) : fallback;
-    } catch (e) {
-      console.warn("[Tier List] Failed to read storage key", key2, e);
-      return fallback;
-    }
-  }
-  function writeJSON2(key2, value) {
-    try {
-      GM_setValue(key2, JSON.stringify(value));
-    } catch (e) {
-      console.warn("[Tier List] Failed to write storage key", key2, e);
-    }
-  }
-  function loadLists() {
-    return readJSON2(LISTS_KEY, null);
-  }
-  function saveLists(data2) {
-    writeJSON2(LISTS_KEY, data2);
-  }
-  function loadWindowState() {
-    return readJSON2(WINDOW_KEY, null);
-  }
-  function saveWindowState(state2) {
-    writeJSON2(WINDOW_KEY, state2);
-  }
-
-  // packages/misc/tier-list/model.js
-  var DEFAULT_TIERS = [
-    ["S", "#ff7f7f"],
-    ["A", "#ffbf7f"],
-    ["B", "#ffdf7f"],
-    ["C", "#ffff7f"],
-    ["D", "#bfff7f"]
-  ];
-  var TIER_COLORS = [
-    "#ff7f7f",
-    "#ffbf7f",
-    "#ffdf7f",
-    "#ffff7f",
-    "#bfff7f",
-    "#7fff7f",
-    "#7fffff",
-    "#7fbfff",
-    "#7f7fff",
-    "#ff7fff",
-    "#bf7fbf",
-    "#cfcfcf"
-  ];
-  var MAX_UNDO = 50;
-  var SAVE_DELAY_MS = 300;
-  var MAX_LABEL = 40;
-  var MAX_TITLE = 60;
-  var MAX_TEXT = 40;
-  var MAX_LISTS = 50;
-  var DEFAULT_TITLE2 = "My Tier List";
-  var state = null;
-  var undoStack = [];
-  var listeners = /* @__PURE__ */ new Set();
-  var saveTimer = null;
-  function uid(prefix) {
-    return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-  }
-  function makeTier(label, color) {
-    return { id: uid("t"), label, color, items: [] };
-  }
-  function makeList(title = DEFAULT_TITLE2) {
-    return { id: uid("l"), title, texts: {}, tiers: DEFAULT_TIERS.map(([l, c]) => makeTier(l, c)) };
-  }
-  function sanitize(raw) {
-    if (!raw || !Array.isArray(raw.lists) || !raw.lists.length) {
-      const list = makeList();
-      return { version: 1, active: list.id, lists: [list] };
-    }
-    const lists = raw.lists.map((l) => ({
-      id: typeof l.id === "string" ? l.id : uid("l"),
-      title: typeof l.title === "string" ? l.title.slice(0, MAX_TITLE) : DEFAULT_TITLE2,
-      texts: Object.fromEntries(Object.entries(l.texts && typeof l.texts === "object" ? l.texts : {}).filter(([, v]) => typeof v === "string").map(([k, v]) => [k, v.slice(0, MAX_TEXT)])),
-      tiers: (Array.isArray(l.tiers) ? l.tiers : []).map((t) => ({
-        id: typeof t.id === "string" ? t.id : uid("t"),
-        label: typeof t.label === "string" ? t.label.slice(0, MAX_LABEL) : "?",
-        color: /^#[0-9a-f]{6}$/i.test(t.color) ? t.color : "#cfcfcf",
-        items: (Array.isArray(t.items) ? t.items : []).filter((k) => typeof k === "string")
-      }))
-    }));
-    lists.forEach((l) => {
-      const seen = /* @__PURE__ */ new Set();
-      l.tiers.forEach((t) => {
-        t.items = t.items.filter((k) => seen.has(k) ? false : (seen.add(k), true));
-      });
-    });
-    const active = lists.some((l) => l.id === raw.active) ? raw.active : lists[0].id;
-    return { version: 1, active, lists };
-  }
-  function ensureLoaded() {
-    if (!state) state = sanitize(loadLists());
-  }
-  function scheduleSave() {
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => saveLists(state), SAVE_DELAY_MS);
-  }
-  function flushSave() {
-    if (!state) return;
-    clearTimeout(saveTimer);
-    saveLists(state);
-  }
-  function notify() {
-    listeners.forEach((fn) => {
-      try {
-        fn();
-      } catch (e) {
-        console.error("[Tier List] listener failed", e);
-      }
-    });
-  }
-  function change(mutator) {
-    ensureLoaded();
-    const before = JSON.stringify(state);
-    const result = mutator(activeList());
-    if (result === false) return false;
-    if (JSON.stringify(state) === before) return false;
-    undoStack.push(before);
-    if (undoStack.length > MAX_UNDO) undoStack.shift();
-    scheduleSave();
-    notify();
-    return true;
-  }
-  function activeList() {
-    return state.lists.find((l) => l.id === state.active) || state.lists[0];
-  }
-  function findTier(list, tierId) {
-    return list.tiers.find((t) => t.id === tierId) || null;
-  }
-  function removeEverywhere(list, key2) {
-    list.tiers.forEach((t) => {
-      const i = t.items.indexOf(key2);
-      if (i !== -1) t.items.splice(i, 1);
-    });
-  }
-  function subscribe(fn) {
-    listeners.add(fn);
-    return () => listeners.delete(fn);
-  }
-  function getActiveList() {
-    ensureLoaded();
-    return activeList();
-  }
-  function isPlaced(key2) {
-    return getActiveList().tiers.some((t) => t.items.includes(key2));
-  }
-  function canUndo() {
-    return undoStack.length > 0;
-  }
-  function getLists() {
-    ensureLoaded();
-    return state.lists.map((l) => ({
-      id: l.id,
-      title: l.title,
-      count: l.tiers.reduce((n, t) => n + t.items.length, 0),
-      active: l.id === state.active
-    }));
-  }
-  function getTextLabel(textId) {
-    const t = getActiveList().texts[textId];
-    return typeof t === "string" ? t : null;
-  }
-  function getTextIds() {
-    return Object.keys(getActiveList().texts);
-  }
-  function placeItem(key2, tierId, index) {
-    return change((list) => {
-      const tier = findTier(list, tierId);
-      if (!tier || typeof key2 !== "string") return false;
-      removeEverywhere(list, key2);
-      const at = Math.max(0, Math.min(typeof index === "number" ? index : tier.items.length, tier.items.length));
-      tier.items.splice(at, 0, key2);
-    });
-  }
-  function removeItem(key2) {
-    return change((list) => removeEverywhere(list, key2));
-  }
-  function addTier(atIndex) {
-    return change((list) => {
-      const used = new Set(list.tiers.map((t) => t.color));
-      const color = TIER_COLORS.find((c) => !used.has(c)) || "#cfcfcf";
-      const at = typeof atIndex === "number" ? Math.max(0, Math.min(atIndex, list.tiers.length)) : list.tiers.length;
-      list.tiers.splice(at, 0, makeTier("New", color));
-    });
-  }
-  function deleteTier(tierId) {
-    return change((list) => {
-      const i = list.tiers.findIndex((t) => t.id === tierId);
-      if (i === -1) return false;
-      list.tiers.splice(i, 1);
-    });
-  }
-  function renameTier(tierId, label) {
-    return change((list) => {
-      const tier = findTier(list, tierId);
-      if (!tier) return false;
-      tier.label = String(label).slice(0, MAX_LABEL);
-    });
-  }
-  function recolorTier(tierId, color) {
-    if (!/^#[0-9a-f]{6}$/i.test(color)) return false;
-    return change((list) => {
-      const tier = findTier(list, tierId);
-      if (!tier) return false;
-      tier.color = color.toLowerCase();
-    });
-  }
-  function moveTier(tierId, delta) {
-    return change((list) => {
-      const i = list.tiers.findIndex((t) => t.id === tierId);
-      const j = i + delta;
-      if (i === -1 || j < 0 || j >= list.tiers.length) return false;
-      const [tier] = list.tiers.splice(i, 1);
-      list.tiers.splice(j, 0, tier);
-    });
-  }
-  function clearTier(tierId) {
-    return change((list) => {
-      const tier = findTier(list, tierId);
-      if (!tier) return false;
-      tier.items = [];
-    });
-  }
-  function setTitle(title) {
-    return change((list) => {
-      list.title = String(title).trim().slice(0, MAX_TITLE) || DEFAULT_TITLE2;
-    });
-  }
-  function resetList() {
-    return change((list) => {
-      list.tiers = DEFAULT_TIERS.map(([l, c]) => makeTier(l, c));
-    });
-  }
-  function addText(label) {
-    const clean = String(label || "").trim().slice(0, MAX_TEXT);
-    if (!clean) return null;
-    const id = uid("x");
-    const ok = change((list) => {
-      list.texts[id] = clean;
-    });
-    return ok ? `text:${id}` : null;
-  }
-  function renameText(textId, label) {
-    const clean = String(label || "").trim().slice(0, MAX_TEXT);
-    if (!clean) return false;
-    return change((list) => {
-      if (!(textId in list.texts)) return false;
-      list.texts[textId] = clean;
-    });
-  }
-  function deleteText(textId) {
-    return change((list) => {
-      if (!(textId in list.texts)) return false;
-      delete list.texts[textId];
-      removeEverywhere(list, `text:${textId}`);
-    });
-  }
-  function setActiveList(listId) {
-    ensureLoaded();
-    if (state.active === listId || !state.lists.some((l) => l.id === listId)) return false;
-    state.active = listId;
-    undoStack.length = 0;
-    scheduleSave();
-    notify();
-    return true;
-  }
-  function createList() {
-    ensureLoaded();
-    if (state.lists.length >= MAX_LISTS) return false;
-    const list = makeList(`Tier List ${state.lists.length + 1}`);
-    state.lists.push(list);
-    return setActiveList(list.id);
-  }
-  function duplicateList() {
-    ensureLoaded();
-    if (state.lists.length >= MAX_LISTS) return false;
-    const copy = JSON.parse(JSON.stringify(activeList()));
-    copy.id = uid("l");
-    copy.title = `${copy.title} (copy)`.slice(0, MAX_TITLE);
-    copy.tiers.forEach((t) => {
-      t.id = uid("t");
-    });
-    state.lists.push(copy);
-    return setActiveList(copy.id);
-  }
-  function deleteActiveList() {
-    ensureLoaded();
-    const before = JSON.stringify(state);
-    const i = state.lists.findIndex((l) => l.id === state.active);
-    state.lists.splice(i, 1);
-    if (!state.lists.length) state.lists.push(makeList());
-    state.active = state.lists[Math.max(0, i - 1)].id;
-    undoStack.length = 0;
-    undoStack.push(before);
-    scheduleSave();
-    notify();
-    return true;
-  }
-  var ITEM_KEY = /^(card|soul|artifact|text):[A-Za-z0-9_-]{1,40}$/;
-  var MAX_TIERS = 30;
-  var MAX_ITEMS = 3e3;
-  function exportActiveList() {
-    const list = getActiveList();
-    return {
-      v: 1,
-      title: list.title,
-      texts: { ...list.texts },
-      tiers: list.tiers.map((t) => ({ label: t.label, color: t.color, items: t.items.slice() }))
-    };
-  }
-  function importList(data2) {
-    ensureLoaded();
-    if (!data2 || typeof data2 !== "object" || !Array.isArray(data2.tiers)) throw new Error("That code doesn't contain a tier list.");
-    if (state.lists.length >= MAX_LISTS) throw new Error(`You already have ${MAX_LISTS} lists. Delete one first.`);
-    const list = makeList();
-    const textMap = {};
-    Object.entries(data2.texts && typeof data2.texts === "object" ? data2.texts : {}).forEach(([oldId, label]) => {
-      if (typeof label !== "string" || !label.trim()) return;
-      const id = uid("x");
-      textMap[oldId] = id;
-      list.texts[id] = label.trim().slice(0, MAX_TEXT);
-    });
-    let count = 0;
-    const seen = /* @__PURE__ */ new Set();
-    list.tiers = data2.tiers.slice(0, MAX_TIERS).map((t) => {
-      const tier = makeTier(
-        typeof t.label === "string" ? t.label.slice(0, MAX_LABEL) : "?",
-        /^#[0-9a-f]{6}$/i.test(t && t.color) ? t.color.toLowerCase() : "#cfcfcf"
-      );
-      (Array.isArray(t.items) ? t.items : []).forEach((k) => {
-        if (typeof k !== "string" || !ITEM_KEY.test(k) || count >= MAX_ITEMS) return;
-        let key2 = k;
-        if (k.startsWith("text:")) {
-          const id = textMap[k.slice(5)];
-          if (!id) return;
-          key2 = `text:${id}`;
-        }
-        if (seen.has(key2)) return;
-        seen.add(key2);
-        tier.items.push(key2);
-        count += 1;
-      });
-      return tier;
-    });
-    if (!list.tiers.length) list.tiers = DEFAULT_TIERS.map(([l, c]) => makeTier(l, c));
-    let title = typeof data2.title === "string" && data2.title.trim() ? data2.title.trim().slice(0, MAX_TITLE) : "Imported list";
-    const titles = new Set(state.lists.map((l) => l.title));
-    if (titles.has(title)) {
-      let n = 2;
-      while (titles.has(`${title} (${n})`)) n += 1;
-      title = `${title} (${n})`.slice(0, MAX_TITLE);
-    }
-    list.title = title;
-    state.lists.push(list);
-    setActiveList(list.id);
-    return title;
-  }
-  function listUsesKind(kind) {
-    return getActiveList().tiers.some((t) => t.items.some((k) => k.startsWith(kind + ":")));
-  }
-  function undo() {
-    ensureLoaded();
-    const prev = undoStack.pop();
-    if (!prev) return false;
-    state = sanitize(JSON.parse(prev));
-    scheduleSave();
-    notify();
-    return true;
-  }
-
-  // packages/misc/tier-list/items.js
-  var cards = [];
-  var byId = /* @__PURE__ */ new Map();
-  var nameCache = /* @__PURE__ */ new Map();
-  var readyListeners = /* @__PURE__ */ new Set();
-  var HIDDEN_BY_DEFAULT = /* @__PURE__ */ new Set(["TOKEN", "GENERATED", "STORY"]);
-  var RARITY_COLORS = {
-    BASE: "#9a9a9a",
-    COMMON: "#e8e8e8",
-    RARE: "#58b4ff",
-    EPIC: "#c86bff",
-    LEGENDARY: "#ffcc00",
-    DETERMINATION: "#ff3030",
-    TOKEN: "#6b6b6b",
-    GENERATED: "#6b6b6b",
-    STORY: "#6b6b6b"
-  };
-  function setCards(list) {
-    if (!Array.isArray(list) || !list.length) return false;
-    cards = list.filter((c) => c && c.id !== void 0 && c.id !== null);
-    byId = new Map(cards.map((c) => [String(c.id), c]));
-    nameCache.clear();
-    readyListeners.forEach((fn) => {
-      try {
-        fn();
-      } catch (e) {
-      }
-    });
-    return true;
-  }
-  function readCachedCards() {
-    try {
-      const raw = getPageWindow().localStorage.getItem("allCards");
-      return raw ? JSON.parse(raw) : null;
-    } catch (e) {
-      return null;
-    }
-  }
-  function initItemData(plugin) {
-    if (!setCards(getAllCards())) setCards(readCachedCards());
-    const cachedArtifacts = readArtifactCache();
-    if (cachedArtifacts) setArtifacts(cachedArtifacts.list);
-    if (plugin && plugin.events) {
-      plugin.events.on("allCardsReady", (list) => setCards(list));
-    }
-  }
-  function onCardsReady(fn) {
-    readyListeners.add(fn);
-    return () => readyListeners.delete(fn);
-  }
-  function hasCards() {
-    return cards.length > 0;
-  }
-  function getCard(id) {
-    return byId.get(String(id)) || null;
-  }
-  function stripHtml(text) {
-    const el2 = document.createElement("div");
-    el2.innerHTML = String(text);
-    return el2.textContent.trim();
-  }
-  function cardName(card) {
-    const cached = nameCache.get(card.id);
-    if (cached) return cached;
-    let name = "";
-    try {
-      const $2 = getPageWindow().$;
-      if ($2 && $2.i18n) {
-        const key2 = `card-name-${card.fixedId || card.id}`;
-        const value = $2.i18n(key2, 1);
-        if (value && value !== key2) name = stripHtml(value);
-      }
-    } catch (e) {
-    }
-    if (!name) name = stripHtml(card.name || `Card ${card.id}`);
-    nameCache.set(card.id, name);
-    return name;
-  }
-  function cardImage(card) {
-    return card && card.image ? `/images/cards/${card.image}.png` : "";
-  }
-  function cardKey(card) {
-    return `card:${card.id}`;
-  }
-  var SOULS = ["DETERMINATION", "PATIENCE", "BRAVERY", "INTEGRITY", "PERSEVERANCE", "KINDNESS", "JUSTICE"];
-  var SOUL_COLORS3 = {
-    DETERMINATION: "#ff0000",
-    PATIENCE: "#41fcff",
-    BRAVERY: "#fca500",
-    INTEGRITY: "#0064ff",
-    PERSEVERANCE: "#d535d9",
-    KINDNESS: "#00c000",
-    JUSTICE: "#ffff00"
-  };
-  function i18n(key2, ...args) {
-    try {
-      const $2 = getPageWindow().$;
-      if ($2 && $2.i18n) {
-        const value = $2.i18n(key2, ...args);
-        if (value && value !== key2) return stripHtml(value);
-      }
-    } catch (e) {
-    }
-    return "";
-  }
-  function soulName(soul) {
-    return i18n(`soul-${soul.toLowerCase()}`, 1) || soul.charAt(0) + soul.slice(1).toLowerCase();
-  }
-  var ARTIFACT_CACHE_KEY = "wizascript.tierlist.artifacts";
-  var ARTIFACT_CACHE_MS = 24 * 60 * 60 * 1e3;
-  var artifacts = [];
-  var artifactsById = /* @__PURE__ */ new Map();
-  var artifactLoad = null;
-  function setArtifacts(list) {
-    if (!Array.isArray(list) || !list.length) return false;
-    artifacts = list.filter((a) => a && a.id !== void 0 && a.id !== null).map((a) => ({ id: a.id, name: a.name, image: a.image, rarity: a.rarity }));
-    artifactsById = new Map(artifacts.map((a) => [String(a.id), a]));
-    return true;
-  }
-  function readArtifactCache() {
-    try {
-      const raw = GM_getValue(ARTIFACT_CACHE_KEY, null);
-      return raw ? JSON.parse(raw) : null;
-    } catch (e) {
-      return null;
-    }
-  }
-  function loadArtifacts() {
-    if (artifactLoad) return artifactLoad;
-    const cached = readArtifactCache();
-    if (cached && setArtifacts(cached.list) && Date.now() - cached.time < ARTIFACT_CACHE_MS) {
-      artifactLoad = Promise.resolve(true);
-      return artifactLoad;
-    }
-    artifactLoad = fetch("/DecksConfig", { credentials: "same-origin" }).then((r) => r.json()).then((data2) => {
-      const raw = data2 && data2.allArtifacts;
-      const list = typeof raw === "string" ? JSON.parse(raw) : raw;
-      if (!setArtifacts(list)) return artifacts.length > 0;
-      try {
-        GM_setValue(ARTIFACT_CACHE_KEY, JSON.stringify({ time: Date.now(), list: artifacts }));
-      } catch (e) {
-      }
-      return true;
-    }).catch(() => artifacts.length > 0).then((ok) => {
-      if (!ok) artifactLoad = null;
-      return ok;
-    });
-    return artifactLoad;
-  }
-  function hasArtifacts() {
-    return artifacts.length > 0;
-  }
-  function artifactName(a) {
-    return i18n(`artifact-name-${a.id}`, 1) || stripHtml(a.name || `Artifact ${a.id}`);
-  }
-  function resolveItem(key2) {
-    const str = String(key2);
-    const at = str.indexOf(":");
-    const kind = str.slice(0, at);
-    const id = str.slice(at + 1);
-    if (kind === "card") {
-      const card = getCard(id);
-      if (card) {
-        return { key: key2, kind, card, label: cardName(card), image: cardImage(card), rarity: card.rarity };
-      }
-      return { key: key2, kind, card: null, label: "Unknown card", image: "", rarity: null };
-    }
-    if (kind === "soul" && SOULS.includes(id)) {
-      return { key: key2, kind, card: null, label: soulName(id), image: `/images/souls/${id}.png`, rarity: null, color: SOUL_COLORS3[id] };
-    }
-    if (kind === "artifact") {
-      const a = artifactsById.get(id);
-      if (a) return { key: key2, kind, card: null, label: artifactName(a), image: a.image ? `/images/artifacts/${a.image}.png` : "", rarity: a.rarity };
-      return { key: key2, kind, card: null, label: "Artifact", image: "", rarity: null };
-    }
-    if (kind === "text") {
-      const label = getTextLabel(id);
-      return { key: key2, kind, card: null, label: label === null ? "(deleted text)" : label, image: "", rarity: null, text: true };
-    }
-    return { key: key2, kind, card: null, label: "Unknown item", image: "", rarity: null };
-  }
-  function searchSouls(text) {
-    const q = String(text || "").trim().toLowerCase();
-    return SOULS.filter((s) => !q || soulName(s).toLowerCase().includes(q) || s.toLowerCase().includes(q)).map((s) => `soul:${s}`);
-  }
-  function searchArtifacts(text) {
-    const q = String(text || "").trim().toLowerCase();
-    return artifacts.filter((a) => !q || artifactName(a).toLowerCase().includes(q) || String(a.name || "").toLowerCase().includes(q)).sort((a, b) => artifactName(a).localeCompare(artifactName(b))).map((a) => `artifact:${a.id}`);
-  }
-  function isFilterActive(f) {
-    return !!(String(f.text || "").trim() || f.rarities.size || f.tribes || f.monster || f.spell || f.sets.size);
-  }
-  function searchCards(f, limit = 150) {
-    if (!isFilterActive(f)) return { results: [], total: 0 };
-    const text = String(f.text || "").trim().toLowerCase();
-    const matches = cards.filter((c) => {
-      if (f.rarities.size) {
-        if (!f.rarities.has(c.rarity)) return false;
-      } else if (HIDDEN_BY_DEFAULT.has(c.rarity)) {
-        return false;
-      }
-      if (f.monster || f.spell) {
-        const isSpell = Number(c.typeCard) === 1;
-        if (!(f.monster && !isSpell || f.spell && isSpell)) return false;
-      }
-      if (f.tribes && !(Number(c.typeCard) !== 1 && Array.isArray(c.tribes) && c.tribes.length)) return false;
-      if (f.sets.size && !f.sets.has(c.extension)) return false;
-      if (text) {
-        const local = cardName(c).toLowerCase();
-        const english = stripHtml(c.name || "").toLowerCase();
-        if (!local.includes(text) && !english.includes(text)) return false;
-      }
-      return true;
-    });
-    matches.sort((a, b) => Number(a.cost) - Number(b.cost) || cardName(a).localeCompare(cardName(b)));
-    return { results: matches.slice(0, limit), total: matches.length };
-  }
-
-  // packages/misc/tier-list/window.js
-  var MIN_W = 400;
-  var MIN_H = 340;
-  var DEFAULT_W = 680;
-  var DEFAULT_H = 500;
-  var MIN_TILE = 52;
-  var EDGES = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
-  function viewport() {
-    return { w: document.documentElement.clientWidth || window.innerWidth, h: document.documentElement.clientHeight || window.innerHeight };
-  }
-  function clampGeometry(g) {
-    const vp = viewport();
-    const width = Math.max(Math.min(MIN_W, vp.w), Math.min(g.width, vp.w));
-    const height = Math.max(Math.min(MIN_H, vp.h), Math.min(g.height, vp.h));
-    const left = Math.max(0, Math.min(g.left, vp.w - width));
-    const top = Math.max(0, Math.min(g.top, vp.h - height));
-    return { left, top, width, height };
-  }
-  function defaultGeometry() {
-    const vp = viewport();
-    const width = Math.min(DEFAULT_W, vp.w);
-    const height = Math.min(DEFAULT_H, vp.h);
-    return { left: Math.round((vp.w - width) / 2), top: Math.round((vp.h - height) / 2), width, height };
-  }
-  function buildWindow({ signal, getPreferredTile, onTitleChange }) {
-    const saved = loadWindowState() || {};
-    const ui = {
-      geometry: clampGeometry(saved.geometry || defaultGeometry()),
-      maximised: !!saved.maximised,
-      pickerOpen: saved.pickerOpen !== false
-    };
-    const root = document.createElement("div");
-    root.className = "wz-tl";
-    const header = document.createElement("div");
-    header.className = "wz-tl-header";
-    const title = document.createElement("input");
-    title.type = "text";
-    title.className = "wz-tl-title";
-    title.maxLength = 60;
-    title.spellcheck = false;
-    title.title = "Click to rename this list";
-    title.addEventListener("change", () => onTitleChange(title.value), { signal });
-    title.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") title.blur();
-    }, { signal });
-    const buttons = document.createElement("span");
-    buttons.style.cssText = "display:flex;gap:4px;flex:none;";
-    const body = document.createElement("div");
-    body.className = "wz-tl-body";
-    const grip = document.createElement("div");
-    grip.className = "wz-tl-grip";
-    grip.title = "Drag to move, double-click to fill the screen";
-    header.append(title, grip, buttons);
-    root.append(header, body);
-    EDGES.forEach((edge) => {
-      const h = document.createElement("div");
-      h.className = `wz-tl-resize wz-tl-resize-${edge}`;
-      h.dataset.edge = edge;
-      root.appendChild(h);
-    });
-    function persist() {
-      saveWindowState({ geometry: ui.geometry, maximised: ui.maximised, pickerOpen: ui.pickerOpen });
-    }
-    function updateTileSize() {
-      const width = ui.maximised ? viewport().w : ui.geometry.width;
-      const preferred = getPreferredTile();
-      const tile = Math.round(Math.max(MIN_TILE, Math.min(preferred, (width - 120) / 9)));
-      root.style.setProperty("--wz-tl-tile", tile + "px");
-    }
-    function apply2() {
-      const g = ui.geometry;
-      root.style.left = g.left + "px";
-      root.style.top = g.top + "px";
-      root.style.width = g.width + "px";
-      root.style.height = g.height + "px";
-      root.classList.toggle("wz-tl-max", ui.maximised);
-      updateTileSize();
-    }
-    function setMaximised(value) {
-      ui.maximised = !!value;
-      apply2();
-      persist();
-      onMaximiseChange.forEach((fn) => fn(ui.maximised));
-    }
-    const onMaximiseChange = /* @__PURE__ */ new Set();
-    header.addEventListener("pointerdown", (e) => {
-      if (e.button !== 0 || ui.maximised) return;
-      if (e.target.closest("input, button, select")) return;
-      e.preventDefault();
-      const start = { x: e.clientX, y: e.clientY, left: ui.geometry.left, top: ui.geometry.top };
-      header.setPointerCapture(e.pointerId);
-      header.style.cursor = "grabbing";
-      const move = (ev) => {
-        ui.geometry = clampGeometry({ ...ui.geometry, left: start.left + ev.clientX - start.x, top: start.top + ev.clientY - start.y });
-        apply2();
-      };
-      const end = () => {
-        header.style.cursor = "";
-        header.removeEventListener("pointermove", move);
-        header.removeEventListener("pointerup", end);
-        header.removeEventListener("pointercancel", end);
-        persist();
-      };
-      header.addEventListener("pointermove", move, { signal });
-      header.addEventListener("pointerup", end, { signal });
-      header.addEventListener("pointercancel", end, { signal });
-    }, { signal });
-    header.addEventListener("dblclick", (e) => {
-      if (e.target.closest("input, button, select")) return;
-      setMaximised(!ui.maximised);
-    }, { signal });
-    root.addEventListener("pointerdown", (e) => {
-      const handle = e.target.closest(".wz-tl-resize");
-      if (!handle || e.button !== 0 || ui.maximised) return;
-      e.preventDefault();
-      e.stopPropagation();
-      const edge = handle.dataset.edge;
-      const start = { x: e.clientX, y: e.clientY, ...ui.geometry };
-      const vp = viewport();
-      handle.setPointerCapture(e.pointerId);
-      const move = (ev) => {
-        const dx = ev.clientX - start.x;
-        const dy = ev.clientY - start.y;
-        let { left, top, width, height } = start;
-        if (edge.includes("e")) width = Math.min(start.width + dx, vp.w - start.left);
-        if (edge.includes("s")) height = Math.min(start.height + dy, vp.h - start.top);
-        if (edge.includes("w")) {
-          width = Math.min(start.width - dx, start.left + start.width);
-          width = Math.max(width, MIN_W);
-          left = start.left + start.width - width;
-        }
-        if (edge.includes("n")) {
-          height = Math.min(start.height - dy, start.top + start.height);
-          height = Math.max(height, MIN_H);
-          top = start.top + start.height - height;
-        }
-        ui.geometry = clampGeometry({ left, top, width: Math.max(MIN_W, width), height: Math.max(MIN_H, height) });
-        apply2();
-      };
-      const end = () => {
-        handle.removeEventListener("pointermove", move);
-        handle.removeEventListener("pointerup", end);
-        handle.removeEventListener("pointercancel", end);
-        persist();
-      };
-      handle.addEventListener("pointermove", move, { signal });
-      handle.addEventListener("pointerup", end, { signal });
-      handle.addEventListener("pointercancel", end, { signal });
-    }, { signal });
-    window.addEventListener("resize", () => {
-      ui.geometry = clampGeometry(ui.geometry);
-      apply2();
-    }, { signal });
-    apply2();
-    return {
-      root,
-      header,
-      body,
-      buttons,
-      title,
-      isMaximised: () => ui.maximised,
-      setMaximised,
-      onMaximiseChange: (fn) => onMaximiseChange.add(fn),
-      isPickerOpen: () => ui.pickerOpen,
-      setPickerOpen(value) {
-        ui.pickerOpen = !!value;
-        persist();
-      },
-      refreshTileSize: updateTileSize
-    };
-  }
-
-  // packages/misc/tier-list/tiers-view.js
-  function buildTile(key2, { placed = false } = {}) {
-    const item = resolveItem(key2);
-    const tile = document.createElement("div");
-    tile.className = "wz-tl-tile";
-    tile.dataset.key = key2;
-    tile.tabIndex = -1;
-    if (item.image) tile.style.backgroundImage = `url("${item.image}")`;
-    else tile.classList.add("wz-tl-noimg");
-    if (item.color) tile.style.setProperty("--wz-tl-rarity", item.color);
-    else if (item.rarity && RARITY_COLORS[item.rarity]) tile.style.setProperty("--wz-tl-rarity", RARITY_COLORS[item.rarity]);
-    if (item.kind === "soul") tile.classList.add("wz-tl-soul");
-    if (item.text) {
-      tile.classList.add("wz-tl-text");
-      tile.title = "Double-click to edit";
-    }
-    if (placed) tile.classList.add("wz-tl-placed");
-    const name = document.createElement("div");
-    name.className = "wz-tl-tile-name";
-    name.textContent = item.label;
-    tile.appendChild(name);
-    return tile;
-  }
-  function createTiersView({ body, signal }) {
-    const container = document.createElement("div");
-    container.className = "wz-tl-tiers";
-    body.appendChild(container);
-    let editor = null;
-    function closeEditor() {
-      if (editor) editor.el.remove();
-      editor = null;
-    }
-    function openEditor(tierId, anchor) {
-      closeEditor();
-      const list = getActiveList();
-      const index = list.tiers.findIndex((t) => t.id === tierId);
-      const tier = list.tiers[index];
-      if (!tier) return;
-      const el2 = document.createElement("div");
-      el2.className = "wz-tl-editor";
-      el2.dataset.tierId = tierId;
-      const name = document.createElement("input");
-      name.type = "text";
-      name.maxLength = 40;
-      name.value = tier.label;
-      name.placeholder = "Tier name";
-      const commitName = () => renameTier(tierId, name.value);
-      name.addEventListener("change", commitName);
-      name.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          commitName();
-          closeEditor();
-        }
-        if (e.key === "Escape") closeEditor();
-      });
-      const swatches = document.createElement("div");
-      swatches.className = "wz-tl-swatches";
-      TIER_COLORS.forEach((color) => {
-        const s = document.createElement("div");
-        s.className = "wz-tl-swatch" + (color === tier.color ? " wz-tl-active" : "");
-        s.style.background = color;
-        s.title = color;
-        s.addEventListener("click", () => {
-          recolorTier(tierId, color);
-          swatches.querySelectorAll(".wz-tl-swatch").forEach((n) => n.classList.toggle("wz-tl-active", n === s));
-          custom.value = color;
-        });
-        swatches.appendChild(s);
-      });
-      const custom = document.createElement("input");
-      custom.type = "color";
-      custom.value = tier.color;
-      custom.title = "Custom colour";
-      custom.addEventListener("change", () => recolorTier(tierId, custom.value));
-      swatches.appendChild(custom);
-      const grid = document.createElement("div");
-      grid.className = "wz-tl-editor-buttons";
-      const btn = (label, fn, opts = {}) => {
-        const b = document.createElement("button");
-        b.type = "button";
-        b.className = "wz-tl-btn";
-        b.textContent = label;
-        if (opts.disabled) b.disabled = true;
-        b.addEventListener("click", () => {
-          commitName();
-          fn();
-          if (opts.close) closeEditor();
-          else reopen();
-        });
-        grid.appendChild(b);
-        return b;
-      };
-      const reopen = () => {
-        const row = container.querySelector(`.wz-tl-row[data-tier-id="${tierId}"]`);
-        if (row) openEditor(tierId, row);
-        else closeEditor();
-      };
-      btn("\u25B2 Move up", () => moveTier(tierId, -1), { disabled: index === 0 });
-      btn("\u25BC Move down", () => moveTier(tierId, 1), { disabled: index === list.tiers.length - 1 });
-      btn("+ Row above", () => addTier(index), { close: true });
-      btn("+ Row below", () => addTier(index + 1), { close: true });
-      btn("Clear row", () => clearTier(tierId), { disabled: !tier.items.length });
-      const del = btn("Delete row", () => deleteTier(tierId), { close: true });
-      del.classList.add("wz-tl-danger");
-      btn("Done", () => {
-      }, { close: true }).style.gridColumn = "1 / -1";
-      el2.append(name, swatches, grid);
-      body.appendChild(el2);
-      const bodyRect = body.getBoundingClientRect();
-      const aRect = anchor.getBoundingClientRect();
-      let top = aRect.bottom - bodyRect.top + 2;
-      if (top + el2.offsetHeight > body.clientHeight) top = Math.max(2, aRect.top - bodyRect.top - el2.offsetHeight - 2);
-      el2.style.top = Math.max(2, top) + "px";
-      el2.style.left = "6px";
-      editor = { el: el2, tierId };
-      name.focus();
-      name.select();
-    }
-    function render() {
-      const list = getActiveList();
-      const scroll = container.scrollTop;
-      container.innerHTML = "";
-      list.tiers.forEach((tier) => {
-        const row = document.createElement("div");
-        row.className = "wz-tl-row";
-        row.dataset.tierId = tier.id;
-        const label = document.createElement("div");
-        label.className = "wz-tl-row-label";
-        label.style.background = tier.color;
-        label.textContent = tier.label;
-        label.title = "Click to edit this tier";
-        label.addEventListener("click", () => openEditor(tier.id, row));
-        const items = document.createElement("div");
-        items.className = "wz-tl-row-items";
-        tier.items.forEach((key2) => items.appendChild(buildTile(key2)));
-        const tools = document.createElement("div");
-        tools.className = "wz-tl-row-tools";
-        const gear = document.createElement("button");
-        gear.type = "button";
-        gear.textContent = "\u2699";
-        gear.title = "Edit this tier";
-        gear.addEventListener("click", () => openEditor(tier.id, row));
-        const up = document.createElement("button");
-        up.type = "button";
-        up.textContent = "\u25B2";
-        up.title = "Move tier up";
-        up.addEventListener("click", () => moveTier(tier.id, -1));
-        const down = document.createElement("button");
-        down.type = "button";
-        down.textContent = "\u25BC";
-        down.title = "Move tier down";
-        down.addEventListener("click", () => moveTier(tier.id, 1));
-        tools.append(up, gear, down);
-        row.append(label, items, tools);
-        container.appendChild(row);
-      });
-      const add = document.createElement("button");
-      add.type = "button";
-      add.className = "wz-tl-btn wz-tl-add-row";
-      add.textContent = "+ Add tier";
-      add.addEventListener("click", () => addTier());
-      container.appendChild(add);
-      container.scrollTop = scroll;
-      if (editor && !list.tiers.some((t) => t.id === editor.tierId)) closeEditor();
-    }
-    document.addEventListener("pointerdown", (e) => {
-      if (!editor) return;
-      if (editor.el.contains(e.target)) return;
-      if (e.target.closest(".wz-tl-row-label, .wz-tl-row-tools")) return;
-      closeEditor();
-    }, { signal, capture: true });
-    return { render, closeEditor, element: container };
-  }
-
-  // packages/misc/tier-list/picker.js
-  var RESULT_LIMIT = 150;
-  var SEARCH_DELAY_MS = 150;
-  var RARITY_TOGGLES = [
-    ["BASE", "images/rarity/BASE_BASE.png", "Base"],
-    ["TOKEN", "images/rarity/BASE_TOKEN.png", "Token"],
-    ["COMMON", "images/rarity/BASE_COMMON.png", "Common"],
-    ["RARE", "images/rarity/BASE_RARE.png", "Rare"],
-    ["EPIC", "images/rarity/BASE_EPIC.png", "Epic"],
-    ["LEGENDARY", "images/rarity/BASE_LEGENDARY.png", "Legendary"],
-    ["DETERMINATION", "images/rarity/BASE_DETERMINATION.png", "Determination"],
-    ["STORY", "images/rarity/BASE_STORY.png", "Story"]
-  ];
-  var KIND_TOGGLES = [
-    ["tribes", "images/tribes/ALL.png", "Monsters with tribes"],
-    ["monster", "images/souls/MONSTER.png", "Monsters"],
-    ["spell", "images/artifacts/Arcane_Scepter.png", "Spells"]
-  ];
-  var SET_TOGGLES = [
-    ["BASE", "images/rarity/BASE.png", "Undertale cards"],
-    ["DELTARUNE", "images/rarity/DELTARUNE.png", "Deltarune cards"],
-    ["UTY", "images/rarity/UTY.png", "Undertale Yellow cards"]
-  ];
-  var TYPES = [
-    ["cards", "Cards"],
-    ["souls", "Souls"],
-    ["artifacts", "Artifacts"],
-    ["text", "Text"]
-  ];
-  function createPicker({ body, signal }) {
-    const panel = document.createElement("div");
-    panel.className = "wz-tl-picker";
-    let type = "cards";
-    const state2 = { rarities: /* @__PURE__ */ new Set(), sets: /* @__PURE__ */ new Set(), tribes: false, monster: false, spell: false };
-    const toggles2 = [];
-    const searchText = { cards: "", souls: "", artifacts: "", text: "" };
-    const filters = document.createElement("div");
-    filters.className = "wz-tl-filters";
-    const tabs = document.createElement("div");
-    tabs.className = "wz-tl-type-tabs";
-    const tabButtons = TYPES.map(([value, label]) => {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "wz-tl-type-tab";
-      b.dataset.type = value;
-      b.textContent = label;
-      b.addEventListener("click", () => setType(value), { signal });
-      tabs.appendChild(b);
-      return b;
-    });
-    const search = document.createElement("input");
-    search.type = "text";
-    search.spellcheck = false;
-    const clear = document.createElement("button");
-    clear.type = "button";
-    clear.className = "wz-tl-btn";
-    const searchRow = document.createElement("div");
-    searchRow.className = "wz-tl-search-row";
-    searchRow.append(search, clear);
-    function makeToggle([value, src, title], isOn2, flip) {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "wz-tl-toggle";
-      b.title = title;
-      b.dataset.filter = value;
-      const img = document.createElement("img");
-      img.src = "/" + src;
-      img.alt = title;
-      img.draggable = false;
-      img.addEventListener("error", () => {
-        img.remove();
-        b.textContent = title;
-        b.classList.add("wz-tl-toggle-text");
-      }, { once: true });
-      b.appendChild(img);
-      b.addEventListener("click", () => {
-        flip(value);
-        render();
-      }, { signal });
-      toggles2.push({ el: b, isOn: () => isOn2(value) });
-      return b;
-    }
-    function group(defs, isOn2, flip) {
-      const g = document.createElement("div");
-      g.className = "wz-tl-toggle-group";
-      defs.forEach((d) => g.appendChild(makeToggle(d, isOn2, flip)));
-      return g;
-    }
-    const flipSet = (set) => (v) => set.has(v) ? set.delete(v) : set.add(v);
-    const cardToggles = document.createElement("div");
-    cardToggles.className = "wz-tl-card-toggles";
-    cardToggles.append(
-      group(RARITY_TOGGLES, (v) => state2.rarities.has(v), flipSet(state2.rarities)),
-      group(KIND_TOGGLES, (v) => state2[v], (v) => {
-        state2[v] = !state2[v];
-      }),
-      group(SET_TOGGLES, (v) => state2.sets.has(v), flipSet(state2.sets))
-    );
-    filters.append(tabs, searchRow, cardToggles);
-    const hint = document.createElement("div");
-    hint.className = "wz-tl-hint";
-    const results = document.createElement("div");
-    results.className = "wz-tl-results";
-    panel.append(filters, hint, results);
-    body.appendChild(panel);
-    function cardFilters() {
-      return { text: search.value, ...state2 };
-    }
-    function setType(value) {
-      searchText[type] = search.value;
-      type = value;
-      search.value = searchText[type];
-      if (type === "artifacts" && !hasArtifacts()) {
-        loadArtifacts().then(() => {
-          if (type === "artifacts") render();
-        });
-      }
-      render();
-      search.focus();
-    }
-    function syncControls() {
-      tabButtons.forEach((b) => b.classList.toggle("wz-tl-active", b.dataset.type === type));
-      cardToggles.style.visibility = type === "cards" ? "" : "hidden";
-      toggles2.forEach((t) => t.el.classList.toggle("wz-tl-on", t.isOn()));
-      if (type === "text") {
-        search.placeholder = "New text item\u2026";
-        search.maxLength = MAX_TEXT;
-        clear.textContent = "Add";
-        clear.title = "Add this text as an item you can rank";
-        clear.disabled = !search.value.trim();
-      } else {
-        search.placeholder = type === "cards" ? "Search cards\u2026" : type === "souls" ? "Search souls\u2026" : "Search artifacts\u2026";
-        search.removeAttribute("maxLength");
-        clear.textContent = "Clear";
-        clear.title = "Clear the search and filters";
-        clear.disabled = type === "cards" ? !isFilterActive(cardFilters()) : !search.value;
-      }
-    }
-    function showKeys(keys, { deletable = false } = {}) {
-      const frag = document.createDocumentFragment();
-      keys.forEach((key2) => {
-        const tile = buildTile(key2, { placed: isPlaced(key2) });
-        if (deletable) {
-          const del = document.createElement("button");
-          del.type = "button";
-          del.className = "wz-tl-tile-del";
-          del.textContent = "\xD7";
-          del.title = "Delete this text item";
-          del.addEventListener("click", (e) => {
-            e.stopPropagation();
-            deleteText(key2.slice(5));
-          });
-          tile.appendChild(del);
-        }
-        frag.appendChild(tile);
-      });
-      results.appendChild(frag);
-    }
-    function renderCards() {
-      if (!hasCards()) {
-        hint.textContent = "No card data yet. Open the Decks or Crafting page once, then come back.";
-        return;
-      }
-      const f = cardFilters();
-      if (!isFilterActive(f)) {
-        hint.textContent = "Search or tick a filter to list cards, then drag them into a tier.";
-        return;
-      }
-      const { results: cards2, total } = searchCards(f, RESULT_LIMIT);
-      if (!total) {
-        hint.textContent = "No cards match.";
-        return;
-      }
-      hint.textContent = total > cards2.length ? `Showing ${cards2.length} of ${total} cards. Narrow the search to see the rest.` : `${total} card${total === 1 ? "" : "s"}. Drag one into a tier.`;
-      showKeys(cards2.map(cardKey));
-    }
-    function renderSouls() {
-      const keys = searchSouls(search.value);
-      hint.textContent = keys.length ? "Drag a soul into a tier." : "No souls match.";
-      showKeys(keys);
-    }
-    function renderArtifacts() {
-      if (!hasArtifacts()) {
-        hint.textContent = "Loading artifacts\u2026 (if this stays, open the Decks page once, then try again)";
-        return;
-      }
-      const keys = searchArtifacts(search.value);
-      hint.textContent = keys.length ? `${keys.length} artifact${keys.length === 1 ? "" : "s"}. Drag one into a tier.` : "No artifacts match.";
-      showKeys(keys);
-    }
-    function renderText() {
-      const keys = getTextIds().map((id) => `text:${id}`);
-      hint.textContent = keys.length ? "Drag a text item into a tier. Double-click one to edit it." : "Type a label (e.g. an archetype) and press Add to make a text item.";
-      showKeys(keys, { deletable: true });
-    }
-    function render() {
-      results.innerHTML = "";
-      syncControls();
-      if (type === "cards") renderCards();
-      else if (type === "souls") renderSouls();
-      else if (type === "artifacts") renderArtifacts();
-      else renderText();
-    }
-    function addTextItem() {
-      if (addText(search.value)) {
-        search.value = "";
-        render();
-      }
-    }
-    let searchTimer = null;
-    search.addEventListener("input", () => {
-      if (type === "text") {
-        syncControls();
-        return;
-      }
-      clearTimeout(searchTimer);
-      searchTimer = setTimeout(render, SEARCH_DELAY_MS);
-    }, { signal });
-    search.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && type === "text") {
-        addTextItem();
-        return;
-      }
-      if (e.key === "Escape" && search.value) {
-        search.value = "";
-        render();
-      }
-    }, { signal });
-    clear.addEventListener("click", () => {
-      if (type === "text") {
-        addTextItem();
-        return;
-      }
-      search.value = "";
-      if (type === "cards") {
-        state2.rarities.clear();
-        state2.sets.clear();
-        state2.tribes = state2.monster = state2.spell = false;
-      }
-      render();
-    }, { signal });
-    const stopListening = onCardsReady(() => {
-      if (type === "cards") render();
-    });
-    signal.addEventListener("abort", stopListening);
-    render();
-    return {
-      element: panel,
-      render,
-      setOpen(open) {
-        panel.classList.toggle("wz-tl-hidden", !open);
-      },
-      focusSearch() {
-        search.focus();
-      }
-    };
-  }
-
-  // packages/misc/tier-list/drag.js
-  var DRAG_THRESHOLD = 6;
-  function insertionIndex(tiles, x, y) {
-    for (let i = 0; i < tiles.length; i++) {
-      const r = tiles[i].getBoundingClientRect();
-      if (y < r.top) return i;
-      if (y <= r.bottom && x < r.left + r.width / 2) return i;
-    }
-    return tiles.length;
-  }
-  function attachDrag({ root, signal, onDrop, onDragStart, pageItemKey: pageItemKey2, buildGhost }) {
-    let pending = null;
-    let active = null;
-    let suppressClick = false;
-    function targetAt(x, y) {
-      const el2 = document.elementFromPoint(x, y);
-      if (!el2 || !root.contains(el2)) return { type: "outside" };
-      const row = el2.closest(".wz-tl-row");
-      if (row) return { type: "tier", tierId: row.dataset.tierId, rowItems: row.querySelector(".wz-tl-row-items") };
-      if (el2.closest(".wz-tl-picker")) return { type: "picker" };
-      return { type: "none" };
-    }
-    function clearHighlights() {
-      if (!active) return;
-      if (active.marker) active.marker.remove();
-      active.marker = null;
-      root.querySelectorAll(".wz-tl-drop-in").forEach((n) => n.classList.remove("wz-tl-drop-in"));
-      active.ghost.classList.remove("wz-tl-ghost-remove");
-    }
-    function update(x, y) {
-      active.ghost.style.left = x - active.offsetX + "px";
-      active.ghost.style.top = y - active.offsetY + "px";
-      const t = targetAt(x, y);
-      clearHighlights();
-      active.target = t;
-      if (t.type === "tier") {
-        const tiles = [...t.rowItems.querySelectorAll(".wz-tl-tile")].filter((n) => n !== active.tile);
-        t.index = insertionIndex(tiles, x, y);
-        const marker = document.createElement("div");
-        marker.className = "wz-tl-marker";
-        if (t.index < tiles.length) t.rowItems.insertBefore(marker, tiles[t.index]);
-        else t.rowItems.appendChild(marker);
-        active.marker = marker;
-      } else if ((t.type === "picker" || t.type === "outside") && active.from.type === "tier") {
-        active.ghost.classList.add("wz-tl-ghost-remove");
-        if (t.type === "picker") {
-          const picker = root.querySelector(".wz-tl-picker");
-          if (picker) picker.classList.add("wz-tl-drop-in");
-        }
-      }
-    }
-    function begin(x, y) {
-      const { tile, key: key2, from, offsetX, offsetY } = pending;
-      const fromPage = from.type === "page";
-      const ghost = fromPage ? buildGhost(key2) : tile.cloneNode(true);
-      ghost.classList.add("wz-tl-ghost");
-      ghost.classList.remove("wz-tl-placed");
-      const size = getComputedStyle(root).getPropertyValue("--wz-tl-tile");
-      ghost.style.setProperty("--wz-tl-tile", size);
-      if (fromPage) {
-        ghost.style.width = size;
-        ghost.style.height = `calc(${size} * 0.8)`;
-      } else {
-        const rect = tile.getBoundingClientRect();
-        ghost.style.width = rect.width + "px";
-        ghost.style.height = rect.height + "px";
-      }
-      ghost.style.zIndex = String(Z_FLOATING);
-      document.body.appendChild(ghost);
-      if (tile) tile.classList.add("wz-tl-dragging");
-      active = { tile, key: key2, from, ghost, offsetX, offsetY, target: null, marker: null };
-      pending = null;
-      if (onDragStart) onDragStart();
-      update(x, y);
-    }
-    function finish(cancelled) {
-      if (!active) return;
-      const { key: key2, from, target, tile, ghost } = active;
-      clearHighlights();
-      ghost.remove();
-      if (tile) tile.classList.remove("wz-tl-dragging");
-      active = null;
-      suppressClick = true;
-      setTimeout(() => {
-        suppressClick = false;
-      }, 0);
-      if (cancelled || !target) return;
-      const clean = target.type === "tier" ? { type: "tier", tierId: target.tierId, index: target.index } : { type: target.type };
-      onDrop({ key: key2, from, target: clean });
-    }
-    document.addEventListener("pointerdown", (e) => {
-      if (e.button !== 0 || !pageItemKey2 || root.contains(e.target)) return;
-      const key2 = pageItemKey2(e.target);
-      if (!key2) return;
-      pending = {
-        tile: null,
-        key: key2,
-        from: { type: "page" },
-        startX: e.clientX,
-        startY: e.clientY,
-        offsetX: 20,
-        offsetY: 20
-      };
-    }, { signal, capture: true });
-    ["dragstart", "selectstart"].forEach((type) => {
-      document.addEventListener(type, (e) => {
-        if (active || pending && pending.from.type === "page") e.preventDefault();
-      }, { signal, capture: true });
-    });
-    root.addEventListener("pointerdown", (e) => {
-      if (e.button !== 0) return;
-      if (e.target.closest(".wz-tl-tile-del, input")) return;
-      const tile = e.target.closest(".wz-tl-tile");
-      if (!tile || !root.contains(tile) || !tile.dataset.key) return;
-      e.preventDefault();
-      const row = tile.closest(".wz-tl-row");
-      const rect = tile.getBoundingClientRect();
-      pending = {
-        tile,
-        key: tile.dataset.key,
-        from: row ? { type: "tier", tierId: row.dataset.tierId } : { type: "picker" },
-        startX: e.clientX,
-        startY: e.clientY,
-        offsetX: e.clientX - rect.left,
-        offsetY: e.clientY - rect.top
-      };
-    }, { signal });
-    document.addEventListener("pointermove", (e) => {
-      if (pending) {
-        if (Math.hypot(e.clientX - pending.startX, e.clientY - pending.startY) < DRAG_THRESHOLD) return;
-        begin(e.clientX, e.clientY);
-      }
-      if (active) {
-        e.preventDefault();
-        update(e.clientX, e.clientY);
-      }
-    }, { signal });
-    document.addEventListener("pointerup", (e) => {
-      pending = null;
-      if (active) {
-        update(e.clientX, e.clientY);
-        finish(false);
-      }
-    }, { signal });
-    document.addEventListener("pointercancel", () => {
-      pending = null;
-      finish(true);
-    }, { signal });
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && active) finish(true);
-    }, { signal });
-    document.addEventListener("click", (e) => {
-      if (!suppressClick) return;
-      suppressClick = false;
-      e.preventDefault();
-      e.stopPropagation();
-    }, { signal, capture: true });
-    return {
-      isDragging: () => !!active,
-      cancel: () => {
-        pending = null;
-        finish(true);
-      }
-    };
-  }
-
-  // packages/misc/tier-list/preview.js
-  var HOLD_MS = 3e3;
-  function attachPreview({ root, signal, isDragging }) {
-    let timer = null;
-    let box = null;
-    let lastX = 0;
-    let lastY = 0;
-    function hide() {
-      clearTimeout(timer);
-      timer = null;
-      if (box) box.remove();
-      box = null;
-    }
-    function position() {
-      if (!box) return;
-      const r = box.getBoundingClientRect();
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
-      let left = lastX + 18;
-      let top = lastY + 12;
-      if (left + r.width > vw - 4) left = Math.max(4, lastX - r.width - 18);
-      if (top + r.height > vh - 4) top = Math.max(4, vh - r.height - 4);
-      box.style.left = left + "px";
-      box.style.top = top + "px";
-    }
-    function render(item) {
-      const el2 = document.createElement("div");
-      el2.className = "wz-tl-preview";
-      const pageWindow2 = getPageWindow();
-      const $2 = pageWindow2.$;
-      if (item.card && typeof pageWindow2.appendCard === "function" && $2) {
-        try {
-          const holder = $2("<div>");
-          pageWindow2.appendCard(JSON.parse(JSON.stringify(item.card)), holder);
-          if (holder.children().length) {
-            el2.appendChild(holder[0]);
-            return el2;
-          }
-        } catch (e) {
-        }
-      }
-      const fallback = document.createElement("div");
-      fallback.className = "wz-tl-preview-fallback";
-      const pic = document.createElement("div");
-      if (item.image) pic.style.backgroundImage = `url("${item.image}")`;
-      else pic.style.display = "none";
-      fallback.append(pic, item.label);
-      el2.appendChild(fallback);
-      return el2;
-    }
-    let overTile = null;
-    let pressed = false;
-    function arm() {
-      clearTimeout(timer);
-      timer = null;
-      const tile = overTile;
-      if (!tile || pressed || isDragging() || box) return;
-      if (tile.classList.contains("wz-tl-text")) return;
-      timer = setTimeout(() => {
-        if (pressed || isDragging() || !tile.isConnected || overTile !== tile) return;
-        const item = resolveItem(tile.dataset.key);
-        box = render(item);
-        box.dataset.key = tile.dataset.key;
-        document.body.appendChild(box);
-        position();
-      }, HOLD_MS);
-    }
-    root.addEventListener("pointerover", (e) => {
-      const tile = e.target.closest(".wz-tl-tile");
-      if (!tile || !tile.dataset.key || tile === overTile) return;
-      hide();
-      overTile = tile;
-      arm();
-    }, { signal });
-    root.addEventListener("pointerout", (e) => {
-      const tile = e.target.closest(".wz-tl-tile");
-      if (!tile || tile !== overTile) return;
-      if (e.relatedTarget && tile.contains(e.relatedTarget)) return;
-      overTile = null;
-      hide();
-    }, { signal });
-    root.addEventListener("pointermove", (e) => {
-      lastX = e.clientX;
-      lastY = e.clientY;
-      position();
-    }, { signal });
-    document.addEventListener("pointerdown", () => {
-      pressed = true;
-      hide();
-    }, { signal, capture: true });
-    document.addEventListener("pointerup", () => {
-      pressed = false;
-      if (overTile && overTile.isConnected) arm();
-      else overTile = null;
-    }, { signal, capture: true });
-    signal.addEventListener("abort", hide);
-    return { hide };
-  }
-
-  // packages/misc/tier-list/index.js
-  var CARD_PAGES = ["/Crafting", "/Decks"];
-  function pageItemKey(target) {
-    if (!matchesPage(CARD_PAGES)) return null;
-    const el2 = target.closest && target.closest(".card[id]");
-    if (!el2 || !getCard(el2.id)) return null;
-    return `card:${el2.id}`;
-  }
-  var CARD_SIZES = { Small: 64, Medium: 88, Large: 120 };
-  var settings2 = null;
-  var mounted2 = null;
-  function preferredTile() {
-    const v = settings2 ? settings2.value("cardSize") : "Medium";
-    return CARD_SIZES[v] || CARD_SIZES.Medium;
-  }
-  function headerButton(label, title) {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "wz-tl-btn";
-    b.textContent = label;
-    b.title = title;
-    return b;
-  }
-  function showTierList() {
-    if (mounted2) return;
-    injectTierListStyle();
-    const controller = new AbortController();
-    const { signal } = controller;
-    const win = buildWindow({
-      signal,
-      getPreferredTile: preferredTile,
-      onTitleChange: (value) => setTitle(value)
-    });
-    const listsBtn = headerButton("Lists \u25BE", "Switch, add, copy or delete tier lists");
-    win.title.after(listsBtn);
-    const undoBtn = headerButton("\u21B6", "Undo");
-    const resetBtn = headerButton("Reset", "Clear every tier back to S\u2013D (click twice)");
-    const pickerBtn = headerButton("Items", "Show or hide the item panel");
-    const maxBtn = headerButton("\u25A1", "Fill the screen");
-    const closeBtn = headerButton("\xD7", "Close");
-    win.buttons.append(undoBtn, resetBtn, pickerBtn, maxBtn, closeBtn);
-    const tiers = createTiersView({ body: win.body, signal });
-    const picker = createPicker({ body: win.body, signal });
-    function syncHeader() {
-      const list = getActiveList();
-      if (document.activeElement !== win.title) win.title.value = list.title;
-      undoBtn.disabled = !canUndo();
-      pickerBtn.classList.toggle("wz-tl-active", win.isPickerOpen());
-      maxBtn.textContent = win.isMaximised() ? "\u2750" : "\u25A1";
-      maxBtn.title = win.isMaximised() ? "Restore the window size" : "Fill the screen";
-    }
-    function renderAll() {
-      tiers.render();
-      picker.render();
-      syncHeader();
-    }
-    undoBtn.addEventListener("click", () => undo(), { signal });
-    let listsMenu = null;
-    function closeListsMenu() {
-      if (listsMenu) listsMenu.remove();
-      listsMenu = null;
-      listsBtn.classList.remove("wz-tl-active");
-    }
-    function openListsMenu() {
-      closeListsMenu();
-      const menu = document.createElement("div");
-      menu.className = "wz-tl-menu";
-      getLists().forEach((l) => {
-        const row = document.createElement("button");
-        row.type = "button";
-        row.className = "wz-tl-menu-item" + (l.active ? " wz-tl-active" : "");
-        row.dataset.listId = l.id;
-        const name = document.createElement("span");
-        name.textContent = l.title;
-        const count = document.createElement("span");
-        count.className = "wz-tl-menu-count";
-        count.textContent = String(l.count);
-        row.append(name, count);
-        row.addEventListener("click", () => {
-          setActiveList(l.id);
-          closeListsMenu();
-        });
-        menu.appendChild(row);
-      });
-      const actions = document.createElement("div");
-      actions.className = "wz-tl-menu-actions";
-      const act = (label, title, fn) => {
-        const b = headerButton(label, title);
-        b.addEventListener("click", fn);
-        actions.appendChild(b);
-        return b;
-      };
-      act("+ New", "Start a new, empty tier list", () => {
-        createList();
-        closeListsMenu();
-      });
-      act("Copy", "Make a copy of this list", () => {
-        duplicateList();
-        closeListsMenu();
-      });
-      const del = act("Delete", "Delete this list (click twice; \u21B6 brings it back)", () => {
-        if (!del.classList.contains("wz-tl-danger")) {
-          del.classList.add("wz-tl-danger");
-          del.textContent = "Sure?";
-          return;
-        }
-        deleteActiveList();
-        closeListsMenu();
-      });
-      act("Share\u2026", "Get a code for this list to send to someone", () => {
-        closeListsMenu();
-        shareList();
-      });
-      act("Import\u2026", "Add a list from a code someone sent you", () => {
-        closeListsMenu();
-        importListDialog();
-      });
-      menu.appendChild(actions);
-      win.root.appendChild(menu);
-      const r = listsBtn.getBoundingClientRect();
-      const rr = win.root.getBoundingClientRect();
-      menu.style.left = Math.max(4, r.left - rr.left) + "px";
-      menu.style.top = r.bottom - rr.top + 4 + "px";
-      listsMenu = menu;
-      listsBtn.classList.add("wz-tl-active");
-    }
-    listsBtn.addEventListener("click", () => listsMenu ? closeListsMenu() : openListsMenu(), { signal });
-    document.addEventListener("pointerdown", (e) => {
-      if (listsMenu && !listsMenu.contains(e.target) && e.target !== listsBtn) closeListsMenu();
-    }, { signal, capture: true });
-    async function shareList() {
-      const data2 = exportActiveList();
-      const code = await encodeCode("TIER", data2);
-      const safe = (data2.title || "tier-list").replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, " ").trim().slice(0, 60) || "tier-list";
-      showExportDialog({
-        title: "Share Tier List",
-        intro: `Send this code to share "${data2.title}". They can add it with Lists \u25BE \u2192 Import\u2026`,
-        code,
-        fileName: `${safe}.txt`
-      });
-    }
-    function importListDialog() {
-      showImportDialog({
-        title: "Import Tier List",
-        intro: "Paste a tier list code. It's added as a new list; your own lists aren't changed.",
-        actionLabel: "Import",
-        onSubmit: async (text) => {
-          const data2 = await decodeCode(text, "TIER");
-          importList(data2);
-          ensureArtifacts();
-        }
-      });
-    }
-    let artifactsTried = false;
-    function ensureArtifacts() {
-      if (artifactsTried || hasArtifacts() || !listUsesKind("artifact")) return;
-      artifactsTried = true;
-      loadArtifacts().then((ok) => {
-        if (ok) renderAll();
-      });
-    }
-    const modalWatch = new MutationObserver(() => {
-      win.root.classList.toggle("wz-tl-under-modal", document.body.classList.contains("modal-open") || !!document.querySelector(".bootstrap-dialog.in, .modal.in"));
-    });
-    modalWatch.observe(document.body, { attributes: true, attributeFilter: ["class"], childList: true });
-    signal.addEventListener("abort", () => modalWatch.disconnect());
-    win.root.addEventListener("dblclick", (e) => {
-      const tile = e.target.closest(".wz-tl-tile.wz-tl-text");
-      if (!tile || e.target.closest("input, .wz-tl-tile-del")) return;
-      const textId = tile.dataset.key.slice(5);
-      const current = getTextLabel(textId);
-      if (current === null) return;
-      const label = tile.querySelector(".wz-tl-tile-name");
-      const input = document.createElement("input");
-      input.type = "text";
-      input.maxLength = MAX_TEXT;
-      input.value = current;
-      label.textContent = "";
-      label.appendChild(input);
-      input.focus();
-      input.select();
-      let done = false;
-      const commit = (save) => {
-        if (done) return;
-        done = true;
-        if (save && input.value.trim() && input.value.trim() !== current) renameText(textId, input.value);
-        else renderAll();
-      };
-      input.addEventListener("keydown", (ev) => {
-        if (ev.key === "Enter") commit(true);
-        if (ev.key === "Escape") commit(false);
-      });
-      input.addEventListener("blur", () => commit(true));
-    }, { signal });
-    let resetArmed = null;
-    resetBtn.addEventListener("click", () => {
-      if (resetArmed) {
-        clearTimeout(resetArmed);
-        resetArmed = null;
-        resetBtn.textContent = "Reset";
-        resetBtn.classList.remove("wz-tl-danger");
-        tiers.closeEditor();
-        resetList();
-        return;
-      }
-      resetBtn.textContent = "Sure?";
-      resetBtn.classList.add("wz-tl-danger");
-      resetArmed = setTimeout(() => {
-        resetArmed = null;
-        resetBtn.textContent = "Reset";
-        resetBtn.classList.remove("wz-tl-danger");
-      }, 3e3);
-    }, { signal });
-    pickerBtn.addEventListener("click", () => {
-      const open = !win.isPickerOpen();
-      win.setPickerOpen(open);
-      picker.setOpen(open);
-      syncHeader();
-      if (open) picker.focusSearch();
-    }, { signal });
-    picker.setOpen(win.isPickerOpen());
-    maxBtn.addEventListener("click", () => win.setMaximised(!win.isMaximised()), { signal });
-    win.onMaximiseChange(syncHeader);
-    closeBtn.addEventListener("click", () => hideTierList(), { signal });
-    ["keydown", "keyup", "keypress"].forEach((type) => {
-      win.root.addEventListener(type, (e) => {
-        if (e.target.closest("input, select, textarea")) e.stopPropagation();
-      }, { signal });
-    });
-    let preview = null;
-    const drag = attachDrag({
-      root: win.root,
-      signal,
-      pageItemKey,
-      buildGhost: (key2) => buildTile(key2),
-      onDragStart: () => {
-        if (preview) preview.hide();
-        tiers.closeEditor();
-        closeListsMenu();
-      },
-      onDrop: ({ key: key2, from, target }) => {
-        if (target.type === "tier") {
-          placeItem(key2, target.tierId, target.index);
-        } else if ((target.type === "picker" || target.type === "outside") && from.type === "tier") {
-          removeItem(key2);
-        }
-      }
-    });
-    preview = attachPreview({ root: win.root, signal, isDragging: drag.isDragging });
-    const unsubscribe = subscribe(() => {
-      renderAll();
-      ensureArtifacts();
-    });
-    signal.addEventListener("abort", unsubscribe);
-    window.addEventListener("beforeunload", () => flushSave(), { signal });
-    document.body.appendChild(win.root);
-    renderAll();
-    ensureArtifacts();
-    mounted2 = { controller, win };
-  }
-  function hideTierList() {
-    if (!mounted2) return;
-    flushSave();
-    mounted2.controller.abort();
-    mounted2.win.root.remove();
-    mounted2 = null;
-  }
-  function initTierList(plugin) {
-    settings2 = createFeatureSettings(plugin, "tierlist", {
-      tab: "Tier List",
-      visible: () => isPluginEnabled("tierList")
-    });
-    settings2.add("cardSize", {
-      name: "Card Size",
-      note: "How big cards get in a large window. They shrink in a small one.",
-      type: "select",
-      options: Object.keys(CARD_SIZES),
-      default: "Medium",
-      onChange: () => {
-        if (mounted2) mounted2.win.refreshTileSize();
-      }
-    });
-    registerKeybind(plugin, {
-      key: "toggleTierList",
-      name: "Toggle Tier List",
-      defaultCode: "KeyL",
-      packageLabel: "Tier List",
-      onMatch: () => {
-        if (!isPluginEnabled("tierList")) return;
-        if (mounted2) hideTierList();
-        else showTierList();
-      }
-    });
-    if (!isPluginEnabled("tierList")) return;
-    initItemData(plugin);
-  }
-
   // packages/misc/index.js
   function initMisc(plugin) {
     const settings3 = registerMiscSettings(plugin);
     initCardTags(plugin, settings3.enableCardTags);
-    initTierList(plugin);
     let shownThisPage = null;
     function syncNotepadVisibility() {
       const wanted = shownThisPage !== null ? shownThisPage : settings3.notepadOpenOnLoad.value();
@@ -14811,6 +14928,7 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     initTrueHubBridge(plugin);
     initDeckTracker(plugin);
     initUcTv(plugin);
+    initTierList(plugin);
     const miscSettings = initMisc(plugin);
     initKeybinds(plugin);
     initController(plugin, miscSettings.enableController);

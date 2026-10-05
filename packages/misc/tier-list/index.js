@@ -31,6 +31,7 @@ import { buildTile } from "./tiers-view.js";
 import { getCard, loadArtifacts, hasArtifacts } from "./items.js";
 import { encodeCode, decodeCode, showExportDialog, showImportDialog } from "../../core/share-code.js";
 import { matchesPage } from "../../core/page-match.js";
+import { tagObjectsForCard } from "../card-tags/storage.js";
 
 // Pages whose card elements carry real card ids (<div id="<cardId>"
 // class="card">). In matches/Spectate the ids are per-match instances,
@@ -38,13 +39,17 @@ import { matchesPage } from "../../core/page-match.js";
 const CARD_PAGES = ["/Crafting", "/Decks"];
 
 function pageItemKey(target) {
-  if (!matchesPage(CARD_PAGES)) return null;
+  if (!setting("pageDrag", true) || !matchesPage(CARD_PAGES)) return null;
   const el = target.closest && target.closest(".card[id]");
   if (!el || !getCard(el.id)) return null;
   return `card:${el.id}`;
 }
 
 const CARD_SIZES = { Small: 64, Medium: 88, Large: 120 };
+const PREVIEW_DELAYS = ["1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "5"];
+const OPACITIES = ["100%", "90%", "80%", "70%", "60%", "50%"];
+const RANKED_SHOW = "Greyed out";
+const RANKED_HIDE = "Hidden";
 
 let settings = null;
 let mounted = null; // { controller, win, ... } | null
@@ -52,6 +57,37 @@ let mounted = null; // { controller, win, ... } | null
 function preferredTile() {
   const v = settings ? settings.value("cardSize") : "Medium";
   return CARD_SIZES[v] || CARD_SIZES.Medium;
+}
+
+function setting(key, fallback) {
+  return settings ? settings.value(key) : fallback;
+}
+
+// Off by default. Spectate is never affected - only your own matches.
+function blockedHere() {
+  return !!setting("hideInMatches", false) && matchesPage("/Game");
+}
+
+// Window look settings, applied to an open window straight away.
+function applyLook() {
+  if (!mounted) return;
+  const root = mounted.win.root;
+  const pct = parseInt(setting("opacity", "100%"), 10);
+  root.style.setProperty("--wz-tl-opacity", String((Number.isFinite(pct) ? Math.min(100, Math.max(50, pct)) : 100) / 100));
+  root.classList.toggle("wz-tl-nonames", !setting("showNames", true));
+}
+
+function previewDelayMs() {
+  const v = parseFloat(settings ? settings.value("previewDelay") : "2");
+  return (Number.isFinite(v) ? Math.min(5, Math.max(1, v)) : 2) * 1000;
+}
+
+// Card Tags only joins the search while that plugin is switched on.
+function pickerOptions() {
+  return {
+    hideRanked: !!settings && settings.value("rankedInPanel") === RANKED_HIDE,
+    tagsFor: isPluginEnabled("cardTags") ? (id) => tagObjectsForCard(id).map((t) => t.name) : null
+  };
 }
 
 function headerButton(label, title) {
@@ -68,7 +104,7 @@ export function isTierListOpen() {
 }
 
 export function showTierList() {
-  if (mounted) return;
+  if (mounted || blockedHere()) return;
   injectTierListStyle();
   const controller = new AbortController();
   const { signal } = controller;
@@ -90,7 +126,7 @@ export function showTierList() {
   win.buttons.append(undoBtn, resetBtn, pickerBtn, maxBtn, closeBtn);
 
   const tiers = createTiersView({ body: win.body, signal });
-  const picker = createPicker({ body: win.body, signal });
+  const picker = createPicker({ body: win.body, signal, getOptions: pickerOptions });
 
   function syncHeader() {
     const list = model.getActiveList();
@@ -297,7 +333,7 @@ export function showTierList() {
       }
     }
   });
-  preview = attachPreview({ root: win.root, signal, isDragging: drag.isDragging });
+  preview = attachPreview({ root: win.root, signal, isDragging: drag.isDragging, getDelayMs: previewDelayMs });
 
   const unsubscribe = model.subscribe(() => { renderAll(); ensureArtifacts(); });
   signal.addEventListener("abort", unsubscribe);
@@ -307,7 +343,8 @@ export function showTierList() {
   renderAll();
   ensureArtifacts();
 
-  mounted = { controller, win };
+  mounted = { controller, win, picker };
+  applyLook();
 }
 
 export function hideTierList() {
@@ -330,6 +367,50 @@ export function initTierList(plugin) {
     options: Object.keys(CARD_SIZES),
     default: "Medium",
     onChange: () => { if (mounted) mounted.win.refreshTileSize(); }
+  });
+  settings.add("opacity", {
+    name: "Window Opacity",
+    note: "See-through when the mouse is elsewhere; solid while you use it.",
+    type: "select",
+    options: OPACITIES,
+    default: "100%",
+    onChange: () => applyLook()
+  });
+  settings.add("showNames", {
+    name: "Show Names on Tiles",
+    note: "Turn off for art-only tiles. Text items always show their words.",
+    type: "boolean",
+    default: true,
+    onChange: () => applyLook()
+  });
+  settings.add("previewDelay", {
+    name: "Card Preview Delay (seconds)",
+    note: "How long to rest the mouse on a card before its full preview shows.",
+    type: "select",
+    options: PREVIEW_DELAYS,
+    default: "2"
+  });
+  settings.add("rankedInPanel", {
+    name: "Ranked Items in the Item Panel",
+    note: "Grey out items already in a tier, or hide them from the panel.",
+    type: "select",
+    options: [RANKED_SHOW, RANKED_HIDE],
+    default: RANKED_SHOW,
+    onChange: () => { if (mounted) mounted.picker.render(); }
+  });
+
+  settings.add("pageDrag", {
+    name: "Drag Cards In From Crafting/Decks",
+    note: "Hold and drag a card on those pages into the open tier list.",
+    type: "boolean",
+    default: true
+  });
+  settings.add("hideInMatches", {
+    name: "Turn Off During Your Matches",
+    note: "Closes it and ignores the shortcut while you play. Spectating is fine.",
+    type: "boolean",
+    default: false,
+    onChange: () => { if (blockedHere()) hideTierList(); }
   });
 
   registerKeybind(plugin, {

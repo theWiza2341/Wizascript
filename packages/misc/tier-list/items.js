@@ -245,9 +245,13 @@ export function isFilterActive(f) {
   return !!(String(f.text || "").trim() || f.rarities.size || f.tribes || f.monster || f.spell || f.sets.size);
 }
 
-export function searchCards(f, limit = 150) {
-  if (!isFilterActive(f)) return { results: [], total: 0 };
+// opts.tagsFor(cardId) -> tag names (Card Tags), so the search text
+// also matches a card's tags; opts.exclude(key) drops ranked cards when
+// the "hide ranked items" setting is on. Both optional.
+export function searchCards(f, limit = 150, opts = {}) {
+  if (!isFilterActive(f)) return { results: [], total: 0, tagHits: 0 };
   const text = String(f.text || "").trim().toLowerCase();
+  let tagHits = 0;
   const matches = cards.filter((c) => {
     if (f.rarities.size) {
       if (!f.rarities.has(c.rarity)) return false;
@@ -260,13 +264,20 @@ export function searchCards(f, limit = 150) {
     }
     if (f.tribes && !(Number(c.typeCard) !== 1 && Array.isArray(c.tribes) && c.tribes.length)) return false;
     if (f.sets.size && !f.sets.has(c.extension)) return false;
+    if (opts.exclude && opts.exclude(cardKey(c))) return false;
     if (text) {
       const local = cardName(c).toLowerCase();
       const english = stripHtml(c.name || "").toLowerCase();
-      if (!local.includes(text) && !english.includes(text)) return false;
+      if (!local.includes(text) && !english.includes(text)) {
+        // Same rule as Card Tags' own search on Crafting/Decks: a tag
+        // whose name contains the search text.
+        const tags = opts.tagsFor ? opts.tagsFor(c.id) : [];
+        if (!tags.some((name) => name.toLowerCase().includes(text))) return false;
+        tagHits += 1;
+      }
     }
     return true;
   });
   matches.sort((a, b) => (Number(a.cost) - Number(b.cost)) || cardName(a).localeCompare(cardName(b)));
-  return { results: matches.slice(0, limit), total: matches.length };
+  return { results: matches.slice(0, limit), total: matches.length, tagHits };
 }

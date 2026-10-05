@@ -102,6 +102,10 @@ export function attachDrag({ root, signal, onDrop, onDragStart, pageItemKey, bui
       ghost.style.height = rect.height + "px";
     }
     ghost.style.zIndex = String(Z_FLOATING);
+    if (root.classList.contains("wz-tl-nonames")) ghost.classList.add("wz-tl-nonames");
+    // Keep the window solid (Window Opacity) for the whole drag, even
+    // while the pointer is off it.
+    root.classList.add("wz-tl-busy");
     document.body.appendChild(ghost);
     if (tile) tile.classList.add("wz-tl-dragging");
     active = { tile, key, from, ghost, offsetX, offsetY, target: null, marker: null };
@@ -115,6 +119,7 @@ export function attachDrag({ root, signal, onDrop, onDragStart, pageItemKey, bui
     const { key, from, target, tile, ghost } = active;
     clearHighlights();
     ghost.remove();
+    root.classList.remove("wz-tl-busy");
     if (tile) tile.classList.remove("wz-tl-dragging");
     active = null;
     suppressClick = true;
@@ -193,9 +198,15 @@ export function attachDrag({ root, signal, onDrop, onDragStart, pageItemKey, bui
     finish(true);
   }, { signal });
 
+  // Capture phase: the window stops key events from its text fields
+  // reaching the page, which would otherwise hide Escape from us while
+  // the search box has focus (it does after clicking a panel tab).
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && active) finish(true);
-  }, { signal });
+    if (e.key !== "Escape" || !active) return;
+    e.preventDefault();
+    e.stopPropagation();
+    finish(true);
+  }, { signal, capture: true });
 
   // A drag ends with a click on whatever is under the pointer - eat it.
   document.addEventListener("click", (e) => {

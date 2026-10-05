@@ -120,8 +120,8 @@ const GUIDES = {
     summary: "Rank cards, souls and artifacts in your own tier lists.",
     points: () => [
       `${key("toggleTierList", "KeyL")} shows/hides the window. Drag its title bar to move it, its edges to resize it; <b>□</b> fills the screen.`,
-      'Pick <b>Cards</b>, <b>Souls</b>, <b>Artifacts</b> or <b>Text</b> in the bottom panel, then drag items into a tier. On Crafting/Decks you can also drag cards straight from the page.',
-      'Click a tier\'s label (or <b>⚙</b>) to edit it. Drag an item back to the panel to unrank it. Rest the mouse on a card for 3s to see it in full.',
+      'Pick <b>Cards</b>, <b>Souls</b>, <b>Artifacts</b> or <b>Text</b> in the bottom panel, then drag items into a tier. With Card Tags on, the card search also finds your tags. On Crafting/Decks you can drag cards straight from the page.',
+      'Click a tier\'s label (or <b>⚙</b>) to edit it. Drag an item back to the panel to unrank it. Rest the mouse on a card to see it in full.',
       '<b>Lists ▾</b> switches or adds lists, and <b>Share…</b> / <b>Import…</b> swaps them with friends as codes. Saves automatically; <b>↶</b> undoes.'
     ]
   }

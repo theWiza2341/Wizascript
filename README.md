@@ -15,7 +15,7 @@ All of Wizascript's settings live under UnderScript's settings menu, in **Plugin
 
 - **General** tab: the **Plugins** and **Miscellaneous** lists, one on/off switch per feature (hover each for a short description), plus the version number, a **Changelog** button, **Back up / Restore settings** (all your Wizascript settings and saved data as one code or file, for moving to another browser or after a reinstall), and a single **Debug logging** switch for the whole suite. New installs start with every plugin switched off. Turning a plugin on or off takes effect after a page refresh.
 - **One tab per enabled plugin**, holding only that plugin's settings, with a short **How to use** guide at the bottom (pages it works on, what it does, its inputs). The **?** next to each plugin in the lists opens the same guide, including for Notepad and Card Tags, which have no tab of their own. Plugins that are switched off don't show a tab at all.
-- **Keybinds** tab: appears once you enable a plugin with keyboard shortcuts (Patch Maker, UC TV, Notepad), with a General section plus one section per plugin you have on. A warning appears under any shortcut that clashes with another one, with your Primary key, or with UnderScript's Space-to-end-turn hotkey.
+- **Keybinds** tab: appears once you enable a plugin with keyboard shortcuts (Patch Maker, UC TV, Tier List Maker, Notepad), with a General section plus one section per plugin you have on. A warning appears under any shortcut that clashes with another one, with your Primary key, or with UnderScript's Space-to-end-turn hotkey.
 - **Controller Support** tab: appears when Controller Support is enabled, split into Setup, General, one section per plugin you have on, and In-Game Inputs. Like the Keybinds tab, it warns under any binding that clashes with another.
 - If more tabs are open than fit in one row, they're split into pages, and **◀ ▶** arrows pinned to the right end of the row flip between pages.
 
@@ -39,6 +39,9 @@ The core in-match feature. Adds a "+" button during games and while spectating, 
 - **Custom Tracker builder** — lets a player create their own named counter (optionally with a card sprite), and save it as a reusable preset.
 - Widgets support drag-to-reposition (position is remembered), favoriting, and optionally retaining an unclosed widget between matches all via settings on the Card Tracker tab.
 - The "+" button itself is also drag-to-reposition (middle-click to reset it back to its default spot next to your avatar), so a future UC update repositioning its own UI into that space doesn't strand the button underneath something else again.
+
+### Tier List Maker
+A TierMaker-style tier list builder that works on every page, including during matches. Primary + L shows or hides a resizable window (from a minimum size up to full screen). Cards, souls, artifacts and custom text items are dragged from an item panel into tiers that can be renamed, recoloured, reordered, added and removed. The panel stays empty until you search or tick a filter, using the same rarity/type/set icons as the Crafting page; with Card Tags enabled, the search also matches your tags. On Crafting and Decks, cards can be dragged straight in from the page. Lists are saved automatically, any number can be kept, and each can be shared or imported as a code. Card data comes from the game's own card list, so new cards appear without a Wizascript update. Its settings tab covers card size, window opacity, names on tiles, the hover-preview delay, greying out vs hiding ranked items, dragging from Crafting/Decks, and turning it off during your own matches. It only reads card data and never touches gameplay.
 
 ### Notepad
 A small freeform drawing canvas, entirely disconnected from match data. Draw, erase, or flood-fill with the pen color, on up to 6 independent layers (start with one, add more from the toolbar up to the limit, remove from the top down). Undo/redo covers the last several actions across every layer (in-memory only, not saved between sessions). An HSL color wheel handles both pen and paper colors, with a row of your most recently used pen colors for quickly switching back and forth. Clear resets the drawing, paper color, pen color, recent colors, and title back to defaults (but leaves the notepad's position alone), same scope as the "Reset Notepad" keybind, just without the position reset, and without closing and reopening the window to do it. The notepad's name is editable in place and doubles as the filename when saving a doodle as a PNG. Position, drawing (all layers), colors, and name all persist between sessions. Enable it from the Miscellaneous list. "Open Notepad on Page Load" (shown under it once enabled) decides whether it opens by itself; the Toggle Notepad shortcut opens/closes it for the current page.
@@ -70,9 +73,10 @@ packages/
   true-hub-bridge/
   deck-tracker/    Card Tracker (folder and storage keys keep the old name)
   controller/      full gamepad navigation + remappable controller keybinds (see Controller Support above)
-  misc/            Notepad and Card Tags
+  misc/            Notepad and Card Tags (plus Tier List Maker's files)
     notepad/       freeform drawing canvas (see Notepad above)
     card-tags/     custom card flair tags (see Card Tags above)
+    tier-list/     Tier List Maker (a full plugin; its files live here because it began as a Misc feature)
 bot/               deck-scraping bot + decks.json
 assets/logo.png    logo shown in the General tab's Wizascript section (square PNG, 192x192 recommended; embedded into the script at build time)
 manifest.js        wires each package's init function together (also flushes the keybind registry once every package has registered its own settings)

@@ -76,7 +76,13 @@ export const CONTROLLER_ACTIONS = [
   // also End Turn's default - fine, because In-Game Inputs stand down
   // while Controller Primary is held (index.js), so Primary + Touchpad
   // only toggles the tier list.
-  { key: 'toggleTierList', name: 'Toggle Tier List', packageLabel: 'Tier List', context: 'always', defaultButton: 17, dispatch: { code: 'KeyL', key: 'l' } }
+  { key: 'toggleTierList', name: 'Toggle Tier List', packageLabel: 'Tier List', context: 'always', defaultButton: 17, dispatch: { code: 'KeyL', key: 'l' } },
+  // Context 'tierList' (1.6.0): applies only while the tier list window is
+  // open, and then WINS over any other combo on the same button - so
+  // Primary + □ fills the screen there and still resets the Notepad
+  // everywhere else. No keyboard keybind behind it: `run` names a
+  // function index.js calls directly instead of relaying a key.
+  { key: 'tierListFillScreen', name: 'Fill Screen', packageLabel: 'Tier List', context: 'tierList', defaultButton: 2, run: 'tierListFillScreen' }
 ];
 export const CONTROLLER_ACTIONS_BY_KEY = {};
 CONTROLLER_ACTIONS.forEach((a) => { CONTROLLER_ACTIONS_BY_KEY[a.key] = a; });
@@ -637,7 +643,9 @@ function enhanceDetectControllerButton(el) {
      button's normal job; and a combo can't use Primary's own button.
    - The Channel Guide, while held, drives its list with the d-pad and ✕.
    - Two combos clash only if both can apply in the same place (their
-     `context`s overlap) AND would relay different keys - the Patch Maker
+     `context`s overlap; a 'tierList' combo overlaps only with another
+     'tierList' combo, since it wins while the window is open) AND would
+     relay different keys - the Patch Maker
      Move Entry/Section/Card Up trio deliberately share D-Up and relay one
      key, which the frame loop de-dupes. */
 const CONFLICT_CLASS = 'wizascript-controller-warning';
@@ -655,6 +663,9 @@ function sameInput(a, b) {
   return a.type === 'key' && b.type === 'key' && a.code === b.code;
 }
 function contextsOverlap(a, b) {
+  // A 'tierList' combo wins over every other combo while the tier list
+  // is open, and doesn't apply otherwise - so it never clashes.
+  if (a === 'tierList' || b === 'tierList') return a === b;
   if (a === 'always' || b === 'always') return true;
   const outside = (c) => c === 'channelSwitch' || c === 'default';
   if (outside(a) && outside(b)) return true;
@@ -668,7 +679,7 @@ export function computeControllerConflicts() {
   const guide = isPluginEnabled('ucTv') ? getChannelGuideButton() : null;
   const combos = CONTROLLER_ACTIONS
     .filter((a) => { const id = pluginIdForLabel(a.packageLabel); return !id || isPluginEnabled(id); })
-    .map((a) => ({ a, input: getBoundButton(a.key), code: getBoundKeybindCode(a.key, a.dispatch.code) }))
+    .map((a) => ({ a, input: getBoundButton(a.key), code: a.dispatch ? getBoundKeybindCode(a.key, a.dispatch.code) : 'run:' + a.key }))
     .filter((c) => c.input !== null);
   const shortcuts = HARDWARE_SHORTCUT_ACTIONS
     .filter((a) => !a.pluginId || isPluginEnabled(a.pluginId))

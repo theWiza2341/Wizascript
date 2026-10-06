@@ -481,8 +481,12 @@
         primaryHeld = true;
         comboFired = false;
         const now = Date.now();
-        tapCount = now - lastTapTime <= DOUBLE_TAP_WINDOW_MS ? tapCount + 1 : 1;
-        lastTapTime = now;
+        if (e.wizascriptNoDoubleTap) {
+          tapCount = 0;
+        } else {
+          tapCount = now - lastTapTime <= DOUBLE_TAP_WINDOW_MS ? tapCount + 1 : 1;
+          lastTapTime = now;
+        }
         if (tapCount === 2) {
           tapCount = 0;
           registry.forEach((b) => {
@@ -744,10 +748,12 @@ Make your own tier lists right inside Undercards, using the game's current cards
 - Rename, recolour, reorder, add or delete tiers. Undo with **\u21B6**.
 - Keep as many lists as you like with **Lists \u25BE**, and swap them with friends using **Share\u2026** and **Import\u2026** codes.
 - Rest the mouse on a card to see it in full.
-- **Controller support:** with Controller Support on, Primary + Touchpad opens it and the d-pad moves around the whole window. \u2715 picks a card up and puts it down, \u25B3 sends it straight to a tier, \u25A1 jumps between the tiers and the item panel, and \u25CB cancels. All of these can be changed in the Controller Support tab.
+- **Controller support:** with Controller Support on, Primary + Touchpad opens it and the d-pad moves around the whole window. \u2715 picks a card up and puts it down, \u25B3 sends it straight to a tier, \u25A1 jumps between the tiers and the item panel, and \u25CB cancels (including in its menus, like the Lists menu). Primary + \u25A1 fills the screen and back. The window can be moved and resized with the controller cursor too. All of these can be changed in the Controller Support tab.
 - Its own settings tab: card size, window opacity, names on tiles, preview delay, whether ranked items are greyed out or hidden in the panel, dragging from Crafting/Decks, and turning it off during your own matches.
 
 ### Fixes
+- Controller Support: the default Concede button ("\u2212") no longer briefly opens UnderScript's menu outside a match.
+- Controller Support: double-tapping the Channel Guide button no longer opens Wizascript Settings (only double-tapping Primary does).
 - Controller Support: holding Controller Primary no longer also triggers an In-Game Input on the same button. Combos and In-Game Inputs can now share a button (like Toggle Tier List on Primary + Touchpad, and End Turn on Touchpad).
 - The Notepad and Card Tracker's trackers can no longer be dragged off the screen, where their close button couldn't be reached. Ones already off-screen come back into view, and they stay in view if you make the browser window smaller.
 
@@ -1741,7 +1747,13 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     // also End Turn's default - fine, because In-Game Inputs stand down
     // while Controller Primary is held (index.js), so Primary + Touchpad
     // only toggles the tier list.
-    { key: "toggleTierList", name: "Toggle Tier List", packageLabel: "Tier List", context: "always", defaultButton: 17, dispatch: { code: "KeyL", key: "l" } }
+    { key: "toggleTierList", name: "Toggle Tier List", packageLabel: "Tier List", context: "always", defaultButton: 17, dispatch: { code: "KeyL", key: "l" } },
+    // Context 'tierList' (1.6.0): applies only while the tier list window is
+    // open, and then WINS over any other combo on the same button - so
+    // Primary + □ fills the screen there and still resets the Notepad
+    // everywhere else. No keyboard keybind behind it: `run` names a
+    // function index.js calls directly instead of relaying a key.
+    { key: "tierListFillScreen", name: "Fill Screen", packageLabel: "Tier List", context: "tierList", defaultButton: 2, run: "tierListFillScreen" }
   ];
   var CONTROLLER_ACTIONS_BY_KEY = {};
   CONTROLLER_ACTIONS.forEach((a) => {
@@ -2169,6 +2181,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     return a.type === "key" && b.type === "key" && a.code === b.code;
   }
   function contextsOverlap(a, b) {
+    if (a === "tierList" || b === "tierList") return a === b;
     if (a === "always" || b === "always") return true;
     const outside = (c) => c === "channelSwitch" || c === "default";
     if (outside(a) && outside(b)) return true;
@@ -2185,7 +2198,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     const combos = CONTROLLER_ACTIONS.filter((a) => {
       const id = pluginIdForLabel(a.packageLabel);
       return !id || isPluginEnabled(id);
-    }).map((a) => ({ a, input: getBoundButton(a.key), code: getBoundKeybindCode(a.key, a.dispatch.code) })).filter((c) => c.input !== null);
+    }).map((a) => ({ a, input: getBoundButton(a.key), code: a.dispatch ? getBoundKeybindCode(a.key, a.dispatch.code) : "run:" + a.key })).filter((c) => c.input !== null);
     const shortcuts = HARDWARE_SHORTCUT_ACTIONS.filter((a) => !a.pluginId || isPluginEnabled(a.pluginId)).map((a) => ({ a, row: "shortcut_" + a.key, input: getBoundShortcutButton(a.key) })).filter((c) => c.input !== null);
     if (primary2 !== null && typeof primary2 === "number" && BUILT_IN_BUTTON_USES[primary2]) {
       add("controllerPrimary", `This button also ${BUILT_IN_BUTTON_USES[primary2]}, which stops working while it's your Primary.`);
@@ -2557,7 +2570,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         "Click a tier's label (or <b>\u2699</b>) to edit it. Drag an item back to the panel to unrank it. Rest the mouse on a card to see it in full.",
         "<b>Lists \u25BE</b> switches or adds lists, and <b>Share\u2026</b> / <b>Import\u2026</b> swaps them with friends as codes. Saves automatically; <b>\u21B6</b> undoes."
       ].concat(isPluginEnabled("controller") ? [
-        `Controller: Primary + ${ctl(getBoundButton("toggleTierList"))} opens it. The d-pad moves around; ${ctl(getBoundTierListButton("tlSelect"))} picks up / places, ${ctl(getBoundTierListButton("tlQuickSend"))} sends to a tier, ${ctl(getBoundTierListButton("tlJump"))} jumps between tiers and items, ${ctl(getBoundTierListButton("tlBack"))} cancels.`
+        `Controller: Primary + ${ctl(getBoundButton("toggleTierList"))} opens it. The d-pad moves around; ${ctl(getBoundTierListButton("tlSelect"))} picks up / places, ${ctl(getBoundTierListButton("tlQuickSend"))} sends to a tier, ${ctl(getBoundTierListButton("tlJump"))} jumps between tiers and items, ${ctl(getBoundTierListButton("tlBack"))} cancels. Primary + ${ctl(getBoundButton("tierListFillScreen"))} fills the screen.`
       ] : [])
     }
   };
@@ -9243,27 +9256,31 @@ Version: v${version}`;
       onMaximiseChange.forEach((fn) => fn(ui.maximised));
     }
     const onMaximiseChange = /* @__PURE__ */ new Set();
+    function followPointer(onMove, onEnd) {
+      const move = (ev) => onMove(ev);
+      const end = () => {
+        document.removeEventListener("pointermove", move, true);
+        document.removeEventListener("pointerup", end, true);
+        document.removeEventListener("pointercancel", end, true);
+        onEnd();
+      };
+      document.addEventListener("pointermove", move, { capture: true, signal });
+      document.addEventListener("pointerup", end, { capture: true, signal });
+      document.addEventListener("pointercancel", end, { capture: true, signal });
+    }
     header.addEventListener("pointerdown", (e) => {
       if (e.button !== 0 || ui.maximised) return;
       if (e.target.closest("input, button, select")) return;
       e.preventDefault();
       const start = { x: e.clientX, y: e.clientY, left: ui.geometry.left, top: ui.geometry.top };
-      header.setPointerCapture(e.pointerId);
       header.style.cursor = "grabbing";
-      const move = (ev) => {
+      followPointer((ev) => {
         ui.geometry = clampGeometry({ ...ui.geometry, left: start.left + ev.clientX - start.x, top: start.top + ev.clientY - start.y });
         apply2();
-      };
-      const end = () => {
+      }, () => {
         header.style.cursor = "";
-        header.removeEventListener("pointermove", move);
-        header.removeEventListener("pointerup", end);
-        header.removeEventListener("pointercancel", end);
         persist();
-      };
-      header.addEventListener("pointermove", move, { signal });
-      header.addEventListener("pointerup", end, { signal });
-      header.addEventListener("pointercancel", end, { signal });
+      });
     }, { signal });
     header.addEventListener("dblclick", (e) => {
       if (e.target.closest("input, button, select")) return;
@@ -9277,8 +9294,7 @@ Version: v${version}`;
       const edge = handle.dataset.edge;
       const start = { x: e.clientX, y: e.clientY, ...ui.geometry };
       const vp = viewport2();
-      handle.setPointerCapture(e.pointerId);
-      const move = (ev) => {
+      followPointer((ev) => {
         const dx = ev.clientX - start.x;
         const dy = ev.clientY - start.y;
         let { left, top, width, height } = start;
@@ -9296,16 +9312,7 @@ Version: v${version}`;
         }
         ui.geometry = clampGeometry({ left, top, width: Math.max(MIN_W, width), height: Math.max(MIN_H, height) });
         apply2();
-      };
-      const end = () => {
-        handle.removeEventListener("pointermove", move);
-        handle.removeEventListener("pointerup", end);
-        handle.removeEventListener("pointercancel", end);
-        persist();
-      };
-      handle.addEventListener("pointermove", move, { signal });
-      handle.addEventListener("pointerup", end, { signal });
-      handle.addEventListener("pointercancel", end, { signal });
+      }, () => persist());
     }, { signal });
     window.addEventListener("resize", () => {
       ui.geometry = clampGeometry(ui.geometry);
@@ -10634,6 +10641,9 @@ Version: v${version}`;
     if (!mounted || !mounted.pad) return null;
     if (mounted.win.root.classList.contains("wz-tl-under-modal")) return null;
     return mounted.pad;
+  }
+  function toggleTierListFillScreen() {
+    if (mounted) mounted.win.setMaximised(!mounted.win.isMaximised());
   }
   function toggleTierList() {
     if (!isPluginEnabled("tierList")) return;
@@ -13931,6 +13941,11 @@ Version: v${version}`;
     document.addEventListener("keyup", (e) => {
       heldKeyCodes.delete(e.code);
     });
+    function sameBoundInput(a, b) {
+      if (a === null || a === void 0 || b === null || b === void 0) return false;
+      if (typeof a === "number" || typeof b === "number") return a === b;
+      return a.type === "key" && b.type === "key" && a.code === b.code;
+    }
     function isBoundInputDown(value, btnFn) {
       if (value === null || value === void 0) return false;
       if (typeof value === "number") return !!btnFn(value);
@@ -14354,11 +14369,7 @@ Version: v${version}`;
             }
           }
           if (btn(1) && !shortcutBtnHeld[1] && oskOpen && oskPaused) closeOsk();
-          const sameBound = (a, b) => {
-            if (a === null || a === void 0 || b === null || b === void 0) return false;
-            if (typeof a === "number" || typeof b === "number") return a === b;
-            return a.type === "key" && b.type === "key" && a.code === b.code;
-          };
+          const sameBound = sameBoundInput;
           const primaryForShortcuts = getControllerPrimaryButton();
           const primaryHeldForShortcuts = isBoundInputDown(primaryForShortcuts, btn) && !settingsTabsActive;
           const padForShortcuts = getTierListPad();
@@ -14386,7 +14397,7 @@ Version: v${version}`;
           if (shortcutFires("opponentDustpile") && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(false)"]'));
           if (shortcutFires("endTurn")) triggerElementClick(document.getElementById("endTurnBtn"));
           if (shortcutFires("openWizascriptSettings") && !oskOpen) openWizascriptSettings();
-          if (shortcutFires("concede")) triggerConcede();
+          if (shortcutFires("concede") && document.getElementById("handCards")) triggerConcede();
           if (shortcutFires("goHome")) pageWindow2.location.href = "https://undercards.net/";
           if (shortcutFires("openDeckTrackerPresets") && !oskOpen) triggerElementClick(document.getElementById("dt-add-tracker-button"));
           shortcutBtnHeld = { 1: btn(1), 5: btn(5) };
@@ -14401,7 +14412,9 @@ Version: v${version}`;
           const guideDownForRelay = isBoundInputDown(guideBtnForRelay, btn);
           const controlShouldBeDown = l1Down || guideDownForRelay;
           if (controlShouldBeDown && !keybindRelayHeld.controlDown) {
-            document.dispatchEvent(new KeyboardEvent("keydown", primaryBase));
+            const down2 = new KeyboardEvent("keydown", primaryBase);
+            if (!l1Down) Object.defineProperty(down2, "wizascriptNoDoubleTap", { value: true });
+            document.dispatchEvent(down2);
             keybindRelayHeld.controlDown = true;
           } else if (!controlShouldBeDown && keybindRelayHeld.controlDown) {
             document.dispatchEvent(new KeyboardEvent("keyup", primaryBase));
@@ -14417,16 +14430,24 @@ Version: v${version}`;
             const inPatchMakerFieldForContext = !!(pmFocusForContext && pmFocusForContext.matches && pmFocusForContext.matches(".uc-li-text, .uc-section-label, .uc-card-item"));
             const nextActionHeld = {};
             const codesFiredThisFrame = /* @__PURE__ */ new Set();
+            const tierListOpenForRelay = !!getTierListPad();
+            const tierListComboInputs = tierListOpenForRelay ? CONTROLLER_ACTIONS.filter((a) => a.context === "tierList").map((a) => getBoundButton(a.key)) : [];
+            const comboRunners = { tierListFillScreen: toggleTierListFillScreen };
             CONTROLLER_ACTIONS.forEach((action) => {
               let applies;
-              if (action.context === "always") applies = true;
+              if (action.context === "tierList") applies = tierListOpenForRelay;
+              else if (action.context === "always") applies = true;
               else if (action.context === "channelSwitch") applies = !inPatchMakerFieldForContext;
               else if (action.context === "patchMaker") applies = inPatchMakerFieldForContext;
               else applies = !inPatchMakerFieldForContext;
+              if (applies && action.context !== "tierList" && tierListComboInputs.some((b) => sameBoundInput(b, getBoundButton(action.key)))) applies = false;
               const boundInput = applies ? getBoundButton(action.key) : null;
               const isDown = isBoundInputDown(boundInput, btn);
               nextActionHeld[action.key] = isDown;
-              if (isDown && !keybindRelayHeld.actions[action.key]) {
+              if (isDown && !keybindRelayHeld.actions[action.key] && action.run) {
+                const runner = comboRunners[action.run];
+                if (runner) runner();
+              } else if (isDown && !keybindRelayHeld.actions[action.key]) {
                 const liveCode = getBoundKeybindCode(action.key, action.dispatch.code);
                 if (!codesFiredThisFrame.has(liveCode)) {
                   codesFiredThisFrame.add(liveCode);

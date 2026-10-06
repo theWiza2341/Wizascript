@@ -40,7 +40,7 @@ import {
   getPresetMenuState, isDebugTextEnabled, getHighlightColor,
   TIER_LIST_PAD_ACTIONS, getBoundTierListButton
 } from './settings.js';
-import { getTierListPad } from '../misc/tier-list/index.js';
+import { getTierListPad, toggleTierListFillScreen } from '../misc/tier-list/index.js';
 import { getHudPosition, setHudPosition, getCursorSensitivity, setCursorSensitivity } from './storage.js';
 import { getPageWindow } from '../core/page-window.js';
 // Read-only accessor for a real Wizascript keybind's CURRENT e.code,
@@ -1373,6 +1373,12 @@ export function initController(plugin, controllerEnabledSetting) {
   // null (unbound), a number (gamepad button index, checked via the
   // frame's own `btn` closure), or { type: 'key', code } (checked against
   // heldKeyCodes above).
+  // Same binding (button number, or the same keyboard key)?
+  function sameBoundInput(a, b) {
+    if (a === null || a === undefined || b === null || b === undefined) return false;
+    if (typeof a === 'number' || typeof b === 'number') return a === b;
+    return a.type === 'key' && b.type === 'key' && a.code === b.code;
+  }
   function isBoundInputDown(value, btnFn) {
     if (value === null || value === undefined) return false;
     if (typeof value === 'number') return !!btnFn(value);
@@ -2076,11 +2082,7 @@ export function initController(plugin, controllerEnabledSetting) {
         // its controls uses (those win there). shortcutJustPressed() still
         // runs either way, so its held-state stays in sync and a held
         // button can't fire late once Primary is let go.
-        const sameBound = (a, b) => {
-          if (a === null || a === undefined || b === null || b === undefined) return false;
-          if (typeof a === 'number' || typeof b === 'number') return a === b;
-          return a.type === 'key' && b.type === 'key' && a.code === b.code;
-        };
+        const sameBound = sameBoundInput;
         const primaryForShortcuts = getControllerPrimaryButton();
         const primaryHeldForShortcuts = isBoundInputDown(primaryForShortcuts, btn) && !settingsTabsActive;
         const padForShortcuts = getTierListPad();
@@ -2110,7 +2112,10 @@ export function initController(plugin, controllerEnabledSetting) {
         if (shortcutFires('opponentDustpile') && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(false)"]'));
         if (shortcutFires('endTurn')) triggerElementClick(document.getElementById('endTurnBtn'));
         if (shortcutFires('openWizascriptSettings') && !oskOpen) openWizascriptSettings();
-        if (shortcutFires('concede')) triggerConcede();
+        // Only in your own match - elsewhere it used to open UnderScript's
+        // menu looking for Surrender, then close it again ("−" / Share
+        // flashing the menu on every page).
+        if (shortcutFires('concede') && document.getElementById('handCards')) triggerConcede();
         if (shortcutFires('goHome')) pageWindow.location.href = 'https://undercards.net/';
         // Deck Tracker's own "Add Tracker Preset" picker (packages/deck-
         // tracker/index.js) otherwise only opens via a real mouse click on
@@ -2208,7 +2213,11 @@ export function initController(plugin, controllerEnabledSetting) {
         // independent keydown/keyup pair.
         const controlShouldBeDown = l1Down || guideDownForRelay;
         if (controlShouldBeDown && !keybindRelayHeld.controlDown) {
-          document.dispatchEvent(new KeyboardEvent('keydown', primaryBase));
+          const down = new KeyboardEvent('keydown', primaryBase);
+          // Pressed by the Channel Guide button alone: keybinds.js doesn't
+          // count it towards double-tap Primary (which opens Settings).
+          if (!l1Down) Object.defineProperty(down, 'wizascriptNoDoubleTap', { value: true });
+          document.dispatchEvent(down);
           keybindRelayHeld.controlDown = true;
         } else if (!controlShouldBeDown && keybindRelayHeld.controlDown) {
           document.dispatchEvent(new KeyboardEvent('keyup', primaryBase));
@@ -2227,17 +2236,29 @@ export function initController(plugin, controllerEnabledSetting) {
             pmFocusForContext.matches('.uc-li-text, .uc-section-label, .uc-card-item'));
           const nextActionHeld = {};
           const codesFiredThisFrame = new Set();
+          // 'tierList' combos apply only while the tier list window is open
+          // (and on top), and then win over other combos on their button.
+          const tierListOpenForRelay = !!getTierListPad();
+          const tierListComboInputs = tierListOpenForRelay
+            ? CONTROLLER_ACTIONS.filter((a) => a.context === 'tierList').map((a) => getBoundButton(a.key))
+            : [];
+          const comboRunners = { tierListFillScreen: toggleTierListFillScreen };
           CONTROLLER_ACTIONS.forEach((action) => {
             let applies;
-            if (action.context === 'always') applies = true;
+            if (action.context === 'tierList') applies = tierListOpenForRelay;
+            else if (action.context === 'always') applies = true;
             else if (action.context === 'channelSwitch') applies = !inPatchMakerFieldForContext;
             else if (action.context === 'patchMaker') applies = inPatchMakerFieldForContext;
             else /* 'default' */ applies = !inPatchMakerFieldForContext;
 
+            if (applies && action.context !== 'tierList' && tierListComboInputs.some((b) => sameBoundInput(b, getBoundButton(action.key)))) applies = false;
             const boundInput = applies ? getBoundButton(action.key) : null;
             const isDown = isBoundInputDown(boundInput, btn);
             nextActionHeld[action.key] = isDown;
-            if (isDown && !keybindRelayHeld.actions[action.key]) {
+            if (isDown && !keybindRelayHeld.actions[action.key] && action.run) {
+              const runner = comboRunners[action.run];
+              if (runner) runner();
+            } else if (isDown && !keybindRelayHeld.actions[action.key]) {
               // Read the REAL keybind's CURRENT e.code live, every time,
               // rather than trusting action.dispatch.code (a hardcoded
               // snapshot of whatever that binding's default happened to

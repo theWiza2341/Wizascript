@@ -113,6 +113,11 @@ export function getTierListPad() {
   return mounted.pad;
 }
 
+// Controller "Fill Screen" combo (Primary + □ by default, only while open).
+export function toggleTierListFillScreen() {
+  if (mounted) mounted.win.setMaximised(!mounted.win.isMaximised());
+}
+
 // Controller toggle (Primary + Touchpad by default) - same as the keybind.
 export function toggleTierList() {
   if (!isPluginEnabled("tierList")) return;

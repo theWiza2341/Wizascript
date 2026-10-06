@@ -127,7 +127,7 @@ const GUIDES = {
       'Click a tier\'s label (or <b>⚙</b>) to edit it. Drag an item back to the panel to unrank it. Rest the mouse on a card to see it in full.',
       '<b>Lists ▾</b> switches or adds lists, and <b>Share…</b> / <b>Import…</b> swaps them with friends as codes. Saves automatically; <b>↶</b> undoes.'
     ].concat(isPluginEnabled("controller") ? [
-      `Controller: Primary + ${ctl(getBoundButton("toggleTierList"))} opens it. The d-pad moves around; ${ctl(getBoundTierListButton("tlSelect"))} picks up / places, ${ctl(getBoundTierListButton("tlQuickSend"))} sends to a tier, ${ctl(getBoundTierListButton("tlJump"))} jumps between tiers and items, ${ctl(getBoundTierListButton("tlBack"))} cancels.`
+      `Controller: Primary + ${ctl(getBoundButton("toggleTierList"))} opens it. The d-pad moves around; ${ctl(getBoundTierListButton("tlSelect"))} picks up / places, ${ctl(getBoundTierListButton("tlQuickSend"))} sends to a tier, ${ctl(getBoundTierListButton("tlJump"))} jumps between tiers and items, ${ctl(getBoundTierListButton("tlBack"))} cancels. Primary + ${ctl(getBoundButton("tierListFillScreen"))} fills the screen.`
     ] : [])
   }
 };

@@ -117,27 +117,36 @@ export function buildWindow({ signal, getPreferredTile, onTitleChange }) {
   const onMaximiseChange = new Set();
 
   // ---- move (title bar) ----
+  // Moves and releases are followed on the whole page, not through
+  // pointer capture: Controller Support's cursor sends its pointer
+  // events to whatever is under it, so capture never kicks in and the
+  // drag used to stop the moment the cursor left the bar or edge.
+  function followPointer(onMove, onEnd) {
+    const move = (ev) => onMove(ev);
+    const end = () => {
+      document.removeEventListener("pointermove", move, true);
+      document.removeEventListener("pointerup", end, true);
+      document.removeEventListener("pointercancel", end, true);
+      onEnd();
+    };
+    document.addEventListener("pointermove", move, { capture: true, signal });
+    document.addEventListener("pointerup", end, { capture: true, signal });
+    document.addEventListener("pointercancel", end, { capture: true, signal });
+  }
+
   header.addEventListener("pointerdown", (e) => {
     if (e.button !== 0 || ui.maximised) return;
     if (e.target.closest("input, button, select")) return;
     e.preventDefault();
     const start = { x: e.clientX, y: e.clientY, left: ui.geometry.left, top: ui.geometry.top };
-    header.setPointerCapture(e.pointerId);
     header.style.cursor = "grabbing";
-    const move = (ev) => {
+    followPointer((ev) => {
       ui.geometry = clampGeometry({ ...ui.geometry, left: start.left + ev.clientX - start.x, top: start.top + ev.clientY - start.y });
       apply();
-    };
-    const end = () => {
+    }, () => {
       header.style.cursor = "";
-      header.removeEventListener("pointermove", move);
-      header.removeEventListener("pointerup", end);
-      header.removeEventListener("pointercancel", end);
       persist();
-    };
-    header.addEventListener("pointermove", move, { signal });
-    header.addEventListener("pointerup", end, { signal });
-    header.addEventListener("pointercancel", end, { signal });
+    });
   }, { signal });
 
   header.addEventListener("dblclick", (e) => {
@@ -154,8 +163,7 @@ export function buildWindow({ signal, getPreferredTile, onTitleChange }) {
     const edge = handle.dataset.edge;
     const start = { x: e.clientX, y: e.clientY, ...ui.geometry };
     const vp = viewport();
-    handle.setPointerCapture(e.pointerId);
-    const move = (ev) => {
+    followPointer((ev) => {
       const dx = ev.clientX - start.x;
       const dy = ev.clientY - start.y;
       let { left, top, width, height } = start;
@@ -173,16 +181,7 @@ export function buildWindow({ signal, getPreferredTile, onTitleChange }) {
       }
       ui.geometry = clampGeometry({ left, top, width: Math.max(MIN_W, width), height: Math.max(MIN_H, height) });
       apply();
-    };
-    const end = () => {
-      handle.removeEventListener("pointermove", move);
-      handle.removeEventListener("pointerup", end);
-      handle.removeEventListener("pointercancel", end);
-      persist();
-    };
-    handle.addEventListener("pointermove", move, { signal });
-    handle.addEventListener("pointerup", end, { signal });
-    handle.addEventListener("pointercancel", end, { signal });
+    }, () => persist());
   }, { signal });
 
   // The browser window got smaller: keep ours inside it.

@@ -16,6 +16,14 @@ Make your own tier lists right inside Undercards, using the game's current cards
 - **Controller support:** with Controller Support on, Primary + Touchpad opens it and the d-pad moves around the whole window. ✕ picks a card up and puts it down, △ sends it straight to a tier, □ jumps between the tiers and the item panel, and ○ cancels (including in its menus, like the Lists menu). Primary + □ fills the screen and back. The window can be moved and resized with the controller cursor too. All of these can be changed in the Controller Support tab.
 - Its own settings tab: card size, window opacity, names on tiles, preview delay, whether ranked items are greyed out or hidden in the panel, dragging from Crafting/Decks, and turning it off during your own matches.
 
+### New: Cosmetic Wishlist
+Pin the avatars, emotes and profile skins you want, and Wizascript tells you when the Cosmetics Shop has them. Turn it on in the **Miscellaneous** list.
+- **Right-click** an avatar, emote or profile skin (in chat, in matches, or in the Cosmetics Shop) and choose **Add to Wishlist**. Right-click it again to remove it. With Controller Support on, point the cursor at it and press △, then ✕.
+- When something you pinned is in the shop, a message pops up with its price (and any sale) and a **Take me there!** button that opens the shop with that item highlighted. Pinned items are outlined with a ★ in the shop.
+- The shop is checked once after each daily and weekly refresh, in the background, never during a match. You can change how often, or check only when you visit the shop yourself.
+- Things you buy leave your wishlist by themselves. Free cosmetics can't be pinned, since everyone already has them.
+- Its own tab lists everything you've pinned, with when it was last in the shop, a **×** to remove each one, and **Check Shop Now**.
+
 ### Fixes
 - Controller Support: the default Concede button ("−") no longer briefly opens UnderScript's menu outside a match.
 - Controller Support: double-tapping the Channel Guide button no longer opens Wizascript Settings (only double-tapping Primary does).

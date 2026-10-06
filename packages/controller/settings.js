@@ -20,6 +20,7 @@ import {
 } from './storage.js';
 import { getMergedGamepad, buttonToDisplay, bindingToDisplay, connectWebHidController, isHidConnected } from './gamepad.js';
 import { getBoundKeybindCode } from '../core/keybinds.js';
+import { isDebugLogging } from '../core/debug.js';
 
 // One entry per real Wizascript keybind this package's Primary+<button>
 // relay dispatches (see actions.js). `context` decides which subset of
@@ -863,8 +864,10 @@ function startControllerKeybindObserver(idPrefix) {
     });
   });
   observer.observe(document.body, { childList: true, subtree: true });
+  // Settings only render when the dialog is opened, so on most page loads
+  // nothing is found - only worth mentioning with Debug logging on.
   setTimeout(() => {
-    if (!everFoundOne) {
+    if (!everFoundOne && isDebugLogging()) {
       console.warn('[Wizascript Controller] never found any "Keybinds - Controller" <input> elements to enhance after 15s - either the category never rendered, or the assumed id pattern (' + idPrefix + '<key>) is wrong.');
     }
   }, 15000);

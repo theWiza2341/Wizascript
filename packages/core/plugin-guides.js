@@ -117,6 +117,19 @@ const GUIDES = {
       '<b>Manage Tags…</b> (in the right-click menu) renames, recolours and deletes tags, and can <b>Share…</b> / <b>Import…</b> tags with friends.'
     ]
   },
+  wishlist: {
+    tab: "Cosmetic Wishlist",
+    pages: "every page (the shop is checked in the background)",
+    summary: "Pin avatars, emotes and profile skins you want, and get a message when the Cosmetics Shop has them.",
+    points: () => [
+      '<b>Right-click</b> an avatar, emote or profile skin (in chat, in matches, or in the Cosmetics Shop) and choose <b>Add to Wishlist</b>. Right-click it again to remove it, or use <b>×</b> on this tab.',
+      'When something you pinned is in the shop, a message pops up with <b>Take me there!</b>. Things you buy leave the list by themselves.',
+      'The shop is checked after each refresh (see <b>Shop Check Frequency</b>), never during a match. <b>Check Shop Now</b> checks straight away.',
+      "Free cosmetics (0 UCP) can't be pinned - everyone already has them."
+    ].concat(isPluginEnabled("controller") ? [
+      `Controller: point the cursor at it, press ${pad(3)} to right-click, then ${pad(0)} on the menu. ${pad(1)} closes it.`
+    ] : [])
+  },
   tierList: {
     tab: "Tier List",
     pages: "every page, including matches",

@@ -84,6 +84,14 @@ export const PLUGINS = [
     name: "Card Tags",
     key: "misc.enableCardTags",
     note: "Right-click cards in Crafting/Decks to tag and search them."
+  },
+  {
+    id: "wishlist",
+    category: "Miscellaneous",
+    name: "Cosmetic Wishlist",
+    key: "wishlist.enabled",
+    // The one Miscellaneous plugin with a tab of its own (its list of pins).
+    note: "Pin avatars, emotes and profile skins; hear when the shop has them."
   }
 ];
 

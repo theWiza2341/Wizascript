@@ -73,14 +73,14 @@
       const { category, page, hidden, ...rest } = config;
       const isHidden = () => (visible2 ? !visible2() : false) || resolve(hidden) === true;
       const dynamicCategory = categories && category ? { toString: () => isHidden() ? "N/A" : String(category), valueOf: () => isHidden() ? "N/A" : String(category) } : null;
-      const setting3 = settingsApi.add({
+      const setting4 = settingsApi.add({
         ...rest,
         ...dynamicCategory ? { category: dynamicCategory } : {},
         key: `${featureName}.${key2}`,
         hidden: isHidden
       });
-      registered[key2] = setting3;
-      return setting3;
+      registered[key2] = setting4;
+      return setting4;
     }
     function value(key2) {
       return registered[key2].value();
@@ -217,6 +217,14 @@
       name: "Card Tags",
       key: "misc.enableCardTags",
       note: "Right-click cards in Crafting/Decks to tag and search them."
+    },
+    {
+      id: "wishlist",
+      category: "Miscellaneous",
+      name: "Cosmetic Wishlist",
+      key: "wishlist.enabled",
+      // The one Miscellaneous plugin with a tab of its own (its list of pins).
+      note: "Pin avatars, emotes and profile skins; hear when the shop has them."
     }
   ];
   var LS_PREFIX = "underscript.plugin.Wizascript.";
@@ -751,6 +759,14 @@ Make your own tier lists right inside Undercards, using the game's current cards
 - **Controller support:** with Controller Support on, Primary + Touchpad opens it and the d-pad moves around the whole window. \u2715 picks a card up and puts it down, \u25B3 sends it straight to a tier, \u25A1 jumps between the tiers and the item panel, and \u25CB cancels (including in its menus, like the Lists menu). Primary + \u25A1 fills the screen and back. The window can be moved and resized with the controller cursor too. All of these can be changed in the Controller Support tab.
 - Its own settings tab: card size, window opacity, names on tiles, preview delay, whether ranked items are greyed out or hidden in the panel, dragging from Crafting/Decks, and turning it off during your own matches.
 
+### New: Cosmetic Wishlist
+Pin the avatars, emotes and profile skins you want, and Wizascript tells you when the Cosmetics Shop has them. Turn it on in the **Miscellaneous** list.
+- **Right-click** an avatar, emote or profile skin (in chat, in matches, or in the Cosmetics Shop) and choose **Add to Wishlist**. Right-click it again to remove it. With Controller Support on, point the cursor at it and press \u25B3, then \u2715.
+- When something you pinned is in the shop, a message pops up with its price (and any sale) and a **Take me there!** button that opens the shop with that item highlighted. Pinned items are outlined with a \u2605 in the shop.
+- The shop is checked once after each daily and weekly refresh, in the background, never during a match. You can change how often, or check only when you visit the shop yourself.
+- Things you buy leave your wishlist by themselves. Free cosmetics can't be pinned, since everyone already has them.
+- Its own tab lists everything you've pinned, with when it was last in the shop, a **\xD7** to remove each one, and **Check Shop Now**.
+
 ### Fixes
 - Controller Support: the default Concede button ("\u2212") no longer briefly opens UnderScript's menu outside a match.
 - Controller Support: double-tapping the Channel Guide button no longer opens Wizascript Settings (only double-tapping Primary does).
@@ -873,7 +889,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     if (lastSeen === SUITE_VERSION) return;
     const markSeen = () => GM_setValue(LAST_SEEN_KEY, SUITE_VERSION);
     const isFresh = installState === "fresh";
-    const toast = isFresh ? {
+    const toast2 = isFresh ? {
       title: "Welcome to Wizascript!",
       text: "Wizascript's features start switched off. Turn on the ones you want in the Plugins list.",
       buttons: [{ text: "Open Wizascript settings", className: "dismiss", onclick: () => plugin.settings().open() }]
@@ -883,7 +899,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       buttons: [{ text: "View changelog", className: "dismiss", onclick: () => openChangelog() }]
     };
     plugin.toast({
-      ...toast,
+      ...toast2,
       className: "dismissable",
       onClose: () => {
         markSeen();
@@ -1158,8 +1174,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       const hit = FEATURE_LABELS.find(([p]) => (GM_PREFIX2 + k).startsWith(GM_PREFIX2 + p));
       if (hit) found.add(hit[1]);
     });
-    const settings3 = Object.keys(backup.ls || {}).length;
-    const parts = [`${settings3} setting${settings3 === 1 ? "" : "s"}`];
+    const settings4 = Object.keys(backup.ls || {}).length;
+    const parts = [`${settings4} setting${settings4 === 1 ? "" : "s"}`];
     if (found.size) parts.push(`saved data for ${Array.from(found).join(", ")}`);
     return parts.join(", plus ");
   }
@@ -2034,7 +2050,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       document.removeEventListener("mousedown", onOutsideClick, true);
       document.removeEventListener("keydown", onEscape, true);
     }
-    function openMenu() {
+    function openMenu2() {
       if (menuEl) {
         closeMenu();
         return;
@@ -2086,7 +2102,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       document.addEventListener("keydown", onEscape, true);
       presetMenuState = { rows: rowEls, activeIndex: Math.max(0, getActivePreset() - 1), close: closeMenu };
     }
-    el2.addEventListener("click", openMenu);
+    el2.addEventListener("click", openMenu2);
   }
   function enhancePresetNameInput(el2) {
     el2.setAttribute("data-wc-enhanced", "true");
@@ -2359,7 +2375,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     });
     observer2.observe(document.body, { childList: true, subtree: true });
     setTimeout(() => {
-      if (!everFoundOne) {
+      if (!everFoundOne && isDebugLogging()) {
         console.warn('[Wizascript Controller] never found any "Keybinds - Controller" <input> elements to enhance after 15s - either the category never rendered, or the assumed id pattern (' + idPrefix + "<key>) is wrong.");
       }
     }, 15e3);
@@ -2370,7 +2386,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key)
     );
     controllerEnabledSetting = controllerEnabledSettingIn;
-    const settings3 = createFeatureSettings(plugin, "controller", {
+    const settings4 = createFeatureSettings(plugin, "controller", {
       tab: "Controller Support",
       visible: () => isPluginEnabled("controller"),
       categories: true
@@ -2379,61 +2395,61 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     const GENERAL = "General";
     const IN_GAME = "In-Game Inputs";
     const hiddenUnless = (pluginId) => () => pluginId ? !isPluginEnabled(pluginId) : false;
-    settings3.add("detectController", {
+    settings4.add("detectController", {
       name: "Detect Controller",
       note: "Click if your controller isn't responding.",
       type: "text",
       default: "Click to Detect Controller (WebHID)",
       category: SETUP
     });
-    settings3.add("presetSelector", {
+    settings4.add("presetSelector", {
       name: "Settings Preset",
       note: "Click to switch presets.",
       type: "text",
       default: getPresetName(getActivePreset()),
       category: SETUP
     });
-    settings3.add("presetName", {
+    settings4.add("presetName", {
       name: "Preset Name",
       note: "Renames whichever preset is currently selected above.",
       type: "text",
       default: getPresetName(getActivePreset()),
       category: SETUP
     });
-    settings3.add("resetPreset", {
+    settings4.add("resetPreset", {
       name: "Restore Settings to Default",
       note: "Double Click to reset selected preset settings",
       type: "text",
       default: "Double Click to Reset",
       category: SETUP
     });
-    debugTextEnabledSetting = settings3.add("debugTextEnabled", {
+    debugTextEnabledSetting = settings4.add("debugTextEnabled", {
       name: "Enable Debug Text",
       type: "boolean",
       default: false,
       category: GENERAL
     });
-    highlightColorSetting = settings3.add("highlightColor", {
+    highlightColorSetting = settings4.add("highlightColor", {
       name: "Selection Outline Color",
       type: "select",
       data: HIGHLIGHT_COLOR_PRESETS,
       default: DEFAULT_HIGHLIGHT_COLOR,
       category: GENERAL
     });
-    settings3.add("controllerPrimary", {
+    settings4.add("controllerPrimary", {
       name: "Controller Primary",
       note: "Click to remap. Hold for combos below, same as Wizascript's own Primary Key.",
       type: "text",
       default: buttonToDisplay(DEFAULT_PRIMARY_BUTTON),
       category: GENERAL
     });
-    settings3.add("__info_openSettings", { name: "Double Tap Primary \u2192 Open Wizascript Settings", type: "text", default: "", category: GENERAL });
+    settings4.add("__info_openSettings", { name: "Double Tap Primary \u2192 Open Wizascript Settings", type: "text", default: "", category: GENERAL });
     const seenLabels = /* @__PURE__ */ new Set();
     CONTROLLER_ACTIONS.forEach((action) => {
       if (!seenLabels.has(action.packageLabel)) {
         seenLabels.add(action.packageLabel);
         if (action.packageLabel === "UC TV") {
-          settings3.add("channelGuide", {
+          settings4.add("channelGuide", {
             name: "Channel Guide (hold)",
             type: "text",
             default: buttonToDisplay(null),
@@ -2442,7 +2458,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
           });
         }
       }
-      settings3.add(action.key, {
+      settings4.add(action.key, {
         name: action.name + " - Primary + <btn>",
         type: "text",
         default: buttonToDisplay(action.defaultButton),
@@ -2451,7 +2467,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       });
     });
     TIER_LIST_PAD_ACTIONS.forEach((action) => {
-      settings3.add("tierlistPad_" + action.key, {
+      settings4.add("tierlistPad_" + action.key, {
         name: action.name,
         note: "While the tier list is open. The d-pad moves around it.",
         type: "text",
@@ -2461,7 +2477,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       });
     });
     HARDWARE_SHORTCUT_ACTIONS.forEach((action) => {
-      settings3.add("shortcut_" + action.key, {
+      settings4.add("shortcut_" + action.key, {
         name: action.name,
         type: "text",
         default: buttonToDisplay(HARDWARE_SHORTCUT_DEFAULTS[action.key]),
@@ -2560,6 +2576,19 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         "<b>Manage Tags\u2026</b> (in the right-click menu) renames, recolours and deletes tags, and can <b>Share\u2026</b> / <b>Import\u2026</b> tags with friends."
       ]
     },
+    wishlist: {
+      tab: "Cosmetic Wishlist",
+      pages: "every page (the shop is checked in the background)",
+      summary: "Pin avatars, emotes and profile skins you want, and get a message when the Cosmetics Shop has them.",
+      points: () => [
+        "<b>Right-click</b> an avatar, emote or profile skin (in chat, in matches, or in the Cosmetics Shop) and choose <b>Add to Wishlist</b>. Right-click it again to remove it, or use <b>\xD7</b> on this tab.",
+        "When something you pinned is in the shop, a message pops up with <b>Take me there!</b>. Things you buy leave the list by themselves.",
+        "The shop is checked after each refresh (see <b>Shop Check Frequency</b>), never during a match. <b>Check Shop Now</b> checks straight away.",
+        "Free cosmetics (0 UCP) can't be pinned - everyone already has them."
+      ].concat(isPluginEnabled("controller") ? [
+        `Controller: point the cursor at it, press ${pad(3)} to right-click, then ${pad(0)} on the menu. ${pad(1)} closes it.`
+      ] : [])
+    },
     tierList: {
       tab: "Tier List",
       pages: "every page, including matches",
@@ -2598,12 +2627,12 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     Object.entries(GUIDES).forEach(([id, g]) => {
       if (g.tab) {
         const categorised = g.tab === "Controller Support";
-        const settings3 = createFeatureSettings(plugin, "guide", {
+        const settings4 = createFeatureSettings(plugin, "guide", {
           tab: g.tab,
           visible: () => isPluginEnabled(id),
           categories: categorised
         });
-        settings3.add(id, {
+        settings4.add(id, {
           name: `How to use ${pluginName(id)}`,
           type: "text",
           default: "",
@@ -2829,26 +2858,26 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
 
   // packages/patch-maker/settings.js
   function registerPatchMakerSettings(plugin) {
-    const settings3 = createFeatureSettings(plugin, "patchmaker", {
+    const settings4 = createFeatureSettings(plugin, "patchmaker", {
       tab: "Patch Maker",
       visible: () => isPluginEnabled("patchMaker")
     });
     return {
-      settings: settings3,
+      settings: settings4,
       // The on/off switch itself now lives in the Plugins list (core/plugins.js).
       enabled: getPluginToggle("patchMaker"),
       // One suite-wide switch on the General tab since 1.5.0 (core/debug.js).
       debugLogging: debugLoggingSetting,
-      hideControls: settings3.add("hideControls", { name: "Hide Patch Maker controls", type: "boolean", default: false }),
-      cardHovers: settings3.add("enableCardHovers", { name: "Enable card hovers", type: "boolean", default: true }),
-      language: settings3.add("patchLanguage", {
+      hideControls: settings4.add("hideControls", { name: "Hide Patch Maker controls", type: "boolean", default: false }),
+      cardHovers: settings4.add("enableCardHovers", { name: "Enable card hovers", type: "boolean", default: true }),
+      language: settings4.add("patchLanguage", {
         name: "Select Language",
         type: "select",
         options: ["Auto / Default", "English", "French", "Spanish", "Portuguese", "Chinese", "Italian", "Polish", "German", "Russian"],
         default: "Auto / Default",
         onChange: () => location.reload()
       }),
-      openOnLoad: settings3.add("openPatchNotesOnPageLoad", { name: "Auto-Load Patch Maker", type: "boolean", default: false })
+      openOnLoad: settings4.add("openPatchNotesOnPageLoad", { name: "Auto-Load Patch Maker", type: "boolean", default: false })
     };
   }
 
@@ -4665,15 +4694,15 @@ Version: v${version}`;
     return matchesPage("/gameUpdates.jsp");
   }
   function initPatchMaker(plugin) {
-    const settings3 = registerPatchMakerSettings(plugin);
+    const settings4 = registerPatchMakerSettings(plugin);
     const logger4 = createLogger("PatchMaker");
     const originalWarn = logger4.warn.bind(logger4);
     const originalLog = logger4.log.bind(logger4);
     logger4.log = (...args) => {
-      if (settings3.debugLogging.value()) originalLog(...args);
+      if (settings4.debugLogging.value()) originalLog(...args);
     };
     logger4.warn = (...args) => {
-      if (settings3.debugLogging.value()) originalWarn(...args);
+      if (settings4.debugLogging.value()) originalWarn(...args);
     };
     let wordColors = { ...BASE_WORD_COLORS };
     let underlineTokens = [];
@@ -4684,16 +4713,16 @@ Version: v${version}`;
       version: FEATURE_VERSION,
       getWordColors: () => wordColors,
       getUnderlineTokens: () => underlineTokens,
-      getCardHoversEnabled: () => settings3.cardHovers.value(),
+      getCardHoversEnabled: () => settings4.cardHovers.value(),
       getCardNameMap: () => cardNameMap,
-      getHideControlsEnabled: () => settings3.hideControls.value(),
-      getOpenOnLoad: () => settings3.openOnLoad.value()
+      getHideControlsEnabled: () => settings4.hideControls.value(),
+      getOpenOnLoad: () => settings4.openOnLoad.value()
     });
-    settings3.hideControls.on((value) => overlay.setControlsHidden(value));
-    if (!settings3.enabled.value()) return;
+    settings4.hideControls.on((value) => overlay.setControlsHidden(value));
+    if (!settings4.enabled.value()) return;
     if (!isPatchNotesPage()) return;
     async function refreshLocalizedData() {
-      const languageLabel = settings3.language.value();
+      const languageLabel = settings4.language.value();
       const { tokens, localizedColors } = await buildLocalizedFormattingData(languageLabel, BASE_WORD_COLORS);
       underlineTokens = tokens;
       wordColors = { ...BASE_WORD_COLORS, ...localizedColors };
@@ -4707,22 +4736,22 @@ Version: v${version}`;
 
   // packages/true-hub-bridge/settings.js
   function registerTrueHubBridgeSettings(plugin) {
-    const settings3 = createFeatureSettings(plugin, "truehubbridge", {
+    const settings4 = createFeatureSettings(plugin, "truehubbridge", {
       tab: "True Hub Bridge",
       visible: () => isPluginEnabled("trueHub")
     });
     return {
-      settings: settings3,
+      settings: settings4,
       // The on/off switch itself now lives in the Plugins list (core/plugins.js).
       enabled: getPluginToggle("trueHub"),
       // One suite-wide switch on the General tab since 1.5.0 (core/debug.js).
       debugLogging: debugLoggingSetting,
-      autoOpen: settings3.add("autoOpenTrueHub", {
+      autoOpen: settings4.add("autoOpenTrueHub", {
         name: "Auto Open True Hub",
         type: "boolean",
         default: true
       }),
-      scrollPaging: settings3.add("enableScrollPaging", {
+      scrollPaging: settings4.add("enableScrollPaging", {
         name: "Enable Scroll Paging",
         type: "boolean",
         default: true
@@ -5799,22 +5828,22 @@ Version: v${version}`;
     return matchesPage("/Hub");
   }
   function initTrueHubBridge(plugin) {
-    const settings3 = registerTrueHubBridgeSettings(plugin);
-    if (!settings3.enabled.value()) return;
+    const settings4 = registerTrueHubBridgeSettings(plugin);
+    if (!settings4.enabled.value()) return;
     if (!isHubPage()) return;
     const logger4 = createLogger("TrueHubBridge");
     const originalWarn = logger4.warn.bind(logger4);
     const originalLog = logger4.log.bind(logger4);
     logger4.log = (...args) => {
-      if (settings3.debugLogging.value()) originalLog(...args);
+      if (settings4.debugLogging.value()) originalLog(...args);
     };
     logger4.warn = (...args) => {
-      if (settings3.debugLogging.value()) originalWarn(...args);
+      if (settings4.debugLogging.value()) originalWarn(...args);
     };
     const overlay = createTrueHubOverlay({
       logger: logger4,
-      getAutoOpen: () => settings3.autoOpen.value(),
-      getScrollPaging: () => settings3.scrollPaging.value()
+      getAutoOpen: () => settings4.autoOpen.value(),
+      getScrollPaging: () => settings4.scrollPaging.value()
     });
     loadDecks().then((decks) => {
       overlay.setDecks(decks);
@@ -5824,24 +5853,24 @@ Version: v${version}`;
 
   // packages/deck-tracker/settings.js
   function registerDeckTrackerSettings(plugin) {
-    const settings3 = createFeatureSettings(plugin, "decktracker", {
+    const settings4 = createFeatureSettings(plugin, "decktracker", {
       tab: "Card Tracker",
       visible: () => isPluginEnabled("cardTracker")
     });
     const enabled = getPluginToggle("cardTracker");
     const debugLogging = debugLoggingSetting;
-    const retainUnclosedPresets = settings3.add("retainUnclosedPresets", {
+    const retainUnclosedPresets = settings4.add("retainUnclosedPresets", {
       name: "Retain Unclosed Presets Between Matches",
       type: "boolean",
       default: false
     });
-    const allowFavoritedRetainedWhileSpectating = settings3.add("allowFavoritedRetainedWhileSpectating", {
+    const allowFavoritedRetainedWhileSpectating = settings4.add("allowFavoritedRetainedWhileSpectating", {
       name: "Auto-load Presets While Spectating",
       note: "Applies to your own favorited/retained tracker presets specifically.",
       type: "boolean",
       default: false
     });
-    const dimOpacity = settings3.add("dimOpacity", {
+    const dimOpacity = settings4.add("dimOpacity", {
       name: "Tracker Dim Opacity",
       type: "slider",
       default: 0.4,
@@ -5850,7 +5879,7 @@ Version: v${version}`;
       step: 0.05
     });
     return {
-      settings: settings3,
+      settings: settings4,
       enabled,
       debugLogging,
       retainUnclosedPresets,
@@ -6854,7 +6883,7 @@ Version: v${version}`;
     }).on("mouseleave", function() {
       $(this).css("background", "");
     });
-    const thumb = $("<img>").attr("src", `${CARD_IMAGE_BASE2}${card.image}.png`).css({
+    const thumb2 = $("<img>").attr("src", `${CARD_IMAGE_BASE2}${card.image}.png`).css({
       width: "28px",
       aspectRatio: SPRITE_RATIO2,
       objectFit: "cover",
@@ -6863,7 +6892,7 @@ Version: v${version}`;
     }).on("error", function() {
       $(this).replaceWith($("<div>").css({ width: "28px", aspectRatio: SPRITE_RATIO2, background: "#333", flexShrink: 0 }));
     });
-    row.append(thumb, $("<span>").text(card.name));
+    row.append(thumb2, $("<span>").text(card.name));
     row.on("click", () => onPick(card));
     return row;
   }
@@ -7060,19 +7089,19 @@ Version: v${version}`;
     GM_deleteValue(BUTTON_POSITION_KEY);
   }
   function initDeckTracker(plugin) {
-    const settings3 = registerDeckTrackerSettings(plugin);
-    if (!settings3.enabled.value()) return;
+    const settings4 = registerDeckTrackerSettings(plugin);
+    if (!settings4.enabled.value()) return;
     if (!isGamePage()) return;
     const logger4 = createLogger("DeckTracker");
     const originalWarn = logger4.warn.bind(logger4);
     const originalLog = logger4.log.bind(logger4);
     logger4.log = (...args) => {
-      if (settings3.debugLogging.value()) originalLog(...args);
+      if (settings4.debugLogging.value()) originalLog(...args);
     };
     logger4.warn = (...args) => {
-      if (settings3.debugLogging.value()) originalWarn(...args);
+      if (settings4.debugLogging.value()) originalWarn(...args);
     };
-    setRetainEnabledGetter(() => settings3.retainUnclosedPresets.value());
+    setRetainEnabledGetter(() => settings4.retainUnclosedPresets.value());
     registerBuiltInPresets();
     function handleAddPreset(id) {
       spawnPreset(id);
@@ -7179,8 +7208,8 @@ Version: v${version}`;
         tryReveal();
       }
       function isUnderScriptMenuOpen() {
-        const menu = document.querySelector('.menu-content[role="Menu"]');
-        return menu !== null && menu.offsetParent !== null;
+        const menu2 = document.querySelector('.menu-content[role="Menu"]');
+        return menu2 !== null && menu2.offsetParent !== null;
       }
       function isBlockingModalOpen() {
         return document.body.classList.contains("modal-open") || document.querySelector(".modal-backdrop") !== null || isUnderScriptMenuOpen();
@@ -7192,7 +7221,7 @@ Version: v${version}`;
         const shouldDim = isBlockingModalOpen();
         if (shouldDim !== isDimmed) {
           isDimmed = shouldDim;
-          btn.style.opacity = shouldDim ? String(settings3.dimOpacity.value()) : "1";
+          btn.style.opacity = shouldDim ? String(settings4.dimOpacity.value()) : "1";
           btn.style.pointerEvents = shouldDim ? "none" : "auto";
         }
       }, 250);
@@ -7274,7 +7303,7 @@ Version: v${version}`;
       }
     });
     function restoreFavoritedAndRetained() {
-      if (isSpectating() && !settings3.allowFavoritedRetainedWhileSpectating.value()) return;
+      if (isSpectating() && !settings4.allowFavoritedRetainedWhileSpectating.value()) return;
       const favoritedIds = getFavoritedPresetIds();
       const spawnedFavorites = favoritedIds.filter((id) => spawnPreset(id) !== null);
       if (spawnedFavorites.length) {
@@ -7287,7 +7316,7 @@ Version: v${version}`;
           favoritedIds.filter((id) => !spawnedFavorites.includes(id))
         );
       }
-      if (settings3.retainUnclosedPresets.value()) {
+      if (settings4.retainUnclosedPresets.value()) {
         const retainedIds = getRetainedPresetIds().filter((id) => !favoritedIds.includes(id));
         retainedIds.forEach((id) => spawnPreset(id));
         if (retainedIds.length) {
@@ -7350,18 +7379,18 @@ Version: v${version}`;
     settingsRef = ref;
   }
   function registerUcTvSettings(plugin, divisionTiers) {
-    const settings3 = createFeatureSettings(plugin, "ucTv", {
+    const settings4 = createFeatureSettings(plugin, "ucTv", {
       tab: "UC TV",
       visible: () => isPluginEnabled("ucTv")
     });
     const enabled = getPluginToggle("ucTv");
     const debugLogs = debugLoggingSetting;
-    const autoMode = settings3.add("autoMode", {
+    const autoMode = settings4.add("autoMode", {
       name: "Enable auto-mode when spectating",
       type: "boolean",
       default: false
     });
-    const countdownSeconds = settings3.add("countdownSeconds", {
+    const countdownSeconds = settings4.add("countdownSeconds", {
       name: "Auto-continue delay (seconds)",
       type: "select",
       data: Array.from({ length: 15 }, (_, i) => i + 1).map((n) => [`${n}`, n]),
@@ -7370,11 +7399,11 @@ Version: v${version}`;
     const filterDisabled = () => !filteringEnabled.value();
     const filterDependents = [];
     const addFilter = (key2, config) => {
-      const setting3 = settings3.add(key2, { ...config, disabled: filterDisabled });
-      filterDependents.push(setting3);
-      return setting3;
+      const setting4 = settings4.add(key2, { ...config, disabled: filterDisabled });
+      filterDependents.push(setting4);
+      return setting4;
     };
-    const filteringEnabled = settings3.add("filteringEnabled", {
+    const filteringEnabled = settings4.add("filteringEnabled", {
       name: "Enable Match Filtering",
       type: "boolean",
       default: true,
@@ -7663,15 +7692,15 @@ Version: v${version}`;
   }
   function showCountdownViaToast(plugin, seconds, onComplete) {
     let remaining = seconds;
-    const toast = plugin.toast({
+    const toast2 = plugin.toast({
       title: "UC TV",
       text: `Spectating a new match in ${remaining}s... (${cancelHint()})`
     });
     function cancel() {
       clearInterval(interval);
       activeCancelFn = null;
-      if (toast && typeof toast.setText === "function") toast.setText("Auto-continue canceled.");
-      if (toast && typeof toast.close === "function") setTimeout(() => toast.close(), 1500);
+      if (toast2 && typeof toast2.setText === "function") toast2.setText("Auto-continue canceled.");
+      if (toast2 && typeof toast2.close === "function") setTimeout(() => toast2.close(), 1500);
       logDebug("Auto-continue canceled - Primary pressed during countdown.");
     }
     activeCancelFn = cancel;
@@ -7680,12 +7709,12 @@ Version: v${version}`;
       if (remaining <= 0) {
         clearInterval(interval);
         activeCancelFn = null;
-        if (toast && typeof toast.close === "function") toast.close();
+        if (toast2 && typeof toast2.close === "function") toast2.close();
         onComplete();
         return;
       }
-      if (toast && typeof toast.setText === "function") {
-        toast.setText(`Spectating a new match in ${remaining}s... (${cancelHint()})`);
+      if (toast2 && typeof toast2.setText === "function") {
+        toast2.setText(`Spectating a new match in ${remaining}s... (${cancelHint()})`);
       }
     }, 1e3);
   }
@@ -8109,8 +8138,8 @@ Version: v${version}`;
     return matchesPage({ prefix: "/Spectate" });
   }
   function initUcTv(plugin) {
-    const settings3 = registerUcTvSettings(plugin, DIVISION_TIERS);
-    setSettingsRef(settings3);
+    const settings4 = registerUcTvSettings(plugin, DIVISION_TIERS);
+    setSettingsRef(settings4);
     if (CONFIG.debugLogs) dumpSettingsState();
     window.__ucTVScope = scopeActiveGames;
     window.__ucTVSettings = dumpSettingsState;
@@ -10087,8 +10116,8 @@ Version: v${version}`;
       if (sendMenu && sendMenu.el.isConnected) return { el: sendMenu.el, prefix: "qs" };
       const editor = root.querySelector(".wz-tl-editor");
       if (editor) return { el: editor, prefix: "ed" };
-      const menu = root.querySelector(".wz-tl-menu");
-      if (menu) return { el: menu, prefix: "lm" };
+      const menu2 = root.querySelector(".wz-tl-menu");
+      if (menu2) return { el: menu2, prefix: "lm" };
       return null;
     }
     function items() {
@@ -10339,12 +10368,12 @@ Version: v${version}`;
       const key2 = held ? held.key : it && it.el.classList.contains("wz-tl-tile") ? it.el.dataset.key : null;
       if (!key2) return;
       const list = getActiveList();
-      const menu = document.createElement("div");
-      menu.className = "wz-tl-send";
+      const menu2 = document.createElement("div");
+      menu2.className = "wz-tl-send";
       const title = document.createElement("div");
       title.className = "wz-tl-send-title";
       title.textContent = "Send to tier";
-      menu.appendChild(title);
+      menu2.appendChild(title);
       const currentTier = list.tiers.find((t) => t.items.includes(key2));
       list.tiers.forEach((t) => {
         const b = document.createElement("button");
@@ -10358,7 +10387,7 @@ Version: v${version}`;
           held = null;
           closeSendMenu();
         });
-        menu.appendChild(b);
+        menu2.appendChild(b);
       });
       if (currentTier) {
         const b = document.createElement("button");
@@ -10370,19 +10399,19 @@ Version: v${version}`;
           held = null;
           closeSendMenu();
         });
-        menu.appendChild(b);
+        menu2.appendChild(b);
       }
-      root.appendChild(menu);
+      root.appendChild(menu2);
       const rr = root.getBoundingClientRect();
       const tr = (it ? it.el : root).getBoundingClientRect();
       let left = tr.right - rr.left + 6;
-      if (left + menu.offsetWidth > rr.width - 4) left = Math.max(4, tr.left - rr.left - menu.offsetWidth - 6);
+      if (left + menu2.offsetWidth > rr.width - 4) left = Math.max(4, tr.left - rr.left - menu2.offsetWidth - 6);
       let top = tr.top - rr.top;
-      if (top + menu.offsetHeight > rr.height - 4) top = Math.max(4, rr.height - menu.offsetHeight - 4);
-      menu.style.left = left + "px";
-      menu.style.top = Math.max(4, top) + "px";
-      sendMenu = { el: menu, key: key2, returnTo: focusId, returnRect: lastRect };
-      const buttons = [...menu.querySelectorAll("button")];
+      if (top + menu2.offsetHeight > rr.height - 4) top = Math.max(4, rr.height - menu2.offsetHeight - 4);
+      menu2.style.left = left + "px";
+      menu2.style.top = Math.max(4, top) + "px";
+      sendMenu = { el: menu2, key: key2, returnTo: focusId, returnRect: lastRect };
+      const buttons = [...menu2.querySelectorAll("button")];
       const start2 = Math.max(0, buttons.findIndex((b) => b.classList.contains("wz-tl-active")));
       focusId = `qs:${start2}`;
       dirty = true;
@@ -10692,8 +10721,8 @@ Version: v${version}`;
     }
     function openListsMenu() {
       closeListsMenu();
-      const menu = document.createElement("div");
-      menu.className = "wz-tl-menu";
+      const menu2 = document.createElement("div");
+      menu2.className = "wz-tl-menu";
       getLists().forEach((l) => {
         const row = document.createElement("button");
         row.type = "button";
@@ -10709,7 +10738,7 @@ Version: v${version}`;
           setActiveList(l.id);
           closeListsMenu();
         });
-        menu.appendChild(row);
+        menu2.appendChild(row);
       });
       const actions = document.createElement("div");
       actions.className = "wz-tl-menu-actions";
@@ -10744,13 +10773,13 @@ Version: v${version}`;
         closeListsMenu();
         importListDialog();
       });
-      menu.appendChild(actions);
-      win.root.appendChild(menu);
+      menu2.appendChild(actions);
+      win.root.appendChild(menu2);
       const r = listsBtn.getBoundingClientRect();
       const rr = win.root.getBoundingClientRect();
-      menu.style.left = Math.max(4, r.left - rr.left) + "px";
-      menu.style.top = r.bottom - rr.top + 4 + "px";
-      listsMenu = menu;
+      menu2.style.left = Math.max(4, r.left - rr.left) + "px";
+      menu2.style.top = r.bottom - rr.top + 4 + "px";
+      listsMenu = menu2;
       listsBtn.classList.add("wz-tl-active");
     }
     listsBtn.addEventListener("click", () => listsMenu ? closeListsMenu() : openListsMenu(), { signal });
@@ -11613,7 +11642,7 @@ Version: v${version}`;
     function currentState() {
       return { hue, saturation, lightness };
     }
-    function setState(nextHue, nextSaturation, nextLightness) {
+    function setState2(nextHue, nextSaturation, nextLightness) {
       hue = nextHue;
       saturation = nextSaturation;
       lightness = nextLightness;
@@ -11657,7 +11686,7 @@ Version: v${version}`;
     updateIndicatorPosition();
     notify2();
     container.append(wheelWrapper, lightnessRow, preview);
-    return { element: container, getColor: currentColor, getState: currentState, setState };
+    return { element: container, getColor: currentColor, getState: currentState, setState: setState2 };
   }
 
   // packages/misc/notepad/recent-colors.js
@@ -12482,9 +12511,9 @@ Version: v${version}`;
   }
   function openTagMenu(card, cards2, x, y) {
     closeTagMenu();
-    const menu = document.createElement("div");
-    menu.className = "wiza-tag-menu";
-    Object.assign(menu.style, {
+    const menu2 = document.createElement("div");
+    menu2.className = "wiza-tag-menu";
+    Object.assign(menu2.style, {
       position: "fixed",
       left: x + "px",
       top: y + "px",
@@ -12514,7 +12543,7 @@ Version: v${version}`;
       outline: "none",
       fontSize: "13px"
     });
-    menu.appendChild(filterInput);
+    menu2.appendChild(filterInput);
     const rowsWrap = document.createElement("div");
     Object.assign(rowsWrap.style, { maxHeight: "220px", overflowY: "auto" });
     function makeRow({ label, onClick, active, secondary, swatch }) {
@@ -12594,34 +12623,34 @@ Version: v${version}`;
       });
     }
     renderRows("");
-    menu.appendChild(rowsWrap);
+    menu2.appendChild(rowsWrap);
     filterInput.addEventListener("input", () => renderRows(filterInput.value));
     const divider = document.createElement("div");
     divider.style.cssText = "height:1px;background:rgba(255,255,255,0.15);";
-    menu.appendChild(divider);
+    menu2.appendChild(divider);
     const newTagRow = makeRow({ label: "+ New Tag", onClick: () => {
       closeTagMenu();
       promptNewTag(card, cards2, x, y);
     } });
     newTagRow.style.color = "#8f8";
-    menu.appendChild(newTagRow);
+    menu2.appendChild(newTagRow);
     const manageRow = makeRow({ label: "Manage Tags\u2026", onClick: () => {
       closeTagMenu();
       openManageTagsDialog();
     } });
     manageRow.style.color = "#9ab";
-    menu.appendChild(manageRow);
-    menu.addEventListener("click", (ev) => ev.stopPropagation());
-    document.body.appendChild(menu);
-    openMenuEl = menu;
-    const rect = menu.getBoundingClientRect();
-    if (rect.right > window.innerWidth) menu.style.left = Math.max(0, window.innerWidth - rect.width - 8) + "px";
-    if (rect.bottom > window.innerHeight) menu.style.top = Math.max(0, window.innerHeight - rect.height - 8) + "px";
+    menu2.appendChild(manageRow);
+    menu2.addEventListener("click", (ev) => ev.stopPropagation());
+    document.body.appendChild(menu2);
+    openMenuEl = menu2;
+    const rect = menu2.getBoundingClientRect();
+    if (rect.right > window.innerWidth) menu2.style.left = Math.max(0, window.innerWidth - rect.width - 8) + "px";
+    if (rect.bottom > window.innerHeight) menu2.style.top = Math.max(0, window.innerHeight - rect.height - 8) + "px";
     filterInput.focus();
     const openedAt = performance.now();
     function outsideCloser(e) {
       if (performance.now() - openedAt < 200) return;
-      if (menu.contains(e.target)) return;
+      if (menu2.contains(e.target)) return;
       closeTagMenu();
     }
     outsideClick = outsideCloser;
@@ -12681,7 +12710,7 @@ Version: v${version}`;
     }
     const wrapper = document.createElement("div");
     wrapper.style.cssText = "min-width:280px;max-height:320px;overflow-y:auto;";
-    function renderList2() {
+    function renderList3() {
       wrapper.innerHTML = "";
       if (!allTags().length) {
         const empty = document.createElement("div");
@@ -12728,13 +12757,13 @@ Version: v${version}`;
           if (e.detail !== 2) return;
           deleteTag(tag.id);
           decorateAllCards();
-          renderList2();
+          renderList3();
         });
         row.appendChild(delBtn);
         wrapper.appendChild(row);
       });
     }
-    renderList2();
+    renderList3();
     BootstrapDialog2.show({
       title: "Manage Tags",
       message: wrapper,
@@ -12743,7 +12772,7 @@ Version: v${version}`;
         { label: "Share\u2026", action: () => openShareTagsDialog() },
         { label: "Import\u2026", action: () => openImportTagsDialog(() => {
           decorateAllCards();
-          renderList2();
+          renderList3();
         }) },
         { label: "Close", action: (d) => {
           d.close();
@@ -12840,12 +12869,12 @@ Version: v${version}`;
 
   // packages/misc/index.js
   function initMisc(plugin) {
-    const settings3 = registerMiscSettings(plugin);
-    initCardTags(plugin, settings3.enableCardTags);
+    const settings4 = registerMiscSettings(plugin);
+    initCardTags(plugin, settings4.enableCardTags);
     let shownThisPage = null;
     function syncNotepadVisibility() {
-      const wanted = shownThisPage !== null ? shownThisPage : settings3.notepadOpenOnLoad.value();
-      if (settings3.enableNotepad.value() && wanted) {
+      const wanted = shownThisPage !== null ? shownThisPage : settings4.notepadOpenOnLoad.value();
+      if (settings4.enableNotepad.value() && wanted) {
         showNotepad();
       } else {
         hideNotepad();
@@ -12890,7 +12919,695 @@ Version: v${version}`;
       packageLabel: "Notepad",
       onMatch: () => redoNotepad()
     });
-    return settings3;
+    return settings4;
+  }
+
+  // packages/misc/wishlist/styles.js
+  var STYLE_ID2 = "wizascript-wishlist-style";
+  var CSS3 = `
+.wz-wl-menu { position: fixed; z-index: 2147483000; min-width: 170px; max-width: 280px; background: #000; color: #fff;
+  border: 1px solid #fff; font-size: 14px; user-select: none; box-shadow: 0 2px 8px rgba(0,0,0,.6); margin: 0; padding: 0; }
+.wz-wl-menu header { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-bottom: 1px solid #555; }
+.wz-wl-menu header img { width: 32px; height: 32px; object-fit: contain; flex: none; }
+.wz-wl-menu header img.wz-wl-wide { width: 64px; object-fit: cover; }
+.wz-wl-menu header small { display: block; color: #aaa; font-size: 11px; }
+.wz-wl-menu li { list-style: none; padding: 4px 10px; cursor: pointer; }
+.wz-wl-menu li:hover { background: #333; }
+.wz-wl-menu li.wz-wl-on { color: #ff6; }
+.wz-wl-menu li.wz-wl-off { color: #888; cursor: default; }
+.wz-wl-menu li.wz-wl-off:hover { background: transparent; }
+
+.wz-wl-shop-pin { outline: 3px solid #ff6 !important; outline-offset: 2px; border-radius: 4px; }
+.wz-wl-shop-star { position: absolute; margin: -6px 0 0 -6px; color: #ff6; font-size: 18px; line-height: 1;
+  text-shadow: 0 0 3px #000; pointer-events: none; z-index: 1; }
+.wz-wl-shop-target { animation: wz-wl-pulse 1s ease-in-out 3; }
+@keyframes wz-wl-pulse { 50% { outline-color: #fff; outline-offset: 6px; } }
+
+.wz-wl-toast-row { display: flex; align-items: center; gap: 6px; margin: 3px 0; text-align: left; }
+.wz-wl-toast-row img { height: 28px; width: 28px; object-fit: contain; flex: none; }
+.wz-wl-toast-row img.wz-wl-wide { width: 56px; object-fit: cover; }
+
+.wz-wl-list { flex-basis: 100%; margin-top: 4px; }
+.wz-wl-list-empty { color: #aaa; font-style: italic; padding: 4px 0; white-space: normal; }
+.wz-wl-row { display: flex; align-items: center; gap: 8px; padding: 3px 4px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.wz-wl-row img { height: 32px; width: 32px; object-fit: contain; flex: none; }
+.wz-wl-row img.wz-wl-wide { width: 64px; object-fit: cover; }
+.wz-wl-row-text { flex: 1; min-width: 0; line-height: 1.2; }
+.wz-wl-row-text small { display: block; color: #aaa; }
+.wz-wl-row button { flex: none; background: #300; color: #fff; border: 1px solid #a55; border-radius: 3px;
+  padding: 0 8px; line-height: 20px; cursor: pointer; }
+.wz-wl-row button:hover, .wz-wl-row button:focus { background: #622; }
+.wz-wl-status { flex-basis: 100%; color: #ccc; margin-top: 4px; white-space: normal; }
+`;
+  function injectWishlistStyle() {
+    if (document.getElementById(STYLE_ID2)) return;
+    const style = document.createElement("style");
+    style.id = STYLE_ID2;
+    style.textContent = CSS3;
+    (document.head || document.documentElement).appendChild(style);
+  }
+
+  // packages/misc/wishlist/detect.js
+  var TYPE_INFO = {
+    avatar: { folder: "avatars", label: "Avatar" },
+    emote: { folder: "emotes", label: "Emote" },
+    "profile-skin": { folder: "profiles", label: "Profile Skin" }
+  };
+  var FOLDERS = Object.entries(TYPE_INFO).map(([type, info]) => [info.folder, type]);
+  var SKIP_FILES = /^(YourBubble|EnemyBubble)\./i;
+  function nameFromFile(file) {
+    return file.replace(/\.[a-z0-9]+$/i, "").replace(/_/g, " ");
+  }
+  function imageUrl(type, file) {
+    const info = TYPE_INFO[type];
+    return info ? `/images/${info.folder}/${encodeURIComponent(file)}` : "";
+  }
+  function fromSrc(src) {
+    if (!src) return null;
+    const hit = FOLDERS.find(([folder]) => src.includes(`images/${folder}/`));
+    if (!hit) return null;
+    let file = src.split("/").pop().split(/[?#]/)[0];
+    try {
+      file = decodeURIComponent(file);
+    } catch (e) {
+    }
+    if (!file || SKIP_FILES.test(file)) return null;
+    const type = hit[1];
+    return { key: `${type}:${file}`, type, file, name: nameFromFile(file) };
+  }
+  function srcOf(el2) {
+    if (!(el2 instanceof Element)) return "";
+    if (el2.tagName === "IMG") return el2.getAttribute("src") || "";
+    const bg = getComputedStyle(el2).backgroundImage || "";
+    const m = bg.match(/url\(["']?([^"')]+)/);
+    return m ? m[1] : "";
+  }
+  function detectElement(el2) {
+    return fromSrc(srcOf(el2));
+  }
+  function findCosmetic(target) {
+    if (!(target instanceof Element)) return null;
+    let found = null;
+    const profile = target.closest("table.profile");
+    if (profile) found = detectElement(profile);
+    for (let n = target, i = 0; !found && n && i < 5; n = n.parentElement, i++) {
+      found = detectElement(n);
+    }
+    if (!found) return null;
+    const box = target.closest(".col-sm-1, tr");
+    const form = box && box.querySelector("form.cosmetic-purchase[data-name]");
+    const boxImg = box && box.querySelector("img");
+    const boxItem = boxImg ? fromSrc(boxImg.getAttribute("src")) : null;
+    if (form && boxItem && boxItem.key === found.key) {
+      found.name = form.getAttribute("data-name") || found.name;
+    }
+    return found;
+  }
+  function isFreeEmote(file) {
+    try {
+      const list = getPageWindow().chatEmotes;
+      if (!Array.isArray(list)) return false;
+      const e = list.find((x) => x && `${x.image}.png` === file);
+      return !!(e && Number(e.ucpCost) === 0);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // packages/misc/wishlist/storage.js
+  var ITEMS_KEY = "wizascript.wishlist.items";
+  var STATE_KEY2 = "wizascript.wishlist.state";
+  var listeners2 = /* @__PURE__ */ new Set();
+  function read(key2, fallback) {
+    try {
+      const raw = GM_getValue(key2, null);
+      if (!raw) return fallback;
+      const v = typeof raw === "string" ? JSON.parse(raw) : raw;
+      return v && typeof v === "object" ? v : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+  function write(key2, value) {
+    GM_setValue(key2, JSON.stringify(value));
+  }
+  function emit() {
+    listeners2.forEach((fn) => {
+      try {
+        fn();
+      } catch (e) {
+      }
+    });
+  }
+  function getItems() {
+    return read(ITEMS_KEY, {});
+  }
+  function getItemList() {
+    return Object.entries(getItems()).map(([key2, v]) => ({ key: key2, ...v })).sort((a, b) => (a.added || 0) - (b.added || 0));
+  }
+  function hasItems() {
+    return Object.keys(getItems()).length > 0;
+  }
+  function isPinned(key2) {
+    return !!getItems()[key2];
+  }
+  function addItem({ key: key2, type, file, name }) {
+    const items = getItems();
+    if (items[key2]) return;
+    items[key2] = { type, file, name, added: Date.now() };
+    write(ITEMS_KEY, items);
+    emit();
+  }
+  function removeItem2(key2) {
+    const items = getItems();
+    if (!items[key2]) return;
+    delete items[key2];
+    write(ITEMS_KEY, items);
+    emit();
+  }
+  function updateItems(fn) {
+    const items = getItems();
+    fn(items);
+    write(ITEMS_KEY, items);
+    emit();
+  }
+  function onItemsChange(fn) {
+    listeners2.add(fn);
+    return () => listeners2.delete(fn);
+  }
+  function getState() {
+    return read(STATE_KEY2, {});
+  }
+  function setState(patch) {
+    write(STATE_KEY2, { ...getState(), ...patch });
+  }
+
+  // packages/misc/wishlist/menu.js
+  var menu = null;
+  var wired = false;
+  function isWishlistMenuOpen() {
+    return !!(menu && menu.isConnected);
+  }
+  function closeWishlistMenu() {
+    const was = isWishlistMenuOpen();
+    if (menu) menu.remove();
+    menu = null;
+    return was;
+  }
+  function thumb(item) {
+    const img = document.createElement("img");
+    img.src = imageUrl(item.type, item.file);
+    img.alt = "";
+    if (item.type === "profile-skin") img.className = "wz-wl-wide";
+    return img;
+  }
+  function openMenu(item, x, y) {
+    closeWishlistMenu();
+    const pinned = isPinned(item.key);
+    const free = item.type === "emote" && isFreeEmote(item.file);
+    menu = document.createElement("ul");
+    menu.className = "wz-wl-menu";
+    const head = document.createElement("header");
+    const text = document.createElement("div");
+    text.append(item.name);
+    const sub = document.createElement("small");
+    sub.textContent = TYPE_INFO[item.type].label;
+    text.append(sub);
+    head.append(thumb(item), text);
+    const li = document.createElement("li");
+    if (free && !pinned) {
+      li.textContent = "Free for everyone - can't be pinned";
+      li.className = "wz-wl-off";
+    } else {
+      li.textContent = pinned ? "\u2605 Remove from Wishlist" : "\u2606 Add to Wishlist";
+      if (pinned) li.className = "wz-wl-on";
+      li.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (isPinned(item.key)) removeItem2(item.key);
+        else addItem(item);
+        closeWishlistMenu();
+      });
+    }
+    menu.append(head, li);
+    document.body.appendChild(menu);
+    const r = menu.getBoundingClientRect();
+    menu.style.left = Math.max(4, Math.min(x, window.innerWidth - r.width - 4)) + "px";
+    menu.style.top = Math.max(4, Math.min(y, window.innerHeight - r.height - 4)) + "px";
+  }
+  function wireWishlistMenu() {
+    if (wired) return;
+    wired = true;
+    document.addEventListener("contextmenu", (e) => {
+      if (menu && menu.contains(e.target)) {
+        e.preventDefault();
+        return;
+      }
+      const item = findCosmetic(e.target);
+      if (!item) return;
+      e.preventDefault();
+      e.stopPropagation();
+      openMenu(item, e.clientX, e.clientY);
+    }, true);
+    document.addEventListener("mousedown", (e) => {
+      if (menu && e.button === 0 && !menu.contains(e.target)) closeWishlistMenu();
+    }, true);
+    let swallowEscUp = false;
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && closeWishlistMenu()) {
+        e.stopPropagation();
+        swallowEscUp = true;
+      }
+    }, true);
+    document.addEventListener("keyup", (e) => {
+      if (e.key === "Escape" && swallowEscUp) {
+        swallowEscUp = false;
+        e.stopPropagation();
+      }
+    }, true);
+  }
+
+  // packages/misc/wishlist/shop.js
+  var SECTIONS = { "cosmetics-daily": "Daily", "cosmetics-new": "New", "cosmetics-sales": "Sale" };
+  function i18nKey(el2) {
+    return (el2.getAttribute("data-i18n") || "").replace(/^\[[a-z]+\]/i, "");
+  }
+  function parseTimer(text) {
+    const t = String(text == null ? "" : text).trim();
+    if (/^\d+$/.test(t)) return Number(t);
+    const parts = t.split(":").map((p) => Number(p));
+    if (!parts.length || parts.some((p) => !Number.isFinite(p))) return null;
+    const [s = 0, m = 0, h = 0, d = 0] = parts.reverse();
+    return d * 86400 + h * 3600 + m * 60 + s;
+  }
+  function parseShop(doc) {
+    const heads = [...doc.querySelectorAll("span[data-i18n]")].filter((s) => SECTIONS[i18nKey(s)]);
+    if (!heads.length) throw new Error(`not the Cosmetics Shop (page title: "${doc.title || "none"}")`);
+    const timers = { Daily: null, New: null, Sale: null };
+    heads.forEach((h) => {
+      const t = h.parentElement && h.parentElement.querySelector(".cosmetics-timer");
+      timers[SECTIONS[i18nKey(h)]] = t ? parseTimer(t.textContent) : null;
+    });
+    const items = [];
+    const seen = /* @__PURE__ */ new Set();
+    doc.querySelectorAll("img").forEach((img) => {
+      const found = fromSrc(img.getAttribute("src"));
+      if (!found) return;
+      let section = null;
+      heads.forEach((h) => {
+        if (h.compareDocumentPosition(img) & 4) section = SECTIONS[i18nKey(h)];
+      });
+      if (!section) return;
+      const box = img.closest(".col-sm-1") || img.closest("tr") || img.parentElement;
+      const form = box.querySelector("form.cosmetic-purchase");
+      const sale = (box.textContent.match(/\(-\s*(\d+)\s*%\)/) || [])[1];
+      const owned = [...box.querySelectorAll("[data-i18n]")].some((n) => i18nKey(n) === "cardskins-shop-owned");
+      const id = `${section}|${found.key}`;
+      if (seen.has(id)) return;
+      seen.add(id);
+      items.push({
+        ...found,
+        name: form && form.getAttribute("data-name") || found.name,
+        section,
+        cost: form ? Number(form.getAttribute("data-cost")) : null,
+        sale: sale ? Number(sale) : 0,
+        owned,
+        img
+      });
+    });
+    return { items, timers };
+  }
+  async function fetchShop() {
+    const res = await fetch("/CosmeticsShop", { credentials: "same-origin", cache: "no-store" });
+    if (!res.ok) throw new Error(`the shop answered with HTTP ${res.status}`);
+    const html = await res.text();
+    return parseShop(new DOMParser().parseFromString(html, "text/html"));
+  }
+
+  // packages/misc/wishlist/check.js
+  var FREQ_REFRESH = "After each shop refresh";
+  var FREQ_4H = "Every 4 hours";
+  var FREQ_12H = "Every 12 hours";
+  var FREQ_VISIT = "Only when I visit the shop";
+  var FREQUENCIES = [FREQ_REFRESH, FREQ_4H, FREQ_12H, FREQ_VISIT];
+  var REMIND_ONCE = "Once per shop refresh";
+  var REMIND_ALWAYS = "Every page load";
+  var REMINDS = [REMIND_ONCE, REMIND_ALWAYS];
+  var HOUR = 60 * 60 * 1e3;
+  var INTERVALS = { [FREQ_4H]: 4 * HOUR, [FREQ_12H]: 12 * HOUR };
+  var MIN_GAP = 2 * 60 * 1e3;
+  var RETRY_AFTER_FAIL = HOUR;
+  var LOCK_MS = 30 * 1e3;
+  var SAME_REFRESH = 5 * 60 * 1e3;
+  var AFTER_REFRESH = 60 * 1e3;
+  var esc2 = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  function noBackgroundHere() {
+    return matchesPage(["/Game", { prefix: "/Spectate" }]);
+  }
+  function isDue(freq, now = Date.now(), state2 = getState()) {
+    if (freq === FREQ_VISIT || !hasItems()) return false;
+    if (state2.checkingUntil && state2.checkingUntil > now) return false;
+    if (state2.retryAt && state2.retryAt > now) return false;
+    if (!state2.lastCheckAt) return true;
+    if (now - state2.lastCheckAt < MIN_GAP) return false;
+    if (!state2.nextDailyAt && !state2.nextWeeklyAt) return true;
+    if (state2.nextDailyAt && now >= state2.nextDailyAt) return true;
+    if (state2.nextWeeklyAt && now >= state2.nextWeeklyAt) return true;
+    const interval = INTERVALS[freq];
+    return !!(interval && now - state2.lastCheckAt >= interval);
+  }
+  function nextAt(prev, seconds, now) {
+    if (seconds == null) return null;
+    const at = now + seconds * 1e3 + AFTER_REFRESH;
+    return prev && Math.abs(prev - at) < SAME_REFRESH ? prev : at;
+  }
+  function applyShop(shop, now = Date.now()) {
+    const state2 = getState();
+    const nextDailyAt = nextAt(state2.nextDailyAt, shop.timers.Daily, now);
+    const weeklySecs = [shop.timers.New, shop.timers.Sale].filter((s) => s != null);
+    const nextWeeklyAt = nextAt(state2.nextWeeklyAt, weeklySecs.length ? Math.min(...weeklySecs) : null, now);
+    setState({ lastCheckAt: now, nextDailyAt, nextWeeklyAt, retryAt: 0, checkingUntil: 0 });
+    const removed = [];
+    const matches = [];
+    const pins = getItems();
+    if (shop.items.some((i) => pins[i.key])) {
+      updateItems((items) => {
+        shop.items.forEach((i) => {
+          const pin = items[i.key];
+          if (!pin) return;
+          if (i.owned) {
+            removed.push(pin.name || i.name);
+            delete items[i.key];
+            return;
+          }
+          if (i.name) pin.name = i.name;
+          pin.lastSeen = { section: i.section, cost: i.cost, sale: i.sale, at: now };
+          matches.push({ ...i, name: pin.name });
+        });
+      });
+    }
+    const cycle = (section) => section === "Daily" ? `D${nextDailyAt}` : `W${nextWeeklyAt}`;
+    return { matches, removed, cycle };
+  }
+  function rowsHtml(matches) {
+    return matches.map((m) => {
+      const wide = m.type === "profile-skin" ? ' class="wz-wl-wide"' : "";
+      const price = m.cost != null ? `${m.cost} UCP${m.sale ? ` (-${m.sale}%)` : ""}` : "";
+      return `<div class="wz-wl-toast-row"><img src="${esc2(imageUrl(m.type, m.file))}"${wide} alt=""><span><b>${esc2(m.name)}</b> <small>${TYPE_INFO[m.type].label}</small><br><small>${m.section === "Sale" ? "On sale" : m.section}${price ? ` \xB7 ${esc2(price)}` : ""}</small></span></div>`;
+    }).join("");
+  }
+  function goToShop(key2) {
+    location.href = "/CosmeticsShop" + (key2 ? `#wz=${encodeURIComponent(key2)}` : "");
+  }
+  function toast(plugin, opts) {
+    if (!plugin || typeof plugin.toast !== "function") return null;
+    return plugin.toast({ className: "dismissable", ...opts });
+  }
+  function showMatchesToast(plugin, matches) {
+    const n = matches.length;
+    return toast(plugin, {
+      title: `${n} wishlist item${n === 1 ? "" : "s"} in the Cosmetics Shop!`,
+      text: rowsHtml(matches),
+      buttons: [{ text: "Take me there!", className: "dismiss", onclick: () => goToShop(matches[0].key) }]
+    });
+  }
+  function showRemovedToast(plugin, names) {
+    if (!names.length) return null;
+    return toast(plugin, {
+      title: "Cosmetic Wishlist",
+      text: `Removed from your wishlist (you own ${names.length === 1 ? "it" : "them"} now): ${names.map(esc2).join(", ")}`
+    });
+  }
+  function formatIn(ms) {
+    if (!(ms > 0)) return "soon";
+    const mins = Math.round(ms / 6e4);
+    const d = Math.floor(mins / 1440), h = Math.floor(mins % 1440 / 60), m = mins % 60;
+    return [d ? `${d}d` : "", h ? `${h}h` : "", !d && m ? `${m}m` : ""].filter(Boolean).join(" ") || "under a minute";
+  }
+  async function backgroundCheck(plugin, { freq, remind }) {
+    if (noBackgroundHere() || !isDue(freq)) return null;
+    const now = Date.now();
+    setState({ checkingUntil: now + LOCK_MS });
+    let shop;
+    try {
+      shop = await fetchShop();
+    } catch (e) {
+      setState({ checkingUntil: 0, retryAt: Date.now() + RETRY_AFTER_FAIL });
+      return { error: e };
+    }
+    const result = applyShop(shop, Date.now());
+    showRemovedToast(plugin, result.removed);
+    const state2 = getState();
+    const notified = { ...state2.notified || {} };
+    const fresh = remind === REMIND_ALWAYS ? result.matches : result.matches.filter((m) => notified[m.key] !== result.cycle(m.section));
+    result.matches.forEach((m) => {
+      notified[m.key] = result.cycle(m.section);
+    });
+    const pins = getItems();
+    Object.keys(notified).forEach((k) => {
+      if (!pins[k]) delete notified[k];
+    });
+    setState({ notified });
+    if (fresh.length) showMatchesToast(plugin, fresh);
+    return { ...result, shown: fresh };
+  }
+  async function manualCheck(plugin) {
+    let shop;
+    try {
+      shop = await fetchShop();
+    } catch (e) {
+      toast(plugin, { title: "Cosmetic Wishlist", text: `Couldn't read the Cosmetics Shop: ${esc2(e.message)}` });
+      return { error: e };
+    }
+    const result = applyShop(shop, Date.now());
+    showRemovedToast(plugin, result.removed);
+    const notified = { ...getState().notified || {} };
+    result.matches.forEach((m) => {
+      notified[m.key] = result.cycle(m.section);
+    });
+    setState({ notified });
+    if (result.matches.length) {
+      showMatchesToast(plugin, result.matches);
+    } else {
+      const state2 = getState();
+      toast(plugin, {
+        title: "Cosmetic Wishlist",
+        text: `Nothing from your wishlist is in the Cosmetics Shop right now.` + (state2.nextDailyAt ? `<br><small>Next daily refresh in ${formatIn(state2.nextDailyAt - Date.now())}.</small>` : "")
+      });
+    }
+    return result;
+  }
+  function readLiveShop(plugin) {
+    let shop;
+    try {
+      shop = parseShop(document);
+    } catch (e) {
+      return null;
+    }
+    const result = applyShop(shop, Date.now());
+    showRemovedToast(plugin, result.removed);
+    const notified = { ...getState().notified || {} };
+    result.matches.forEach((m) => {
+      notified[m.key] = result.cycle(m.section);
+    });
+    setState({ notified });
+    return { shop, ...result };
+  }
+
+  // packages/misc/wishlist/index.js
+  var TAB2 = "Cosmetic Wishlist";
+  var BACKGROUND_DELAY_MS = 3e3;
+  var settings3 = null;
+  var pluginRef = null;
+  function setting3(key2, fallback) {
+    try {
+      return settings3 ? settings3.value(key2) : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+  function whenText(at) {
+    if (!at) return "";
+    const d = new Date(at);
+    return d.toLocaleDateString(void 0, { month: "short", day: "numeric" });
+  }
+  function lastSeenText(pin) {
+    const s = pin.lastSeen;
+    if (!s) return "Not seen in the shop yet";
+    const where = s.section === "Sale" ? "on sale" : `in ${s.section}`;
+    return `Last seen ${where}, ${whenText(s.at)}${s.cost != null ? ` \xB7 ${s.cost} UCP` : ""}`;
+  }
+  function renderList2(box, label) {
+    const pins = getItemList();
+    if (label) label.textContent = `Your Wishlist (${pins.length})`;
+    box.textContent = "";
+    if (!pins.length) {
+      const empty = document.createElement("div");
+      empty.className = "wz-wl-list-empty";
+      empty.textContent = "Nothing pinned yet. Right-click an avatar, emote or profile skin anywhere on the site and choose Add to Wishlist.";
+      box.appendChild(empty);
+      return;
+    }
+    pins.forEach((pin) => {
+      const row = document.createElement("div");
+      row.className = "wz-wl-row";
+      const img = document.createElement("img");
+      img.src = imageUrl(pin.type, pin.file);
+      img.alt = "";
+      if (pin.type === "profile-skin") img.className = "wz-wl-wide";
+      const text = document.createElement("div");
+      text.className = "wz-wl-row-text";
+      text.append(pin.name || pin.file);
+      const sub = document.createElement("small");
+      sub.textContent = `${(TYPE_INFO[pin.type] || {}).label || pin.type} \xB7 ${lastSeenText(pin)}`;
+      text.appendChild(sub);
+      const del = document.createElement("button");
+      del.type = "button";
+      del.textContent = "\xD7";
+      del.title = "Remove from your wishlist";
+      del.setAttribute("aria-label", `Remove ${pin.name || pin.file}`);
+      del.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        removeItem2(pin.key);
+      });
+      row.append(img, text, del);
+      box.appendChild(row);
+    });
+  }
+  function registerTabWidgets() {
+    registerSettingWidget("wishlist.list", (el2) => {
+      el2.readOnly = true;
+      el2.tabIndex = -1;
+      el2.style.display = "none";
+      const row = el2.closest(".flex-start");
+      if (!row) return;
+      const label = row.querySelector("label");
+      if (label) label.style.fontWeight = "bold";
+      const box = document.createElement("div");
+      box.className = "wz-wl-list";
+      row.appendChild(box);
+      renderList2(box, label);
+      const off = onItemsChange(() => {
+        if (!box.isConnected) {
+          off();
+          return;
+        }
+        renderList2(box, label);
+      });
+    });
+    let checking = false;
+    registerSettingWidget("wishlist.checkNow", (el2) => {
+      asButton("Check Shop Now", async (input) => {
+        if (checking) return;
+        checking = true;
+        input.value = "Checking\u2026";
+        const row = input.closest(".flex-start");
+        let status = row && row.querySelector(".wz-wl-status");
+        if (row && !status) {
+          status = document.createElement("div");
+          status.className = "wz-wl-status";
+          row.appendChild(status);
+        }
+        const result = await manualCheck(pluginRef);
+        checking = false;
+        input.value = "Check Shop Now";
+        if (!status) return;
+        if (result.error) {
+          status.textContent = `Couldn't read the shop: ${result.error.message}`;
+        } else if (result.matches.length) {
+          status.textContent = `In the shop now: ${result.matches.map((m) => m.name).join(", ")}. Close Settings to see the message with Take me there!`;
+        } else {
+          const next = getState().nextDailyAt;
+          status.textContent = "Nothing from your wishlist is in the shop right now." + (next ? ` Next daily refresh in ${formatIn(next - Date.now())}.` : "");
+        }
+      })(el2);
+    });
+  }
+  function decorateShop(shop) {
+    document.querySelectorAll(".wz-wl-shop-star").forEach((n) => n.remove());
+    document.querySelectorAll(".wz-wl-shop-pin").forEach((n) => n.classList.remove("wz-wl-shop-pin"));
+    const pins = getItems();
+    shop.items.forEach((i) => {
+      if (!pins[i.key] || !i.img || !i.img.isConnected) return;
+      i.img.classList.add("wz-wl-shop-pin");
+      const star = document.createElement("span");
+      star.className = "wz-wl-shop-star";
+      star.textContent = "\u2605";
+      star.title = "On your wishlist";
+      i.img.parentElement.insertBefore(star, i.img);
+    });
+  }
+  function initShopPage() {
+    const result = readLiveShop(pluginRef);
+    if (!result) return;
+    const shop = result.shop;
+    decorateShop(shop);
+    const want = (location.hash.match(/wz=([^&]+)/) || [])[1];
+    if (want) {
+      let key2 = want;
+      try {
+        key2 = decodeURIComponent(want);
+      } catch (e) {
+      }
+      const hit = shop.items.find((i) => i.key === key2);
+      if (hit && hit.img) {
+        hit.img.scrollIntoView({ block: "center", behavior: "smooth" });
+        hit.img.classList.add("wz-wl-shop-target");
+      }
+    }
+    onItemsChange(() => decorateShop(shop));
+  }
+  function initWishlist(plugin) {
+    pluginRef = plugin;
+    settings3 = createFeatureSettings(plugin, "wishlist", {
+      tab: TAB2,
+      visible: () => isPluginEnabled("wishlist")
+    });
+    settings3.add("list", {
+      name: "Your Wishlist",
+      type: "text",
+      default: ""
+    });
+    settings3.add("checkNow", {
+      name: "Check the Shop",
+      note: "Read the Cosmetics Shop now and show what's on your wishlist.",
+      type: "text",
+      default: "Check Shop Now"
+    });
+    settings3.add("frequency", {
+      name: "Shop Check Frequency",
+      note: "The shop only changes when it refreshes; that's checked by default.",
+      type: "select",
+      options: FREQUENCIES,
+      default: FREQ_REFRESH
+    });
+    settings3.add("remind", {
+      name: "Remind Me",
+      note: "Show a match once per shop refresh, or on every page load.",
+      type: "select",
+      options: REMINDS,
+      default: REMIND_ONCE
+    });
+    registerTabWidgets();
+    if (!isPluginEnabled("wishlist")) return;
+    injectWishlistStyle();
+    wireWishlistMenu();
+    const start = () => {
+      if (matchesPage("/CosmeticsShop")) {
+        initShopPage();
+        return;
+      }
+      setTimeout(() => {
+        backgroundCheck(plugin, {
+          freq: setting3("frequency", FREQ_REFRESH),
+          remind: setting3("remind", REMIND_ONCE)
+        }).catch(() => {
+        });
+      }, BACKGROUND_DELAY_MS);
+    };
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true });
+    else start();
   }
 
   // packages/controller/index.js
@@ -13389,8 +14106,8 @@ Version: v${version}`;
         const tabbedRoot = dialog.querySelector(".tabbedView.left");
         return tabbedRoot ? { root: dialog, kind: "tabbed", tabbedRoot } : { root: dialog, kind: "plain" };
       }
-      const menu = document.querySelector(".menu-backdrop");
-      if (menu && getComputedStyle(menu).display !== "none") return { root: menu, kind: "menu" };
+      const menu2 = document.querySelector(".menu-backdrop");
+      if (menu2 && getComputedStyle(menu2).display !== "none") return { root: menu2, kind: "menu" };
       return null;
     }
     function queryModalItems(root) {
@@ -14041,8 +14758,8 @@ Version: v${version}`;
       dispatchClick(el2, r.left + r.width / 2, r.top + r.height / 2, 0);
     }
     function triggerConcede() {
-      const menu = document.querySelector(".menu-backdrop");
-      const wasMenuOpen = !!(menu && getComputedStyle(menu).display !== "none");
+      const menu2 = document.querySelector(".menu-backdrop");
+      const wasMenuOpen = !!(menu2 && getComputedStyle(menu2).display !== "none");
       document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
       let attempts2 = 0;
       const MAX_ATTEMPTS = 30;
@@ -15423,6 +16140,7 @@ ${btnLabel(0)} select attacker   \u2193/${btnLabel(1)} hand`;
             } else if (!btn(3) && drag.right) {
               endPress("right", 2);
             }
+            if (btn(1) && !btnHeld[1]) closeWishlistMenu();
             btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
             cursor.style.display = "none";
             const hoverEl = document.elementFromPoint(x, y);
@@ -15567,7 +16285,7 @@ ${btnLabel(0)} select attacker   \u2193/${btnLabel(1)} hand`;
         } else if (!btn(3) && drag.right) {
           endPress("right", 2);
         }
-        if (btn(1) && !btnHeld[1]) closeSubmenu();
+        if (btn(1) && !btnHeld[1] && !closeWishlistMenu()) closeSubmenu();
         btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
         cursor.style.display = "none";
         const hitEl = document.elementFromPoint(x, y);
@@ -15600,6 +16318,7 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     initUcTv(plugin);
     initTierList(plugin);
     const miscSettings = initMisc(plugin);
+    initWishlist(plugin);
     initKeybinds(plugin);
     initController(plugin, miscSettings.enableController);
     registerPluginGuides(plugin);

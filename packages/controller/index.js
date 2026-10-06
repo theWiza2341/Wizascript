@@ -41,6 +41,7 @@ import {
   TIER_LIST_PAD_ACTIONS, getBoundTierListButton
 } from './settings.js';
 import { getTierListPad, toggleTierListFillScreen } from '../misc/tier-list/index.js';
+import { closeWishlistMenu } from '../misc/wishlist/menu.js';
 import { getHudPosition, setHudPosition, getCursorSensitivity, setCursorSensitivity } from './storage.js';
 import { getPageWindow } from '../core/page-window.js';
 // Read-only accessor for a real Wizascript keybind's CURRENT e.code,
@@ -3448,6 +3449,10 @@ export function initController(plugin, controllerEnabledSetting) {
             endPress('right', 2);
           }
 
+          // Back closes Cosmetic Wishlist's right-click menu (opened with
+          // the right-click button above).
+          if (btn(1) && !btnHeld[1]) closeWishlistMenu();
+
           btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
 
           // Cursor-only card-hover restoration for the general in-match
@@ -3588,7 +3593,8 @@ export function initController(plugin, controllerEnabledSetting) {
         endPress('right', 2);
       }
 
-      if (btn(1) && !btnHeld[1]) closeSubmenu();
+      // Back also closes Cosmetic Wishlist's right-click menu.
+      if (btn(1) && !btnHeld[1] && !closeWishlistMenu()) closeSubmenu();
 
       btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
 

@@ -15,6 +15,7 @@ import { initUcTv } from "./packages/uc-tv/index.js";
 // packages/misc/tier-list/ because it started out as a Misc feature.
 import { initTierList } from "./packages/misc/tier-list/index.js";
 import { initMisc } from "./packages/misc/index.js";
+import { initWishlist } from "./packages/misc/wishlist/index.js";
 import { initController } from "./packages/controller/index.js";
 
 // NOTE: Doom Reminder (both "Classic" chat-ping and "Evil" clickbait-
@@ -54,6 +55,7 @@ bootstrap(plugin => {
   initUcTv(plugin);
   initTierList(plugin);
   const miscSettings = initMisc(plugin);
+  initWishlist(plugin); // Miscellaneous, but with its own tab
   initKeybinds(plugin); // creates the Keybinds tab ahead of Controller Support's
   initController(plugin, miscSettings.enableController);
   // Last on each plugin's tab: the "How to use" box (plus the "?" links).

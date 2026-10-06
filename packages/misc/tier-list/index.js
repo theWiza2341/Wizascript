@@ -27,6 +27,7 @@ import { createTiersView } from "./tiers-view.js";
 import { createPicker } from "./picker.js";
 import { attachDrag } from "./drag.js";
 import { attachPreview } from "./preview.js";
+import { createPad } from "./pad.js";
 import { buildTile } from "./tiers-view.js";
 import { getCard, loadArtifacts, hasArtifacts } from "./items.js";
 import { encodeCode, decodeCode, showExportDialog, showImportDialog } from "../../core/share-code.js";
@@ -101,6 +102,22 @@ function headerButton(label, title) {
 
 export function isTierListOpen() {
   return !!mounted;
+}
+
+// For Controller Support: the open window's d-pad controller, or null
+// when the window is closed or something (a dialog, UnderScript's menu)
+// is on top of it.
+export function getTierListPad() {
+  if (!mounted || !mounted.pad) return null;
+  if (mounted.win.root.classList.contains("wz-tl-under-modal")) return null;
+  return mounted.pad;
+}
+
+// Controller toggle (Primary + Touchpad by default) - same as the keybind.
+export function toggleTierList() {
+  if (!isPluginEnabled("tierList")) return;
+  if (mounted) hideTierList();
+  else showTierList();
 }
 
 export function showTierList() {
@@ -239,12 +256,25 @@ export function showTierList() {
     loadArtifacts().then((ok) => { if (ok) renderAll(); });
   }
 
-  // Bootstrap dialogs sit far below our window - step behind while one is open.
-  const modalWatch = new MutationObserver(() => {
-    win.root.classList.toggle("wz-tl-under-modal", document.body.classList.contains("modal-open") || !!document.querySelector(".bootstrap-dialog.in, .modal.in"));
-  });
-  modalWatch.observe(document.body, { attributes: true, attributeFilter: ["class"], childList: true });
-  signal.addEventListener("abort", () => modalWatch.disconnect());
+  // Step behind anything UnderScript opens on top of the page, so a
+  // maximised tier list never hides it:
+  //  - Bootstrap dialogs (Settings, Share/Import, ...), z-index 1050;
+  //  - UnderScript's own menu (Esc), a .menu-backdrop at z-index 1010,
+  //    created the first time it opens and shown/hidden by its style.
+  let menuBackdrop = null;
+  const syncLayer = () => {
+    if (!menuBackdrop) {
+      menuBackdrop = document.querySelector(".menu-backdrop");
+      if (menuBackdrop) layerWatch.observe(menuBackdrop, { attributes: true, attributeFilter: ["style"] });
+    }
+    const dialogOpen = document.body.classList.contains("modal-open") || !!document.querySelector(".bootstrap-dialog.in, .modal.in");
+    const menuOpen = !!menuBackdrop && menuBackdrop.style.display === "block";
+    win.root.classList.toggle("wz-tl-under-modal", dialogOpen || menuOpen);
+  };
+  const layerWatch = new MutationObserver(syncLayer);
+  layerWatch.observe(document.body, { attributes: true, attributeFilter: ["class"], childList: true });
+  syncLayer();
+  signal.addEventListener("abort", () => layerWatch.disconnect());
 
   // ---- editing text items (double-click) ----
   win.root.addEventListener("dblclick", (e) => {
@@ -343,12 +373,24 @@ export function showTierList() {
   renderAll();
   ensureArtifacts();
 
-  mounted = { controller, win, picker };
+  const pad = createPad({
+    root: win.root,
+    tiers,
+    picker,
+    preview,
+    closeListsMenu,
+    isListsMenuOpen: () => !!listsMenu,
+    hide: () => hideTierList()
+  });
+  pad.start();
+
+  mounted = { controller, win, picker, pad };
   applyLook();
 }
 
 export function hideTierList() {
   if (!mounted) return;
+  if (mounted.pad) mounted.pad.clearDrawing();
   model.flushSave();
   mounted.controller.abort();
   mounted.win.root.remove();
@@ -418,11 +460,7 @@ export function initTierList(plugin) {
     name: "Toggle Tier List",
     defaultCode: "KeyL",
     packageLabel: "Tier List",
-    onMatch: () => {
-      if (!isPluginEnabled("tierList")) return;
-      if (mounted) hideTierList();
-      else showTierList();
-    }
+    onMatch: () => toggleTierList()
   });
 
   if (!isPluginEnabled("tierList")) return;

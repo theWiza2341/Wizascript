@@ -19,6 +19,7 @@
 // moved (packages/misc/notepad.js -> packages/misc/notepad/index.js).
 
 import { buildNotepadShell, DEFAULT_TITLE } from "./widget.js";
+import { watchOnScreen } from "../../core/on-screen.js";
 import { createDrawingSurface } from "./canvas.js";
 import { buildColorPicker } from "./color-wheel.js";
 import {
@@ -213,6 +214,9 @@ export function showNotepad() {
   colorColumn.append(colorLabel, picker.element, applyPenBtn, applyBgBtn, recentColorsRow.element);
   body.append(mainColumn, layersColumn, colorColumn);
   document.body.appendChild(root);
+  // A position saved on a bigger screen (or before this fix) could leave
+  // it partly off-screen - pull it back in, and keep it in on resize.
+  watchOnScreen(root);
 
   // ---- tool selection ----
   function selectTool(tool) {

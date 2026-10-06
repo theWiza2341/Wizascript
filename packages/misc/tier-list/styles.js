@@ -43,7 +43,44 @@ const CSS = `
    (and never mid-drag or with a menu/editor open), so it stays readable
    while you use it. */
 .wz-tl { opacity: var(--wz-tl-opacity, 1); transition: opacity 0.15s; }
-.wz-tl:hover, .wz-tl:focus-within, .wz-tl.wz-tl-busy { opacity: 1; }
+.wz-tl:hover, .wz-tl:focus-within, .wz-tl.wz-tl-busy, .wz-tl.wz-tl-pad { opacity: 1; }
+/* Controller d-pad mode: the highlighted item (colour = Controller
+   Support's "Selection Outline Color"), drawn inside the element so
+   scrolling containers don't clip it. */
+.wz-tl .wz-tl-pad-focus {
+  outline: 3px solid var(--wz-tl-pad-color, #3ea6ff) !important;
+  outline-offset: -3px;
+  box-shadow: 0 0 8px var(--wz-tl-pad-color, #3ea6ff);
+}
+.wz-tl .wz-tl-row-items.wz-tl-pad-focus { outline-offset: -2px; }
+.wz-tl .wz-tl-tile.wz-tl-pad-held { opacity: 0.45; outline: 2px dashed #fff; outline-offset: -3px; }
+.wz-tl .wz-tl-tile.wz-tl-pad-held.wz-tl-pad-focus { opacity: 0.7; }
+.wz-tl-send {
+  position: absolute;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 90px;
+  max-height: calc(100% - 8px);
+  overflow-y: auto;
+  padding: 5px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  background: #1c1c1c;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+}
+.wz-tl-send-title { color: #bbb; font-size: 11px; text-align: center; }
+.wz-tl-send-tier {
+  min-height: 24px;
+  padding: 2px 8px;
+  border: 1px solid #000;
+  border-radius: 3px;
+  color: #000;
+  font: bold 13px Arial, sans-serif;
+  cursor: pointer;
+}
+.wz-tl-send-tier.wz-tl-active::after { content: "  \\2713"; }
 /* Show Names on Tiles = off. Text items keep their label (it IS the tile). */
 .wz-tl-nonames .wz-tl-tile:not(.wz-tl-text) .wz-tl-tile-name,
 .wz-tl-ghost.wz-tl-nonames:not(.wz-tl-text) .wz-tl-tile-name { display: none; }
@@ -272,8 +309,9 @@ const CSS = `
    them so the heart sits above the name instead of filling the tile. */
 .wz-tl-results .wz-tl-tile.wz-tl-text .wz-tl-tile-name { padding-top: 16px; }
 .wz-tl-tile.wz-tl-soul { background-size: auto 46%; background-position: center 30%; }
-/* While any dialog (e.g. Share / Import) is open, sit under it. */
-.wz-tl.wz-tl-under-modal { z-index: 1030; }
+/* While a dialog (Settings, Share / Import) or UnderScript's Esc menu
+   (z-index 1010) is open, sit under it. */
+.wz-tl.wz-tl-under-modal { z-index: 1000; }
 .wz-tl-tile.wz-tl-text .wz-tl-tile-name { background: transparent; font-weight: bold; padding: 2px; line-height: 1.1; word-break: break-word; }
 .wz-tl-tile.wz-tl-text .wz-tl-tile-name input {
   width: 100%;

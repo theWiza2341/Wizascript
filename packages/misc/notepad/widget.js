@@ -11,6 +11,7 @@
 // across repeated show/hide cycles instead of being replaced.
 
 import { getSavedPosition, setSavedPosition, getSavedTitle, setSavedTitle } from "./storage.js";
+import { keepOnScreen } from "../../core/on-screen.js";
 
 const DEFAULT_RIGHT = 16;
 const DEFAULT_BOTTOM = 16;
@@ -86,6 +87,9 @@ export function buildNotepadShell(signal) {
     root.style.top = e.clientY - offsetY + "px";
     root.style.right = "auto";
     root.style.bottom = "auto";
+    // Never past the edge of the window, so the title bar and its
+    // close button always stay reachable.
+    keepOnScreen(root);
   }, { signal });
 
   document.addEventListener("mouseup", () => {

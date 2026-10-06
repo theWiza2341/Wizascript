@@ -70,7 +70,13 @@ export const CONTROLLER_ACTIONS = [
   // though the underlying relay mechanism itself works correctly in
   // isolation (proven by Move Entry/Section/Card already using it).
   { key: 'cycleCategoryUp', name: 'Cycle Category Up', packageLabel: 'Patch Maker', context: 'patchMaker', defaultButton: 14, dispatch: { code: 'Comma', key: ',' } },
-  { key: 'cycleCategoryDown', name: 'Cycle Category Down', packageLabel: 'Patch Maker', context: 'patchMaker', defaultButton: 15, dispatch: { code: 'Period', key: '.' } }
+  { key: 'cycleCategoryDown', name: 'Cycle Category Down', packageLabel: 'Patch Maker', context: 'patchMaker', defaultButton: 15, dispatch: { code: 'Period', key: '.' } },
+  // Relays Tier List Maker's own "Toggle Tier List" keybind (Primary + L
+  // by default), like Toggle Notepad. Default: Touchpad (17), which is
+  // also End Turn's default - fine, because In-Game Inputs stand down
+  // while Controller Primary is held (index.js), so Primary + Touchpad
+  // only toggles the tier list.
+  { key: 'toggleTierList', name: 'Toggle Tier List', packageLabel: 'Tier List', context: 'always', defaultButton: 17, dispatch: { code: 'KeyL', key: 'l' } }
 ];
 export const CONTROLLER_ACTIONS_BY_KEY = {};
 CONTROLLER_ACTIONS.forEach((a) => { CONTROLLER_ACTIONS_BY_KEY[a.key] = a; });
@@ -101,6 +107,20 @@ export const HARDWARE_SHORTCUT_DEFAULTS = {
 };
 export const HARDWARE_SHORTCUT_ACTIONS_BY_KEY = {};
 HARDWARE_SHORTCUT_ACTIONS.forEach((a) => { HARDWARE_SHORTCUT_ACTIONS_BY_KEY[a.key] = a; });
+
+// Tier List Maker's d-pad mode (packages/misc/tier-list/pad.js): single
+// buttons that only apply while the tier list window is open and on top.
+// The d-pad itself always moves the highlight (not remappable, like the
+// rest of Controller Support's navigation). Stored per preset under
+// "tierlist.<key>".
+export const TIER_LIST_PAD_ACTIONS = [
+  { key: 'tlSelect', name: 'Pick Up / Place / Press', defaultButton: 0 },
+  { key: 'tlBack', name: 'Cancel / Back / Close', defaultButton: 1 },
+  { key: 'tlQuickSend', name: 'Send to Tier…', defaultButton: 3 },
+  { key: 'tlJump', name: 'Jump: Tiers ↔ Items', defaultButton: 2 }
+];
+export const TIER_LIST_PAD_ACTIONS_BY_KEY = {};
+TIER_LIST_PAD_ACTIONS.forEach((a) => { TIER_LIST_PAD_ACTIONS_BY_KEY[a.key] = a; });
 
 export const DEFAULT_PRIMARY_BUTTON = 4; // L1
 
@@ -156,6 +176,13 @@ export function getBoundButton(actionKey) {
 }
 export function setBoundButton(actionKey, value) {
   csSet(presetKey('keybinds.' + actionKey), encodeBoundInput(value));
+}
+export function getBoundTierListButton(actionKey) {
+  const action = TIER_LIST_PAD_ACTIONS_BY_KEY[actionKey];
+  return decodeBoundInput(csGet(presetKey('tierlist.' + actionKey), String(action.defaultButton)), action.defaultButton);
+}
+export function setBoundTierListButton(actionKey, value) {
+  csSet(presetKey('tierlist.' + actionKey), encodeBoundInput(value));
 }
 export function getBoundShortcutButton(actionKey) {
   const defaultButton = HARDWARE_SHORTCUT_DEFAULTS[actionKey];
@@ -542,7 +569,7 @@ function enhanceResetButton(el) {
   boundInputRefreshers.push(refreshDisplay);
 
   el.addEventListener('dblclick', () => {
-    resetPresetBindings(getActivePreset(), CONTROLLER_ACTIONS.map((a) => a.key), HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key));
+    resetPresetBindings(getActivePreset(), CONTROLLER_ACTIONS.map((a) => a.key), HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key), TIER_LIST_PAD_ACTIONS.map((a) => a.key));
     boundInputRefreshers.forEach((fn) => fn());
     el.value = '✅ Reset to Defaults';
     setTimeout(refreshDisplay, 1500);
@@ -595,11 +622,16 @@ function enhanceDetectControllerButton(el) {
    clashes with something else, recomputed when the tab renders, after
    every rebind, and on preset switch. Rules follow what index.js's frame
    loop actually does with each kind of binding:
-   - In-Game Inputs fire on press, every frame, regardless of Primary -
-     so they clash with each other, with Controller Primary, with the
-     Channel Guide, with the button half of any Primary+<btn> combo, and
-     with the buttons the controller itself uses to click/back/alt-click/
-     navigate/open UnderScript's menu.
+   - In-Game Inputs fire on press, every frame - except while Controller
+     Primary is held (1.6.0), so a Primary+<btn> combo never also fires
+     an In-Game Input on the same button. They clash with each other,
+     with Controller Primary, with the Channel Guide, and with the
+     buttons the controller itself uses to click/back/alt-click/navigate/
+     open UnderScript's menu.
+   - Tier List controls (1.6.0) only apply while the tier list window is
+     open; then they win over an In-Game Input on the same button. They
+     clash with each other, with Primary, the Channel Guide, the d-pad
+     (which moves around the list) and R1 (UnderScript's menu).
    - Controller Primary, while held, takes over the frame (combos only),
      so putting it on one of those navigation buttons disables that
      button's normal job; and a combo can't use Primary's own button.
@@ -642,7 +674,6 @@ export function computeControllerConflicts() {
     .filter((a) => !a.pluginId || isPluginEnabled(a.pluginId))
     .map((a) => ({ a, row: 'shortcut_' + a.key, input: getBoundShortcutButton(a.key) }))
     .filter((c) => c.input !== null);
-  const comboName = (a) => `${a.name} (Primary + ${bindingToDisplay(getBoundButton(a.key))})`;
 
   if (primary !== null && typeof primary === 'number' && BUILT_IN_BUTTON_USES[primary]) {
     add('controllerPrimary', `This button also ${BUILT_IN_BUTTON_USES[primary]}, which stops working while it's your Primary.`);
@@ -672,10 +703,24 @@ export function computeControllerConflicts() {
     if (typeof input === 'number' && BUILT_IN_BUTTON_USES[input]) {
       add(row, `This button also ${BUILT_IN_BUTTON_USES[input]}, so pressing it will do both.`);
     }
-    combos.forEach(({ a: combo, input: comboInput }) => {
-      if (!sameInput(input, comboInput)) return;
-      add(row, `Also used by ${comboName(combo)} - that combo will trigger this too.`);
-      add(combo.key, `This button is also ${a.name} (In-Game Inputs), which will trigger too.`);
+  });
+
+  // Tier List controls (only while the tier list window is open).
+  const padControls = isPluginEnabled('tierList')
+    ? TIER_LIST_PAD_ACTIONS.map((a) => ({ a, row: 'tierlistPad_' + a.key, input: getBoundTierListButton(a.key) })).filter((c) => c.input !== null)
+    : [];
+  padControls.forEach(({ a, row, input }, i) => {
+    padControls.forEach(({ a: other, input: otherInput }, j) => {
+      if (i !== j && sameInput(input, otherInput)) add(row, `Same button as ${other.name} - only one of them will work.`);
+    });
+    if (typeof input === 'number' && input >= 12 && input <= 15) add(row, 'The d-pad moves around the tier list, so this button can\'t do this too.');
+    if (sameInput(input, primary)) add(row, "Same button as Controller Primary, so this can't be pressed.");
+    if (sameInput(input, guide)) add(row, 'Same button as Channel Guide - both will happen.');
+    if (input === 5) add(row, "This button also opens UnderScript's menu, which would cover the tier list.");
+    shortcuts.forEach(({ a: sc, row: scRow, input: scInput }) => {
+      if (!sameInput(input, scInput)) return;
+      add(row, `Also ${sc.name} (In-Game Inputs) - while the tier list is open, this wins.`);
+      add(scRow, `Also the Tier List's ${a.name} - while the tier list is open, that wins.`);
     });
   });
 
@@ -697,7 +742,8 @@ function refreshControllerConflictWarnings() {
   const conflicts = computeControllerConflicts();
   const rowKeys = ['controllerPrimary', 'channelGuide']
     .concat(CONTROLLER_ACTIONS.map((a) => a.key))
-    .concat(HARDWARE_SHORTCUT_ACTIONS.map((a) => 'shortcut_' + a.key));
+    .concat(HARDWARE_SHORTCUT_ACTIONS.map((a) => 'shortcut_' + a.key))
+    .concat(TIER_LIST_PAD_ACTIONS.map((a) => 'tierlistPad_' + a.key));
   rowKeys.forEach((key) => {
     const input = document.getElementById(prefix + key);
     const row = input && input.closest('.flex-start');
@@ -774,6 +820,13 @@ function startControllerKeybindObserver(idPrefix) {
       if (CONTROLLER_ACTIONS_BY_KEY[bindingKey]) {
         enhanceControllerCaptureInput(el, () => getBoundButton(bindingKey), (v) => setBoundButton(bindingKey, v));
         return;
+      }
+      if (bindingKey.startsWith('tierlistPad_')) {
+        const padKey = bindingKey.slice('tierlistPad_'.length);
+        if (TIER_LIST_PAD_ACTIONS_BY_KEY[padKey]) {
+          enhanceControllerCaptureInput(el, () => getBoundTierListButton(padKey), (v) => setBoundTierListButton(padKey, v));
+          return;
+        }
       }
       if (bindingKey.startsWith('shortcut_')) {
         const shortcutKey = bindingKey.slice('shortcut_'.length);
@@ -946,6 +999,19 @@ export function registerControllerSettings(plugin, controllerEnabledSettingIn) {
       default: buttonToDisplay(action.defaultButton),
       category: action.packageLabel,
       hidden: hiddenUnless(pluginIdForLabel(action.packageLabel))
+    });
+  });
+
+  // Tier List Maker's in-window controls, in the same "Tier List"
+  // category as its Toggle combo above.
+  TIER_LIST_PAD_ACTIONS.forEach((action) => {
+    settings.add('tierlistPad_' + action.key, {
+      name: action.name,
+      note: 'While the tier list is open. The d-pad moves around it.',
+      type: 'text',
+      default: buttonToDisplay(action.defaultButton),
+      category: 'Tier List',
+      hidden: hiddenUnless('tierList')
     });
   });
 

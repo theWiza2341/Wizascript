@@ -13,7 +13,12 @@ Make your own tier lists right inside Undercards, using the game's current cards
 - Rename, recolour, reorder, add or delete tiers. Undo with **↶**.
 - Keep as many lists as you like with **Lists ▾**, and swap them with friends using **Share…** and **Import…** codes.
 - Rest the mouse on a card to see it in full.
+- **Controller support:** with Controller Support on, Primary + Touchpad opens it and the d-pad moves around the whole window. ✕ picks a card up and puts it down, △ sends it straight to a tier, □ jumps between the tiers and the item panel, and ○ cancels. All of these can be changed in the Controller Support tab.
 - Its own settings tab: card size, window opacity, names on tiles, preview delay, whether ranked items are greyed out or hidden in the panel, dragging from Crafting/Decks, and turning it off during your own matches.
+
+### Fixes
+- Controller Support: holding Controller Primary no longer also triggers an In-Game Input on the same button. Combos and In-Game Inputs can now share a button (like Toggle Tier List on Primary + Touchpad, and End Turn on Touchpad).
+- The Notepad and Card Tracker's trackers can no longer be dragged off the screen, where their close button couldn't be reached. Ones already off-screen come back into view, and they stay in view if you make the browser window smaller.
 
 ## 1.5.0
 

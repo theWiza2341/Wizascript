@@ -23,6 +23,7 @@ import { createFeatureSettings } from "./settings.js";
 import { registerSettingWidget } from "./setting-widgets.js";
 import { describeKeybind, getPrimaryKeyDisplay } from "./keybinds.js";
 import { bindingToDisplay } from "../controller/gamepad.js";
+import { getBoundButton, getBoundTierListButton } from "../controller/settings.js";
 import { getPageWindow } from "./page-window.js";
 
 function esc(s) {
@@ -35,6 +36,8 @@ function key(bindingKey, defaultCode) {
 }
 const primary = () => `<b>${esc(getPrimaryKeyDisplay())}</b>`;
 const pad = (i) => `<b>${esc(bindingToDisplay(i))}</b>`;
+// A player's current controller binding (button or key).
+const ctl = (binding) => `<b>${esc(bindingToDisplay(binding))}</b>`;
 
 // tab: the plugin's settings tab, or null if it has none.
 const GUIDES = {
@@ -123,7 +126,9 @@ const GUIDES = {
       'Pick <b>Cards</b>, <b>Souls</b>, <b>Artifacts</b> or <b>Text</b> in the bottom panel, then drag items into a tier. With Card Tags on, the card search also finds your tags. On Crafting/Decks you can drag cards straight from the page.',
       'Click a tier\'s label (or <b>⚙</b>) to edit it. Drag an item back to the panel to unrank it. Rest the mouse on a card to see it in full.',
       '<b>Lists ▾</b> switches or adds lists, and <b>Share…</b> / <b>Import…</b> swaps them with friends as codes. Saves automatically; <b>↶</b> undoes.'
-    ]
+    ].concat(isPluginEnabled("controller") ? [
+      `Controller: Primary + ${ctl(getBoundButton("toggleTierList"))} opens it. The d-pad moves around; ${ctl(getBoundTierListButton("tlSelect"))} picks up / places, ${ctl(getBoundTierListButton("tlQuickSend"))} sends to a tier, ${ctl(getBoundTierListButton("tlJump"))} jumps between tiers and items, ${ctl(getBoundTierListButton("tlBack"))} cancels.`
+    ] : [])
   }
 };
 

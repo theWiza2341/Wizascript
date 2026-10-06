@@ -66,12 +66,12 @@
   function resolve(v) {
     return typeof v === "function" ? v() : v;
   }
-  function createFeatureSettings(plugin, featureName, { tab, visible, categories = false } = {}) {
+  function createFeatureSettings(plugin, featureName, { tab, visible: visible2, categories = false } = {}) {
     const settingsApi = tab ? plugin.settings().page(tab) : plugin.settings();
     const registered = {};
     function add(key2, config) {
       const { category, page, hidden, ...rest } = config;
-      const isHidden = () => (visible ? !visible() : false) || resolve(hidden) === true;
+      const isHidden = () => (visible2 ? !visible2() : false) || resolve(hidden) === true;
       const dynamicCategory = categories && category ? { toString: () => isHidden() ? "N/A" : String(category), valueOf: () => isHidden() ? "N/A" : String(category) } : null;
       const setting3 = settingsApi.add({
         ...rest,
@@ -744,7 +744,12 @@ Make your own tier lists right inside Undercards, using the game's current cards
 - Rename, recolour, reorder, add or delete tiers. Undo with **\u21B6**.
 - Keep as many lists as you like with **Lists \u25BE**, and swap them with friends using **Share\u2026** and **Import\u2026** codes.
 - Rest the mouse on a card to see it in full.
+- **Controller support:** with Controller Support on, Primary + Touchpad opens it and the d-pad moves around the whole window. \u2715 picks a card up and puts it down, \u25B3 sends it straight to a tier, \u25A1 jumps between the tiers and the item panel, and \u25CB cancels. All of these can be changed in the Controller Support tab.
 - Its own settings tab: card size, window opacity, names on tiles, preview delay, whether ranked items are greyed out or hidden in the panel, dragging from Crafting/Decks, and turning it off during your own matches.
+
+### Fixes
+- Controller Support: holding Controller Primary no longer also triggers an In-Game Input on the same button. Combos and In-Game Inputs can now share a button (like Toggle Tier List on Primary + Touchpad, and End Turn on Touchpad).
+- The Notepad and Card Tracker's trackers can no longer be dragged off the screen, where their close button couldn't be reached. Ones already off-screen come back into view, and they stay in view if you make the browser window smaller.
 
 ## 1.5.0
 
@@ -1593,6 +1598,867 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     }
   }
 
+  // packages/controller/storage.js
+  var GM_PREFIX3 = "wizascript.controller.";
+  function csGet(key2, fallback) {
+    try {
+      const v = GM_getValue(GM_PREFIX3 + key2, null);
+      return v === null || v === void 0 ? fallback : v;
+    } catch (e) {
+      console.warn("[Wizascript Controller] GM_getValue failed, falling back to default:", e);
+      return fallback;
+    }
+  }
+  function csSet(key2, value) {
+    try {
+      GM_setValue(GM_PREFIX3 + key2, value);
+    } catch (e) {
+      console.warn("[Wizascript Controller] GM_setValue failed, binding will not persist:", e);
+    }
+  }
+  function csDelete(key2) {
+    try {
+      GM_deleteValue(GM_PREFIX3 + key2);
+    } catch (e) {
+      console.warn("[Wizascript Controller] GM_deleteValue failed:", e);
+    }
+  }
+  var PRESET_COUNT = 3;
+  var DEFAULT_PRESET_NAME_PREFIX = "Preset ";
+  function getActivePreset() {
+    const raw = csGet("activePreset", "1");
+    const n = parseInt(raw, 10);
+    return Number.isNaN(n) || n < 1 || n > PRESET_COUNT ? 1 : n;
+  }
+  function setActivePreset(n) {
+    csSet("activePreset", String(n));
+  }
+  function getPresetName(n) {
+    return csGet("presetName." + n, DEFAULT_PRESET_NAME_PREFIX + n);
+  }
+  function setPresetName(n, name) {
+    const trimmed = (name || "").trim();
+    csSet("presetName." + n, trimmed === "" ? DEFAULT_PRESET_NAME_PREFIX + n : trimmed);
+  }
+  function presetKey(rawKey) {
+    return "preset" + getActivePreset() + "." + rawKey;
+  }
+  function getHudPosition() {
+    const raw = csGet("debugHudPosition", null);
+    if (!raw) return null;
+    try {
+      const pos = JSON.parse(raw);
+      if (pos && typeof pos.left === "number" && typeof pos.top === "number") return pos;
+    } catch (e) {
+      console.warn("[Wizascript Controller] stored debug HUD position was invalid JSON, ignoring:", e);
+    }
+    return null;
+  }
+  function setHudPosition(left, top) {
+    csSet("debugHudPosition", JSON.stringify({ left, top }));
+  }
+  function getCursorSensitivity() {
+    const raw = csGet("cursorSensitivity", null);
+    if (raw === null) return 0;
+    const n = parseFloat(raw);
+    return Number.isNaN(n) ? 0 : Math.max(-1, Math.min(1, n));
+  }
+  function setCursorSensitivity(v) {
+    csSet("cursorSensitivity", String(Math.max(-1, Math.min(1, v))));
+  }
+  function migrateFlatBindingsToPresetOne(controllerActionKeys, hardwareShortcutKeys) {
+    if (csGet("migratedToPresetsV056", null) !== null) return;
+    const migrate = (rawKey) => {
+      const oldVal = csGet(rawKey, null);
+      if (oldVal === null) return;
+      const newKey = "preset1." + rawKey;
+      if (csGet(newKey, null) !== null) return;
+      csSet(newKey, oldVal);
+    };
+    migrate("keybinds.__primary");
+    controllerActionKeys.forEach((key2) => migrate("keybinds." + key2));
+    hardwareShortcutKeys.forEach((key2) => migrate("shortcuts." + key2));
+    csSet("migratedToPresetsV056", "true");
+    console.log("[Wizascript Controller] migrated any pre-preset-system bindings into Preset 1.");
+  }
+  function resetPresetBindings(presetN, controllerActionKeys, hardwareShortcutKeys, tierListKeys = []) {
+    const prefix = "preset" + presetN + ".";
+    csDelete(prefix + "keybinds.__primary");
+    csDelete(prefix + "keybinds.__channelGuide");
+    controllerActionKeys.forEach((key2) => csDelete(prefix + "keybinds." + key2));
+    hardwareShortcutKeys.forEach((key2) => csDelete(prefix + "shortcuts." + key2));
+    tierListKeys.forEach((key2) => csDelete(prefix + "tierlist." + key2));
+    console.log("[Wizascript Controller] reset preset " + presetN + "'s keybinds/shortcuts to their defaults.");
+  }
+
+  // packages/controller/settings.js
+  var CONTROLLER_ACTIONS = [
+    { key: "previousChannel", name: "Previous Channel", packageLabel: "UC TV", context: "channelSwitch", defaultButton: 14, dispatch: { code: "ArrowLeft", key: "ArrowLeft" } },
+    { key: "nextChannel", name: "Next Channel", packageLabel: "UC TV", context: "channelSwitch", defaultButton: 15, dispatch: { code: "ArrowRight", key: "ArrowRight" } },
+    { key: "toggleNotepad", name: "Toggle Notepad", packageLabel: "Notepad", context: "always", defaultButton: 3, dispatch: { code: "KeyO", key: "o" } },
+    { key: "resetNotepad", name: "Reset Notepad", packageLabel: "Notepad", context: "always", defaultButton: 2, dispatch: { code: "KeyN", key: "n" } },
+    { key: "undoNotepad", name: "Undo Drawing", packageLabel: "Notepad", context: "default", defaultButton: 13, dispatch: { code: "KeyZ", key: "z" } },
+    { key: "redoNotepad", name: "Redo Drawing", packageLabel: "Notepad", context: "default", defaultButton: 12, dispatch: { code: "KeyY", key: "y" } },
+    { key: "moveEntryUp", name: "Move Entry Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
+    { key: "moveEntryDown", name: "Move Entry Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
+    // Shortened from "Move Balance Section Up/Down" - the "- Primary +
+    // <button>" suffix registerControllerSettings() appends below already
+    // pushed the combined row name wide enough to force a horizontal
+    // scrollbar in the settings dialog. "Section" alone is unambiguous
+    // here (Patch Maker only has one thing called a "section"), matching
+    // "Entry"/"Card" already being bare nouns in the two actions above.
+    { key: "moveSectionUp", name: "Move Section Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
+    { key: "moveSectionDown", name: "Move Section Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
+    { key: "moveCardUp", name: "Move Card Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
+    { key: "moveCardDown", name: "Move Card Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
+    // Relays Patch Maker's own real "Cycle Category Up/Down" keybind
+    // (packages/patch-maker/overlay.js - Comma/Period by default,
+    // scope:'scoped'/selector:'.uc-li-text', same registry Move Entry/
+    // Section/Card Up/Down above already relay into successfully) exactly
+    // the same way those do: dispatch the real e.code Wizascript's own
+    // registry is listening for while Primary is synthetically held, and
+    // let that registry's own document.activeElement/selector check
+    // decide whether it actually applies. defaultButton is D-pad Left/
+    // Right (14/15) rather than Up/Down (12/13, already claimed by Move
+    // Entry/Section/Card in this same 'patchMaker' context) specifically
+    // to avoid a same-frame double-fire - Up/Down and Left/Right dispatch
+    // different e.codes, so sharing a button between two 'patchMaker'
+    // actions would relay BOTH every time it's pressed. Left/Right is
+    // free here: previousChannel/nextChannel above claim the same two
+    // buttons, but only under 'channelSwitch' context, which is mutually
+    // exclusive with 'patchMaker' by construction (see the `applies`
+    // check in index.js's relay). This is very likely the actual
+    // technical snag from the earlier, abandoned attempt at this exact
+    // feature - reusing Up/Down here would produce confusing dual
+    // behavior (moving the entry AND cycling its category on the same
+    // press) that could easily read as "wiring it was a pain," even
+    // though the underlying relay mechanism itself works correctly in
+    // isolation (proven by Move Entry/Section/Card already using it).
+    { key: "cycleCategoryUp", name: "Cycle Category Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 14, dispatch: { code: "Comma", key: "," } },
+    { key: "cycleCategoryDown", name: "Cycle Category Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 15, dispatch: { code: "Period", key: "." } },
+    // Relays Tier List Maker's own "Toggle Tier List" keybind (Primary + L
+    // by default), like Toggle Notepad. Default: Touchpad (17), which is
+    // also End Turn's default - fine, because In-Game Inputs stand down
+    // while Controller Primary is held (index.js), so Primary + Touchpad
+    // only toggles the tier list.
+    { key: "toggleTierList", name: "Toggle Tier List", packageLabel: "Tier List", context: "always", defaultButton: 17, dispatch: { code: "KeyL", key: "l" } }
+  ];
+  var CONTROLLER_ACTIONS_BY_KEY = {};
+  CONTROLLER_ACTIONS.forEach((a) => {
+    CONTROLLER_ACTIONS_BY_KEY[a.key] = a;
+  });
+  var HARDWARE_SHORTCUT_ACTIONS = [
+    { key: "openSettings", name: "Open Settings" },
+    { key: "yourDustpile", name: "Check Your Dustpile" },
+    { key: "opponentDustpile", name: "Check Opponent's Dustpile" },
+    { key: "endTurn", name: "End Turn" },
+    { key: "openWizascriptSettings", name: "Open Wizascript Settings" },
+    { key: "concede", name: "Concede" },
+    { key: "goHome", name: "Go to Home Page" },
+    // Key kept as-is (stored bindings use it); shown as Card Tracker since 1.5.0.
+    { key: "openDeckTrackerPresets", name: "Open Card Tracker Presets", pluginId: "cardTracker" }
+  ];
+  var HARDWARE_SHORTCUT_DEFAULTS = {
+    openSettings: 9,
+    yourDustpile: 10,
+    opponentDustpile: 11,
+    endTurn: 17,
+    openWizascriptSettings: 7,
+    concede: 8,
+    goHome: 16,
+    openDeckTrackerPresets: 6
+  };
+  var HARDWARE_SHORTCUT_ACTIONS_BY_KEY = {};
+  HARDWARE_SHORTCUT_ACTIONS.forEach((a) => {
+    HARDWARE_SHORTCUT_ACTIONS_BY_KEY[a.key] = a;
+  });
+  var TIER_LIST_PAD_ACTIONS = [
+    { key: "tlSelect", name: "Pick Up / Place / Press", defaultButton: 0 },
+    { key: "tlBack", name: "Cancel / Back / Close", defaultButton: 1 },
+    { key: "tlQuickSend", name: "Send to Tier\u2026", defaultButton: 3 },
+    { key: "tlJump", name: "Jump: Tiers \u2194 Items", defaultButton: 2 }
+  ];
+  var TIER_LIST_PAD_ACTIONS_BY_KEY = {};
+  TIER_LIST_PAD_ACTIONS.forEach((a) => {
+    TIER_LIST_PAD_ACTIONS_BY_KEY[a.key] = a;
+  });
+  var DEFAULT_PRIMARY_BUTTON = 4;
+  function encodeBoundInput(value) {
+    if (value === null || value === void 0) return "unbound";
+    if (typeof value === "number") return String(value);
+    if (value && value.type === "key") return "kb:" + value.code;
+    return "unbound";
+  }
+  function decodeBoundInput(raw, defaultValue) {
+    if (raw === "unbound") return null;
+    if (typeof raw === "string" && raw.indexOf("kb:") === 0) return { type: "key", code: raw.slice(3) };
+    const n = parseInt(raw, 10);
+    return Number.isNaN(n) ? defaultValue : n;
+  }
+  function getControllerPrimaryButton() {
+    return decodeBoundInput(csGet(presetKey("keybinds.__primary"), String(DEFAULT_PRIMARY_BUTTON)), DEFAULT_PRIMARY_BUTTON);
+  }
+  function setControllerPrimaryButton(value) {
+    csSet(presetKey("keybinds.__primary"), encodeBoundInput(value));
+  }
+  function getChannelGuideButton() {
+    return decodeBoundInput(csGet(presetKey("keybinds.__channelGuide"), "unbound"), null);
+  }
+  function setChannelGuideButton(value) {
+    csSet(presetKey("keybinds.__channelGuide"), encodeBoundInput(value));
+  }
+  function getBoundButton(actionKey) {
+    const action = CONTROLLER_ACTIONS_BY_KEY[actionKey];
+    return decodeBoundInput(csGet(presetKey("keybinds." + actionKey), String(action.defaultButton)), action.defaultButton);
+  }
+  function setBoundButton(actionKey, value) {
+    csSet(presetKey("keybinds." + actionKey), encodeBoundInput(value));
+  }
+  function getBoundTierListButton(actionKey) {
+    const action = TIER_LIST_PAD_ACTIONS_BY_KEY[actionKey];
+    return decodeBoundInput(csGet(presetKey("tierlist." + actionKey), String(action.defaultButton)), action.defaultButton);
+  }
+  function setBoundTierListButton(actionKey, value) {
+    csSet(presetKey("tierlist." + actionKey), encodeBoundInput(value));
+  }
+  function getBoundShortcutButton(actionKey) {
+    const defaultButton = HARDWARE_SHORTCUT_DEFAULTS[actionKey];
+    return decodeBoundInput(csGet(presetKey("shortcuts." + actionKey), String(defaultButton)), defaultButton);
+  }
+  function setBoundShortcutButton(actionKey, value) {
+    csSet(presetKey("shortcuts." + actionKey), encodeBoundInput(value));
+  }
+  var controllerEnabledSetting = null;
+  function isControllerSupportEnabled() {
+    if (!controllerEnabledSetting || typeof controllerEnabledSetting.value !== "function") return true;
+    try {
+      const v = controllerEnabledSetting.value();
+      return v === void 0 || v === null ? true : !!v;
+    } catch (e) {
+      return true;
+    }
+  }
+  var debugTextEnabledSetting = null;
+  var debugTextCheckedLive = null;
+  function observeDebugTextCheckbox(el2) {
+    el2.setAttribute("data-wc-enhanced", "true");
+    debugTextCheckedLive = !!el2.checked;
+    el2.addEventListener("change", () => {
+      debugTextCheckedLive = !!el2.checked;
+    });
+  }
+  function isDebugTextEnabled() {
+    if (debugTextCheckedLive !== null) return debugTextCheckedLive;
+    if (!debugTextEnabledSetting || typeof debugTextEnabledSetting.value !== "function") return false;
+    try {
+      return !!debugTextEnabledSetting.value();
+    } catch (e) {
+      return false;
+    }
+  }
+  var HIGHLIGHT_COLOR_PRESETS = [
+    ["Light Blue (default)", "#3ea6ff"],
+    ["Yellow", "#ffff00"],
+    // JUSTICE
+    ["Red", "red"],
+    // DETERMINATION
+    ["Green", "#00c000"],
+    // KINDNESS
+    ["Orange", "#fca500"],
+    // BRAVERY
+    ["Blue", "#0064ff"],
+    // INTEGRITY
+    ["Cyan", "#41fcff"],
+    // PATIENCE
+    ["Magenta", "#d535d9"]
+    // PERSEVERANCE
+  ];
+  var DEFAULT_HIGHLIGHT_COLOR = HIGHLIGHT_COLOR_PRESETS[0][1];
+  var highlightColorSetting = null;
+  var highlightColorLive = null;
+  function observeHighlightColorSelect(el2) {
+    el2.setAttribute("data-wc-enhanced", "true");
+    highlightColorLive = el2.value || null;
+    el2.addEventListener("change", () => {
+      highlightColorLive = el2.value || null;
+    });
+  }
+  function getHighlightColor() {
+    if (highlightColorLive) return highlightColorLive;
+    if (!highlightColorSetting || typeof highlightColorSetting.value !== "function") return DEFAULT_HIGHLIGHT_COLOR;
+    try {
+      return highlightColorSetting.value() || DEFAULT_HIGHLIGHT_COLOR;
+    } catch (e) {
+      return DEFAULT_HIGHLIGHT_COLOR;
+    }
+  }
+  var controllerCaptureActive = false;
+  function isControllerCaptureActive() {
+    return controllerCaptureActive;
+  }
+  var boundInputRefreshers = [];
+  function enhanceControllerInfoRow(el2) {
+    el2.setAttribute("data-wc-enhanced", "true");
+    el2.readOnly = true;
+    el2.tabIndex = -1;
+    el2.style.display = "none";
+  }
+  function enhanceControllerCaptureInput(el2, readBound, writeBound) {
+    el2.setAttribute("data-wc-enhanced", "true");
+    el2.readOnly = true;
+    Object.assign(el2.style, {
+      cursor: "pointer",
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      el2.value = bindingToDisplay(readBound());
+    }
+    refreshDisplay();
+    boundInputRefreshers.push(refreshDisplay);
+    el2.addEventListener("focus", () => {
+      el2.style.border = "1px solid #40E0D0";
+      el2.style.boxShadow = "0 0 4px #40E0D0";
+      el2.value = "Press a button or key...";
+      controllerCaptureActive = true;
+      let cancelled = false;
+      let ignoreUntilReleased = /* @__PURE__ */ new Set();
+      const gp0 = getMergedGamepad();
+      if (gp0) gp0.buttons.forEach((b, i) => {
+        if (b && b.pressed) ignoreUntilReleased.add(i);
+      });
+      function captureFrame() {
+        if (cancelled) return;
+        const gp = getMergedGamepad();
+        if (gp) {
+          gp.buttons.forEach((b, i) => {
+            if (!b) return;
+            if (!b.pressed) {
+              ignoreUntilReleased.delete(i);
+              return;
+            }
+            if (ignoreUntilReleased.has(i)) return;
+            finishCapture(i);
+          });
+        }
+        if (!cancelled) requestAnimationFrame(captureFrame);
+      }
+      function finishCapture(value) {
+        if (cancelled) return;
+        cancelled = true;
+        writeBound(value);
+        cleanup();
+        el2.blur();
+      }
+      function onKeydown(e) {
+        if (cancelled) return;
+        if (e.key === "Escape") {
+          e.preventDefault();
+          cancelled = true;
+          writeBound(null);
+          cleanup();
+          el2.blur();
+          return;
+        }
+        if (e.key === "Shift" || e.key === "Control" || e.key === "Alt" || e.key === "Meta") return;
+        const gpNow = getMergedGamepad();
+        if (gpNow && gpNow.buttons.some((b) => b && b.pressed)) return;
+        e.preventDefault();
+        finishCapture({ type: "key", code: e.code });
+      }
+      function cleanup() {
+        document.removeEventListener("keydown", onKeydown, true);
+      }
+      document.addEventListener("keydown", onKeydown, true);
+      requestAnimationFrame(captureFrame);
+      el2.addEventListener("blur", function onBlur() {
+        cancelled = true;
+        controllerCaptureActive = false;
+        el2.style.border = "1px solid #b4b4b4";
+        el2.style.boxShadow = "none";
+        cleanup();
+        refreshDisplay();
+        scheduleControllerConflictRefresh();
+        el2.removeEventListener("blur", onBlur);
+      });
+    });
+  }
+  var presetMenuState = null;
+  function getPresetMenuState() {
+    return presetMenuState;
+  }
+  function enhancePresetSelector(el2) {
+    el2.setAttribute("data-wc-enhanced", "true");
+    el2.readOnly = true;
+    el2.tabIndex = 0;
+    Object.assign(el2.style, {
+      cursor: "pointer",
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      el2.value = getPresetName(getActivePreset());
+    }
+    refreshDisplay();
+    boundInputRefreshers.push(refreshDisplay);
+    let menuEl = null;
+    function onOutsideClick(e) {
+      if (menuEl && !menuEl.contains(e.target) && e.target !== el2) closeMenu();
+    }
+    function onEscape(e) {
+      if (e.key === "Escape") closeMenu();
+    }
+    function closeMenu() {
+      if (!menuEl) return;
+      menuEl.remove();
+      menuEl = null;
+      presetMenuState = null;
+      document.removeEventListener("mousedown", onOutsideClick, true);
+      document.removeEventListener("keydown", onEscape, true);
+    }
+    function openMenu() {
+      if (menuEl) {
+        closeMenu();
+        return;
+      }
+      const rect = el2.getBoundingClientRect();
+      menuEl = document.createElement("div");
+      Object.assign(menuEl.style, {
+        position: "fixed",
+        left: rect.left + "px",
+        top: rect.bottom + 2 + "px",
+        width: Math.max(rect.width, 140) + "px",
+        background: "#111",
+        border: "1px solid #40E0D0",
+        borderRadius: "3px",
+        zIndex: 2147483647,
+        overflow: "hidden",
+        fontFamily: "inherit"
+      });
+      const rowEls = [];
+      for (let n = 1; n <= PRESET_COUNT; n++) {
+        const isActive = n === getActivePreset();
+        const row = document.createElement("div");
+        row.textContent = getPresetName(n) + (isActive ? "  \u2713" : "");
+        Object.assign(row.style, {
+          padding: "6px 10px",
+          cursor: "pointer",
+          color: "white",
+          background: isActive ? "#333" : "transparent"
+        });
+        row.addEventListener("mouseenter", () => {
+          row.style.background = "#40E0D0";
+          row.style.color = "black";
+        });
+        row.addEventListener("mouseleave", () => {
+          row.style.background = isActive ? "#333" : "transparent";
+          row.style.color = "white";
+        });
+        row.addEventListener("click", () => {
+          setActivePreset(n);
+          closeMenu();
+          boundInputRefreshers.forEach((fn) => fn());
+          if (isDebugTextEnabled()) console.log("[Wizascript Controller] switched to preset", n, "(" + getPresetName(n) + ")");
+        });
+        menuEl.appendChild(row);
+        rowEls.push(row);
+      }
+      document.body.appendChild(menuEl);
+      document.addEventListener("mousedown", onOutsideClick, true);
+      document.addEventListener("keydown", onEscape, true);
+      presetMenuState = { rows: rowEls, activeIndex: Math.max(0, getActivePreset() - 1), close: closeMenu };
+    }
+    el2.addEventListener("click", openMenu);
+  }
+  function enhancePresetNameInput(el2) {
+    el2.setAttribute("data-wc-enhanced", "true");
+    el2.readOnly = false;
+    Object.assign(el2.style, {
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      if (document.activeElement !== el2) el2.value = getPresetName(getActivePreset());
+    }
+    refreshDisplay();
+    boundInputRefreshers.push(refreshDisplay);
+    function commit() {
+      setPresetName(getActivePreset(), el2.value);
+      boundInputRefreshers.forEach((fn) => fn());
+    }
+    el2.addEventListener("blur", commit);
+    el2.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") el2.blur();
+    });
+  }
+  function enhanceResetButton(el2) {
+    el2.setAttribute("data-wc-enhanced", "true");
+    el2.readOnly = true;
+    el2.tabIndex = 0;
+    Object.assign(el2.style, {
+      cursor: "pointer",
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      el2.value = "Double Click to Reset";
+    }
+    refreshDisplay();
+    boundInputRefreshers.push(refreshDisplay);
+    el2.addEventListener("dblclick", () => {
+      resetPresetBindings(getActivePreset(), CONTROLLER_ACTIONS.map((a) => a.key), HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key), TIER_LIST_PAD_ACTIONS.map((a) => a.key));
+      boundInputRefreshers.forEach((fn) => fn());
+      el2.value = "\u2705 Reset to Defaults";
+      setTimeout(refreshDisplay, 1500);
+    });
+  }
+  function enhanceDetectControllerButton(el2) {
+    el2.setAttribute("data-wc-enhanced", "true");
+    el2.readOnly = true;
+    el2.tabIndex = 0;
+    Object.assign(el2.style, {
+      cursor: "pointer",
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      el2.value = isHidConnected() ? "\u2705 Controller Detected (WebHID)" : "\u{1F3AE} Click to Detect Controller (WebHID)";
+    }
+    refreshDisplay();
+    boundInputRefreshers.push(refreshDisplay);
+    el2.addEventListener("click", async () => {
+      if (isHidConnected()) return;
+      el2.value = "Check your browser's device picker\u2026";
+      try {
+        await connectWebHidController();
+      } finally {
+        refreshDisplay();
+      }
+    });
+  }
+  var CONFLICT_CLASS = "wizascript-controller-warning";
+  var BUILT_IN_BUTTON_USES = {
+    0: "clicks / selects",
+    1: "goes back / cancels",
+    3: "right-clicks",
+    12: "navigates up",
+    13: "navigates down",
+    14: "navigates left",
+    15: "navigates right",
+    5: "opens UnderScript's menu (and switches tabs in Settings)"
+  };
+  var GUIDE_BUTTONS = /* @__PURE__ */ new Set([0, 12, 13, 14, 15]);
+  function sameInput(a, b) {
+    if (a === null || a === void 0 || b === null || b === void 0) return false;
+    if (typeof a === "number" || typeof b === "number") return a === b;
+    return a.type === "key" && b.type === "key" && a.code === b.code;
+  }
+  function contextsOverlap(a, b) {
+    if (a === "always" || b === "always") return true;
+    const outside = (c) => c === "channelSwitch" || c === "default";
+    if (outside(a) && outside(b)) return true;
+    return a === "patchMaker" && b === "patchMaker";
+  }
+  function computeControllerConflicts() {
+    const out = /* @__PURE__ */ new Map();
+    const add = (key2, msg) => {
+      if (!out.has(key2)) out.set(key2, []);
+      out.get(key2).push(msg);
+    };
+    const primary2 = getControllerPrimaryButton();
+    const guide = isPluginEnabled("ucTv") ? getChannelGuideButton() : null;
+    const combos = CONTROLLER_ACTIONS.filter((a) => {
+      const id = pluginIdForLabel(a.packageLabel);
+      return !id || isPluginEnabled(id);
+    }).map((a) => ({ a, input: getBoundButton(a.key), code: getBoundKeybindCode(a.key, a.dispatch.code) })).filter((c) => c.input !== null);
+    const shortcuts = HARDWARE_SHORTCUT_ACTIONS.filter((a) => !a.pluginId || isPluginEnabled(a.pluginId)).map((a) => ({ a, row: "shortcut_" + a.key, input: getBoundShortcutButton(a.key) })).filter((c) => c.input !== null);
+    if (primary2 !== null && typeof primary2 === "number" && BUILT_IN_BUTTON_USES[primary2]) {
+      add("controllerPrimary", `This button also ${BUILT_IN_BUTTON_USES[primary2]}, which stops working while it's your Primary.`);
+    }
+    if (guide !== null) {
+      if (sameInput(guide, primary2)) {
+        add("channelGuide", "Same button as Controller Primary.");
+        add("controllerPrimary", "Same button as Channel Guide.");
+      }
+      if (typeof guide === "number" && GUIDE_BUTTONS.has(guide)) {
+        add("channelGuide", "The channel guide uses the d-pad and " + bindingToDisplay(0) + " to pick a channel, so this button would clash with it.");
+      }
+    }
+    shortcuts.forEach(({ a, row, input }, i) => {
+      if (sameInput(input, primary2)) {
+        add(row, "Same button as Controller Primary - pressing Primary will also do this.");
+        add("controllerPrimary", `Same button as ${a.name} - pressing Primary will also do that.`);
+      }
+      if (sameInput(input, guide)) {
+        add(row, "Same button as Channel Guide - both will happen.");
+        add("channelGuide", `Same button as ${a.name} - both will happen.`);
+      }
+      shortcuts.forEach(({ a: other, input: otherInput }, j) => {
+        if (i !== j && sameInput(input, otherInput)) add(row, `Same button as ${other.name} - both will happen.`);
+      });
+      if (typeof input === "number" && BUILT_IN_BUTTON_USES[input]) {
+        add(row, `This button also ${BUILT_IN_BUTTON_USES[input]}, so pressing it will do both.`);
+      }
+    });
+    const padControls = isPluginEnabled("tierList") ? TIER_LIST_PAD_ACTIONS.map((a) => ({ a, row: "tierlistPad_" + a.key, input: getBoundTierListButton(a.key) })).filter((c) => c.input !== null) : [];
+    padControls.forEach(({ a, row, input }, i) => {
+      padControls.forEach(({ a: other, input: otherInput }, j) => {
+        if (i !== j && sameInput(input, otherInput)) add(row, `Same button as ${other.name} - only one of them will work.`);
+      });
+      if (typeof input === "number" && input >= 12 && input <= 15) add(row, "The d-pad moves around the tier list, so this button can't do this too.");
+      if (sameInput(input, primary2)) add(row, "Same button as Controller Primary, so this can't be pressed.");
+      if (sameInput(input, guide)) add(row, "Same button as Channel Guide - both will happen.");
+      if (input === 5) add(row, "This button also opens UnderScript's menu, which would cover the tier list.");
+      shortcuts.forEach(({ a: sc, row: scRow, input: scInput }) => {
+        if (!sameInput(input, scInput)) return;
+        add(row, `Also ${sc.name} (In-Game Inputs) - while the tier list is open, this wins.`);
+        add(scRow, `Also the Tier List's ${a.name} - while the tier list is open, that wins.`);
+      });
+    });
+    combos.forEach(({ a, input, code }, i) => {
+      if (sameInput(input, primary2)) add(a.key, "Same button as Controller Primary, so this combo can't be pressed.");
+      if (sameInput(input, guide)) add(a.key, "Same button as Channel Guide - both will happen.");
+      combos.forEach(({ a: other, input: otherInput, code: otherCode }, j) => {
+        if (i === j || !sameInput(input, otherInput) || code === otherCode) return;
+        if (!contextsOverlap(a.context, other.context)) return;
+        add(a.key, `Same button as ${other.name} - both will happen.`);
+      });
+    });
+    return out;
+  }
+  function refreshControllerConflictWarnings() {
+    const prefix = "underscript.plugin.Wizascript.controller.";
+    if (!document.querySelector(`[id^="${prefix}"]`)) return;
+    const conflicts = computeControllerConflicts();
+    const rowKeys = ["controllerPrimary", "channelGuide"].concat(CONTROLLER_ACTIONS.map((a) => a.key)).concat(HARDWARE_SHORTCUT_ACTIONS.map((a) => "shortcut_" + a.key)).concat(TIER_LIST_PAD_ACTIONS.map((a) => "tierlistPad_" + a.key));
+    rowKeys.forEach((key2) => {
+      const input = document.getElementById(prefix + key2);
+      const row = input && input.closest(".flex-start");
+      if (!row) return;
+      const messages = conflicts.get(key2) || [];
+      let warn = row.querySelector(`:scope > .${CONFLICT_CLASS}`);
+      if (!messages.length) {
+        if (warn) warn.remove();
+        return;
+      }
+      const text = messages.map((m) => "\u26A0 " + m).join("\n");
+      if (!warn) {
+        warn = document.createElement("div");
+        warn.className = `setting-description ${CONFLICT_CLASS}`;
+        Object.assign(warn.style, { color: "#ffb347", opacity: "1", whiteSpace: "pre-line" });
+        row.appendChild(warn);
+      }
+      if (warn.textContent !== text) warn.textContent = text;
+    });
+  }
+  var controllerConflictRefreshQueued = false;
+  function scheduleControllerConflictRefresh() {
+    if (controllerConflictRefreshQueued) return;
+    controllerConflictRefreshQueued = true;
+    setTimeout(() => {
+      controllerConflictRefreshQueued = false;
+      refreshControllerConflictWarnings();
+    }, 0);
+  }
+  boundInputRefreshers.push(scheduleControllerConflictRefresh);
+  var controllerObserverStarted = false;
+  function startControllerKeybindObserver(idPrefix) {
+    if (controllerObserverStarted) return;
+    controllerObserverStarted = true;
+    let everFoundOne = false;
+    const observer2 = new MutationObserver(() => {
+      const matches = document.querySelectorAll(`input[id^="${idPrefix}"]:not([data-wc-enhanced]), select[id^="${idPrefix}"]:not([data-wc-enhanced])`);
+      if (matches.length) scheduleControllerConflictRefresh();
+      matches.forEach((el2) => {
+        everFoundOne = true;
+        const bindingKey = el2.id.slice(idPrefix.length);
+        if (bindingKey.startsWith("__info_")) {
+          enhanceControllerInfoRow(el2);
+          return;
+        }
+        if (bindingKey === "detectController") {
+          enhanceDetectControllerButton(el2);
+          return;
+        }
+        if (bindingKey === "presetSelector") {
+          enhancePresetSelector(el2);
+          return;
+        }
+        if (bindingKey === "presetName") {
+          enhancePresetNameInput(el2);
+          return;
+        }
+        if (bindingKey === "resetPreset") {
+          enhanceResetButton(el2);
+          return;
+        }
+        if (bindingKey === "controllerPrimary") {
+          enhanceControllerCaptureInput(el2, () => getControllerPrimaryButton(), (v) => setControllerPrimaryButton(v));
+          return;
+        }
+        if (bindingKey === "channelGuide") {
+          enhanceControllerCaptureInput(el2, () => getChannelGuideButton(), (v) => setChannelGuideButton(v));
+          return;
+        }
+        if (CONTROLLER_ACTIONS_BY_KEY[bindingKey]) {
+          enhanceControllerCaptureInput(el2, () => getBoundButton(bindingKey), (v) => setBoundButton(bindingKey, v));
+          return;
+        }
+        if (bindingKey.startsWith("tierlistPad_")) {
+          const padKey = bindingKey.slice("tierlistPad_".length);
+          if (TIER_LIST_PAD_ACTIONS_BY_KEY[padKey]) {
+            enhanceControllerCaptureInput(el2, () => getBoundTierListButton(padKey), (v) => setBoundTierListButton(padKey, v));
+            return;
+          }
+        }
+        if (bindingKey.startsWith("shortcut_")) {
+          const shortcutKey = bindingKey.slice("shortcut_".length);
+          if (HARDWARE_SHORTCUT_ACTIONS_BY_KEY[shortcutKey]) {
+            enhanceControllerCaptureInput(el2, () => getBoundShortcutButton(shortcutKey), (v) => setBoundShortcutButton(shortcutKey, v));
+            return;
+          }
+        }
+        if (bindingKey === "debugTextEnabled") {
+          observeDebugTextCheckbox(el2);
+          return;
+        }
+        if (bindingKey === "highlightColor") {
+          observeHighlightColorSelect(el2);
+          return;
+        }
+        el2.setAttribute("data-wc-enhanced", "true");
+      });
+    });
+    observer2.observe(document.body, { childList: true, subtree: true });
+    setTimeout(() => {
+      if (!everFoundOne) {
+        console.warn('[Wizascript Controller] never found any "Keybinds - Controller" <input> elements to enhance after 15s - either the category never rendered, or the assumed id pattern (' + idPrefix + "<key>) is wrong.");
+      }
+    }, 15e3);
+  }
+  function registerControllerSettings(plugin, controllerEnabledSettingIn) {
+    migrateFlatBindingsToPresetOne(
+      CONTROLLER_ACTIONS.map((a) => a.key),
+      HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key)
+    );
+    controllerEnabledSetting = controllerEnabledSettingIn;
+    const settings3 = createFeatureSettings(plugin, "controller", {
+      tab: "Controller Support",
+      visible: () => isPluginEnabled("controller"),
+      categories: true
+    });
+    const SETUP = "Setup";
+    const GENERAL = "General";
+    const IN_GAME = "In-Game Inputs";
+    const hiddenUnless = (pluginId) => () => pluginId ? !isPluginEnabled(pluginId) : false;
+    settings3.add("detectController", {
+      name: "Detect Controller",
+      note: "Click if your controller isn't responding.",
+      type: "text",
+      default: "Click to Detect Controller (WebHID)",
+      category: SETUP
+    });
+    settings3.add("presetSelector", {
+      name: "Settings Preset",
+      note: "Click to switch presets.",
+      type: "text",
+      default: getPresetName(getActivePreset()),
+      category: SETUP
+    });
+    settings3.add("presetName", {
+      name: "Preset Name",
+      note: "Renames whichever preset is currently selected above.",
+      type: "text",
+      default: getPresetName(getActivePreset()),
+      category: SETUP
+    });
+    settings3.add("resetPreset", {
+      name: "Restore Settings to Default",
+      note: "Double Click to reset selected preset settings",
+      type: "text",
+      default: "Double Click to Reset",
+      category: SETUP
+    });
+    debugTextEnabledSetting = settings3.add("debugTextEnabled", {
+      name: "Enable Debug Text",
+      type: "boolean",
+      default: false,
+      category: GENERAL
+    });
+    highlightColorSetting = settings3.add("highlightColor", {
+      name: "Selection Outline Color",
+      type: "select",
+      data: HIGHLIGHT_COLOR_PRESETS,
+      default: DEFAULT_HIGHLIGHT_COLOR,
+      category: GENERAL
+    });
+    settings3.add("controllerPrimary", {
+      name: "Controller Primary",
+      note: "Click to remap. Hold for combos below, same as Wizascript's own Primary Key.",
+      type: "text",
+      default: buttonToDisplay(DEFAULT_PRIMARY_BUTTON),
+      category: GENERAL
+    });
+    settings3.add("__info_openSettings", { name: "Double Tap Primary \u2192 Open Wizascript Settings", type: "text", default: "", category: GENERAL });
+    const seenLabels = /* @__PURE__ */ new Set();
+    CONTROLLER_ACTIONS.forEach((action) => {
+      if (!seenLabels.has(action.packageLabel)) {
+        seenLabels.add(action.packageLabel);
+        if (action.packageLabel === "UC TV") {
+          settings3.add("channelGuide", {
+            name: "Channel Guide (hold)",
+            type: "text",
+            default: buttonToDisplay(null),
+            category: "UC TV",
+            hidden: hiddenUnless("ucTv")
+          });
+        }
+      }
+      settings3.add(action.key, {
+        name: action.name + " - Primary + <btn>",
+        type: "text",
+        default: buttonToDisplay(action.defaultButton),
+        category: action.packageLabel,
+        hidden: hiddenUnless(pluginIdForLabel(action.packageLabel))
+      });
+    });
+    TIER_LIST_PAD_ACTIONS.forEach((action) => {
+      settings3.add("tierlistPad_" + action.key, {
+        name: action.name,
+        note: "While the tier list is open. The d-pad moves around it.",
+        type: "text",
+        default: buttonToDisplay(action.defaultButton),
+        category: "Tier List",
+        hidden: hiddenUnless("tierList")
+      });
+    });
+    HARDWARE_SHORTCUT_ACTIONS.forEach((action) => {
+      settings3.add("shortcut_" + action.key, {
+        name: action.name,
+        type: "text",
+        default: buttonToDisplay(HARDWARE_SHORTCUT_DEFAULTS[action.key]),
+        category: IN_GAME,
+        hidden: hiddenUnless(action.pluginId)
+      });
+    });
+    startControllerKeybindObserver("underscript.plugin.Wizascript.controller.");
+  }
+
   // packages/core/plugin-guides.js
   function esc(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -1603,6 +2469,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   }
   var primary = () => `<b>${esc(getPrimaryKeyDisplay())}</b>`;
   var pad = (i) => `<b>${esc(bindingToDisplay(i))}</b>`;
+  var ctl = (binding) => `<b>${esc(bindingToDisplay(binding))}</b>`;
   var GUIDES = {
     patchMaker: {
       tab: "Patch Maker",
@@ -1689,7 +2556,9 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         "Pick <b>Cards</b>, <b>Souls</b>, <b>Artifacts</b> or <b>Text</b> in the bottom panel, then drag items into a tier. With Card Tags on, the card search also finds your tags. On Crafting/Decks you can drag cards straight from the page.",
         "Click a tier's label (or <b>\u2699</b>) to edit it. Drag an item back to the panel to unrank it. Rest the mouse on a card to see it in full.",
         "<b>Lists \u25BE</b> switches or adds lists, and <b>Share\u2026</b> / <b>Import\u2026</b> swaps them with friends as codes. Saves automatically; <b>\u21B6</b> undoes."
-      ]
+      ].concat(isPluginEnabled("controller") ? [
+        `Controller: Primary + ${ctl(getBoundButton("toggleTierList"))} opens it. The d-pad moves around; ${ctl(getBoundTierListButton("tlSelect"))} picks up / places, ${ctl(getBoundTierListButton("tlQuickSend"))} sends to a tier, ${ctl(getBoundTierListButton("tlJump"))} jumps between tiers and items, ${ctl(getBoundTierListButton("tlBack"))} cancels.`
+      ] : [])
     }
   };
   function pluginName(id) {
@@ -4437,8 +5306,8 @@ Version: v${version}`;
     function renderPage() {
       trueHubList.innerHTML = "";
       const start = (currentPage2 - 1) * DECKS_PER_PAGE;
-      const visible = filteredDecks.slice(start, start + DECKS_PER_PAGE);
-      visible.forEach((deck) => trueHubList.appendChild(buildCard(deck)));
+      const visible2 = filteredDecks.slice(start, start + DECKS_PER_PAGE);
+      visible2.forEach((deck) => trueHubList.appendChild(buildCard(deck)));
       syncNav();
     }
     function buildCardFilterPanel() {
@@ -5168,7 +6037,47 @@ Version: v${version}`;
     }
   }
 
+  // packages/core/on-screen.js
+  var watched = /* @__PURE__ */ new Map();
+  var listening = false;
+  function viewport() {
+    return {
+      w: document.documentElement.clientWidth || window.innerWidth,
+      h: document.documentElement.clientHeight || window.innerHeight
+    };
+  }
+  function keepOnScreen(el2, margin = 0) {
+    if (!el2 || !el2.isConnected) return false;
+    const r = el2.getBoundingClientRect();
+    if (!r.width && !r.height) return false;
+    const vp = viewport();
+    const maxLeft = Math.max(margin, vp.w - r.width - margin);
+    const maxTop = Math.max(margin, vp.h - r.height - margin);
+    const left = Math.min(Math.max(r.left, margin), maxLeft);
+    const top = Math.min(Math.max(r.top, margin), maxTop);
+    if (Math.abs(left - r.left) < 0.5 && Math.abs(top - r.top) < 0.5) return false;
+    el2.style.left = left + "px";
+    el2.style.top = top + "px";
+    el2.style.right = "auto";
+    el2.style.bottom = "auto";
+    return true;
+  }
+  function watchOnScreen(el2, margin = 0) {
+    if (!el2) return;
+    watched.set(el2, margin);
+    keepOnScreen(el2, margin);
+    if (listening) return;
+    listening = true;
+    window.addEventListener("resize", () => {
+      watched.forEach((m, node) => {
+        if (!node.isConnected) watched.delete(node);
+        else keepOnScreen(node, m);
+      });
+    });
+  }
+
   // packages/deck-tracker/hud.js
+  var TRACKER_SCREEN_MARGIN = 8;
   var CARD_IMAGE_BASE = "https://undercards.net/images/cards/";
   var SPRITE_RATIO = "160 / 90";
   var MIN_WIDTH = 90;
@@ -5337,6 +6246,7 @@ Version: v${version}`;
       renderListItems(initialListItems);
       widget.append(listBody, resizeHandle);
       $("body").append(widget);
+      watchOnScreen(widget[0], TRACKER_SCREEN_MARGIN);
       applySizeList(width);
       return {
         widget,
@@ -5433,6 +6343,7 @@ Version: v${version}`;
       widget.append(nameLine, countEl, resizeHandle);
     }
     $("body").append(widget);
+    watchOnScreen(widget[0], TRACKER_SCREEN_MARGIN);
     if (star) star.on("mousedown", (e) => e.stopPropagation());
     closeBtn.on("mousedown", (e) => e.stopPropagation());
     function setSprite(newSprite) {
@@ -5474,6 +6385,7 @@ Version: v${version}`;
       if (Math.abs(e.clientX - startX) > 4 || Math.abs(e.clientY - startY) > 4) dragMoved = true;
       if (dragMoved) {
         widget.css({ left: e.clientX - offsetX + "px", top: e.clientY - offsetY + "px", right: "auto", bottom: "auto" });
+        keepOnScreen(widget[0], TRACKER_SCREEN_MARGIN);
       }
     });
     $(document).on("mouseup" + ns, function() {
@@ -5506,6 +6418,7 @@ Version: v${version}`;
     $(document).on("mousemove" + ns + "-resize", function(e) {
       if (!resizing) return;
       applySize(resizeStartWidth + (e.clientX - resizeStartX));
+      keepOnScreen(widget[0], TRACKER_SCREEN_MARGIN);
     });
     $(document).on("mouseup" + ns + "-resize", function() {
       if (!resizing) return;
@@ -7217,10 +8130,10 @@ Version: v${version}`;
     if (document.getElementById(STYLE_ID)) return;
     const style = document.createElement("style");
     style.id = STYLE_ID;
-    style.textContent = CSS;
+    style.textContent = CSS2;
     (document.head || document.documentElement).appendChild(style);
   }
-  var CSS = `
+  var CSS2 = `
 .wz-tl {
   --wz-tl-tile: 72px;
   --wz-tl-tile-h: calc(var(--wz-tl-tile) * 0.8);
@@ -7244,7 +8157,44 @@ Version: v${version}`;
    (and never mid-drag or with a menu/editor open), so it stays readable
    while you use it. */
 .wz-tl { opacity: var(--wz-tl-opacity, 1); transition: opacity 0.15s; }
-.wz-tl:hover, .wz-tl:focus-within, .wz-tl.wz-tl-busy { opacity: 1; }
+.wz-tl:hover, .wz-tl:focus-within, .wz-tl.wz-tl-busy, .wz-tl.wz-tl-pad { opacity: 1; }
+/* Controller d-pad mode: the highlighted item (colour = Controller
+   Support's "Selection Outline Color"), drawn inside the element so
+   scrolling containers don't clip it. */
+.wz-tl .wz-tl-pad-focus {
+  outline: 3px solid var(--wz-tl-pad-color, #3ea6ff) !important;
+  outline-offset: -3px;
+  box-shadow: 0 0 8px var(--wz-tl-pad-color, #3ea6ff);
+}
+.wz-tl .wz-tl-row-items.wz-tl-pad-focus { outline-offset: -2px; }
+.wz-tl .wz-tl-tile.wz-tl-pad-held { opacity: 0.45; outline: 2px dashed #fff; outline-offset: -3px; }
+.wz-tl .wz-tl-tile.wz-tl-pad-held.wz-tl-pad-focus { opacity: 0.7; }
+.wz-tl-send {
+  position: absolute;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 90px;
+  max-height: calc(100% - 8px);
+  overflow-y: auto;
+  padding: 5px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  background: #1c1c1c;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+}
+.wz-tl-send-title { color: #bbb; font-size: 11px; text-align: center; }
+.wz-tl-send-tier {
+  min-height: 24px;
+  padding: 2px 8px;
+  border: 1px solid #000;
+  border-radius: 3px;
+  color: #000;
+  font: bold 13px Arial, sans-serif;
+  cursor: pointer;
+}
+.wz-tl-send-tier.wz-tl-active::after { content: "  \\2713"; }
 /* Show Names on Tiles = off. Text items keep their label (it IS the tile). */
 .wz-tl-nonames .wz-tl-tile:not(.wz-tl-text) .wz-tl-tile-name,
 .wz-tl-ghost.wz-tl-nonames:not(.wz-tl-text) .wz-tl-tile-name { display: none; }
@@ -7473,8 +8423,9 @@ Version: v${version}`;
    them so the heart sits above the name instead of filling the tile. */
 .wz-tl-results .wz-tl-tile.wz-tl-text .wz-tl-tile-name { padding-top: 16px; }
 .wz-tl-tile.wz-tl-soul { background-size: auto 46%; background-position: center 30%; }
-/* While any dialog (e.g. Share / Import) is open, sit under it. */
-.wz-tl.wz-tl-under-modal { z-index: 1030; }
+/* While a dialog (Settings, Share / Import) or UnderScript's Esc menu
+   (z-index 1010) is open, sit under it. */
+.wz-tl.wz-tl-under-modal { z-index: 1000; }
 .wz-tl-tile.wz-tl-text .wz-tl-tile-name { background: transparent; font-weight: bold; padding: 2px; line-height: 1.1; word-break: break-word; }
 .wz-tl-tile.wz-tl-text .wz-tl-tile-name input {
   width: 100%;
@@ -8214,11 +9165,11 @@ Version: v${version}`;
   var DEFAULT_H = 500;
   var MIN_TILE = 52;
   var EDGES = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
-  function viewport() {
+  function viewport2() {
     return { w: document.documentElement.clientWidth || window.innerWidth, h: document.documentElement.clientHeight || window.innerHeight };
   }
   function clampGeometry(g) {
-    const vp = viewport();
+    const vp = viewport2();
     const width = Math.max(Math.min(MIN_W, vp.w), Math.min(g.width, vp.w));
     const height = Math.max(Math.min(MIN_H, vp.h), Math.min(g.height, vp.h));
     const left = Math.max(0, Math.min(g.left, vp.w - width));
@@ -8226,7 +9177,7 @@ Version: v${version}`;
     return { left, top, width, height };
   }
   function defaultGeometry() {
-    const vp = viewport();
+    const vp = viewport2();
     const width = Math.min(DEFAULT_W, vp.w);
     const height = Math.min(DEFAULT_H, vp.h);
     return { left: Math.round((vp.w - width) / 2), top: Math.round((vp.h - height) / 2), width, height };
@@ -8271,7 +9222,7 @@ Version: v${version}`;
       saveWindowState({ geometry: ui.geometry, maximised: ui.maximised, pickerOpen: ui.pickerOpen });
     }
     function updateTileSize() {
-      const width = ui.maximised ? viewport().w : ui.geometry.width;
+      const width = ui.maximised ? viewport2().w : ui.geometry.width;
       const preferred = getPreferredTile();
       const tile = Math.round(Math.max(MIN_TILE, Math.min(preferred, (width - 120) / 9)));
       root.style.setProperty("--wz-tl-tile", tile + "px");
@@ -8325,7 +9276,7 @@ Version: v${version}`;
       e.stopPropagation();
       const edge = handle.dataset.edge;
       const start = { x: e.clientX, y: e.clientY, ...ui.geometry };
-      const vp = viewport();
+      const vp = viewport2();
       handle.setPointerCapture(e.pointerId);
       const move = (ev) => {
         const dx = ev.clientX - start.x;
@@ -9087,7 +10038,398 @@ Version: v${version}`;
       else overTile = null;
     }, { signal, capture: true });
     signal.addEventListener("abort", hide);
-    return { hide };
+    function showNear(tile) {
+      hide();
+      const r = tile.getBoundingClientRect();
+      lastX = r.right;
+      lastY = r.top;
+      overTile = tile;
+      pressed = false;
+      arm();
+    }
+    function clear() {
+      overTile = null;
+      hide();
+    }
+    return { hide: clear, showNear };
+  }
+
+  // packages/misc/tier-list/pad.js
+  var TIER_AREA = /^(l:|t:|e:|add$)/;
+  var PANEL_AREA = /^(p:|tab:|search$|clear$|f:)/;
+  function visible(el2) {
+    if (!el2 || !el2.isConnected || !el2.getClientRects().length) return false;
+    return getComputedStyle(el2).visibility !== "hidden";
+  }
+  function center(r) {
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  }
+  function createPad({ root, tiers, picker, preview, closeListsMenu, isListsMenuOpen, hide }) {
+    let focusId = null;
+    let lastRect = null;
+    let held = null;
+    let sendMenu = null;
+    let shown = true;
+    let lastTier = null;
+    let lastPanel = null;
+    let highlighted = null;
+    let dirty = true;
+    let marker = null;
+    let previewFor = null;
+    function trapRoot() {
+      if (sendMenu && sendMenu.el.isConnected) return { el: sendMenu.el, prefix: "qs" };
+      const editor = root.querySelector(".wz-tl-editor");
+      if (editor) return { el: editor, prefix: "ed" };
+      const menu = root.querySelector(".wz-tl-menu");
+      if (menu) return { el: menu, prefix: "lm" };
+      return null;
+    }
+    function items() {
+      const out = [];
+      const push = (el2, id) => {
+        if (visible(el2)) out.push({ el: el2, id });
+      };
+      const trap = trapRoot();
+      if (trap) {
+        [...trap.el.querySelectorAll("button, input, .wz-tl-swatch")].forEach((el2, i) => push(el2, `${trap.prefix}:${i}`));
+        return out;
+      }
+      const title = root.querySelector(".wz-tl-title");
+      push(title, "title");
+      root.querySelectorAll(".wz-tl-header button").forEach((el2, i) => push(el2, `hb:${i}`));
+      root.querySelectorAll(".wz-tl-row").forEach((row) => {
+        const tierId = row.dataset.tierId;
+        push(row.querySelector(".wz-tl-row-label"), `l:${tierId}`);
+        row.querySelectorAll(".wz-tl-row-items .wz-tl-tile").forEach((t) => push(t, `t:${t.dataset.key}`));
+        if (held) push(row.querySelector(".wz-tl-row-items"), `e:${tierId}`);
+      });
+      push(root.querySelector(".wz-tl-add-row"), "add");
+      const panel = root.querySelector(".wz-tl-picker");
+      if (panel && visible(panel)) {
+        panel.querySelectorAll(".wz-tl-type-tab").forEach((el2) => push(el2, `tab:${el2.dataset.type}`));
+        push(panel.querySelector(".wz-tl-search-row input"), "search");
+        push(panel.querySelector(".wz-tl-search-row button"), "clear");
+        panel.querySelectorAll(".wz-tl-toggle").forEach((el2, i) => push(el2, `f:${i}`));
+        panel.querySelectorAll(".wz-tl-results .wz-tl-tile").forEach((t) => push(t, `p:${t.dataset.key}`));
+      }
+      return out;
+    }
+    function find(list, id) {
+      return list.find((it) => it.id === id) || null;
+    }
+    function current(list = items()) {
+      let it = focusId ? find(list, focusId) : null;
+      if (!it && list.length) {
+        if (lastRect) {
+          const c = center(lastRect);
+          it = list.reduce((best, cand) => {
+            const p = center(cand.el.getBoundingClientRect());
+            const d = Math.hypot(p.x - c.x, p.y - c.y);
+            return !best || d < best.d ? { it: cand, d } : best;
+          }, null).it;
+        } else {
+          it = list[0];
+        }
+        setFocus(it);
+      }
+      return it;
+    }
+    function setFocus(it) {
+      if (!it) return;
+      focusId = it.id;
+      lastRect = it.el.getBoundingClientRect();
+      if (TIER_AREA.test(it.id)) lastTier = it.id;
+      else if (PANEL_AREA.test(it.id)) lastPanel = it.id;
+      it.el.scrollIntoView({ block: "nearest", inline: "nearest" });
+      lastRect = it.el.getBoundingClientRect();
+    }
+    function placeMarker(it) {
+      if (marker) {
+        marker.remove();
+        marker = null;
+      }
+      if (!held || !it) return;
+      let rowItems = null;
+      let before = null;
+      if (it.id.startsWith("t:")) {
+        rowItems = it.el.parentElement;
+        before = it.el;
+        if (it.el.dataset.key === held.key) return;
+      } else if (it.id.startsWith("e:") || it.id.startsWith("l:")) {
+        const row = it.el.closest(".wz-tl-row");
+        rowItems = row && row.querySelector(".wz-tl-row-items");
+      }
+      if (!rowItems) return;
+      marker = document.createElement("div");
+      marker.className = "wz-tl-marker";
+      rowItems.insertBefore(marker, before);
+    }
+    function syncHeld() {
+      root.querySelectorAll(".wz-tl-pad-held").forEach((n) => {
+        if (!held || n.dataset.key !== held.key) n.classList.remove("wz-tl-pad-held");
+      });
+      if (held) root.querySelectorAll(`.wz-tl-tile[data-key="${CSS.escape(held.key)}"]`).forEach((n) => n.classList.add("wz-tl-pad-held"));
+    }
+    function draw(color) {
+      root.classList.add("wz-tl-pad");
+      if (color) root.style.setProperty("--wz-tl-pad-color", color);
+      if (!dirty && shown && highlighted && highlighted.isConnected && highlighted.dataset.padId === focusId) {
+        if (held && marker && !marker.isConnected) placeMarker({ id: focusId, el: highlighted });
+        if (held) syncHeld();
+        return;
+      }
+      dirty = false;
+      const it = shown ? current() : null;
+      const el2 = it ? it.el : null;
+      if (el2 !== highlighted || el2 && el2.dataset.padId !== (it && it.id)) {
+        if (highlighted) highlighted.classList.remove("wz-tl-pad-focus");
+        if (el2) {
+          el2.classList.add("wz-tl-pad-focus");
+          el2.dataset.padId = it.id;
+        }
+        highlighted = el2;
+      }
+      placeMarker(it);
+      const wantPreview = el2 && el2.classList.contains("wz-tl-tile") && !held && !sendMenu ? el2 : null;
+      if (wantPreview !== previewFor) {
+        previewFor = wantPreview;
+        if (wantPreview) preview.showNear(wantPreview);
+        else preview.hide();
+      }
+      syncHeld();
+    }
+    function clearDrawing() {
+      if (highlighted) highlighted.classList.remove("wz-tl-pad-focus");
+      highlighted = null;
+      previewFor = null;
+      dirty = true;
+      if (marker) {
+        marker.remove();
+        marker = null;
+      }
+      root.querySelectorAll(".wz-tl-pad-held").forEach((n) => n.classList.remove("wz-tl-pad-held"));
+      root.classList.remove("wz-tl-pad");
+      preview.hide();
+    }
+    function nav(dir) {
+      const list = items();
+      const it = current(list);
+      if (!it) return;
+      const cr = it.el.getBoundingClientRect();
+      const c = center(cr);
+      let best = null;
+      list.forEach((cand) => {
+        if (cand === it) return;
+        const r = cand.el.getBoundingClientRect();
+        const p = center(r);
+        const dx = p.x - c.x;
+        const dy = p.y - c.y;
+        let primary2;
+        let ortho;
+        const sameRow = Math.abs(dy) <= Math.max(cr.height, r.height) * 0.6;
+        if (dir === "left") {
+          if (dx > -4 || !sameRow) return;
+          primary2 = -dx;
+          ortho = Math.abs(dy);
+        } else if (dir === "right") {
+          if (dx < 4 || !sameRow) return;
+          primary2 = dx;
+          ortho = Math.abs(dy);
+        } else if (dir === "up") {
+          if (dy > -4) return;
+          primary2 = -dy;
+          ortho = Math.abs(dx);
+        } else {
+          if (dy < 4) return;
+          primary2 = dy;
+          ortho = Math.abs(dx);
+        }
+        const score = primary2 + ortho * (dir === "left" || dir === "right" ? 4 : 1.5);
+        if (!best || score < best.score) best = { cand, score };
+      });
+      if (best) setFocus(best.cand);
+      dirty = true;
+    }
+    function tierIndexOf(tierId, key2) {
+      const tier = getActiveList().tiers.find((t) => t.id === tierId);
+      if (!tier) return -1;
+      return tier.items.filter((k) => k !== held.key).indexOf(key2);
+    }
+    function drop(it) {
+      const key2 = held.key;
+      if (it.id.startsWith("t:")) {
+        const tierId = it.el.closest(".wz-tl-row").dataset.tierId;
+        const target = it.id.slice(2);
+        if (target !== key2) placeItem(key2, tierId, tierIndexOf(tierId, target));
+      } else if (it.id.startsWith("e:") || it.id.startsWith("l:")) {
+        placeItem(key2, it.id.slice(2));
+      } else if (PANEL_AREA.test(it.id)) {
+        if (held.from === "tier") removeItem(key2);
+      } else {
+        return false;
+      }
+      held = null;
+      if (isPlaced(key2) && (it.id.startsWith("t:") || it.id.startsWith("e:") || it.id.startsWith("l:"))) focusId = `t:${key2}`;
+      dirty = true;
+      return true;
+    }
+    function press() {
+      const it = current();
+      if (!it) return null;
+      if (held) {
+        drop(it);
+        return null;
+      }
+      const el2 = it.el;
+      if (el2.classList.contains("wz-tl-tile")) {
+        held = { key: el2.dataset.key, from: it.id.startsWith("t:") ? "tier" : "panel" };
+        dirty = true;
+        return null;
+      }
+      if (el2.tagName === "INPUT" && el2.type === "text") return { osk: el2 };
+      if (el2.tagName === "INPUT" && el2.type === "color") return null;
+      el2.click();
+      dirty = true;
+      return null;
+    }
+    function closeSendMenu() {
+      if (sendMenu) {
+        sendMenu.el.remove();
+        focusId = sendMenu.returnTo;
+        if (sendMenu.returnRect) lastRect = sendMenu.returnRect;
+      }
+      sendMenu = null;
+      dirty = true;
+    }
+    function back() {
+      if (sendMenu) {
+        closeSendMenu();
+        return;
+      }
+      if (held) {
+        held = null;
+        dirty = true;
+        return;
+      }
+      if (root.querySelector(".wz-tl-editor")) {
+        tiers.closeEditor();
+        dirty = true;
+        return;
+      }
+      if (isListsMenuOpen()) {
+        closeListsMenu();
+        dirty = true;
+        return;
+      }
+      hide();
+    }
+    function quickSend() {
+      if (sendMenu) {
+        closeSendMenu();
+        return;
+      }
+      const it = current();
+      const key2 = held ? held.key : it && it.el.classList.contains("wz-tl-tile") ? it.el.dataset.key : null;
+      if (!key2) return;
+      const list = getActiveList();
+      const menu = document.createElement("div");
+      menu.className = "wz-tl-send";
+      const title = document.createElement("div");
+      title.className = "wz-tl-send-title";
+      title.textContent = "Send to tier";
+      menu.appendChild(title);
+      const currentTier = list.tiers.find((t) => t.items.includes(key2));
+      list.tiers.forEach((t) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "wz-tl-send-tier";
+        b.style.background = t.color;
+        b.textContent = t.label;
+        if (currentTier && currentTier.id === t.id) b.classList.add("wz-tl-active");
+        b.addEventListener("click", () => {
+          placeItem(key2, t.id);
+          held = null;
+          closeSendMenu();
+        });
+        menu.appendChild(b);
+      });
+      if (currentTier) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "wz-tl-btn";
+        b.textContent = "Unrank";
+        b.addEventListener("click", () => {
+          removeItem(key2);
+          held = null;
+          closeSendMenu();
+        });
+        menu.appendChild(b);
+      }
+      root.appendChild(menu);
+      const rr = root.getBoundingClientRect();
+      const tr = (it ? it.el : root).getBoundingClientRect();
+      let left = tr.right - rr.left + 6;
+      if (left + menu.offsetWidth > rr.width - 4) left = Math.max(4, tr.left - rr.left - menu.offsetWidth - 6);
+      let top = tr.top - rr.top;
+      if (top + menu.offsetHeight > rr.height - 4) top = Math.max(4, rr.height - menu.offsetHeight - 4);
+      menu.style.left = left + "px";
+      menu.style.top = Math.max(4, top) + "px";
+      sendMenu = { el: menu, key: key2, returnTo: focusId, returnRect: lastRect };
+      const buttons = [...menu.querySelectorAll("button")];
+      const start2 = Math.max(0, buttons.findIndex((b) => b.classList.contains("wz-tl-active")));
+      focusId = `qs:${start2}`;
+      dirty = true;
+    }
+    function jump() {
+      if (trapRoot()) return;
+      const list = items();
+      const it = current(list);
+      const inTiers = it && TIER_AREA.test(it.id);
+      if (it && inTiers) lastTier = it.id;
+      else if (it && PANEL_AREA.test(it.id)) lastPanel = it.id;
+      let target = null;
+      if (inTiers) {
+        target = lastPanel && find(list, lastPanel) || list.find((x) => x.id.startsWith("p:")) || find(list, "search");
+      } else {
+        target = lastTier && find(list, lastTier) || list.find((x) => x.id.startsWith("t:")) || list.find((x) => x.id.startsWith("l:"));
+      }
+      if (target) setFocus(target);
+      dirty = true;
+    }
+    function start() {
+      const list = items();
+      const first = list.find((x) => x.id.startsWith("p:")) || find(list, "search") || list[0];
+      if (first) setFocus(first);
+    }
+    return {
+      start,
+      draw,
+      nav,
+      press,
+      back,
+      quickSend,
+      jump,
+      clearDrawing,
+      // Cursor mode (stick moved): hide the highlight and drop any held item.
+      setShown(value) {
+        if (shown === !!value) return;
+        shown = !!value;
+        if (!shown) {
+          held = null;
+          closeSendMenu();
+          clearDrawing();
+        }
+        dirty = true;
+      },
+      isShown: () => shown,
+      // "send" | "holding" | "idle" - Controller Support writes the HUD text
+      // with the player's actual button names.
+      state() {
+        if (sendMenu) return "send";
+        if (held) return "holding";
+        return "idle";
+      }
+    };
   }
 
   // packages/misc/card-tags/storage.js
@@ -9288,6 +10630,16 @@ Version: v${version}`;
     b.title = title;
     return b;
   }
+  function getTierListPad() {
+    if (!mounted || !mounted.pad) return null;
+    if (mounted.win.root.classList.contains("wz-tl-under-modal")) return null;
+    return mounted.pad;
+  }
+  function toggleTierList() {
+    if (!isPluginEnabled("tierList")) return;
+    if (mounted) hideTierList();
+    else showTierList();
+  }
   function showTierList() {
     if (mounted || blockedHere()) return;
     injectTierListStyle();
@@ -9426,11 +10778,20 @@ Version: v${version}`;
         if (ok) renderAll();
       });
     }
-    const modalWatch = new MutationObserver(() => {
-      win.root.classList.toggle("wz-tl-under-modal", document.body.classList.contains("modal-open") || !!document.querySelector(".bootstrap-dialog.in, .modal.in"));
-    });
-    modalWatch.observe(document.body, { attributes: true, attributeFilter: ["class"], childList: true });
-    signal.addEventListener("abort", () => modalWatch.disconnect());
+    let menuBackdrop = null;
+    const syncLayer = () => {
+      if (!menuBackdrop) {
+        menuBackdrop = document.querySelector(".menu-backdrop");
+        if (menuBackdrop) layerWatch.observe(menuBackdrop, { attributes: true, attributeFilter: ["style"] });
+      }
+      const dialogOpen = document.body.classList.contains("modal-open") || !!document.querySelector(".bootstrap-dialog.in, .modal.in");
+      const menuOpen = !!menuBackdrop && menuBackdrop.style.display === "block";
+      win.root.classList.toggle("wz-tl-under-modal", dialogOpen || menuOpen);
+    };
+    const layerWatch = new MutationObserver(syncLayer);
+    layerWatch.observe(document.body, { attributes: true, attributeFilter: ["class"], childList: true });
+    syncLayer();
+    signal.addEventListener("abort", () => layerWatch.disconnect());
     win.root.addEventListener("dblclick", (e) => {
       const tile = e.target.closest(".wz-tl-tile.wz-tl-text");
       if (!tile || e.target.closest("input, .wz-tl-tile-del")) return;
@@ -9523,11 +10884,22 @@ Version: v${version}`;
     document.body.appendChild(win.root);
     renderAll();
     ensureArtifacts();
-    mounted = { controller, win, picker };
+    const pad2 = createPad({
+      root: win.root,
+      tiers,
+      picker,
+      preview,
+      closeListsMenu,
+      isListsMenuOpen: () => !!listsMenu,
+      hide: () => hideTierList()
+    });
+    pad2.start();
+    mounted = { controller, win, picker, pad: pad2 };
     applyLook();
   }
   function hideTierList() {
     if (!mounted) return;
+    if (mounted.pad) mounted.pad.clearDrawing();
     flushSave();
     mounted.controller.abort();
     mounted.win.root.remove();
@@ -9600,11 +10972,7 @@ Version: v${version}`;
       name: "Toggle Tier List",
       defaultCode: "KeyL",
       packageLabel: "Tier List",
-      onMatch: () => {
-        if (!isPluginEnabled("tierList")) return;
-        if (mounted) hideTierList();
-        else showTierList();
-      }
+      onMatch: () => toggleTierList()
     });
     if (!isPluginEnabled("tierList")) return;
     initItemData(plugin);
@@ -9759,6 +11127,7 @@ Version: v${version}`;
       root.style.top = e.clientY - offsetY + "px";
       root.style.right = "auto";
       root.style.bottom = "auto";
+      keepOnScreen(root);
     }, { signal });
     document.addEventListener("mouseup", () => {
       if (!dragging) return;
@@ -10455,6 +11824,7 @@ Version: v${version}`;
     colorColumn.append(colorLabel, picker.element, applyPenBtn, applyBgBtn, recentColorsRow.element);
     body.append(mainColumn, layersColumn, colorColumn);
     document.body.appendChild(root);
+    watchOnScreen(root);
     function selectTool(tool) {
       currentTool = tool;
       drawBox.classList.toggle("active", tool === "draw");
@@ -11511,817 +12881,6 @@ Version: v${version}`;
       onMatch: () => redoNotepad()
     });
     return settings3;
-  }
-
-  // packages/controller/storage.js
-  var GM_PREFIX3 = "wizascript.controller.";
-  function csGet(key2, fallback) {
-    try {
-      const v = GM_getValue(GM_PREFIX3 + key2, null);
-      return v === null || v === void 0 ? fallback : v;
-    } catch (e) {
-      console.warn("[Wizascript Controller] GM_getValue failed, falling back to default:", e);
-      return fallback;
-    }
-  }
-  function csSet(key2, value) {
-    try {
-      GM_setValue(GM_PREFIX3 + key2, value);
-    } catch (e) {
-      console.warn("[Wizascript Controller] GM_setValue failed, binding will not persist:", e);
-    }
-  }
-  function csDelete(key2) {
-    try {
-      GM_deleteValue(GM_PREFIX3 + key2);
-    } catch (e) {
-      console.warn("[Wizascript Controller] GM_deleteValue failed:", e);
-    }
-  }
-  var PRESET_COUNT = 3;
-  var DEFAULT_PRESET_NAME_PREFIX = "Preset ";
-  function getActivePreset() {
-    const raw = csGet("activePreset", "1");
-    const n = parseInt(raw, 10);
-    return Number.isNaN(n) || n < 1 || n > PRESET_COUNT ? 1 : n;
-  }
-  function setActivePreset(n) {
-    csSet("activePreset", String(n));
-  }
-  function getPresetName(n) {
-    return csGet("presetName." + n, DEFAULT_PRESET_NAME_PREFIX + n);
-  }
-  function setPresetName(n, name) {
-    const trimmed = (name || "").trim();
-    csSet("presetName." + n, trimmed === "" ? DEFAULT_PRESET_NAME_PREFIX + n : trimmed);
-  }
-  function presetKey(rawKey) {
-    return "preset" + getActivePreset() + "." + rawKey;
-  }
-  function getHudPosition() {
-    const raw = csGet("debugHudPosition", null);
-    if (!raw) return null;
-    try {
-      const pos = JSON.parse(raw);
-      if (pos && typeof pos.left === "number" && typeof pos.top === "number") return pos;
-    } catch (e) {
-      console.warn("[Wizascript Controller] stored debug HUD position was invalid JSON, ignoring:", e);
-    }
-    return null;
-  }
-  function setHudPosition(left, top) {
-    csSet("debugHudPosition", JSON.stringify({ left, top }));
-  }
-  function getCursorSensitivity() {
-    const raw = csGet("cursorSensitivity", null);
-    if (raw === null) return 0;
-    const n = parseFloat(raw);
-    return Number.isNaN(n) ? 0 : Math.max(-1, Math.min(1, n));
-  }
-  function setCursorSensitivity(v) {
-    csSet("cursorSensitivity", String(Math.max(-1, Math.min(1, v))));
-  }
-  function migrateFlatBindingsToPresetOne(controllerActionKeys, hardwareShortcutKeys) {
-    if (csGet("migratedToPresetsV056", null) !== null) return;
-    const migrate = (rawKey) => {
-      const oldVal = csGet(rawKey, null);
-      if (oldVal === null) return;
-      const newKey = "preset1." + rawKey;
-      if (csGet(newKey, null) !== null) return;
-      csSet(newKey, oldVal);
-    };
-    migrate("keybinds.__primary");
-    controllerActionKeys.forEach((key2) => migrate("keybinds." + key2));
-    hardwareShortcutKeys.forEach((key2) => migrate("shortcuts." + key2));
-    csSet("migratedToPresetsV056", "true");
-    console.log("[Wizascript Controller] migrated any pre-preset-system bindings into Preset 1.");
-  }
-  function resetPresetBindings(presetN, controllerActionKeys, hardwareShortcutKeys) {
-    const prefix = "preset" + presetN + ".";
-    csDelete(prefix + "keybinds.__primary");
-    csDelete(prefix + "keybinds.__channelGuide");
-    controllerActionKeys.forEach((key2) => csDelete(prefix + "keybinds." + key2));
-    hardwareShortcutKeys.forEach((key2) => csDelete(prefix + "shortcuts." + key2));
-    console.log("[Wizascript Controller] reset preset " + presetN + "'s keybinds/shortcuts to their defaults.");
-  }
-
-  // packages/controller/settings.js
-  var CONTROLLER_ACTIONS = [
-    { key: "previousChannel", name: "Previous Channel", packageLabel: "UC TV", context: "channelSwitch", defaultButton: 14, dispatch: { code: "ArrowLeft", key: "ArrowLeft" } },
-    { key: "nextChannel", name: "Next Channel", packageLabel: "UC TV", context: "channelSwitch", defaultButton: 15, dispatch: { code: "ArrowRight", key: "ArrowRight" } },
-    { key: "toggleNotepad", name: "Toggle Notepad", packageLabel: "Notepad", context: "always", defaultButton: 3, dispatch: { code: "KeyO", key: "o" } },
-    { key: "resetNotepad", name: "Reset Notepad", packageLabel: "Notepad", context: "always", defaultButton: 2, dispatch: { code: "KeyN", key: "n" } },
-    { key: "undoNotepad", name: "Undo Drawing", packageLabel: "Notepad", context: "default", defaultButton: 13, dispatch: { code: "KeyZ", key: "z" } },
-    { key: "redoNotepad", name: "Redo Drawing", packageLabel: "Notepad", context: "default", defaultButton: 12, dispatch: { code: "KeyY", key: "y" } },
-    { key: "moveEntryUp", name: "Move Entry Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
-    { key: "moveEntryDown", name: "Move Entry Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
-    // Shortened from "Move Balance Section Up/Down" - the "- Primary +
-    // <button>" suffix registerControllerSettings() appends below already
-    // pushed the combined row name wide enough to force a horizontal
-    // scrollbar in the settings dialog. "Section" alone is unambiguous
-    // here (Patch Maker only has one thing called a "section"), matching
-    // "Entry"/"Card" already being bare nouns in the two actions above.
-    { key: "moveSectionUp", name: "Move Section Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
-    { key: "moveSectionDown", name: "Move Section Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
-    { key: "moveCardUp", name: "Move Card Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
-    { key: "moveCardDown", name: "Move Card Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
-    // Relays Patch Maker's own real "Cycle Category Up/Down" keybind
-    // (packages/patch-maker/overlay.js - Comma/Period by default,
-    // scope:'scoped'/selector:'.uc-li-text', same registry Move Entry/
-    // Section/Card Up/Down above already relay into successfully) exactly
-    // the same way those do: dispatch the real e.code Wizascript's own
-    // registry is listening for while Primary is synthetically held, and
-    // let that registry's own document.activeElement/selector check
-    // decide whether it actually applies. defaultButton is D-pad Left/
-    // Right (14/15) rather than Up/Down (12/13, already claimed by Move
-    // Entry/Section/Card in this same 'patchMaker' context) specifically
-    // to avoid a same-frame double-fire - Up/Down and Left/Right dispatch
-    // different e.codes, so sharing a button between two 'patchMaker'
-    // actions would relay BOTH every time it's pressed. Left/Right is
-    // free here: previousChannel/nextChannel above claim the same two
-    // buttons, but only under 'channelSwitch' context, which is mutually
-    // exclusive with 'patchMaker' by construction (see the `applies`
-    // check in index.js's relay). This is very likely the actual
-    // technical snag from the earlier, abandoned attempt at this exact
-    // feature - reusing Up/Down here would produce confusing dual
-    // behavior (moving the entry AND cycling its category on the same
-    // press) that could easily read as "wiring it was a pain," even
-    // though the underlying relay mechanism itself works correctly in
-    // isolation (proven by Move Entry/Section/Card already using it).
-    { key: "cycleCategoryUp", name: "Cycle Category Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 14, dispatch: { code: "Comma", key: "," } },
-    { key: "cycleCategoryDown", name: "Cycle Category Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 15, dispatch: { code: "Period", key: "." } }
-  ];
-  var CONTROLLER_ACTIONS_BY_KEY = {};
-  CONTROLLER_ACTIONS.forEach((a) => {
-    CONTROLLER_ACTIONS_BY_KEY[a.key] = a;
-  });
-  var HARDWARE_SHORTCUT_ACTIONS = [
-    { key: "openSettings", name: "Open Settings" },
-    { key: "yourDustpile", name: "Check Your Dustpile" },
-    { key: "opponentDustpile", name: "Check Opponent's Dustpile" },
-    { key: "endTurn", name: "End Turn" },
-    { key: "openWizascriptSettings", name: "Open Wizascript Settings" },
-    { key: "concede", name: "Concede" },
-    { key: "goHome", name: "Go to Home Page" },
-    // Key kept as-is (stored bindings use it); shown as Card Tracker since 1.5.0.
-    { key: "openDeckTrackerPresets", name: "Open Card Tracker Presets", pluginId: "cardTracker" }
-  ];
-  var HARDWARE_SHORTCUT_DEFAULTS = {
-    openSettings: 9,
-    yourDustpile: 10,
-    opponentDustpile: 11,
-    endTurn: 17,
-    openWizascriptSettings: 7,
-    concede: 8,
-    goHome: 16,
-    openDeckTrackerPresets: 6
-  };
-  var HARDWARE_SHORTCUT_ACTIONS_BY_KEY = {};
-  HARDWARE_SHORTCUT_ACTIONS.forEach((a) => {
-    HARDWARE_SHORTCUT_ACTIONS_BY_KEY[a.key] = a;
-  });
-  var DEFAULT_PRIMARY_BUTTON = 4;
-  function encodeBoundInput(value) {
-    if (value === null || value === void 0) return "unbound";
-    if (typeof value === "number") return String(value);
-    if (value && value.type === "key") return "kb:" + value.code;
-    return "unbound";
-  }
-  function decodeBoundInput(raw, defaultValue) {
-    if (raw === "unbound") return null;
-    if (typeof raw === "string" && raw.indexOf("kb:") === 0) return { type: "key", code: raw.slice(3) };
-    const n = parseInt(raw, 10);
-    return Number.isNaN(n) ? defaultValue : n;
-  }
-  function getControllerPrimaryButton() {
-    return decodeBoundInput(csGet(presetKey("keybinds.__primary"), String(DEFAULT_PRIMARY_BUTTON)), DEFAULT_PRIMARY_BUTTON);
-  }
-  function setControllerPrimaryButton(value) {
-    csSet(presetKey("keybinds.__primary"), encodeBoundInput(value));
-  }
-  function getChannelGuideButton() {
-    return decodeBoundInput(csGet(presetKey("keybinds.__channelGuide"), "unbound"), null);
-  }
-  function setChannelGuideButton(value) {
-    csSet(presetKey("keybinds.__channelGuide"), encodeBoundInput(value));
-  }
-  function getBoundButton(actionKey) {
-    const action = CONTROLLER_ACTIONS_BY_KEY[actionKey];
-    return decodeBoundInput(csGet(presetKey("keybinds." + actionKey), String(action.defaultButton)), action.defaultButton);
-  }
-  function setBoundButton(actionKey, value) {
-    csSet(presetKey("keybinds." + actionKey), encodeBoundInput(value));
-  }
-  function getBoundShortcutButton(actionKey) {
-    const defaultButton = HARDWARE_SHORTCUT_DEFAULTS[actionKey];
-    return decodeBoundInput(csGet(presetKey("shortcuts." + actionKey), String(defaultButton)), defaultButton);
-  }
-  function setBoundShortcutButton(actionKey, value) {
-    csSet(presetKey("shortcuts." + actionKey), encodeBoundInput(value));
-  }
-  var controllerEnabledSetting = null;
-  function isControllerSupportEnabled() {
-    if (!controllerEnabledSetting || typeof controllerEnabledSetting.value !== "function") return true;
-    try {
-      const v = controllerEnabledSetting.value();
-      return v === void 0 || v === null ? true : !!v;
-    } catch (e) {
-      return true;
-    }
-  }
-  var debugTextEnabledSetting = null;
-  var debugTextCheckedLive = null;
-  function observeDebugTextCheckbox(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    debugTextCheckedLive = !!el2.checked;
-    el2.addEventListener("change", () => {
-      debugTextCheckedLive = !!el2.checked;
-    });
-  }
-  function isDebugTextEnabled() {
-    if (debugTextCheckedLive !== null) return debugTextCheckedLive;
-    if (!debugTextEnabledSetting || typeof debugTextEnabledSetting.value !== "function") return false;
-    try {
-      return !!debugTextEnabledSetting.value();
-    } catch (e) {
-      return false;
-    }
-  }
-  var HIGHLIGHT_COLOR_PRESETS = [
-    ["Light Blue (default)", "#3ea6ff"],
-    ["Yellow", "#ffff00"],
-    // JUSTICE
-    ["Red", "red"],
-    // DETERMINATION
-    ["Green", "#00c000"],
-    // KINDNESS
-    ["Orange", "#fca500"],
-    // BRAVERY
-    ["Blue", "#0064ff"],
-    // INTEGRITY
-    ["Cyan", "#41fcff"],
-    // PATIENCE
-    ["Magenta", "#d535d9"]
-    // PERSEVERANCE
-  ];
-  var DEFAULT_HIGHLIGHT_COLOR = HIGHLIGHT_COLOR_PRESETS[0][1];
-  var highlightColorSetting = null;
-  var highlightColorLive = null;
-  function observeHighlightColorSelect(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    highlightColorLive = el2.value || null;
-    el2.addEventListener("change", () => {
-      highlightColorLive = el2.value || null;
-    });
-  }
-  function getHighlightColor() {
-    if (highlightColorLive) return highlightColorLive;
-    if (!highlightColorSetting || typeof highlightColorSetting.value !== "function") return DEFAULT_HIGHLIGHT_COLOR;
-    try {
-      return highlightColorSetting.value() || DEFAULT_HIGHLIGHT_COLOR;
-    } catch (e) {
-      return DEFAULT_HIGHLIGHT_COLOR;
-    }
-  }
-  var controllerCaptureActive = false;
-  function isControllerCaptureActive() {
-    return controllerCaptureActive;
-  }
-  var boundInputRefreshers = [];
-  function enhanceControllerInfoRow(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    el2.readOnly = true;
-    el2.tabIndex = -1;
-    el2.style.display = "none";
-  }
-  function enhanceControllerCaptureInput(el2, readBound, writeBound) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    el2.readOnly = true;
-    Object.assign(el2.style, {
-      cursor: "pointer",
-      backgroundColor: "black",
-      color: "white",
-      border: "1px solid #b4b4b4",
-      borderRadius: "3px",
-      textAlign: "center"
-    });
-    function refreshDisplay() {
-      el2.value = bindingToDisplay(readBound());
-    }
-    refreshDisplay();
-    boundInputRefreshers.push(refreshDisplay);
-    el2.addEventListener("focus", () => {
-      el2.style.border = "1px solid #40E0D0";
-      el2.style.boxShadow = "0 0 4px #40E0D0";
-      el2.value = "Press a button or key...";
-      controllerCaptureActive = true;
-      let cancelled = false;
-      let ignoreUntilReleased = /* @__PURE__ */ new Set();
-      const gp0 = getMergedGamepad();
-      if (gp0) gp0.buttons.forEach((b, i) => {
-        if (b && b.pressed) ignoreUntilReleased.add(i);
-      });
-      function captureFrame() {
-        if (cancelled) return;
-        const gp = getMergedGamepad();
-        if (gp) {
-          gp.buttons.forEach((b, i) => {
-            if (!b) return;
-            if (!b.pressed) {
-              ignoreUntilReleased.delete(i);
-              return;
-            }
-            if (ignoreUntilReleased.has(i)) return;
-            finishCapture(i);
-          });
-        }
-        if (!cancelled) requestAnimationFrame(captureFrame);
-      }
-      function finishCapture(value) {
-        if (cancelled) return;
-        cancelled = true;
-        writeBound(value);
-        cleanup();
-        el2.blur();
-      }
-      function onKeydown(e) {
-        if (cancelled) return;
-        if (e.key === "Escape") {
-          e.preventDefault();
-          cancelled = true;
-          writeBound(null);
-          cleanup();
-          el2.blur();
-          return;
-        }
-        if (e.key === "Shift" || e.key === "Control" || e.key === "Alt" || e.key === "Meta") return;
-        const gpNow = getMergedGamepad();
-        if (gpNow && gpNow.buttons.some((b) => b && b.pressed)) return;
-        e.preventDefault();
-        finishCapture({ type: "key", code: e.code });
-      }
-      function cleanup() {
-        document.removeEventListener("keydown", onKeydown, true);
-      }
-      document.addEventListener("keydown", onKeydown, true);
-      requestAnimationFrame(captureFrame);
-      el2.addEventListener("blur", function onBlur() {
-        cancelled = true;
-        controllerCaptureActive = false;
-        el2.style.border = "1px solid #b4b4b4";
-        el2.style.boxShadow = "none";
-        cleanup();
-        refreshDisplay();
-        scheduleControllerConflictRefresh();
-        el2.removeEventListener("blur", onBlur);
-      });
-    });
-  }
-  var presetMenuState = null;
-  function getPresetMenuState() {
-    return presetMenuState;
-  }
-  function enhancePresetSelector(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    el2.readOnly = true;
-    el2.tabIndex = 0;
-    Object.assign(el2.style, {
-      cursor: "pointer",
-      backgroundColor: "black",
-      color: "white",
-      border: "1px solid #b4b4b4",
-      borderRadius: "3px",
-      textAlign: "center"
-    });
-    function refreshDisplay() {
-      el2.value = getPresetName(getActivePreset());
-    }
-    refreshDisplay();
-    boundInputRefreshers.push(refreshDisplay);
-    let menuEl = null;
-    function onOutsideClick(e) {
-      if (menuEl && !menuEl.contains(e.target) && e.target !== el2) closeMenu();
-    }
-    function onEscape(e) {
-      if (e.key === "Escape") closeMenu();
-    }
-    function closeMenu() {
-      if (!menuEl) return;
-      menuEl.remove();
-      menuEl = null;
-      presetMenuState = null;
-      document.removeEventListener("mousedown", onOutsideClick, true);
-      document.removeEventListener("keydown", onEscape, true);
-    }
-    function openMenu() {
-      if (menuEl) {
-        closeMenu();
-        return;
-      }
-      const rect = el2.getBoundingClientRect();
-      menuEl = document.createElement("div");
-      Object.assign(menuEl.style, {
-        position: "fixed",
-        left: rect.left + "px",
-        top: rect.bottom + 2 + "px",
-        width: Math.max(rect.width, 140) + "px",
-        background: "#111",
-        border: "1px solid #40E0D0",
-        borderRadius: "3px",
-        zIndex: 2147483647,
-        overflow: "hidden",
-        fontFamily: "inherit"
-      });
-      const rowEls = [];
-      for (let n = 1; n <= PRESET_COUNT; n++) {
-        const isActive = n === getActivePreset();
-        const row = document.createElement("div");
-        row.textContent = getPresetName(n) + (isActive ? "  \u2713" : "");
-        Object.assign(row.style, {
-          padding: "6px 10px",
-          cursor: "pointer",
-          color: "white",
-          background: isActive ? "#333" : "transparent"
-        });
-        row.addEventListener("mouseenter", () => {
-          row.style.background = "#40E0D0";
-          row.style.color = "black";
-        });
-        row.addEventListener("mouseleave", () => {
-          row.style.background = isActive ? "#333" : "transparent";
-          row.style.color = "white";
-        });
-        row.addEventListener("click", () => {
-          setActivePreset(n);
-          closeMenu();
-          boundInputRefreshers.forEach((fn) => fn());
-          if (isDebugTextEnabled()) console.log("[Wizascript Controller] switched to preset", n, "(" + getPresetName(n) + ")");
-        });
-        menuEl.appendChild(row);
-        rowEls.push(row);
-      }
-      document.body.appendChild(menuEl);
-      document.addEventListener("mousedown", onOutsideClick, true);
-      document.addEventListener("keydown", onEscape, true);
-      presetMenuState = { rows: rowEls, activeIndex: Math.max(0, getActivePreset() - 1), close: closeMenu };
-    }
-    el2.addEventListener("click", openMenu);
-  }
-  function enhancePresetNameInput(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    el2.readOnly = false;
-    Object.assign(el2.style, {
-      backgroundColor: "black",
-      color: "white",
-      border: "1px solid #b4b4b4",
-      borderRadius: "3px",
-      textAlign: "center"
-    });
-    function refreshDisplay() {
-      if (document.activeElement !== el2) el2.value = getPresetName(getActivePreset());
-    }
-    refreshDisplay();
-    boundInputRefreshers.push(refreshDisplay);
-    function commit() {
-      setPresetName(getActivePreset(), el2.value);
-      boundInputRefreshers.forEach((fn) => fn());
-    }
-    el2.addEventListener("blur", commit);
-    el2.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") el2.blur();
-    });
-  }
-  function enhanceResetButton(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    el2.readOnly = true;
-    el2.tabIndex = 0;
-    Object.assign(el2.style, {
-      cursor: "pointer",
-      backgroundColor: "black",
-      color: "white",
-      border: "1px solid #b4b4b4",
-      borderRadius: "3px",
-      textAlign: "center"
-    });
-    function refreshDisplay() {
-      el2.value = "Double Click to Reset";
-    }
-    refreshDisplay();
-    boundInputRefreshers.push(refreshDisplay);
-    el2.addEventListener("dblclick", () => {
-      resetPresetBindings(getActivePreset(), CONTROLLER_ACTIONS.map((a) => a.key), HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key));
-      boundInputRefreshers.forEach((fn) => fn());
-      el2.value = "\u2705 Reset to Defaults";
-      setTimeout(refreshDisplay, 1500);
-    });
-  }
-  function enhanceDetectControllerButton(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    el2.readOnly = true;
-    el2.tabIndex = 0;
-    Object.assign(el2.style, {
-      cursor: "pointer",
-      backgroundColor: "black",
-      color: "white",
-      border: "1px solid #b4b4b4",
-      borderRadius: "3px",
-      textAlign: "center"
-    });
-    function refreshDisplay() {
-      el2.value = isHidConnected() ? "\u2705 Controller Detected (WebHID)" : "\u{1F3AE} Click to Detect Controller (WebHID)";
-    }
-    refreshDisplay();
-    boundInputRefreshers.push(refreshDisplay);
-    el2.addEventListener("click", async () => {
-      if (isHidConnected()) return;
-      el2.value = "Check your browser's device picker\u2026";
-      try {
-        await connectWebHidController();
-      } finally {
-        refreshDisplay();
-      }
-    });
-  }
-  var CONFLICT_CLASS = "wizascript-controller-warning";
-  var BUILT_IN_BUTTON_USES = {
-    0: "clicks / selects",
-    1: "goes back / cancels",
-    3: "right-clicks",
-    12: "navigates up",
-    13: "navigates down",
-    14: "navigates left",
-    15: "navigates right",
-    5: "opens UnderScript's menu (and switches tabs in Settings)"
-  };
-  var GUIDE_BUTTONS = /* @__PURE__ */ new Set([0, 12, 13, 14, 15]);
-  function sameInput(a, b) {
-    if (a === null || a === void 0 || b === null || b === void 0) return false;
-    if (typeof a === "number" || typeof b === "number") return a === b;
-    return a.type === "key" && b.type === "key" && a.code === b.code;
-  }
-  function contextsOverlap(a, b) {
-    if (a === "always" || b === "always") return true;
-    const outside = (c) => c === "channelSwitch" || c === "default";
-    if (outside(a) && outside(b)) return true;
-    return a === "patchMaker" && b === "patchMaker";
-  }
-  function computeControllerConflicts() {
-    const out = /* @__PURE__ */ new Map();
-    const add = (key2, msg) => {
-      if (!out.has(key2)) out.set(key2, []);
-      out.get(key2).push(msg);
-    };
-    const primary2 = getControllerPrimaryButton();
-    const guide = isPluginEnabled("ucTv") ? getChannelGuideButton() : null;
-    const combos = CONTROLLER_ACTIONS.filter((a) => {
-      const id = pluginIdForLabel(a.packageLabel);
-      return !id || isPluginEnabled(id);
-    }).map((a) => ({ a, input: getBoundButton(a.key), code: getBoundKeybindCode(a.key, a.dispatch.code) })).filter((c) => c.input !== null);
-    const shortcuts = HARDWARE_SHORTCUT_ACTIONS.filter((a) => !a.pluginId || isPluginEnabled(a.pluginId)).map((a) => ({ a, row: "shortcut_" + a.key, input: getBoundShortcutButton(a.key) })).filter((c) => c.input !== null);
-    const comboName = (a) => `${a.name} (Primary + ${bindingToDisplay(getBoundButton(a.key))})`;
-    if (primary2 !== null && typeof primary2 === "number" && BUILT_IN_BUTTON_USES[primary2]) {
-      add("controllerPrimary", `This button also ${BUILT_IN_BUTTON_USES[primary2]}, which stops working while it's your Primary.`);
-    }
-    if (guide !== null) {
-      if (sameInput(guide, primary2)) {
-        add("channelGuide", "Same button as Controller Primary.");
-        add("controllerPrimary", "Same button as Channel Guide.");
-      }
-      if (typeof guide === "number" && GUIDE_BUTTONS.has(guide)) {
-        add("channelGuide", "The channel guide uses the d-pad and " + bindingToDisplay(0) + " to pick a channel, so this button would clash with it.");
-      }
-    }
-    shortcuts.forEach(({ a, row, input }, i) => {
-      if (sameInput(input, primary2)) {
-        add(row, "Same button as Controller Primary - pressing Primary will also do this.");
-        add("controllerPrimary", `Same button as ${a.name} - pressing Primary will also do that.`);
-      }
-      if (sameInput(input, guide)) {
-        add(row, "Same button as Channel Guide - both will happen.");
-        add("channelGuide", `Same button as ${a.name} - both will happen.`);
-      }
-      shortcuts.forEach(({ a: other, input: otherInput }, j) => {
-        if (i !== j && sameInput(input, otherInput)) add(row, `Same button as ${other.name} - both will happen.`);
-      });
-      if (typeof input === "number" && BUILT_IN_BUTTON_USES[input]) {
-        add(row, `This button also ${BUILT_IN_BUTTON_USES[input]}, so pressing it will do both.`);
-      }
-      combos.forEach(({ a: combo, input: comboInput }) => {
-        if (!sameInput(input, comboInput)) return;
-        add(row, `Also used by ${comboName(combo)} - that combo will trigger this too.`);
-        add(combo.key, `This button is also ${a.name} (In-Game Inputs), which will trigger too.`);
-      });
-    });
-    combos.forEach(({ a, input, code }, i) => {
-      if (sameInput(input, primary2)) add(a.key, "Same button as Controller Primary, so this combo can't be pressed.");
-      if (sameInput(input, guide)) add(a.key, "Same button as Channel Guide - both will happen.");
-      combos.forEach(({ a: other, input: otherInput, code: otherCode }, j) => {
-        if (i === j || !sameInput(input, otherInput) || code === otherCode) return;
-        if (!contextsOverlap(a.context, other.context)) return;
-        add(a.key, `Same button as ${other.name} - both will happen.`);
-      });
-    });
-    return out;
-  }
-  function refreshControllerConflictWarnings() {
-    const prefix = "underscript.plugin.Wizascript.controller.";
-    if (!document.querySelector(`[id^="${prefix}"]`)) return;
-    const conflicts = computeControllerConflicts();
-    const rowKeys = ["controllerPrimary", "channelGuide"].concat(CONTROLLER_ACTIONS.map((a) => a.key)).concat(HARDWARE_SHORTCUT_ACTIONS.map((a) => "shortcut_" + a.key));
-    rowKeys.forEach((key2) => {
-      const input = document.getElementById(prefix + key2);
-      const row = input && input.closest(".flex-start");
-      if (!row) return;
-      const messages = conflicts.get(key2) || [];
-      let warn = row.querySelector(`:scope > .${CONFLICT_CLASS}`);
-      if (!messages.length) {
-        if (warn) warn.remove();
-        return;
-      }
-      const text = messages.map((m) => "\u26A0 " + m).join("\n");
-      if (!warn) {
-        warn = document.createElement("div");
-        warn.className = `setting-description ${CONFLICT_CLASS}`;
-        Object.assign(warn.style, { color: "#ffb347", opacity: "1", whiteSpace: "pre-line" });
-        row.appendChild(warn);
-      }
-      if (warn.textContent !== text) warn.textContent = text;
-    });
-  }
-  var controllerConflictRefreshQueued = false;
-  function scheduleControllerConflictRefresh() {
-    if (controllerConflictRefreshQueued) return;
-    controllerConflictRefreshQueued = true;
-    setTimeout(() => {
-      controllerConflictRefreshQueued = false;
-      refreshControllerConflictWarnings();
-    }, 0);
-  }
-  boundInputRefreshers.push(scheduleControllerConflictRefresh);
-  var controllerObserverStarted = false;
-  function startControllerKeybindObserver(idPrefix) {
-    if (controllerObserverStarted) return;
-    controllerObserverStarted = true;
-    let everFoundOne = false;
-    const observer2 = new MutationObserver(() => {
-      const matches = document.querySelectorAll(`input[id^="${idPrefix}"]:not([data-wc-enhanced]), select[id^="${idPrefix}"]:not([data-wc-enhanced])`);
-      if (matches.length) scheduleControllerConflictRefresh();
-      matches.forEach((el2) => {
-        everFoundOne = true;
-        const bindingKey = el2.id.slice(idPrefix.length);
-        if (bindingKey.startsWith("__info_")) {
-          enhanceControllerInfoRow(el2);
-          return;
-        }
-        if (bindingKey === "detectController") {
-          enhanceDetectControllerButton(el2);
-          return;
-        }
-        if (bindingKey === "presetSelector") {
-          enhancePresetSelector(el2);
-          return;
-        }
-        if (bindingKey === "presetName") {
-          enhancePresetNameInput(el2);
-          return;
-        }
-        if (bindingKey === "resetPreset") {
-          enhanceResetButton(el2);
-          return;
-        }
-        if (bindingKey === "controllerPrimary") {
-          enhanceControllerCaptureInput(el2, () => getControllerPrimaryButton(), (v) => setControllerPrimaryButton(v));
-          return;
-        }
-        if (bindingKey === "channelGuide") {
-          enhanceControllerCaptureInput(el2, () => getChannelGuideButton(), (v) => setChannelGuideButton(v));
-          return;
-        }
-        if (CONTROLLER_ACTIONS_BY_KEY[bindingKey]) {
-          enhanceControllerCaptureInput(el2, () => getBoundButton(bindingKey), (v) => setBoundButton(bindingKey, v));
-          return;
-        }
-        if (bindingKey.startsWith("shortcut_")) {
-          const shortcutKey = bindingKey.slice("shortcut_".length);
-          if (HARDWARE_SHORTCUT_ACTIONS_BY_KEY[shortcutKey]) {
-            enhanceControllerCaptureInput(el2, () => getBoundShortcutButton(shortcutKey), (v) => setBoundShortcutButton(shortcutKey, v));
-            return;
-          }
-        }
-        if (bindingKey === "debugTextEnabled") {
-          observeDebugTextCheckbox(el2);
-          return;
-        }
-        if (bindingKey === "highlightColor") {
-          observeHighlightColorSelect(el2);
-          return;
-        }
-        el2.setAttribute("data-wc-enhanced", "true");
-      });
-    });
-    observer2.observe(document.body, { childList: true, subtree: true });
-    setTimeout(() => {
-      if (!everFoundOne) {
-        console.warn('[Wizascript Controller] never found any "Keybinds - Controller" <input> elements to enhance after 15s - either the category never rendered, or the assumed id pattern (' + idPrefix + "<key>) is wrong.");
-      }
-    }, 15e3);
-  }
-  function registerControllerSettings(plugin, controllerEnabledSettingIn) {
-    migrateFlatBindingsToPresetOne(
-      CONTROLLER_ACTIONS.map((a) => a.key),
-      HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key)
-    );
-    controllerEnabledSetting = controllerEnabledSettingIn;
-    const settings3 = createFeatureSettings(plugin, "controller", {
-      tab: "Controller Support",
-      visible: () => isPluginEnabled("controller"),
-      categories: true
-    });
-    const SETUP = "Setup";
-    const GENERAL = "General";
-    const IN_GAME = "In-Game Inputs";
-    const hiddenUnless = (pluginId) => () => pluginId ? !isPluginEnabled(pluginId) : false;
-    settings3.add("detectController", {
-      name: "Detect Controller",
-      note: "Click if your controller isn't responding.",
-      type: "text",
-      default: "Click to Detect Controller (WebHID)",
-      category: SETUP
-    });
-    settings3.add("presetSelector", {
-      name: "Settings Preset",
-      note: "Click to switch presets.",
-      type: "text",
-      default: getPresetName(getActivePreset()),
-      category: SETUP
-    });
-    settings3.add("presetName", {
-      name: "Preset Name",
-      note: "Renames whichever preset is currently selected above.",
-      type: "text",
-      default: getPresetName(getActivePreset()),
-      category: SETUP
-    });
-    settings3.add("resetPreset", {
-      name: "Restore Settings to Default",
-      note: "Double Click to reset selected preset settings",
-      type: "text",
-      default: "Double Click to Reset",
-      category: SETUP
-    });
-    debugTextEnabledSetting = settings3.add("debugTextEnabled", {
-      name: "Enable Debug Text",
-      type: "boolean",
-      default: false,
-      category: GENERAL
-    });
-    highlightColorSetting = settings3.add("highlightColor", {
-      name: "Selection Outline Color",
-      type: "select",
-      data: HIGHLIGHT_COLOR_PRESETS,
-      default: DEFAULT_HIGHLIGHT_COLOR,
-      category: GENERAL
-    });
-    settings3.add("controllerPrimary", {
-      name: "Controller Primary",
-      note: "Click to remap. Hold for combos below, same as Wizascript's own Primary Key.",
-      type: "text",
-      default: buttonToDisplay(DEFAULT_PRIMARY_BUTTON),
-      category: GENERAL
-    });
-    settings3.add("__info_openSettings", { name: "Double Tap Primary \u2192 Open Wizascript Settings", type: "text", default: "", category: GENERAL });
-    const seenLabels = /* @__PURE__ */ new Set();
-    CONTROLLER_ACTIONS.forEach((action) => {
-      if (!seenLabels.has(action.packageLabel)) {
-        seenLabels.add(action.packageLabel);
-        if (action.packageLabel === "UC TV") {
-          settings3.add("channelGuide", {
-            name: "Channel Guide (hold)",
-            type: "text",
-            default: buttonToDisplay(null),
-            category: "UC TV",
-            hidden: hiddenUnless("ucTv")
-          });
-        }
-      }
-      settings3.add(action.key, {
-        name: action.name + " - Primary + <btn>",
-        type: "text",
-        default: buttonToDisplay(action.defaultButton),
-        category: action.packageLabel,
-        hidden: hiddenUnless(pluginIdForLabel(action.packageLabel))
-      });
-    });
-    HARDWARE_SHORTCUT_ACTIONS.forEach((action) => {
-      settings3.add("shortcut_" + action.key, {
-        name: action.name,
-        type: "text",
-        default: buttonToDisplay(HARDWARE_SHORTCUT_DEFAULTS[action.key]),
-        category: IN_GAME,
-        hidden: hiddenUnless(action.pluginId)
-      });
-    });
-    startControllerKeybindObserver("underscript.plugin.Wizascript.controller.");
   }
 
   // packages/controller/index.js
@@ -13685,6 +14244,10 @@ Version: v${version}`;
     let btnHeld = {};
     let shortcutBtnHeld = {};
     let shortcutHeldByAction = {};
+    let tlHeld = {};
+    let tlLastRun = 0;
+    let tlDpadSince = { up: 0, down: 0, left: 0, right: 0 };
+    let tlDpadLastRepeat = 0;
     function shortcutJustPressed(btnFn, actionKey) {
       const bound = getBoundShortcutButton(actionKey);
       const isDown = isBoundInputDown(bound, btnFn);
@@ -13791,7 +14354,24 @@ Version: v${version}`;
             }
           }
           if (btn(1) && !shortcutBtnHeld[1] && oskOpen && oskPaused) closeOsk();
-          if (shortcutJustPressed(btn, "openSettings")) {
+          const sameBound = (a, b) => {
+            if (a === null || a === void 0 || b === null || b === void 0) return false;
+            if (typeof a === "number" || typeof b === "number") return a === b;
+            return a.type === "key" && b.type === "key" && a.code === b.code;
+          };
+          const primaryForShortcuts = getControllerPrimaryButton();
+          const primaryHeldForShortcuts = isBoundInputDown(primaryForShortcuts, btn) && !settingsTabsActive;
+          const padForShortcuts = getTierListPad();
+          const padButtons = padForShortcuts ? TIER_LIST_PAD_ACTIONS.map((a) => getBoundTierListButton(a.key)) : [];
+          const shortcutFires = (key2) => {
+            const pressed = shortcutJustPressed(btn, key2);
+            if (!pressed) return false;
+            const bound = getBoundShortcutButton(key2);
+            if (primaryHeldForShortcuts && !sameBound(bound, primaryForShortcuts)) return false;
+            if (padButtons.some((b) => sameBound(b, bound))) return false;
+            return true;
+          };
+          if (shortcutFires("openSettings")) {
             const openModal = queryModalRoot();
             if (openModal && openModal.kind === "tabbed") {
               if (debugTextOn) console.log("[Wizascript Controller] openSettings: Settings already open - closing instead of stacking another copy");
@@ -13802,13 +14382,13 @@ Version: v${version}`;
               triggerElementClick(document.getElementById("btn-config"));
             }
           }
-          if (shortcutJustPressed(btn, "yourDustpile") && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(true)"]'));
-          if (shortcutJustPressed(btn, "opponentDustpile") && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(false)"]'));
-          if (shortcutJustPressed(btn, "endTurn")) triggerElementClick(document.getElementById("endTurnBtn"));
-          if (shortcutJustPressed(btn, "openWizascriptSettings") && !oskOpen) openWizascriptSettings();
-          if (shortcutJustPressed(btn, "concede")) triggerConcede();
-          if (shortcutJustPressed(btn, "goHome")) pageWindow2.location.href = "https://undercards.net/";
-          if (shortcutJustPressed(btn, "openDeckTrackerPresets") && !oskOpen) triggerElementClick(document.getElementById("dt-add-tracker-button"));
+          if (shortcutFires("yourDustpile") && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(true)"]'));
+          if (shortcutFires("opponentDustpile") && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(false)"]'));
+          if (shortcutFires("endTurn")) triggerElementClick(document.getElementById("endTurnBtn"));
+          if (shortcutFires("openWizascriptSettings") && !oskOpen) openWizascriptSettings();
+          if (shortcutFires("concede")) triggerConcede();
+          if (shortcutFires("goHome")) pageWindow2.location.href = "https://undercards.net/";
+          if (shortcutFires("openDeckTrackerPresets") && !oskOpen) triggerElementClick(document.getElementById("dt-add-tracker-button"));
           shortcutBtnHeld = { 1: btn(1), 5: btn(5) };
         }
         if ((!oskOpen || oskPaused) && !isControllerCaptureActive()) {
@@ -14517,6 +15097,75 @@ ${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   \u2190/${btnLabel(1)} ba
 row ${modalRow + 1}/${modalGrid.length}, col ${modalCol + 1}/${modalGrid[modalRow].length}
 ${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   ${btnLabel(1)} close`;
           return;
+        }
+        const tlPad = getTierListPad();
+        if (tlPad) {
+          const tlNow = performance.now();
+          const tlResync = tlNow - tlLastRun > 120;
+          tlLastRun = tlNow;
+          const tlDown = {};
+          TIER_LIST_PAD_ACTIONS.forEach((a) => {
+            tlDown[a.key] = isBoundInputDown(getBoundTierListButton(a.key), btn);
+          });
+          if (tlResync) {
+            tlHeld = { ...tlDown };
+            dpadHeld = { up, down, left, right };
+            tlPad.setShown(true);
+          }
+          if (lx || ly || ry) tlPad.setShown(false);
+          const dpadEdge = up && !dpadHeld.up || down && !dpadHeld.down || left && !dpadHeld.left || right && !dpadHeld.right;
+          let tlClaimed = false;
+          if (!tlPad.isShown() && dpadEdge && !lx && !ly) {
+            tlPad.setShown(true);
+            tlClaimed = true;
+          } else if (tlPad.isShown()) {
+            tlClaimed = true;
+            const REPEAT_DELAY = 380, REPEAT_EVERY = 110;
+            [["up", up], ["down", down], ["left", left], ["right", right]].forEach(([dir, isDown]) => {
+              if (!isDown) {
+                tlDpadSince[dir] = 0;
+                return;
+              }
+              if (!dpadHeld[dir]) {
+                tlDpadSince[dir] = tlNow;
+                tlPad.nav(dir);
+                return;
+              }
+              if (!tlDpadSince[dir]) {
+                tlDpadSince[dir] = tlNow;
+                return;
+              }
+              if (tlNow - tlDpadSince[dir] > REPEAT_DELAY && tlNow - tlDpadLastRepeat > REPEAT_EVERY) {
+                tlDpadLastRepeat = tlNow;
+                tlPad.nav(dir);
+              }
+            });
+            const edge = (key2) => tlDown[key2] && !tlHeld[key2];
+            if (edge("tlSelect")) {
+              const result = tlPad.press();
+              if (result && result.osk) {
+                dispatchClick(result.osk, x, y, 0);
+                openOsk(result.osk);
+              }
+            }
+            if (edge("tlBack")) tlPad.back();
+            if (edge("tlQuickSend")) tlPad.quickSend();
+            if (edge("tlJump")) tlPad.jump();
+            const stillOpen = getTierListPad();
+            if (stillOpen) stillOpen.draw(getHighlightColor());
+          }
+          tlHeld = tlDown;
+          if (tlClaimed) {
+            dpadHeld = { up, down, left, right };
+            btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+            const label = (key2) => bindingToDisplay(getBoundTierListButton(key2));
+            const state3 = tlPad.state();
+            hud.textContent = state3 === "send" ? `tier list: send to tier
+d-pad pick   ${label("tlSelect")} send   ${label("tlBack")} cancel` : state3 === "holding" ? `tier list: holding an item
+d-pad move   ${label("tlSelect")} place   ${label("tlJump")} jump   ${label("tlBack")} cancel` : `tier list
+d-pad move   ${label("tlSelect")} pick up / press   ${label("tlQuickSend")} send   ${label("tlJump")} jump   ${label("tlBack")} back`;
+            return;
+          }
         }
         const handHost = document.getElementById("handCards");
         if (!handHost && matchPhase !== "hand") {

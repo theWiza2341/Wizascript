@@ -37,8 +37,10 @@ import {
   CONTROLLER_ACTIONS, HARDWARE_SHORTCUT_ACTIONS_BY_KEY,
   getControllerPrimaryButton, getBoundButton, getBoundShortcutButton,
   getChannelGuideButton,
-  getPresetMenuState, isDebugTextEnabled, getHighlightColor
+  getPresetMenuState, isDebugTextEnabled, getHighlightColor,
+  TIER_LIST_PAD_ACTIONS, getBoundTierListButton
 } from './settings.js';
+import { getTierListPad } from '../misc/tier-list/index.js';
 import { getHudPosition, setHudPosition, getCursorSensitivity, setCursorSensitivity } from './storage.js';
 import { getPageWindow } from '../core/page-window.js';
 // Read-only accessor for a real Wizascript keybind's CURRENT e.code,
@@ -1743,6 +1745,15 @@ export function initController(plugin, controllerEnabledSetting) {
   // (user remaps it in settings), so tracking by number would leave a
   // stale entry under the old number and never arm under the new one.
   let shortcutHeldByAction = {};
+  // Tier List Maker d-pad mode (1.6.0) - see the "Tier List" section in
+  // frame(). tlHeld: per-control held state (keyed by action key, since
+  // the bound button can change); tlLastRun: when that section last ran,
+  // so coming back to it (window reopened, a dialog or the OSK closed)
+  // resyncs held buttons instead of reading them as fresh presses.
+  let tlHeld = {};
+  let tlLastRun = 0;
+  let tlDpadSince = { up: 0, down: 0, left: 0, right: 0 };
+  let tlDpadLastRepeat = 0;
   function shortcutJustPressed(btnFn, actionKey) {
     const bound = getBoundShortcutButton(actionKey);
     const isDown = isBoundInputDown(bound, btnFn);
@@ -2057,7 +2068,32 @@ export function initController(plugin, controllerEnabledSetting) {
         // start"). queryModalRoot()'s own 'tabbed' kind IS Settings (see its
         // own comment - a TabManager-shaped `.tabbedView.left` dialog), so
         // reusing it here rather than re-detecting independently.
-        if (shortcutJustPressed(btn, 'openSettings')) {
+        // 1.6.0: an In-Game Input stands down (a) while Controller Primary
+        // is held - so a Primary+<btn> combo never ALSO fires an In-Game
+        // Input on the same button (Toggle Tier List = Primary + Touchpad,
+        // End Turn = Touchpad) - unless the input IS Primary's own button;
+        // and (b) while the tier list window is open, on any button one of
+        // its controls uses (those win there). shortcutJustPressed() still
+        // runs either way, so its held-state stays in sync and a held
+        // button can't fire late once Primary is let go.
+        const sameBound = (a, b) => {
+          if (a === null || a === undefined || b === null || b === undefined) return false;
+          if (typeof a === 'number' || typeof b === 'number') return a === b;
+          return a.type === 'key' && b.type === 'key' && a.code === b.code;
+        };
+        const primaryForShortcuts = getControllerPrimaryButton();
+        const primaryHeldForShortcuts = isBoundInputDown(primaryForShortcuts, btn) && !settingsTabsActive;
+        const padForShortcuts = getTierListPad();
+        const padButtons = padForShortcuts ? TIER_LIST_PAD_ACTIONS.map((a) => getBoundTierListButton(a.key)) : [];
+        const shortcutFires = (key) => {
+          const pressed = shortcutJustPressed(btn, key);
+          if (!pressed) return false;
+          const bound = getBoundShortcutButton(key);
+          if (primaryHeldForShortcuts && !sameBound(bound, primaryForShortcuts)) return false;
+          if (padButtons.some((b) => sameBound(b, bound))) return false;
+          return true;
+        };
+        if (shortcutFires('openSettings')) {
           const openModal = queryModalRoot();
           if (openModal && openModal.kind === 'tabbed') {
             if (debugTextOn) console.log('[Wizascript Controller] openSettings: Settings already open - closing instead of stacking another copy');
@@ -2070,12 +2106,12 @@ export function initController(plugin, controllerEnabledSetting) {
         }
         // Guarded on !oskOpen since L3/R3 (their default buttons) are ALSO
         // the OSK's own local symbols-toggle/send bindings while it's open.
-        if (shortcutJustPressed(btn, 'yourDustpile') && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(true)"]'));
-        if (shortcutJustPressed(btn, 'opponentDustpile') && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(false)"]'));
-        if (shortcutJustPressed(btn, 'endTurn')) triggerElementClick(document.getElementById('endTurnBtn'));
-        if (shortcutJustPressed(btn, 'openWizascriptSettings') && !oskOpen) openWizascriptSettings();
-        if (shortcutJustPressed(btn, 'concede')) triggerConcede();
-        if (shortcutJustPressed(btn, 'goHome')) pageWindow.location.href = 'https://undercards.net/';
+        if (shortcutFires('yourDustpile') && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(true)"]'));
+        if (shortcutFires('opponentDustpile') && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(false)"]'));
+        if (shortcutFires('endTurn')) triggerElementClick(document.getElementById('endTurnBtn'));
+        if (shortcutFires('openWizascriptSettings') && !oskOpen) openWizascriptSettings();
+        if (shortcutFires('concede')) triggerConcede();
+        if (shortcutFires('goHome')) pageWindow.location.href = 'https://undercards.net/';
         // Deck Tracker's own "Add Tracker Preset" picker (packages/deck-
         // tracker/index.js) otherwise only opens via a real mouse click on
         // its floating button (`#dt-add-tracker-button`) - defaults to ZL
@@ -2083,7 +2119,7 @@ export function initController(plugin, controllerEnabledSetting) {
         // there). Guarded on !oskOpen for the same reason as the dustpile
         // checks above (shared default-button space with the OSK's own
         // local bindings while it's open).
-        if (shortcutJustPressed(btn, 'openDeckTrackerPresets') && !oskOpen) triggerElementClick(document.getElementById('dt-add-tracker-button'));
+        if (shortcutFires('openDeckTrackerPresets') && !oskOpen) triggerElementClick(document.getElementById('dt-add-tracker-button'));
         shortcutBtnHeld = { 1: btn(1), 5: btn(5) };
       }
 
@@ -3013,6 +3049,82 @@ export function initController(plugin, controllerEnabledSetting) {
         btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
         hud.textContent = `${kind === 'menu' ? 'underscript menu' : 'dialog'}\nrow ${modalRow + 1}/${modalGrid.length}, col ${modalCol + 1}/${modalGrid[modalRow].length}\n${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   ${btnLabel(1)} close`;
         return;
+      }
+
+      /* ---------- Tier List Maker d-pad mode (1.6.0) ----------
+         While the tier list window is open and on top (no dialog or
+         UnderScript menu over it - those are handled just above), the
+         d-pad moves a highlight around it and the Tier List controls
+         (Controller Support tab > Tier List; ✕ / ○ / △ / □ by default)
+         act on it. All the list logic lives in packages/misc/tier-list/
+         pad.js; this only routes input.
+         Moving a stick switches to cursor mode: the highlight hides and
+         the rest of this frame runs as usual (free cursor, hold ✕ to drag
+         a tile - that already worked before d-pad mode). The next d-pad
+         press switches back. Runs before match mode, so the tier list
+         gets the d-pad even in a match while it's open. */
+      const tlPad = getTierListPad();
+      if (tlPad) {
+        const tlNow = performance.now();
+        const tlResync = tlNow - tlLastRun > 120;
+        tlLastRun = tlNow;
+        const tlDown = {};
+        TIER_LIST_PAD_ACTIONS.forEach((a) => { tlDown[a.key] = isBoundInputDown(getBoundTierListButton(a.key), btn); });
+        if (tlResync) {
+          tlHeld = { ...tlDown };
+          dpadHeld = { up, down, left, right };
+          tlPad.setShown(true);
+        }
+        if (lx || ly || ry) tlPad.setShown(false);
+        const dpadEdge = (up && !dpadHeld.up) || (down && !dpadHeld.down) || (left && !dpadHeld.left) || (right && !dpadHeld.right);
+        let tlClaimed = false;
+        if (!tlPad.isShown() && dpadEdge && !lx && !ly) {
+          // Back from cursor mode: show the highlight where it was.
+          tlPad.setShown(true);
+          tlClaimed = true;
+        } else if (tlPad.isShown()) {
+          tlClaimed = true;
+          // D-pad, with hold-to-repeat for long rows/lists.
+          const REPEAT_DELAY = 380, REPEAT_EVERY = 110;
+          [['up', up], ['down', down], ['left', left], ['right', right]].forEach(([dir, isDown]) => {
+            if (!isDown) { tlDpadSince[dir] = 0; return; }
+            if (!dpadHeld[dir]) { tlDpadSince[dir] = tlNow; tlPad.nav(dir); return; }
+            // Held since before d-pad mode took over (e.g. the press that
+            // brought the highlight back): start timing, don't repeat yet.
+            if (!tlDpadSince[dir]) { tlDpadSince[dir] = tlNow; return; }
+            if (tlNow - tlDpadSince[dir] > REPEAT_DELAY && tlNow - tlDpadLastRepeat > REPEAT_EVERY) {
+              tlDpadLastRepeat = tlNow;
+              tlPad.nav(dir);
+            }
+          });
+          const edge = (key) => tlDown[key] && !tlHeld[key];
+          if (edge('tlSelect')) {
+            const result = tlPad.press();
+            if (result && result.osk) {
+              dispatchClick(result.osk, x, y, 0);
+              openOsk(result.osk);
+            }
+          }
+          if (edge('tlBack')) tlPad.back();
+          if (edge('tlQuickSend')) tlPad.quickSend();
+          if (edge('tlJump')) tlPad.jump();
+          // The window may have just closed (○ with nothing open).
+          const stillOpen = getTierListPad();
+          if (stillOpen) stillOpen.draw(getHighlightColor());
+        }
+        tlHeld = tlDown;
+        if (tlClaimed) {
+          dpadHeld = { up, down, left, right };
+          btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+          const label = (key) => bindingToDisplay(getBoundTierListButton(key));
+          const state = tlPad.state();
+          hud.textContent = state === 'send'
+            ? `tier list: send to tier\nd-pad pick   ${label('tlSelect')} send   ${label('tlBack')} cancel`
+            : state === 'holding'
+              ? `tier list: holding an item\nd-pad move   ${label('tlSelect')} place   ${label('tlJump')} jump   ${label('tlBack')} cancel`
+              : `tier list\nd-pad move   ${label('tlSelect')} pick up / press   ${label('tlQuickSend')} send   ${label('tlJump')} jump   ${label('tlBack')} back`;
+          return;
+        }
       }
 
       /* ---------- match mode (hand-nav / play / post-play targeting) ----------

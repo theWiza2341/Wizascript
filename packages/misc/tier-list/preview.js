@@ -121,5 +121,21 @@ export function attachPreview({ root, signal, isDragging, getDelayMs = () => 200
 
   signal.addEventListener("abort", hide);
 
-  return { hide };
+  // Controller d-pad mode: the highlighted tile rests "under" a virtual
+  // pointer at its top-right corner, with the same delay as the mouse.
+  function showNear(tile) {
+    hide();
+    const r = tile.getBoundingClientRect();
+    lastX = r.right;
+    lastY = r.top;
+    overTile = tile;
+    pressed = false;
+    arm();
+  }
+  function clear() {
+    overTile = null;
+    hide();
+  }
+
+  return { hide: clear, showNear };
 }

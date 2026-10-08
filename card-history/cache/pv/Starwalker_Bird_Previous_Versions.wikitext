@@ -1,0 +1,32 @@
+[[File:Starwalker Bird (Original - Beta 48.9)|thumb|220x220px|Original - Beta 48.9]]
+Current Version can be found [https://undercards.fandom.com/wiki/Starwalker_Bird here].
+[[File:Starwalker Bird (Beta 49.0).png|thumb|295x295px|Beta 49.0]]
+'''Beta 30.0''' released this card with 3/3 for 5G with Haste and Ranged. '''Beta 31.0''' gave it -1 HP. This was reverted in '''Beta 32.1''', but instead increased its cost from 5G to 6G. '''Beta 34.0''' added the ability to deal 1 DMG to a random enemy monster whenever it attacks and kills a monster.
+
+'''Beta 47.0''' removed Ranged, which caused this to get redesigned. It gained +2/+2 and now has a Magic effect that requires your deck to lack any Rare and Epic monsters (something also given to the redesigned [https://undercards.fandom.com/wiki/Ranger_Rudinn Ranger Rudinn]). In this case, if you lack them, all monsters in your hand gain +1/+1. '''Beta 49.0''' changed that to letting you draw 3 cards. ([https://undercards.fandom.com/wiki/Final_Froggit Final Froggit] and [https://undercards.fandom.com/wiki/Dark_Ponman Dark Ponman] were also made Rare to not be as easily used with this.) '''Beta 53.0''' gave it the same treatment as [https://undercards.fandom.com/wiki/Gerson_Tombstone Gerson Tombstone]: Generated cards, cards that didn't start in your deck (shown with a Gear Icon), that are in your deck no longer count.
+=== Stats ===
+ATK:
+* 3 (Post Beta 30.0)
+* 5 (Post Beta 47.0, Current)
+
+HP:
+* 3 (Post Beta 30.0)
+* 2 (Post Beta 31.0)
+* 3 (Post Beta 32.1)
+* 5 (Post Beta 47.0, Current)
+Cost:
+* 5 (Post Beta 30.0)
+* 6 (Post Beta 32.1, Current)
+
+Abilities:
+* Haste. Ranged. (Post Beta 30.0)
+* Haste. Ranged. Whenever this attacks and kills a monster, ...
+** deal 1 DMG to a random enemy monster. (Post Beta 34.0)
+* Magic: If your deck has no Rare or Epic cards, ...
+** give all monsters in your hand +1/+1. (Post Beta 47.0)
+** draw 3 cards. (Post Beta 49.0)
+* Magic: If your deck has no non-Generated Rare or Epic cards, ...
+** draw 3 cards. (Post Beta 53.0, Current)
+
+Rarity: White (Common)
+[[Category:Rework]]

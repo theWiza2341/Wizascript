@@ -1,0 +1,18 @@
+[[File:Instant Noodles.png|thumb|291x291px|Beta 44.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Instant_Noodles here].
+
+Instant Noodles was added in '''Beta 44.0''' as a generated card from the '''Noodles''' [https://undercards.fandom.com/wiki/Artifacts Artifact]. As a rather powerful 4G spell able to give +4/+4 to whoever and whenever you want, one was added to your hand at the start of the game.
+
+'''Beta 47.1''' changed them both. The Artifact was doubled, giving 2 instead of 1, while the spell was halved to give +2/+2 for 2G. The Artifact now adds them to your deck instead of to your hand, while the spell now also lets you draw a card.
+
+=== Stats ===
+Spell giver: Noodles
+
+Cost:
+* 4 (Post Beta 44.0)
+* 2 (Post Beta 47.1, Current)
+Effects:
+* Give a monster +4/+4. (Post Beta 44.0)
+* Give a monster +2/+2. Draw a card. (Post Beta 47.1, Current)
+Rarity: Green (Generated)
+[[Category:Rework]]

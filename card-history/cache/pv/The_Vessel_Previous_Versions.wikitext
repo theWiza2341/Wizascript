@@ -1,0 +1,28 @@
+[[File:The_Vessel.png|thumb|Beta 51.0]]
+
+Current Version can be found [[The Vessel|here]].
+[[File:The Vessel (Beta 52.0).png|thumb|Beta 52.0]]
+The Vessel was added in '''Beta 51.0, '''as the 8th [[:Category:Determination (Rarity)|Determination]] monster. It was a 12G 6/6 monster that added 4 exact copies of an ally monster to your deck and 1 to your hand. (It couldn't target other Vessels.) This made it function much like [[Alphys|Royal Integrity]], thus an old [[Cloning]], only on a much grander scale. '''Beta 52.0''' gave it -2G, but also made it add 2 copies to your deck instead of 4 (while still adding 1 to your hand).
+[[File:The Vessel (Beta 56.0).png|thumb|Beta 56.0]]
+'''Beta 56.0''' made it no longer able to copy any other DT monster. After its effect, it will also transform itself into the True Vessel, which is the same 6/6 but without any effects, preventing repeated use. As a trade off, True Vessel is a mere 2G, so bouncing it will not have a big impact. '''Beta 57.1''' made True Vessel keep the buffs The Vessel obtained beforehand.
+
+=== Stats ===
+ATK: 6
+
+HP: 6
+
+Cost:
+*12 (Post Beta 51.0)
+*10 (Post Beta 52.0, Current)
+Abilities:
+*Magic: Add an exact copy of an ally monster (except itself) ...
+**to your hand and 4 to your deck. (Post Beta 51.0)
+**to your hand and 2 to your deck. (Post Beta 52.0)
+* Magic: Add an exact copy of a non-DT ally monster to your hand and 2 to your deck.
+** Turn into the True Vessel. (Post Beta 56.0)
+** Turn into the True Vessel (keep buffs). (Post Beta 57.1, Current)
+
+Rarity: Red (DETERMINATION - Cannot be crafted or silenced)
+
+Song: ANOTHER HIM
+[[Category:Rework]]

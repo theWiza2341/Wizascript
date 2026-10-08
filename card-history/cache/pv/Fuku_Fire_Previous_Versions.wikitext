@@ -1,0 +1,24 @@
+[[File:Fuku Fire (Beta 6.6).png|thumb|234x234px|Post Beta 6.6]]
+Current Version can be found [http://undercards.wikia.com/wiki/Fuku_Fire here].
+[[File:Fuku Fire (Beta 7.1).png|thumb|234x234px|Post Beta 7.1]]
+Fuku Fire was added in '''Beta 6.6''' with the ability to deal 2 damage to the monster in front of it when placed. However, as a 4G monster, it was outclassed by [[Vulkin]], so its effect was buffed in '''Beta 7.1''' to deal 3 damage, making it far more useful.
+[[File:Fuku Fire (Beta 11.0).png|thumb|234x234px|Post Beta 11.0]]
+'''Beta 11.0''' gave it -1 ATK, while '''Beta 22.0''' gave it -1 HP, leaving it with 3/2 for 4G.
+
+Stats:
+
+ATK:
+* 4 (Post Beta 6.6)
+* 3 (Post Beta 11.0, Current)
+
+HP:
+* 3 (Post Beta 6.6)
+* 2 (Post Beta 22.0, Current)
+
+Cost: 4
+
+Abilities:
+* Magic: Deal 2 DMG to the monster in front of it. (Post Beta 6.6)
+* Magic: Deal 3 DMG to the monster in front of it. (Post Beta 7.1, Current)
+Rarity: White (Common)
+[[Category:Rework]]

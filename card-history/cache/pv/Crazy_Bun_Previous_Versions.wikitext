@@ -1,0 +1,19 @@
+[[File:Crazy Bun.png|thumb|235x235px|Post Beta 7.6]]
+Current Version can be found [http://undercards.wikia.com/wiki/Crazy_Bun here].
+[[File:Crazy Bun (Beta 10.2).png|thumb|234x234px|Post Beta 10.2]]
+Crazy Bun was added in '''Beta 7.6''' alongside 13 others. Its first change was in '''Beta 10.2''', where its ATK was buffed from 1 to 2. '''Beta 14.0''' increased its cost from 2G to 3G.
+
+=== Stats ===
+ATK:
+* 1 (Post Beta 7.6)
+* 2 (Post Beta 10.2, Current)
+HP: 2
+
+Cost:
+* 2 (Post Beta  7.6)
+* 3 (Post Beta 14.0, Current)
+
+Ability: Magic: Deal 3 damage randomly split among all other monsters.
+
+Rarity: White (Common)
+[[Category:Rework]]

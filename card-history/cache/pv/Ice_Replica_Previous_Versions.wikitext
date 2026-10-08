@@ -1,0 +1,34 @@
+[[File:Ice Replica (Original - Beta 54.9).png|thumb|Original - Beta 54.9]]
+[[File:Ice Replica (Beta 56.1).png|thumb|Image update Beta 56.1]]
+Current Version can be found [[Ice Replica|here]].
+Ice Replica was released in '''Beta 27.0''' as Patience's 3rd Rare spell. '''Beta 32.0''' dropped its cost from 2G to 1G. '''Beta 39.0''' returned its cost to 2G but also reworked its effect. Before, it would exactly copy a paralyzed non-DT monster to your deck. If this was used on an ally monster, it would always go to the top of your deck. Now, it will add an [[Ice Cap]], [[Ice]] and [[Snowman]] to your hand (always in that order, even if the card mentioned Ice before Ice Cap). '''Beta 42.0''' increased its cost to 3G.
+
+With the class rework of '''Beta 55.0''', Ice Replica's design was mostly moved to [[Cold Winter]], while Ice Replica itself regained some of its old design. Now, still for 3G, it can Paralyze any non-DT monster on the board. After doing so, when your turn ends, a copy of that monster will be added to your hand. If it was an ally monster, the copy will have its cost reduced by 2G. 
+'''Beta 61.0''' dropped its cost from 3G to 2G.
+===Stats ===
+SOUL Type: Patience
+
+Cost:
+
+*2 (Post Beta 27.0)
+*1 (Post Beta 32.0)
+*2 (Post Beta 39.0)
+*3 (Post Beta 42.0)
+*2 (Post Beta 61.0, Current)
+
+Effects:
+
+*Exactly copy a non-DT paralyzed monster to your deck.
+**If it's an ally monster, topdeck it. (Post Beta 27.0)
+* Add an Ice Cap, Ice and Snowman to your hand. (Post Beta 39.0)
+*Paralyze a non-DT monster. Delay: Copy it to your hand.
+** If it's an ally monster, give it -2 cost. (Post Beta 55.0, Current)
+
+Rarity: Blue (Rare)
+== Trivia==
+
+*Beta 33.0 updated its image.
+*Beta 56.1 updated its image.
+**For Patience, it shares this with [https://undercards.fandom.com/wiki/Protection Protection], [https://undercards.fandom.com/wiki/Cold_Winter Cold Winter] and  [https://undercards.fandom.com/wiki/Defrosting Defrosting].
+
+[[Category:Rework]]

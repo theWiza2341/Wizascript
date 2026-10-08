@@ -1,0 +1,24 @@
+[[File:Berdly.png|thumb|232x232px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Berdly here].
+[[File:Berdly (Beta 31.0).png|thumb|234x234px|Beta 31.0]]
+Berdly started in '''Beta 30.0''' at the cost of 6G. '''Beta 31.0''' dropped it to 5G. '''Beta 38.0''' reverted it back to 6G, but also increased its ATK from 3 to 4.
+[[File:Berdly (Beta 38.0).png|thumb|234x234px|Beta 38.0]]
+
+=== Stats ===
+ATK:
+* 3 (Post Beta 30.0)
+* 4 (Post Beta 38.0, Current)
+
+HP: 6
+
+Cost:
+* 6 (Post Beta 30.0)
+* 5 (Post Beta 31.0)
+* 6 (Post Beta 38.0, Current)
+Ability: End of turn: If alone on your board, give a random spell in your hand -3 cost.
+
+Rarity: Blue (Rare)
+
+== Trivia ==
+* Beta 50.0 updated its image.
+[[Category:Rework]]

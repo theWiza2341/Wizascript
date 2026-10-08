@@ -1,0 +1,25 @@
+[[File:Catty.jpg|thumb|234x234px|Beta 7.6]]Current Version can be found [http://undercards.wikia.com/wiki/Catty here].[[File:Catty (Beta 8.1).png|thumb|234x234px|Beta 8.1]]
+Catty was revealed on Undercard's Twitter page before her release in the upcoming update, '''Beta 7.6''', alongside [http://undercards.wikia.com/wiki/MTT_Fountain MTT Fountain] and [http://undercards.wikia.com/wiki/Sad_Dragon Sad Dragon]. Her ability was that whenever you played a card while she was on the board, you would gain 1G and draw a new card, making her ability simmilar to Bravery's passive effect.[[File:Catty (Beta 10.2).png|thumb|234x234px|Beta 10.2]]'''Beta 8.1''' nerfed that by only having her effect take place whenever you summon a monster. This means spells don't trigger the effect anymore, but monsters spawned from cards like [http://undercards.wikia.com/wiki/Igloo Igloo] or [http://undercards.wikia.com/wiki/Lamp Lamp] will. '''Beta 10.2''' nerfed her effect again by only making you draw a card, so no longer gain gold.
+[[File:Catty (Beta 14.0).png|thumb|234x234px|Beta 14.0]]
+'''Beta 14.0''' nerfed her again, this time by lowering her ATK from 5 to 4. (This made her match up with [http://undercards.wikia.com/wiki/Bratty Bratty] again for a while.) '''Beta 49.0''' buffed her slightly by reducing her cost from 7G to 6G and making her only let you draw a card if you have 5 or less cards in your hand, meaning you will not draw a card if that results in a full hand.
+
+=== Stats ===
+ATK:
+* 5 (Post Beta 7.6)
+* 4 (Post Beta 14.0, Current)
+
+HP: 6
+
+Cost:
+* 7 (Post Beta 7.6)
+* 6 (Post Beta 49.0, Current)
+
+Abilities:
+* Whenever you play a card, ...
+** draw a card and earn 1G. (Post Beta 7.6)
+* Whenever you summon a monster, ....
+** draw a card and earn 1G. (Post Beta 8.1)
+** draw a card. (Post Beta 10.2)
+** draw a card if your hand <= 5 cards. (Post Beta 49.0, Current)
+Rarity: Purple (Epic)
+[[Category:Rework]]

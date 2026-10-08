@@ -1,0 +1,20 @@
+[[File:Chaos Duck.png|thumb|186x186px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Chaos_Duck here].
+[[File:Chaos Duck (Beta 39.1).png|thumb|186x186px|Beta 39.1]]
+Chaos Duck was added in '''Beta 30.0''' with the Magic ability to turn an enemy monster into an Apoca Duck, an effectless 5/5 "copy" of itself for 4G (half the cost, should it ever return to someone's hand/deck). '''Beta 39.1''' buffed it by allowing it to target any other monster, so you can turn one of your own monsters into an Apoca Duck. '''Beta 51.0''' reduced its cost from 8G to 7G, but made it impossible to target an enemy monster.
+
+=== Stats ===
+ATK: 5
+
+HP: 5
+
+Cost:
+* 8 (Post Beta 30.0)
+* 7 (Post Beta 51.0, Current)
+
+Abilities:
+* Magic: Turn an enemy monster into an Apoca Duck. (Post Beta 30.0)
+* Magic: Turn a monster into an Apoca Duck. (Post Beta 39.1)
+* Magic: Turn an ally monster into an Apoca Duck. (Post Beta 51.0, Current)
+Rarity: Purple (Epic)
+[[Category:Rework]]

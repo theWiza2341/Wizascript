@@ -1,0 +1,35 @@
+[[File:Dog Residue (Original - Beta 55.9).png|thumb|Original - Beta 55.9]]
+Current Version can be found [[Annoying Dog|here]]. Previous Versions of the Annoying Dog can be found [[Annoying Dog/Previous_Versions|here]].
+
+Dog Residue was originally a mill card given to the opponent by Annoying Dog with pitiful stats. Starting as a 1/1/1, '''Alpha 2.0''' buffed Annoying Dog by making the Residue cost 2G. This was reverted in '''Beta 4.8''', only to be brought back to 2G, but also +1 HP, in '''Beta 5.2'''.
+
+'''Beta 56.0''' reworked both card, with Dog Residue now being given to the user and gaining -1 cost (again) and +1/+1, resulting in 2/3 for a mere 1G. Dog Residue was also turned into a [[:Category:Dog|Dog]] for the first time.
+
+=== Stats ===
+ATK:
+
+* 1 (Pre Beta 56.0)
+* 2 (Post Beta 56.0, Current)
+
+HP:
+* 1 (Pre Beta 5.2)
+* 2 (Post Beta 5.2)
+*3 (Post Beta 56.0, Current)
+
+Cost:
+* 1 (Pre Alpha 2.0)
+* 2 (Post Alpha 2.0)
+* 1 (Post Beta 4.8)
+* 2 (Post Beta 5.2)
+*1 (Post Beta 56.0, Current)
+
+Abilities:
+
+* N/A (Pre Beta 56.0)
+* '''[Now counts as a Dog.]''' (Post Beta 56.0, Current)
+
+Rarities:
+
+* White (Common) (Pre Beta 30.0)
+* Green (Token) (Post Beta 30.0, Current)
+[[Category:Rework]]

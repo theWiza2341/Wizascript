@@ -1,0 +1,26 @@
+[[File:Zap Cannon.png|thumb|291x291px|Beta 44.1]]
+Current Version can be found [https://undercards.fandom.com/wiki/Blitz_Quiz here].
+[[File:Zap Cannon (Beta 47.0).png|thumb|291x291px|Beta 47.0]]
+Zap Cannon was added in '''Beta 44.1''' as a Generated card of Blitz Quiz, which would add Trick Question and this to your hand for 2G. Trick Question dealt 5 DMG to a monster for 5G, while this dealt 2 DMG for 1G. This made them function very similar to [https://undercards.fandom.com/wiki/Sans Gaster Blaster] and [https://undercards.fandom.com/wiki/Punishment Punishment].
+
+'''Beta 47.0''' reduced Blitz Quiz's cost to 0G (making it the first free Justice spell), and now lets you choose one of the two to be added to your hand. The two spells also changed. Both are now 2G and Trick Question deals 2 DMG to a monster and lets you draw 1 card, while this deals 1 DMG and draws 2 cards.
+
+'''Beta 52.1''' changed Trick Question and Zap Cannon again. Now both deal 2 DMG to a monster and draw a single card, but Trick Question specifically draws a monster while Zap Cannon draws a spell (aside from a new Blitz Quiz). '''Beta 56.0''' changed the trio again. Blitz Quiz had its cost increased by 1, but both Trick Question and Zap Cannon had their cost decreased by 1.
+
+=== Stats ===
+Spell giver: Blitz Quiz
+
+Cost:
+* 1 (Post Beta 44.1)
+* 2 (Post Beta 47.0)
+*1 (Post Beta 56.0, Current)
+
+Effects:
+* Deal 2 DMG to a monster. (Post Beta 44.1)
+* Deal 1 DMG to a monster. Draw 2 cards. (Post Beta 47.0)
+* Deal 2 DMG to a monster. Draw a spell (except Blitz Quiz). (Post Beta 52.1, Current)
+Rarity: Green (Generated)
+
+=== Trivia ===
+* Beta 53.0's Patch Notes mentioned an effect nerf only for this, but nothing changed.
+[[Category:Rework]]

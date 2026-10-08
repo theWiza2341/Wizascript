@@ -1,0 +1,30 @@
+[[File:Defrosting (Original - Beta 32.0).png|thumb|220x220px|Original - Beta 32.0]]
+Current Version can be seen [[Defrosting|here]].
+[[File:Defrosting (Beta 32.1).png|thumb|252x252px|Beta 32.1]]
+Defrosting originally dealt 4 DMG to all paralyzed enemy monsters when played, at the cost of 4G. The cost was reduced to 3G in '''Alpha 3.2'''. And '''Beta 4.8''' reduced the DMG to 3. '''Beta 7.1''' brought new life into it by still dealing 3 damage to all paralyzed enemy monsters, but now also does 1 damage to non-paralyzed enemy monsters, making it work very much like [[Pollutant Gas]].
+[[File:Defrosting (Beta 33.0).png|thumb|252x252px|Beta 33.0]]
+After quite some time, '''Beta 18.1''' dropped its cost further to 2G, but '''Beta 32.1''' reverted this back to 3G. With the class change of '''Beta 55.0''', Defrosting was reworked to now deal 3 DMG to all damaged monsters (both ally and enemy, making it act as a small [[Asgore]]). Then, at the end of that turn, all monsters would take 1 DMG.
+[[File:Defrosting (Beta 55.0).png|thumb|248x248px|Beta 55.0]]
+
+=== Stats ===
+SOUL Type: Patience
+
+Cost:
+* 4 (Post Alpha 3.0)
+* 3 (Post Alpha 3.2)
+* 2 (Post Beta 18.1)
+* 3 (Post Beta 32.1, Current)
+Effects: 
+* Deal 4 DMG to all paralyzed enemy monsters. (Post Alpha 3.0) 
+* Deal 3 DMG to all paralyzed enemy monsters. (Post Beta 4.8) 
+* Deal 1 DMG to all enemy monsters. If paralyzed, deal 3 DMG instead. (Post Beta 7.1)
+*Deal 3 DMG to all damaged monsters. Delay: Deal 1 DMG to all monsters. (Post Beta 55.0, Current)
+
+Rarity: Blue (Rare)
+== Trivia ==
+* Beta 33.0 updated its image.
+** For Patience, it shares this with [[Protection]], [[Cold Winter]] and [[Ice Replica]].
+* Beta 56.0 updated its image again.
+** For Patience, it shares this with [[Fridge]], [[Ice Prison]] and Cold Winter (again).
+
+[[Category:Rework]]

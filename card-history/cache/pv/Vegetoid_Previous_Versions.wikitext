@@ -1,0 +1,24 @@
+[[File:Vegetoid Original.png|thumb|215x215px|Pre Alpha 2.7]]
+Current version can be seen [[Vegetoid|here]].
+
+[[File:Screenshot 119.png|thumb|214x214px|Post Alpha 2.7]]
+Vegetoid gained small buffs over time. Starting out with 1/3 that would heal its owner for 3 HP upon death, Vegetoid gained its first buff in '''Alpha 2.7''', where its ATK was raised to 2. '''Beta 1.6''' buffed that further to 3, giving it its current 3/3 for 3G.
+
+[[File:Updated Vegetoid.png|thumb|211x211px|Post Beta 1.6]]
+'''Beta 5.3 '''gave it its first buff in its effect, healing 4 HP upon death instead of 3 HP. '''Beta 16.0''' buffed that further to 5 HP.
+
+[[File:5.3 Vegetoid.png|thumb|214x214px|Post Beta 5.3]][[File:Vegetoid (Beta 30.0).png|thumb|135x135px|Beta 30.0 ]]
+=== Stats ===
+ATK:
+* 1 (Pre  Alpha 2.1)
+* 2 (Post Alpha 2.1)
+* 3 (Post Beta  1.6, Current)
+HP: 3
+
+Cost: 3
+
+Abilities:
+* Dust: Restore 3 HP to yourself. (Pre  Beta  5.3)
+* Dust: Restore 4 HP to yourself. (Post Beta  5.3)
+* Dust: Restore 5 HP to yourself. (Post Beta 16.0, Current)
+Rarity: White (Common)[[Category:Rework]]

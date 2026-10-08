@@ -1,0 +1,29 @@
+[[File:Catty's Dad.png|thumb|209x209px|Beta 30.0]]
+Current Version can be found [[Catty's Dad|here]].
+[[File:Catty's Dad (Beta 31.0).png|thumb|212x212px|Beta 31.0]]
+Catty's Dad, alongside [[Catti]], were added in '''Beta 30.0''' with the same stats as [[Catty]], at 4/6 for 7G. Dad's first change was in '''Beta 31.0''', where both his cost and ATK dropped by 1. But his effect was also nerfed from giving you 1G every time you summon a monster to only do so when the summoned monster has a cost of 2G or more. '''Beta 35.0''' brought his ATK back up to 4.
+[[File:Catty's Dad (Beta 35.0).png|thumb|214x214px|Beta 35.0]]
+
+=== Stats ===
+ATK:
+* 4 (Post Beta 30.0)
+* 3 (Post Beta 31.0)
+* 4 (Post Beta 35.0, Current)
+HP: 6
+
+Cost:
+* 7 (Post Beta 30.0)
+* 6 (Post Beta 31.0, Current)
+Abilities:
+* Earn 1G whenever you summon a monster. (Post Beta 30.0)
+* Earn 1G whenever you summon a => 2G monster. (Post Beta 31.0, Current)
+Rarity: Blue (Rare)
+
+== Trivia ==
+* Beta 50.0 updated his image.
+*Since Beta 55.1, the stats of all 3 cats are equal, just like when they were in Beta 30.0, but at -1 ATK.
+**Beta 31.0 gave Catty's Dad -1 ATK and Cost, just like Catti in Beta 45.0.
+**Beta 49.0 gave Catty -1 cost, making the cost equal among all of them.
+**Beta 35.0 gave Catty's Dad +1 ATK (making only Catti have less ATK), just like Catti in Beta 55.1.
+
+[[Category:Rework]]

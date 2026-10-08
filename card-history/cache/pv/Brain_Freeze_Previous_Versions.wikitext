@@ -1,0 +1,30 @@
+[[File:Brain Freeze (Original - Beta 44.0)|thumb|220x220px|Original - Beta 44.0]]
+Current Version can be found [[Brain Freeze|here]].
+[[File:Brain Freeze (Beta 44.1).png|thumb|257x257px|Beta 44.1]]
+
+Brain Freeze, added in '''Beta 11.0''', originally made both players skip their next turn. (They still draw a card and get gold, and monster effects still works, so their turn more accurately just ends right after it starts.) It did this for 7G, but '''Beta 12.1''' reduced that to 5G. '''Beta 17.0''' increased that to 6G and '''Beta 31.0''' brought it back to the original 7G. '''Beta 39.0''' increased it further to 8G.
+[[File:Brain Freeze (Beta 45.0).png|thumb|Beta 45.0]]
+'''Beta 44.1''' returned it back to 6G, but also reworked its effect for the first time. Now, your current turn ends, and any Turn start and Turn end effect of monsters on your board get activated (including the regular trigger, so Turn end effect trigger twice). '''Beta 45.0''' also makes you draw a card.
+
+'''Beta 55.0''' reworked the soul. As a result, Brain Freeze was replaced with [[Ice Prison]].
+=== Stats ===
+SOUL Type: Patience
+
+Cost:
+* 7 (Post Beta 11.0)
+* 5 (Post Beta 12.1)
+* 6 (Post Beta 17.0)
+* 7 (Post Beta 31.0)
+* 8 (Post Beta 39.0)
+* 6 (Post Beta 44.1)
+*N/A (Post Beta 55.0, Current)
+
+Effects:
+* Both players skip their next turn. (Post Beta 11.0)
+* Trigger all ally Turn start & Turn end effects.
+**End your turn. (Post Beta 44.1)
+**Draw a card and end your turn. (Post Beta 45.0)
+* N/A (Post Beta 55.0, Current)
+
+Rarity: Purple (Epic)
+[[Category:Rework]]

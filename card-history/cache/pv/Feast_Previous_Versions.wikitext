@@ -1,0 +1,37 @@
+[[File:Feast (Original - Beta 6.4).png|thumb|220x220px|Original - Beta 6.4]]
+Current version can be seen [[Feast|here]].
+[[File:Feast (Beta 6.5 - Beta 42.9)|thumb|220x220px|Beta 6.5 - Beta 42.9]]
+Originally, this card fully healed all your monsters in play for 7G. '''Beta 2.0''' reduced that to 5G.
+[[File:Feast (Beta 43.0).png|thumb|291x291px|Beta 43.0]]
+'''Beta 5.2''' changed the effect so that now, while only healing 2 HP, it adds 2 max HP as well, making this version an all ally version of [http://undercards.wikia.com/wiki/Force_of_Nature Force of Nature]. This was changed to make more people play it as it was seen useless when compared to [[Asriel]], who would also fully heal your ally monsters, but also remove KR and it would give a 4/4 monster (for the same price of 5G). '''Beta 6.0''' decreased its price from 5G to 4G.
+[[File:Feast (Beta 47.0).png|thumb|291x291px|Beta 47.0]]
+'''Beta 6.4''' changed it enourmous. Instead of recovering and adding HP to your monsters, it now makes it so that until the end of your turn, all healing effects will do damage instead. This can be used to make cards such as [http://undercards.wikia.com/wiki/Heal Heal] or [http://undercards.wikia.com/wiki/Shyren Shyren] that you have in your hand work like [http://undercards.wikia.com/wiki/Vulkin Vulkin] and damage your opponent or their monsters. The next update, '''Beta 6.5''', dropped its price to 2G, and '''Beta 7.4''' dropped it further to 1G.
+
+'''Beta 9.3''' reworked it, mostly returning it to its Beta 6.0 version by making it cost 4G again and giving bonus HP to all ally monsters. But instead of +2, it gives +3, as well as an additional +1 (so +4 total) to monsters with a CURRENT HP of 3 or less (before the initial +3 is given, of course). '''Beta 14.0''' dropped its cost to 3G, but this was returned to 4G in '''Beta 22.0'''. After quite a while, '''Beta 43.0''' reworked it slightly, reducing the main HP boost back to +2, but those with <= 3 HP will also gain +1 ATK on top of their +1 HP (so +1/+1).
+
+'''Beta 47.0''' reworked it yet again, this time bringing it back to its very first version in terms of effect, to fully restore all ally monsters. But its price has been improved heavily, being AT MOST 5G like its Beta 2.0 version. This is due to it starting at 1G, but increasing its cost by 1G for every damaged monster on your board. '''Beta 50.0''' switched that, by now being 4G at all times by default. However, undamaged monsters now gain +1/+1, giving it back some of its buffing powers.
+
+=== Stats ===
+Soul Type: Kindness
+
+Cost: 
+* 7 (Post Alpha 3.0)
+* 5 (Post Beta 2.0)
+* 4 (Post Beta 6.0)
+* 2 (Post Beta 6.5)
+* 1 (Post Beta 7.4)
+* 4 (Post Beta 9.3)
+* 3 (Post Beta 14.0)
+* 4 (Post Beta 22.0)
+* 1 (Post Beta 47.0)
+* 4 (Post Beta 50.0, Current)
+Effects: 
+* Fully restore all ally monsters. (Post Alpha 3.0)
+* Give +2 HP to all ally monsters. (Post Beta 5.2)
+* During this turn, healing effects will deal DMG instead. (Post Beta 6.4)
+* Give +3 HP to all ally monsters. If HP <= 3, give an extra +1 HP. (Post Beta 9.3)
+* Give +2 HP to all ally monsters. If HP <= 3, give an extra +1/+1. (Post Beta 43.0)
+* Fully restore all ally monsters.
+** Has +1 cost for each damaged ally monster. (Post Beta 47.0)
+** Give +1/+1 to all undamaged ally monsters. (Post Beta 50.0, Current)
+Rarity: Blue (Rare)[[Category:Rework]]

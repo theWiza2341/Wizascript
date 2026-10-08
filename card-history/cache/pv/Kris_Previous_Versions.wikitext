@@ -1,0 +1,18 @@
+''Current version can be found [[Kris|here]].''
+*Beta 30.0: New card: Kris. DR DT. COST 13. ATK 4. HP 10. EFFECT: Support: Give the attacking monster +1/+1 for each other monster you control.
+*Beta 30.1: EFFECT UPDATE: Support: Give the attacking monster +1/+1 (MAX +2/+2) for each other monster you control.
+** This update was only a few hours later.
+*Beta 33.0: Updated sprite.
+**[[Chara]] also got an updated sprite.
+*Beta 56.0: EFFECT UPDATE: Support: Give the attacker +2/+2.
+*Beta 60.0: COST 13 > 12.
+* Beta 67.1: COST 12 > 10. EFFECT UPDATE: Haste. Transparency. Whenever this attacks and kills a monster, gain +2/+1. Turn end: Draw a monster. It copies this card's buffs.
+*Beta 84.0: EFFECT UPDATE: Haste. Transparency. Whenever this attacks and kills a monster, gain +1/+1. Turn end: Draw a monster. It copies this card's buffs.
+
+<gallery>
+File:Kris.png|Beta 30.0
+File:Kris (Beta 30.1).png|Beta 30.1
+File:Kris (Beta 33.0).png|Beta 33.0
+File:Kris (Beta 56.0).png|Beta 56.0
+</gallery>
+[[Category:Rework]]

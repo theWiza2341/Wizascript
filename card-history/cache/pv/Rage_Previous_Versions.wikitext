@@ -1,0 +1,32 @@
+[[File:Rage (Original - Beta 39.0).png|thumb|220x220px|Original - Beta 39.0]]
+Current Version can be found [https://undercards.wikia.com/wiki/Rage here].
+[[File:Rage (Beta 39.1).png|thumb|253x253px|Beta 39.1]]
+Rage was added in '''Beta 27.0''' as [https://undercards.wikia.com/wiki/Category:Bravery Bravery]'s 3rd [https://undercards.wikia.com/wiki/Category:Rare Rare] Spell. Its first change was already in '''Beta 28.0''', which it shares with [https://undercards.wikia.com/wiki/Category:Perseverance Perseverance]'s [https://undercards.wikia.com/wiki/Siphoning Siphoning] and [https://undercards.wikia.com/wiki/Category:Justice Justice]'s [https://undercards.wikia.com/wiki/Fast_Sanction Fast Sanction].
+[[File:Rage (Beta 41.0).png|thumb|254x254px|Beta 41.0]]
+At first, under the cost of 3G, it was able to deal the ATK of an ally monster of your choice as DMG to the monster in front of it. In Beta 28.0, this was buffed by now making the excess DMG be dealt to the opponent (but 6 at most) for 4G. '''Beta 34.0''' buffed it again by returning its cost to 3G, but keeping the 2nd effect.
+
+'''Beta 38.0''' buffed the effect yet again. Now, instead of dealing the excess DMG to the opponent, it gives +1/+1 to the selected monster first. As a result, this spell will deal 1 more DMG to the monster in front of it, and can be followed by the actual attack of your monster, which also deals 1 more DMG. '''Beta 39.1''' increased its cost back to 4G. This was brought back yet again in '''Beta 41.0''' alongside a slight effect change. The monster will now attack the monster in front of it rather than just dealing its ATK as DMG, meaning counter-DMG will now apply.
+
+'''Beta 42.0''' reworked the class as a whole. This resulted to Rage being replaced by [https://undercards.fandom.com/wiki/Overgrowth Overgrowth]. 
+
+=== Stats ===
+SOUL Type: Bravery
+
+Cost:
+* 3 (Post Beta 27.0)
+* 4 (Post Beta 28.0)
+* 3 (Post Beta 34.0)
+* 4 (Post Beta 39.1)
+* 3 (Post Beta 41.0)
+* N/A (Post Beta 42.0, Current)
+Effects:
+* Deal an ally monster's ATK as DMG to the monster in front of it. (Post Beta 27.0)
+** Deal the excess DMG to the opponent (max: 6). (Post Beta 28.0)
+** Give it +1/+1 first. (Post Beta 38.0)
+* Give an ally monster +1/+1 and it attacks the monster in front of it. (Post Beta 41.0)
+* N/A (Post Beta 42.0, Current)
+Rarity: Blue (Rare)
+== Trivia ==
+* Beta 33.0 update its image.
+** For Bravery, it shares this with [https://undercards.fandom.com/wiki/Aaron's_Secret Aaron's Secret], [https://undercards.fandom.com/wiki/Final_Charge Final Charge] and [https://undercards.fandom.com/wiki/Froggit_Trio Froggit Trio].
+[[Category:Rework]]

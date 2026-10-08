@@ -1,0 +1,26 @@
+[[File:Soothing.png|thumb|234x234px|Post Beta 11.0]]
+Current Version can be found [http://undercards.wikia.com/wiki/Soothing here].
+[[File:Soothing (Beta 13.1).png|thumb|234x234px|Post Beta 13.1]]
+Soothing was added in '''Beta 11.0''' during UnderCards' 1 Year Anniversary as [http://undercards.wikia.com/wiki/Category:Kindness Kindness]' 2nd [http://undercards.wikia.com/wiki/Category:Epic Epic] spell. When first released, it would set a monster to 3/3 at the cost of 3G. '''Beta 13.1''' made the monster have 1 less HP, leaving it with 3/2.
+[[File:Soothing (Beta 17.0).png|thumb|234x234px|Post Beta 17.0]]
+'''Beta 17.0''' swapped its rarity with that of [http://undercards.wikia.com/wiki/Longevity Longevity], making that an Epic and this a [http://undercards.wikia.com/wiki/Category:Rare Rare]. '''Beta 40.0''' increased its cost to 4G.
+[[File:Soothing (Beta 33.0).png|thumb|236x236px|Post Beta 33.0]]
+
+=== Stats ===
+SOUL Type: Kindness
+
+Cost:
+* 3 (Post Beta 11.0)
+* 4 (Post Beta 40.0, Current)
+
+Effects:
+* Set a monster to 3/3. (Post Beta 11.0)
+* Set a monster to 3/2. (Post Beta 13.1, Current)
+Rarities:
+* Purple (Epic) (Post Beta 11.0)
+* Blue (Rare) (Post Beta 17.0, Current)
+
+== Trivia ==
+* Beta 33.0 updated its image.
+** For Kindness, it shares this with [https://undercards.fandom.com/wiki/Heal Heal], [https://undercards.fandom.com/wiki/Force_of_Nature Force of Nature], [https://undercards.fandom.com/wiki/Test_of_Will Test of Will] and [https://undercards.fandom.com/wiki/Octofriend Octofriend].
+[[Category:Rework]]

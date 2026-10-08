@@ -1,0 +1,27 @@
+[[File:Load (Original - Beta 29.9).png|thumb|Original - Beta 29.9]]
+Load is a spell card given by [[Omega Flowey]].
+[[File:Load (Beta 30.0).png|thumb|Beta 30.0]]
+When first released in '''Beta 5.3''', it costed 8G to use and would load the last saved game state. When a game state was saved, most aspects of the game were saved. This included both players' board, hand, deck, gold and even the number of seconds into the turn the card is placed. The only things not affected were the turn number and dustpiles. This card was removed from '''Beta 6.7''' to '''Beta 9.1''' due to a rework of Omega Flowey.
+[[File:Load (Beta 54.1).png|thumb|Beta 54.1]]
+With its return, it functions identical as before. Only now, it costs 15G to use and while still loading the last saved state, Omega now only saves the Board. '''Beta 20.0,''' '''Beta 22.0''' and '''Beta 54.1''' increased its cost by 1G. '''Beta 55.0''' decreased it by 2G, bringing it back to its Beta 20.0 version.
+
+=== Stats ===
+Spell giver: Omega Flowey
+
+Cost:
+* 8 (Post Beta 5.3)
+* N/A (Post Beta 6.7)
+* 15 (Post Beta 9.1)
+* 16 (Post Beta 20.0)
+* 17 (Post Beta 22.0)
+*18 (Post Beta 54.1)
+*16 (Post Beta 55.0, Current)
+
+Effects:
+* Load the last saved state. (Post Beta 5.3)
+* N/A (Post Beta 6.7)
+* Load the last saved board. (Post Beta 9.1, Current)
+Rarities:
+* Red (Determination) (Post Beta 5.3)
+* Green (Generated) (Post Beta 30.0, Current)
+[[Category:Rework]]

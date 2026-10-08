@@ -1,0 +1,5 @@
+* Beta 84.0: [[Brain Shift]] has been replaced by Aftermath. UT EPIC Spell. SOUL: Perseverance. COST 2. EFFECT: Summon 2 1/1 enemy [[Pile of Dust|Piles of Dust]].
+* Beta 101.0: COST 2 > 1. EFFECT UPDATE: Summon a Pile of Dust for the opponent and give it KR.
+* Beta 103.0: Aftermath no longer unintentionally summons 2/1 Piles of Dust.
+** While Pile of Dust was buffed from 2/1 to 2/2 in Beta 102.0, Aftermath would still summon a 2/1 Pile of Dust.
+[[Category:Rework]]

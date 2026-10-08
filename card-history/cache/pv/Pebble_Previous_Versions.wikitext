@@ -1,0 +1,24 @@
+[[File:Pebble.png|thumb|155x155px|Beta 4.2]]
+Current Version can be found [http://undercards.wikia.com/wiki/Rock here]. Previous Versions of Rock can be found [http://undercards.wikia.com/wiki/Rock/Previous_Versions here].
+[[File:Pebble (Beta 11.0).png|thumb|154x154px|Beta 11.0]]
+Pebble was added in '''Beta 4.2''' as a summon for Rock. It started as 1/2 with Taunt for 1G. '''Beta 11.0''' buffed it to 1/3.
+[[File:Pebble (Beta 30.0).png|thumb|154x154px|Beta 30.0]]
+
+=== Stats ===
+[[File:Pebble (Beta 33.0).png|thumb|156x156px|Beta 33.0]]
+ATK: 1
+
+HP:
+* 2 (Post Beta 4.2)
+* 3 (Post Beta 11.0, Current)
+Cost: 1
+
+Ability: Taunt
+
+Rarities:
+* White (Common) (Post Beta 4.2)
+* Green (Generated) (Post Beta 30.0, Current)
+
+== Trivia ==
+* Beta 33.0 and Beta 50.0 updated its image.
+[[Category:Rework]]

@@ -1,0 +1,29 @@
+[[File:Clam Boy (Original - Beta 48.9).png|thumb|287x287px|Original - Beta 48.9]]
+Current Version can be found [[Clam Boy|here]].
+
+Since its debut in '''Beta 7.6''', Clam Boy got its first change in '''Beta 12.0'''. This change gave it +1/+1/+1, turning it from a 3/4 for 4G monster to a 4/5 for 5G one. '''Beta 18.1''' gave it -1 cost and HP, but kept its ATK the same, leaving it at 4/4/4.
+
+'''Beta 20.2''' brought its cost back up to 5G, but reworked its effect by replacing it with Transparency. So now, it also can't be targeted by direct attacks, but will lose the effect if it attacks itself. This also makes Clam Boy the first monster to have just Transparency. '''Beta 21.0''' gave it +1 HP again.
+
+Transparency got a slight change during its time, now being removed when the owner's next turn starts. Eventually, '''Beta 49.0''' buffed Clam Boy again by now reapplying itself with Transparency if it attacked and killed a monster.[[File:Clam Boy (Beta 21.0).png|thumb|124x124px|Beta 21.0 ]]
+=== Stats ===
+ATK:
+* 3 (Post Beta 7.6)
+* 4 (Post Beta 12.0, Current)
+HP:
+* 4 (Post Beta 7.6)
+* 5 (Post Beta 12.0)
+* 4 (Post Beta 18.1)
+* 5 (Post Beta 21.0, Current)
+Cost:
+* 4 (Post Beta 7.6)
+* 5 (Post Beta 12.0)
+* 4 (Post Beta 18.1)
+* 5 (Post Beta 20.2, Current)
+Abilities:
+* Can't be targeted by spells and Magic effects. (Post Beta 7.6)
+* Transparency. (Post Beta 20.2)
+* Transparency. If this attacks and kills, gain Transparency. (Post Beta 49.0, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

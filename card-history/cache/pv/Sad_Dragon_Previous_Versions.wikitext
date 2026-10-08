@@ -1,0 +1,27 @@
+[[File:Sad Dragon.jpg|thumb|238x238px|Pre-release]]
+Current Version can be found [http://undercards.wikia.com/wiki/Sad_Dragon here].
+[[File:Sad Dragon (Beta 7.6).png|thumb|234x234px|Post Beta 7.6]]
+
+Sad Dragon was one of the 14 cards added in '''Beta 7.6''' and was the 2nd monster to have Dodge (the first being [http://undercards.wikia.com/wiki/Sans Sans]).[[File:Sad Dragon (Beta 16.0).png|thumb|234x234px|Post Beta 16.0]]
+
+When first revealed, it costed 6G and had 4/5 in stats. But when it was added to the game, its HP dropped to 4. '''Beta 16.0''' dropped its HP further to 3.
+[[File:Sad Dragon (Beta 20.2).png|thumb|234x234px|Post Beta 20.2]]
+
+Due to the Dodge nerf of Beta 20.0, where it now only resets at the start of the owner's turn instead of both turns, '''Beta 20.2''' brought Sad Dragon's HP back up to 4. '''Beta 36.1''' nerfed Dodge again. Now it doesn't reset at all. As a result, Sad Dragon gained +1 ATK.
+
+=== Stats ===
+ATK:
+* 4 (Post Beta 7.6)
+* 5 (Post Beta 36.1, Current)
+
+HP:
+* 5 (Pre-release)
+* 4 (Post Beta 7.6)
+* 3 (Post Beta 16.0)
+* 4 (Post Beta 20.2, Current)
+Cost: 6
+
+Ability: Dodge (1).
+
+Rarity: White (Common)
+[[Category:Rework]]

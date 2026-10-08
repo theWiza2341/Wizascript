@@ -1,0 +1,22 @@
+[[File:Screenshot 137.png|thumb|236x236px|Pre Beta 25.0]]
+Current Version can be found [https://undercards.wikia.com/wiki/So_Sorry here].
+
+Doodlebog holds the record for both having the longest gap between changes and the longest gap between release and its first change, as it was released as a summon through So Sorry, but got its first change all the way into Beta 25.0.
+
+In this change, it gained -1/-1, but also gained an effect for it, a Magic effect which increased its ATK or HP by 1 depending on where it is placed on the board.
+
+=== Stats ===
+ATK:
+* 3 (Pre Beta 25.0)
+* 2 (Post Beta 25.0, Current)
+HP:
+* 3 (Pre Beta 25.0)
+* 2 (Post Beta 25.0, Current)
+Cost: 2
+
+Abilities:
+* N/A (Pre Beta 25.0)
+* Magic: If played on the left side, gain +1 HP. If played on the right side, gain +1 ATK. (Post Beta 25.0, Current)
+Rarity: White (Common)
+
+[[Category:Rework]]

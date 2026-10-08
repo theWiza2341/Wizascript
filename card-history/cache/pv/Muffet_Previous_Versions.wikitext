@@ -1,0 +1,42 @@
+[[File:Muffet (Original - Beta 9.2).png|thumb|220x220px|Original - Beta 9.2]]
+Current version can be seen [[Muffet|here]].
+[[File:Muffet (Beta 9.3 - Beta 45.9)|thumb|220x220px|Beta 9.3 - Beta 45.9]]
+
+Originally, Muffet had an Epic Rarity, making her the 2nd card to get a change in Rarity (the 1st being the [http://undercards.wikia.com/wiki/Gaster_Blaster Gaster Blaster]). She had the stats of 6/6 with the cost of 8G. Her ability would make the owner heal 5 HP every time Muffet killed a monster whilst attacking. '''Alpha 2.7''' changed this to 4/9, possibly in an attempt to make her last and therefore heal longer as a buff.
+With the release of [[Spider]] in Beta 5.2, '''Beta 5.3 '''buffed Muffet to summon a Spider as well as restoring 5 HP whenever she attacks and kills a monster. '''Beta 7.4''' buffed her a bit more by lowering her cost by 2G, but also decreasing her HP by 2.
+
+And finally, '''Beta 8.1''' changed her completely by turning her into a legendary. As a 4/11 for 9G monster (thus getting +4 HP and +3 cost), she now puts 3 Spiders in both your and the opponent's deck, and will gain +2/+1 whenever one in summoned. '''Beta 9.3''' buffed her by also gaining Haste, much like Spider getting Haste in Beta 9.1. '''Beta 10.2''' buffed her again by making her also gain +2/+1 for every [http://undercards.wikia.com/wiki/Muffet's_Pet Muffet's Pet] summoned, but '''Beta 16.0''' nerfed her a bit by lowering her HP to 10. '''Beta 18.1''' nerfed her further by increasing her cost to 10G. This was returned to 9G in '''Beta 29.0'''.
+
+'''Beta 46.0''' introduced the [https://undercards.fandom.com/wiki/Category:Arachnid Arachnid] Tribe and half a dozen new members of it. As a result, her effect was expended from just Spider and Muffet's Pet to all Arachnids. She was also made one herself, so the amount of different cards that affect her increased from 2 to 9. However, the effect no longer triggers from enemy monsters nor does it trigger from just summoning them. You need to play them (and a second Muffet is needed to buff the first).
+=== Stats ===
+ATK:
+* 6 (Pre Alpha 2.7)
+
+* 4 (Post Alpha 2.7, Current)
+HP:
+* 6 (Pre Alpha 2.7)
+
+* 9 (Post Alpha 2.7)
+* 7 (Post Beta 7.4)
+* 11 (Post Beta 8.1)
+* 10 (Post Beta 16.0, Current)
+Cost:
+* 8 (Pre Beta 7.4)
+* 6 (Post Beta 7.4)
+* 9 (Post Beta 8.1)
+* 10 (Post Beta 18.1)
+* 9 (Post Beta 29.0, Current)
+Abilities:
+* Whenever this attacks a kills a monster, ....
+** restore 5 HP to you. (Pre Beta 5.3)
+** restore 5 HP to you and summon a Spider. (Post Beta 5.3)
+* Whenever a Spider is summoned, gain +2/+1. Magic: Add 3 Spiders to both decks. (Post Beta 8.1)
+* Haste. Magic: Add 3 Spiders to both decks. Gain +2/+1 whenever ...
+** a Spider is summoned. (Post Beta 9.3)
+** a Spider or Muffet's Pet is summoned. (Post Beta 10.2)
+** you play an Arachnid. '''[Now counts as an Arachnid.]''' (Post Beta 46.0, Current)
+Rarities:
+* Purple (Epic) (Pre Beta 8.1)
+* Gold (Legendary) (Post Beta 8.1, Current)
+Song (as Legendary): Spider Dance
+[[Category:Rework]]

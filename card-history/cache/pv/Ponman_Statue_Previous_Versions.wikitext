@@ -1,0 +1,38 @@
+[[File:Ponman Statue (Original - Beta 53.9).png|thumb|290x290px|Original - Beta 53.9]]
+Current Version can be found [[Ponman Statue|here]].
+Ponman Statue was added in '''Beta 30.0''' as a 3G 1/6 with a Magic effect that would add a [[Ponman]] to the top of your deck. It also had a Turn end effect that would give all ally Ponman +1 HP (making it quite similar to [[Moldbygg]]). '''Beta 46.0''' added [[Chessboard]] and the [[:Category:Piece|Piece]] (first known as "Chess Figure") Tribe with 5 members, this being one of them. As a result, it was entirely reworked. In stats, it gained +1/+2/-3, leaving it at 4G 3/3.
+
+In effect, like the others, it uses the same "played left or right" type of effect already used by [[Mister Society|Mr. Society]]. In this case, it keeps its supporting properties by buffing an ally Piece of your choice rather than itself: +2 ATK and Transparency if played on the left or +2 HP and Candy if played on the right (the position of the target doesn't matter). '''Beta 46.1''' reduced its HP lower to 2, but added a Synergy effect that would make it apply the buff to all ally Pieces, making it able to affect up to 3 monsters rather than only 1. '''Beta 47.0''' made the Synergy effect give both effects to a single monster instead.
+
+'''Beta 49.0''' increased its HP back to 3 and its cost further to 5G. It no longer has a Magic, and its Synergy was expanded as a result of that. The Synergy now gives +2 ATK and Haste (replacing Transparency) to Pieces at its right and +2 HP and Taunt (replacing Candy) to Pieces at its left (making it very similar to [[Janitor]]). During the next big Piece change of '''Beta 54.0''', this was reworked once more. It was mostly revered to its Beta 46.1 version, returning to 2 HP, 4G cost and able to affect all ally Pieces. But now, it's able to do so with Magic right away, giving +2 ATK when played left, or +2 HP if played right. It also gained Taunt. However, it no longer gives any additional effects, and its Rarity was increased from [[:Category:Common|Common]] to [[:Category:Epic|Epic]].
+
+=== Stats ===
+ATK:
+* 1 (Post Beta 30.0)
+* 3 (Post Beta 46.0, Current)
+HP:
+* 6 (Post Beta 30.0)
+* 3 (Post Beta 46.0)
+* 2 (Post Beta 46.1)
+* 3 (Post Beta 49.0)
+*2 (Post Beta 54.0, Current)
+
+Cost:
+* 3 (Post Beta 30.0)
+* 4 (Post Beta 46.0)
+* 5 (Post Beta 49.0)
+*4 (Post Beta 54.0, Current)
+
+Abilities:
+* Magic: Topdeck a Ponman. Turn end: Give all ally Ponman +1 HP. (Post Beta 30.0)
+* '''[Now counts as a Piece.] '''Magic: If played left, give an ally Piece +2 ATK and Transparency. If played right, give it +2 HP and Candy. (Post Beta 46.0)
+** Synergy: Affect all ally Pieces. (Post Beta 46.1)
+** Synergy: Give it both. (Post Beta 47.0)
+* Synergy: Give +2 ATK and Haste to Pieces at its right and +2 HP and Taunt to Pieces at its left. (Post Beta 49.0)
+*Taunt. Magic: If played left, give all ally Pieces +2 ATK. If played right, give them +2 HP. (Post Beta 54.0, Current)
+
+Rarities:
+
+* White (Common) (Post Beta 30.0)
+* Purple (Epic) (Post Beta 54.0, Current)
+[[Category:Rework]]

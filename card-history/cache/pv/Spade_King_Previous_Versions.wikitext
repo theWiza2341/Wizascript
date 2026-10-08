@@ -1,0 +1,27 @@
+[[File:Spade King.png|thumb|196x196px|Beta 36.1]]
+Current Version can be found [https://undercards.fandom.com/wiki/Spade_King here].
+[[File:Spade King (Beta 37.0).png|thumb|194x194px|Beta 37.0]]
+Spade King was added in '''Beta 36.1''' with the ability to kill all monsters with a cost of 4 or lower and gain +2/+2 for each. The next update, '''Beta 37.0''', changed this to kill all monsters with a BASE cost of 4 or lower, so cards like [https://undercards.fandom.com/wiki/Lesser_Dog Lesser Dog] and especially [https://undercards.fandom.com/wiki/Inflation Inflation] have no impact on Spade King's (in)ability to kill monsters affected by those.
+[[File:Spade King (Beta 38.0).png|thumb|194x194px|Beta 38.0]]
+Spade King's effect was again changed in the following update, '''Beta 38.0''', but at a larget impact. Now, it will kill monsters with a current HP of <= 2. He was made more consistant in '''Beta 51.0''', gaining +4/+4 base stats (to 6/8, which was equal to 2 kills), but no longer gaining stats from its Magic.
+
+=== Stats ===
+ATK:
+* 2 (Post Beta 36.1)
+* 6 (Post Beta 51.0, Current)
+HP:
+* 4 (Post Beta 36.1)
+* 8 (Post Beta 51.0, Current)
+
+Cost: 9
+
+Abilities:
+* Taunt. Magic: Kill all monsters with ...
+** <= 4 cost. Gain +2/+2 for each. (Beta 36.1)
+** <= 4 base cost. Gain +2/+2 for each. (Beta 37.0)
+** <= 2 HP. Gain +2/+2 for each. (Beta 38.0)
+** <= 2 HP. (Post Beta 51.0, Current)
+Rarity: Gold (Legendary)
+
+Song: Chaos King
+[[Category:Rework]]

@@ -1,0 +1,19 @@
+[[File:Rouxls Kaard.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Rouxls_Kaard here].
+
+RK was released in '''Beta 30.0''' with 5/5. '''Beta 34.0''' increased his HP to 6.
+
+=== Stats ===
+ATK: 5
+
+HP:
+* 5
+* 6
+Cost: 6
+
+Ability: You have INV. Magic: Add a Puzzle Box to the enemy's hand.
+
+Rarity: Gold (Legendary)
+
+Song: Rouxls Kaard (Second encounter)
+[[Category:Rework]]

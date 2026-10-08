@@ -1,0 +1,38 @@
+[[File:Asriel (Original - Beta 15.9).png|thumb|220x220px|Original - Beta 15.9]]
+Current version can be seen [[Asriel|here]].
+[[File:Asriel (Beta 16.0 - Beta 50.9).png|thumb|218x218px|Beta 16.0 - Beta 50.9]]
+Asriel always had 4 ATK and 4 HP. However, when released, Asriel costed 7G and would heal all your other monsters. However, he didn't restore anything else yet. '''Beta 4.3''' changed that by lowering his cost to 6G, but also made Asriel able to remove KR from all ally monsters before healing them. This made Asriel a much better card, especially after his cost was reduced again to 5G in '''Beta 4.8'''.
+[[File:Asriel (Beta 51.0).png|thumb|291x291px|Beta 51.0]]
+After the Beta 6.8 rework of KR not being able to deny healing anymore, '''Beta 7.1''' buffed Asriel again. Now, for 6G, Asriel doesn't just remove KR, but all negative effects from all ally monster. However, this also includes the Taunt from monsters that don't have it in their base form. (So cards like [http://undercards.wikia.com/wiki/Dummy Dummy] and [http://undercards.wikia.com/wiki/Jerry Jerry] keep Taunt, but cards that have been given Taunt by [http://undercards.wikia.com/wiki/Protection Protection], [http://undercards.wikia.com/wiki/Glad_Dummy Glad Dummy] and even the effect of [http://undercards.wikia.com/wiki/Lemon_Bread Lemon Bread] will have it removed.) The next update, '''Beta 7.2,''' returned Asriel to 5G again. And '''Beta 7.5''' made Taunt not classify as a negative effect at all, meaning that Asriel will never remove it.
+
+'''Beta 16.0''' nerfed Asriel quite a bit, no longer making him restore your other monsters' HP and only removing their negative effects. '''Beta 17.0''' buffed him by lowering his cost to 4. '''Beta 20.0''' returned him to 5G, but also gave some of his healing ability back by restoring 3 HP to the monsters he targeted at the end of that turn. '''Beta 22.0''' nerfed this to 2 HP. '''Beta 51.0''' gave this condition its own keyword: Delay. [https://undercards.fandom.com/wiki/Burgerpants Burgerpants] also obtained this. And '''Beta 52.1''' buffed the Delay by also making its owner restore 2 HP.
+=== Stats ===
+ATK: 4
+
+HP: 4
+
+Cost:
+* 7 (Pre Beta 4.3)
+* 6 (Post Beta 4.3)
+* 5 (Post Beta 4.8)
+* 6 (Beta 7.1)
+* 5 (Post Beta 7.2)
+* 4 (Post Beta 17.0)
+* 5 (Post Beta 20.0, Current)
+Abilities:
+* Magic: Fully restore all ally monsters. (Pre Beta 4.3)
+** Remove their KR first. (Post Beta 4.3)
+** Remove their negative effects first. (Post Beta 7.1)
+* '''[Taunt is no longer a negative effect.]''' (Post Beta 7.5)
+* Magic: Remove all negative effects from all other ally monsters. (Post Beta 16.0)
+** and Turn end: Restore 3 HP to them. (Post Beta 20.0)
+** and Turn end: Restore 2 HP to them. (Post Beta 22.0)
+** Delay: Restore 2 HP to them. (Post Beta 51.0)
+*** '''[Unchanged. Updated wording due to newly added Keyword.]'''
+** Delay: Restore 2 HP to all allies. (Post Beta 52.1, Current)
+Rarity: Purple (Epic)
+
+=== Trivia ===
+* When he got reworked in Beta 20.0, the description forgot to include "Magic:" and used the old "at the end of the turn," instead of "End of turn:".
+* Beta 21.1 gave him an updated image.
+[[Category:Rework]]

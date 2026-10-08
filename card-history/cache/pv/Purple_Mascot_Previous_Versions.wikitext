@@ -1,0 +1,29 @@
+[[File:Purple Mascot.png|thumb|263x263px|Beta 36.0]]
+Current Version can be found [[Purple Mascot|here]].
+[[File:Purple Mascot (Beta 36.1).png|thumb|262x262px|Beta 36.1]]
+Purple Mascot was added in '''Beta 36.0 '''as a 6/6/6. Its first change was already in the next update, '''Beta 36.1''', where it lost 1 ATK and its secondary effect of dealing as much DMG to its owner as it just took itself (with a maximum of 6).
+[[File:Purple Mascot (Beta 38.2).png|thumb|Beta 38.2]]
+'''Beta 38.2''' lowered its ATK by 1 again, but now also its Cost and lowered its HP by 2, going from 6G 5/6 to 5G 4/4. It also gained a new secondary effect, a Magic effect that shows you 5 random monsters in your deck and the 1 you choose gains Taunt. '''Beta 54.0''' gave it +1 HP, removed its Taunt and reworked its Magic. This Magic now transforms a card (so either monster or spell) of your choice in your hand into a copy of a random [[:Category:Epic|Epic]] monster that you have in either your deck or dustpile.
+
+=== Stats ===
+ATK:
+* 6 (Beta 36.0)
+* 5 (Post Beta 36.1)
+* 4 (Post Beta 38.2, Current)
+HP:
+* 6 (Post Beta 36.0)
+* 4 (Post Beta 38.2)
+*5 (Post Beta 54.0, Current)
+
+Cost:
+* 6 (Post Beta 36.0)
+* 5 (Post Beta 38.2, Current)
+
+Abilities:
+* Taunt. When this takes DMG, deal as much DMG to you (max: 6). (Beta 36.0)
+* Taunt. (Post Beta 36.1)
+* Taunt. Magic: See 5 random monsters in your deck. Choose 1. Give it Taunt. (Post Beta 38.2)
+*Magic: Turn a card in your hand into a copy of a random EPIC monster in your deck or dustpile. (Post Beta 54.0, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

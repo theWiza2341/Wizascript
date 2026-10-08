@@ -1,0 +1,21 @@
+[[File:G Follower 1.png|thumb|293x293px|Beta 5.3]]
+Current Version can be found [https://undercards.fandom.com/wiki/G_Follower_1 here].
+
+G(aster) Follower 1 was added in '''Beta 5.3''', during Halloween 2016, as one of the [https://undercards.fandom.com/wiki/Category:Follower Followers] introducing the Future effect. This ability functioned identical to Magic, but it would trigger (x) turns later. This effect was not silencable, nor does the monster need to survive for it to take place. With GF1, it would let you draw a card 2 turns later (so for example, if you play this on Turn 2, you would draw an extra card when your 4th turn begins).
+
+'''Beta 46.0''' entirely reworked the Tribe to fit with Gaster's rework to a Legendary. Future was replaced with Synergy, another Magic-like effect that triggers when you have played a monster of the same tribe as it beforehand on the same turn. GF1's Future was instead replaced with a Magic that would still let you draw a card, but now just a monster with Synergy itself. It also received stat changes, going from a 2/3/1 to a 3/3/3 (thus gaining +1 Cost and +2 HP).
+
+=== Stats ===
+ATK: 3
+
+HP:
+* 1 (Post Beta 5.3)
+* 3 (Post Beta 46.0, Current)
+Cost:
+* 2 (Post Beta 5.3)
+* 3 (Post Beta 46.0, Current)
+Abilities:
+* Future (2): Draw a card. (Post Beta 5.3)
+* Magic: Draw a Synergy monster. (Post Beta 46.0, Current)
+Rarity: White (Common)
+[[Category:Rework]]

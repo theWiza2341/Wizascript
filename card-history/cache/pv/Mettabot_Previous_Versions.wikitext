@@ -1,0 +1,24 @@
+[[File:Mettabot (Original - Beta 43.0)|thumb|220x220px|Original - Beta 43.0]]
+Current Version can be found [http://undercards.wikia.com/wiki/Dancer_Mettaton here].
+Mettabot was added in '''Beta 13.4''', as a summon from Dancer Mettaton. These two work exactly like the last version of [http://undercards.wikia.com/wiki/Muffet Muffet] before she was turned into a Legendary. However, while [http://undercards.wikia.com/wiki/Spider Spiders] were 2/1, Mettabot is the opposite as a 1/2. (Spider is also 1G while Mettabot is 2G.)
+
+Neither had an ability at the start, but '''Beta 17.0''' gave Mettabot Haste, just like Spider now has. '''Beta 21.0''' dropped its HP by 1, which also happened to Dancer Mettaton himself. '''Beta 43.0''' reduced its cost to 0G. '''Beta 43.1''' increased it to 1G due to a powerful combination with [https://undercards.fandom.com/wiki/Pizzapants Pizzapants] and one or two [https://undercards.fandom.com/wiki/Loren Loren], a strategy also used with Spiders.
+=== Stats ===
+ATK: 1
+
+HP:
+* 2 (Post Beta 13.4)
+* 1 (Post Beta 21.0, Current)
+
+Cost:
+* 2 (Post Beta 13.4)
+* 0 (Post Beta 43.0)
+* 1 (Post Beta 43.1, Current)
+
+Abilities:
+* N/A (Post Beta 13.4)
+* Haste. (Post Beta 17.0, Current)
+Rarities:
+* White (Common) (Post Beta 13.4)
+* Green (Generated) (Post Beta 30.0, Current)
+[[Category:Rework]]

@@ -1,0 +1,36 @@
+[[File:G Follower 3 (Original - Beta 45.9)|thumb|220x220px|Original - Beta 45.9]]
+Current version can be seen [https://undercards.fandom.com/wiki/G_Follower_3 here].
+[[File:G Follower 3 (Beta 46.0).png|thumb|291x291px|Beta 46.0]]
+G(aster) Follower 3 was added in '''Beta 5.3''', during Halloween 2016, as one of the [https://undercards.fandom.com/wiki/Category:Follower Followers] introducing the Future effect. This ability functioned identical to Magic, but it would trigger (x) turns later. This effect was not silencable, nor does the monster need to survive for it to take place. With GF3, it would kill a random enemy monster 3 turns later (so for example, if you play this on Turn 4, it would kill when your 7th turn begins).
+[[File:G Follower 3 (Beta 46.1).png|thumb|291x291px|Beta 46.1]]
+It was nerfed a number of times due to its powerful effect and combination with [[Goner Kid]]. The next update, '''Beta 5.4''', was already the first time, increasing its Cost from 6 to 7 while also increasing its Future itself from 3 to 4, meaning it takes 1 more turn to trigger. '''Beta 5.7''' increased its Cost further to 8G while also reducing its HP from 6 to 5. Its HP was brought back to 6 in '''Beta 15.0'''. '''Beta 20.2''' reduced its ATK from 6 to 5 instead.
+[[File:G Follower 3 (Beta 52.0).png|thumb|291x291px|Beta 52.0]]
+'''Beta 46.0''' entirely reworked the Tribe to fit with [https://undercards.fandom.com/wiki/Gaster Gaster]'s rework to a Legendary. Future was replaced with Synergy, another Magic-like effect that triggers when you have played a monster of the same tribe as it beforehand on the same turn. GF3 gained both a Magic and Synergy. Its Magic would show 2 out of the 5 other Followers and let you choose 1 to be added to your hand with -1 cost. Its Synergy would improve the Magic, adding both with -1 cost. Its stats dropped all the way down to 2/2/2 (thus gaining -6/-3/-4). '''Beta 46.1''' made the given Followers not have their cost reduced. In return, it can now also give new GF3's. '''Beta 52.0''' changed the Synergy to provide the cost drop instead rather than giving 2 Followers. The chosen Follower will have its cost reduced by 2G. '''Beta 52.1''' improved this for Gaster's sake (while function the same on its own). Before, if Gaster triggered GF3's synergy, the cost drop would only work if the card given by GF3 was still in your hand. Now, Gaster's version will add a new Follower to your hand with -2 cost.
+=== Stats ===
+ATK:
+* 6 (Post Beta 5.3)
+* 5 (Post Beta 20.2)
+* 2 (Post Beta 46.0, Current)
+
+HP:
+* 6 (Post Beta 5.3)
+* 5 (Post Beta 5.7)
+* 6 (Post Beta 15.0)
+* 2 (Post Beta 46.0, Current)
+Cost:
+* 6 (Beta 5.3)
+* 7 (Post Beta 5.4)
+* 8 (Post Beta 5.7)
+* 2 (Post Beta 46.0, Current)
+Abilities:
+* Future (3): Kill a random enemy monster. (Beta 5.3)
+* Future (4): Kill a random enemy monster. (Post Beta 5.4)
+* Magic: See 2 other random Followers. Choose 1 to add to your hand with -1 cost.
+** Synergy: Add both with -1 cost instead. (Beta 46.0)
+* Magic: See 2 random Followers. Choose 1 to add to your hand.
+** Synergy: Add both instead. (Post Beta 46.1)
+** Synergy: Give it -2 cost. (Beta 52.0)
+** Synergy: Add it with -2 cost. (Post Beta 52.1, Current)
+*** '''[Unchanged on its own. Change only applies to Gaster's effect.]'''
+Rarity: White (Common)
+[[Category:Rework]]

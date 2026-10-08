@@ -1,0 +1,20 @@
+[[File:Fan Rudinn.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Fan_Rudinn here].
+
+Fan Rudinn was added in the Deltarune Opening Season of '''Beta 30.0''' as a 2G 1/1 monster that could give +1/+1 to an ally monster of your choice when played. Like the other Rudinns, it also had Ranged. '''Beta 42.1''' removed its Ranged, gave it +1 in all stats and changed its Magic to giving any monster of your choice +1/+2.
+
+=== Stats ===
+ATK:
+* 1 (Post Beta 30.0)
+* 2 (Post Beta 42.1, Current)
+HP:
+* 1 (Post Beta 30.0)
+* 2 (Post Beta 42.1, Current)
+Cost:
+* 2 (Post Beta 30.0)
+* 3 (Post Beta 42.1, Current)
+Abilities:
+* Ranged. Magic: Give an ally monster +1/+1. (Post Beta 30.0)
+* Magic: Give a monster +1/+2. (Post Beta 42.1, Current)
+Rarity: White (Common)
+[[Category:Rework]]

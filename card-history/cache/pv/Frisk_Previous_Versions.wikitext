@@ -1,0 +1,53 @@
+[[File:Frisk (Original - Beta 10.0).png|thumb|220x220px|Original - Beta 10.0]]
+Current version can be seen [[Frisk|here]].
+[[File:Frisk (Beta 10.1).png|thumb|234x234px|Beta 10.1]]
+Frisk had 20 HP for a long time. This was to compare it with the HP you have at LV 1 in Undertale. They originally had 8 ATK, costed 30G and only had their current Dust effect, but to your hand instead of deck. '''Beta 1.7''' changed that by halving their ATK to 4, dropped their cost to 25G and changed their ability to Frisk's other ability, invincibility for you. '''Beta 3.2''' dropped their cost further to 20G.
+[[File:Frisk (Beta 13.1).png|thumb|234x234px|Beta 13.1]]
+It was in '''Beta 5.7 '''where Frisk obtained their current Dust effect, returning to your deck, while also keeping the other ability they still have to this day. This was done as just making the player invincible seemed lackluster compared to the other DT [[cards]], as Frisk could easily be destroyed with cards like [http://undercards.wikia.com/wiki/Asgore Asgore]. Their ATK was halved again to a mere 2, but was quickly brought to 3 in '''Beta 5.8''', because [http://undercards.wikia.com/wiki/Muffet's_Pet Muffet's Pet] was a big counter.
+
+'''Beta 10.1''' brought changes to Frisk. They now only cost 13G, but their HP dropped for the first time, and all the way to 3, leaving them with a base 3/3. However, they gained a Magic effect which would add +3 HP to them for every monster on the board. This includes those of the enemy, which could lead to a maximum of 24 HP. '''Beta 13.1''' increased their cost to 14G. This stayed for a very long time, until '''Beta 50.1''' buffed Frisk again by halving their cost down to a mere 7G, but this now passively gets increased by 1G for each other monster (which maxes out back at 14G).
+
+'''Beta 69.0''' gave Frisk a massive rework, turning them into a Taunt card with 7 ATK and 8 HP while replacing their ability with one that required the player to have spent 50G: Turn all cards in the hand and deck into Undertale [[:Category:Legendary|Legendary]] cards with -2 cost. However, players realized that this could be played after [[Shovels x999]], which at the time added 99 Shovel cards to the deck, resulting in a practically infinite deck of powerful cards.
+
+'''Beta 78.0''' would rectify Frisk's potential with another rework, replacing their ability with one that gives an Artifact that essentially copies the enemy SOUL while removing Taunt and raising their cost to 10G (and then 11G in '''Beta 80.0'''). This change gave Frisk a healthy amount of randomness that can be planned for as soon as the game starts.
+[[File:FriskBeta80.png|thumb|Beta 80.0]]
+
+=== Stats ===
+ATK: 
+* 8 (Pre Beta 1.7)
+* 4 (Post Beta 1.7)
+* 2 (Beta 5.7)
+* 3 (Beta 5.8)
+* 7 (Post Beta 69.0, Current)
+HP:
+* 20 (Pre Beta 10.1)
+* 3 (Post Beta 10.1)
+* 8 (Post Beta 69.0, Current)
+Cost: 
+* 30 (Pre Beta 1.7)
+* 25 (Post Beta 1.7)
+* 20 (Post Beta 3.2)
+* 13 (Post Beta 10.1)
+* 14 (Post Beta 13.1)
+* 7 (Post Beta 50.1)
+* 10 (Beta 78.0)
+* 11 (Post 80.0, Current)
+Abilities: 
+* Dust: Return to your hand. (Pre Beta 1.7)
+* You are Invulnerable. (Post Beta 1.7)
+* You are Invulnerable. Dust: Return to your deck. (Post Beta 5.7)
+** Magic: Gain +3 HP for each other monster. (Post Beta 10.1)
+*** Gains +1 cost for each other monster. (Post Beta 50.1)
+
+* Taunt. Need: You spent 50G. Magic: Turn all cards in your hand and deck into Undertale Legendary cards with -2 cost. (Post 69.0)
+* Magic: Gain an upgraded version of the enemy SOUL. Add an Act Button to your hand. (Post 78.0, Current)
+
+Rarity: Red (DETERMINATION - Cannot be crafted or silenced)
+
+Song: [http://undercards.wikia.com/wiki/Asriel His] Theme
+
+== Trivia ==
+[[File:Frisk (April Fools' Day 2018).png|thumb|234x234px|April Fools' Day 2018]]
+* For '''April Fools' Day 2018''', Frisk was changed to their UnderPants version, an AU made by Sr Pelo.
+[[Category:Rework]]
+[[Category:April Fools' Day]]

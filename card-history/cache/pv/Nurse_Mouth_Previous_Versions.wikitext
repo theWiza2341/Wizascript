@@ -1,0 +1,21 @@
+[[File:Nurse Mouth.png|thumb|228x228px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Nurse_Mouth here].
+[[File:Nurse Mouth (Beta 40.0).png|thumb|227x227px|Beta 40.0]]
+Nurse Mouth was added in '''Beta 30.0''' with the same 3/7 for 5G as its Undertale counterpart [https://undercards.fandom.com/wiki/Big_Mouth Big Mouth]. '''Beta 40.0''' dropped both their HP to 6.
+
+=== Stats ===
+ATK: 3
+
+HP:
+* 7 (Post Beta 30.0)
+* 6 (Post Beta 40.0, Current)
+Cost: 5
+
+Ability: Restore 3 HP to you if an ally => 3G monster dies.
+
+Rarity: Blue (Rare)
+
+=== Trivia ===
+* Upon its release, its effect was bugged and actually healed you from the death of ally monsters that costed equal or LESS than 3G, not equal or MORE.
+* Beta 50.0 updated its image, making it the much more on par with Big Mouth's sprite.
+[[Category:Rework]]

@@ -1,0 +1,30 @@
+[[File:Screenshot 121.png|thumb|226x226px|Pre Beta 5.7]]
+Current Version can be found [[Chilldrake|here]].
+[[File:5.7 Chilldrake.png|thumb|226x226px|Post Beta 5.7]]
+
+Chilldrake didn't change much. Starting as a 4/4/4 with the ability to simply let the user draw a card, its first change was during '''Beta 5.7''', where it was nerfed with -1 HP. '''Beta 19.0''' reverted this and gave it -1 ATK instead.
+[[File:Chilldrake (Beta 19.0).png|thumb|226x226px|Post Beta 19.0]]
+
+'''Beta 26.0''' reworked its effect for the first time. Now it draws a monster if you play it on the left side of the board (slot 1 or 2) and it draws a spell if you play it on the right side (slot 3 or 4). '''Beta 32.1''' changed this slightly. The way it was worded made it unable to trigger Turbo effects. It now has the ability to, but the description remained the same. Chilldrake shares this change and kept description with [[Throne]]. '''Beta 57.0''' gave it +1 HP again.
+[[File:Chilldrake (Beta 26.0).png|thumb|226x226px|Post Beta 26.0]]
+
+=== Stats ===
+ATK:
+* 4 (Pre Beta 19.0)
+* 3 (Post Beta 19.0, Current)
+
+HP:
+* 4 (Pre Beta 5.7)
+* 3 (Post Beta 5.7)
+* 4 (Post Beta 19.0)
+* 5 (Post Beta 57.0, Current)
+
+Cost: 4
+
+Abilities:
+* Magic: Draw a card. (Pre Beta 26.0)
+* Magic: If played left, add a monster from your deck to your hand. If played right, add a spell instead. (Post Beta 26.0)
+* Magic: If played left, draw a monster. If played right, draw a spell. (Post Beta 32.1, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

@@ -1,0 +1,27 @@
+[[File:Investment (Original - Beta 36.0).png|thumb|220x220px|Original - Beta 36.0]]
+Current Version can be found [http://undercards.wikia.com/wiki/Investment here].
+[[File:Investment (Beta 36.1).png|thumb|294x294px|Beta 36.1]]
+Investment is the 3rd Common Integrity Spell and one of the 20 cards added in '''Beta 6.6'''. At a cost of 2G, you draw a card. The drawn card gets its cost reduced by 3G, resulting in a 1G profit. '''Beta 7.1''' nerfed it by reducing the drawn card's cost by 2G, going equal with Investment's own cost.
+
+'''Beta 18.1''' buffed it by quite a lot, as you will now copy a card from your deck and it will be added to your hand (with its cost reduced by 2G), leaving your deck untouched. '''Beta 20.0''' buffed that further by reducing Investment's own cost by and to 1G, giving back the 1G profit, but this was reverted in '''Beta 32.1'''. The effect was buffed again in '''Beta 36.1''', where it will now show 3 cards from your deck and you can choose which one you want to be copied to your hand with -2 cost.
+
+'''Beta 38.0''' reworked this quite a bit. It costs 1G again, giving back the 1G profit, but the chosen card will now be moved to the top of your deck instead of copied to your hand.
+
+=== Stats ===
+SOUL Type: Integrity 
+
+Cost: 
+* 2 (Post Beta 6.6)
+* 1 (Post Beta 20.0)
+* 2 (Post Beta 32.1)
+* 1 (Post Beta 38.0, Current)
+
+Effects:
+* Draw a card with -3 cost. (Post Beta 6.6)
+* Draw a card with -2 cost. (Post Beta 7.1)
+* Draw a copy with -2 cost. (Post Beta 18.1)
+* See 3 random cards in your deck. Choose 1.
+** Copy it to your hand with -2 cost. (Post Beta 36.1)
+** Move it to the top of your deck with -2 cost. (Post Beta 38.0, Current)
+Rarity: White (Common)
+[[Category:Rework]]

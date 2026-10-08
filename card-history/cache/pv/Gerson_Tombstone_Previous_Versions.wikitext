@@ -1,0 +1,19 @@
+[[File:Gerson Tombstone.png|thumb|295x295px|Beta 51.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Gerson_Tombstone here].
+
+Gerson Tombstone was added in '''Beta 51.0''' with a Magic of summoning a random monster from your dustpile with a cost of 4-7G if your deck lacks any duplicates. Much like [https://undercards.fandom.com/wiki/Librarian Librarian] and a couple others in Beta 52.0, '''Beta 53.0''' made generated cards (those that didn't start in your deck, visualized with a Gear Icon) in your deck no longer be included. However, it can no longer summon 4G monsters specifically.
+
+=== Stats ===
+ATK: 4
+
+HP: 4
+
+Cost: 7
+
+Abilities:
+* Magic: If your deck lacks duplicates, ...
+** summon a random 4-7G monster from your dustpile. (Post Beta 51.0)
+* Magic: If you deck lacks non-Generated duplicates, ...
+** summon a random 5-7G monster from your dustpile. (Post Beta 53.0, Current)
+Rarity: Purple (Epic)
+[[Category:Rework]]

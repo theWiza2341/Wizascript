@@ -1,0 +1,35 @@
+[[File:Strength (Original - Beta 4.7).png|thumb|220x220px|Original - Beta 4.7]]
+Current version can be seen [[Strength|here]].[[File:Four.8 Strength.png|thumb|205x205px|Beta 4.8]]
+
+Strength is [http://undercards.wikia.com/wiki/Decks#Bravery Bravery] 's beginner spell. It went through quite a lot, though small changes over time. Starting out as a 2G spell able to give any monster of your choice +3 ATK, '''Beta 2.0''' dropped its cost to 1G until '''Beta 4.1''', where this was brought back to 2G like its original version.[[File:Strength (Beta 6.2).png|thumb|206x206px|Beta 6.2]]
+
+The next update, '''Beta 4.2''', brought it back down to 1G again, but also nerfed the effect to only give +2 ATK. '''Beta 4.6''' reduced its cost further to 0G until '''Beta 4.8''', where this was brought back to 1G again. Its effect also gave +3 ATK again, making it equal to its 2nd version. '''Beta 6.2''' took that further by increasing its cost back up to 2G, making it the same as its original version again.[[File:Strength (Beta 20.0)|thumb|206x206px|Beta 20.0]]'''Beta 20.0''' nerfed it for the first time, keeping it at 2G, but making the effect only give +2 ATK normally. It only gives +3 ATK if it's used when your opponent has more monsters. (The extra ATK is even included when the spell targets an enemy monster, as it checks your status, not that of your monsters.)
+[[File:Strength (Beta 30.0).png|thumb|207x207px|Beta 30.0]]
+'''Beta 42.0''' reworked the class, which resulted in its spells getting a complete change as well (some of them even getting replaced). Strength stayed in the game with the same cost, but its effect now works very similar to [https://undercards.fandom.com/wiki/Aaron's_Secret Aaron's Secret] before this update. It now gives +1/+1 to 2 random (but different) ally monsters.
+
+=== Stats ===
+Soul Type: Bravery
+
+Cost:
+* 2 (Post Alpha 3.0)
+
+* 1 (Post Beta 2.0)
+
+* 2 (Beta 4.1)
+* 1 (Post Beta 4.2)
+* 0 (Post Beta 4.6)
+* 1 (Post Beta 4.8)
+* 2 (Post Beta 6.2, Current)
+Effects:
+* Give a monster +3 ATK. (Post Alpha 3.0)
+* Give a monster +2 ATK. (Post Beta 4.2)
+* Give a monster +3 ATK. (Post Beta 4.8)
+* Give a monster +2 ATK. If your opponent has more monsters...
+** Give +3 ATK instead. (Post Beta 20.0)
+* Give 2 random ally monsters +1/+1. (Post Beta 42.0, Current)
+Rarities:
+* White (Common) (Post Alpha 3.0)
+* Gray (Basic) (Post Beta 30.0, Current)
+
+== Trivia ==
+* Beta 30.0 introduced the [https://undercards.fandom.com/wiki/Category:Basic Basic] Rarity, which this gained.[[Category:Rework]]

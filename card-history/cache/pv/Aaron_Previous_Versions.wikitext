@@ -1,0 +1,30 @@
+[[File:Aaron (Original - Beta 25.9).png|thumb|220x220px|Original - Beta 25.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/Aaron here].
+[[File:Aaron (Beta 26.0 - Beta 52.9).png|thumb|220x220px|Beta 26.0 - Beta 52.9]]
+Aaron started out as a pretty powerful 4/5 monster with a cost of 4G and no ability as seen [https://www.youtube.com/watch?time_continue=23&v=kjY2uqlymHE here], but was increased to 5G in the very first patch of '''Alpha 2.0'''. He later was switched to 5/4 in '''Beta 4.2'''. '''Beta 5.3''' buffed its ATK to 6. This was done because [http://undercards.wikia.com/wiki/Jerry Jerry]'s HP was buffed to 6 in Beta 5.2. '''Beta 17.0''' gave him -1/+1, leaving him with 5/5 for 5G, exactly half of [http://undercards.wikia.com/wiki/Glyde Glyde].
+'''Beta 26.0''' brought his ATK back up to 6 (while leaving his other stats unchanged), but this got reverted in '''Beta 32.1'''. '''Beta 41.1''' decided to give him an ability, this being Thorns (1). However, '''Beta 49.0''' removed Thorns as a whole, thus removing it from Aaron as well. (This was undocumented, as Aaron didn't get a replacement like all other Thorn Monsters did.) '''Beta 53.0''' gave him +1 ATK again, bringing his stats back to his Beta 26.0 version.
+=== Stats ===
+ATK:
+* 4 (Pre Beta 4.2)
+* 5 (Post Beta 4.2)
+* 6 (Post Beta 5.3)
+* 5 (Post Beta 17.0)
+* 6 (Post Beta 26.0)
+* 5 (Post Beta 32.1)
+* 6 (Post Beta 53.0, Current)
+HP:
+* 5 (Pre Beta 4.2)
+* 4 (Post Beta 4.2)
+* 5 (Post Beta 17.0, Current)
+Cost:
+* 4 (Pre Alpha 2.0)
+* 5 (Post Alpha 2.0, Current)
+
+Abilities:
+* N/A (Pre Beta 41.1)
+* Thorns (1). (Post Beta 41.1)
+* N/A (Post Beta 49.0, Current)
+Rarities:
+* White (Common) (Pre Beta 30.0)
+* Gray (Basic) (Post Beta 30.0, Current)
+[[Category:Rework]]

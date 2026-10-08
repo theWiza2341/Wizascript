@@ -1,0 +1,19 @@
+[[File:Snailmobile.png|thumb|Beta 30.0]]
+Current Version can be found [[Snailmobile|here]].
+
+Snailmobile was added in '''Beta 30.0''' as a 3/3 for 5G with Haste and the Magic of drawing 2 1G monsters. '''Beta 54.1''' expanded that to also able to draw spells and 0G cards.
+
+=== Stats ===
+ATK: 3
+
+HP: 3
+
+Cost: 5
+
+Abilities:
+
+* Haste. Magic: Draw 2 1G monsters. (Post Beta 30.0)
+* Haste. Magic: Draw 2 <= 1G cards. (Post Beta 54.1, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

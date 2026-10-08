@@ -1,0 +1,22 @@
+*Alpha 3.0: New card: Penetration. RARE Spell. COST 2. EFFECT: Remove a monster's Taunt.
+*Alpha 3.2: COST 2 > 1.
+*Beta 2.0: COST 1 > 0.
+**Penetration and [[Poison]] were the first cards to cost 0 G.
+*Beta 3.2: COST 0 > 1.
+*Beta 6.4: COST 1 > 0.
+*Beta 8.3: COST 0 > 1.
+*Beta 11.0: COST 1 > 0.
+*Beta 13.1: EFFECT UPDATE: Remove a monster's Taunt. If it has no Taunt, draw a card instead.
+*Beta 15.0: EFFECT UPDATE: Remove an enemy monster's Taunt. If it has no Taunt, draw a card instead.
+*Beta 20.0: COST 0 > 1. EFFECT UPDATE: Silence an enemy Taunt monster. If it has no Taunt, draw a card instead.
+*Beta 42.0: COST 1 > 2. EFFECT UPDATE: Silence all enemy monsters.
+**Beta 42.0 was a rework of the [[:Category:Bravery|Bravery]] soul and all Bravery spells.
+*Beta 52.0: COST 2 > 1. EFFECT UPDATE: Silence a monster.
+
+<gallery>
+File:Penetration (Original - Beta 8.2).png|Original - Beta 8.2
+File:Penetration (Beta 8.3 - Beta 41.9).png|Beta 8.3 - Beta 41.9
+File:Penetration (Beta 42.0).png|Beta 42.0
+</gallery>
+
+[[Category:Rework]]

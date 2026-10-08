@@ -1,0 +1,23 @@
+[[File:Snowdrake.png|thumb|233x233px|Pre Alpha 2.7]]
+Current Version can be found [http://undercards.wikia.com/wiki/Snowdrake here].
+
+[[File:Snowdrake Updated.png|thumb|233x233px|Post Alpha 2.7]]
+Snowdrake has changed a little bit. It started out with 3/3 for 4G to give +2 ATK to an ally monster.
+
+'''Alpha 2.7''' nerfed it by lowering its HP to 2. This gave us a 3/2 monster for a long time, until '''Beta 6.0''' buffed its ATK to 4. '''Beta 10.2''' increased its HP back up to 3.
+[[File:6.0 Snowdrake.png|thumb|234x234px|Post Beta 6.0]]
+Stats:
+
+ATK:
+* 3 (Pre Beta 6.0)
+* 4 (Post Beta 6.0, Current)
+HP:
+* 3 (Pre Alpha 2.7)
+* 2 (Post Alpha 2.7)
+* 3 (Post Beta 10.2, Current)
+Cost: 4
+
+Ability: Battlecry/Enter/Magic: Give +2 ATK to an ally monster.
+
+Rarity: White (Common)
+[[Category:Rework]]

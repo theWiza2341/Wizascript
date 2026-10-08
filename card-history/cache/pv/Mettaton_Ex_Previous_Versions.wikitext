@@ -1,0 +1,51 @@
+[[File:Mettaton EX (Original - Beta 9.2).png|thumb|220x220px|Original - Beta 9.2]]
+Current Version can be found [[Mettaton Ex|here]].
+[[File:Mettaton EX (Beta 9.3 - Beta 36.0)|thumb|220x220px|Beta 9.3 - Beta 36.0]]
+Mettaton Ex used to set both player's Gold to 0. This was helpful, especially against Integrity, if you want to prevent someone to play a powerful card, such as a DT Card. He was originally a 6/4 monster with a cost of 7G, but the cost was decreased to 6G in '''Beta 2.0'''. This was done so people would be able to place him on Turn 3 (without the need of money giving cards such as [[Fortune]] or [[Burgerpants]]). This was kept until '''Beta 7.1''', where he got +2 in both ATK and HP, leaving him with 8/6, but his cost was increased to 11G, which is almost double his previous cost. '''Beta 7.4''' increased that again to 12G, making it actually doubled from its Beta 2.0 versions.
+[[File:Mettaton EX (Beta 36.1).png|thumb|262x262px|Beta 36.1]]
+'''Beta 9.1''' reworked EX a lot. Not only did he gain -2/+2, swapping his ATK and HP from 8/6 to 6/8, his cost also decreased to 8G, as he also got his first rework in ablity. Now, he'll decrease your and your opponent's amount of gold by your current amount. So you end up with 0 gold, but the opponent may not. '''Beta 9.3''', '''Beta 10.2''' and '''Beta 18.1''' all nerfed him, with +2 cost, -2 HP and -1/-1 respectively, leaving him with only 5/5 for 10G.[[File:Mettaton EX (Beta 43.0).png|thumb|257x257px|Beta 43.0]]'''Beta 26.0''' brought new life in him by reworking him a little. While his cost dropped to 6G, his effect was nerfed by now only reducing both players' gold by your remaining gold. This means that the cost of EX isn't included anymore and as a result, will make the enemy lose less than before (6 gold in this case). However, by being cheaper, you get more worth in the body. Though, his ATK was also dropped by 1, but this was reverted in '''Beta 27.0'''. '''Beta 36.1''' even gave him another +1 ATK, bringing his ATK to his original 6.
+[[File:Mettaton EX (Beta 47.1).png|thumb|Beta 47.1]]
+'''Beta 43.0''' reworked him entirely, not even having a Magic effect anymore. Instead, he now has an Aura effect that passively increases the cost of ALL cards of BOTH players by 2G while he's alive and unsilenced. His HP went up by 2 to 7, but his cost went up by 3G to 9G. '''Beta 47.1''' dropped his cost to 8G and gave him a new effect again (the old effect was since added and now limited to [[MTT TV]]). His new effect is a Dust that lets him summon a new version of himself endlessly, but only as long as his owner has 15G or more when he dies. '''Beta 55.1''' changed that to needing to have at least 7G to work, which was his new cost as well, but also actually pay the 7G. His HP was increased to 8. 
+
+=== Stats ===
+ATK:
+* 6 (Pre Beta 7.1)
+* 8 (Post Beta 7.1)
+* 6 (Post Beta 9.1)
+* 5 (Post Beta 18.1)
+* 4 (Post Beta 26.0)
+* 5 (Post Beta 27.0)
+* 6 (Post Beta 36.1, Current)
+HP:
+* 4 (Pre Beta 7.1)
+* 6 (Post Beta 7.1)
+* 8 (Post Beta 9.1)
+* 6 (Post Beta 10.2)
+* 5 (Post Beta 18.1)
+* 7 (Post Beta 43.0)
+*8 (Post Beta 55.1, Current)
+
+Cost:
+* 7 (Pre Beta 2.0)
+* 6 (Post Beta 2.0)
+* 11 (Post Beta 7.1)
+* 12 (Post Beta 7.4)
+* 8 (Post Beta 9.1)
+* 10 (Post Beta 9.3)
+* 6 (Post Beta 26.0)
+* 9 (Post Beta 43.0)
+* 8 (Post Beta 47.1)
+*7 (Post Beta 55.1, Current)
+
+Abilities:
+* Magic: Both players lose all their gold. (Pre Beta 9.1)
+* Magic: Both players lose your current gold. (Post Beta 9.1)
+* Magic: Both players lose your remaining gold. (Post Beta 26.0)
+* All cards have +2 cost. (Post Beta 43.0)
+* Dust: If you have => 15G, summon Mettaton EX. (Post Beta 47.1)
+*Dust: If you have => 7G, spend 7G to summon Mettaton EX. (Post Beta 55.1, Current)
+
+Rarity: Gold (Legendary)
+
+Song: Death by Glamour
+[[Category:Rework]]

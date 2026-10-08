@@ -1,0 +1,29 @@
+[[File:Parsnik (Original - Beta 40.9).png|thumb|220x220px|Original - Beta 40.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/Parsnik here].
+[[File:Parsnik (Beta 41.0).png|thumb|294x294px|Beta 41.0]]
+Parsnik changed a few times, but never too heavily. Its first change was during '''Beta 4.8''', in which its ATK dropped from 4 to 3. Much later, in '''Beta 26.0''', its Magic effect was buffed by not just paralyzing an enemy monster, but also dealing 2 DMG to it when it's paralyzed, getting similar changes as [https://undercards.wikia.com/wiki/Cold_Winter Cold Winter]. '''Beta 31.0''' increased its ranged to be able to affect ally monsters. This was reverted the next day in '''Beta 31.1'''.
+[[File:Parsnik (Beta 49.1).png|thumb|291x291px|Beta 49.1]]
+'''Beta 41.0''' made it no longer re-paralyze paralyzed monsters (something it also shares with Cold Winter and something that was made impossible to do entirely as of Beta 42.0). '''Beta 49.1''' reduced its HP from 4 to/by 2. [https://undercards.fandom.com/wiki/Dark_Ponman Dark Ponman] was reworked in this update, and Parsnik received its old effect. If Parsnik is played on the left side of the board (slot 1 or 2), it will still Paralyze an enemy monster of your choice (though no longer deal DMG if it's already paralyzed). But if played on the right (slot 3 or 4), the targeted enemy monster will now be Silenced instead. '''Beta 52.0''' reverted it back to its Beta 31.0 version (but without the consecutive Paralysis), being at 4 HP and able to Paralyze any monster.
+=== Stats ===
+ATK:
+* 4 (Pre Beta 4.8)
+* 3 (Post Beta 4.8, Current)
+HP:
+* 4 (Pre Beta 49.1)
+* 2 (Post Beta 49.1)
+* 4 (Post Beta 52.0, Current)
+
+Cost: 4
+
+Abilities:
+* Magic: Paralyze an enemy monster. (Pre Beta 26.0)
+* Magic: Paralyze an enemy monster. If paralyzed, deal 2 bonus DMG. (Post Beta 26.0)
+* Magic: Paralyze a monster. If paralyzed, deal 2 bonus DMG. (Beta 31.0)
+* Magic: Paralyze an enemy monster. If paralyzed, deal 2 bonus DMG. (Post Beta 31.1)
+* Magic: Paralyze an enemy monster. If paralyzed, deal 2 DMG instead. (Post Beta 41.0)
+* Magic: Paralyze an enemy monster if played on the left.
+** If played on the right, Silence it instead. (Post Beta 49.1)
+* Magic: Paralyze a monster. If paralyzed, deal 2 DMG instead. (Post Beta 52.0, Current)
+
+Rarity: White (Common)
+[[Category:Rework]]

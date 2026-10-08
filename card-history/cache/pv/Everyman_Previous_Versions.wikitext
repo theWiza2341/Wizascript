@@ -1,0 +1,32 @@
+[[File:Everyman (Original - Beta 41.0).png|thumb|220x220px|Original - Beta 41.0]]
+Current Version can be found [http://undercards.wikia.com/wiki/Everyman here].
+[[File:Everyman (Beta 41.1).png|thumb|294x294px|Beta 41.1]]
+Originally, Everyman was a 5/6 monster for the cost of 8G released in '''Beta 4.2'''. '''Beta 4.5''' nerfed it with -1 HP, but '''Beta 7.1''' buffed it with -1 Cost, leaving it at 5/5 for 7G.
+
+'''Beta 19.0''' gave it its first change in its effect. Before, it just had the ability of being unable to take damage during your turn. Now, it gained a Magic effect with it. A Magic effect that gives +2/+2 to a random ally [http://undercards.wikia.com/wiki/Category:Amalgamate Amalgamate]. '''Beta 30.0''' not only nerfed the effect to only give +1/+1, Everyman itself also gained -1 in all its stats.
+
+'''Beta 41.1''' gave it +1 ATK and reworked its Magic. Now, it'll let you add an exact copy of an ally Amalgamate to your hand, making it a monster (but Tribe limited) version of [https://undercards.fandom.com/wiki/Cloning Cloning]. '''Beta 42.0''' made it unable to target another Everyman.
+=== Stats ===
+ATK:
+* 5 (Post Beta 4.2)
+* 4 (Post Beta 30.0)
+* 5 (Post Beta 41.1, Current)
+
+HP:
+* 6 (Post Beta 4.2)
+* 5 (Post Beta 4.5)
+* 4 (Post Beta 30.0, Current)
+Cost:
+* 8 (Post Beta 4.2)
+* 7 (Post Beta 7.1)
+* 6 (Post Beta 30.0, Current)
+Abilities:
+* Invulnerable during your turn. (Post Beta 4.2)
+** Magic: Give a random ally Amalgamate +2/+2. (Post Beta 19.0)
+** Magic: Give a random ally Amalgamate +1/+1. (Post Beta 30.0)
+** Magic: Exactly copy an ally Amalgamate to your hand. (Post Beta 41.1)
+** Magic: Exactly copy an ally Amalgamate (except Everyman) to your hand.
+*** (Post Beta 42.0, Current)
+
+Rarity: White (Common)
+[[Category:Rework]]

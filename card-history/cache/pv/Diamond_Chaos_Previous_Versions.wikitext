@@ -1,0 +1,17 @@
+[[File:Diamond Chaos.png|thumb|294x294px|Beta 39.1]]
+Current Version can be found [https://undercards.fandom.com/wiki/Jevil here].
+
+This link will lead you to Jevil's page, who was added in '''Beta 39.1''' alongside its usable spells, of which this is one. Alongside ''Spade Chaos'', Diamond Chaos was the first of all Chaos Weapons to obtain a change, before Jevil himself even got one. This was during '''Beta 42.0''', and both were buffed.
+
+Diamond Chaos' buff was improving its effectiveness, letting you draw UP to 3 cards instead of 3 regularly. This means that you won't overdraw nor trigger Fatigue no matter how many cards you have. Drawn cards also get their cost dropped by 2 instead of 1.
+
+=== Stats ===
+Spell giver: Jevil
+
+Cost: 0
+
+Effects:
+* Deal 3 cards with -1 cost. (Post Beta 39.1)
+* Deal up to 3 cards with -2 cost. (Post Beta 42.0, Current)
+Rarity: Green (Generated)
+[[Category:Rework]]

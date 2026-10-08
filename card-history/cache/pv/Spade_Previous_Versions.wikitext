@@ -1,0 +1,23 @@
+[[File:Spade.png|thumb|Beta 30.0]]
+
+Spade is a spell card given by [https://undercards.fandom.com/wiki/Lancer Lancer].
+
+It was first released in '''Beta 30.0''', costing 3G to cast, and dealt 3 DMG to a random enemy monster. However, if it killed an enemy monster, it added itself back to your hand, allowing you to, with the right conditions, cast it infinitely throughout a match. However, in '''Beta 56.0''', its cost was increased by 2, up to 5, and its effect was changed. It still dealt 3 DMG, but now it allowed you to choose which enemy monster it dealt DMG to, and upon killing a monster, it essentially recast itself, dealing 3 DMG to a random other enemy monster. This recast effect could only trigger once, however, unlike [https://undercards.fandom.com/wiki/Piranhas Piranhas]'.
+
+===Stats===
+Spell giver: [https://undercards.fandom.com/wiki/Lancer Lancer]
+
+Cost:
+
+*3 (Post Beta 30.0)
+*5 (Post Beta 56.0, Current)
+
+Effects:
+
+*Deal 3 DMG to a random enemy monster. Return this card to your hand if it killed. (Post Beta 30.0)
+*Deal 3 DMG to an enemy monster. If it dies, deal 3 DMG to a random other enemy monster. (Post Beta 56.0, Current)
+
+Rarity:
+
+* Green (Generated) (Post Beta 30.0, Current)
+[[Category:Rework]]

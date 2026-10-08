@@ -1,0 +1,44 @@
+[[File:Final Froggit (Original - Beta 13.0).png|thumb|220x220px|Original - Beta 13.0]]
+Current Version can be found [http://undercards.wikia.com/wiki/Final_Froggit here].
+[[File:Final Froggit (Beta 13.1 - Beta 36.0)|thumb|220x220px|Beta 13.1 - Beta 36.0]]
+Final Froggit originally was just the upgraded version of [http://undercards.wikia.com/wiki/Froggit Froggit], much like it is the CORE/Hard Mode version of Froggit in Undertale, with relative high stats but no ability. It started out with 6/6 for 7G, but was given +1 HP in '''Alpha 3.2 '''and +1 ATK in '''Beta 5.3''', leaving it at 7/7/7.
+[[File:Final Froggit (Beta 36.1).png|thumb|294x294px|Beta 36.1]]
+In '''Beta 6.4''', Final Froggit gained an ability. This ability would give +1/+1 to all ally Froggits and Final Froggits on your board, making it a more situanional version of [http://undercards.wikia.com/wiki/Grillby Grillby], but also a more powerful one. Its ATK returned to 6 for this, but was brought back to 7 in '''Beta 9.1'''.
+[[File:Final Froggit (Beta 49.0).png|thumb|291x291px|Beta 49.0]]
+'''Beta 13.1''' returned its stats to the original 6/6, but also buffed its ability, as now it gives +1/+1 to all ally Froggits and Final Froggits "wherever they are", meaning that it will give the buffs to not only the monsters on your board, but also your hand and deck. When [http://undercards.wikia.com/wiki/Tiny_Froggit Tiny Froggit] was released in Beta 13.4, Final Froggit was also able to buff Tiny Froggits (despite that not written anywhere in the Patch Notes or on the card). However, '''Beta 14.0''' nerfed Final Froggit by removing the ability to buff other Final Froggits. The ability to buff Tiny Froggits was added on the card in its place (despite the Patch Notes saying only Froggits get buffed).
+
+'''Beta 29.0''' nerfed it quite a bit. While it's now able to buff Final Froggits again, excluding itself, these Frogs will now also get +1 Cost, making Final Froggit work like [https://undercards.wikia.com/wiki/Inflation Inflation], but halved, limited to Frogs and also target board and deck. '''Beta 30.0''' buffed it by only affecting Froggits and Tiny Froggits again. '''Beta 36.0''' nerfed its ATK to 5, while the next update, '''Beta 36.1''', buffed its effect to affect the Tribe instead of the specific monsters (while still not being able to buff any Final Froggits). This means it will now affect [https://undercards.fandom.com/wiki/Thrashing_M Thrashing Machine] and monsters other than Final Froggit obtained from [https://undercards.fandom.com/wiki/Evil_Blueprints Evil Blueprints] (and eventually [https://undercards.fandom.com/wiki/Reaper_Bird Reaper Bird]).
+
+'''Beta 49.0''' buffed it once again, no longer increasing cost (like Pre-Beta 29.0). It also got a first change in Rarity, going from [https://undercards.fandom.com/wiki/Category:Common Common] to [https://undercards.fandom.com/wiki/Category:Rare Rare]. This was done to prevent a Frog deck being combined with [https://undercards.fandom.com/wiki/Starwalker_Bird Starwalker Bird] and [https://undercards.fandom.com/wiki/Ranger_Rudinn Ranger Rudinn]. ([https://undercards.fandom.com/wiki/Dark_Ponman Dark Ponman] was changed for the same reason.) The next update, '''Beta 49.1''', nerfed it back by increasing cost again, but now only to those in your deck.
+
+=== Stats ===
+ATK:
+* 6 (Pre Beta 5.3)
+* 7 (Post Beta 5.3)
+* 6 (Post Beta 6.4)
+* 7 (Post Beta 9.1)
+* 6 (Post Beta 13.1)
+* 5 (Post Beta 36.0, Current)
+HP:
+* 6 (Pre Alpha 3.2)
+* 7 (Post Alpha 3.2)
+* 6 (Post Beta 13.1, Current)
+Cost: 7
+
+Abilities:
+* N/A (Pre Beta 6.4)
+* Magic: Give +1/+1 to all other ally Frogs. (Post Beta 6.4)
+* Magic: Give +1/+1 to all other Frogs you own. (Post Beta 13.1)
+* '''[Can buff the newly released Tiny Froggit.]''' (Post Beta 13.4 - '''UNDOCUMENTED''')
+* Magic: Give +1/+1 to all (Tiny) Froggits you own. (Post Beta 14.0)
+* Magic: Give +1/+1/+1 to all other Frogs you own. (Post Beta 29.0)
+* Magic: Give +1/+1/+1 to all (Tiny) Froggits you own. (Post Beta 30.0)
+* Magic: Give +1/+1/+1 to all Frogs you own (except Final Froggit). Post Beta 36.1)
+* Magic: Give +1/+1 to all Frogs you own (except Final Froggit). (Beta 49.0)
+* Magic: Give +1/+1 to all Frogs you own and +1 cost to those in your deck (except Final Froggit). (Post Beta 49.1, Current)
+Rarities:
+* White (Common) (Pre Beta 49.0)
+* Blue (Rare) (Post Beta 49.0, Current)
+
+=== Trivia ===
+Beta 29.0 made it the first card to affect the cost of monsters already on the board.[[Category:Rework]]

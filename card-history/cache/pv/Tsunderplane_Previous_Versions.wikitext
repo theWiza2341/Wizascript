@@ -1,0 +1,30 @@
+[[File:Tsunderplane (Original - Beta 41.0).png|thumb|220x220px|Original - Beta 41.0]]
+Current version can be seen [[Tsunderplane|here]].
+
+Tsunderplane is one of those cards that got changed very early, which ended up lost. This is because Tsunderplane originally restored 5 HP to its owner upon death, making it an upgraded version of [http://undercards.wikia.com/wiki/Vegetoid Vegetoid], but was nerfed to only healing 3 HP at some point (either undocumented or still before Alpha 2.1).
+
+'''Beta 1.6''' changed it again, making us know its history clearly from now on. With this change, its entire use was swapped as it will now deal 1 DMG to all enemies upon death, making it more useful as both a powerful charge, but also a substitute of [http://undercards.wikia.com/wiki/Woshua Woshua] that can also damage the enemy, an ability that is later given to [http://undercards.wikia.com/wiki/Mettaton_NEO Mettaton NEO] as well.
+
+This stayed for a very long time until '''Beta 31.2''', in which it was nerfed from an 8G Charge to a 9G Haste, but its effect was buffed in its place, dealing 2 more DMG to the opponent. '''Beta 32.0''' buffed its ATK from 5 to 6. This was brought down to 4 in '''Beta 41.1''', but its cost was also reduced by 2, to 7G.
+
+=== Stats ===
+ATK:
+* 5 (Pre Beta 32.0)
+* 6 (Post Beta 32.0)
+* 4 (Post Beta 41.1, Current)
+
+HP: 3
+
+Cost:
+* 8 (Pre Beta 31.2)
+* 9 (Post Beta 31.2)
+* 7 (Post Beta 41.1, Current)
+
+Abilities: 
+* Charge. Dust: Heal 5 HP to you. (Original) 
+* Charge. Dust: Heal 3 HP to you. (Pre Beta 1.6) 
+* Charge. Dust: Deal 1 DMG to all enemies. (Post Beta 1.6) 
+* Haste. Dust: Deal 1 DMG to all enemy monsters and 3 to the enemy. (Post Beta 31.2, Current) 
+Rarity: White (Common)
+[[Category:Rework]]
+[[Category:Missing]]

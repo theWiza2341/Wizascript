@@ -1,0 +1,20 @@
+''Current version can be found [[Termination|here]].''
+
+*Alpha 3.0: New card: Termination. RARE Spell. SOUL: Perseverance. COST 6. EFFECT: Kill a poisoned monster.
+*Beta 2.0: COST 6 > 4.
+*Beta 4.2: COST 4 > 3.
+*Beta 4.3: Description of a lot of cards have been updated.
+**"Poisoned" was replaced with "KR". Termination's description was updated to "Kill a monster under KR."
+*Beta 5.7: COST 3 > 4.
+*Beta 6.0: COST 4 > 3.
+*Beta 7.1: COST 3 > 4.
+**Most of the cost changes were made to balance out the changes made to KR and Perseverance.
+*Beta 33.0: Updated sprite.
+**The Perseverance spells [[Poison]], [[Pollutant Gas]], [[Contamination]], and [[Siphoning]] also received an updated sprite.
+*Beta 44.0: EFFECT UPDATE: Paralyze a monster and give it KR. If it already has KR, kill it instead.
+
+<gallery>
+File:Termination (Beta 7.1).png|Beta 7.1
+File:Termination (Beta 33.0).png|Beta 33.0
+</gallery>
+[[Category:Rework]]

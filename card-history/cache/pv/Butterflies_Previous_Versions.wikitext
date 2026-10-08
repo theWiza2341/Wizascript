@@ -1,0 +1,18 @@
+*Beta 39.0: New card: Butterflies. COMMON. COST 1. ATK 1. HP 1. EFFECT: Dust: Add a random <= 3G spell to your hand. 
+*Beta 45.0: EFFECT UPDATE: Haste. Dust: Add a random <= 3G spell to your hand. 
+**This change allowed Butterflies to attack the turn it was played in order to die and trigger its Dust effect.
+*Beta 54.0: EFFECT UPDATE: Haste. Magic: Look at 2 random spells costing 1 or less G and choose one. Add it to your hand.
+**This version of Butterflies was akin to a miniature version of [[Bone Box]].
+**[[Magic Crystal]] was released in Beta 54.0. Butterflies functioned as a setup card for Magic Crystal. Scepter and Shock decks, on the other hand, required => 2 G spells which were not in the range of Butterflies.
+*Beta 57.0: HP 1 > 2. EFFECT UPDATE: Taunt. Magic: Look at 2 random spells costing 1 or less G and choose one. Add it to your hand.
+*Beta 60.0: EFFECT UPDATE: Magic: Look at 2 spells costing 1 or less G. Choose one to add to the top of your deck. Dust: Draw a spell.
+*Beta 60.1: HP 2 > 3.
+*Beta 61.1: EFFECT UPDATE: Dust: Draw a spell.
+*Beta 62.0: HP 3 > 2.
+
+<gallery>
+File:Butterflies.png|Beta 39.0
+File:Butterflies (Beta 45.0).png|Beta 45.0
+File:Butterflies (Beta 54.0).png|Beta 54.0
+</gallery>
+[[Category:Rework]]

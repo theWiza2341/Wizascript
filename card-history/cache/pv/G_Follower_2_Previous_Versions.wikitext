@@ -1,0 +1,30 @@
+[[File:G Follower 2 (Original - Beta 46.0)|thumb|220x220px|Original - Beta 46.0]]
+Current version can be seen [https://undercards.fandom.com/wiki/G_Follower_2 here].
+
+G(aster) Follower 2 was added in '''Beta 5.3''', during Halloween 2016, as one of the [https://undercards.fandom.com/wiki/Category:Follower Followers] introducing the Future effect. This ability functioned identical to Magic, but it would trigger (x) turns later. This effect was not silencable, nor does the monster need to survive for it to take place. With GF2, it would give you 4G 3 turns later (so for example, if you play this on Turn 3, you would gain an extra 4G when your 6th turn begins).
+
+It was nerfed a number of times due to its powerful combination with [[Goner Kid]]. The next update, '''Beta 5.4''', was already the first time, reducing its HP from 5 to 4 while also reducing the Gold earned by 1G. '''Beta 5.7''' increased its own cost by 1G as well, from 5G to 6G. '''Beta 6.0''' increased its HP back to 5.
+'''Beta 46.0''' entirely reworked the Tribe to fit with [https://undercards.fandom.com/wiki/Gaster Gaster]'s rework to a Legendary. Future was replaced with Synergy, another Magic-like effect that triggers when you have played a monster of the same tribe as it beforehand on the same turn. GF2's Synergy let it summon a fresh copy of itself. It also gained Haste as 2nd effect, which would then apply to the copy as well. However, its HP went back down to 4 again. '''Beta 46.1''' reduced its HP further to 3.
+
+=== Stats ===
+ATK: 4
+
+HP:
+* 5 (Beta 5.3)
+* 4 (Post Beta 5.4)
+* 5 (Post Beta 6.0)
+* 4 (Beta 46.0)
+* 3 (Post Beta 46.1, Current)
+Cost:
+* 5 (Post Beta 5.3)
+* 6 (Post Beta 5.7, Current)
+Abilities: 
+* Future (3): Earn 4 gold. (Beta 5.3)
+* Future (3): Earn 3 gold. (Post Beta 5.4)
+* Haste. Synergy: Summon a G Follower 2. (Post Beta 46.0, Current)
+Rarity: White (Common) 
+
+=== Trivia ===
+* In the Patch Notes of Beta 46.0, it was noted that its HP increased from 3 to 4, rather than decreased from 5 to 4.
+** Interestingly, its HP was reduced to 3 in the next update.
+[[Category:Rework]]

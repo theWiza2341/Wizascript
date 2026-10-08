@@ -1,0 +1,17 @@
+[[File:Hathy.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.wikia.com/wiki/Hathy here].
+
+Hathy was added in '''Beta 30.0''' with the ability to give +1 ATK whenever another ally monster attacks. This was nerfed in the exact same way as [https://undercards.wikia.com/wiki/Artifacts Veteran] (in Beta 20.2) in '''Beta 30.1''', where its effect now only works on monsters with at least 3 ATK already.
+
+=== Stats ===
+ATK: 1
+
+HP: 6
+
+Cost: 4
+
+Abilities:
+* Support: Give the attacker +1 ATK. (Beta 30.0)
+* Support: Give the attacker +1 ATK if it has => 3 ATK. (Post Beta 30.1, Current)
+Rarity: White (Common)
+[[Category:Rework]]

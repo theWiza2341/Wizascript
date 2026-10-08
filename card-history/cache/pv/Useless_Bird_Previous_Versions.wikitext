@@ -1,0 +1,24 @@
+[[File:Useless Bird.png|thumb|200x200px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Useless_Bird here].
+[[File:Useless Bird (Beta 31.0).png|thumb|198x198px|Beta 31.0]]
+Useless Bird was added in '''Beta 30.0'''. It's named this way as it has Disarmed and adds two more randomly chosen Disarmed monsters to your hand (except for itself or a DT monster, specifically [https://undercards.fandom.com/wiki/Chara Chara]). Like many other Deltarune cards, it was slightly changed in '''Beta 31.0'''. For Useless Bird, this meant a +1 buff in HP, from 3 to 4. With Chara's rework in Beta 31.2, '''Beta 32.0''' reworded the effect. It no longer has the DT limitation, but no DT monster has Disarmed anymore.
+[[File:Useless Bird (Beta 32.0).png|thumb|196x196px|Beta 32.0]]
+'''Beta 49.0''' reworked [https://undercards.fandom.com/wiki/Artifacts#Will Will], a requirement to effectively use this. As such, Useless Bird was reworked (among a couple other Disarmed monsters). While its stats remained the same, its new effect is a combination of both Taunt and Transparency (of which the former doesn't work until the latter goes away).
+
+=== Stats ===
+ATK: 3
+
+HP:
+* 3 (Post Beta 30.0)
+* 4 (Post Beta 31.0, Current)
+Cost: 4
+
+Abilities:
+* Disarmed. Magic: Add to your hand 2 random ...
+** other Disarmed monsters (except Chara). (Post Beta 30.0)
+** '''[Chara rework]''' (Post Beta 31.2)
+** other Disarmed monsters. (Post Beta 32.0)
+* Taunt. Transparency.
+
+Rarity: White (Common)
+[[Category:Rework]]

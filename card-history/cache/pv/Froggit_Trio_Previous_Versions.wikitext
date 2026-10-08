@@ -1,0 +1,30 @@
+[[File:Froggit Trio (Original - Beta 32.9).png|thumb|220x220px|Original - Beta 32.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/Froggit_Trio here].
+[[File:Froggit Trio (Beta 33.0).png|thumb|209x209px|Beta 33.0]]
+Froggit Trio is one of the 20 cards added in '''Beta 6.6, '''being [http://undercards.wikia.com/wiki/Decks#Bravery Bravery]'s next spell. It originally costed 4G, but was reduced to 3G in '''Beta 7.1''' only to be returned to 4G in '''Beta 7.4'''.
+[[File:Froggit Trio (Beta 42.0).png|thumb|204x204px|Beta 42.0]]
+'''Beta 12.1''' changed it effect from summoning 3 [http://undercards.wikia.com/wiki/Froggit Froggits] if you had less monsters on the board than the enemy to summoning 3 Froggits if the enemy has at least 1 monster on the board at all. This means that it still works if you have equal or more monsters than the enemy as long as they have one (though it's not recommended to use this when you have 2 or more monsters, as that would waste some). '''Beta 21.0''' reverted that back, though.
+
+'''Beta 42.0''' reworked it entirely to fit the new Bravery. For 2G, it adds 3 Froggits to your hand. All of them gain Haste. '''Beta 53.0''' reduced its cost by/to 1G.
+
+=== Stats ===
+Soul Type: Bravery
+
+Cost:
+* 4 (Post Beta 6.6)
+* 3 (Post Beta 7.1)
+* 4 (Post Beta 7.4)
+* 2 (Post Beta 42.0)
+* 1 (Post Beta 53.0)
+Effects:
+* [[File:Froggit Trio (Beta 53.0).png|thumb]]Summon 3 Froggits if the enemy has more monsters than you. (Post Beta 6.6)
+* Summon 3 Froggits if the enemy has at least 1 monster. (Post Beta 12.1)
+* Summon 3 Froggits if the enemy has more monsters than you. (Post Beta 21.0)
+* Add 3 Froggits with Haste to your hand. (Post Beta 42.0)
+* Summon 2 Froggits with Haste. Delay: If both are dead, add 1 to your hand with -1 cost. (Current)
+Rarity: White (Common)
+
+== Trivia Edit ==
+* Beta 33.0 updated its image.
+** For Bravery, it shares this with [https://undercards.fandom.com/wiki/Aaron's_Secret Aaron's Secret], [https://undercards.fandom.com/wiki/Final_Charge Final Charge] and [https://undercards.fandom.com/wiki/Rage Rage].
+[[Category:Rework]]

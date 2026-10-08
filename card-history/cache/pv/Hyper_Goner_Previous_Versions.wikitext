@@ -1,0 +1,42 @@
+[[File:Hyper Goner (Original - Beta 16.9).png|thumb|220x220px|Original - Beta 16.9]]
+[[File:Hyper Goner (Beta 17.0 - Beta 47.9)|thumb|220x220px|Beta 17.0 - Beta 47.9]]
+[[File:Hyper Goner (Beta 48.0).png|thumb|220x220px|Beta 48.0]]
+Current Version can be found [http://undercards.wikia.com/wiki/Hyper_Goner here].
+
+Originally, Hyper Goner would only be able to use when your HP was at 0. But when '''Beta 6.8''' reworked the class, this wasn't possible anymore, so it had to rework as well. At first, it was changed to be able to be used whenever you wanted, killing all monsters on the board. Its price went from 8G to 12G for this.
+But '''Beta 7.1''' changed that by making it 30G, but it would lower the cost by your missing HP. In other words, its cost would be equal to your current HP. This cost change would happen the moment your HP did. '''Beta 7.5''' nerfed that by not only increasing the cost to 34G (making it unable to cost less than 5G), the cost reduction effect now only triggers at the start of your turn. In practice, this actually means resetting its cost and then reducing it by your current missing HP, canceling out other cost changes.
+
+However, with the release of [http://undercards.wikia.com/wiki/Innkeeper Innkeeper] in Beta 13.4, Hyper Goner was able to become 0G to play. As such, '''Beta 14.0''' nerfed it again by making its minimum price 5G, even with HP boosts. This was followed with 3 more nerfs: '''Beta 17.0''' gave it +1 cost, '''Beta 19.0''' increased its minimum cost by 3 and '''Beta 24.0''' increased its base cost (again) by 3, leaving it at 38G with a minimum cost of 8G.
+
+With '''Beta 41.0'''<nowiki/>'s engine rework, Hyper Goner's trigger was returned to its Beta 7.1 version, changing its cost the moment your HP does. With the updated 'aura' effect, it also solely checks your HP, meaning other cost changing cards work on it. Its "(min: 8)", referring its minimum cost, was reworded into "(max: 30)", now referring to its maximum cost decrease that your missing HP can give. '''Beta 48.0''' reduced its cost by 15G, from 38G to 23G, but also made the cost only drop by 15G at most, resulting in the same default minimum cost of 8G. The cost is now also reduced by 1G for every 2 HP missing, meaning you still need to miss the default 30 HP.
+
+In '''Beta 58.0''', Hyper Goner was reworked again. Rather than lowering the cost of the card based on the player's missing HP, Hyper Goner was brought down to a static cost of 12G. However, it now forces the player to burn a card in their hand unless they have 10 or less HP. The player is able to choose which card to burn, meaning Hyper Goner can also be used to strategically destroy a useless card in hand while clearing the board.
+
+=== Stats ===
+Soul Type: Determination
+
+Cost:
+* 8 (Post Alpha 3.0)
+* 12 (Post Beta 6.8)
+* 30 (Post Beta 7.1)
+* 34 (Post Beta 7.5)
+* 35 (Post Beta 17.0)
+* 38 (Post Beta 24.0)
+* 23 (Post Beta 48.0, Current)
+Effects:
+* Kill all monsters if your HP = 0. (Pre Beta 6.8)
+* Kill all monsters. (Post Beta 6.8)
+* Kill all monsters.
+** Costs 1G less for every 1 HP you're missing. (Post Beta 7.1)
+** Turn start: Reduce its cost by your missing HP. (Post Beta 7.5)
+** Turn start: Reduce its cost by your missing HP (min: 5). (Post Beta 14.0)
+** Turn start: Reduce its cost by your missing HP (min: 8). (Post Beta 19.0)
+** Costs 1G less for every 1 HP you're missing (max: 30). (Post Beta 41.0)
+** Costs 1G less for every 2 HP you're missing (max: 15). (Post Beta 48.0, Current)
+Rarity: Purple (Epic)
+== Trivia ==
+* When Hyper Goner got its rework in Beta 7.1, the patch notes stated that it already had the cost reduction effect trigger at the start of your turn, but the card itself (and as such, the effect) didn't work that way.
+
+* Beta 33.0 updated its image.
+** For Determination, it shares this with [https://undercards.fandom.com/wiki/Will_to_Fight Will to Fight], [https://undercards.fandom.com/wiki/Resurrection Resurrection], [https://undercards.fandom.com/wiki/Another_Chance Another Chance], [https://undercards.fandom.com/wiki/Same_Fate Same Fate] and [https://undercards.fandom.com/wiki/Sacrifice Sacrifice].
+[[Category:Rework]]

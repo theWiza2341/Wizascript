@@ -1,0 +1,29 @@
+[[File:Memorial Statue (Original - Beta 52.9).png|thumb|330x330px|Original - Beta 52.9]]
+Current version can be seen [[Memorial Statue|here]].
+
+When first released in '''Beta 4.5''', Memorial Statue, a 4G 1/8, used to silence all enemy monsters at the end of your turn without being able to attack itself. This was ridiculously fast nerfed to doing it at the start of your turn, around 15 minutes after its release. '''Beta 6.5''' nerfed its HP from 8 to 7. '''Beta 13.1''' reworked the ability. Now it can attack and will silence any monster it damages. Its cost dropped to 3G for this. '''Beta 36.0''' nerfed its HP further to 6.
+
+'''Beta 53.0''' brought its HP down even further to 5, but increased its ATK to 2 (so +1/-1). Its effect will now trigger when it attacks, meaning it will now never trigger during the enemy's turn, but always during yours (providing you attack a monster with it).
+
+=== Stats ===
+ATK:
+* 1 (Post Beta 4.5)
+* 2 (Post Beta 53.0, Current)
+
+HP:
+* 8 (Post Beta 4.5)
+* 7 (Post Beta 6.5)
+* 6 (Post Beta 36.0)
+* 5 (Post Beta 53.0, Current)
+
+Cost:
+* 4 (Post Beta 4.5)
+* 3 (Post Beta 13.1, Current)
+
+Abilities:
+* Disarmed. Turn end: Silence all enemy monsters. (Beta 4.5 - for 15 minutes)
+* Disarmed. Turn start: Silence all enemy monsters. (Post Beta 4.5)
+* Whenever this damages a monster, Silence it. (Post Beta 13.1)
+* Whenever this attacks a monster, Silence it. (Post Beta 53.0, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

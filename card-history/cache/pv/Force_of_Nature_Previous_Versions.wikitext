@@ -1,0 +1,27 @@
+[[File:Force of Nature (Original - Beta 52.0).png|thumb|220x220px|Original - Beta 52.0]]
+Current Version can be found [http://undercards.wikia.com/wiki/Force_of_Nature here].
+[[File:Force of Nature (Beta 52.1).png|thumb|291x291px|Beta 52.1]]
+Force of Nature never changed from its debut in '''Alpha 3.0'''. At least, that was the case until '''Beta 7.3''', where its cost dropped from 1G to 0G. This was returned to 1G in '''Beta 29.0'''. '''Beta 52.1''' gave its its first effect change.
+Before, it simply gave +3 HP to a monster (on the board) of your choice. Now, enemy monsters can't be targeted. Additionally, it can also be used on you yourself, boosting your own current and max HP. However, the player boost is only +2 HP. '''Beta 53.0''' increased the player boost to the same +3 as the monster boost. (This change was noted as a rework rather than a buff for some reason.)
+=== Stats ===
+SOUL Type: Kindness
+
+Cost:
+* 1 (Post Alpha 3.0)
+* 0 (Post Beta 7.3)
+* 1 (Post Beta 29.0, Current)
+Effects:
+* Give +3 HP to a monster. (Post Alpha 3.0)
+* Give +3 HP to an ally monster or +2 HP to you. (Post Beta 52.1)
+* Give +3 HP to an ally. (Post Beta 53.0, Current)
+
+Rarities:
+* White (Common) (Post Alpha 3.0)
+* Gray (Basic) (Post Beta 30.0, Current)
+
+== Trivia ==
+* Beta 26.0 made this card replace [https://undercards.wikia.com/wiki/Heal Heal] as a part of a new player's starting cardpool.
+** This resulted in it getting the [https://undercards.fandom.com/wiki/Category:Basic Basic] rarity in Beta 30.0.
+* Beta 33.0 updated its image.
+** For Kindness, it shares this with [https://undercards.fandom.com/wiki/Heal Heal], [https://undercards.fandom.com/wiki/Soothing Soothing], [https://undercards.fandom.com/wiki/Test_of_Will Test of Will] and [https://undercards.fandom.com/wiki/Octofriend Octofriend].
+[[Category:Rework]]

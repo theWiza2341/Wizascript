@@ -1,0 +1,19 @@
+[[File:Ice Drink Wolf.png|thumb|237x237px|Beta 39.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Ice_Drink_Wolf here].
+[[File:Ice Drink Wolf (Beta 49.1).png|thumb|233x233px|Beta 49.1]]
+Ice Drink Wolf was added in '''Beta 39.0''' with a cost of 8G. '''Beta 49.1''' decreased that to 7G. '''Beta 52.0''' reduced its HP from 8 to 7.
+
+=== Stats ===
+ATK: 6
+
+HP:
+* 8 (Post Beta 39.0)
+* 7 (Post Beta 52.0, Current)
+
+Cost:
+* 8 (Post Beta 39.0)
+* 7 (Post Beta 49.1, Current)
+Ability: Magic: See [https://undercards.fandom.com/wiki/Ice Ice], [https://undercards.fandom.com/wiki/Ice_Cap Ice Cap] and [https://undercards.fandom.com/wiki/Snowman Snowman]. Choose 1. Add it to your hand.
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

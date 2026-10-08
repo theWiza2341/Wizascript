@@ -1,0 +1,26 @@
+[[File:Nacarat Jester.png|thumb|235x235px|Beta 1.6]]
+Current Version can be found [http://undercards.wikia.com/wiki/Nacarat_Jester here].
+[[File:Nacarat Jester (Beta 21.0).png|thumb|234x234px|Beta 21.0]]
+Nacarat Jester was added in '''Beta 1.6''' as the first monster able to Silence. Its first change was all the way in '''Beta 21.0''', where it simply gained +1 ATK, from 5 to 6. '''Beta 49.1''' followed that with giving it +1 HP, from 3 to 4. However, '''Beta 52.0''' reverted this buff.
+[[File:Nacarat Jester (Beta 49.1).png|thumb|234x234px|Beta 49.1]]
+
+=== Stats ===
+ATK:
+* 5 (Post Beta 1.6)
+* 6 (Post Beta 21.0, Current)
+HP:
+* 3 (Post Beta 1.6)
+* 4 (Post Beta 49.1)
+* 3 (Post Beta 52.0, Current)
+
+Cost: 5
+
+Ability: Magic: Silence a monster.
+
+Rarity: Blue (Rare)
+
+=== Trivia ===
+* Nacarat Jester holds 3rd place for having the longest gap between updates and the longest gap between its release and first change.
+** [http://undercards.wikia.com/wiki/Woshua Woshua] is 1st for also getting its first rework in Beta 21.0, but was released upon the game's launch.
+** [http://undercards.wikia.com/wiki/Reaper_Bird Reaper Bird] takes 2nd for being released upon the game's launch like Woshua, but having its first change in Beta 19.0.
+[[Category:Rework]]

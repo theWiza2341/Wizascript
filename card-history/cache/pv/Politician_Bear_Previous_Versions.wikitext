@@ -1,0 +1,20 @@
+[[File:Politician Bear.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Politician_Bear here].
+[[File:Politician Bear (Beta 49.0).png|thumb|295x295px|Beta 49.0]]
+Politician Bear was added in '''Beta 30.0''' with a Magic that matches [https://undercards.fandom.com/wiki/Politics_Bear Politics Bear]'s original effect very well, but turned down. It'll make an ally monster of your choice attack right away, no matter if it could or not. However, this attack is limited to the monster in front of the target. '''Beta 49.0''' buffed this effect by now making the target only deal its ATK as DMG to the monster in front of it, thus no longer taking counter-DMG. '''Beta 49.1''' nerfed it a bit by reducing its ATK and HP from 5 to 4.
+
+=== Stats ===
+ATK:
+* 5 (Post Beta 30.0)
+* 4 (Post Beta 49.1, Current)
+HP:
+* 5 (Post Beta 30.0)
+* 4 (Post Beta 49.1, Current)
+
+Cost: 6
+
+Abilities:
+* Magic: Make an ally monster attack the monster in front of it. (Post Beta 30.0)
+* Magic: Deal an ally monster's ATK as DMG to the monster in front of it. (Post Beta 49.0, Current)
+Rarity: White (Common)
+[[Category:Rework]]

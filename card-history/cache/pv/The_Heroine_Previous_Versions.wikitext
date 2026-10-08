@@ -1,0 +1,51 @@
+[[File:The Heroine (Original - Beta 20.1).png|thumb|228x228px|Original - Beta 20.1]]
+Current Version can be found [[The Heroine|here]].
+[[File:The Heroine (Beta 20.2).png|thumb|Beta 20.2]]
+The Heroine (a.k.a. Undyne the Undying) was the 3rd DT card added to the game, in '''Beta 3.9'''. Like any DT cards, she's immune to Silence. She used to be a 10/10 monster for 25G, with her ability giving her -2/-2 with each death, making her have 5 'lives' and a combined total of 30/30.
+[[File:The Heroine (Beta 30.2).png|thumb|234x234px|Beta 30.2]]
+In '''Beta 7.1''', she got buffed with +5/+10/+10, leaving her with 20/20 for 30G, and her ability would give -5/-5 each time, giving her only 4 'lives', but a total of a whopping 50/50. '''Beta 7.6''' changed her back, though, to 10/10 with -2/-2 each death. Only now, she's 20G. '''Beta 18.1''' dropped this further to 18G, '''Beta 20.0''' to 15G, but '''Beta 20.2''' increased it to 16G.
+[[File:The Heroine (Beta 55.1).png|thumb|230x230px|Beta 55.1]]
+'''Beta 30.2''' changed how Dust functioned. As a result, The Heroine was slightly reworked. She functions still the same, but is no longer a Dust monster. '''Beta 55.1''' reworked her more. Dropping to a 9/9 for 13G, she now resurrects with -3/-3, giving her just 3 'lives' with a total of 18/18. '''Beta 58.0''' turned her into a [[:Category:Royal Guard|Royal Guard]] (at the same time [[Omega Flowey]] became a [[:Category:Plant|Plant]] again). She was reworked once more as well, dropping to an even lower 8/8, but resurrecting with -2/-2 again, thus giving her 4 'lives' and a total of 20/20. She now also has Taunt by default, but this doesn't carry over into her resurrections. Instead, it is replaced with Armor during her first (at 6/6) and Transparency during her second (at 4/4). She has no additional ability during her final resurrection (at 2/2). '''Beta 61.0''' once again reworked her even more. She kept her Taunt and stats, but had her cost reduced by 2, to 11. Now, if you had a card of each non-DT rarity in your dustpile, so base, common, rare, epic, legendary, and token, she would resurrect with -2/-2 base stats and no Taunt, bringing her back to a total of 20/20 again.
+
+=== Stats ===
+ATK:
+* 10 (Post Beta 3.9)
+* 20 (Post Beta 7.1)
+* 10 (Post Beta 7.6)
+*9 (Post Beta 55.1)
+*8 (Post Beta 58.0, Current)
+
+HP:
+* 10 (Post Beta 3.9)
+* 20 (Post Beta 7.1)
+* 10 (Post Beta 7.6)
+*9 (Post Beta 55.1)
+*8 (Post Beta 58.0, Current)
+
+Cost:
+* 25 (Post Beta 3.9)
+* 30 (Post Beta 7.1)
+* 20 (Post Beta 7.6)
+* 18 (Post Beta 18.1)
+* 15 (Post Beta 20.0)
+* 16 (Post Beta 20.2)
+*13 (Post Beta 55.1)
+*11 (Post Beta 61.0, Current)
+
+Abilities:
+* Dust: Resurrect with -2/-2. (Post Beta 3.9)
+* Dust: Resurrect with -5/-5. (Post Beta 7.1)
+* Dust: Resurrect with -2/-2. (Post Beta 7.6)
+*Instead of dying, resurrect with -2/-2. (Post Beta 30.2)
+*Instead of dying, resurrect with -3/-3. (Post Beta 55.1)
+*'''[Now counts as a Royal Guard.]''' Taunt. Instead of dying, resurrect with -2/-2 and no Taunt.
+**Gain Armor at 6/6 or Transparency at 4/4. (Post Beta 58.0, Current)
+* Taunt. Instead of dying, return with base -2/-2 and no Taunt if you have a card of each non-DT rarity in your dustpile.
+
+Rarity: Red (DETERMINATION - Can only be crafted by DT fragments)
+
+Song: Battle Against A True Hero
+
+=== Trivia ===
+* Her price of 25G was the suspected age of Undyne, as her Undernet username is strongfish91, suggesting she was born in 1991. This makes her 25 years old in 2016, the year of Undertale's release.
+[[Category:Rework]]

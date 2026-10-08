@@ -1,0 +1,35 @@
+[[File:Protection (Original - Beta 32.9).png|thumb|220x220px|Original - Beta 32.9]]
+Current Version can be found [[Protection|here]].
+[[File:Protection (Beta 33.0).png|thumb|260x260px|Beta 33.0]]
+Protection originally costed 1G, but was reduced to 0G and made the user draw a card in '''Beta 5.7''', similar to cards from other souls, such as [[Heal]], [[Poison]], [[Will to Fight]] and [[Penetration]].
+[[File:Protection (Beta 41.0).png|thumb|260x260px|Beta 41.0]]
+After a long time, Protection got another buff in '''Beta 26.0''', where it gained the ability to also give enemy monsters Taunt. This was reverted in '''Beta 27.0''' due to it being too powerful with [[Small Bird]]. '''Beta 41.0''' increased its cost back to 1G.
+
+'''Beta 55.0''' reworked the soul. Fridge became the new Base spell, while Protection was replaced with [[Frozen Energy]].
+
+=== Stats ===
+SOUL Type: Patience
+
+Cost:
+* 1 (Post Alpha 3.0)
+* 0 (Post Beta 5.7)
+* 1 (Post Beta 41.0)
+*N/A (Post Beta 55.0, Current)
+
+Effect:
+* Give an ally monster Taunt. (Post Alpha 3.0)
+* Give an ally monster Taunt. Draw a card. (Post Beta 5.7)
+* Give a monster Taunt. Draw a card. (Post Beta 26.0)
+* Give an ally monster Taunt. Draw a card. (Post Beta 27.0)
+*N/A (Post Beta 55.0, Current)
+
+Rarities:
+* White (Common) (Post Alpha 3.0)
+* Gray (Base) (Post Beta 30.0)
+*White (Common) (Post Beta 55.0, Current)
+
+== Trivia ==
+* Beta 30.0 introduced the [[:Category:Base|Base]] Rarity, which this gained.
+* Beta 33.0 updated its image.
+** For Patience, it shares this with [[Cold Winter]], [[Defrosting]] and [[Ice Replica]].
+[[Category:Rework]]

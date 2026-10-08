@@ -1,0 +1,26 @@
+[[File:Big Mouth Updated.png|thumb|235x235px|Post Beta 6.6]]Current Versions can be seen [http://undercards.wikia.com/wiki/Big_Mouth here].
+[[File:Big Mouth (Beta 7.1).png|thumb|244x244px|Post Beta 7.1]]
+Big Mouth is a card added in '''Beta 6.6''', along with 19 others. Its first change was during '''Beta 7.1''', where its cost dropped from 6G to 5G. After a long time, '''Beta 40.0''' dropped its HP from 7 to 6 (just like [https://undercards.fandom.com/wiki/Nurse_Mouth Nurse Mouth]'s) and reworked its effect. Originally, whenever an enemy monster with a cost of 0-2G was summoned, Big Mouth would kill it instantly and full restore itself.
+[[File:Big Mouth (Beta 40.0).png|thumb|245x245px|Beta 40.0]]
+Now, this will only trigger at the start and end of its owner's turn. And not only will it just be a single random <= 2G monster, it can also choose one of yours. '''Beta 52.1''' removed its Turn start trigger, while also no longer being able to kill one of your own <= 2G monsters. However, it no longer heals itself when it kills. Instead, you restore 2 HP.
+
+=== Stats ===
+ATK: 3
+
+HP:
+* 7 (Post Beta 6.6)
+* 6 (Post Beta 40.0, Current)
+
+Cost:
+* 6 (Post Beta 6.6)
+* 5 (Post Beta 7.1, Current)
+Abilities:
+* Whenever an enemy <= 2G monster is summoned, kill it ...
+** to fully restore itself. (Post Beta 6.6)
+* Turn start & Turn end: Kill a random <= 2G monster ...
+** to fully restore itself. (Post Beta 40.0)
+* Turn end: Kill a random enemy <= 2G monster ...
+** to restore 2 HP to you. (Post Beta 52.1, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

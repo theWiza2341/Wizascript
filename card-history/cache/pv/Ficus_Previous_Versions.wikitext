@@ -1,0 +1,28 @@
+[[File:Ficus.png|thumb|Beta 51.0]]
+Current version can be found [https://undercards.fandom.com/wiki/Ficus here].
+
+Ficus was added in '''Beta 51.0''' as a 5/2/7 common monster with both the plant tribe and an aura effect. Whenever Ficus was on the board, and an ally plant died, Ficus gained +1 ATK. '''Beta 57.0''' changed its stats, reducing its cost by 1, but also reducing its HP by 1, to make it a 4/2/6.
+
+=== Stats ===
+ATK:
+
+* 2 (Post Beta 51.0, Current)
+
+HP:
+
+* 7 (Post Beta 51.0)
+* 6 (Post Beta 57.0, Current)
+
+Cost:
+
+* 5 (Post Beta 51.0)
+* 4 (Post Beta 57.0, Current)
+
+Abilities:
+
+* Whenever an ally plant dies, gain +1 ATK. (Post Beta 51.0, Current)
+
+Rarities:
+
+* White (Common) (Post Beta 51.0, Current)
+[[Category:Rework]]

@@ -1,0 +1,27 @@
+[[File:Ghost Tree.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Ghost_Tree here].
+[[File:Ghost Tree (Beta 31.0).png|thumb|293x293px|Beta 31.0]]
+Ghost Tree was added in '''Beta 30.0''' with a cost of 4G. '''Beta 31.0''', which also changed many other Deltarune cards, reduced that to 3G. '''Beta 31.2''' made it count as a [https://undercards.fandom.com/wiki/Category:Plant Plant].
+[[File:Ghost Tree (Beta 31.2).png|thumb|294x294px|Beta 31.2]]
+'''Beta 39.0''' changed it quite a bit. It gained +2/-2, going from 1/4 to 3/2. However, its effect will no longer give +1 ATK when you summon a Plant, only +1 HP. '''Beta 42.1''' gave it Transparency.
+[[File:Ghost Tree (Beta 39.0).png|thumb|294x294px|Beta 39.0]]
+
+=== Stats ===
+ATK:
+* 1 (Post Beta 30.0)
+* 3 (Post Beta 39.0, Current)
+HP:
+* 4 (Post Beta 30.0)
+* 2 (Post Beta 39.0, Current)
+
+Cost:
+* 4 (Post Beta 30.0)
+* 3 (Post Beta 31.0, Current)
+Abilities:
+* If you summon a Plant, gain +1/+1. (Post Beta 30.0)
+* If you summon a Plant, gain +1 HP. (Post Beta 39.0)
+* Transparency. If you summon a Plant, gain +1 HP.
+** (Post Beta 42.1, Current)
+
+Rarity: White (Common)
+[[Category:Rework]]

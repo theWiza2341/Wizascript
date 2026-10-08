@@ -1,0 +1,33 @@
+[[File:Shyren (Original - Beta 36.0)|thumb|220x220px|Original - Beta 36.0]]
+Current version can be seen [[Shyren|here]].
+[[File:Shyren (Beta 36.1).png|thumb|198x198px|Beta 36.1]]
+
+Shyren gained small buffs over time, the first one being in '''Alpha 2.7''', where her Cost was reduced from 4G to 3G. '''Beta 4.6''' followed that up with an increase in HP, from 3 to 4. And '''Beta 6.0''' buffed her ability by making it heal 5 HP instead of 4.
+[[File:Shyren (Beta 39.1).png|thumb|198x198px|Beta 39.1]]
+'''Beta 16.0''' gave Shyren her first nerf, reverting her last buff back to only healing 4 HP. '''Beta 36.1''' followed that by reverting the buff before that, reducing her HP from 4 to 3. '''Beta 43.1''' brought her HP back up to 4, but now instead reduced her healing effect to an even lower 3 HP. '''Beta 50.1''' changed her Rarity from [https://undercards.fandom.com/wiki/Category:Common Common] to [https://undercards.fandom.com/wiki/Category:Basic Basic/Base].
+
+=== Stats ===
+[[File:Shyren (Beta 43.1).png|thumb|194x194px|Beta 43.1]]
+ATK: 2
+
+HP:
+* 3 (Pre Beta 4.6)
+* 4 (Post Beta 4.6)
+* 3 (Post Beta 36.1)
+* 4 (Post Beta 43.1, Current)
+Cost:
+* 4 (Pre Alpha 2.7)
+* 3 (Post Alpha 2.7, Current)
+Abilities:
+* Magic: Restore 4 HP. (Pre Beta 6.0)
+* Magic: Restore 5 HP. (Post Beta 6.0)
+* Magic: Restore 4 HP. (Post Beta 16.0)
+* Magic: Restore 3 HP. (Post Beta 43.1, Current)
+Rarities:
+* White (Common) (Pre Beta 50.1)
+* Gray (Basic) (Post Beta 50.1, Current)
+
+== Trivia ==
+* Beta 39.1 updated her image, making her "body" darker.
+** This was done due to the added [https://undercards.fandom.com/wiki/Shyren's_Agent Shyren's Agent], which has a darker "head".
+[[Category:Rework]]

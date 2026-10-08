@@ -1,0 +1,18 @@
+[[File:Overgrowth.png|thumb|295x295px|Beta 42.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Overgrowth here].
+
+Overgrowth replaced [[Rage]] in '''Beta 42.0''' as a 4G that was able to give all monsters on your board and those in your hand that didn't start in your deck +1/+2. (Since Beta 51.1, these are known as Generated cards.) Cards that would be affected are visualized with a Gear Icon.
+
+'''Beta 53.0''' nerfed it to only give +1/+1, but the cost was reduced to 3G and it now also targets your deck, thus it now targets all Generated monsters you own.
+
+=== Stats ===
+SOUL Type: Bravery
+
+Cost:
+* 4 (Post Beta 42.0)
+* 3 (Post Beta 53.0, Current)
+Effects:
+* Give +1/+2 to all Generated monsters your board and hand has. (Post Beta 42.0)
+* Give +1/+1 to all Generated monsters you own. (Post Beta 53.0, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

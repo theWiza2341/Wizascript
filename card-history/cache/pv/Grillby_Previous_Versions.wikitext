@@ -1,0 +1,20 @@
+[[File:Grillby.png|thumb|236x236px|Post Beta 2.8]]
+Current Version can be found [http://undercards.wikia.com/wiki/Grillby here].
+[[File:Grillby (Beta 19.0).png|thumb|234x234px|Post Beta 19.0]]
+Grillby was added in '''Beta 2.8''', and was never changed since its release until all the way in '''Beta 19.0''', where it got -1 in all 3 of its stats, going from a 6G 5/4 to a 5G 4/3. '''Beta 22.0''' nerfed it with -1 ATK.
+
+=== Stats ===
+ATK:
+* 5 (Post Beta 2.8)
+* 4 (Post Beta 19.0)
+* 3 (Post Beta 22.0, Current)
+HP:
+* 4 (Post Beta 2.8)
+* 3 (Post Beta 19.0, Current)
+Cost:
+* 6 (Post Beta 2.8)
+* 5 (Post Beta 19.0, Current)
+Ability: Magic: Give all ally monsters +1/+1.
+
+Rarity: Purple (Epic)
+[[Category:Rework]]

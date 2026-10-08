@@ -1,0 +1,22 @@
+[[File:Rudinn.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Rudinn here].
+[[File:Rudinn (Beta 39.1).png|thumb|294x294px|Beta 39.1]]
+Rudinn was added in '''Beta 30.0''' as a 1/3 for 2G monster simply with the newly added Ranged effect, which made it not take counter-damage. '''Beta 39.1''' increased its ATK and Cost by 1. '''Beta 47.0''' gave it another +1 ATK, but also removed Ranged, which resulted in a full rework. Now, it has a Magic effect that would add a random Deltarune monster with a cost of 2-4 to your hand and give it +1 ATK. '''Beta 65.1''' buffed this Magic effect, allowing you to look at and pick one of two monsters instead of automatically adding one to your hand.
+
+=== Stats ===
+ATK:
+* 1 (Post Beta 30.0)
+* 2 (Post Beta 39.1)
+* 3 (Post Beta 47.0, Current)
+HP: 3
+
+Cost:
+* 2 (Post Beta 30.0)
+* 3 (Post Beta 39.1, Current)
+Abilities:
+* Ranged. (Post Beta 30.0)
+* Magic: Add a random 2-4G Deltarune monster to your hand with +1 ATK. (Post Beta 47.0,)
+*Magic: Look at 2 random Deltarune monsters costing 2-4 G and choose one. Add it to your hand with +1 ATK. (Post Beta 56.1, Current)
+
+Rarity: White (Common)
+[[Category:Rework]]

@@ -1,0 +1,30 @@
+[[File:Greater Dog.png|thumb|226x226px|Pre Beta 3.2]]
+Current Version can be seen [[Greater Dog|here]].[[File:3.2Greater Dog.png|thumb|220x220px|Post Beta 3.2]]
+
+Greater Dog didn't change much. Starting with 5/10 for 9G, the 1st change was in '''Beta 3.2''', where its ATK was dropped from 5 to 4. '''Beta 18.0''' gave it -4 HP and -2 cost, but gained an addition effect.
+[[File:Greater Dog (Beta 18.0).png|thumb|234x234px|Beta 18.0]]
+This effect was a Magic, giving it +3 HP if you had another [http://undercards.wikia.com/wiki/Category:Dog Dog] in your hand, which would bring his HP up to 9 as a result. This Magic was turned into an Aura in '''Beta 49.0'''. So now it has +3 HP as long as you have a Dog in your hand, no matter if this was played or summoned through the likes of [https://undercards.fandom.com/wiki/Snow_Poff Snow Poff] (which was also changed because of this). '''Beta 56.0''' gave it +1 HP, but compensated by reducing its aura effect to only giving +2 HP.
+=== Stats ===
+ATK:
+* 5 (Pre Beta 3.2)
+* 4 (Post Beta 3.2, Current)
+HP:
+* 10 (Pre Beta 18.0)
+* 6 (Post Beta 18.0)
+*7 (Post Beta 56.0, Current)
+
+Cost:
+* 9 (Pre Beta 18.0)
+* 7 (Post Beta 18.0, Current)
+
+Ability:
+* Taunt. (Pre Beta 18.0)
+* Taunt. Magic: Gain +3 HP if you have a Dog in your hand.
+** (Post Beta 18.0)
+* Taunt. Has +3 HP while you have a Dog in your hand.
+** (Post Beta 49.0)
+* Taunt. Has +2 HP while you have a Dog in your hand.
+** (Post Beta 56.0, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

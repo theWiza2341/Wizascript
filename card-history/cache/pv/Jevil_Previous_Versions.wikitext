@@ -1,0 +1,21 @@
+[[File:Jevil.png|thumb|294x294px|Beta 39.1]]
+Current Version can be found [https://undercards.fandom.com/wiki/Jevil here].
+
+Jevil was added in '''Beta 39.1''' as a 12G 7/7 monster that would cast a Chaos Weapon of your choice when played. Two of these, ''Spade Chaos'' and ''Diamond Chaos'', already had a change before Jevil himself, in Beta 42.0 (where they both got buffed). It was in the next update, '''Beta 42.1''', where Jevil got his 1st change (alongside Spade Chaos' 2nd), though this was a nerf instead.
+
+In Jevil's case, this was a simple increase in cost of 1G.
+
+=== Stats ===
+ATK: 7
+
+HP: 7
+
+Cost:
+* 12 (Post Beta 39.1)
+* 13 (Post Beta 42.1, Current)
+Ability: Magic: Look at all Chaos Weapons and choose one to cast.
+
+Rarity: Gold (Legendary)
+
+Song: THE WORLD REVOLVING
+[[Category:Rework]]

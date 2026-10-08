@@ -1,0 +1,34 @@
+[[File:Scarf Mouse (Original - Beta 29.9).png|thumb|220x220px|Original - Beta 29.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/Scarf_Mouse here].
+[[File:Scarf Mouse (Beta 30.0).png|thumb|206x206px|Beta 30.0]]
+Scarf Mouse was one of the 20 new cards added in '''Beta 6.6''', but got its first change already in the next update. Originally, Scarf Mouse was a 2/2 monster for 2G, able to silence an enemy monster of your choice. '''Beta 6.7''' lowered its HP to 1, but this was returned to 2 in '''Beta 7.1''' and instead, its cost was increased to 3G. '''Beta 9.3''' nerfed it yet again, as now it can only silence the monster in front of it. '''Beta 18.1''' buffed it by increasing its HP to 3.
+[[File:Scarf Mouse (Beta 37.0).png|thumb|210x210px|Beta 37.0]]
+'''Beta 37.0''' buffed it quite a lot by changing its Magic to Silence a monster of your choice, exactly the same as [https://undercards.fandom.com/wiki/Nacarat_Jester Nacarat Jester]'s Magic. '''Beta 40.0''' nerfed its HP back to 2. '''Beta 41.1''' nerfed it further by limiting it to enemy monsters again, making it the exact same as its Beta 7.1 version.
+[[File:Scarf Mouse (Beta 40.0).png|thumb|211x211px|Beta 40.0]]
+
+=== Stats ===
+ATK: 2
+
+HP:
+* 2 (Beta 6.6)
+* 1 (Post Beta 6.7)
+* 2 (Post Beta 7.1)
+* 3 (Post Beta 18.1)
+* 2 (Post Beta 40.0, Current)
+Cost:
+* 2 (Post Beta 6.6)
+* 3 (Post Beta 7.1, Current)
+Abilities:
+* Magic: Silence an enemy monster. (Post Beta 6.6)
+* Magic: Silence the monster in front of it. (Post Beta 9.3)
+* Magic: Silence a monster. (Post Beta 37.0)
+* Magic: Silence an enemy monster. (Post Beta 41.1, Current)
+
+Rarities:
+* White (Common) (Post Beta 6.6)
+* Gray (Basic) (Post Beta 30.0, Current)
+
+=== Trivia ===
+* Beta 26.0 added this to the starting cardpool.
+** This resulted in it gaining the [https://undercards.fandom.com/wiki/Category:Basic Basic] Rarity in Beta 30.0.
+[[Category:Rework]]

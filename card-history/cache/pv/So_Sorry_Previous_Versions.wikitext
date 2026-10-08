@@ -1,0 +1,24 @@
+[[File:So Sorry.png|thumb|234x234px|Pre Beta 4.6]]
+Current Version be be seen [[So Sorry|here]].
+[[File:So Sorry 4.6.png|thumb|238x238px|Post Beta 4.6]]
+
+When it was first released, So Sorry costed 7G for a 4/5 monster that would add 2 Doodlebogs (originally a 2G 3/3 vanilla monster) to your hand. '''Beta 4.6''' lowered its cost to 6G, making it more reliable and able to be placed alongside one or two Doodlebogs as soon as Turn 4.
+[[File:So Sorry-0.png|thumb|242x242px|Beta 6.2]]'''Beta 6.2 '''nerfed it with -1 HP, '''Beta 10.2''' buffed it with another cost drop to 5G, and '''Beta 48.0''' buffed it again with +1 HP, reverting the previous nerf.
+
+=== Stats ===
+[[File:So Sorry (Beta 10.2).png|thumb|234x234px|Beta 10.2]]
+ATK: 4
+
+HP:
+* 5 (Pre Beta 6.2)
+
+* 4 (Post Beta 6.2)
+* 5 (Post Beta 48.0, Current)
+Cost:
+* 7 (Pre Beta 4.6)
+* 6 (Post Beta 4.6)
+* 5 (Post Beta 10.2, Current)
+Ability:
+* Bettlecry/Enter/Magic: Add 2 Doodlebog to your hand.
+Rarity: Blue (Rare)
+[[Category:Rework]]

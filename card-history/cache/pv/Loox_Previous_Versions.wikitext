@@ -1,0 +1,21 @@
+*?: New card: Loox. COMMON. COST 3. ATK 2. HP 3. EFFECT: Battlecry : Deal 1 damage to a random enemy monster.
+**New players started with Loox in their collection.
+*Beta 1.6: EFFECT UPDATE: Battlecry : Deal 1 damage to a monster.
+*Beta 5.3: ATK 2 > 3.
+*Beta 8.3: EFFECT UPDATE: Magic: Deal 1 damage.
+**This change made Loox behave as a weaker, cheaper [[Vulkin]]. 
+*Beta 10.2: COST 3 > 2. ATK 3 > 2. HP 3 > 2.
+*Beta 30.0:
+**The BASE rarity was introduced. Loox became a BASE card.
+*Beta 59.0: EFFECT UPDATE: Magic: Deal 1 DMG. If it targeted an ally monster, gain Charge.
+*Beta 61.1: BASE > COMMON.
+*Beta 62.1: COST 2 > 1. ATK 2 > 1. EFFECT UPDATE: Magic: Deal 1 DMG. If it targeted an ally monster, gain +1 ATK.
+
+<gallery>
+File:Screenshot 113.png|Original
+File:Updated Loox.png|Beta 1.6
+File:5.3 Loox.png|Beta 5.3
+File:Loox (Beta 8.3).png|Beta 8.3
+File:Loox (Beta 30.0).png|Beta 30.0
+</gallery>
+[[Category:Rework]]

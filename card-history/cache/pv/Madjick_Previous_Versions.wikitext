@@ -1,0 +1,27 @@
+[[File:Madjick (Original).png|thumb|168x168px|Pre Alpha 2.7]]
+Current Version can be found [http://undercards.wikia.com/wiki/Madjick here].
+
+[[File:Madjick.png|thumb|169x169px|Post Alpha 2.7]]
+
+Madjick started out with 7/5 for 8G. '''Alpha 2.7''' buffed it by giving it -3/-2 and -3G, leaving it at 4/3 for 5G. This stayed that way for a long time, until '''Beta 19.0''' buffed its HP to 4 and '''Beta 48.0''' buffed its cost to 4G.
+[[File:Madjick (Beta 19.0).png|thumb|171x171px|Beta 19.0]]
+
+=== Stats ===
+[[File:Madjick (Beta 30.0).png|thumb|170x170px|Beta 30.0]]
+ATK:
+* 7 (Pre Alpha 2.7)
+* 4 (Post Alpha 2.7, Current)
+HP:
+* 5 (Pre Alpha 2.7)
+* 3 (Post Alpha 2.7)
+* 4 (Post Beta 19.0, Current)
+Cost:
+* 8 (Pre Alpha 2.7)
+* 5 (Post Alpha 2.7)
+* 4 (Post Beta 48.0, Current)
+Ability: Magic: Swap the ATK and HP of a monster.
+
+Rarities:
+* White (Common) (Pre Beta 30.0)
+* Gray (Basic) (Post Beta 30.0, Current)
+[[Category:Rework]]

@@ -1,0 +1,22 @@
+[[File:Spike Trap.png|thumb|246x246px|Beta 39.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Spike_Trap here].
+[[File:Spike Trap (Beta 49.0).png|thumb|240x240px|Beta 49.0]]
+Like [https://undercards.fandom.com/wiki/Popumeter Popumeter], Spike Trap was added in '''Beta 39.0''', introducing the game to Thorns, and wasn't changed until '''Beta 49.0''' due to Thorns being removed. Unlike Popumeter, however, Spike Trap remained fairly similar to before.
+
+Originally, it was a 4G 0/6 Taunt monster with Thorns (4), meaning it was effectively a 4/6 for enemy monsters that attacked it (and they were mostly forced to due to Taunt). Now, it kept its stats and Taunt, but replaced Thorns with passively gaining +3 ATK every time it took DMG. '''Beta 52.0''' reduced that to gaining +2 ATK, but it now starts with 1 ATK by default.
+
+=== Stats ===
+ATK:
+* 0 (Post Beta 39.0)
+* 1 (Post Beta 52.0, Current)
+
+HP: 6
+
+Cost: 4
+
+Abilities:
+* Taunt. Thorns (4). (Post Beta 39.0)
+* Taunt. Whenever this takes DMG, gain +3 ATK. (Post Beta 49.0)
+* Taunt. Whenever this takes DMG, gain +2 ATK. (Post Beta 52.0, Current)
+Rarity: White (Common)
+[[Category:Rework]]

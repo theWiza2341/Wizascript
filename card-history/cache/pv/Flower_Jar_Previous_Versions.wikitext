@@ -1,0 +1,24 @@
+[[File:Flower Jar.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Flower_Jar here].
+
+Flower Jar was added in '''Beta 30.0''' with a Dust that would add a random [https://undercards.fandom.com/wiki/Category:Plant Plant] to your hand. '''Beta 39.1''' nerfed that by making it just add a Red Flower to your hand instead, a 5/5/5 effectless Plant added as a generated monster in the same update. '''Beta 57.0''' buffed it by giving it +1 ATK.
+
+=== Stats ===
+ATK:
+
+* 2 (Post Beta 30.0)
+* 3 (Post Beta 57.0, Current)
+
+HP: 
+
+* 2
+
+Cost: 
+
+* 2
+
+Abilities:
+* Dust: Add a random Plant to your hand. (Post Beta 30.0)
+* Dust: Add a Red Flower to your hand. (Post Beta 39.1, Current)
+Rarity: White (Common)
+[[Category:Rework]]

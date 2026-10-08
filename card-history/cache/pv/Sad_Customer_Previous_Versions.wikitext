@@ -1,0 +1,30 @@
+[[File:Sad Customer (Original - Beta 39.9).png|thumb|220x220px|Original - Beta 39.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/Sad_Customer here].
+
+Sad Customer was added to the game all the way back during '''Beta 2.3''' and got never changed since its release, until '''Beta 8.1'''. Starting as a 1/4 for 3G monster, it was turned into a 4/5 for 6G one (gaining +3/+1 for +3G). Its effect was also changed from reducing the enemy's gold by 2G to 3G.
+
+'''Beta 13.1''' gave it -1 HP. '''Beta 21.0''' folled that up by reducing the enemy's gold by 2G again. '''Beta 27.0''' gave it +1 ATK. And '''Beta 40.0''' gave it -1/+1, swapped its stats from 5/4 to 4/5, returning them to its Beta 8.1 state (but with the weaker Magic).
+=== Stats ===
+ATK:
+* 1 (Post Beta 2.3)
+* 4 (Post Beta 8.1)
+* 5 (Post Beta 27.0)
+* 4 (Post Beta 40.0, Current)
+HP:
+* 4 (Post Beta 2.3)
+* 5 (Post Beta 8.1)
+* 4 (Post Beta 13.1)
+* 5 (Post Beta 40.0, Current)
+Cost:
+* 3 (Post Beta 2.3)
+* 6 (Post Beta 8.1, Current)
+Abilities:
+* Magic: The enemy loses 2 gold. (Post Beta 2.3)
+* Magic: The enemy loses 3 gold. (Post Beta 8.1)
+* Magic: The enemy loses 2 gold. (Post Beta 21.0, Current)
+Rarity: White (Common)
+
+== Trivia ==
+* Its change in Beta 8.1 was mostly done to make it more similar to [https://undercards.fandom.com/wiki/Gaster_Follower_2 Gaster Follower 2], similar to how [https://undercards.fandom.com/wiki/Goner_Kid Goner Kid] was similar to [https://undercards.fandom.com/wiki/Monster_Kid Monster Kid].
+** [https://undercards.fandom.com/wiki/Ficus_Licker Ficus Licker], added in Beta 39.1, continued this by being similar to [https://undercards.fandom.com/wiki/Gaster_Follower_1 Gaster Follower 1].
+[[Category:Rework]]

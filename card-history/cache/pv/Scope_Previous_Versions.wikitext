@@ -1,0 +1,17 @@
+[[File:Scope.png|thumb|294x294px|Beta 36.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Telescope here].
+
+Scope was added as a Token for Telescope, both in '''Beta 36.0'''. It allowed you to see the 2 cards at the top of the enemy's deck and choose 1 of them to be sent to the bottom of theirs instead. This resulting in you know the card the opponent would draw next and last, making it quite powerful. '''Beta 52.0''' pretty much reversed it. It now shows 2 random cards from your deck and choose 1 to be sent to the top of yours.
+
+=== Stats ===
+Spell giver: Telescope
+
+Cost: 0
+
+Effects:
+* See 2 topdeck cards from the enemy's deck.
+** Choose 1. Bottomdeck it. (Post Beta 36.0)
+* See 2 random cards from your deck.
+** Choose 1. Topdeck it. (Post Beta 52.0, Current)
+Rarity: Green (Token)
+[[Category:Rework]]

@@ -1,0 +1,15 @@
+* Beta 11.0: New card: Inflation. EPIC Spell. SOUL: Integrity. COST 2. EFFECT: Increase the cost of all monsters in your hand by 2, and give them +2/+2.
+*Beta 17.0: COST 2 > 1.
+*Beta 49.0: COST 1 > 2. EFFECT UPDATE: Increase the cost of all monsters in your hand by 1, and give them +2/+1.
+* Beta 54.0: COST 2 > 1.
+*Beta 58.1: EFFECT UPDATE: Gain the Economics artifact and set its counter to 6. If you already have it, increase its counter by 6 instead.
+*Beta 59.0: COST 1 > 2.
+*Beta 61.1: COST 2 > 1. EFFECT UPDATE: Add the Economics artifact. Increase its counter by 6.
+
+<gallery>
+File:Inflation.png|Beta 11.0
+File:Inflation (Beta 17.0).png|Beta 17.0
+File:Inflation (Beta 49.0).png|Beta 49.0
+File:Inflation (Beta 54.0).png|Beta 54.0
+</gallery>
+[[Category:Rework]]

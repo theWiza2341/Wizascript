@@ -1,0 +1,20 @@
+[[File:Jockington.png|thumb|224x224px|Beta 36.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Jockington here].
+[[File:Jockington (Beta 46.0).png|thumb|220x220px|Beta 46.0]]
+Jockington was added in '''Beta 36.0''' with the ability to draw a card every time you cast a spell. '''Beta 46.0''' nerfed it by only allowing it to trigger when casting a spell with a base cost of 2G or more. Its HP increased from 4 to 5 for this. '''Beta 50.1''' turned the condition of the effect into a keyword, named <u>Shock</u>. As such, its wording was updated, but it functions the same. ([https://undercards.fandom.com/wiki/Artifacts#Arcane_Scepter Arcane Scepter] gained the same treatment.)
+
+=== Stats ===
+ATK: 2
+
+HP:
+* 4 (Post Beta 36.0)
+* 5 (Post Beta 46.0, Current)
+Cost: 3
+
+Abilities:
+* If you cast a spell, draw a card. (Post Beta 36.0)
+* If you cast a => base 2G spell, draw a card. (Post Beta 46.0)
+* Shock: Draw a card. (Post Beta 50.1, Current)
+** '''[Unchanged. Updated wording due to newly added Keyword.]'''
+Rarity: Purple (Epic)
+[[Category:Rework]]

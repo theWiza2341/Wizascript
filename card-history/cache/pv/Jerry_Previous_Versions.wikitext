@@ -1,0 +1,29 @@
+[[File:Jerry (Original - Beta 50.9)|thumb|220x220px|Original - Beta 50.9]]
+Current Version can be found [[Jerry|here]].
+[[File:Jerry (Beta 51.0).png|thumb|Beta 51.0]]
+Jerry was originally a Taunt monster with 4/6 for 6G. '''Alpha 2.2''' gave it -1 HP, '''Alpha 2.7''' followed that with -1 ATK and Cost, but '''Beta 5.2''' gave it +1 HP again. This leaves it at 3/6 for 5G.
+[[File:Jerry (Beta 53.1).png|thumb|Beta 53.1]]
+This stayed all the way until '''Beta 51.0''', where Jerry received an additional effect. This effect makes it take 1 less DMG from the effects and (counter-)attacks of monsters with a cost of 4G or less (so basically limited Armor). '''Beta 53.1''' removed it from the starting cardpool (in exchange for [[Charles]] and [[Fishing Rod]]). '''Beta 54.0''' changed its secondary effect to having +1 ATK when there's a monster in front of it.
+
+=== Stats ===
+ATK:
+* 4 (Pre Alpha 2.7)
+* 3 (Post Alpha 2.7, Current)
+HP:
+* 6 (Pre Alpha 2.2)
+* 5 (Post Alpha 2.2)
+* 6 (Post Beta 5.2, Current)
+Cost:
+* 6 (Pre Alpha 2.7)
+* 5 (Post Alpha 2.7, Current)
+Abilities:
+* Taunt. (Pre Beta 51.0)
+* Taunt. Takes 1 less DMG from <= 4G monsters. (Post Beta 51.0)
+*Taunt. Has +1 ATK if a monster is in front of it. (Post Beta 54.0, Current)
+
+Rarities:
+* White (Common) (Pre Beta 30.0)
+* Gray (Basic) (Post Beta 30.0)
+*White (Common) (Post Beta 53.1, Current)
+
+[[Category:Rework]]

@@ -1,0 +1,49 @@
+[[File:Mad Dummy (Original - Beta 5.6).png|thumb|220x220px|Original - Beta 5.6]]
+Current Version can be found [[Mad Dummy|here]].
+[[File:5.7 Mad Dummy.png|thumb|228x228px|Post Beta 5.7]]
+Mad Dummy's past has been lost in time, as it used to cost 6G, had 3/1 in stats, but had a different ability from the one it gained in '''Alpha 2.1''', where it was reduced to 4G and given the ability to block any damage dealt to it that's 4 or greater. And while '''Alpha 3.2''' reduced it further to 3G, '''Beta 1.6''' brought it back to 4G.
+[[File:Mad Dummy (Beta 14.0).png|thumb|228x228px|Post Beta 14.0]]
+'''Beta 3.2''' increased its price back to 6G, but also increased its ATK to 5. And with [[Jerry]]'s HP buff from 5 to 6 in Beta 5.2, '''Beta 5.7''' buffed Mad Dummy's ATK from 5 to 6. '''Beta 14.0''' reduced its ATK back to 5, but it gained Transparency in exchange, making it the 2nd card to ever have this ability, the other one being [[Vulkin's Cloud]]. '''Beta 15.0''' turned it back to its Beta 5.7 state, though.
+[[File:Mad Dummy (Beta 15.0).png|thumb|224x224px|Beta 15.0]]
+That was until '''Beta 57.1''', where Mad Dummy was reworked from a [[:Category:Rare|Rare]] into a [[:Category:Legendary|Legendary]], the first to do so (as [[Muffet|the]] [[Gaster|three]] [[Alphys|others]] that became Legendary were [[:Category:Epic|Epic]]). It's now a 7/4 for 13G, thus gaining a mere +1/+3, but more than double its cost with +7G. It kept the same inability to take 3 or less DMG (which means its increased HP only matters in case it gets silenced), but also gained a Magic that deals 3 DMG to both players and all monsters on the board (excluding itself due to its effect and the way it's triggered). Afterwards, any excess DMG dealt will be restored as HP to you. '''Beta 58.0''' gave it -1 cost, making its cost exactly double from its Beta 5.7 version.
+[[File:Mad Dummy (Beta 57.1).png|thumb|224x224px|Beta 57.1]]
+
+=== Stats ===
+ATK:
+* 3 (Pre Beta 3.2)
+* 5 (Post Beta 3.2)
+* 6 (Post Beta 5.7)
+* 5 (Post Beta 14.0)
+* 6 (Post Beta 15.0)
+*7 (Post Beta 57.1, Current)
+
+HP:
+
+* 1 (Pre Beta 57.1)
+* 4 (Post Beta 57.1, Current)
+
+Cost:
+* 6 (Pre Alpha 2.1)
+* 4 (Post Alpha 2.1)
+* 3 (Post Alpha 3.2)
+* 4 (Post Beta 1.6)
+* 6 (Post Beta 3.2)
+*13 (Post Beta 57.1)
+*12 (Post Beta 58.0, Current)
+
+Abilities:
+* Unknown. (Pre Alpha 2.1)
+* Can only be hurt if damage => 4. (Post Alpha 2.1)
+* Transparency. Can only be hurt if damage => 4. (Beta 14.0)
+* Can only be hurt if damage => 4. (Post Beta 15.0)
+*Can only be hurt if damage => 4. Magic: Deal 3 DMG to all monsters and both players.
+**Excess DMG dealt is restored as HP to you. (Post Beta 57.1, Current)
+
+Rarities:
+
+* Blue (Rare) (Pre Beta 57.1)
+* Gold (Legendary) (Post Beta 57.1, Current)
+
+Song (as Legendary): Dummy!
+[[Category:Rework]]
+[[Category:Missing]]

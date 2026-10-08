@@ -1,0 +1,24 @@
+*Beta 11.0: New card: Acceleration. EPIC Spell. SOUL: Bravery. COST 2. EFFECT: Return your hand to your deck and draw 4 cards.
+*Beta 12.1: COST 2 > 1.
+**Patience's [[Brain Freeze]] also got a cost reduction.
+* Beta 20.2: EFFECT UPDATE: Return your hand to your deck, shuffle it and draw 4 cards.
+**Previously, Acceleration did not properly shuffle your cards. While this change was listed in the patch notes as a rebalance, it was really a bug fix. [[Trash Tornado]] also had this fix.
+*Beta 28.0: EFFECT UPDATE: Return your hand to your deck, shuffle it and draw 4 cards max.
+**This change prevents fatigue damage if you have < 4 cards in total left.
+*Beta 38.2: COST 1 > 3. EFFECT UPDATE: Return your hand to your deck, shuffle it and draw 4 cards max. They cost 1 less.
+*
+* Beta 42.0: Acceleration has been replaced by [[Overheat]].
+**Beta 42.0 was a rework of the Bravery soul and all Bravery spells.
+* Beta 43.0: New card: Acceleration. DR COMMON Spell. SOUL: Bravery. COST 1. EFFECT: Choose a card from your hand. Burn it and draw 3 cards.
+*Beta 53.0: COST 1 > 2.
+*Beta 58.1: COST 2 > 1.
+*?: Updated sprite.
+*Beta 101.0: EFFECT UPDATE: Choose a card in your hand to Erase. Draw 3 cards.
+**The "Burn" keyword was renamed to "Erase", causing Acceleration to be reworded.
+<gallery>
+File:Acceleration (Original - Beta 41.9).png|Original - Beta 41.9
+File:Acceleration (Beta 43.0).png|Beta 43.0
+File:Acceleration (Beta 53.0).png|Beta 53.0
+File:Acceleration (Beta 58.1).png|Beta 58.1
+</gallery>
+[[Category:Rework]]

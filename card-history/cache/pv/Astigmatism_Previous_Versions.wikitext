@@ -1,0 +1,35 @@
+[[File:Astigmatism (Original - Beta 7.0).png|thumb|220x220px|Original - Beta 7.0]]
+Current version can be found [http://undercards.wikia.com/wiki/Astigmatism here].
+[[File:Astigmatism (Beta 7.1).png|thumb|234x234px|Beta 7.1]]
+
+Astigmatism is one of those monsters that started off weak, but gained buff after buff throughout the game's lifespan. Starting with 3/10 for 10G, its first buff was in '''Alpha 2.7''', where its cost dropped by 1G. '''Beta 4.2''' gave it +1 ATK and both '''Beta 4.8''' and '''Beta 5.3''' dropped its cost by 1G again. This left it at 4/10 for 7G.
+[[File:Astigmatism (Beta 22.0).png|thumb|234x234px|Beta 22.0]]
+During this time, it also had Disarmed, but '''Beta 7.1''' removed that at the cost of 1 ATK, dropping it back to 3. It also gained -2 HP with this, making this the first time its HP was changed. '''Beta 22.0''' buffed its effect again, as it will now add a [http://undercards.wikia.com/wiki/Loox Loox] to your hand if there wasn't a monster in front of it. '''Beta 49.0''' gave it another -2 HP, but also reduced its cost by another 1G, leaving it at 3/6 for 6G. '''Beta 56.1''' revamped the card, giving it back its 7 cost and also +2 ATK, but trashing its turn start effect and replacing it with both an aura and a magic effect. Whenever it killed a monster, it added a [http://undercards.wikia.com/wiki/Loox Loox] to your hand. Its Magic effect was akin to [https://undercards.fandom.com/wiki/Vulkin Vulkin]'s, dealing 2 DMG. Its aura ability could trigger from its Magic ability, but also from attacking and killing or counterattacking a monster. 
+
+=== Stats ===
+ATK:
+* 3 (Pre Beta 4.2)
+* 4 (Post Beta 4.2)
+* 3 (Post Beta 7.1)
+*5 (Post Beta 56.1, Current)
+
+HP:
+* 10 (Pre Beta 7.1)
+* 8 (Post Beta 7.1)
+* 6 (Post Beta 49.0, Current)
+Cost:
+* 10 (Pre Alpha 2.7)
+* 9 (Post Alpha 2.7)
+* 8 (Post Beta 4.8)
+* 7 (Post Beta 5.3)
+* 6 (Post Beta 49.0)
+*7 (Post Beta 56.1, Current)
+
+Abilities:
+* Disarmed. Turn start: Kill the monster in front of it. (Pre Beta 7.1)
+* Turn start: Kill the monster in front of it. (Post Beta 7.1)
+* Turn start: Kill the monster in front of it. If there is none, add a Loox to your hand. (Post Beta 22.0)
+*Whenever this kills a monster, add a Loox to your hand. Magic: Deal 2 DMG. (Post Beta 56.1, Current)
+
+Rarity: White (Common)
+[[Category:Rework]]

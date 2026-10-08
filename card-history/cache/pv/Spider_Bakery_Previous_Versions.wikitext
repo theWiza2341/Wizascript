@@ -1,0 +1,19 @@
+[[File:Spider_Bakery.png|thumb|Beta 46.0]]Current Version can be found [https://undercards.fandom.com/wiki/Spider_Bakery here].
+
+Spider Bakery was an [https://undercards.fandom.com/wiki/Category:Arachnid Arachnid] added in '''Beta 46.0. '''It's a 3/3/3 monster with the Magic of adding 2 [https://undercards.fandom.com/wiki/Spider Spiders] to your deck. It also has a Synergy, which makes it add a Spider Croissant and Spider Donut instead. '''Beta 52.0''' gave it -1 ATK and its Magic and Synergy now adds one of the two new cards to your hand instead of your deck.
+
+=== Stats ===
+ATK:
+*3 (Post Beta 46.0)
+*2 (Post Beta 52.0, Current)
+HP: 3
+
+Cost: 3
+
+Abilities:
+*Magic: Add 2 Spiders to your deck.
+**Synergy: Add a Spider Croissant and Spider Donut instead. (Post Beta 46.0)
+*Magic: Add a Spider to your hand and deck.
+**Synergy: Add a Spider Croissant and Spider Donut instead. (Post Beta 52.0, Current)
+Rarity: White (Common)
+[[Category:Rework]]

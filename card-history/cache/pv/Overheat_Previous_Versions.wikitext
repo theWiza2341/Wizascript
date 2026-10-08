@@ -1,0 +1,15 @@
+[[File:Overheat.png|thumb|244x244px|Beta 42.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Overheat here].
+
+Overheat was added in '''Beta 42.0''' during the Bravery rework, replacing [https://undercards.fandom.com/wiki/Acceleration Acceleration] as a 5G spell that kills an ally monster of your choice to deal its ATK as DMG to all enemy monsters. '''Beta 43.0''' decreased its cost to 4G.
+
+=== Stats ===
+SOUL Type: Bravery
+
+Cost:
+* 5 (Post Beta 42.0)
+* 4 (Post Beta 43.0, Current)
+Effect: Kill an ally monster. Deal its ATK as DMG to all enemy monsters.
+
+Rarity: Purple (Epic)
+[[Category:Rework]]

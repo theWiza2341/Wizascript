@@ -1,0 +1,34 @@
+*Alpha 3.0: New card: Assault. COMMON. SOUL: Bravery. COST 2. EFFECT: Draw a random <= 3G monster with -3 cost. 
+**This effect cannot reduce the cost below 0.
+*Beta 1.6: EFFECT UPDATE: Add a random <= 3G monster to your hand with -3 cost. 
+**Rather than a random monster from the deck, this effect gives a random monster from all monsters costing 3G or less, including [http://undercards.wikia.com/wiki/Category:Generated Generated] monsters.
+*Beta 6.6: Assault's effect can no longer give Generated monsters.
+* Beta 7.5: EFFECT UPDATE: Add 3 random <= 3G monsters to your deck with -1 cost.
+*Beta 9.1: COST 2 > 1.
+* Beta 12.1: EFFECT UPDATE: Summon a random 3G monster.
+** Summoning directly to the board does not activate Magic or Future effects.
+* Beta 13.1: EFFECT UPDATE: Add 3 random <= 3G monsters to your deck with +1 ATK.
+*Beta 14.0: EFFECT UPDATE: Add 3 random <= 3G monsters to your deck with +1/+1.
+*Beta 21.0: EFFECT UPDATE: Add 3 random <= 3G monsters to your deck with +1/+1. Draw a card.
+*Beta 38.2: EFFECT UPDATE: Add 3 random 3G monsters to your deck with +1/+1. Draw a card.
+*Beta 41.0: COST 1 > 0. EFFECT UPDATE: Add 3 random 3G monsters to your deck with +1/+1.
+*Beta 42.0: COST 0 > 1. EFFECT UPDATE: If your opponent has more monsters than you, give an ally monster Haste. 
+**Beta 42.0 involved a rework of the 
+<nowiki> </nowiki>soul and all Bravery spells.
+** Beta 42.0 gave Assault an updated sprite containing Frisk.
+* Beta 42.1: EFFECT UPDATE: If your opponent has as much or more monsters than you on the board, give a monster Haste.
+*Beta 45.1: EFFECT UPDATE: If your opponent has equal or more monsters than you, give an ally monster +1 ATK and Haste.
+*Beta 52.0: EFFECT UPDATE: Give an ally monster +1 ATK and Haste.
+*Beta 91.0: COST 1 > 0.
+* ?: Assault's sprite was updated with an orange color scheme.
+
+<gallery>
+File:Assault (Original - Beta 13.0).png|Original - Beta 13.0
+File:Assault (Beta 13.1 - Beta 41.9).png|Beta 13.1 - Beta 41.9
+File:Assault (Beta 42.0).png|Beta 42.0
+File:Assault (Beta 42.1).png|Beta 42.1
+File:Assault (Beta 45.1).png|Beta 45.1
+File:Assault (Beta 52.0).png|Beta 52.0
+</gallery>
+
+[[Category:Rework]]

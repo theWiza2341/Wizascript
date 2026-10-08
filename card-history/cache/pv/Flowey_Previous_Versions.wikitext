@@ -1,0 +1,32 @@
+[[File:Flowey (Original - Beta 18.0).png|thumb|260x260px|Original - Beta 18.0]]
+Current Version can be found [[Flowey|here]].
+[[File:Flowey (Beta 18.1).png|thumb|234x234px|Beta 18.1]]
+Flowey didn't change much since his debut as a 4G 1/6 at first with the ability to gain +3 ATK every time he dies alongside being able to keep ATK buffs. His first change was in '''Beta 5.2''', where his cost was reduced by 1G, making him summonable by [[Assault]].
+[[File:Flowey (Beta 52.0).png|thumb|230x230px|Beta 52.0]]
+'''Beta 12.0''' made him only gain +2 ATK upon death, but he gained default Haste in the process. The next update, '''Beta 12.1''', changed that to make him gain +3 ATK upon death again, but no longer having Haste after his first death. '''Beta 15.0''' gave him -1 HP. '''Beta 18.1''' made him gain +2 ATK upon death once again, but he still loses Haste after his first death.
+[[File:Flowey (Beta 57.1).png|thumb|230x230px|Beta 57.1]]
+'''Beta 52.0''' changed him forever, by now adding a Silenced copy to your deck upon death instead. The copy will gain both +2 ATK and Haste, allowing it to attack with 3 ATK right away, but previously given buffs are lost. And now, instead of an infinite loop of returning to your deck, he only returns once by default. '''Beta 57.1''' made the copy, still Silenced and with Haste, gain +3 ATK again. The copy will also gain +3 HP and Cost, giving it a total of +3/+3/+3. '''Beta 59.0''' gave it its first default ATK change, increasing it to 2.
+=== Stats ===
+ATK:
+
+* 1 (Pre Beta 59.0)
+* 2 (Post Beta 59.0, Current)
+
+HP:
+* 6 (Pre Beta 15.0)
+* 5 (Post Beta 15.0, Current)
+
+Cost:
+* 4 (Pre Beta 5.2)
+* 3 (Post Beta 5.2, Current)
+Abilities:
+* Dust: Return to your deck with +3 ATK (keep ATK buffs). (Pre Beta 12.0)
+* Haste. Dust: Return to your deck ...
+** with +2 ATK (keep ATK buffs). (Beta 12.0)
+** with +3 ATK, but without Haste (keep ATK buffs). (Post Beta 12.1)
+** with +2 ATK, but without Haste (keep ATK buffs). (Post Beta 18.1)
+** Silenced, but with +2 ATK and Haste. (Post Beta 52.0)
+**Silenced, but with +3/+3/+3 and Haste. (Post Beta 57.1, Current)
+
+Rarity: Purple (Epic)
+[[Category:Rework]]

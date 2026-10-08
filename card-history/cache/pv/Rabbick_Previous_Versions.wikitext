@@ -1,0 +1,19 @@
+[[File:Rabbick.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Rabbick here].
+[[File:Rabbick (Beta 34.0).png|thumb|293x293px|Beta 34.0]]
+Added in '''Beta 30.0''', its ATK was increased from 3 to 4 in '''Beta 34.0'''. '''Beta 36.1''' buffed both it and Clean Rabbick by making its Turbo add CR to your hand and dropping CR's cost from 1G to 0G to keep it a free monster, but now giving the player the choice as to when and where to play it.
+
+=== Stats ===
+ATK:
+* 3 (Post Beta 30.0)
+* 4 (Post Beta 34.0, Current)
+HP: 3
+
+Cost: 4
+
+Abilities:
+* Turbo & Dust: Summon a Clean Rabbick. (Post Beta 30.0)
+* Turbo: Add a Clean Rabbick to your hand. Dust: Summon a Clean Rabbick. (Post Beta 36.1, Current)
+
+Rarity: White (Common)
+[[Category:Rework]]

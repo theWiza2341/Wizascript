@@ -1,0 +1,26 @@
+[[File:Pie (Original - Beta 21.9).png|thumb|220x220px|Original - Beta 21.9]]
+Current version can be found [http://undercards.wikia.com/wiki/Pie here].
+[[File:Pie (Beta 22.0).png|thumb|293x293px|Beta 22.0]]
+Pie is the newest Kindness Spell added in '''Beta 6.6'''.
+
+Originally, it used to remove all negative effects of your monsters, just like half of [http://undercards.wikia.com/wiki/Asriel Asriel]'s ability is now. Its price, however, made it far less useful, as Asriel would also heal your monster and you gained a 4/4 monster out of it, just for 1G more. That's why Pie's cost was decreased to 1G in the next update, '''Beta 6.7'''.
+
+This didn't stay long, though, as '''Beta 7.1''' changed its whole effect. Now, it prevents your monsters from taking any damage until your turn ends, at the cost of 4G. '''Beta 9.1''' decreased the price to 2G. '''Beta 10.2''' reworked the card a bit. It now only effects a single monster, but it also gives it Haste. '''Beta 22.0''' increased its cost to 3G.
+
+'''Beta 43.0''' replaced the temporary DMG immunity with a permanent +1 Dodge (until it uses it up of course), reworking it in the process. But this was mostly done to nerf its powerful combination with [https://undercards.fandom.com/wiki/Papyrus Papyrus] (which was known as 'Papierus').
+
+Soul Type: Kindness
+
+Cost:
+* 3 (Beta 6.6)
+* 1 (Post Beta 6.7)
+* 4 (Post Beta 7.1)
+* 2 (Post Beta 9.1)
+* 3 (Post Beta 22.0, Current)
+Effect:
+* Remove all negative effecs of your monsters. (Post Beta 6.6)
+* Give all ally monsters DMG immunity this turn. (Post Beta 7.1)
+* Give an ally monster Haste and DMG immunity this turn. (Post Beta 10.2)
+* Give an ally monster Haste and +1 Dodge. (Post Beta 43.0, Current)
+Rarity: White (Common)
+[[Category:Rework]]

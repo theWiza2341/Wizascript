@@ -1,0 +1,19 @@
+[[File:Rabbick Hole.png|thumb|294x294px|Beta 39.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Rabbick_Hole here].
+
+Rabbick Hole was added in '''Beta 39.0''' as a 7G 3/4 Epic Haste monster that, when played, lets you look at 3 random 4G monsters and the one you choose would be caught in the Rabbick Hole. And like all other catch monsters, upon death, that monster would be released.
+
+'''Beta 45.0''' removed its Magic and changed its Dust to simply summon a [https://undercards.fandom.com/wiki/Rabbick Rabbick]. Rabbick is a 4G monster, so this change basically just removed all other possible monsters from being chosen.
+
+=== Stats ===
+ATK: 3
+
+HP: 4
+
+Cost: 7
+
+Abilities:
+* Haste. Magic: See 3 random 4G monsters. Catch 1. Dust: Release it. (Post Beta 39.0)
+* Haste. Dust: Summon a Rabbick. (Post Beta 45.0, Current)
+Rarity: Purple (Epic)
+[[Category:Rework]]

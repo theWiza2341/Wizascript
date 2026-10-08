@@ -1,0 +1,17 @@
+[[File:Dark Throne.png|thumb|294x294px|Beta 39.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Dark_Throne here].
+
+Dark Throne was added in '''Beta 39.0''' sharing the same [https://undercards.fandom.com/wiki/Category:Epic Epic] Rarity and 5G 4/4 stats as [https://undercards.fandom.com/wiki/Throne Throne], as well as a Magic effect that lets you draw a specific card. While Throne stayed the same, '''Beta 47.0''' gave Dark Throne +1 HP (until Beta 49.0, where Throne also gained +1 HP).
+
+=== Stats ===
+ATK: 4
+
+HP:
+* 4 (Post Beta 39.0)
+* 5 (Post Beta 47.0, Current)
+Cost: 5
+
+Ability: Magic: Draw a card that didn't start in your deck.
+
+Rarity: Purple (Epic)
+[[Category:Rework]]

@@ -1,0 +1,21 @@
+[[File:Chest.png|thumb|202x202px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Chest here].
+[[File:Chest (Beta 36.0).png|thumb|205x205px|Beta 36.0]]
+Chest was added in '''Beta 30.0''' as a 1G 0/3 monster that would give you 2G upon death. '''Beta 36.0''' nerfed it by dropping its HP to 1, but also made it Dust only give 1G. The next update, '''Beta 36.1''', buffed it by reworking its Dust to letting you draw 2 cards. '''Beta 38.0''' brought its HP back to 3.
+[[File:Chest (Beta 36.1).png|thumb|207x207px|Beta 36.1]]
+
+=== Stats ===
+ATK: 0
+
+HP:
+* 3 (Post Beta 30.0)
+* 1 (Post Beta 36.0)
+* 3 (Post Beta 38.0, Current)
+Cost: 1
+
+Abilities:
+* Dust: Earn 2G. (Post Beta 30.0)
+* Dust: Earn 1G. (Beta 36.0)
+* Dust: Draw 2 cards. (Post Beta 36.1, Current)
+Rarity: White (Common)
+[[Category:Rework]]

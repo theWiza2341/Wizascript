@@ -1,0 +1,25 @@
+[[File:Receptionist 1 (Original - Beta 20.1).png|thumb|220x220px|Original - Beta 20.1]]
+Current Version can be found [http://undercards.wikia.com/wiki/Receptionist_1 here].
+Receptionist 1, originally just named ''Receptionist'', was added in '''Beta 7.6'''. It was renamed to Receptionist 1 after [http://undercards.wikia.com/wiki/Receptionist_2 Receptionist 2] was added in '''Beta 9.1'''.
+
+It used to gain 1 gold for every kill it made, but this was reworked in '''Beta 9.3'''. Now, it gives 1 gold for every time it gets damaged, no matter how much that damage is, for the cost of 7G instead of 6G. '''Beta 10.2''' returned the cost to 6G.
+
+'''Beta 13.1''' buffed it again. While it gained -1/-1 to end up with 3/5, it now gives 2 gold whenever it gets damaged. '''Beta 20.2''' reworked the effect by now reducing the cost of a random card in your hand by 2 instead of giving you 2 gold. This can also affect cards that are 0-1G, making it more risky to use.
+=== Stats ===
+ATK:
+* 4 (Post Beta  7.6)
+* 3 (Post Beta 13.1, Current)
+HP:
+* 6 (Post Beta  7.6)
+* 5 (Post Beta 13.1, Current)
+
+Cost:
+* 6 (Post Beta  7.6)
+* 7 (Post Beta  9.3)
+* 6 (Post Beta 10.2, Current)
+Abilities:
+* Kill: Earn 1 gold. (Post Beta 7.6)
+* Hurt: Earn 1 gold. (Post Beta  9.3)
+* Hurt: Earn 2 gold. (Post Beta 13.1)
+* Hurt: Give a random card in your hand -2 cost. (Post Beta 20.2, Current)
+Rarity: White (Common)[[Category:Rework]]

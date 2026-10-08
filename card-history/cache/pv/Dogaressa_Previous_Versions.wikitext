@@ -1,0 +1,31 @@
+[[File:Dogaressa (Original - Beta 19.9).png|thumb|220x220px|Original - Beta 19.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/Dogaressa here].
+[[File:Dogaressa (Beta 20.0).png|thumb|234x234px|Beta 20.0]]
+Much like the [http://undercards.wikia.com/wiki/Royal_Guard_1 Royal] [http://undercards.wikia.com/wiki/Royal_Guard_2 Guards], Dogaressa changed alongside [http://undercards.wikia.com/wiki/Dogamy Dogamy]. Starting with 7G, she was reduced to 6G in '''Alpha 2.1''', and reduced further to 5G in '''Beta 2.6'''.
+
+'''Beta 6.2''' dropped her ATK from 8 to 7, and her Magic, which made her gain +5 HP if you had an ally Dogamy, was dropped to give her +4. This means that after the effect, her stats will be 7/7 instead of 8/8. '''Beta 15.0''' nerfed her ability further by only giving +3 HP, and '''Beta 20.0''' nerfed her ATK to 6, making her max out at 6/6.
+
+'''Beta 41.0''' reworked the card engine, which allowed 'aura' effects to work. This resulted in her getting reworked to passively gain +2 HP as long as you have a Dogamy in your hand. '''Beta 56.0''' gave her +1 HP, but changed her aura into a dust that gave +4 HP randomly split among all Dogs in your hand.
+=== Stats ===
+ATK: 
+* 8 (Pre  Beta 6.2)
+* 7 (Post Beta 6.2)
+* 6 (Post Beta 20.0, Current)
+
+HP:
+
+* 3 (Pre Alpha 2.1)
+* 4 (Post Beta 56.0, Current)
+
+Cost:
+* 7 (Pre  Alpha 2.1)
+* 6 (Post Alpha 2.1)
+* 5 (Post Beta  2.6, Current)
+Abilities:
+* Magic: If Dogamy is on your board, gain +5 HP. (Pre Beta 6.2)
+* Magic: If Dogamy is on your board, gain +4 HP. (Post Beta 6.2)
+* Magic: If Dogamy is on your board, gain +3 HP. (Post Beta 15.0)
+* Has +2 HP while you have Dogamy in your hand. (Post Beta 41.0)
+*Dust: Give +4 HP randomly split among all Dogs in your hand. (Post Beta 56.0, Current)
+
+Rarity: Blue (Rare)[[Category:Rework]]

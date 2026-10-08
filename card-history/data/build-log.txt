@@ -1,0 +1,9 @@
+Fandom Version History: read live
+Version History: 271 versions
+Patch notes: 0 versions read, 0 corrections/additions to Version History
+  errata: removed Generous Gifts from Beta 105.0
+Miraheze unreachable (HTTP 403) and no cached copy - building without it
+Card-Tracker: 23853 snapshots of 931 cards, 931 cards today (commit 96bc601)
+Fandom Previous Versions: 529 pages (529 read live, 0 from cache), 315 exist
+Cards: 931 written, 0 failed
+Artifacts: 85 written (85 names in the wikis)

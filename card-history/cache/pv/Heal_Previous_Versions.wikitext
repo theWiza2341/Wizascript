@@ -1,0 +1,30 @@
+*Alpha 3.0: New card: Heal. COMMON Spell. SOUL: Kindness. COST 2. EFFECT: Restore 5 HP.
+**New players would start with Heal. ''(Beta 30.0 was when starter cards would receive the Base rarity.)''
+*Beta 2.0: COST 2 > 1.
+*Beta 5.2: COST 1 > 2. EFFECT UPDATE: Restore 3 HP. Draw a card.
+**Mirroring the update to Heal, [[Poison]] gained 1 cost and "Draw a card."
+*Beta 5.7: COST 2 > 0.
+**Mirroring the updates to Heal, [[Protection]] gained "Draw a card," and Protection and [[Poison]] had COST 1 > 0.
+*Beta 7.4: COST 0 > 1.
+*Beta 10.2: COST 1 > 0.
+*Beta 19.0: COST 0 > 1.
+*Beta 21.0: EFFECT UPDATE: Restore 3 HP and remove negative effects. Draw a card.
+**This effect is similar to that of [[Asriel]].
+*Beta 24.0: EFFECT UPDATE: Restore 3 HP. Remove negative effects instead if there are any. Draw a card.
+*Beta 25.0: EFFECT UPDATE: Restore 3 HP and remove negative effects. Draw a card if there are none.
+*Beta 26.0: 
+**[[Force of Nature]] took the place of Heal as [[:Category:Kindness|Kindness]]'s starter spell. ''(Beta 30.0 was when starter cards would receive the Base rarity.)''
+*Beta 33.0: Updated sprite.
+**[[Force of Nature]], [[Soothing]], [[Test of Will]] and [[Octofriend]] also received updated sprites.
+*Beta 52.1: EFFECT UPDATE: Heal 3 HP. If this targeted you, draw a card. If this targeted a monster, remove negative effects from it.
+*Beta 92.0: EFFECT UPDATE: Heal 3 HP. If this targeted a player, draw a card. If this targeted a monster, remove negative effects from it.
+**This was a community requested wording change made by elytrafae.
+
+<gallery>
+File:Heal (Original - Beta 10.1).png|Original - Beta 10.1
+File:Heal (Beta 10.2 - Beta 32.9).png|Beta 10.2 - Beta 32.9
+File:Heal (Beta 33.0).png|Beta 33.0
+File:Heal (Beta 52.1).png|Beta 52.1
+</gallery>
+
+[[Category:Rework]]

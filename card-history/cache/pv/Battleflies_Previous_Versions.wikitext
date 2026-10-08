@@ -1,0 +1,32 @@
+[[File:Battleflies (Original - Beta 55.9).png|thumb|209x209px|Original - Beta 55.9]]
+Current Version can be found [[Battleflies|here]].
+Battleflies was added in '''Beta 39.1''' as a 0/5 for 4G with Haste and the ability to set its ATK to 4 every time you cast a spell. However, it would be set back to 0 at the start of your next turn, meaing you have the cast a new spell. '''Beta 40.0''' made its Turn start effect drop its ATK by 3 instead, meaning it would be left with 1 instead of 0. It also meant that further ATK buffs through monster effects would be kept, but this was insignificant. 
+
+'''Beta 43.0''' transformed its effect into an 'Aura', now having +4 ATK after casting a spell until the start of your next turn. This means that, while its ATK would revert back to 0 instead of 1, any other ATK buff will now be safe to use and kept at all times (if the enemy doesn't interfere), as multiple spells in 1 turn now have no effect and only the 4 ATK from its own effect will go back and forth. '''Beta 45.0''' gave it +1 cost. '''Beta 55.0''' also gave it +2 ATK, but its effect now only gives it +2 ATK. 
+
+=== Stats ===
+ATK:
+
+* 0 (Post Beta 39.1)
+* 2 (Post Beta 55.0, Current)
+
+HP: 5
+
+Cost:
+* 3 (Post Beta 39.1)
+* 4 (Post Beta 45.0, Current)
+
+Abilities:
+* Haste. Whenever you cast a spell, ...
+** set its ATK to 4. Turn start: Set its ATK to 0. (Post Beta 39.1)
+** set its ATK to 4. Turn start: Gain -3 ATK. (Post Beta 40.0)
+** this has +4 ATK until the start of your next turn. (Post Beta 43.0)
+**this has +2 ATK until the start of your next turn. (Post Beta 55.0, Current)
+
+Rarity: White (Common)
+
+=== Trivia ===
+
+* Beta 56.0 updated its sprite.
+
+[[Category:Rework]]

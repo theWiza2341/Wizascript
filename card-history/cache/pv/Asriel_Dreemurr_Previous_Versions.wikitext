@@ -1,0 +1,33 @@
+[[File:Asriel Dreemurr (Original).png|thumb|226x226px|Pre Alpha 3.2]]
+Current Version can be found [http://undercards.wikia.com/wiki/Asriel_Dreemurr here].[[File:Asriel Dreemurr.png|thumb|226x226px|Post Alpha 3.2]]
+Asriel Dreemurr, also known as the (Absolute) God of Hyperdeath, originally was a 8/8 monster for the cost of 15G and would fully heal you when summoned.[[File:Updated Dreemurr.png|thumb|230x230px|Post Beta 1.6]]'''Alpha 3.2''' nerfed him by increasing the cost by 1G and '''Beta 1.6''' nerfed him further by lowering his ATK and HP by 1 each, making him end up with 7/7 for 16G.
+
+This stayed all the way until '''Beta 6.5''', where his stats were raised to 10/10, but his cost was also increased to 20G. '''Beta 9.1''' dropped that to 17G, but also reworked his ability so that he now heals 20 HP upon being summoned, and the other 10 HP upon death.
+
+'''Beta 12.1''' returned him to fully restoring you upon summon and no healing upon death, but his cost is now 18G instead of the 20G from Beta 6.5.[[File:AsrielDreemurr.png|thumb|238x238px|Post Beta 6.5]]
+
+=== Stats ===
+ATK:
+* 8 (Pre Beta 1.6)
+* 7 (Post Beta 1.6)
+* 10 (Post Beta 6.5, Current)
+HP:
+* 8 (Pre Beta 1.6)
+* 7 (Post Beta 1.6)
+* 10 (Post Beta 6.5, Current)
+Cost:
+* 15 (Pre Alpha 3.2)
+* 16 (Post Alpha 3.2)
+* 20 (Post Beta 6.5)
+* 17 (Post Beta 9.1)
+* 18 (Post Beta 12.1, Current)
+Abilities:
+* Magic: Restore 30 HP to you. (Pre Beta 9.1)
+* Magic: Restore 20 HP to you. Dust: Restore 10 HP to you.
+** (Post Beta 9.1)
+* Magic: Restore 30 HP to you. (Post Beta 12.1, Current)
+
+Rarity: Gold (Legendary)
+[[File:Asriel Dreemurr (Beta 9.1).png|thumb|234x234px|Post Beta 9.1]]
+Song: Hopes and Dreams
+[[Category:Rework]]

@@ -1,0 +1,29 @@
+[[File:Worsening (Original - Beta 29.9).png|thumb|220x220px|Original - Beta 29.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/Worsening here].
+[[File:Worsening (Beta 30.0).png|thumb|241x241px|Beta 30.0]]
+Worsening is a Perseverance Deck exclusive card. Originally, it dealt 2 DMG for 2G to a board monster of your choice, including your own. But when that monster is under KR, the DMG is increased. This started out at 6, which stayed like that for a very long time, all the way to '''Beta 7.1'''. There, it was nerfed to 4. '''Beta 7.3''' buffed that to 5, while '''Beta 7.4''' nerfed its cost to 3G instead.
+[[File:Worsening (Beta 43.0).png|thumb|234x234px|Beta 43.0]]
+'''Beta 18.1''' expanded its effect, now dealing the extra damage dealt to the KR'd monster to the opponent, similar to [http://undercards.wikia.com/wiki/Casual_Undyne Casual Undyne]. After a long time again, '''Beta 43.0''' nerfed its increased DMG back to 4 (while keeping the extra DMG effect). 
+
+'''Beta 44.0''' buffed its initial effect, still dealing 2 DMG to a monster of your choice, but the opponent also takes 2 DMG now, even when it's not under KR (but is fixed at 2). However, the KR version has been nerfed, simply increasing the DMG to the monster and the opponent by 1 (so to 3). 
+
+=== Stats ===
+SOUL Type: Perseverance
+
+Cost:
+* 2 (Post Alpha 3.0)
+* 3 (Post Beta 7.4, Current)
+Effects:
+* Deal 2 DMG to a monster. If it's under KR, ...
+** deal 6 DMG instead. (Post Alpha 3.0)
+** deal 4 DMG instead. (Post Beta 7.1)
+** deal 5 DMG instead. (Post Beta 7.3)
+** deal 5 DMG instead and the extra DMG to the opponent. (Post Beta 18.1)
+** deal 4 DMG instead and the extra DMG to the opponent. (Post Beta 43.0)
+* Deal 2 DMG to a monster and the opponent. If under KR, deal +1 DMG. (Post Beta 44.0, Current)
+Rarities:
+* White (Common) (Post Alpha 3.0)
+* Gray (Basic) (Post Beta 30.0, Current)
+
+== Trivia ==
+* Beta 30.0 introduced the [https://undercards.fandom.com/wiki/Category:Basic Basic] Rarity, which this gained.[[Category:Rework]]

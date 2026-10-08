@@ -1,0 +1,20 @@
+[[File:Spade Chaos.png|thumb|178x178px|Beta 39.1]]
+Current Version can be found [https://undercards.fandom.com/wiki/Jevil here].
+[[File:Spade Chaos (Beta 42.0).png|thumb|182x182px|Beta 42.0]]
+This link will lead you to Jevil's page, who was added in '''Beta 39.1''' alongside its usable spells, of which this is one. Alongside ''Diamond Chaos'', Spade Chaos was the first of all Chaos Weapons to obtain a change, before Jevil himself even got one. This was during '''Beta 42.0''', and both were buffed.
+[[File:Spade Chaos (Beta 42.1).png|thumb|180x180px|Beta 42.1]]
+Spade Chaos' buff was changing its effect from dealing 2 DMG to all enemies (similar to [https://undercards.fandom.com/wiki/Strafe Strafe]) to dealing 1 DMG to all enemies, but this repeats (similar to [https://undercards.fandom.com/wiki/Shootout Shootout]) for each empty slot you have. Meaning that only if you have a full board will this spell deal less DMG, and if you played Jevil on its own, this will deal 4 DMG total, double of before. This was nerfed back a lot in the next update, '''Beta 42.1''' (where Jevil got its 1st change and also got nerfed). The way it deals damage was returned to a single hit, but the amount it deals is now simply the amount of empty spaces. Meaning the initial 1 DMG has been removed and the spell can only deal a max of 3 DMG. It also lost the ability to damage the opponent directly, though this part was brought back in '''Beta 43.0'''.
+
+=== Stats ===
+Spell giver: Jevil
+
+Cost: 0
+
+Effects:
+* Deal 2 DMG to all enemies. (Post Beta 39.1)
+* Deal 1 DMG to all enemies. Repeat for each empty board slot you have. (Post Beta 42.0)
+* Deal DMG equal to the amount of empty board slots you have...
+** to all enemy monsters. (Post Beta 42.1)
+** to all enemies. (Post Beta 43.0, Current)
+Rarity: Green (Generated)
+[[Category:Rework]]

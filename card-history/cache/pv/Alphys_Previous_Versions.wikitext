@@ -1,0 +1,40 @@
+[[File:Alphys (Original - Beta 36.0).png|thumb|330x330px|Original - Beta 36.0]]
+Current version can be seen [[Alphys|here]].  
+[[File:Alphys (Beta 36.1).png|thumb|265x265px|Beta 36.1]]
+Alphys originally costed 5G and would reduce the cost of any [[:Category:Amalgamate|Amalgamate]] to 3G. '''Beta 4.3''' nerfed that to dropping the cost '''BY''' 3G in order to prevent more expensive [[cards]] such as [[Endogeny]] or the in the previous updated added [[Everyman]] being added too cheap. This, in turn, made some of the cheaper Amalgamates such as [[Memory Head]] or [[Snowdrake's Mom]] cost less than 3G.
+[[File:Alphys (Beta 49.0).png|thumb|Beta 49.0]]
+'''Beta 6.5''' reworked Alphys so that she herself would cost 1G less (4G), but her Amalgamate 1G more (so 2G less than normal). This was done to nerf Alphys for Integrity users to balance it out, as they would get 1G back from a 5G monster. But with the Integrity rework of Beta 6.8, Alphys returned to being a 5G card in '''Beta 7.1'''. However, her Amalgamate still only costs 2G less. (She didn't change after Integrity's passive was reverted back in Beta 9.1 either.) This was nerfed further much later in '''Beta 36.1''', where her given Amalgamate now only costs 1G less. 
+[[File:Alphys (Beta 53.1).png|thumb|Beta 53.1]]
+'''Beta 49.0''' turned her into a Legendary, completing reworking her. Her ATK changed for the first time, being increased by 2, from 3 to 5. Her cost was also increased by 2, making her 7G. (Her HP is still at the original 5.) Her ability, while still being a Magic that gives the user something, what she gives has been entirely changed. Now, she adds a single generated, class specific spell to your hand. Much like [[Jevil]]'s Chaos Weapons, these 7 spells have a Tribe to themselves: Royal Inventions. '''Beta 53.1''' changed her HP for the first time, buffing it to 6. '''Beta 57.0''' buffed her again with -1 ATK and Cost. 
+=== Stats ===
+ATK:
+* 3 (Pre Beta 49.0)
+* 5 (Post Beta 49.0)
+*4 (Post Beta 57.0, Current)
+
+HP:
+
+* 5 (Pre Beta 53.1)
+* 6 (Post Beta 53.1, Current)
+
+Cost:
+* 5 (Pre Beta 6.5)
+* 4 (Post Beta 6.5)
+* 5 (Post Beta 7.1)
+* 7 (Post Beta 49.0)
+*6 (Post Beta 57.0, Current)
+
+Abilities:
+* Magic: Add a random Amalgamate to your hand. Reduce its cost to 3G. (Pre Beta 4.3)
+* Magic: Add a random Amalgamate to your hand. Reduce its cost by 3G. (Post Beta 4.3)
+* Magic: Add a random Amalgamate to your hand. Reduce its cost by 2G. (Post Beta 6.5)
+* Magic: Add a random Amalgamate to your hand. Reduce its cost by 1G. (Post Beta 36.1)
+* Magic: Add your soul's Royal Invention to your hand. (Post Beta 49.0, Current)
+Rarities:
+* Purple (Epic) (Pre Beta 49.0)
+* Gold (Legendary) (Post Beta 49.0, Current)
+Song (as Legendary): Alphys
+
+== Trivia ==
+* Beta 21.1 updated her image.
+[[Category:Rework]]

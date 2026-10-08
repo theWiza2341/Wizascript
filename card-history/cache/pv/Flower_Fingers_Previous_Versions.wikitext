@@ -1,0 +1,18 @@
+[[File:Flower Fingers.png|thumb|294x294px|Beta 39.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Flower_Fingers here].
+
+Flower Fingers was added in '''Beta 39.0''' as a 5G 4/5 [https://undercards.fandom.com/wiki/Category:Plant Plant] with the Magic ability to deal 1 DMG to a target of your choice for each other Plant on your board. '''Beta 46.0''' gave it -1 HP, but its Magic now includes itself, allowing you to always deal at least 1 DMG.
+
+=== Stats ===
+ATK: 4
+
+HP:
+* 5 (Post Beta 39.0)
+* 4 (Post Beta 46.0, Current)
+Cost: 5
+
+Abilities:
+* Magic: Deal 1 DMG for each other ally Plant. (Post Beta 39.0)
+* Magic: Deal 1 DMG for each ally Plant. (Post Beta 46.0, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

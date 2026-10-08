@@ -1,0 +1,26 @@
+[[File:Glyde.png|thumb|236x236px|Original]]Current Version can be seen [http://undercards.wikia.com/wiki/Glyde here].[[File:Glyde (Beta 7.5).png|thumb|234x234px|Beta 7.5]]
+Up to Beta 7.5, Glyde was a vanilla monster with a massive 10/10 in stats for the cost of 12G. '''Beta 7.5''' dropped that to 11G, and '''Beta 7.6''' dropped it further to 10G.
+[[File:Glyde (Beta 7.6).png|thumb|234x234px|Beta 7.6]]
+This stayed for quite a while again, but not as long, as '''Beta 30.0''' gave it a complete rework. Its cost dropped further to 7G, but its stats of 10/10 drastically dropped to a mere 2/2. However, it now got an effect, which gives it +1/+1 for each card in your hand when played. This made Glyde work identical to an old version of [https://undercards.wikia.com/wiki/Lemon_Bread Lemon Bread] (from Alpha 2.7 to be exact). Lemon Bread's next buff (in Beta 6.5) passed onto Glyde as well, as '''Beta 31.0''' buffed Glyde with an even lower cost of 6G.
+[[File:Glyde (Beta 30.0).png|thumb|238x238px|Beta 30.0]]
+
+=== Stats ===
+ATK:
+* 10 (Pre Beta 30.0)
+* 2 (Post Beta 30.0, Current)
+HP:
+* 10 (Pre Beta 30.0)
+* 2 (Post Beta 30.0, Current)
+
+Cost:
+* 12 (Pre Beta 7.5)
+* 11 (Beta 7.5)
+* 10 (Post Beta 7.6)
+* 7 (Post Beta 30.0)
+* 6 (Post Beta 31.0, Current)
+Abilities:
+* N/A (Pre Beta 30.0)
+* Magic: Gain +1/+1 for each card in your hand. (Post Beta 30.0, Current)
+
+Rarity: Blue [Rare]
+[[Category:Rework]]

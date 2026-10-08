@@ -1,0 +1,29 @@
+[[File:Migosp (Original - Beta 29.9)|thumb|220x220px|Original - Beta 29.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/Migosp here].
+[[File:Migosp (Beta 30.0).png|thumb|215x215px|Beta 30.0]]
+Migosp is a basic card with basic changes. Its cost of 2G has never been changed since its debut. However, its basic stats and ability did. It started out with 1/1, but was buffed to 2/1 in '''Beta 1.6''' in order to make [http://undercards.wikia.com/wiki/Sans Sans] the weakest enemy by himself, just like he is in Undertale. '''Beta 6.4 '''followed that by increasing its HP by 1, making it 2/2.
+[[File:Migosp (Beta 37.0).png|thumb|211x211px|Beta 37.0]]
+'''Beta 8.3''' buffed its ability to give +3 HP to a random ally monster instead of 2, making it heal as much as its Hard Mode/Upgraded version [http://undercards.wikia.com/wiki/Migospel Migospel]. However, this was returned to giving +2 HP in '''Beta 13.1'''. '''Beta 37.0''' nerfed it further by only giving +1 HP, but '''Beta 38.0''' made its effect targetable, just like Migospel's, but still limited to an ally monster. '''Beta 42.1''' made its Magic target the monsters adjacent to it, making it possible to give +2 HP again, but not to a single one.
+[[File:Migosp (Beta 38.0).png|thumb|210x210px|Beta 38.0]]
+
+=== Stats ===
+ATK:
+* 1 (Pre Beta 1.6)
+* 2 (Post Beta 1.6, Current)
+HP:
+* 1 (Pre Beta 6.4)
+* 2 (Post Beta 6.4, Current)
+Cost: 2
+
+Abilities:
+* Magic: Give a random ally monster +2 HP. (Pre Beta 8.3)
+* Magic: Give a random ally monster +3 HP. (Post Beta 8.3)
+* Magic: Give a random ally monster +2 HP. (Post Beta 13.1)
+* Magic: Give a random ally monster +1 HP. (Post Beta 37.0)
+* Magic: Give an ally monster +1 HP. (Post Beta 38.0)
+* Magic: Give adjacent monsters +1 HP. (Post Beta 42.1, Current)
+
+Rarities:
+* White (Common) (Pre Beta 30.0)
+* Gray (Basic) (Post Beta 30.0, Current)
+[[Category:Rework]]

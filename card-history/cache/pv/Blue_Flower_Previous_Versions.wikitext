@@ -1,0 +1,25 @@
+[[File:Blue Flower.png|thumb|218x218px|Beta 44.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Blue_Flower here].
+[[File:Blue Flower (Beta 46.0).png|thumb|218x218px|Beta 46.0]]
+Blue Flower was added in '''Beta 44.0''' as a Token card from the '''Seedlings''' [https://undercards.fandom.com/wiki/Artifacts Artifact]. One would be summoned after every time its owner has taken 10+ DMG (up to 3 times since Beta 44.1).
+[[File:Blue Flower (Beta 47.1).png|thumb|217x217px|Beta 47.1]]
+'''Beta 46.0''' nerfed Seedlings to now only summon one when its owner's HP is at 10 or lower. This happens only once per game (similar to '''Adrenaline'''). To compensate, Blue Flower's ATK and HP were doubled from 3 to 6 and it gained Taunt. '''Beta 47.1''' gave it -1/-1. '''Beta 52.0''' increased its cost to 5G.
+
+=== Stats ===
+ATK:
+* 3 (Post Beta 44.0)
+* 6 (Post Beta 46.0)
+* 5 (Post Beta 47.1, Current)
+HP:
+* 3 (Post Beta 44.0)
+* 6 (Post Beta 46.0)
+* 5 (Post Beta 47.1, Current)
+Cost:
+* 3 (Post Beta 44.0)
+* 5 (Post Beta 52.0, Current)
+
+Abilities:
+* N/A (Post Beta 44.0)
+* Taunt. (Post Beta 46.0, Current)
+Rarity: Green (Token)
+[[Category:Rework]]

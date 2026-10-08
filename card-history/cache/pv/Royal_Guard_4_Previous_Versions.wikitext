@@ -1,0 +1,22 @@
+[[File:RG 04.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Royal_Guard_4 here].
+[[File:RG 04 (Beta 40.0).png|thumb|294x294px|Beta 40.0]]
+Royal Guard 4 (RG 04) was added in '''Beta 30.0''', alongside [https://undercards.fandom.com/wiki/Royal_Guard_3 RG 03], as the only Undertale monsters added in this Deltarune Release Themed update. Much like [https://undercards.fandom.com/wiki/Royal_Guard_1 RG 01] and [https://undercards.fandom.com/wiki/Royal_Guard_2 RG 02], RG 03 and RG 04 have swapped stats, being in the middle ground of the other two, and are [https://undercards.fandom.com/wiki/Category:Common Common] instead of [https://undercards.fandom.com/wiki/Category:Basic Basic].
+
+Since their release, all four of them changes at the same time, starting in '''Beta 40.0''', where their effects able to affect other RG's of the same kind. In RG 04's case, this meant that before, when it died, all ally RG's except other 03's gained Ranged. Now, all ally RG's gain it.
+
+'''Beta 47.0''' gave it a change without giving one to the other [https://undercards.fandom.com/wiki/Category:Royal_Guard Royal Guards], marking this the first time ever of this happening. This is because Ranged was removed. Instead, RG 04 will give +1 Dodge.
+
+=== Stats ===
+ATK: 9
+
+HP: 8
+
+Cost: 9
+
+Abilities:
+* Dust: Give all ally RG's Ranged (except 04). (Post Beta 30.0)
+* Dust: Give all ally RG's Ranged. (Post Beta 40.0)
+* Dust: Give all ally RG's +1 Dodge. (Post Beta 47.0, Current)
+Rarity: White (Common)
+[[Category:Rework]]

@@ -1,0 +1,20 @@
+[[File:Headshot.png|thumb|295x295px|Pre Beta 2.6]]
+Current Version can be found [http://undercards.wikia.com/wiki/Headshot here].
+
+[[File:Headshot Updatd.png|thumb|295x295px|Post Beta 2.6]]
+Headshot is the Epic Justice exclusive Spell. When used, it will kill the targeted monster, no questions asked.
+
+It used to kill a single monster (friend or foe) for 8G, but was reduced in '''Beta 2.6''' to 7G.
+
+'''Beta 6.2''' buffed it by silencing the targeted monster before killing it, making Dust effecs not trigger. This was very useful as you could get rid of some dangerous monsters this way, such as [http://undercards.wikia.com/wiki/Flowey Flowey] and [http://undercards.wikia.com/wiki/Mettaton_NEO Mettaton NEO].
+
+SOUL Type: Justice
+
+Cost:
+* 8 (Pre Beta 2.6)
+* 7 (Post Beta 2.6, Current)
+Effects:
+* Kill a monster. (Pre Beta 6.2)
+* Silence and kill a monster. (Post Beta 6.2, Current)
+Rarity: Purple (Epic)
+[[Category:Rework]]

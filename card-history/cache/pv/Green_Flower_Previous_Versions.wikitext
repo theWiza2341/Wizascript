@@ -1,0 +1,22 @@
+[[File:Green Flower.png|thumb|208x208px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Flower_Can here].
+[[File:Green Flower (Beta 33.0).png|thumb|206x206px|Beta 33.0]]
+Green Flower was added in '''Beta 30.0''' as a summon for Flower Can. '''Beta 34.0''' dropped its cost from 1G to 0G.
+
+=== Stats ===
+ATK: 1
+
+HP: 1
+
+Cost:
+* 1
+* 0
+Ability: N/A
+
+Rarity: Green (Generated)
+
+== Trivia ==
+* Beta 33.0 updated its image.
+** Its original image was a custom sprite.
+** Its current image is a sprite from UT (Justice's healing bullet during Omega Flowey). Its Rarity stayed DR styled, however.
+[[Category:Rework]]

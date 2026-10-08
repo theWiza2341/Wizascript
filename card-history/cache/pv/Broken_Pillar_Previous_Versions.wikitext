@@ -1,0 +1,17 @@
+[[File:Broken Pillar.png|thumb|291x291px|Beta 51.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Pillar here].
+
+Broken Pillar was added in '''Beta 51.0''' as a 4/2 Token for the 2/4 Pillar. '''Beta 53.0''' broke the symmetry by only giving this -1 ATK.
+
+=== Stats ===
+ATK:
+* 4 (Post Beta 51.0)
+* 3 (Post Beta 53.0, Current)
+HP: 2
+
+Cost: 5
+
+Ability: Haste. Magic: Give an ally monster +1/+2.
+
+Rarity: Green (Token)
+[[Category:Rework]]

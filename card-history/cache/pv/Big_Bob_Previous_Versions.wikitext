@@ -1,0 +1,21 @@
+[[File:Big Bob.png|thumb|234x234px|Beta 6.6]]
+Current Version can be found [http://undercards.wikia.com/wiki/Big_Bob here].
+[[File:Big Bob (Beta 13.1).png|thumb|236x236px|Beta 13.1]]
+Big Bob was added in '''Beta 6.6'''. Upon release, its ability was that it would summon another Big Bob if it survived taking damage. This new Big Bob was a base version of it, being 2/3. '''Beta 13.1''' buffed that by making any new Big Bobs keep the ATK buffs of the original one, while still keeping their own 3 HP. '''Beta 45.1''' reverted this buff. '''Beta 49.0''' reverted that back again.
+[[File:Big Bob (Beta 45.1).png|thumb|291x291px|Beta 45.1]]
+
+=== Stats ===
+ATK: 2
+
+HP: 3
+
+Cost: 3
+
+Abilities:
+* Whenever this survives after taking DMG, ...
+** summon a Big Bob. (Post Beta 6.6)
+** summon a Big Bob (keep ATK buffs). (Post Beta 13.1)
+** summon a Big Bob. (Post Beta 45.1)
+** summon a Big Bob (keep ATK buffs). (Post Beta 49.0, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

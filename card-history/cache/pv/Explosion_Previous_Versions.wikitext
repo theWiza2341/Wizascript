@@ -1,0 +1,21 @@
+[[File:Explosion (Original - Beta 21.9).png|thumb|220x220px|Original - Beta 21.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/Explosion here].
+Explosion started as 7G with the effect to deal 2 DMG to an enemy monster of your choice. Monsters adjacent to it (so directly left and right) will take 4 DMG. '''Beta 7.4''' gave it its first change, which was an updated image, making Explosion one of the first cards to do so. '''Beta 9.3''' gave it its first balance change, a -1 cost drop from 7G to 6G.
+
+'''Beta 15.0''' brought it back to 7G, but also reworked the effect a bit. Now, it deals 4 damage to any monster of your choice instead of 2 limited to enemy monsters. But the adjacent monsters, while still taking 4 damage, will only take damage if the targeted monster is killed with this. '''Beta 18.1''' dropped its cost back to 6. '''Beta 22.0''' nerfed its effect a bit by only dealing 3 damage to adjacent monsters.
+
+=== Stats ===
+SOUL Type: Justice
+
+Cost:
+* 7 (Post Alpha 3.0)
+* 6 (Post Beta  9.3)
+* 7 (Post Beta 15.0)
+* 6 (Post Beta 18.1, Current)
+Effects:
+* Deal 2 DMG to an enemy monster and 4 DMG to adjacent ones. (Post Alpha 3.0)
+* Deal 4 DMG to a monster. Kill: Deal 4 DMG to adjacent ones. (Post Beta 15.0)
+* Deal 4 DMG to a monster. Kill: Deal 3 DMG to adjacent ones. (Post Beta 22.0, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

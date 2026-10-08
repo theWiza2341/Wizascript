@@ -1,0 +1,17 @@
+[[File:Bone Box.png|thumb|294x294px|Beta 36.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Bone_Box here].
+
+Bone Box was added in '''Beta 36.0''' as one of the cards using the new mechanic of "choose one" effects. In this case, looking at 3 random (craftable) spells with a cost of 3G or lower and let you choose one of them to be added to your hand. '''Beta 48.0''' gave it +1/+1, buffing it from 3/2/2 to 3/3/3.
+
+=== Stats ===
+ATK:
+* 2 (Post Beta 36.0)
+* 3 (Post Beta 48.0, Current)
+HP:
+* 2 (Post Beta 36.0)
+* 3 (Post Beta 48.0, Current)
+Cost: 3
+
+Ability: Magic: See 3 random <= 3G spells. Choose 1. Add it to your hand.
+
+Rarity: White (Common)[[Category:Rework]]

@@ -1,0 +1,33 @@
+[[File:Longevity (Original - Beta 16.9).png|thumb|220x220px|Original - Beta 16.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/Longevity here].
+[[File:Longevity (Beta 17.0).png|thumb|234x234px|Beta 17.0]]
+Longevity is a [http://undercards.wikia.com/wiki/Decks#Kindness Kindness] [http://undercards.wikia.com/wiki/Decks Deck] specific [http://undercards.wikia.com/wiki/Abilities#Effect_Cards: Effect Card]. It used to double the HP of a selected monster, both ally and enemy, for 6G. This was decreased to 5G in '''Alpha 3.2''' and further decreased to 3G in '''Beta 2.0'''.
+[[File:Longevity (Beta 21.0).png|thumb|234x234px|Beta 21.0]]
+However, while it would double the current and maximum HP of the selected monster, its calculations go by the '''current''' HP of that monster, not its maximum. ''(So this spell functions exactly like [https://undercards.fandom.com/wiki/Force_of_Nature Force of Nature] if used on a monster with 3 current HP, no matter its max HP.) ''And because the monster's HP increases by the same ammount as it gets healed, damaged monsters would still be damaged. Because of this, they stay vulnerable to cards like [http://undercards.wikia.com/wiki/Asgore Asgore].
+[[File:Longevity (Beta 51.0).png|thumb|230x230px|Beta 51.0]]
+'''Beta 7.4''' increased its cost to 4G and changed it by fully healing the monster, and then give the HP bonus. But this bonus is only 75% instead of 100%. This made it the same as [http://undercards.wikia.com/wiki/Category:Bravery Bravery]'s [http://undercards.wikia.com/wiki/Aaron's_Secret Aaron's Secret] again (at that time), which was nerfed to a 75% ATK bonus some time earlier. '''Beta 16.0''' increased its cost to 5G. And '''Beta 17.0''' made it an [http://undercards.wikia.com/wiki/Category:Epic Epic], swapping its Rarity with that of [http://undercards.wikia.com/wiki/Soothing Soothing].
+
+'''Beta 21.0''' reworked the card and dropped its cost back to 4G. Now, it will only give bonus HP equal to the amount of HP it healed the monster up. (So if it's used on a monster with 4 Current HP and 7 Max HP, this card restore 3 HP and then give +3 HP, bringing it up to 10.) It also gives Candy with this. '''Beta 51.0''' reworked it again. While its cost stayed at 4G, its effect now simply gives +10 max HP to the user. (So effectively a double [https://undercards.fandom.com/wiki/Artifacts#Health Health], but without increasing your current HP, thus more accurate to 2 body-less original [https://undercards.fandom.com/wiki/Innkeeper Innkeepers].) This was reworked again, already in '''Beta 52.1''', where it now, for 3G, would move 2 monsters from your dustpile to your deck, give them +1 HP each and then let you draw up to 2 cards. 
+=== Stats ===
+SOUL Type: Kindness
+
+Cost:
+* 6 (Post Alpha 3.0)
+* 5 (Post Alpha 3.2)
+* 3 (Post Beta 2.0)
+* 4 (Post Beta 7.4)
+* 5 (Post Beta 16.0)
+* 4 (Post Beta 21.0)
+* 3 (Post Beta 52.1, Current)
+Effect:
+* Double a monster's HP. (Post Alpha 3.0)
+* Fully restore a monster and give it ...
+** +75% HP. (Post Beta 7.4)
+** +1 HP for every HP restored and Candy. (Post Beta 21.0)
+* Gain +10 max HP. (Post Beta 51.0)
+* Shuffle 2 random monsters from your dustpile into your deck with +1 HP.
+** Draw up to 2 cards. (Post Beta 21.0, Current)
+Rarities:
+* Blue (Rare) (Post Alpha 3.0)
+* Purple (Epic) (Post Beta 17.0, Current)
+[[Category:Rework]]

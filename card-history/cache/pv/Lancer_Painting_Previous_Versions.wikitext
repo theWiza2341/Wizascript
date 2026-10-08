@@ -1,0 +1,33 @@
+[[File:Lancer Painting.png|thumb|213x213px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Lancer_Painting here].
+[[File:Lancer Painting (Beta 31.2).png|thumb|210x210px|Beta 31.2]]
+Lancer Painting was added in '''Beta 30.0'''. Its first change was in '''Beta 31.2''', where it went from a 1/1/1 to a 2/2/2. However, its Dust would make it add a new Lancer Painting to your hand with a cost of 2G. Despite being 2G itself now, this line wasn't removed until '''Beta 33.1'''.
+[[File:Lancer Painting (Beta 33.1).png|thumb|212x212px|Beta 33.1]]
+'''Beta 43.1''' reworked its Dust entirely, now adding a Spade to your hand (which before was exclusively given by [https://undercards.fandom.com/wiki/Lancer Lancer]).
+
+=== Stats ===
+ATK:
+* 1 (Post Beta 30.0)
+* 2 (Post Beta 31.2, Current)
+HP:
+* 1 (Post Beta 30.0)
+* 2 (Post Beta 31.2, Current)
+Cost:
+* 1 (Post Beta 30.0)
+* 2 (Post Beta 31.2, Current)
+Abilities:
+* Dust: Add a 2G Lancer Painting to your hand. (Post Beta 30.0)
+* Dust: Add a Lancer Painting to your hand. (Post Beta 33.1)
+* Dust: Add a Spade to your hand. (Post Beta 43.1, Current)
+
+Rarity: White (Common)
+
+=== Trivia ===
+* Its stat changes in Beta 31.2 was actually an effect change in the patch notes. This was confirmed to be the change that was supposed to happen, but it was never fixed.
+** This is shown in the effect, which still showed "It costs 2." despite being 2G itself now, until Beta 33.1 removed it.
+** It shares this problem with [https://undercards.fandom.com/wiki/Temmie_Statue Temmie Statue].
+** So to summarize the change, going from Before to Patch to actual Card:
+*** '''1/1/1''' - Dust: Add a '''2G''' Lancer Painting to your hand.
+*** '''1/1/1''' - Dust: Add a '''2/2/2''' Lancer Painting to your hand.
+*** '''2/2/2''' - Dust: Add a <s>'''2G'''</s> Lancer Painting to your hand.
+[[Category:Rework]]

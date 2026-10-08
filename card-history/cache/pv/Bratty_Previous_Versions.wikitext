@@ -1,0 +1,38 @@
+[[File:Bratty (Original - Beta 36.0).png|thumb|220x220px|Original - Beta 36.0]]
+Current Version can be found [[Bratty|here]].
+[[File:Bratty (Beta 36.1).png|thumb|Beta 36.1]]
+Bratty was added in '''Beta 7.6''' as a 6/5 for 7G that originally gave all cards in the enemy's hand +1 cost, making her the opposide of [[Lesser Dog]]. She also revealed the enemy's hand, but this was removed in '''Beta 11.0'''. '''Beta 13.1''' gave her -1 HP. '''Beta 20.0''' gave her +1 HP, but -1 ATK instead. '''Beta 25.0''' nerfed her further by now only increasing the cost of 4 random cards in the enemy's hand instead of all of them.
+[[File:Bratty (Beta 55.0).png|thumb|Beta 55.0]]
+'''Beta 36.1''' reworked her effect. She will now increase the cost of all spells in the enemy's hand by 1, making her now more of an opposide of [[Clam Girl]]. This stayed until '''Beta 55.0''', where she was reworked to an exact recreation of [[Trader Temmie]], who was changed in the same update, as a 3/6 for 5G (so gaining -2/+1 for -2G) that would add a random spell of your soul to your hand with -1 cost at the start of every turn. However, '''Beta 56.0''' changed that again. Now, with +1 ATK and +1 cost, she has a Magic that shows all spells of the same cost as a random spell in your hand. You get to choose 1 and a random spell in your hand (which doesn't have to be the same one as the one that triggered the first part) gets transformed into the chosen spell. However, this effect doesn't work with spells that don't have any other same cost spells, like [https://undercards.fandom.com/wiki/Omega_Flowey Load]. '''Beta 56.1'''  changed this effect to give the transformed spell -1 cost.
+
+=== Stats ===
+ATK:
+* 6 (Post Beta 7.6)
+* 5 (Post Beta 20.0)
+*3 (Post Beta 55.0)
+*4 (Post Beta 56.0, Current)
+
+HP:
+* 5 (Post Beta 7.6)
+* 4 (Post Beta 13.1)
+* 5 (Post Beta 20.0)
+*6 (Post Beta 55.0, Current)
+
+Cost:
+
+* 7 (Post Beta 7.6)
+* 5 (Post Beta 55.0)
+* 6 (Post Beta 56.0, Current)
+
+Abilities:
+* Magic: Reveal and give +1 cost to the enemy's hand. (Post Beta 7.6)
+* Magic: Give +1 cost to the enemy's hand. (Post Beta 11.0)
+* Magic: Give +1 cost to 4 random cards in the enemy's hand. (Post Beta 25.0)
+* Magic: Give +1 cost to all spells in the enemy's hand. (Post Beta 36.1)
+*Turn start: Add a random spell of your soul to your hand with -1 cost. (Post Beta 55.0)
+*Magic: Look at all spells of the same cost as a random spell in your hand.
+**Choose 1. Turn a random spell in your hand into it. (Post Beta 56.0)
+**Choose 1. Turn a random spell in your hand into it with -1 cost. (Post Beta 56.1, Current)
+
+Rarity: Purple (Epic)
+[[Category:Rework]]

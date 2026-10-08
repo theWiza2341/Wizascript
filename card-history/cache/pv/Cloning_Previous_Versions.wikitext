@@ -1,0 +1,32 @@
+{{Outdated}}[[File:Cloning (Original - Beta 10.9).png|thumb|220x220px|Original - Beta 10.9]]
+Current Version can be found [[Cloning|here]].
+[[File:Cloning (Beta 11.0 - Beta 53.9).png|thumb|220x220px|Beta 11.0 - Beta 53.9]]
+Cloning went through some minor changes at first. It started in '''Alpha 3.0''' as a 4G that would add an exact copy of a monster from your board to your hand. '''Beta 3.2''' changed that to adding a base version, while '''Beta 6.8''' made the copy kept the same cost. '''Beta 7.3 '''increased its cost from 4G to 5G. This was returned in '''Beta 9.3''' to 4G, though, as Integrity gained its passive effect of returning 20% of the card's cost back in Beta 9.1. And '''Beta 11.0''' made it now make an exact copy again, just like it used to do so from the beginning. '''Beta 17.0''' dropped its cost to 3G.
+'''Beta 44.0''' gave it a complete overhaul. Dropping its cost to 1G, it no longer lets you choose a monster on your board. Instead, it lets you choose one from your hand to copy, making it no longer as strong with "Magic: Gain stats" cards like [[Glyde]] or [[Frisk]]. '''Beta 47.0''' redesigned it again. Back at 4G and choosing a board monster, it can now also target an enemy monster and will directly summon the chosen monster on your board (like [[Angel of Death]]). However, this can't be used on [[:Category:Determination (Rarity)|Determination]] monsters (like [[Mad Mew Mew]]) and the stats of the copy will be set to a new base of 3/3. '''Beta 54.0''' increased it to 5G. 
+
+=== Stats ===
+SOUL Type: Integrity
+
+Cost:
+* 4 (Post Alpha 3.0)
+* 5 (Post Beta 7.3)
+* 4 (Post Beta 9.3)
+* 3 (Post Beta 17.0)
+* 1 (Post Beta 44.0)
+* 4 (Post Beta 47.0)
+*5 (Post Beta 54.0, Current)
+
+Effects:
+* Add a copy of an ally monster to your hand. It...
+** will be an exact copy. (Post Alpha 3.0)
+** will be a base copy. (Post Beta 3.2)
+** will be a base copy with exact cost. (Post Beta 6.8)
+** will be an exact copy. (Post Beta 11.0)
+* Add a copy of a monster from your hand to your hand. It...
+** will be an exact copy. (Post Beta 44.0)
+* Summon a 3/3 base copy of a non-DT monster. (Post Beta 47.0, Current)
+Rarity: Purple (Epic)
+== Trivia ==
+* Beta 33.0 updated its image.
+** For Integrity, it shares this with [[Fortune]], [[Expulsion]] and [[Golden Hit]].
+[[Category:Rework]]

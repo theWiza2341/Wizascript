@@ -1,0 +1,17 @@
+[[File:Jigsawry.png|thumb|261x261px|Beta 30.0]]
+Current Version can be found [[Jigsawry|here]].[[File:Jigsawry (Beta 31.0).png|thumb|Beta 31.0]]Jigsawry started in '''Beta 30.0''' as one of the dozens Deltarune monsters. And like quite a few of them, it received a change in '''Beta 31.0'''. Before, its Magic made it remove all other Jigsawry on your board and add their ATK and HP to itself as buff. Now, those stats are added to its BASE, making it more safe against Silence. '''Beta 53.1''' changed its Magic into a passive. So instead of removing all Jigsawry that are already on the board, it removes the ones that are played afterwards.
+
+=== Stats ===
+ATK: 3
+
+HP: 4
+
+Cost: 3
+
+Abilities:
+* Magic: Remove all ally Jigsawry and add their ATK and HP to this Jigsawry. (Post Beta 30.0)
+* Magic: Remove all ally Jigsawry and add their ATK and HP to this Jigsawry's base. (Post Beta 31.0)
+*If you play a Jigsawry, remove it and add its ATK and HP to this Jigsawry's base. (Post Beta 53.1, Current) 
+
+Rarity: White (Common)
+[[Category:Rework]]

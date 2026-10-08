@@ -1,0 +1,46 @@
+[[File:Cold Winter (Original - Beta 7.1).png|thumb|220x220px|Original - Beta 7.1]]
+Current Version can be found [[Cold Winter|here]].
+[[File:Cold Winter (Beta 7.2 - Beta 33.9)|thumb|220x220px|Beta 7.2 - Beta 33.9]]
+Cold Winter originally Paralyzed all enemy monsters for 5G. Keep in mind that monsters that were Paralyzed last turn could be Paralyzed again for another turn, making this a very strong spell. It was made even stronger when '''Alpha 3.2''' reduced it to 4G, but '''Beta 6.7''' reverted this back to 5G.
+[[File:Cold Winter (Beta 34.0).png|thumb|251x251px|Beta 34.0]]
+However, the next update, '''Beta 6.8''', reworked the card a lot. It now just paralyzes the selected enemy monster and the ones next to it, similar to Justice's [[Explosion]]. But as a bonus, if any of the monsters is already paralyzed, it will not only paralyze them again, but also deal 2 bonus damage. Its cost was returned to 4G for this, dropped further to 3G in '''Beta 7.1''', returned back to the original 5G in '''Beta 7.2''', brought back to 4G in '''Beta 7.5''' only for '''Beta 17.0''' to end it at the original 5G yet again.
+[[File:Cold Winter (Beta 41.0).png|thumb|252x252px|Beta 41.0]]
+'''Beta 20.0''' nerfed the effect a bit, as it now no longer re-paralyzes enemy monsters that were already paralyzed. '''Beta 34.0''' reverted that nerf and its cost was brought back to 4G once again. However, the effect will no longer work on the monster to the right of the target. '''Beta 41.0''' did the same as Beta 20.0, not paralyzing paralyzed monsters again. ''(Beta 42.0 made Paralyzed monster unable to be Paralyzed again by default.)''
+[[File:Cold Winter (Beta 55.0).png|thumb|247x247px|Beta 55.0]]
+During the class rework of '''Beta 55.0''', Cold Winter took most of [[Ice Replica]]'s design of possibly being able to obtain [[Ice Cap]], [[Ice]] and [[Snowman]]. For 2G, you will be shown all 3. The one you choose will be removed and the other two will be added to your hand.
+
+=== Stats ===
+Soul Type: Patience
+
+Cost:
+* 5 (Post Alpha 3.0)
+* 4 (Post Alpha 3.2)
+* 5 (Beta 6.7)
+* 4 (Post Beta 6.8)
+* 3 (Beta 7.1)
+* 5 (Post Beta 7.2)
+* 4 (Post Beta 7.5)
+* 5 (Post Beta 17.0)
+* 4 (Post Beta 34.0)
+*2 (Post Beta 55.0, Current)
+
+Effect:
+* Paralyze all enemy monsters. (Post Alpha 3.0)
+* Paralyze an enemy monster and the monster to its left and right.
+** If paralyzed, deal 2 bonus DMG. (Post Beta 6.8)
+** If paralyzed, deal 2 DMG instead. (Post Beta 20.0)
+* Paralyze an enemy monster and the monster to its left.
+** If paralyzed, deal 2 bonus DMG. (Post Beta 34.0)
+** If paralyzed, deal 2 DMG instead. (Post Beta 41.0)
+* See Ice Cap, Ice and Snowman. Choose 1 to burn.
+** Add the others to your hand. (Post Beta 55.0, Current)
+
+Rarity: Blue (Rare)
+== Trivia ==
+* Beta 33.0 updated its image.
+** For Patience, it shares this with [[Protection]], [[Defrosting]] and [[Ice Replica]].
+* Between Beta 34.0 and Beta 41.0, the card didn't actually mention that it could only be used on enemy monsters, but it did still work that way.
+** The patch notes of Beta 41.0 itself have the same mistake, but the card is now correctly worded.
+* Beta 56.0 updated its image again.
+
+[[Category:Rework]]

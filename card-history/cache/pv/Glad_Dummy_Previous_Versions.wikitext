@@ -1,0 +1,29 @@
+[[File:Glad Dummy.png|thumb|239x239px|Beta 5.1]]Current version can be seen [[Glad Dummy|here]].
+
+[[File:6.0 Glad Dummy.png|thumb|234x234px|Beta 6.0]]
+
+Glad Dummy was added in '''Beta 5.1''' as a new way to add taunt to monsters without using [[Protection]]. In '''Beta 6.0''' it was given the Taunt ability to itself as well, to increase the playability and strategy of the card. '''Beta 8.3''' gave it -1/+1, going from 2/5 to 1/6, in order to make it last longer and have swapped stats with [http://undercards.wikia.com/wiki/Mad_Dummy Mad Dummy], which was 6/1 at the time.
+[[File:Glad Dummy (Beta 8.3).png|thumb|234x234px|Beta 8.3]]
+But after a long time, it got a huge rework in '''Beta 38.2'''. Besides gaining +3/-3 to end up at 4/3 and getting its cost increased from 4G to 6G (the same Cost as Mad Dummy), its effect was also changed a lot. Now, instead of giving Taunt to a single ally monster, it will now give Taunt to all other monsters on the board. It lost Taunt itself, however. '''Beta 49.0''' returned it to 4G. 
+[[File:Glad Dummy (Beta 38.2).png|thumb|239x239px|Beta 38.2]]
+
+=== Stats ===
+ATK:
+* 2 (Post Beta 5.1)
+* 1 (Post Beta 8.3)
+* 4 (Post Beta 38.2, Current)
+HP: 
+* 5 (Post Beta 5.1)
+* 6 (Post Beta 8.3)
+* 3 (Post Beta 38.2, Current)
+Cost:
+* 4 (Post Beta 5.1)
+* 6 (Post Beta 38.2)
+* 4 (Post Beta 49.0, Current)
+
+Abilities: 
+* Magic: Give an ally monster Taunt. (Post Beta 5.1)
+* Taunt. Magic: Give an ally monster Taunt. (Post Beta 6.0)
+* Magic: Give all other monsters Taunt. (Post Beta 38.2, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

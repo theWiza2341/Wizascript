@@ -1,0 +1,29 @@
+Current version can be seen [http://undercards.wikia.com/wiki/Politics_Bear here].
+[[File:P. Bear Beta 6.6.png|thumb|224x224px|Beta 6.6 (Original)]]
+Politics Bear changed heavily for the short amount of time that it has been in the game. Originally, it used to reset the cooldown of an ally monster, which would make it a single target, all-class version of an early [http://undercards.wikia.com/wiki/Final_Charge Final Charge].
+[[File:P. Bear Beta 7.1.png|thumb|223x223px|Beta 7.1 (New ability)]]
+Beta 7.1 changed to to give it the ability to kill the monster with the highest ATK, which included allies, and would be random if 2 or more cards had the same highest ATK. This was used very often to get rid of cards such as [http://undercards.wikia.com/wiki/Mad_Dummy Mad Dummy] or your own [[Mettaton NEO]], but also almost every other Legendary and DT cards, with [http://undercards.wikia.com/wiki/Sans Sans] and [http://undercards.wikia.com/wiki/Frisk Frisk] being the only exceptions. But it was way overpowered with the stats that it had, so Beta 7.2 nerfed it by lowering it's ATK and HP by 1, but also increasing it's Cost by 1.[[File:P. Bear Beta 7.2.png|thumb|225x225px|Beta 7.2 (ATK & HP: -1; Cost: +1)]]
+
+Beta 7.3 changed it again to it's current state, giving him another new way of playing.
+
+Stats:
+
+ATK:
+* 6 (Post Beta 6.6)
+* 5 (Beta 7.2)
+* 3 (Post Beta 7.3, Current)
+HP:
+* 5 (Post Beta 6.6)
+* 4 (Beta 7.2)
+* 3 (Post Beta 7.3, Current)
+Cost:
+* 6 (Post Beta 6.6)
+* 8 (Beta 7.1)
+* 9 (Beta 7.2)
+* 4 (Post Beta 7.3, Current)
+Ability:
+* Battlecry: Reset the attack cooldown of an ally monster. (Post Beta 6.6)
+* Battlecry: Kill the monster with the highest ATK. (Post Beta 7.1)
+* Gain +1 ATK if your opponent plays a monster or +1 HP if you play a monster. (Post Beta 7.3, Current)
+Rarity: White (Common)
+[[Category:Rework]]

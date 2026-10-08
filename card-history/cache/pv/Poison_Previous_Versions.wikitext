@@ -1,0 +1,33 @@
+: ''Current version can be found [[Poison|here]].''
+
+*Alpha 3.0: New card: Poison. COMMON Spell. SOUL: Perseverance. COST 1. EFFECT: Give KR to a monster.
+*Beta 2.0: COST 1 > 0.
+**Poison and [[Penetration]] were the first cards to cost 0 G.
+*Beta 5.2: COST 0 > 1. EFFECT UPDATE: Give KR to a monster. Draw a card.
+**Mirroring the update to Poison, [[Heal]] gained 1 cost and "Draw a card."
+**This change was made because Perseverance decks focused on using spells, making Perseverance players short on monsters in hand.
+*Beta 5.7: COST 1 > 0.
+**Similarly, the cost of Protection and Heal became 0. Mirroring the updates to Heal and Poison, [[Protection]] gained "Draw a card."
+*Beta 7.1: COST 0 > 2. EFFECT UPDATE: Deal 1 damage to an enemy monster. Draw a card.
+**Beta 6.8 was a rework of every Soul. Dealing 1 damage at this time would give a monster KR.
+*Beta 7.3: COST 2 > 1. EFFECT UPDATE: Give KR to a monster. Draw a card.
+**Poison was reverted to the Beta 5.2 version because it was impossible to for Poison to give KR to cards such as [[Mad Dummy]] and [[Sans]] which couldn't take any damage.
+*Beta 9.3: EFFECT UPDATE: Give KR to a monster. Add a Poison to your deck. Draw a card.
+*Beta 33.0: Updated sprite.
+**The Perseverance spells [[Pollutant Gas]], [[Termination]], [[Contamination]] and [[Siphoning]] also received updated sprites.
+*Beta 44.0: EFFECT UPDATE: Deal 1 DMG to a monster and give it KR. Draw a card.
+*Beta 49.0: EFFECT UPDATE: Deal 1 DMG to a monster and give it KR. If under KR, also draw 2 cards.
+**This is similar to a past effect of [[Blitz Quiz]]'s Zap Cannon.
+*Beta 54.0: COST 1 > 2.
+*Beta 59.0: COST 2 > 1.
+*Beta 62.1: COST 1 > 2. EFFECT UPDATE: Give a monster KR. Draw 2 cards.
+*Beta 85.0: COST 2 > 1. EFFECT UPDATE: Loop (1). Give a monster KR. Draw a card.
+
+<gallery>
+File:Poison (Original - Beta 7.2).png|Alpha 3.0 - Beta 7.2
+File:Poison (Beta 7.3 - Beta 53.9).png|Beta 7.3 - Beta 53.9
+File:Poison (Beta 54.0).png|Beta 54.0
+File:Poison (Beta 9.3).png|Beta 9.3
+</gallery>
+
+[[Category:Rework]]

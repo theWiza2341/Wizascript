@@ -1,0 +1,46 @@
+[[File:Moldbygg (Original - Beta 7.4).png|thumb|220x220px|Original - Beta 7.4]]
+Current version can be seen [[Moldbygg|here]].
+[[File:Moldbygg (Beta 7.5 - Beta 20.9).png|thumb|220x220px|Beta 7.5 - Beta 20.9]]
+
+Moldbygg is a useful [[Cards|card]] which has had 4 major reworks changing the main uses for it. Originally a 0/6 monster for 3G, dealing 1 damage to all enemy monsters, it was particularly effective as a deterrent to [[Woshua]] and other spread damage based cards, making Moldbygg particularly useful in and against the [http://undercards.wikia.com/wiki/Abilities#Justice: Justice] [[Decks|deck]], as well as [http://undercards.wikia.com/wiki/Abilities#Patience: Patience] with [[Protection]] applied to it. It was also a good pair for [[Asgore]].
+[[File:Moldbygg (Beta 21.0).png|thumb|233x233px|Beta 21.0]]
+Moldbygg was undocumented reworked in '''Beta 1.7''', where its ATK was buffed to 1 and its ability was changed to paralyzing enemy monsters damaged by it. This made it more useful in the [http://undercards.wikia.com/wiki/Abilities#Patience: Patience] deck and removing its specific use in other soul types. After '''Beta 4.6''', Moldbygg was buffed by gaining [[abilities|Taunt]] in exchange for 1 less HP, making it particularly useful when wanting to protect yourself from multiple attacks, typically ensuring yourself protection from a monster for that turn and the subsequent one, with the exception of [[cards]] like [[Mad Dummy]]. '''Beta 6.5''' nerfed it a bit by dropping its HP by one again, for a total of 4.
+[[File:Moldbygg (Beta 22.0).png|thumb|236x236px|Beta 22.0]]
+'''Beta 7.4''' moved Moldbygg's ability to paralyze to [http://undercards.wikia.com/wiki/Ice Ice] as a buff, which also indirectly buffed [http://undercards.wikia.com/wiki/Snow_Storm Snow Storm] (somewhat) and nerfed [http://undercards.wikia.com/wiki/Ice_Wolf Ice Wolf]. Moldbygg, meanwhile, gained a new 2nd ability. This makes it so that and the end of your turn, it gets fully healed. This is very good as it makes it almost invincible to low ATK enemies. Its HP was brought back to its original 6. '''Beta 7.5''' expanded the effect to also fully heal any [http://undercards.wikia.com/wiki/Moldsmal Moldsmal], [http://undercards.wikia.com/wiki/Moldessa Moldessa] and even other Moldbygg's (who have been silenced) on your side on the field. '''Beta 10.1''' nerfed the effect by taking place at the start of your turn instead of at the end.
+[[File:Moldbygg (Beta 48.0).png|thumb|235x235px|Beta 48.0]]
+'''Beta 15.0''' reworked Moldbygg again. Its HP has been reduced to 5, but its ability, which now triggers at the end of your turn again, has been changed to give +1 HP to all ally [http://undercards.wikia.com/wiki/Category:Mold Molds]. (So Moldbygg still has 1/6 when the enemy's turn starts.) '''Beta 17.0''' made [http://undercards.wikia.com/wiki/Lemon_Bread Lemon Bread] count as a Mold as well, making it able to be buffed by Moldbygg. '''Beta 18.1''' dropped its HP to 4. '''Beta 19.0''' brought it back to 5, but is now no longer able to buff itself. '''Beta 21.0''' increased its HP back to its original 6 again. '''Beta 22.0''' nerfed its effect again, as it will now also no longer buff other Moldbyggs.
+
+Its last (current) major rework was in '''Beta 48.0''', where it lost its Taunt and changed its ATK after a very long time. Its cost was also changed for the very first time. It's now a 4/4 for 5G monster with a Dust effect that summons a Moldsmal if there's another Mold on your board when it dies. '''Beta 50.0''' gave it its Taunt back, while also making the requirement take place during a Magic but still summon the Moldsmal with Dust. This is done by making it catch one.
+=== Stats ===
+ATK:
+* 0 (Pre Beta 1.7)
+* 1 (Post Beta 1.7)
+* 4 (Post Beta 48.0, Current)
+HP:
+* 6 (Pre Beta 4.6)
+* 5 (Post Beta 4.6)
+* 4 (Post Beta 6.5)
+* 6 (Post Beta 7.4)
+* 5 (Post Beta 15.0)
+* 4 (Post Beta 18.1)
+* 5 (Post Beta 19.0)
+* 6 (Post Beta 21.0)
+* 4 (Post Beta 48.0, Current)
+Cost:
+* 3 (Pre Beta 48.0)
+* 5 (Post Beta 48.0, Current)
+
+Abilities:
+* Whenever this takes DMG, deal 1 DMG to all enemy monsters. (Pre Beta 1.7)
+* Paralyze any monster it damages. (Post Beta 1.7)
+* Taunt. Paralyze any monster it damages. (Post Beta 4.6)
+* Taunt. End of turn: Fully restore itself. (Beta 7.4)
+* Taunt. End of turn: Fully restore all ally Molds. (Post Beta 7.5)
+* Taunt. Start of turn: Fully restore all ally Molds. (Post Beta 10.1)
+* Taunt. End of turn: Give +1 HP to all ally Molds. (Post Beta 15.0)
+* '''[Now counts Lemon Bread as a Mold.]''' (Post Beta 17.0)
+* Taunt. End of turn: Give +1 HP to all other ally Molds. (Post Beta 19.0)
+* Taunt. End of turn: Give +1 HP to all ally Molds (except Moldbygg). (Post Beta 22.0)
+* Dust: If there's an ally Mold, summon a Moldsmal. (Post Beta 48.0)
+* Taunt. Magic: If there's an ally Mold, catch a Moldsmal. Dust: Release it. (Post Beta 50.0, Current)
+Rarity: White (Common)[[Category:Rework]]

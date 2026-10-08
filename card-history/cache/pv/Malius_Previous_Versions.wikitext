@@ -1,0 +1,28 @@
+[[File:Malius.png|thumb|Beta 36.0]]
+Current Version can be found [[Malius|here]].
+
+Malius was added in '''Beta 36.0''' as an Epic 5/4 for 5G monster that allowed the user to return a monster of their choice from their hand back into their deck with Candy and a +2/+2 boost. '''Beta 55.0''' removed the given buffs and gave it +1 cost, but also gave it +1/+3.
+
+=== Stats ===
+ATK:
+
+* 5 (Post Beta 36.0)
+* 6 (Post Beta 55.0, Current)
+
+HP:
+
+* 4 (Post Beta 36.0)
+* 7 (Post Beta 55.0, Current)
+
+Cost:
+
+* 5 (Post Beta 36.0)
+* 6 (Post Beta 55.0, Current)
+
+Abilities:
+
+* Magic: Return a monster from your hand to your deck with +2/+2 and Candy. (Post Beta 36.0)
+* Magic: Return a monster from your hand to your deck. (Post Beta 55.0, Current)
+
+Rarity: Purple (Epic)
+[[Category:Rework]]

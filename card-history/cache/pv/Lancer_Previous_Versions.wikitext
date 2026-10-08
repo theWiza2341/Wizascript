@@ -1,0 +1,21 @@
+[[File:Lancer.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Lancer here].
+
+Lancer was added in '''Beta 30.0''' as a 5/5 for 7G Legendary with the Magic of adding 3 Spades to your hand. '''Beta 49.1''' dropped that to 2 Spades, but also gave it a passive effect that makes enemy monster take 2 more DMG from any spell.
+
+=== Stats ===
+ATK: 5
+
+HP: 5
+
+Cost: 7
+
+Abilities:
+* Magic: Add 3 Spades to your hand. (Post Beta 30.0)
+* Enemy monsters take +2 DMG from spells. Magic: Add 2 Spades to your hand. (Post Beta 49.1, Current)
+Rarity: Gold (Legendary)
+
+Songs:
+* Vs. Lancer (Post Beta 30.0)
+* Lancer (Post Beta 50.0, Current)
+[[Category:Rework]]

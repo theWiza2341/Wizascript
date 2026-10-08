@@ -1,0 +1,18 @@
+[[File:Crown.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/C-Round here].
+[[File:Crown (Beta 31.0).png|thumb|293x293px|Beta 31.0]]
+Crown was added as a [https://undercards.fandom.com/wiki/Generated_Cards Generated] card for C-Round in '''Beta 30.0'''. It would turn an ally C-Round into a K-Round, but did nothing beyond that. '''Beta 31.0''' fixed that letting you draw a card if there's no ally C-Round.
+
+'''Beta 41.0''' buffed it quite a bit. Not only will it now let you draw a card at any time, using it on anything but C-Round will give the targeted monster +1/+2 (even a K-Round). Keep in mind that it can now target enemy monsters.
+
+=== Stats ===
+Creator: C-Round
+
+Cost: 2
+
+Effects:
+* Turn an ally C-Round into K-Round. (Post Beta 30.0)
+** If there's none, draw a card. (Post Beta 31.0)
+* Give a monster +1/+2. Turn a C-Round into a K-Round instead. Draw a card. (Post Beta 41.0, Current)
+Rarity Creator: Purple (Epic)
+[[Category:Rework]]

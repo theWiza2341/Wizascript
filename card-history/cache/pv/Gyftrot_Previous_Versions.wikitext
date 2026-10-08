@@ -1,0 +1,34 @@
+[[File:Gyftrot (Original - Beta 54.0).png|thumb|269x269px|Original - Beta 54.0]]
+Current Version can be found [[Gyftrot|here]].
+
+Gyftrot existed from the start as a 4/8 for 8G Rare Taunt that makes the owner draw a card upon death, but hadn't changed once until all the way into '''Beta 12.1''', where it got -1 HP and -1 Cost. '''Beta 20.2''' reverted that back, but also gave it +1 ATK. '''Beta 24.0''' gave it -1 HP again, but only that, and it was reverted in '''Beta 43.1.'''
+
+'''Beta 54.1''' changed it into a [[:Category:Base|Base]], alongside [[Dad Slime]], replacing [[Royal Guard 1|RG 01]] and [[Royal Guard 2|RG 02]].
+=== Stats ===
+ATK:
+* 4 (Pre Beta 20.2)
+* 5 (Post Beta 20.2, Current)
+
+HP:
+* 8 (Pre Beta 12.1)
+* 7 (Post Beta 12.1)
+* 8 (Post Beta 20.2)
+* 7 (Post Beta 24.0)
+* 8 (Post Beta 43.1, Current)
+Cost:
+* 8 (Pre Beta 12.1)
+* 7 (Post Beta 12.1)
+* 8 (Post Beta 20.2, Current)
+Ability: Taunt. Dust: Draw a card.
+
+Rarities:
+
+* Blue (Rare) (Pre Beta 54.1)
+* Gray (Base) (Post Beta 54.1, Current)
+
+=== Trivia ===
+* Its nerf in Beta 24.0 was listed as a buff in the patch notes. This was due to the card mistakenly having its COST decresed from 8 to 7 rather of its HP. This was quickly fixed.
+*Its transition to Base Beta 54.1 marks the only time a card was changed from Rare straight into Base.
+**[[Charles]] is the only Base card that ever was a Rare, but was turned into a Common first.
+
+[[Category:Rework]]

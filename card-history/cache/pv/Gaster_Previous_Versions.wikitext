@@ -1,0 +1,44 @@
+[[File:Gaster (Original - Beta 7.1).png|thumb|220x220px|Original - Beta 7.1]]
+Current version of Gaster can be seen [[Gaster|here]]. Previous Versions of his Blaster can be seen [[Gaster Blaster/Previous_Versions|here]]. Current Version of his Blaster can be found on Sans' page [[Sans|here]].
+[[File:Gaster (Beta 7.2 - Beta 55.0).png|thumb|220x220px|Beta 7.2 - Beta 55.0]]
+'''Before Beta 4.2''', Gaster costed 8G for a 0/12 monster, which made him especially susceptible to [[Nacarat Jester]] and [[Madjick]]. '''Beta 4.2''' gave him +2/-2, like many other cards in order to make [[Muffet's Pet]] more useful. However, he gained -1 ATK in the very next update, '''Beta 4.3''', and '''Beta 4.6''' nerfed him further to adding the Gaster Blaster to your hand at the start of your turn instead of at the end. '''Beta 5.2''' brought his HP back back up to 12.
+
+'''Beta 7.2''' changed both Gaster and Sans. Sans gained Gaster's ability, but with Dodge instead of Disarmed, while Gaster returned to giving the Gaster Blasters at the end of your turn. However, they will now be put into your deck instead of your hand (which Sans did beforehand, but 3 at once with Magic). His HP was also brought back to 10. However, his cost also dropped for the first time, by 2G to 6G. '''Beta 10.1''' and '''Beta 33.0''' both continued this by dropping his cost by 1G each. Beta 10.1 also dropped his HP by another 2, to 8, as he now allows Gaster Blasters to deal 8 DMG to players rather than 5 (which made them work like how they used to before their nerf in Beta 7.1). This was removed in Beta 33.0, alongside his initial inability to attack.
+'''Beta 46.0''' reworked the Follower Tribe and made Gaster play a huge part in it, turning him from an [[:Category:Epic|Epic]] into a [[:Category:Legendary|Legendary]], similar to what happened to [[Muffet]]. Gaining +6/-1 and a whopping +10G, his new stats are 7/7 for 14G. He no longer gives Gaster Blasters either, making those limited to [[Artifacts|Science]], Sans and his [[Angel of Death|Lost Soul]] counterpart. Gaster now has both Haste and a Magic effect that would retrigger all Synergy effects you have succesfully used this game. '''Beta 52.0 '''gave him -2G, but removed his Haste and only one of each Synergy effect will trigger (much like how [[Goner Kid]] used to work). '''Beta 55.1''' gave him +1G, but allowed each Synergy effect to trigger twice.
+=== Stats ===
+ATK:
+* 0 (Pre Beta 4.2)
+* 2 (Beta 4.2)
+* 1 (Post Beta 4.3)
+* 7 (Post Beta 46.0, Current)
+HP:
+* 12 (Pre Beta 4.2)
+* 10 (Post Beta 4.2)
+* 12 (Post Beta 5.2)
+* 10 (Post Beta 7.2)
+* 8 (Post Beta 10.1)
+* 7 (Post Beta 46.0, Current)
+Cost:
+* 8 (Pre Beta 7.2)
+* 6 (Post Beta 7.2)
+* 5 (Post Beta 10.1)
+* 4 (Post Beta 33.0)
+* 14 (Post Beta 46.0)
+* 12 (Post Beta 52.0)
+*13 (Post Beta 55.1, Current)
+
+Abilities:
+* Disarmed.
+** Turn end: Add a Gaster Blaster to your hand. (Pre Beta 4.6)
+** Turn start: Add a Gaster Blaster to your hand. (Post Beta 4.6)
+** Turn end: Add a Gaster Blaster to your deck. (Post Beta 7.2)
+*** Gaster Blasters deal 8 DMG. (Post Beta 10.1)
+* Turn end: Add a Gaster Blaster to your deck. (Post Beta 33.0)
+* Haste. Magic: Retrigger all your triggered Synergy effects. (Post Beta 46.0)
+* Magic: Retrigger one of each of your triggered Synergy effects. (Post Beta 52.0)
+*Magic: Retrigger up to 2 of each of your triggered Synergy effects. (Post Beta 55.1, Current)
+
+Rarities:
+* Purple (Epic) (Pre Beta 46.0)
+* Gold (Legendary) (Post Beta 46.0, Current)
+Song (as Legendary): Gaster's Theme[[Category:Rework]]

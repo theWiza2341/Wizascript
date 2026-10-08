@@ -1,0 +1,31 @@
+[[File:Reaper Bird (Original - Beta 43.0)|thumb|220x220px|Original - Beta 43.0]]
+Current Version can be found [http://undercards.wikia.com/wiki/Reaper_Bird here].
+[[File:Reaper Bird (Beta 43.1).png|thumb|291x291px|Beta 43.1]]
+Since its release, Reaper Bird has always been a 6G 6/4 [http://undercards.wikia.com/wiki/Category:Amalgamate Amalgamate] that would make you draw a card opon playing it. Its first change was all the way in '''Beta 19.0''', where its Magic was improved, as if you now draw an Amalgamate, the drawn card will gain +2 HP and Candy. '''Beta 29.0''' reworked it with stat changes, being -2 ATK and -1 Cost, leaving it at 4/4 for 5G.
+'''Beta 41.1''' gave it a second Tribe: [https://undercards.fandom.com/wiki/Category:Frog Frog] (as a [https://undercards.fandom.com/wiki/Final_Froggit Final Froggit] is part of its body). '''Beta 43.1''' followed this by expanding its effect to also give drawn Frogs +2 HP and Candy. (This doesn't stack with other Reaper Birds, who are both Tribes, for +4 HP.) '''Beta 47.1''' nerfed its Magic to ONLY draw an Amalgamate or Frog. However, Reaper Bird itself gained +1 ATK as well as a Synergy effect that would give the drawn card +1/+1.
+
+=== Stats ===
+ATK:
+* 6 (Pre Beta 29.0)
+* 4 (Post Beta 29.0)
+* 5 (Post Beta 47.1, Current)
+
+HP: 4
+
+Cost:
+* 6 (Pre Beta 29.0)
+* 5 (Post Beta 29.0, Current)
+
+Abilities:
+* Magic: Draw a card. (Pre Beta 19.0)
+* Magic: Draw a card. Give a drawn Amalgamate +2 HP and Candy. (Post Beta 19.0)
+* '''[Now counts as a Frog.]''' (Post Beta 41.1)
+* Magic: Draw a card. Give a drawn Amalgamate/Frog +2 HP and Candy. (Post Beta 43.1)
+* Magic: Draw an Amalgamate or Frog. Synergy: Give it +1/+1. (Post Beta 47.1, Current)
+Rarity: White (Common)
+
+=== Trivia ===
+* Beta 21.1 updated its image.
+* Being released upon the game's launch and having its first change in Beta 19.0 makes Reaper Bird take 2nd place with both the longest gap between changes as well as the longest gap between its release and first change.
+** [http://undercards.wikia.com/wiki/Woshua Woshua] takes 1st place by also being released upon the game's launch, but having its first change in Beta 21.0.
+[[Category:Rework]]

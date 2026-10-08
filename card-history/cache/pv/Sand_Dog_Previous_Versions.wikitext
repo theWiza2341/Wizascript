@@ -1,0 +1,22 @@
+[[File:Sand Dog.png|thumb|294x294px|Beta 39.1]]
+Current Version can be found [https://undercards.fandom.com/wiki/Sand_Dog here].
+[[File:Sand Dog (Beta 40.0).png|thumb|294x294px|Beta 40.0]]
+Sand Dog was added in '''Beta 39.1''', but was already buffed in '''Beta 40.0'''. Before, it was an 11G Taunt that would summon a 0/1 copy of itself, which gained +1/+1 for each [https://undercards.fandom.com/wiki/Category:Dog Dog] in your hand. Now, not only did its cost drop by 1G, the copy will gain an extra 1 HP for each Dog in your hand. '''Beta 41.0''' changed it again. It lost Taunt and its cost returned to 11G, but the copy will now gain -4/-7 instead of always being 0/1, so prior stat changes (through things like [https://undercards.fandom.com/wiki/Space_Cooler Space Cooler] and [https://undercards.fandom.com/wiki/Inflation Inflation]) will now be copied over as well.
+
+=== Stats ===
+ATK: 4
+
+HP: 8
+
+Cost:
+* 11 (Post Beta 39.1)
+* 10 (Post Beta 40.0)
+* 11 (Post Beta 41.0, Current)
+Abilities:
+* Taunt. Magic: Summon a 0/1 copy of itself.
+** Give it +1/+1 for each Dog in your hand. (Post Beta 39.1)
+** Give it +1/+2 for each Dog in your hand. (Post Beta 40.0)
+* Magic: Summon a -4/-7 copy of itself.
+** Give it +1/+2 for each Dog in your hand. (Post Beta 41.0, Current)
+Rarity: Purple (Epic)
+[[Category:Rework]]

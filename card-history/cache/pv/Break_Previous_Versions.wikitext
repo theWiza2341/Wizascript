@@ -1,0 +1,22 @@
+[[File:Break-0.png|thumb|234x234px|Pre Beta 4.2]]Current Version can be found [http://undercards.wikia.com/wiki/Break here].
+[[File:4.2 Break.png|thumb|236x236px|Post Beta 4.2]]
+
+Break originally costed 2G to return an ally monster of your choice back to your hand. '''Beta 4.2''' lowered its cost to 1G, and '''Beta 12.0''' buffed its effect to also give you 20% of the returned monster's cost in gold.[[File:Break (Beta 12.0).png|thumb|234x234px|Post Beta 12.0]]'''Beta 17.0''' buffed it even further by dropping its cost to 0G.
+[[File:Break (Beta 17.0).png|thumb|234x234px|Beta 17.0]]
+
+=== Stats ===
+SOUL Type: Integrity
+
+Cost:
+* 2 (Post Alpha 3.0)
+* 1 (Post Beta 4.2)
+* 0 (Post Beta 17.0, Current)
+Effects:
+* Return an ally monster to your hand. (Post Alpha 3.0)
+* Return an ally monster to your hand and earn 20% of its cost. (Post Beta 12.0, Current)
+
+Rarity: White (Common)
+
+=== Trivia ===
+* Beta 51.1 updated its image.
+[[Category:Rework]]

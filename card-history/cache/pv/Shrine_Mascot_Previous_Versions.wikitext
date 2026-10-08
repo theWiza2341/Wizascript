@@ -1,0 +1,22 @@
+[[File:Shrine Mascot.png|thumb|294x294px|Pre-release.]]
+Current Version can be found [https://undercards.fandom.com/wiki/Shrine_Mascot here].
+[[File:Shrine Mascot (Beta 36.0).png|thumb|294x294px|Beta 36.0]]
+Shrine Mascot was added in '''Beta 36.0''' as a 2/3 monster. Before its release, it was revealed with 1 ATK instead. It shares this release change with [https://undercards.fandom.com/wiki/Space_Cooler Space Cooler].
+
+'''Beta 36.1''' changed it again, one update after release. It shares this with [https://undercards.fandom.com/wiki/Purple_Mascot Purple Mascot]. Its ATK returned to 1, but its HP went up to 4 instead.
+
+=== Stats ===
+ATK:
+* 1 (Pre-release)
+* 2 (Beta 36.0)
+* 1 (Post Beta 36.1, Current)
+HP:
+* 3 (Beta 36.0)
+* 4 (Post Beta 36.1, Current)
+
+Cost: 3
+
+Ability: Turn end: Earn 1G.
+
+Rarity: White (Common)
+[[Category:Rework]]

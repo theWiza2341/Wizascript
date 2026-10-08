@@ -1,0 +1,27 @@
+[[File:MTT Fountain (Original - Beta 18.9).png|thumb|220x220px|Original - Beta 18.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/MTT_Fountain here].
+
+MTT Fountain was added in '''Beta 7.6''', alongside 13 others.
+
+Originally, MTT Fountain was shown [https://twitter.com/undercardsgame/status/833699576213340162 here], on Undercards's Twitter Page. There, it didn't have the Taunt it gained when it was added to the game.
+
+'''Beta 8.1''' reworked MTT Fountain so they work the same as cards like [http://undercards.wikia.com/wiki/Gaster Gaster] and [http://undercards.wikia.com/wiki/Memorial_Statue Memorial Statue] at that time: Giving it 1 ATK, but also the ''<u>Can't attack</u>'' Ability. '''Beta 10.1''' increased its cost to 5G. And '''Beta 13.1''' lowered its HP from 8 to 6. '''Beta 19.0''' lowered its HP further to 5.
+=== Stats ===
+ATK:
+* 0 (Pre  Beta 8.1)
+* 1 (Post Beta 8.1, Current)
+HP:
+* 8 (Pre  Beta 13.1)
+* 6 (Post Beta 13.1)
+* 5 (Post Beta 19.0, Current)
+
+Cost:
+* 4 (Pre  Beta 10.1)
+* 5 (Post Beta 10.1, Current)
+
+Abilities:
+* Heal you by the amount of damage taken by this card. (Pre-Release)
+* Taunt. Heal you by the amount of damage taken by this card. (Post Beta 7.6)
+* Taunt. Can't attack. Heal you by the amount of damage taken by this card. (Post Beta 8.1, Current)
+Rarity: White (Common)
+[[Category:Rework]]

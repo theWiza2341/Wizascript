@@ -1,0 +1,27 @@
+[[File:Plated Pipe.png|thumb|Beta 51.0]]
+Current Version can be found [[Plated Pipe|here]].
+[[File:Plated Pipe (Beta 53.0).png|thumb|Beta 53.0]]
+Plated Pipe was added in '''Beta 51.0''' as a 6/5 for 8G Armor monster that would add a [[Mines|Mine]] to the enemy's deck every time it takes DMG. '''Beta 53.0''' changed Armor, but this only caused a wording change for Plated Pipe. '''Beta 54.1''' gave it -1 cost and ATK, changed its Armor to only take 1 less DMG during the enemy's turn (so temporary Armor without actually having Armor) and instead of adding a Mine, it will deal 2 DMG to the opponent right away.
+
+=== Stats ===
+ATK:
+
+* 6 (Post Beta 51.0)
+* 5 (Post Beta 54.1, Current)
+
+HP: 5
+
+Cost:
+
+* 8 (Post Beta 51.0)
+* 7 (Post Beta 54.1, Current)
+
+Abilities:
+
+* Armor (1). Whenever this takes DMG, add a Mine to the enemy's deck. (Post Beta 51.0)
+* Armor. Whenever this takes DMG, add a Mine to the enemy's deck. (Post Beta 53.0)
+** '''[Unchanged. Updated wording due to Armor rework.]'''
+* Takes 1 less DMG during the enemy's turn. Whenever this takes DMG, deal 2 DMG to the enemy. (Post Beta 54.1, Current)
+
+Rarity: Purple (Epic)
+[[Category:Rework]]

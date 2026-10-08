@@ -1,0 +1,17 @@
+[[File:Donation Stump.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Donation_Stump here].
+
+Donation Stump was added in '''Beta 30.0''' with the Magic of making the opponent lose 1G (effectively a smaller [https://undercards.fandom.com/wiki/Sad_Customer Sad Customer]). '''Beta 50.1''' expanded that by also giving it a Synergy, which makes you earn 1G.
+
+=== Stats ===
+ATK: 3
+
+HP: 4
+
+Cost: 4
+
+Abilities:
+* Magic: The enemy loses 1G. (Post Beta 30.0)
+* Magic: The enemy loses 1G. Synergy: You earn 1G. (Post Beta 50.1, Current)
+Rarity: White (Common)
+[[Category:Rework]]

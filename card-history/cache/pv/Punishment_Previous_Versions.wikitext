@@ -1,0 +1,25 @@
+[[File:Punishment (Original - Beta 46.0)|thumb|220x220px|Original - Beta 46.0]]
+Current Version can be found [http://undercards.wikia.com/wiki/Punishment here].
+Punishment, a Justice Spell, is a simple card that originally dealt 3 DMG to anyone you want at the cost of 2G. '''Beta 4.6''' increased it to its current 3G. This stayed like that for a long time until '''Beta 20.2''', where it was buffed to deal 4 DMG if the enemy had more HP than you.
+
+This stayed for a long time again, this time until '''Beta 46.1''', where it now always deals 4 DMG, but can no longer target a player.
+=== Stats ===
+SOUL Type: Justice
+
+Cost:
+* 2 (Post Alpha 3.0)
+* 3 (Post Beta 4.6, Current)
+Effects:
+* Deal 3 DMG. (Post Alpha 3.0)
+* Deal 3 DMG. If the enemy has more HP, deal 4 DMG instead. (Post Beta 20.2)
+* Deal 4 DMG to a monster. (Post Beta 46.1, Current)
+
+Rarities:
+* White (Common) (Post Alpha 3.0)
+* Gray (Basic) (Post Beta 30.0, Current)
+
+== Trivia ==
+* Beta 30.0 introduced the [https://undercards.fandom.com/wiki/Category:Basic Basic] Rarity, which this gained.
+* Beta 33.0 updated its image.
+** For Justice, it shares this with [https://undercards.fandom.com/wiki/Strafe Strafe], [https://undercards.fandom.com/wiki/Undyne's_Spears Undyne's Spears] and [https://undercards.fandom.com/wiki/Shootout Shootout].
+[[Category:Rework]]

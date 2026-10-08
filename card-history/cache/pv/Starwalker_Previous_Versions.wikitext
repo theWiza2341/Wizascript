@@ -1,0 +1,28 @@
+[[File:Starwalker.png|thumb|220x220px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Starwalker here].
+[[File:Starwalker (Beta 31.0).png|thumb|222x222px|Beta 31.0]]
+Starwalker was added in '''Beta 30.0'''. Its first change, alongside many other Deltarune cards, was in '''Beta 31.0'''. It was buffed by triggering its effect if you have at least 2 spells in your hand instead of 3. This was reverted in '''Beta 35.0'''.
+[[File:Starwalker (Beta 35.0).png|thumb|226x226px|Beta 35.0]]
+'''Beta 52.1''' nerfed it further. Now if its effect triggers, its own cost is reduced by 2G instead of 3G. Since it's a 4G monster, this leaves it at 2G instead of 1G.
+[[File:Starwalker (Beta 52.1).png|thumb|221x221px|Beta 52.1]]
+'''Beta 53.0''' reworked it entirely, taking Ranger Rudinn's design by turning from a 3/2 [https://undercards.fandom.com/wiki/Category:Rare Rare] to a 4/4 [https://undercards.fandom.com/wiki/Category:Common Common] with the Magic of choosing a card in your hand and returning it to your deck with -4 cost. But this will only work if your hand lacks any Rare and [https://undercards.fandom.com/wiki/Category:Epic Epic] cards, just like [https://undercards.fandom.com/wiki/Starwalker_Bird Starwalker Bird]. Luckily, during the transition, that effect was buffed to make generated cards (cards not starting in your deck) not be included.
+
+=== Stats ===
+ATK:
+* 3 (Post Beta 30.0)
+* 4 (Post Beta 53.0, Current)
+HP:
+* 2 (Post Beta 30.0)
+* 4 (Post Beta 53.0, Current)
+Cost: 4
+
+Abilities:
+* Charge. Turbo: Reduce its cost ...
+** by 3G if your hand has 3+ spells. (Post Beta 30.0)
+** by 3G if your hand has 2+ spells. (Post Beta 31.0)
+** by 3G if your hand has 3+ spells. (Post Beta 35.0)
+** by 2G if your hand has 3+ spells. (Post Beta 52.1)
+* Magic: If your deck has no non-Generated Rare or Epic cards, choose a card in your hand. Return it to your deck with -4 cost. (Post Beta 53.0, Current)
+Rarities:
+* Blue (Rare) (Post Beta 30.0)
+* White (Common) (Post Beta 53.0, Current)[[Category:Rework]]

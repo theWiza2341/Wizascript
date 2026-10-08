@@ -1,0 +1,50 @@
+[[File:Endogeny (Original - Beta 15.9).png|thumb|220x220px|Original - Beta 15.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/Endogeny here].
+[[File:Endogeny (Beta 16.0 - Beta 41.0)|thumb|220x220px|Beta 16.0 - Beta 41.0]]
+Endogeny used to cost 7G and had the stats of 4/4. '''Beta 1.6''' buffed it to 5/5, but '''Beta 4.8''' returned it to 4/4. '''Beta 5.0''' gave it only +1 ATK this time, but also increased the cost to 8G. '''Beta 7.2''' returned that to 7G, though, while '''Beta 16.0''' gave it -1 ATK, returning it to its original version yet again.
+[[File:Endogeny (Beta 41.1).png|thumb|294x294px|Beta 41.1]]
+'''Beta 19.0''' brought its cost back up to 8, but kept it at 4/4. '''Beta 33.0''' added Tribe icons, but it came at the cost of Endogeny's [https://undercards.fandom.com/wiki/Category:Dog Dog] Tribe, making it now only part of the [https://undercards.fandom.com/wiki/Category:Amalgamate Amalgamate] one. '''Beta 36.1''' nerfed it further, this time by its first effect change. It will now reduce the cost of the returned card by 2. '''Beta 41.1''' allowed multiple tribes to function again, giving back its Dog Tribe.
+[[File:Endogeny (Beta 46.0).png|thumb|291x291px|Beta 46.0]]
+'''Beta 46.0''' reworked it entirely. It now makes use of the new Synergy effect, giving +1/+1 to all Amalgamates and Dogs in your hand when played if you've played another of either Tribe beforehand in the same turn. It also gained +1 ATK, bringing it back up to 5, while its cost dropped by 3G. This gives it its lowest cost so far, being at 5 as well.
+
+This didn't last long, as '''Beta 51.0''' reverted it back almost entirely with its ATK returning to 4, but its cost increasing to a new hight of 9G. Its Magic is now targetable, but it doesn't reduce the target's cost, making the Magic function exactly like [https://undercards.fandom.com/wiki/Expulsion Expulsion].
+=== Stats ===
+ATK:
+* 4 (Pre Beta 1.6)
+* 5 (Post Beta 1.6)
+* 4 (Post Beta 4.8)
+* 5 (Post Beta 5.0)
+* 4 (Post Beta 16.0)
+* 5 (Post Beta 46.0)
+* 4 (Post Beta 51.0, Current)
+HP:
+* 4 (Pre Beta 1.6)
+* 5 (Post Beta 1.6)
+* 4 (Post Beta 4.8, Current)
+Cost:
+* 7 (Pre Beta 5.0)
+* 8 (Post Beta 5.0)
+* 7 (Post Beta 7.2)
+* 8 (Post Beta 19.0)
+* 5 (Post Beta 46.0)
+* 9 (Post Beta 51.0, Current)
+Abilities:
+* Magic: Return a random enemy monster to their hand. (Pre Beta 33.0)
+* '''[No longer counts as a Dog.]''' (Post Beta 33.0)
+* Magic: Return a random enemy monster to their hand with -2 cost. (Post Beta 36.1)
+* '''[Counts as a Dog again.]''' (Post Beta 41.1)
+* Synergy: Give all Amalgamates and Dogs in your hand +1/+1. (Post Beta 46.0)
+* Magic: Return an enemy monster to their hand. (Post Beta 51.0, Current)
+
+Rarities:
+* White (Common) (Pre Beta 30.0)
+* Gray (Basic) (Post Beta 30.0)
+* White (Common) (Post Beta 46.0, Current)
+
+== Trivia ==
+* Endogeny is the first monster to lose its [https://undercards.fandom.com/wiki/Category:Basic Basic] Rarity after its introduction in Beta 30.0.
+* Endogeny's loss of being a Dog is shared with [https://undercards.fandom.com/wiki/Lemon_Bread Lemon Bread]'s loss of being a [http://undercards.wikia.com/wiki/Category:Mold Mold].
+** Beta 41.1 also made [https://undercards.fandom.com/wiki/Reaper_Bird Reaper Bird] a [https://undercards.fandom.com/wiki/Category:Frog Frog], but it wasn't one before.
+* Due to its sprite being so big, it had to be altered several times in order to fit well on the card. This wasn't done during the (big) Sprite Change updates like Betas 21.1 or 33.0, which is why they are left out on this page.
+** Each individual group image instead shows the biggest changes between each, even if that sprite wasn't used during that particular period of time.
+[[Category:Rework]]

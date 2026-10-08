@@ -1,0 +1,22 @@
+[[File:Popumeter.png|thumb|245x245px|Beta 39.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Popumeter here].
+[[File:Popumeter (Beta 49.0).png|thumb|240x240px|Beta 49.0]]
+Popumeter was added in '''Beta 39.0''' as one of the various cards using the new Thorns effect. It was a 3/6 for 5G monster that gained +1 Thorn for each other monster on the board when played (so both ally and enemy, up to 7).
+
+It didn't receive any changes until '''Beta 49.0''', when Thorns was already removed, leading in a redesign. While its cost stayed at 5G, it's now a 4/4 (thus +1/-2). It has has Disarmed, Armor (1) and a Support effect that makes it attack a random enemy monster on either edge of the board. This Support effect was changed in '''Beta 51.1''', now making it attack the rightmost enemy monster.
+
+=== Stats ===
+ATK:
+* 3 (Post Beta 39.0)
+* 4 (Post Beta 49.0, Current)
+HP:
+* 6 (Post Beta 39.0)
+* 4 (Post Beta 49.0, Current)
+Cost: 5
+
+Abilities:
+* Magic: Gain +1 Thorns for each other monster. (Post Beta 39.0)
+* Disarmed. Armor (1). Support: Attack a random enemy edge monster. (Post Beta 49.0)
+* Disarmed. Armor (1). Support: Attack the rightmost enemy monster. (Post Beta 51.1, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

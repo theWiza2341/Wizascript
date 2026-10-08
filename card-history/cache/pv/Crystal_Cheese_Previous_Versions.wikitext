@@ -1,0 +1,21 @@
+[[File:Crystal Cheese.png|thumb|Beta 39.1]]
+Current Version can be found [[Crystal Cheese|here]].
+
+Crystal Cheese was added in '''Beta 39.1''' as a 3/3 for 4G monster with the Magic of being able to catch a <= 8G Dust monster of your choice out of 3 randomly picked ones. Its Dust would release a 1/1 copy of the chosen monster. '''Beta 55.1''' changed its Magic to instead show 2 random [[Angel of Death|Lost Souls]].
+
+=== Stats ===
+ATK: 3
+
+HP: 3
+
+Cost: 4
+
+Abilities:
+
+* Magic: See 3 random <= 8G Dust monsters.
+**Catch 1. Dust: Release a 1/1 copy of it. (Post Beta 39.1)
+* Magic: See 2 random Lost Souls.
+**Catch 1. Dust: Release a 1/1 copy of it. (Post Beta 55.1, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

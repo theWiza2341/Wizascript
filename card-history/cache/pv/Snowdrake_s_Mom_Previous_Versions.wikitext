@@ -1,0 +1,37 @@
+[[File:Snowdrake's Mom (Original - Beta 52.9).png|thumb|330x330px|Original - Beta 52.9]]
+Current version can be seen [[Snowdrake's Mom|here]].
+[[File:Snowdrake's Mom (Beta 53.0).png|thumb|Beta 53.0]]
+Snowdrake's Mom has an interesting history. While its original effect is sadly unknown (if it even had one to begin with), its stats were known, which were a solid 4/4/4. '''Alpha 2.1''' gave it the Magic to Paralyze all enemy monsters if you hand was empty. (This was noted as a buff.) But this was not used as much or at all in a [[:Category:Bravery|Bravery]] deck due to its passive, so '''Beta 5.3''' changed that to making it Paralyze them when your HP was at 10 or less, making it more useful against a [[:Category:Perseverance|Perseverance]] deck, which still blocked healing back then.
+
+But this didn't stay long, as '''Beta 5.7''' reworked it again, as well as giving it its first stat change: increasing its cost by 1G. Now, instead of a certain requirement, Snowdrake's Mom will now always have a 50% chance to paralyze each enemy monster, making its ability work like that of [[Temmie]] at the time. This stayed until '''Beta 7.2''', where its ability changed again to paralyzing 2 random enemy monsters, at the cost of 7G. 
+
+This stayed all the way until '''Beta 53.0''', where it returned to 5G, but also gained its first ATK and HP change, being -1 in both. In terms of effect, it was entirely reworked. Rather than having its effect work with Paralysis, it now gives +2/+2 to an [[:Category:Amalgamate|Amalgamate]] in your hand of your choice. But it also has a Synergy, which when activated, gives the chosen monsters +3/+3 instead. '''Beta 54.0''' gave it +1/+1, returning it to 4/4, at the cost of its Magic and Synergy giving -1/-1. 
+
+=== Stats ===
+ATK: 
+* 4 (Pre Beta 53.0) 
+* 3 (Post Beta 53.0)
+*4 (Post Beta 54.0, Current)
+
+HP: 
+* 4 (Pre Beta 53.0) 
+* 3 (Post Beta 53.0)
+*4 (Post Beta 54.0, Current)
+
+Cost: 
+* 4 (Pre Beta 5.7) 
+* 5 (Post Beta 5.7) 
+* 7 (Post Beta 7.2) 
+* 5 (Post Beta 53.0, Current) 
+Abilities:
+* Unknown. (Pre Alpha 2.1)
+* Magic: Paralyze all enemy monsters...
+** if your hand is empty. (Post Alpha 2.1)
+** if you have <= 10 HP. (Post Beta 5.3)
+** with a 50% chance each. (Post Beta 5.7)
+* Magic: Paralyze 2 random enemy monsters. (Post Beta 7.2)
+* Magic: Give an Amalgamate in your hand +2/+2. Synergy: Give it +3/+3 instead. (Post Beta 53.0)
+*Magic: Give an Amalgamate in your hand +1/+1. Synergy: Give it +2/+2 instead. (Post Beta 54.0, Current)
+
+Rarity: White (Common)[[Category:Rework]]
+[[Category:Missing]]

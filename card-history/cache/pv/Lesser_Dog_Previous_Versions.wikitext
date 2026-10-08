@@ -1,0 +1,26 @@
+[[File:Lesser Dog (Original - Beta 16.9).png|thumb|227x227px|Original - Beta 16.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/Lesser_Dog here].
+[[File:Lesser Dog (Beta 17.0).png|thumb|234x234px|Beta 17.0]]
+Lesser Dog went through quite a lot of changes. It started out with 3/4 and costed 5G. This was reduced to 4G in '''Alpha 3.2''', but was returned to 5G in '''Beta 3.2 '''and raised further to 6G in '''Beta 4.3'''.
+
+'''Beta 4.8''' increased its ATK from 3 to 4 and '''Beta 17.0''' increased its HP from 4 to 5, while also changing its Magic to a Dust, making it possible to reduce the cost of 7 cards in your hand at most rather than 6, at the cost of it being vulnerable to Silence. '''Beta 46.1''' decreased its HP back to 4.
+
+=== Stats ===
+ATK:
+* 3 (Pre Beta 4.8)
+* 4 (Post Beta 4.8, Current)
+HP:
+* 4 (Pre Beta 17.0)
+* 5 (Post Beta 17.0)
+* 4 (Post Beta 46.1, Current)
+
+Cost:
+* 5 (Pre Alpha 3.2)
+* 4 (Post Alpha 3.2)
+* 5 (Post Beta 3.2)
+* 6 (Post Beta 4.3, Current)
+Abilities:
+* Magic: All cards in your hand cost 1 less. (Pre Beta 17.0)
+* Dust: All cards in your hand cost 1 less. (Post Beta 17.0, Current)
+
+Rarity: Blue (Rare)[[Category:Rework]]

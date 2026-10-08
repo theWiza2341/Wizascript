@@ -1,0 +1,35 @@
+[[File:Knight Knight (Original - Beta 7.2).png|thumb|220x220px|Original - Beta 7.2]]
+Current version can be found [http://undercards.wikia.com/wiki/Knight_Knight here].
+[[File:Knight Knight Beta 7.3.png|thumb|235x235px|Post Beta 7.3]]
+Knight Knight is another monster whose origin life is not completely known, as while it started out with 6/8 for 9G, it had a different ability. '''Alpha 2.1''' changed it to making it restore 3 HP to itself whenever it attacks and kills a monster. It recieved some minor stat changes over time, such as +1 cost in '''Alpha 2.7''' and +1 HP in '''Beta 5.3''', leaving it with 6/9 for 10G. This was kept until '''Beta 7.1''', where Knight Knight dropped 1 in every stat (ATK, HP and Cost), leaving it with 5/8 for 9G.
+[[File:Knight Knight (Beta 17.0).png|thumb|234x234px|Post Beta 17.0]]
+'''Beta 7.3''' buffed its effect by now letting it also restore 3 HP when it kills a monster while defending. '''Beta 17.0''' changed that by making it heal when just attacking. Meaning it no longer triggers while defending, but it doesn't need to kill the target either. The HP it restored was also changed to the amount of DMG it dealt. '''Beta 29.0''' made it heal HP based on its own ATK instead. It also healed before the attack rather than after. '''Beta 42.1''' reverted that back to its previous state, healing itself based on DMG dealt. Its HP also went back up to 9.
+[[File:Knight Knight (Beta 29.0).png|thumb|236x236px|Post Beta 29.0]]
+
+=== Stats ===
+ATK:
+* 6 (Pre Beta 7.1)
+* 5 (Post Beta 7.1, Current)
+HP:
+* 8 (Pre Beta 5.3)
+* 9 (Post Beta 5.3)
+* 8 (Post Beta 7.1)
+* 9 (Post Beta 42.1, Current)
+Cost:
+* 9 (Pre Alpha 2.7)
+* 10 (Post Alpha 2.7)
+* 9 (Post Beta 7.1, Current)
+Abilities:
+* Unknown. (Pre Alpha 2.1)
+* Whenever this attacks and kills, restore 3 HP to itself. (Post Alpha 2.1)
+* Whenever this kills, restore 3 HP to itself. (Post Beta 7.3)
+* After this attacks, restore HP to itself equal to the DMG done. (Post Beta 17.0)
+* Before this attacks, restore HP to itself equal to its ATK. (Post Beta 29.0)
+* After this attacks, restore HP to itself equal to the DMG done. (Post Beta 42.1, Current)
+Rarity: White (Common)
+
+== Trivia ==
+* Beta 29.0 removed it from the Starter Cardpool (in exchange for [https://undercards.fandom.com/wiki/Category:Royal_Guard RG]'s [https://undercards.fandom.com/wiki/Royal_Guard_1 01] and [https://undercards.fandom.com/wiki/Royal_Guard_2 02]).
+** This makes it 1 Month short of obtaining the [https://undercards.fandom.com/wiki/Category:Basic Basic] Rarity, added in Beta 30.0.
+[[Category:Rework]]
+[[Category:Missing]]

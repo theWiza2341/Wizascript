@@ -1,0 +1,19 @@
+[[File:Spider_Reporter.png|thumb|Beta 46.0|224x224px]]Current Version can be found [https://undercards.fandom.com/wiki/Spider_Reporter here].
+[[File:Spider Reporter (Beta 52.0).png|thumb|226x226px|Beta 52.0]]
+Spider Reporter was an [https://undercards.fandom.com/wiki/Category:Arachnid Arachnid] added in '''Beta 46.0. '''It's a 4G 4/3 monster with Haste and the Turbo of adding 2 [https://undercards.fandom.com/wiki/Spider Spiders] to your deck. '''Beta 52.0''' gave it -1 HP and its Turbo now adds one of the two Spiders to your hand instead of your deck. This was reverted the next update, however '''Beta 52.1''' also made it only give 1 Spider instead of 2.
+
+=== Stats ===
+ATK: 4
+
+HP:
+*3 (Post Beta 46.0)
+*2 (Beta 52.0)
+*3 (Post Beta 52.1, Current)
+Cost: 4
+
+Abilities:
+*Haste. Turbo: Add 2 Spiders to your deck. (Post Beta 46.0)
+*Haste. Turbo: Add a Spider to your hand and deck. (Beta 52.0)
+*Haste. Turbo: Add a Spider to your deck. (Post Beta 52.1, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

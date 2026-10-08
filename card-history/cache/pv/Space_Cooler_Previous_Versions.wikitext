@@ -1,0 +1,24 @@
+[[File:Space Cooler.png|thumb|214x214px|Pre-release.]]
+Current Version can be found [[Space Cooler|here]].
+[[File:Space Cooler (Beta 36.0).png|thumb|214x214px|Beta 36.0]]
+Space Cooler was added in '''Beta 36.0''' as a 2/6 monster with the ability to give +1/+1 to 2 random monsters in your hand at the end of every turn. Before its release, it was revealed with 7 HP instead. It shares this release change with [[Shrine Mascot]]. '''Beta 49.0''' gave it +1 ATK. '''Beta 54.1''' gave it another +1 ATK, but nerfed its effect to only give +1/+1 to 1 monster in your hand instead of 2.
+[[File:Space Cooler (Beta 49.0).png|thumb|210x210px|Beta 49.0]]
+
+=== Stats ===
+ATK:
+* 2 (Post Beta 36.0)
+* 3 (Post Beta 49.0)
+*4 (Post Beta 54.1, Current)
+
+HP:
+* 7 (Pre-release)
+* 6 (Post Beta 36.0, Current)
+Cost: 3
+
+Abilities:
+
+* Turn end: Give +1/+1 to 2 random monsters in your hand. (Post Beta 36.0, Current)
+* Turn end: Give +1/+1 to 1 random monster in your hand. (Post Beta 54.1, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

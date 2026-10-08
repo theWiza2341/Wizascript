@@ -1,0 +1,40 @@
+[[File:Annoying Dog (Pre Alpha 2.7).png|thumb|262x262px|Pre Alpha 2.7]]
+Current Version can be found [[Annoying Dog|here]]. For the Previous Versions of the Dog Residue, click [[Dog Residue/Previous_Versions|here]].
+
+[[File:Annoying Dog (Alpha 2.7).png|thumb|261x261px|Post Alpha 2.7]]
+Annoying Dog went through a few changes early on, all of which were buffs, but then stayed the same for a very long time. Starting as a 2/2 for 3G, '''Alpha 2.7''' gave it -1 cost, while '''Alpha 3.2''' gave it +1 ATK, leaving it at 3/2 for 2G.
+
+[[File:Screenshot 107.png|thumb|259x259px|Post Alpha 3.2]]
+'''Beta 28.0''' swapped its ATK and HP, giving it -1/+1, while '''Beta 56.0''' gave it +1 ATK, +2 cost and reworked it entirely, alongside Dog Residue. Before, it added a Dog Residue to the enemy's hand when played. This was done to clog their hand and force them to overdraw, as well as give them a nearly useless card. Now, it has Haste and adds a Dog Residue (which is now reasonably powerful) to your hand upon death.
+[[File:Annoying Dog (Beta 28.0).png|thumb|Beta 28.0]]
+
+=== Stats ===
+ATK:
+* 2 (Pre Alpha 3.2)
+* 3 (Post Alpha 3.2)
+* 2 (Post Beta 28.0)
+*3 (Post Beta 56.0, Current)
+
+HP:
+* 2 (Pre Beta 28.0)
+* 3 (Post Beta 28.0, Current)
+
+Cost:
+* 3 (Pre Alpha 2.7)
+* 2 (Post Alpha 2.7)
+*4 (Post Beta 56.0, Current)
+
+Abilities:
+
+* Magic: Add a Dog Residue to the enemy's hand. (Pre Beta 56.0)
+* Haste. Dust: Add a Dog Residue to your hand. (Post Beta 56.0, Current)
+
+Rarity: Blue (Rare)
+
+== Trivia ==
+[[File:Super colored Dogs.png|thumb|Super colored Annoying Dogs]]
+
+* '''April Fools' Day 2017''' showed 2 [[Super colored cards]] of the Annoying Dog, an orange and a blue one. This might be refrencing the orange and blue attacks from Undertale.
+* Beta 56.0's Patch Notes also gave Annoying Dog +1 HP, bringing it up to 4.
+[[Category:Rework]]
+[[Category:April Fools' Day]]

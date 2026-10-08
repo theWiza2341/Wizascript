@@ -1,0 +1,37 @@
+[[File:Cactus (Original - Beta 8.0).png|thumb|220x220px|Original - Beta 8.0]]
+Current version can be found [http://undercards.wikia.com/wiki/Cactus here].
+[[File:Cactus (Beta 8.1).png|thumb|234x234px|Beta 8.1]]
+This is a decent defensive card, with high health and an instant-kill attack with a cheap cost. It has a few flaws though, which swapped back and forth a lot of times.
+[[File:Cactus (Beta 13.1).png|thumb|234x234px|Beta 13.1]]
+From its debut in '''Beta 6.6''', it had 1 ATK, but couldn't attack on its own, just like cards such as [http://undercards.wikia.com/wiki/Gaster Gaster] and [http://undercards.wikia.com/wiki/Memorial_Statue Memorial Statue]. So to use it properly, you had to put Taunt on it with [http://undercards.wikia.com/wiki/Protection Protection] (in Patience) or [http://undercards.wikia.com/wiki/Glad_Dummy Glad Dummy] (in general). But cards such as [http://undercards.wikia.com/wiki/Muffet's_Pet Muffet's Pet], [http://undercards.wikia.com/wiki/Madjick Madjick] or even [http://undercards.wikia.com/wiki/Tsunderplane Tsunderplane] could easily work with that. In '''Beta 7.1''', it got changed, the same way cards such as [http://undercards.wikia.com/wiki/Pyrope Pyrope] did. Making it able to attack, but lower its ATK to 0. So now, without the use of cards such as [http://undercards.wikia.com/wiki/Strength Strength] (in Bravery) or [http://undercards.wikia.com/wiki/Snowdrake Snowdrake] (in general), this card can't deal damage to activate its ability. '''Beta 7.3''' increased its HP from 6 to 8.
+[[File:Cactus (Beta 36.0).png|thumb|234x234px|Beta 36.0]]
+'''Beta 7.4''' returned it to its other version, giving it 1 ATK and the inability to attack. However, it now has Taunt by default. Its HP dropped to 4 for this, though. '''Beta 7.5''' flipped it yet again: 0 ATK, but can attack. It also lost Taunt with it. Its HP is now 7. This was buffed to 9 in '''Beta 8.1''', but returned to 7 in '''Beta 13.1 '''and dropped further to 5 in''' Beta 36.0.'''
+
+'''Beta 51.0''' increased its ATK back to 1, but still allowed it to attack. Its HP dropped down to 3.
+
+Stats:
+
+ATK:
+* 1 (Post Beta 6.6)
+* 0 (Post Beta 7.1)
+* 1 (Beta 7.4)
+* 0 (Post Beta 7.5)
+* 1 (Post Beta 51.0, Current)
+HP:
+* 6 (Post Beta 6.6)
+* 8 (Beta 7.3)
+* 4 (Beta 7.4)
+* 7 (Post Beta 7.5)
+* 9 (Post Beta 8.1)
+* 7 (Post Beta 13.1)
+* 5 (Post Beta 36.0)
+* 3 (Post Beta 51.0, Current)
+Cost: 3
+
+Abilities:
+* Disarmed. Kill any monster this damages. (Post Beta 6.6)
+* Kill any monster this damages. (Post Beta 7.1)
+* Disarmed. Taunt. Kill any monster this damages. (Beta 7.4)
+* Kill any monster this damages. (Post Beta 7.5, Current)
+Rarity: White (Common)
+[[Category:Rework]]

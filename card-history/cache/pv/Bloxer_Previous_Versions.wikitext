@@ -1,0 +1,27 @@
+[[File:Bloxer.png|thumb|Beta 36.0]]
+The current version of this card can be found [https://undercards.fandom.com/wiki/Bloxer here].
+
+Bloxer was added in '''Beta 36.0''', as a 7 cost monster with 5 ATK and 4 HP. It had a Magic effect of looking at 3 random monsters that each costed less than or equal to 3G, and picking one to summon. '''Beta 56.1''' changed this effect to look exclusively at monsters in your dustpile, allowing you to better control which monster was summoned by just having that monster in your deck and playing it.
+
+=== Stats ===
+ATK:
+
+* 5 (Beta 36.0, Current)
+
+HP:
+
+* 4 (Beta 36.0, Current)
+
+Cost:
+
+* 7 (Beta 36.0, Current)
+
+Abilities:
+
+* Magic: Look at 3 random monsters costing <= 3 G and choose one. Summon it. (Post Beta 36.0)
+* Magic: Look at 3 random monsters costing 3 or less G in your dustpile and choose one. Summon it. (Post Beta 56.1, Current)
+
+Rarity:
+
+* Blue (Rare) (Post Beta 36.0, Current)
+[[Category:Rework]]

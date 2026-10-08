@@ -1,0 +1,23 @@
+[[File:Last Dream.png|thumb|216x216px|Beta 11.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Last_Dream here].
+[[File:Last Dream (Beta 48.0).png|thumb|214x214px|Beta 48.0]]
+Last Dream was added in '''Beta 11.0''' as a 4G spell that would give all monsters on your board +1/+1, or +7/+7 if you only had 1 HP left (extra lives didn't matter).
+[[File:Last Dream (Beta 48.1).png|thumb|216x216px|Beta 48.1]]
+It stayed like this all the way to '''Beta 48.0''', where the class and most of its spells were altered. It's now a 6G spell that summons a random [https://undercards.fandom.com/wiki/Angel_of_Death Lost Soul] (a 3G Dust monster) with Haste. After doing so, if you have <= 15 HP remaining, all monsters on your board gain +1/+1. '''Beta 48.1''' made DT's Passive and some of its spells no longer give Lost Souls randomly, but instead in a specific order. This was one of those spells.
+
+'''Beta 51.0''' reveted it back to its original version. ([https://undercards.fandom.com/wiki/Alphys Royal Determination] gained the effect during this time, and it was reworked because of it, to an older version of [https://undercards.fandom.com/wiki/Another_Chance Another Chance].)
+
+=== Stats ===
+Soul Type: Determination
+
+Cost:
+* 4 (Post Beta 11.0)
+* 6 (Post Beta 48.0)
+* 4 (Post Beta 51.0, Current)
+Effects:
+* Give all ally monsters +1/+1. Give all ally monsters +7/+7 if you're at 1 HP instead. (Post Beta 11.0)
+* Summon a random Lost Soul with Haste. Give all ally monsters +1/+1 if you're at <= 15 HP. (Beta 48.0)
+* Summon the next Lost Soul with Haste. Give all ally monsters +1/+1 if you're at <= 15 HP. (Post Beta 48.1)
+* Give all ally monsters +1/+1. Give all ally monsters +7/+7 if you're at 1 HP instead. (Post Beta 51.0, Current)
+Rarity: Purple (Epic)
+[[Category:Rework]]

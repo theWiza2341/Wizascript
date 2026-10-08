@@ -1,0 +1,29 @@
+[[File:Catti.png|thumb|205x205px|Beta 30.0]]
+Current Version can be found [[Catti|here]].
+[[File:Catti (Beta 45.0).png|thumb|200x200px|Beta 45.0]]
+Catti, alongside [[Catty's Dad]], were added in '''Beta 30.0''' with the same stats as [[Catty]], at 4/6 for 7G. Catti's first change was in '''Beta 45.0''', where her ATK and Cost dropped by 1 each. '''Beta 55.1''' brought her ATK back up to 4.
+[[File:Catti (Beta 50.0).png|thumb|200x200px|Beta 50.0]]
+
+=== Stats ===
+ATK:
+* 4 (Post Beta 30.0)
+* 3 (Post Beta 45.0)
+*4 (Post Beta 55.1, Current)
+
+HP: 6
+
+Cost:
+* 7 (Post Beta 30.0)
+* 6 (Post Beta 45.0, Current)
+Ability: Whenever you summon a monster, deal 1 DMG to a random enemy monster.
+
+Rarity: Blue (Rare)
+
+== Trivia ==
+* Beta 50.0 updated her image.
+*Since Beta 55.1, the stats of all 3 cats are equal, just like when they were in Beta 30.0, but at -1 ATK.
+**Beta 31.0 gave Catty's Dad -1 ATK and Cost, just like Catti in Beta 45.0.
+**Beta 49.0 gave Catty -1 cost, making the cost equal among all of them.
+**Beta 35.0 gave Catty's Dad +1 ATK (making only Catti have less ATK), just like Catti in Beta 55.1.
+
+[[Category:Rework]]

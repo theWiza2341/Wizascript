@@ -1,0 +1,26 @@
+[[File:Goner Clam (Original - Beta 51.9).png|thumb|263x263px|Original - Beta 51.9]]
+Current Version can be found [https://undercards.fandom.com/wiki/Goner_Clam here].
+
+Goner Clam was added in '''Beta 36.0''' with a Magic effect which would restore 2 HP to the user for each active Future effect. '''Beta 40.0''' buffed this by letting it also restore 2 HP to you by default. It had stats of 3/4 for 4G.
+
+'''Beta 46.0''' entirely reworked the [https://undercards.fandom.com/wiki/Category:Follower Follower] Tribe to fit with [https://undercards.fandom.com/wiki/Gaster Gaster]'s rework to a Legendary. Future was replaced with Synergy, another Magic-like effect that triggers when you have played a monster of the same tribe as it beforehand on the same turn. Goner Clam was added to the Tribe and gained both a Magic and Synergy. Its Magic would restore 4 HP to a target of your choice. Its Synergy would give +1/+2 to all Followers on your board except itself. Its cost increased to 5G for this. '''Beta 46.1''' made its Synergy give +1/+1 instead (so 1 less HP), at the cost of 6G (so +1G), but '''Beta 49.0''' reverted the cost nerf. '''Beta 52.0''' nerfed its healing effect by 1 instead.
+=== Stats ===
+ATK: 3
+
+HP: 4
+
+Cost:
+* 4 (Post Beta 36.0)
+* 5 (Beta 46.0)
+* 6 (Post Beta 46.1)
+* 5 (Post Beta 49.0, Current)
+
+Abilities:
+* Magic: You restore 2 HP for each active Future effect. (Post Beta 36.0)
+* Magic: You restore 2 HP and 2 HP for each active Future effect. (Post Beta 40.0)
+* '''[Now counts as a Follower.]'''
+** Magic: Restore 4 HP. Synergy: Give all ally Followers +1/+2. (Beta 46.0)
+** Magic: Restore 4 HP. Synergy: Give all ally Followers +1/+1. (Post Beta 46.1)
+** Magic: Restore 3 HP. Synergy: Give all ally Followers +1/+1. (Post Beta 52.0, Current)
+Rarity: Purple (Epic)
+[[Category:Rework]]

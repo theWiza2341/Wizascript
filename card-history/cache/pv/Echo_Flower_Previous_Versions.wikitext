@@ -1,0 +1,25 @@
+[[File:Echo Flower.png|thumb|236x236px|Beta 3.0]]Current version can be seen [[Echo Flower|here]].
+
+[[File:3.2Echo Flower.png|thumb|238x238px|Beta 3.2]]Echo Flower was released in '''Beta 3.0''', as a 1/4 monster with a cost of 3G. Originally, it would copy a random enemy monster from the opponent's board. '''Beta 3.2''' changed that so it now copies a random card from the hand of the opponent. This in result ended up in more guessing, as you don't know which card you get, but now you are also able to copy Spells from another Soul and even DT Cards such as [http://undercards.wikia.com/wiki/Chara Chara].[[File:Echo Flower Beta 7.1.png|thumb|234x234px|Beta 7.1]]'''Beta 7.1''' increased its HP from 4 to 6. This was done so Echo Flower had the same ATK, HP and Cost as the other flower card, [http://undercards.wikia.com/wiki/Flowey Flowey] (though Flowey's HP dropped to 5 in Beta 15.0 while this stayed at 6). And '''Beta 9.3''' buffed it again by making the copied card cost 1G less.
+[[File:Echo Flower (Beta 9.3).png|thumb|234x234px|Beta 9.3]]
+After a long time, '''Beta 48.0''' reduced its HP back to 4 but also increased its ATK to 2. This was done as a 1/6 with no passive effect more often than not ended up just clogging your board.
+
+=== Stats ===
+ATK:
+* 1 (Post Beta 3.0)
+* 2 (Post Beta 48.0, Current)
+
+HP:
+* 4 (Post Beta 3.0)
+* 6 (Post Beta 7.1)
+* 4 (Post Beta 48.0, Current)
+
+Cost: 3
+
+Abilities: 
+* Magic: Copy to your hand a random ...
+** enemy monster. (Post Beta 3.0)
+** card from the enemy's hand. (Post Beta 3.2)
+** card from the enemy's hand with -1 cost. (Post Beta 9.3, Current)
+Rarity: White (Common)
+[[Category:Rework]]

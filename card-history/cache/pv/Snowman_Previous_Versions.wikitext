@@ -1,0 +1,35 @@
+[[File:Snowman (Original - Beta 40.9).png|thumb|220x220px|Original - Beta 40.9]]
+Current Version can be found [[Snowman|here]].
+[[File:Snowman (Beta 41.0).png|thumb|Beta 41.0]]
+[[File:Wikia cards-3.png|thumb|138x138px]]
+Snowman started out as an effectless 1/3 for 1G card all the way until '''Beta 6.5''', where it gained the ability to paralyze the monster in front of it when played. '''Beta 6.7''' nerfed its HP to 2.
+
+'''Beta 31.0''' reworked its effect. It can now target any monster to paralyze, but only works if you have less monsters than your opponent (a restriction like that of [[Strength]] and [[Froggit Trio]]). However, being the first monster with this type of restriction, it was shown that it will count itself when checking on the amount, meaning the effect won't trigger if you only have 1 less monster before playing it. '''Beta 32.0''' buffed that by making it able to trigger when both boards are equal in numbers (still counting itself). Its effect was now limited to only affect enemy monsters again. '''Beta 41.0''' nerfed its Cost to 2.
+
+'''Beta 54.0''' reworked it entirely. Gaining +2/+2 and +1 Cost, it's now a 3/4 for 3G with the Dust of adding itself back to your hand but with -1/-1/-1 base stats. This makes it a very small version of [[The Heroine]].
+
+===Stats===
+ATK:
+
+*1 (Pre Beta 54.0)
+*3 (Post Beta 54.0, Current)
+
+HP:
+*3 (Pre Beta 6.7)
+*2 (Post Beta 6.7)
+* 4 (Post Beta 54.0, Current)
+
+Cost: 
+*1 (Pre Beta 41.0)
+*2 (Post Beta 41.0)
+*3 (Post Beta 54.0, Current)
+
+Abilities:
+*N/A (Pre Beta 6.5)
+*Magic: Paralyze the monster in front of it. (Post Beta 6.5)
+* Magic: Paralyze a monster if you have less than your opponent. (Post Beta 31.0)
+*Magic: Paralyze an enemy monster if you have as many or less than your opponent. (Post Beta 32.0)
+*Dust: Return to your hand with -1/-1/-1 base. (Post Beta 54.0, Current)
+
+Rarity: White (Common)
+[[Category:Rework]]

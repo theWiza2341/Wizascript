@@ -1,0 +1,34 @@
+[[File:Goner Kid (Original - Beta 37.9)|thumb|220x220px|Original - Beta 37.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/Goner_Kid here].
+[[File:Goner Kid (Beta 38.0).png|thumb|294x294px|Beta 38.0]]
+Goner Kid was released during the '''Beta 5.3''' Haloween Update, during the Gaster Event, where it had the same 2/2/2 as its "real" counterpart [https://undercards.fandom.com/wiki/Monster_Kid Monster Kid], but as an Epic with a Magic instead of a Rare with a Dust. Its effect allowed you to copy and trigger all Future effects you currently have active. '''Beta 7.1''' nerfed that by no longer copying the effects.
+[[File:Goner Kid (Beta 46.0).png|thumb|291x291px|Beta 46.0]]
+This was reverted in '''Beta 8.3''', but it also gained +1/1 and +2G with it, making it 3/3 for 4G, no longer able to be obtained by [http://undercards.wikia.com/wiki/Assault Assault] or [http://undercards.wikia.com/wiki/Lamp Lamp] or match in stats with Monster Kid. '''Beta 10.1''' nerfed its effect again. While it still copies the Future effects, it can no longer affect more than 1 of the same kind of Future effect. '''Beta 12.0''' dropped its cost to 3G, but this was increased to 5G much later in '''Beta 38.0'''.
+
+'''Beta 46.0''' entirely reworked the [https://undercards.fandom.com/wiki/Category:Follower Follower] Tribe to fit with [https://undercards.fandom.com/wiki/Gaster Gaster]'s rework to a Legendary. Future was replaced with Synergy, another Magic-like effect that triggers when you have played a monster of the same tribe as it beforehand on the same turn. Goner Kid was added to the Tribe and gained both a Magic and Synergy. Its Magic would kill a random other monster. Its Synergy would make it kill a random enemy monster instead. It also gained +1 ATK and a whopping +5 Cost, doubling it to 10G. '''Beta 48.0''' reduced that to 8G.
+
+=== Stats ===
+ATK:
+* 2 (Post Beta 5.3)
+* 3 (Post Beta 8.3)
+* 4 (Post Beta 46.0, Current)
+HP:
+* 2 (Post Beta 5.3)
+* 3 (Post Beta 8.3, Current)
+Cost:
+* 2 (Post Beta 5.3)
+* 4 (Post Beta 8.3)
+* 3 (Post Beta 12.0)
+* 5 (Post Beta 38.0)
+* 10 (Post Beta 46.0)
+* 8 (Post Beta 48.0, Current)
+
+Abilities:
+* Magic: Copy and trigger your Future effects. (Post Beta 5.3)
+* Magic: Trigger your Future effects. (Post Beta 7.1)
+* Magic: Copy and trigger your Future effects. (Post Beta 8.3)
+* Magic: Copy and trigger 1 of each of your Future effects. (Post Beta 10.1)
+* Magic: Kill a random other monster. Synergy: Kill a random enemy monster instead.
+** '''[Now counts as a Follower.] '''(Post Beta 46.0, Current)
+Rarity: Purple (Epic)
+[[Category:Rework]]

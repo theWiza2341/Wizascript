@@ -1,0 +1,39 @@
+[[File:Ralsei (Original - Beta 52.0).png|thumb|330x330px|Original - Beta 52.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Ralsei here]. 
+
+Ralsei, added in '''Beta 30.0 '''as a 2/7 for 6G monster, was first nerfed in '''Beta 32.0''' by increasing his cost to 7G. '''Beta 35.0''' followed with decreasing his HP to 5. His effects consisted of a Support effect that would give the attacking monster Ranged. He also had a Dust that would remove Ranged from all ally monsters. 
+
+'''Beta 47.0''' removed Ranged, and as such, this was redesigned. Now, as a 3/3 for 8G, he summons a non-DT monster of your choice directly from your hand, much like a self-use [https://undercards.fandom.com/wiki/Receptionist_3 Receptionist 3]. However, when your next turn starts and Ralsei still lives, that monster returns to your hand (even if it already died, thus moving it from your dustpile). '''Beta 51.1''' gave him +1/+1 and -1 cost and removed his Turn start effect. His Magic also summons a copy rather than the original one. However, the copy will have its stats set to 3/3. '''Beta 52.1''' returned his cost to 8G, but also have him another +1 ATK.
+
+=== Stats ===
+ATK:
+* 2 (Post Beta 30.0)
+* 3 (Post Beta 47.0)
+* 4 (Post Beta 51.1)
+* 5 (Post Beta 52.1, Current)
+
+HP:
+* 7 (Post Beta 30.0)
+* 5 (Post Beta 35.0)
+* 3 (Post Beta 47.0)
+* 4 (Post Beta 51.1, Current)
+
+Cost:
+* 6 (Post Beta 30.0)
+* 7 (Post Beta 32.0)
+* 8 (Post Beta 47.0)
+* 7 (Post Beta 51.1)
+* 8 (Post Beta 52.1, Current)
+Abilities:
+* Support: Give Ranged to the attacking monster.
+** Dust: Remove Ranged from all ally monsters. (Post Beta 30.0)
+* Magic: Choose a non-DT monster in your hand.
+** Summon it. Turn start: Return it to your hand. (Post Beta 47.0)
+** Summon a 3/3 copy of it. (Post Beta 51.1, Current)
+Rarity: Gold (Legendary)
+
+Song: The Legend
+
+=== Trivia ===
+* Beta 51.1 slightly updated his sprite.
+[[Category:Rework]]

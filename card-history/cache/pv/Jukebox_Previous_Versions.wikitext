@@ -1,0 +1,27 @@
+[[File:Jukebox.png|thumb|234x234px|Pre-release.]]
+Current Version can be found [https://undercards.fandom.com/wiki/Jukebox here].
+[[File:Jukebox (Beta 36.0).png|thumb|237x237px|Beta 36.0]]
+Jukebox was added in '''Beta 36.0'''. '''Before its release''', its ability allowed it to potentially add copies of already dead Jukeboxes to your hand for endless cycles. '''Beta 38.0''' increased its HP from 6 to 7 and changed its effect again. Now, the actual chosen monster is added to your deck instead of a copy to your hand. But the chosen monster will get +1/+2 in return. '''Beta 38.2''' nerfed its HP back to 6 and the chosen monster gains +1/+1 instead of +1/+2. However, it is now possible to obtain dead Jukeboxes again.
+[[File:Jukebox (Beta 38.0).png|thumb|237x237px|Beta 38.0]]
+
+=== Stats ===
+ATK: 6
+
+HP:
+* 6 (Post Beta 36.0)
+* 7 (Post Beta 38.0)
+* 6 (Post Beta 38.2, Current)
+
+Cost: 7
+
+Abilities:
+* Magic: See 3 random dead ally monsters. Choose 1.
+** Copy it to your hand. (Pre-release)
+* Magic: See 3 other random dead ally monsters. Choose 1.
+** Copy it to your hand. (Post Beta 36.0)
+* Magic: See 3 other random dead ally monsters. Choose 1.
+** Add it to your deck with +1/+2. (Post Beta 38.0)
+* Magic: See 3 random dead ally monsters. Choose 1.
+** Add it to your deck with +1/+1. (Post Beta 38.2, Current)
+Rarity: White (Common)
+[[Category:Rework]]

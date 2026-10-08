@@ -1,0 +1,18 @@
+[[File:Real Knife.png|thumb|Beta 52.1]]
+Current Version can be found [[Real Knife|here]]. Current Version of Chara can be found [[Chara|here]].
+
+Real Knife was added in '''Beta 52.1''' as a Generated card from Chara's reworked '''Genocide''' [[Artifacts#Genocide|Artifact]]. It allowed the user to Silence and kill any monster on the board for 3G. But this came at the cost of reducing your max HP in a similar way as Fatigue. '''Beta 55.1''' nerfed it by no longer being able to Silence before killing nor able to target ally monsters.
+
+=== Stats ===
+Main spell giver: Chara
+
+Cost: 3
+
+Effects:
+
+* Increase the Genocide counter by 1. Reduce your max HP by the counter.
+** Silence and kill a monster. (Post Beta 52.1)
+** Kill an enemy monster. (Post Beta 55.1, Current)
+
+Rarity: Green (Generated)
+[[Category:Rework]]

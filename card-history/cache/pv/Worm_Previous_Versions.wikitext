@@ -1,0 +1,24 @@
+[[File:Worm.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Worm here].
+[[File:Worm (Beta 40.0).png|thumb|294x294px|Beta 40.0]]
+Worm was added in '''Beta 30.0''' as a [https://undercards.fandom.com/wiki/Category:Generate Generated] monster from [https://undercards.fandom.com/wiki/Jar_of_Worms Jar of Worms]. It became a craftable [https://undercards.fandom.com/wiki/Category:Common Common] monster in '''Beta 40.0''', where its effect was also corrected by stating it only works when dealing DMG to a monster.
+
+'''Beta 47.0''' gave it -1/-1, dropping it from 1/3 to 0/2. Its cost was also reduced from 2G to 0G, making it the 2nd craftable 0G monster (after [https://undercards.fandom.com/wiki/Tiny_Froggit Tiny Froggit]).
+
+=== Stats ===
+ATK:
+* 1 (Post Beta 30.0)
+* 0 (Post Beta 47.0, Current)
+HP:
+* 3 (Post Beta 30.0)
+* 2 (Post Beta 47.0, Current)
+Cost:
+* 2 (Post Beta 30.0)
+* 0 (Post Beta 47.0, Current)
+
+Ability: Haste. Whenever this deals DMG to a monster, restore as much HP to you.
+
+Rarities:
+* Green (Generated) (Post Beta 30.0)
+* White (Common) (Post Beta 40.0, Current)
+[[Category:Rework]]

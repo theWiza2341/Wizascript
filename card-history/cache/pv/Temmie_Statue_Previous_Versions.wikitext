@@ -1,0 +1,46 @@
+[[File:Temmie Statue (Original - Beta 30.9).png|thumb|220x220px|Original - Beta 30.9]]
+Current Version can be found [[Temmie Statue|here]].
+[[File:Temmie Statue (Beta 31.0).png|thumb|226x226px|Beta 31.0]]
+While Temmie Statue was released in '''Beta 9.0 '''as a 0/7 Disarmed monster, '''Beta 9.1''' already removed its Disarmed. '''Beta 14.0''', while dropping its cost from 5G to 4G, nerfed it with -1 HP and its effect giving summoned [[:Category:Tem|Tems]] +1/+1 instead of +2/+2. '''Beta 18.1''' buffed it a bit by futher lowering its cost to 3G. '''Beta 28.0''' brought it back to 4G, but also returned the +2 ATK of its ability, making it now give +2/+1 to any Tem you summon (the same stats as [[Temmie]] itself). It also gained +1 ATK itself, but it lost that in '''Beta 31.0'''.
+[[File:Temmie Statue (Beta 31.2).png|thumb|226x226px|Beta 31.2]]
+'''Beta 31.2''' reworked it slightly. Bringing its cost back up to its original 5G, its effect is now stronger or weaker depending on the kind of Tem you summon. [[Bob]] and Temmie 2, the Tems with Haste, gain an increased boost of +2/+2. All other Tems gain a decreased boost of +1/+1. '''Beta 43.0''' gave it its 1 ATK back. '''Beta 55.0''' returned its cost to 3G, but gave it another -1 HP and returned its effect to affect every ally Tem equally, now giving them simply +2 ATK. '''Beta 55.1''' changed this back to +1/+1.
+[[File:Temmie Statue (Beta 43.0).png|thumb|221x221px|Beta 43.0]]
+
+=== Stats ===
+[[File:Temmie Statue (Beta 55.0).png|thumb|221x221px|Beta 55.0]]
+ATK:
+* 0 (Post Beta 9.0)
+* 1 (Post Beta 28.0)
+* 0 (Post Beta 31.0)
+* 1 (Post Beta 43.0, Current)
+
+HP:
+* 7 (Post Beta 9.0)
+* 6 (Post Beta 14.0)
+*5 (Post Beta 55.0, Current)
+
+Cost:
+* 5 (Post Beta 9.0)
+* 4 (Post Beta 14.0)
+* 3 (Post Beta 18.1)
+* 4 (Post Beta 28.0)
+* 5 (Post Beta 31.2)
+*3 (Post Beta 55.0, Current)
+
+Abilities:
+* Disarmed. Whenever you summon a Tem, give it +2/+2. (Beta 9.0)
+* Whenever you summon a Tem, give it ...
+** +2/+2. (Post Beta 9.1)
+** +1/+1. (Post Beta 14.0)
+** +2/+1. (Post Beta 28.0)
+** +1/+1. If it has Haste, give it +2/+2 instead. (Post Beta 31.2)
+**+2 ATK. (Beta 55.0)
+**+1/+1. (Post Beta 55.1, Current)
+
+Rarity: Blue (Rare)
+
+=== Trivia ===
+* Its +1 cost in Beta 31.2 was actually a -1 HP in the patch notes. This was confirmed to be the change that was supposed to happen, but it was never fixed.
+** This means it was meant to be a 4G 0/5 instead of a 5G 0/6.
+** It shares this problem with [[Lancer Painting]].
+[[Category:Rework]]

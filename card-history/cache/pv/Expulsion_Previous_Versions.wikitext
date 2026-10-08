@@ -1,0 +1,21 @@
+[[File:Expulsion.png|thumb|224x224px|Pre Beta 3.1]]
+Current Version can be found [http://undercards.wikia.com/wiki/Expulsion here].
+
+[[File:Expulsion-0.png|thumb|224x224px|Post Beta 3.1]]
+Expulsion gained the same treatment as [http://undercards.wikia.com/wiki/Fortune Fortune], increasing its cost 1G at the time in order to nerf [http://undercards.wikia.com/wiki/Category:Integrity Integrity]. This also happened during the same updates, starting with 3G, increased to 4G in '''Beta 3.1''' and increased again to 5G in '''Beta 5.7'''.
+[[File:Expulsion (Beta 5.7).png|thumb|228x228px|Post Beta 5.7]]
+
+=== Stats ===
+SOUL Type: Integrity
+
+Cost:
+* 3 (Pre Beta 3.1)
+* 4 (Post Beta 3.1)
+* 5 (Post Beta 5.7, Current)
+Effect: Put an enemy monster back into its owner's hand.
+
+Rarity: Blue (Rare)
+== Trivia ==
+* Beta 33.0 updated its image.
+** For Integrity, it shares this with [https://undercards.fandom.com/wiki/Fortune Fortune], [https://undercards.fandom.com/wiki/Cloning Cloning] and [https://undercards.fandom.com/wiki/Golden_Hit Golden Hit].
+[[Category:Rework]]

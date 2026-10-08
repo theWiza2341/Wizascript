@@ -1,0 +1,27 @@
+[[File:Jumping Rabbit.png|thumb|232x232px|Beta 36.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Jumping_Rabbit here].
+[[File:Jumping Rabbit (Beta 44.0).png|thumb|224x224px|Beta 44.0]]
+Jumping Rabbit was added in '''Beta 36.0'''. When played, another Jumping Rabbit would be added to your hand. This can go on as long as you have gold and board space. However, at the end of the turn you placed them, any remaining Jumping Rabbits generated this way will be removed from your hand.
+[[File:Jumping Rabbit (Beta 44.1).png|thumb|224x224px|Beta 44.1]]
+'''Beta 44.0''' reworked it slightly. Its HP was reduced from 4 to 3, while its Magic was replaced with a Dust. Now it needs to die during your turn to give a new Jumping Rabbit, making it not (easily) possible to end your turn with a board full of them anymore. But instead, the new one added will not be removed either, making it possible to be an endless card, much like [https://undercards.fandom.com/wiki/Skateboard_Girl Skateboard Girl]. In fact, it was pretty much a better SkateGirl in almost every way, so '''Beta 44.1''' changed its effect again. Now when it dies, you will draw a card and then the new Rabbit will be added to the top of your deck, making it the next draw (and allows it to work the same as before if you have 2 of them).
+[[File:Jumping Rabbit (Beta 49.0).png|thumb|222x222px|Beta 49.0]]
+'''Beta 49.0''' changed this effect again. The new Jumping Rabbit will now be added to your deck before you draw, but it's now added at any place in your deck rather than always the top. '''Beta 53.0''' swapped this by making you draw before adding it to your deck.
+
+=== Stats ===
+ATK: 4
+
+HP:
+* 4 (Post Beta 36.0)
+* 3 (Post Beta 44.0, Current)
+Cost: 5
+
+Abilities:
+* Haste. Magic: Add a Jumping Rabbit to your hand.
+** Delay: Remove all generated Jumping Rabbits from your hand. (Post Beta 36.0)
+* Haste. Dust: If it's your turn, ...
+** add a Jumping Rabbit to your hand. (Beta 44.0)
+** draw a card and topdeck a Jumping Rabbit. (Post Beta 44.1)
+** add a Jumping Rabbit to your deck and draw a card. (Post Beta 49.0)
+** draw a card and add a Jumping Rabbit to your deck. (Post Beta 53.0, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

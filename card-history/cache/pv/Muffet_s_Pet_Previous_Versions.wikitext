@@ -1,0 +1,26 @@
+[[File:Muffet's Pet (Original - Beta 45.9)|thumb|220x220px|Original - Beta 45.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/Muffet's_Pet here].
+[[File:Muffet's Pet (Beta 46.0).png|thumb|242x242px|Beta 46.0]]
+Muffet's Pet had quite a few changes, most of which were changes between 2 ATK and 3 ATK to make it vulnerable to other Pets. '''Beta 2.4''' released it with 2 ATK, and '''Beta 3.2''' buffed that to 3. '''Beta 5.3''' dropped it back to 2 ATK, and '''Beta 7.1 '''raised it back to 3. And after a long wait, '''Beta 34.0''' brought it back down to 2.
+[[File:Muffet's Pet (Beta 51.1).png|thumb|244x244px|Beta 51.1]]
+'''Beta 46.0''' added it to the new [https://undercards.fandom.com/wiki/Category:Arachnid Arachnid] Tribe. '''Beta 51.1''' buffed its effect for the first time. Before, it would kill a random enemy monster with an ATK of 2 or lower when played. Now, it no longer does this randomly, letting you choose instead. '''Beta 52.0''' buffed it again, now with a first change in HP, increasing it from 5 to 6.
+
+=== Stats ===
+ATK:
+* 2 (Post Beta 2.4)
+* 3 (Post Beta 3.2)
+* 2 (Post Beta 5.3)
+* 3 (Post Beta 7.1)
+* 2 (Post Beta 34.0, Current)
+HP:
+* 5 (Post Beta 2.4)
+* 6 (Post Beta 52.0, Current)
+
+Cost: 5
+
+Abilities:
+* Magic: Kill a random enemy <= 2 ATK monster. (Post Beta 2.4)
+* '''[Now counts as an Arachnid.]''' (Post Beta 46.0)
+* Magic: Kill an enemy <= 2 ATK monster. (Post Beta 51.1, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

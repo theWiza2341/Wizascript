@@ -1,0 +1,18 @@
+[[File:Sword Emblem.png|thumb|294x294px|Beta 39.1]]
+Current Version can be found [https://undercards.fandom.com/wiki/Sword_Emblem here].
+
+Sword Emblem was added in '''Beta 39.1''' as a 6G 4/4 with Taunt, Armor (1) and Thorns (1). Its first change was already in '''Beta 40.0''', where it, alongside +1 cost, lost both Taunt and Thorns and gained a Magic instead. If played on the left, it would regain Taunt, making it a +2/+2/+2 [https://undercards.fandom.com/wiki/Receptionist_2 Receptionist 2] with -1 Armor. If played on the right, it would instead gain Haste. This makes it more similar to [https://undercards.fandom.com/wiki/Mister_Society Mister Society].
+
+=== Stats ===
+ATK: 4
+
+HP: 4
+
+Cost:
+* 6 (Post Beta 39.1)
+* 7 (Post Beta 40.0, Current)
+Abilities:
+* Armor (1). Taunt. Thorns (1). (Post Beta 39.1)
+* Armor (1). Magic: If played left, gain Taunt. If played right, gain Haste. (Post Beta 40.0, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

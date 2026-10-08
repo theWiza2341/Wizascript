@@ -1,0 +1,32 @@
+[[File:Shopping (Original - Beta 24.9).png|thumb|220x220px|Original - Beta 24.9]]
+Current Version can be found [[Shopping|here]].
+[[File:Shopping (Beta 25.0).png|thumb|264x264px|Beta 25.0]]
+When class spells were added in '''Alpha 3.0''', Shopping costed 4G to make you draw 2 cards. This stayed all the way until '''Beta 6.7''', where its cost dropped to 3G.
+[[File:Shopping (Beta 44.0).png|thumb|257x257px|Beta 44.0]]
+'''Beta 14.0''' brought changes to the card by changing its effect. Now, it will make you draw a card for every 5 gold you have (including the 3G of Shopping itself, similar to an old [[Mettaton Ex|Mettaton EX]]). So it will fail if you don't have 5G and, when taking in account an empty hand after use, will make you overdraw cards starting from 40G.
+[[File:Shopping (Beta 52.1).png|thumb|Btea 52.1]]
+'''Beta 22.0''' reworked this card entirely. While the card itself costs 0G, you lose all the gold you currently have to summon a random monster from your deck that has a cost equal to the amount of gold you spent. This was buffed in '''Beta 24.0''' where it now summons a copy of the card, and buffed again in '''Beta 25.0''' where if you don't have a monster with the exact cost, it chooses the most expensive cheaper monster instead.
+
+'''Beta 44.0''' brought its cost back to its original 4G. Its effect got reworked once more. Now, you draw cards until you've drawn a combined cost of 10G or more out of the cards you've drawn or until you have 7 cards in your hand (making you not overdraw at any time). This was changed in '''Beta 52.1''' to making you draw 3 cards with a cost of 5G or lower. '''Beta 54.1''' reduce its cost back down to 3G.
+
+=== Stats ===
+SOUL Type: Integrity
+
+Cost:
+* 4 (Post Alpha 3.0)
+* 3 (Post Beta 6.7)
+* 0 (Post Beta 22.0)
+* 4 (Post Beta 44.0)
+*3 (Post Beta 54.1, Current)
+
+Effects:
+* Draw 2 cards. (Post Alpha 3.0)
+* Draw a card for every 5 gold you have. (Post Beta 14.0)
+* Lose your gold. Summon from your deck:
+** A random monster with equal cost. (Post Beta 22.0)
+** A copy of a random monster with equal cost. (Post Beta 24.0)
+** A copy of your most expensive monster (max: your gold). (Post Beta 25.0)
+* Draw cards until their cost is => 10 or your hand is full. (Post Beta 44.0)
+* Draw 3 <= 5G cards. (Post Beta 52.1, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

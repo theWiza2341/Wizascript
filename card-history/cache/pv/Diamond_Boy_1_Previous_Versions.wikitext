@@ -1,0 +1,25 @@
+[[File:Diamond Boy 1 (Beta 6.6).png|thumb|241x241px|Beta 6.6 only.]]Current Version can be found [[Diamond Boy 1|here]].
+[[File:Diamond Boy 1 (Beta 6.7).png|thumb|241x241px|Post Beta 6.7]]
+Diamond Boy 1 was released in '''Beta 6.6''' with the ability to give +1 Armor to all ally monsters. It was nerfed to not affect itself the next update, '''Beta 6.7''', because it was very hard to kill. '''Beta 34.0''' nerfed it again by making its effect unstackable (thus only allowing to make a 2nd DB1 only affect the 1st). Due to Armor's change in '''Beta 53.0''', DB1 was nerfed once more to not affect Armor monsters anymore. '''Beta 54.0''' gave it its first non-nerf, being given Taunt.
+=== Stats ===
+[[File:Diamond Boy 1 (Beta 34.0).png|thumb|238x238px|Beta 34.0]]
+ATK: 3
+
+HP: 3
+
+Cost: 3
+[[File:Diamond Boy 1 (Beta 53.0).png|thumb|233x233px|Beta 53.0]]
+Abilities:
+* Reduce DMG taken by 1 for ...
+** your monsters. (Beta 6.6)
+** your other monsters. (Post Beta 6.7)
+** your other monsters once. (Post Beta 34.0)
+** your other non-Armor monsters once. (Post Beta 53.0)
+* Taunt. Your other non-Armor monsters take 1 less DMG once. (Post Beta 54.0, Current)
+
+Rarity: Blue (Rare)
+
+== Trivia ==
+* Beta 9.1 introduced the Armor effect, which in turn gave an update to DB1's description.
+** However, with the way Armor was changed in Beta 53.0, it was forced to return to its old wording.
+[[Category:Rework]]

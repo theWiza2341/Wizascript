@@ -1,0 +1,40 @@
+[[File:Lamp (Original - Beta 49.0)|thumb|220x220px|Original - Beta 49.0]]
+Current Version can be found [[Lamp|here]].
+[[File:Lamp (Beta 49.1).png|thumb|257x257px|Beta 49.1]]
+Lamp was added in '''Beta 7.6''' as a 0/2 Taunt monster with a cost of 3G. Its cost was reduced to 2G in '''Beta 18.1''', and its HP was reduced by and to 1 in '''Beta 19.0'''. Both changes were reverted in '''Beta 32.1'''. '''Beta 36.1''' reduced its cost back to 2G.
+[[File:Lamp (Beta 51.0).png|thumb|257x257px|Beta 51.0]]
+Its Dust had a 0.5% chance to summon [[Frisk]]. '''Beta 49.1''' started changing what the other 99.5% summoned. From summoning a new 0-3G monster, it now no longer summoned another Lamp or 3G monsters. '''Beta 51.0''' changed to to summoning a 3-6G monster and set its (or Frisk's) stats to a base 2/2, while '''Beta 51.1''' removed the 6G monsters as well as Frisk from the possible summons, making the effect have a full 100% chance to summon a random 2/2 3-5G monster.
+[[File:Lamp (Beta 51.1).png|thumb|Beta 51.1]]
+The remaining randomness was removed in '''Beta 56.0''', where Lamp's effect was changed again, now summoning a Snow Frisk upon death, an effectless 2/2/2 exclusive Token. '''Beta 58.1''' removed Lamp's Taunt, in exchange for +1 ATK.
+[[File:Lamp (Beta 56.0).png|thumb|Beta 56.0]]
+
+=== Stats ===
+ATK:
+
+* 0 (Post Beta 7.6)
+* 1 (Post Beta 58.1, Current)
+
+HP:
+* 2 (Post Beta 7.6)
+* 1 (Post Beta 19.0)
+* 2 (Post Beta 32.1, Current)
+
+Cost:
+* 3 (Post Beta 7.6)
+* 2 (Post Beta 18.1)
+* 3 (Post Beta 32.1)
+* 2 (Post Beta 36.1, Current)
+Abilities:
+* Taunt. Dust: Summon Frisk (0.5% chance) or ...
+** a random <= 3G monster. (Post Beta 7.6)
+** a random other <= 2G monster. (Post Beta 49.1)
+** a random 3-6G monster. Set it to 2/2. (Beta 51.0)
+* Taunt. Dust: Summon a random 3-5G monster. Set it to 2/2. (Post Beta 51.1)
+*Taunt. Dust: Summon a Snow Frisk. (Post Beta 56.0)
+*Dust: Summon a Snow Frisk. (Post Beta 58.1, Current)
+
+Rarity: White (Common)
+
+== Trivia ==
+* During the Beta 51.0 and Beta 51.1 changes, both the patch and the card removed the part about it able to summon Frisk. In the former case, this was fixed soon after.
+[[Category:Rework]]

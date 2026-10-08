@@ -1,0 +1,32 @@
+[[File:Scissor Dancer (Original - Beta 54.9).png|thumb|209x209px|Original - Beta 54.9]]
+Current Version can be found [[Scissor Dancer|here]]. 
+[[File:Scissor Dancer (Beta 55.0).png|thumb|Beta 55.0]]
+Scissor Dancer was released in '''Beta 30.0''' with 3/3 for 4G and the Magic effect of dealing 1 DMG to an enemy monster of your choice, which would take 4 DMG instead if it was damaged. '''Beta 33.0''' nerfed it to 2 ATK, while '''Beta 37.0''' nerfed its Magic to be able to target ally monsters and only deal the increased DMG to monsters on the middle 2 slots. '''Beta 47.1''' buffed its ATK back to 3, while '''Beta 55.0''' removed its central slot limitation (but kept ally monsters targetable). '''Beta 55.1''' gave it +1 HP and cost (and mentioned an effect update, but it stayed the same). 
+=== Stats ===
+ATK:
+* 3 (Post Beta 30.0)
+* 2 (Post Beta 33.0)
+* 3 (Post Beta 47.1, Current)
+
+HP:
+
+* 3 (Post Beta 30.0)
+* 4 (Post Beta 55.1, Current)
+
+Cost:
+
+* 4 (Post Beta 30.0)
+* 5 (Post Beta 55.1, Current)
+
+Abilities:
+* Magic: Deal 1 DMG to an enemy monster. If it's damaged, deal 4 DMG instead. (Post Beta 30.0)
+* Magic: Deal 1 DMG to a monster. If it's damaged and on a central slot, deal 4 DMG instead. (Post Beta 37.0)
+*Magic: Deal 1 DMG to a monster. If it's damaged, deal 4 DMG instead. (Post Beta 55.0, Current)
+
+Rarity: White (Common)
+
+=== Trivia ===
+* After its effect nerf of Beta 37.0, it temporarily was still only able to target an enemy monster like before. This was fixed without a direct mention, possibly during Beta 41.1 or Beta 42.0 (as they mentioned bug fixes), with the latest possible moment being when it was buffed in Beta 47.1.
+*Beta 51.1 updated its image. 
+
+[[Category:Rework]]

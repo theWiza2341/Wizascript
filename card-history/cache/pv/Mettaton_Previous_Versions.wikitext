@@ -1,0 +1,33 @@
+[[File:Mettaton (Original - Beta 5.1).png|thumb|220x220px|Original - Beta 5.1]]
+Current Version can be found [http://undercards.wikia.com/wiki/Mettaton here].[[File:5.2 Mettaton.png|thumb|239x239px|Beta 5.2]]
+Mettaton is a unique monster that can only take a little amount of DMG each time, referencing his massive amount of DEF in Undertale. He started out as a 2/5 for 6G that could only take 1 DMG at a time. '''Alpha 2.1''' gave him -1 HP (to 4), but '''Alpha 3.2''' reverted this, bringing him back to start.
+[[File:5.3 Mettaton.png|thumb|244x244px|Beta 5.3]]
+He stayed like this until '''Beta 4.2''', where he actually got +1 HP (to 6). This was followed up by -1 cost in both '''Beta 4.6''' and '''Beta 5.2''', down to 4G. This was deemed too powerful, so the next update, '''Beta 5.3''', gave him -1 HP again, bringing him back to start again, 2/5, but now with -2 cost of 4G instead of 6G.
+[[File:Mettaton (Beta 22.0).png|thumb|245x245px|Beta 22.0]]
+This stayed all the way until '''Beta 22.0''', where his ATK was dropped for the first time, to/by 1. '''Beta 36.1''' followed that with another -1 HP. '''Beta 43.0''' gave him back +1/+1 as well as -1 cost, reducing it to an even lower 3G and bringing his other stats back to the starting 2/5 yet again. But this came at a cost of a huge first effect nerf. Instead of reducing any DMG taken to 1, it's now reduced to 3.
+[[File:Mettaton (Beta 36.1).png|thumb|250x250px|Beta 36.1]]
+
+=== Stats ===
+ATK:
+* 2 (Pre Beta 22.0)
+* 1 (Post Beta 22.0)
+* 2 (Post Beta 43.0, Current)
+HP:
+* 5 (Pre Alpha 2.1)
+* 4 (Post Alpha 2.1)
+* 5 (Post Alpha 3.2)
+* 6 (Post Beta 4.2)
+* 5 (Post Beta 5.3)
+* 4 (Post Beta 36.1)
+* 5 (Post Beta 43.0, Current)
+Cost:
+* 6 (Pre Beta 4.6)
+* 5 (Post Beta 4.6)
+* 4 (Post Beta 5.2)
+* 3 (Post Beta 43.0, Current)
+Abilities:
+* Reduce any DMG taken to 1. (Pre Beta 43.0)
+* Reduce any DMG taken to 3. (Post Beta 43.0, Current)
+
+Rarity: Purple (Epic)
+[[Category:Rework]]

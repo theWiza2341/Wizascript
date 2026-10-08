@@ -1,0 +1,24 @@
+[[File:Grilling King.png|thumb|Beta 57.0]]
+Current Version can be found [[Grilling King|here]].
+
+Grilling King was added in '''Beta 57.0''' as a 5/6 for 10G monster with the ability to kill a single damaged monster of your choice (fittingly functioning as a small [[Asgore]]), while also dealing that monster's ATK as DMG to the opponent. '''Beta 58.0''' gave it +3 cost as well as a new ability (and a new sprite). It will now summon a 5/5 Cake and two 3/3 Spincakes onto your board, thus filling it up entirely, but only if you have more monsters in your dustpile than cards in your deck.
+
+=== Stats ===
+ATK: 5
+
+HP: 6
+
+Cost:
+
+* 10 (Post Beta 57.0)
+* 13 (Post Beta 58.0, Current)
+
+Abilities:
+
+* Magic: Kill a damaged monster and deal its ATK as DMG to the opponent. (Post Beta 57.0)
+* Need: More cards in your dustpile than your deck. Magic: Summon 1 5/5 Cake and 2 3/3 Spincakes. (Post Beta 58.0, Current)
+
+Rarity: Gold (Legendary)
+
+Song: Bring It In, Guys! (Asgore Scene)
+[[Category:Rework]]

@@ -1,0 +1,25 @@
+[[File:Fly.png|thumb|189x189px|Beta 46.0]]
+Current Version can be found [[Fly|here]].
+[[File:Fly (Beta 47.0).png|thumb|191x191px|Beta 47.0]]
+Fly was added in '''Beta 46.0''' with the ability to summon another Fly whenever you casted a => 2G spell. '''Beta 47.0''' buffed it by also making it summon another Fly when the opponent casts one. '''Beta 47.1''' reverted this. '''Beta 50.1''' introduced Shock, an effect that triggers every time the owner casts a spell with a base cost of 2G or more. Fly gained this effect (which is slightly different from its old effect, which checked current cost).
+[[File:Fly (Beta 47.1).png|thumb|193x193px|Beta 47.1]]
+However, not only does it summon a Fly, it will also Silence itself, making chain triggers no longer possible. To avoid wasting its initial Charge, it regains it after Silencing itself. This has no impact after the first turn. '''Beta 54.0''' changed it to make the copy get silenced before regaining Charge.
+[[File:Fly (Beta 50.1).png|thumb|193x193px|Beta 50.1]]
+
+=== Stats ===
+ATK: 1
+
+HP: 1
+
+Cost: 2
+
+Abilities:
+* Charge. Summon a Fly whenever ...
+** you cast a => 2G spell. (Post Beta 46.0)
+** a player casts a => 2G spell. (Beta 47.0)
+** you cast a => 2G spell. (Post Beta 47.1)
+* Charge. Shock: Summon a Fly, Silence itself and gain Charge. (Post Beta 50.1)
+*Charge. Shock: Summon a Silenced copy of itself with Charge. (Post Beta 54.0, Current)
+
+Rarity: White (Common)
+[[Category:Rework]]

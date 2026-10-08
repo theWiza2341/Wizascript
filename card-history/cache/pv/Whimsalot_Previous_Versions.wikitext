@@ -1,0 +1,37 @@
+[[File:Whimsalot (Original - Beta 21.0).png|thumb|Original - Beta 21.0]]
+Current Version can be found [[Whimsalot|here]].
+[[File:Whimsalot (Beta 21.1).png|thumb|Beta 21.1]]
+Whimsalot, [[Whimsun]]'s CORE/Hard Mode counterpart in Undertale, was for the longest time also the upgraded version of Whimsun in Undercards, with higher stats and a simmilar ability. Only instead of gaining ATK, it gains both ATK and HP for each ally monster in play (so up to +3/+3). Originally, it costed 7G for a 4/4, thus at most effective use, it would be a 7/7/7.
+
+'''Alpha 2.1''' dropped its cost to 6G due to the fact that [[Final Froggit]] (at that time) also costed 7G, but had 6/6 by default, for which Whimsalot needed 2 ally monsters. '''Beta 5.3''' gave it +1 HP, '''Beta 15.0''' +1 cost (bringing it back to 7G) and '''Beta 17.0''' +1 ATK, leaving it with 5/5, so 8/8 at most after its Magic.
+
+It stayed like this until '''Beta 53.1''', where alongside another +1 HP, its Magic was changed. Now, it gives +1/+1 to a random monster in your hand. But still for each other ally monster, this effect is repeated. This means it does it 1-4 times and it can target any monster in your hand each time.
+
+=== Stats ===
+ATK:
+* 4 (Pre Beta 17.0)
+* 5 (Post Beta 17.0, Current)
+
+HP:
+* 4 (Pre Beta 5.3)
+* 5 (Post Beta 5.3)
+*6 (Post Beta 53.1, Current)
+
+Cost:
+* 7 (Pre Alpha 2.1)
+* 6 (Post Alpha 2.1)
+* 7 (Post Beta 15.0, Current)
+
+Abilities:
+
+* Magic: Gain +1/+1 for each ally monster. (Pre Beta 53.1)
+* Magic: Give +1/+1 to a random monster in your hand. Repeat this for each other ally monster. (Post Beta 53.1, Current)
+
+Rarity: White (Common)
+
+=== Trivia ===
+
+* Its sprite is actually unused, because it only has 1 wing.
+** Beta 21.1 updated it, using the same sprite, but zoomed in.
+
+[[Category:Rework]]

@@ -1,0 +1,17 @@
+[[File:Clover Head.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Clover_Head here].
+
+Being released in the Deltarune Update of '''Beta 30.0''', Clover Head started off with fitting stats of 3/3/3 (equal ATK/HP as [https://undercards.fandom.com/wiki/Clover Clover], but 33% of its cost of 9G). '''Beta 32.1''' changed that by giving it +1 ATK.
+
+=== Stats ===
+ATK:
+* 3 (Post Beta 30.0)
+* 4 (Post Beta 32.1, Current)
+HP: 3
+
+Cost: 3
+
+Ability: Magic: Topdeck a copy of an ally Turbo monster.
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

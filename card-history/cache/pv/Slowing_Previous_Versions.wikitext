@@ -1,0 +1,28 @@
+[[File:Slowing (Original - Beta 27.9).png|thumb|220x220px|Original - Beta 27.9]]
+Current version can be found [[Slowing|here]].
+[[File:Slowing (Beta 28.0).png|thumb|261x261px|Beta 28.0]]
+Slowing was added in '''Beta 3.4''' as a replacement for [[Sharing]] during Patience's first big rework. It allowed the user to send a Paralyzed enemy monster back into the enemy's deck for 2G. '''Beta 3.6''' increased that to 3G, but '''Beta 7.1''' decreased it to 2G.
+[[File:Slowing (Beta 31.0).png|thumb|Beta 31.0]]
+'''Beta 7.4''' returned it to 3G again, but also buffed its effect by making the returned monster have its cost increased by 3G. '''Beta 18.1 '''buffed that further by increasing the monster's cost by 4G. '''Beta 28.0''' nerfed it down to increasing the cost by 2G. '''Beta 31.0''' nerfed it the most by not only making the card returned not increase in cost at all anymore, its own cost was also increase to a new hight of 4G.
+
+'''Beta 55.0''' reworked the Soul and Slowing was replaced with [[Melt]] (but kept the sprite).
+=== Stats ===
+SOUL Type: Patience
+
+Cost:
+* 2 (Post Beta 3.4)
+* 3 (Post Beta 3.6)
+* 2 (Post Beta 7.1)
+* 3 (Post Beta 7.4)
+* 4 (Post Beta 31.0)
+*N/A (Post Beta 55.0, Current)
+
+Effects:
+* Return a paralyzed enemy monster to their deck. (Post Beta 3.4)
+*Return a paralyzed enemy monster to their deck with +3 cost. (Post Beta 7.4)
+*Return a paralyzed enemy monster to their deck with +4 cost. (Post Beta 18.1)
+*Return a paralyzed enemy monster to their deck with +2 cost. (Post Beta 28.0)
+*Return a paralyzed enemy monster to their deck. (Post Beta 31.0)
+* N/A (Post Beta 55.0, Current)
+Rarity: White (Common)
+[[Category:Rework]]

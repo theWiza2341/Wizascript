@@ -1,0 +1,47 @@
+[[File:Fortune (Original - Beta 29.9).png|thumb|330x330px|Original - Beta 29.9]]
+Current version can be seen [[Fortune|here]].[[File:Fortune (Beta 30.0 - Beta 61.5).png|thumb|330x330px|Beta 30.0 - Beta 61.5]]
+
+Fortune is an [http://undercards.wikia.com/wiki/Category:Integrity Integrity] [http://undercards.wikia.com/wiki/Decks Deck] exclusive Spell Card. This card always gave a base profit of 2G, but the minimum amount of gold needed to activate it increased over time, nerfing Integrity in the process. Starting of at 2G, increased to 3G in '''Beta 3.1''' and increased again to 4G in '''Beta 5.7'''.
+
+'''Beta 12.0''' increased the cost to 5G, but kept the amount given to 6G. This actually still gives a 2G profit, but only to Integrity users themselves due to their passive ability. All other SOULs with this card obtained through [http://undercards.wikia.com/wiki/Echo_Flower Echo Flower] or [http://undercards.wikia.com/wiki/Librarian Librarian] only get a 1G profit. '''Beta 21.0''' continued by increasing its cost to 6G.
+[[File:Fortune (Beta 63).png|thumb|Beta 63.0]]
+'''Beta 32.1''' nerfed it once more, no longer providing the 2G profit at all times. As while it kept the cost and gold earned the same, the effect will now only work if the user has at least 1 monster on their board. '''Beta 33.0''' buffed it a bit by now giving you 6G if you have no monsters, so you don't lose any gold no matter when you use it.[[File:Fortune (Beta 70.5).png|thumb|Beta 70.5]]'''Beta 52.1''' redesigned it. Its cost returned to its original 2G, but it will now make you lose all your gold, just like Golden Hit. However, when the turn ends, you get it back, with an additional 3G. This provides a 1G profit, but one you can't use on the turn you used Fortune on.
+
+'''Beta''' '''61.5''' had a rarity swap between the Integrity spells Fortune and [[Shopping]], making this card a part of the [[:Category:Rare|Rare]] Spells.
+
+'''Beta 63.0''' reworked the card once again, this time encouraging players to have a hand full of different cost cards. The Spell would now draw a card, as well as give -1 cost to 4 random different cards in your hand, as long as they cost 5, 6, 7, and 8.
+
+'''Beta 70.5''' redesigned the card to work multiple times, each with the 1 G gain, however each usage was incentivized to be used over the course of 3 turns.
+=== Stats ===
+SOUL Type: Integrity
+
+Cost:
+* 2 (Post Alpha 3.0)
+* 3 (Post Beta 3.1)
+* 4 (Post Beta 5.7)
+* 5 (Post Beta 12.0)
+* 6 (Post Beta 21.0)
+* 2 (Post Beta 52.1)
+*4 (Post Beta 70.5, Current)
+Effects:
+* Earn 4 gold. (Post Alpha 3.0)
+
+* Earn 5 gold. (Post Beta 3.1)
+* Earn 6 gold. (Post Beta 5.7)
+* Earn 7 gold. (Post Beta 21.0)
+* Earn 7 gold if you have at least 1 monster on board. (Post Beta 32.1)
+* Earn 6 gold. If you have at least 1 monster on board, earn 7 gold instead. (Post Beta 33.0)
+* Spend all your G. Delay: Regain it all and with +3G. (Post Beta 52.1)
+*Draw a card. Give -1 cost to a random 5, 6, 7, and 8 cost card in your hand. (Post Beta 63.0)
+*Loop (2). Delay: Earn 4 G and give the copy -1 cost. (Post Beta 70.5)
+*Delay: Earn 5 G (Post Beta 71.0, Current)
+Rarities:
+* White (Common) (Post Alpha 3.0)
+* Gray (Basic) (Post Beta 30.0)
+*Blue (Rare) (Post Beta 61.5, Current)
+== Trivia ==
+* Beta 30.0 introduced the [https://undercards.fandom.com/wiki/Category:Basic Basic] Rarity, which this gained.
+* Beta 33.0 also updated its image.
+** For Integrity, it shares this with [https://undercards.fandom.com/wiki/Expulsion Expulsion], [https://undercards.fandom.com/wiki/Cloning Cloning] and [https://undercards.fandom.com/wiki/Golden_Hit Golden Hit].
+*Beta 70.5 Introduced a variant of this card utilizing Loop (2). It was then very promptly un-introduced at the next given opportunity.
+[[Category:Rework]]

@@ -1,0 +1,21 @@
+[[File:School Tem.png|thumb|Beta 30.0]]
+Current Version can be found [[School Tem|here]].
+[[File:School Tem (Beta 55.0).png|thumb|Beta 55.0]]
+School Tem was added in '''Beta 30.0''' as a 1/2 for 3G Charge [[:Category:Tem|Tem]] with the additional ability of gaining +1/+1 if you summon a monster with more ATK than itself. '''Beta 55.0''' changed that to a Magic that requires you to burn a card in your hand (so remove it from play) with a cost of 2G or less. By doing so, it will gain ATK and HP equal to its cost (gaining nothing from a 0G card but still burn it). '''Beta 55.1''' buffed that by always giving it +2/+2, no matter the card's cost.
+
+=== Stats ===
+ATK: 1
+
+HP: 2
+
+Cost: 3
+
+Abilities:
+
+* Charge. Whenever you summon a monster with more ATK, gain +1/+1. (Post Beta 30.0)
+* Charge. Magic: Burn a <= 2G card in your hand to ...
+** gain its cost in ATK and HP. (Beta 55.0)
+** gain +2/+2. (Post Beta 55.1, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

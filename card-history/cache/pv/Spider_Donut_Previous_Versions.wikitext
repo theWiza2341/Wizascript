@@ -1,0 +1,17 @@
+[[File:Spider Donut.png|thumb|291x291px|Beta 46.0]]
+Spider Donut was added in '''Beta 46.0''' as an Arachnid Token obtainable through [https://undercards.fandom.com/wiki/Spider_Bakery Spider Bakery] and [https://undercards.fandom.com/wiki/Spider_Sign Spider Sign]. It's quite a powerful card, being a 4G 3/4 monster with Haste, Taunt, Candy AND a Dust effect that restore 3 HP to you, making it a minuature [https://undercards.fandom.com/wiki/Killer_Cook Cake].
+
+'''Beta 52.1''' removed its Candy and Dust, but it gained a Delay effect in its place, which would make it restore 3 HP to itself and you. This effectively simply nerfed its Candy to only work on its first turn, while buffing its Dust to a slower Magic.
+
+=== Stats ===
+ATK: 3
+
+HP: 4
+
+Cost: 4
+
+Abilities:
+* Haste. Taunt. Candy. Dust: Restore 3 HP to you. (Post Beta 46.0)
+* Haste. Taunt. Delay: Restore 3 HP to it and you. (Post Beta 52.1, Current)
+Rarity: Green (Token)
+[[Category:Rework]]

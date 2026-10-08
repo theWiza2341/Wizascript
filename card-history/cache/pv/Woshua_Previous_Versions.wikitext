@@ -1,0 +1,22 @@
+[[File:Woshua.png|thumb|277x277px|Pre Beta 21.0]]
+Current Version can be found [http://undercards.wikia.com/wiki/Woshua here].
+
+Woshua holds the record for having the longest gap between changes and the longest gap between the moment of its release and its first change, as it was released on launch and its first change was in '''Beta 21.0'''.
+
+In this change, its HP dropped from 5 to 4.
+
+=== Stats ===
+ATK: 4
+
+HP:
+* 5 (Pre Beta 21.0)
+* 4 (Post Beta 21.0, Current)
+Cost: 6
+
+Ability: Magic: Deal 1 damage to all enemy monsters.
+
+Rarity: White (Common)
+
+=== Trivia ===
+[http://undercards.wikia.com/wiki/Reaper_Bird Reaper Bird] holds a close 2nd in that record for also being released on launch but first changed in Beta 19.0.
+[[Category:Rework]]

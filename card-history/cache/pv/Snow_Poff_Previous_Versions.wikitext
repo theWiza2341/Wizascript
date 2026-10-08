@@ -1,0 +1,39 @@
+[[File:Snow Poff (Original - Beta 48.9)|thumb|220x220px|Original - Beta 48.9]]
+Current Version can be found [[Snow Poff|here]].  
+[[File:Snow Poff (Beta 49.0).png|thumb|258x258px|Beta 49.0]]
+Snow Poff, added in '''Beta 7.6 '''with the ability to summon a [[Greater Dog]] when it dies, originally had the stats of 0/2 and the cost of 4G. However, '''Beta 8.3''' made it possible for 0 ATK monsters without Disarmed to attack, so Snow Poff (without mention) gained a massive +6 HP to not allow it to die as easy. Its cost was also increased to 5G. However, a few hours later, in '''Beta 8.3.1''', this change was reverted (with 2 mentions of a cost change for some reason) and it simply gained Disarmed in its place. '''Beta 13.4''' increased its cost back to 5G, but this was returned back to 4G in '''Beta 18.0'''. 
+[[File:Snow Poff (Beta 52.0).png|thumb|258x258px|Beta 52.0]]
+'''Beta 49.0''' reworked it (as Greater Dog and [https://undercards.fandom.com/wiki/Artifacts#Will Will] were as well). Its HP was increased to 4, and it gained a new ability on top of its Disarmed. This ability would make it take 1 DMG every time an enemy monster attacks in general (kinda like a Support effect that checks enemy monsters rather than yours), thus it would die after 4 attacks, even if this wasn't attacked once.
+[[File:Snow Poff (Beta 53.0).png|thumb|Beta 53.0]]
+'''Beta 52.0''' reworked it again, now much more. First, its cost dropped all the way down to 2G and its HP was increased further to 5, leaving it at 2G 0/5. Second, it lost its Disarmed and Passive effect for Taunt. Lastly, its Dust was changed and gained a Magic as well. Its Magic shows 3 random [https://undercards.fandom.com/wiki/Category:Dog Dogs] (so not specifically Greater Dog anymore). You get to choose one of them and the chosen Dog will be caught in the Snow Poff. Its Dust will naturally release the Dog, but it will be added to your hand rather than summoned. This was reverted almost entirely in '''Beta 53.0'''. The only thing remaining was its 5 HP. '''Beta 54.1''' changed it once more, regaining its Magic of catching a Dog, but now will always be a Greater Dog. Its Dust will now release it to the board.
+
+=== Stats ===
+ATK: 0 
+
+HP: 
+*2 (Post Beta 7.6) 
+* 8 (Beta 8.3) 
+* 2 (Post Beta 8.3.1) 
+* 4 (Post Beta 49.0) 
+* 5 (Post Beta 52.0, Current) 
+Cost:
+* 4 (Post Beta 7.6)
+* 5 (Beta 8.3)
+* 4 (Post Beta 8.3.1)
+* 5 (Post Beta 13.4)
+* 4 (Post Beta 18.0)
+* 2 (Post Beta 52.0)
+* 4 (Post Beta 53.0, Current)
+Abilities:
+* Dust: Summon a Greater Dog. (Post Beta 7.6)
+* Disarmed. Dust: Summon a Greater Dog. (Post Beta 8.3.1)
+* Disarmed. Takes 1 DMG if an enemy monster attacks.
+** Dust: Summon a Greater Dog. (Post Beta 49.0)
+* Taunt. Magic: See 3 random Dogs. Choose 1. Catch it.
+** Dust: Release it to your hand. (Post Beta 52.0)
+* Disarmed. Takes 1 DMG if an enemy monster attacks.
+** Dust: Summon a Greater Dog. (Post Beta 53.0)
+**Magic: Catch a Greater Dog. Dust: Release it. (Post Beta 54.1, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

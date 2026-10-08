@@ -1,0 +1,17 @@
+[[File:Puzzle Box.png|thumb|Beta 30.0]]
+Current Version can be found [[Rouxls Kaard|here]].
+
+Puzzle Box was added in '''Beta 30.0''', obtainable through an enemy's Rouxls Kaard. For 3G, it will Silence all enemy Rouxls Kaard, making it intentionally very weak, much like Pre-Beta 56.0 [[Annoying Dog|Dog Residue]]. '''Beta 54.1''' changed it to allow the owner to Silence any monster, making it much more useful, but still weak due to being a [[Penetration]] with triple the cost.
+
+=== Stats ===
+Main Spell giver: Rouxls Kaard
+
+Cost: 3
+
+Effects:
+
+* Silence all enemy Rouxls Kaard. (Post Beta 30.0)
+* Silence a monster. (Post Beta 54.1, Current)
+
+Rarity: Green (Generated/Token)
+[[Category:Rework]]

@@ -1,0 +1,43 @@
+[[File:Lemon Bread (Original - Beta 7.3).png|thumb|220x220px|Original - Beta 7.3]]
+Current Version can be found [http://undercards.wikia.com/wiki/Lemon_Bread here].
+[[File:Lemon Bread (Beta 7.4 - Beta 47.0).png|thumb|220x220px|Beta 7.4 - Beta 47.0]]
+Lemon Bread originally was a 3/3 [https://undercards.fandom.com/wiki/Category:Amalgamate Amalgamate] for 7G. Now that might seem like a waste, it had the ability to gain +1/+1 for each card in your hand. Because it doesn't count itself, that would allow it to gain +6/+6 at most, ending up with 9/9. '''Alpha 2.7''' gave it -1/-1, so its base became 2/2 and the max 8/8. This stayed all the way until '''Beta 6.5''', where its cost dropped by 1 to make it cost 6G.
+[[File:Lemon Bread (Beta 47.1).png|thumb|291x291px|Beta 47.1]]
+'''Beta 7.1''' changed Lemon Bread completely. Now, for the same 6G, it has its own very good base stats of 5/6. Before, a card like [http://undercards.wikia.com/wiki/Nacarat_Jester Nacarat Jester] that could Silence was very effective on it as it would lose the gained stats and return to 2/2. Now, this won't have effect on that anymore. Instead, if you have 5 or more cards in your hand, it gains Charge and Taunt. This still doesn't count Lemon Bread itself, so you need 6-7 cards for the effect to trigger. This made Lemon Bread a very good Taunt monster, arguably better than cards like [http://undercards.wikia.com/wiki/Ice Ice] and [http://undercards.wikia.com/wiki/Jerry Jerry]. '''Beta 7.2''' dropped its ATK to 4.
+[[File:Lemon Bread (Beta 50.1).png|thumb|291x291px|Beta 50.1]]
+When '''Beta 7.4''' came out, Lemon Bread got nerfed with being the first monster with the new Haste ability. Haste is the same as Charge, but cannot attack the opponent directly on their first turn. '''Beta 17.0''' made Lemon Bread count as a [http://undercards.wikia.com/wiki/Category:Mold Mold]. This was no longer the case since '''Beta 33.0''' as it added Tribe icons, but this came at the cost of monsters being unable to have 2 (or more) Tribes at once for a period of time, until '''Beta 41.1'''.
+
+'''Beta 47.1''' increased its HP and Cost from 6 to 7. This was reverted in '''Beta 50.1''' alongside an impactful effect change. It now no longer needs the 5+ card requirement to gain Taunt, but will now only gain Haste if you do meet the requirement. '''Beta 53.0''' changed its effect again, quite heavily this time. It now has Haste by default, and will gain Taunt on top of it if you have another Amalgamate or Mold on the board.
+=== Stats ===
+ATK:
+* 3 (Pre Alpha 2.7)
+* 2 (Post Alpha 2.7)
+* 5 (Beta 7.1)
+* 4 (Post Beta 7.2, Current)
+HP:
+* 3 (Pre Alpha 2.7)
+* 2 (Post Alpha 2.7)
+* 6 (Post Beta 7.1)
+* 7 (Post Beta 47.1)
+* 6 (Post Beta 50.1, Current)
+Cost:
+* 7 (Pre Beta 6.5)
+* 6 (Post Beta 6.5)
+* 7 (Post Beta 47.1)
+* 6 (Post Beat 50.1, Current)
+Abilities:
+* Magic: Gain +1/+1 for each card in your hand. (Pre Beta 7.1)
+* Magic: Gain Charge and Taunt if your hand has => 5 cards. (Post Beta 7.1)
+* Magic: Gain Haste and Taunt if your hand has => 5 cards. (Post Beta 7.4)
+* '''[Now counts as a Mold.]''' (Post Beta 17.0)
+* '''[No longer counts as a Mold.]''' (Post Beta 33.0)
+* '''[Counts as a Mold again.]''' (Post Beta 41.1)
+* Magic: Gain Taunt. If your hand has => 5 cards, gain Haste instead. (Post Beta 50.1)
+* Haste. Magic: If there's an ally Amalgamate or Mold, gain Taunt. (Post Beta 53.0, Current)
+Rarity: White (Common)
+
+=== Trivia ===
+* Beta 21.1 updated its sprite, zooming it in a little.
+* Lemon Bread's loss of being a Mold is shared with [https://undercards.fandom.com/wiki/Endogeny Endogeny]'s loss of being a [https://undercards.fandom.com/wiki/Category:Dog Dog].
+** Beta 41.1 also made [https://undercards.fandom.com/wiki/Reaper_Bird Reaper Bird] a [https://undercards.fandom.com/wiki/Category:Frog Frog], but it wasn't one before.
+[[Category:Rework]]

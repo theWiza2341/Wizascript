@@ -1,0 +1,31 @@
+[[File:Clam Girl (Original - Beta 27.9).png|thumb|220x220px|Original - Beta 27.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/Clam_Girl here].
+
+Clam Girl was added in '''Beta 7.6''' with the unique ability to cancel out every Spells and Future Effects of the opponent as long as you have it on the field. This was extremely helpful, as it would almost always end up with the opponent having to throw away cards due to a full hand, as the Spells were unable to be used, but also unable to be get rid of from your hand.
+
+'''Beta 8.1''' nerfed her by reworking her ability. Now, she will increase the price of all Spell Cards in the opponent's hand by 2 when she's placed, making her work like [http://undercards.wikia.com/wiki/Bratty Bratty]. (Her stats were also undocumented swapped with those of [http://undercards.wikia.com/wiki/Clam_Boy Clam Boy], but this was a mistake and fixed.) '''Beta 8.3''' changed that again. Now, she will put all spells in the opponent's hand back into their deck, turning her similar to [http://undercards.wikia.com/wiki/Memory_Head Memory Head]. '''Beta 9.3''' nerfed her by increasing her cost from 4G to 6G.
+
+'''Beta 14.0 '''changed her entirely once again. She gained +1 in everything, goingt from 4/3 to 5/4 (to match Clam Boy's 4/5 at the time) for 7G. She also gained a new ability, which is the reverse of her Beta 8.1 version. As instead of giving +2 cost to all spells in the enemy's hand, she now gives -2 cost to all spells in your hand, making her now a better, more specific version of [http://undercards.wikia.com/wiki/Lesser_Dog Lesser Dog]. '''Beta 28.0''' dropped her ATK and Cost back down by 1.
+
+=== Stats ===
+ATK: 
+* 4 (Post Beta  7.6)
+* 5 (Post Beta 14.0)
+* 4 (Post Beta 28.0, Current)
+HP: 
+* 3 (Post Beta  7.6)
+* 4 (Post Beta 14.0, Current)
+
+Cost:
+* 4 (Post Beta  7.6)
+* 6 (Post Beta  9.3)
+* 7 (Post Beta 14.0)
+* 6 (Post Beta 28.0, Current)
+
+Abilities:
+* Cancel all enemy spells and Future effects. (Post Beta 7.6)
+* Magic: All spells in your opponent's hand cost 2 more. (Post Beta 8.1)
+* Magic: All spells in your opponent's hand return to their deck. (Post Beta 8.3)
+* Magic: All spells in your hand cost 2 less. (Post Beta 14.0, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

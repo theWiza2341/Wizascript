@@ -1,0 +1,18 @@
+[[File:Flower Can.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Flower_Can here].
+
+Flower Can was added in '''Beta 30.0''' with the ability to summon 2 Green Flowers upon death. It had stats of 3G 2/3, but the first change in '''Beta 52.0''' gave it +1 cost and ATK, ending it at 4G 3/3.
+
+=== Stats ===
+ATK:
+* 2 (Post Beta 30.0)
+* 3 (Post Beta 52.0, Current)
+HP: 3
+
+Cost:
+* 3 (Post Beta 30.0)
+* 4 (Post Beta 52.0, Current)
+Ability: Dust: Summon 2 Green Flowers.
+
+Rarity: White (Common)
+[[Category:Rework]]

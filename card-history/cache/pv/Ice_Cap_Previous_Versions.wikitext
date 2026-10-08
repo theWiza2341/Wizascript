@@ -1,0 +1,17 @@
+Current Version can be found [http://undercards.wikia.com/wiki/Ice_Cap here].
+[[File:Screenshot 124.png|thumb|244x244px|Pre Beta 6.5]]
+Ice Cap went through a minor change in '''Beta 6.5'''. Both its ATK and Cost dropped from 4 to 3 as a way to buff [http://undercards.wikia.com/wiki/Mad_Dummy Mad Dummy].
+
+=== Stats ===
+ATK:
+* 4 (Pre Beta 6.5)
+* 3 (Post Beta 6.5, Current)
+HP: 1
+
+Cost:
+* 4 (Pre Beta 6.5)
+* 3 (Post Beta 6.5, Current)
+Ability: Charge.
+
+Rarity: White (Common)
+[[Category:Rework]]

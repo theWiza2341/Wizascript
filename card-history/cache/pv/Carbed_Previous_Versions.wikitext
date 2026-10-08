@@ -1,0 +1,18 @@
+[[File:Carbed.png|thumb|291x291px|Beta 51.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Carbed here].
+
+Carbed was added in '''Beta 51.0''' as a 6G 2/6 monster with Haste, Armor (1) and the passive ability of giving itself an additional +4 ATK when in a damaged state. '''Beta 52.0''' reduced both its HP and passive ATK boost by 1.
+
+=== Stats ===
+ATK: 2
+
+HP:
+* 6 (Post Beta 51.0)
+* 5 (Post Beta 52.0, Current)
+Cost: 6
+
+Abilities:
+* Haste. Armor (1). Has +4 ATK while damaged. (Post Beta 51.0)
+* Haste. Armor (1). Has +3 ATK while damaged. (Post Beta 52.0, Current)
+Rarity: White (Common)
+[[Category:Rework]]

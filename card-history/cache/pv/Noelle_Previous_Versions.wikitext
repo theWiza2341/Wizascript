@@ -1,0 +1,20 @@
+[[File:Noelle.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Noelle here].
+[[File:Noelle (Beta 31.0).png|thumb|293x293px|Beta 31.0]]
+Noelle was added with 6 HP in '''Beta 30.0'''. She got her first change in '''Beta 31.0''', where that was nerfed to 5. '''Beta 36.1''' brought her HP back to 6, but increased her cost from 8G to 9G instead.
+
+=== Stats ===
+ATK: 3
+
+HP:
+* 6 (Post Beta 30.0)
+* 5 (Post Beta 31.0)
+* 6 (Post Beta 36.1, Current)
+Cost:
+* 8 (Post Beta 30.0)
+* 9 (Post Beta 36.1, Current)
+
+Ability: Candy. End of turn: Heal you by it's current HP.
+
+Rarity: Purple (Epic)
+[[Category:Rework]]

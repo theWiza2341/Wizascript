@@ -1,0 +1,31 @@
+[[File:RG 02 (Original - Beta 39.9).png|thumb|330x330px|Original - Beta 39.9]]
+Current Version can be found [[Royal Guard 2|here]]. Previous Versions of RG 01 can be found [[Royal Guard 1/Previous_Versions|here]].
+[[File:RG 02 (Beta 40.0).png|thumb|Beta 40.0]]
+RG 01 and RG 02 do everything together, even changing stats. In RG 02's case, these are ATK based, starting at 8, increased to 9 in '''Beta 5.3''' and to 10 in '''Beta 6.5'''.
+
+'''Beta 8.1''' gave RG 02 an ability. Once RG 02 dies, every RG 01 you have on the board gets Taunt. '''Beta 30.0''', with the release of RG 03 and RG 04, expanded this effect for RG 01 to also affect them. RG 02, meanwhile, got its effect reworked. Now, when it dies, any Royal Guard in your hand (except other RG 02's) will have their cost dropped by 2, making it similar to [[Lesser Dog]]. '''Beta 40.0''' made its effect able to affect other RG 02's. '''Beta 54.1''' changed it (back) into a [[:Category:Common|Common]], getting replaced by [[Dad Slime]] and [[Gyftrot]] in starter decks.
+
+=== Stats ===
+ATK:
+* 8 (Pre Beta 5.3)
+* 9 (Post Beta 5.3)
+* 10 (Post Beta 6.5, Current)
+HP: 7
+
+Cost: 9
+
+Abilities:
+* N/A (Pre Beta 8.1)
+* Dust: Give all ally RG 01's Taunt. (Post Beta 8.1)
+* Dust: Give all RG's in your hand -2 cost (except 02). (Post Beta 30.0)
+* Dust: Give all RG's in your hand -2 cost. (Post Beta 40.0, Current)
+
+Rarities:
+* White (Common) (Pre Beta 30.0)
+* Gray (Basic) (Post Beta 30.0)
+*White (Common) (Post Beta 54.1, Current)
+
+=== Trivia ===
+* Beta 29.0 added RG 01 and RG 02 to the starting cardpool instead of [[Knight Knight]].
+** This resulted in it gaining the [[:Category:Base|Base]] Rarity in Beta 30.0 (until Beta 54.1).
+[[Category:Rework]]

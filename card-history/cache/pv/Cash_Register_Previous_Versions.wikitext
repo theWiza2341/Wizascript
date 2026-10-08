@@ -1,0 +1,17 @@
+[[File:Cash Register.png|thumb|295x295px|Beta 36.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Cash_Register here].
+
+Cash Register was added in '''Beta 36.0''' with the Magic ability to choose a Turbo monster in your hand, return it to the top of your deck and drawing a card. This will make you draw the card you've just chosen, so this Magic basically retriggers the Turbo effect. '''Beta 49.1''' changed it so it does that right away.
+
+=== Stats ===
+ATK: 4
+
+HP: 4
+
+Cost: 4
+
+Abilities:
+* Magic: Topdeck a Turbo monster in your hand. Draw a card. (Post Beta 36.0)
+* Magic: Choose a Turbo monster in your hand. Trigger its Turbo. (Post Beta 49.1, Current)
+Rarity: White (Common)
+[[Category:Rework]]

@@ -1,0 +1,22 @@
+[[File:Gift Bear-0.png|thumb|234x234px|Beta 6.6 only]]Current Version can be found [http://undercards.wikia.com/wiki/Gift_Bear here].
+
+[[File:Gift Bear.png|thumb|234x234px|Post Beta 6.7]]
+
+Originally in '''Beta 6.6''', Gift Bear was a 5/5 monster that costed 5G and would summon a 1G 0/3 Gift with Taunt (which was nerfed to 0/2 in the very next update).
+
+'''Beta 7.1''' nerfed Gift Bear itself by dropping both ATK and HP by 1, for a total of 4/4.
+
+Stats:
+
+ATK:
+* 5 (Post Beta 6.6)
+* 4 (Post Beta 7.1, Current)
+HP:
+* 5 (Post Beta 6.6)
+* 4 (Post Beta 7.1, Current)
+Cost: 5
+
+Ability: End of turn: Summon a Gift.
+
+Rarity: White (Commom)
+[[Category:Rework]]

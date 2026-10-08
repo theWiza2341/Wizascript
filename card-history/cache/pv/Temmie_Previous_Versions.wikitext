@@ -1,0 +1,33 @@
+[[File:Temmie (Original - Beta 6.5).png|thumb|Original - Beta 6.5|269x269px]]
+Current Version can be seen [[Temmie|here]].
+[[File:Temmie (Beta 6.6 - Beta 53.0).png|thumb|Beta 6.6 - Beta 53.0|269x269px]]
+Temmie had a lot of changes. Originally, it was a 3/3 Charge monster for 3G that had a 50% chance of adding another Temmie to your hand. The 2nd Temmie had the same stats, but only Charge. '''Alpha 2.7''' dropped its HP from 3 to 2, '''Beta 2.6''' its ATK from 3 to 2 and '''Beta 4.6''' dropped its cost from 3G to 2G. '''Beta 6.1''' changed its effect. Before, if the 2nd Temmie was returned to your hand or deck, it would regain its main ability. Now, the 2nd Temmie is its own monster, known as Temmie 2.
+[[File:Temmie (Beta 53.1).png|thumb|Beta 53.1]]
+During Beta 6.5, Temmie was supposed to be nerfed to a mere 1 HP. But this was scrapped... at first. That nerf happened anyway in '''Beta 6.6'''. (The same HP nerf also happened to Temmie 2.) This gives us our current stats (2/1 for 2G). However, its ability was changed a couple more times after this, starting in '''Beta 7.1.''' Now, it would add a new Temmie to your hand if it killed a monster on its first turn. This is also not a Temmie 2, but a regular Temmie with the same abilities. As such, if you use it wisely, you can have infinite Temmies. '''Beta 7.2''' nerfed that to putting the new Temmie into your deck, rather than your hand.
+
+But this all didn't matter, as '''Beta 7.5''' returned its ability to giving a Temmie 2 with Magic. However, it now is a 100% chance instead of 50%. '''Beta 7.6''' changed that from a Magic to a Dust effect. After this, Temmie 2 got some changes on its own (as seen [[Temmie 2/Previous_Versions|here]]), eventually ending up where it started as a 2/1 for 2G. However, it had Haste instead of Charge. '''Beta 53.1''' swapped those, leaving Temmie with Haste and Temmie 2 with Charge. '''Beta 55.0''' swapped them back and changed Temmie's Dust into a Delay effect.
+
+=== Stats ===
+ATK:
+* 3 (Pre Beta 2.6)
+* 2 (Post Beta 2.6, Current)
+
+HP:
+* 3 (Pre Alpha 2.7)
+* 2 (Post Alpha 2.7)
+* 1 (Post Beta 6.6, Current)
+Cost:
+* 3 (Pre Beta 4.6)
+* 2 (Post Beta 4.6, Current)
+Abilities:
+* Charge. Magic: Have a 50% chance to add a Temmie to your hand without Magic. (Pre Beta 6.1)
+* Charge. Magic: Have a 50% chance to add a Temmie 2 to your hand. (Post Beta 6.1)
+* Charge. If this kills during its first turn, add a Temmie to your hand. (Beta 7.1)
+* Charge. If this kills during its first turn, add a Temmie to your deck. (Post Beta 7.2)
+* Charge. Magic: Add a Temmie 2 to your hand. (Beta 7.5)
+* Charge. Dust: Add a Temmie 2 to your hand. (Post Beta 7.6)
+*Haste. Dust: Add a Temmie 2 to your hand. (Post Beta 53.1)
+*Charge. Delay: Add a Temmie 2 to your hand. (Post Beta 55.0, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

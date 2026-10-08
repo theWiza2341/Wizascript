@@ -1,0 +1,17 @@
+[[File:Clover.png|thumb|236x236px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Clover here].
+
+Clover was added in '''Beta 30.0. Beta 36.0''' nerfed it with its cost being raised from 9G to 10G.
+
+=== Stats ===
+ATK: 3
+
+HP: 3
+
+Cost:
+* 9 (Post Beta 30.0)
+* 10 (Post Beta 36.0, Current)
+Ability: Haste. Magic: Deal 3 DMG, draw 3 cards and restore 3 HP to you.
+
+Rarity: Purple (Epic)
+[[Category:Rework]]

@@ -1,0 +1,8 @@
+*Beta 62.1: [[Termination]] has been replaced by Buttercup Treat. RARE Spell. SOUL: Perseverance. COST 2. EFFECT UPDATE: Set a non-DT monster's ATK to 1. Delay: Silence it. Give it KR, +1 ATK and Candy.
+*Beta 64.0: COST 2 > 1.
+*Beta 65.1: EFFECT UPDATE: Set an enemy monster's ATK to 1. Delay: Silence it and give it KR and Candy.
+*Beta 80.0: RARE > EPIC.
+**The Perseverance spell [[Petrification]] went EPIC > RARE.
+*Beta 101.0: EFFECT UPDATE: Set a non-DT monster's ATK to 1. Delay: Silence it and give it KR and Candy.
+**Buttercup Treat's large ATK debuff is cancelled at the end of the turn by the Delay: Silence. However, because DT monsters are immune to Silence, the ATK debuff was permanent for DTs. Buttercup Treat could be used to nullify a DT for only 1 G. This change prevents that interaction.
+[[Category:Rework]]

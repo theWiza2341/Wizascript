@@ -1,0 +1,23 @@
+[[File:Ice (Original - Beta 40.9).png|thumb|220x220px|Original - Beta 40.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/Ice here].
+Ice didn't change much despite it being in the game since the beginning. Before '''Alpha 2.1''', it had 8 HP, but that was nerfed to 7.
+
+This was kept all the way until '''Beta 7.4''', where it got a 2nd ability of paralyzing any monster that gets damaged by this one. '''Beta 12.1''' nerfed that effect to only paralyzing the monster that kills it. After another long time, '''Beta 41.0''' nerfed its HP further to 6.
+
+=== Stats ===
+ATK: 1
+
+HP:
+* 8 (Pre Alpha 2.1)
+* 7 (Post Alpha 2.1)
+* 6 (Post Beta 41.0, Current)
+Cost: 4
+
+Abilities:
+* Taunt. (Pre Beta 7.4)
+* Taunt. Paralyze any monster this damages. (Post Beta 7.4)
+* Taunt. Dust: Paralyze its killer. (Post Beta 12.1, Current)
+Rarities:
+* White (Common) (Pre Beta 30.0)
+* Gray (Basic) (Post Beta 30.0, Current)
+[[Category:Rework]]

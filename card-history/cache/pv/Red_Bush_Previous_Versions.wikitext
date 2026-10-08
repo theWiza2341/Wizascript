@@ -1,0 +1,32 @@
+[[File:Red Bush (Original - Beta 42.9)|thumb|220x220px|Original - Beta 42.9]]
+Current Version can be found [[Red Bush|here]].
+[[File:Red Bush (Beta 43.0).png|thumb|257x257px|Beta 43.0]]
+Red Bush was added as a 2/3 for 3G [[:Category:Plant|Plant]] in '''Beta 30.0''', with the effect of giving Transparency to adjcent monsters with a cost of 2 or lower when played. Three changes quickly followed in order to make this balanced. In '''Beta 30.1''', its effect now only affects monsters with a BASE cost of 2 or lower. '''Beta 30.2''' made it able to affect monsters of any cost, but made Transparency ignore Invulnerability (which is owned by [[Frisk]] and [[Rouxls Kaard]]) just like it ignores Taunt. And '''Beta 30.3''' changed it back to its original version, but kept Transprency the same.
+[[File:Red Bush (Beta 51.1).png|thumb|Beta 51.1]]
+This was until '''Beta 42.1''', where it got a full rework. It now has Transparency itself and has replaced its Magic for an Aura effect that gives +1 ATK to all other monsters on your board. Its own ATK dropped to/by 1 for this. '''Beta 43.0''' nerfed it by making its only work while it has Transparency, so on its first turn. '''Beta 51.1''' changed it again. While keeping its Transparency and gaining +1 HP, its own ATK is now equal to the amount of Plants on your board. But because it doesn't include itself, its ATK drops to 0 if you lack any other Plant. '''Beta 54.1''' buffed it by giving it +1 ATK for every other ally Plant, thus keeping its inital 1 ATK (as well as able to receive ATK buffs).
+=== Stats ===
+ATK:
+* 2 (Post Beta 30.0)
+* 1 (Post Beta 42.1, Current)
+
+HP:
+* 3 (Post Beta 30.0)
+* 4 (Post Beta 51.1, Current)
+
+Cost: 3
+
+Abilities:
+* Magic: Give Transparency to adjacent ...
+** <= 2G monsters. (Beta 30.0)
+** <= base 2G monsters. (Beta 30.1)
+** monsters. (Beta 30.2)
+** <= 2G monsters. (Post Beta 30.3)
+* Transparency. Your other monsters have ...
+** +1 ATK. (Post Beta 42.1)
+** +1 ATK while this has Transparency. (Post Beta 43.0)
+* Transparency. Based on the amount of other ally Plants, ...
+**this has equal ATK. (Post Beta 51.1)
+**this has +1 ATK for each. (Post Beta 54.1, Current)
+
+Rarity: White (Common)
+[[Category:Rework]]

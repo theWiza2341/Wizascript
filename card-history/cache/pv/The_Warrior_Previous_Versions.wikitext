@@ -1,0 +1,22 @@
+[[File:The Warrior.png|thumb|Beta 30.0]]
+Current Version can be found [[The Warrior|here]].
+
+The Warrior was added in '''Beta 30.0''' as a powerful 7/8 for only 6G, but with the drawback of dealing 4 DMG to itself when played, effectively making it 7/4. '''Beta 54.1''' gave it +1 HP, but also made it deal +1 DMG to itself, keeping its effective stats the same.
+
+=== Stats ===
+ATK: 7
+
+HP:
+
+* 8 (Post Beta 30.0)
+* 9 (Post Beta 54.1, Current)
+
+Cost: 6
+
+Abilities:
+
+* Magic: Deal 4 DMG to itself. (Post Beta 30.0)
+* Magic: Deal 5 DMG to itself. (Post Beta 54.1, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

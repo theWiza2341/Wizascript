@@ -1,0 +1,17 @@
+[[File:Forest Worm.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Forest_Worm here].
+
+When released in '''Beta 30.0''', Forest Worm would remove 5 random cards (thus monsters) from the enemy's dustpile. But due to the lack of cards that interacted with the dustpile itself rather than dead monsters in general, '''Beta 34.0''' buffed it by reworking the effect. It now gains +1 ATK if there are 7+ monsters in the enemy's dustpile.
+
+=== Stats ===
+ATK: 3
+
+HP: 7
+
+Cost: 6
+
+Abilities:
+* Haste. Magic: Remove 5 random monsters from the enemy's dustpile. (Post Beta 30.0)
+* Haste. Magic: Gain +1 ATK if the enemy's dustpile has 7+ monsters. (Post Beta 34.0, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

@@ -1,0 +1,33 @@
+[[File:Ice Prison.png|thumb|Beta 55.0]]
+Current Version can be found [[Ice Prison|here]].
+[[File:Ice Prison (Beta 55.1).png|thumb|Beta 55.1]]
+Ice Prison, replacing [[Brain Freeze]] in '''Beta 55.0''', was a 3G [[:Category:Epic|Epic]] [[:Category:Patience|Patience]] spell that silenced any monster on the board of your choice, followed by paralyzing it. The user would then draw the card at the bottom of their deck. '''Beta 55.1''' removed the drawing effect and limited it to only target enemy monsters.
+
+=== Stats ===
+SOUL Type: Patience
+
+Cost: 3
+
+Effects:
+
+* Silence and Paralyze a monster. Draw the card from the bottom of your deck. (Beta 55.0)
+* Silence and Paralyze an enemy monster. (Post Beta 55.1, Current)
+
+Rarity: Purple (Epic)
+
+=== Trivia ===
+
+* Beta 56.0 already updated its image.
+
+
+
+
+
+
+
+
+
+
+
+
+[[Category:Rework]]

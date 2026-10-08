@@ -1,0 +1,26 @@
+[[File:Groom.png|thumb|217x217px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Groom here].
+[[File:Groom (Beta 32.1).png|thumb|218x218px|Beta 32.1]]
+Groom's effect during its release in '''Beta 30.0''' allowed you to draw a card with a cost equal to your gold. '''Beta 32.1''' buffed that by now drawing a card with a cost equal to your remaining gold, so you can play the drawn card right away if you want. '''Beta 41.1''' buffed this further by now letting you draw a card with a cost less than your remaining gold if you lack one with equal cost, so the effect will now work almost all the time.
+[[File:Groom (Beta 41.1).png|thumb|217x217px|Beta 41.1]]
+'''Beta 48.0''' reworked it completely. Going from a 3/2/3, it's now a 4/4/4 (thus gaining +1G and +2/+1) and has a Turbo effect which simply lets you draw a card, but only if you have 6 or less in your hand (so you don't overdraw it instantly).
+
+=== Stats ===
+ATK:
+* 2 (Post Beta 30.0)
+* 4 (Post Beta 48.0, Current)
+HP:
+* 3 (Post Beta 30.0)
+* 4 (Post Beta 48.0, Current)
+Cost:
+* 3 (Post Beta 30.0)
+* 4 (Post Beta 48.0, Current)
+Abilities:
+* Magic: Draw a card with the highest cost ...
+** = your Gold. (Post Beta 30.0)
+** = your remaining Gold. (Post Beta 32.1)
+** <= your remaining Gold. (Post Beta 41.1)
+* Turbo: Draw a card if you have <= 6 cards in your hand.
+** (Post Beta 48.0, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

@@ -1,0 +1,25 @@
+''Current version can be found [[Brain_Shift|here]].''
+* Beta 11.0: New card: Brain Shift. EPIC Spell. SOUL: Perseverance. COST 6. EFFECT: Deal a monster under KR's ATK as DMG to your opponent and remove the KR.
+* Beta 13.1: EFFECT UPDATE: Deal a monster without Can't attack under KR's ATK as DMG to your opponent and remove the KR. 
+** This nerf was implemented to prevent Brain Shift from being used with [[Chara/Previous Versions|Chara]] which had Can't attack and 99 ATK.
+** ''Can't attack'' is now known as ''Disarmed''.  
+* Beta 18.0: EFFECT UPDATE: Deal a monster under KR's ATK as DMG to your opponent and remove the KR.
+* Beta 18.1: COST 6 > 5.
+* Beta 20.2: EFFECT UPDATE: Deal a monster under KR's ATK as DMG to your enemy (max: 10) and remove the KR.
+** This nerf was also implemented to prevent Brain Shift from being used with Chara.
+* Beta 38.0: EFFECT UPDATE: Deal a monster under KR's ATK to your opponent and remove the KR (max 8 DMG).
+* Beta 43.0: EFFECT UPDATE: Force an enemy monster to attack another random enemy monster.
+** Brain Shift received an updated sprite.
+* Beta 62.1: EFFECT UPDATE: Both players draw a card. Force an enemy monster to attack another random enemy monster.
+* Beta 65.1: EFFECT UPDATE: Force an enemy monster to attack another random enemy monster. If one dies, silence its killer.
+* Beta 72.0: COST 5 > 4.
+* Beta 84.0: Brain Shift has been replaced by [[Aftermath]].
+<gallery>
+File:Brain Shift (Original - Beta 37.9)|Original - Beta 37.9
+File:Brain Shift (Beta 38.0).png|Beta 38.0
+File:Brain Shift (Beta 43.0).png|Beta 43.0
+</gallery>
+==Trivia==
+[[File:BG S1.png|thumb|330x330px|Asriel Dreemurr's Battle Background]]
+*Brain Shift's original sprite is part of the background sprite used for the Asriel Dreemurr fight in ''Undertale''.
+[[Category:Rework]]

@@ -1,0 +1,24 @@
+[[File:Red Wagon.png|thumb|226x226px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Red_Wagon here].
+[[File:Red Wagon (Beta 34.0).png|thumb|226x226px|Beta 34.0]]
+Red Wagon was added in '''Beta 30.0''', starting as a 3/2 for 5G with Haste and a Magic that allowed it to catch an ally monster of your choice. Its Dust would release a freshly new version of the monster, summoned as far left as possible on your board. '''Beta 34.0''' gave it +1 ATK. '''Beta 53.0''' changed its Dust to release it to your deck instead. The released monster will still be reset, but will gain a +3/+3 bonus. '''Beta 53.1''' gave it -1 cost.
+
+=== Stats ===
+[[File:Red Wagon (Beta 53.0).png|thumb|223x223px|Beta 53.0]]
+ATK:
+* 3 (Post Beta 30.0)
+* 4 (Post Beta 34.0, Current)
+HP: 2
+
+Cost:
+
+* 5 (Post Beta 30.0)
+* 4 (Post Beta 53.1, Current)
+
+Abilities:
+* Haste. Magic: Catch an ally monster.
+** Dust: Release it. (Post Beta 30.0)
+** Dust: Release it to your deck with +3/+3. (Post Beta 53.0, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

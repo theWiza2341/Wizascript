@@ -1,0 +1,31 @@
+[[File:Gardener Asgore.png|thumb|183x183px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Gardener_Asgore here].
+[[File:Gardener Asgore (Beta 41.1).png|thumb|182x182px|Beta 41.1]]
+Gardener Asgore was added in '''Beta 30.0''' with the Magic ability to remove negative effects from ally monsters, which he (fittingly) shares with [https://undercards.fandom.com/wiki/Asriel Asriel], alongside the same stats of 4/4 for 5G and [https://undercards.fandom.com/wiki/Category:Epic Epic] Rarity. However, this was limited to [https://undercards.fandom.com/wiki/Category:Plant Plants]. To compensate, he also added 2 random Plants to your hand. This last part was nerfed in '''Beta 41.1''', as this was now limited to just the 2 [https://undercards.fandom.com/wiki/Category:Generate Generated] Plants: [https://undercards.fandom.com/wiki/Flower_Jar Red Flower] and [https://undercards.fandom.com/wiki/Flower_Can Green Flower], of which he gives one of each.
+[[File:Gardener Asgore (Beta 48.0).png|thumb|179x179px|Beta 48.0]]
+'''Beta 48.0''' heavily reworked it. Now, he's a 3/5 for 7G with a Turn end effect of turning a random ally Green Flower into a Red Flower (effectively giving it +4/+4). If there's no Red, he will simply summon a Green instead. '''Beta 50.1''' reworked Red Flower. As a result, this was changed (but buffed) to make [https://undercards.fandom.com/wiki/Blue_Flower Blue Flower] the result from the transformation (which, compared to the old Red Flower, has the same ATK and HP, but -2G and Taunt).
+[[File:Gardener Asgore (Beta 50.1).png|thumb|177x177px|Beta 50.1]]
+'''Beta 52.1''' changed him once more (after Blue Flower's cost increased by 2G). His Turn end effect was changed into a Delay effect, making it only trigger once (and he has to be actually played). To compensate, he gained +1 HP and if there is no Green Flower on your board, he will now summon a Red Flower (effectively giving it +2/+2 and Transparency).
+
+=== Stats ===
+ATK:
+* 4 (Post Beta 30.0)
+* 3 (Post Beta 48.0, Current)
+HP:
+* 4 (Post Beta 30.0)
+* 5 (Post Beta 48.0)
+* 6 (Post Beta 52.1, Current)
+Cost:
+* 5 (Post Beta 30.0)
+* 7 (Post Beta 48.0, Current)
+Abilities:
+* Magic: Remove all negative effects from all ally Plants.
+** Add 2 random Plants to your hand. (Post Beta 30.0)
+** Add a Green Flower and Red Flower to your hand. (Post Beta 41.1)
+* Turn end: If there is no ally Green Flower, summon one. If there is, ...
+** turn a random ally Green Flower into a Red Flower. (Post Beta 48.0)
+** turn a random ally Green Flower into a Blue Flower. (Post Beta 50.1)
+* Delay: If there is no ally Green Flower, summon a Red Flower. If there is, ...
+** turn a random ally Green Flower into a Blue Flower. (Post Beta 52.1, Current)
+Rarity: Purple (Epic)
+[[Category:Rework]]

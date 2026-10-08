@@ -1,0 +1,37 @@
+[[File:Allergic Temmie (Original - Beta 24.9).png|thumb|220x220px|Original - Beta 24.9]]
+Current Version can be found [[Allergic Temmie|here]].
+[[File:Allergic Temmie (Beta 25.0 - Beta 54.9).png|thumb|220x220px|Beta 25.0 - Beta 54.9]]
+Allergic Temmie was a [[:Category:Tem|Tem]] added in '''Beta 9.0''' as a 2/1 for 2G, just like [[Temmie]]. Unlike Temmie, however, Allergic Temmie didn't have Charge nor Haste. Instead, it had a passive effect that would make it deal 1 DMG to all enemy monsters whenever another Tem was summoned (by any player). '''Beta 10.2''' gave it +1 HP, but this was reverted in '''Beta 15.0'''. '''Beta 16.0''' increased its HP back up to 2, but also increased its cost to 3G.
+'''Beta 25.0''' nerfed its effect to only make it trigger from a summoned Temmie or Temmie 2. '''Beta 36.1''' allowed [[Bob]] to trigger it again, while '''Beta 44.1''' made [[Trader Temmie]] trigger it again as well, alongside the in Beta 30.0 added [[School Tem]] and [[Thrashing Machine]] (the former becoming a Tem in Beta 30.2). As a result, only another Allergic Temmie won't trigger another. Tems summoned by the opponent also no longer trigger your Allergic Temmie.
+
+'''Beta 54.1''' made any Tem trigger it (like before Beta 25.0), but now only counts those you play, not ones directly summoned (or played by the opponent). It also got another +1 HP, but when its ability is triggered, it will also deal 1 DMG to itself. '''Beta 55.0''' gave it yet another +1 HP. 
+
+=== Stats ===
+ATK: 2
+
+HP:
+* 1 (Post Beta 9.0)
+* 2 (Post Beta 10.2)
+* 1 (Post Beta 15.0)
+* 2 (Post Beta 16.0)
+*3 (Post Beta 54.1)
+*4 (Post Beta 55.0, Current)
+
+Cost:
+* 2 (Post Beta 9.0)
+* 3 (Post Beta 16.0, Current)
+Abilities:
+
+* Deal 1 DMG to all enemy monsters whenever ...
+** a player summons a Tem. (Post Beta 9.0)
+** a player summons a Temmie or Temmie 2. (Post Beta 25.0)
+** a player summons a Temmie, Temmie 2 or Bob. (Post Beta 36.1)
+** you summon a Tem (except Allergic Temmie). (Post Beta 44.1)
+
+* Whenever you play a Tem, deal 1 DMG to this and all enemy monsters. (Post Beta 54.1, Current)
+
+Rarity: Blue (Rare)
+== Trivia ==
+* Beta 13.4 updated its image.
+** Temmie 2 also got its image updated.
+* Beta 33.0 updated its image again.[[Category:Rework]]

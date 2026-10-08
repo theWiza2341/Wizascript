@@ -1,0 +1,20 @@
+[[File:Gift.png|thumb|235x235px|Beta 6.6 only]]
+Current Version can be found [http://undercards.wikia.com/wiki/Gift_Bear here].
+[[File:Gift (Beta 6.7).png|thumb|235x235px|Post Beta 6.7]]
+Gift was added as Gift Bear's summon in '''Beta 6.6''', where it was a 1G 0/3 Taunt monster. This, however, was nerfed in the very next update, '''Beta 6.7''', where its HP dropped to 2.
+
+Like [http://undercards.wikia.com/wiki/Bunbun Bun], Gift also got at one point a drop in cost from 1G to 0G that was undocumented.
+
+=== Stats ===
+ATK: 0
+
+HP:
+* 3 (     Beta 6.6)
+* 2 (Post Beta 6.7, Current)
+Cost:
+* 1 (Post Beta 6.6)
+* 0 (Post Beta ''???'', Current)
+Ability: Taunt.
+
+Rarity: White (Common)
+[[Category:Rework]]

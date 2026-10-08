@@ -1,0 +1,30 @@
+[[File:Rope Dog.png|thumb|Beta 51.0]]
+Current Version can be found [[Rope Dog|here]].
+
+Rope Dog was added in '''Beta 51.0''' as a 3G 4/4 with Charge, but the Magic of summoning an enemy [[Mace]] that would get killed at the end of that turn with Delay (triggering Mace's Dust on the Rope Dog that summoned it if it's still on the board). '''Beta 53.1''' gave it +2 ATK, but downgraded its Charge to Haste. '''Beta 56.0''' reworked the card, keeping its haste, but changing everything else. Its ATK and HP dropped by 2, and its cost increased by 1, bringing it down to a 4/4/2. Upon being played, it made you choose a Dog in your hand to give +1 ATK and +2 HP. It also gained a Synergy effect of turning into the chosen card with Haste and Rope Dog's stats before transforming.
+
+=== Stats ===
+ATK:
+
+* 4 (Post Beta 51.0)
+* 6 (Post Beta 53.1)
+*4 (Post Beta 56.0, Current)
+
+HP: 
+
+* 4 (Post Beta 51.0)
+* 2 (Post Beta 56.0, Current)
+
+Cost:
+
+* 3 (Post Beta 51.0)
+* 4 (Post Beta 56.0, Current)
+
+Abilities:
+
+* Charge. Magic: Summon an enemy Mace. Delay: Kill it. (Post Beta 51.0)
+* Haste. Magic: Summon an enemy Mace. Delay: Kill it. (Post Beta 53.1)
+*Haste. Magic: Choose a Dog in your hand. Give it +1/+2. Synergy: Turn into a copy of the chosen Dog with this monster's stats and Haste. (Post Beta 56.0, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

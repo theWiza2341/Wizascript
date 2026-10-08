@@ -1,0 +1,19 @@
+[[File:Kid Slime.png|thumb|293x293px|Beta 21.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Dad_Slime here].
+[[File:Kid Slime (Beta 30.0).png|thumb|293x293px|Beta 30.0]]Kid Slime was added in '''Beta 21.0''' as a summon from Dad Slime. As such, it got the Generated Rarity in '''Beta 30.0'''.
+Its first gameplay change was in '''Beta 41.1''', where its cost dropped from 3G to 1G (though this is not as impactful since Dad Slime summons them directly).
+
+=== Stats ===
+ATK: 2
+
+HP: 1
+
+Cost:
+* 3 (Post Beta 21.0)
+* 1 (Post Beta 41.1, Current)
+Ability: N/A
+
+Rarities:
+* White (Common) (Post Beta 21.0)
+* Green (Generated) (Post Beta 30.0, Current)
+[[Category:Rework]]

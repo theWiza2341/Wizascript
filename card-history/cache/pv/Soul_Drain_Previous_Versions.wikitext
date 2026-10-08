@@ -1,0 +1,16 @@
+[[File:Soul Drain.png|thumb|291x291px|Beta 51.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Soul_Drain here].
+
+Soul Drain was added in '''Beta 51.0''' as a 0G spell that would simply deal 2 DMG to the user to let them draw a card. '''Beta 53.0''' changed it to make the user destroy a card of their choice from their hand for 2G and draw 2 new cards. If the destroyed card was a Lost Soul, its Dust would trigger.
+
+=== Stats ===
+SOUL Type: Determination
+
+Cost:
+* 0 (Post Beta 51.0)
+* 2 (Post Beta 53.0, Current)
+Effects:
+* Deal 2 DMG to yourself to draw a card. (Post Beta 51.0)
+* Burn a card in your hand to draw 2 cards. If it's a Lost Soul, trigger its Dust. (Post Beta 53.0, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

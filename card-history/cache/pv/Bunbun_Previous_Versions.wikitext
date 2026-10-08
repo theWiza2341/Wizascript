@@ -1,0 +1,29 @@
+[[File:Bunbun.png|thumb|234x234px|Post Beta 7.6]]
+Current Version can be found [[Bunbun|here]].[[File:Bunbun (Beta 14.0).png|thumb|234x234px|Post Beta 14.0]]
+
+Bunbun was one of the 14 cards added in '''Beta 7.6'''. While its ability has always allowed it to summon a single Bun (which was also added in Beta 7.6) with Magic, its stats were changed a couple times, partly due to changes to Bun itself, which can be found [[Bun/Previous_Versions|here]].
+[[File:Bunbun (Beta 20.0).png|thumb|Beta 20.0]]
+Starting as a 3/4 for 5G, '''Beta 14.0''' gave it +1 HP. This was reverted in '''Beta 20.0''', but reverted back in '''Beta 55.1. Beta 57.0''' followed it up with -1 ATK and Cost, leaving it at 2/5 for 4G.
+[[File:Bunbun (Beta 55.1).png|thumb|232x232px|Beta 55.1]]
+
+=== Stats ===
+ATK:
+
+* 3 (Post Beta 7.6)
+* 2 (Post Beta 57.0, Current)
+
+HP:
+* 4 (Post Beta 7.6)
+* 5 (Post Beta 14.0)
+* 4 (Post Beta 20.0)
+*5 (Post Beta 55.1, Current)
+
+Cost:
+
+* 5 (Post Beta 7.6)
+* 4 (Post Beta 57.0, Current)
+
+Ability: Magic: Summon a Bun.
+
+Rarity: White (Common)
+[[Category:Rework]]

@@ -1,0 +1,57 @@
+[[File:Chara (Original - Beta 8.2).png|thumb|220x220px|Original - Beta 8.2]]
+Current Version can be found [http://undercards.wikia.com/wiki/Chara here]. A clearer view of all versions of the Genocide Artifact can be found [https://undercards.fandom.com/wiki/Artifacts/Previous_Versions here].
+[[File:Chara (Beta 8.3 - Beta 31.1).png|thumb|220x220px|Beta 8.3 - Beta 31.1]]
+Originally, Chara costed 66G, which was probably refrencing 666, a number associated with the Devil. '''Beta 3.2''' reduced that to 60G, possibly to avoid calling Chara a demon, which a lot of people hated. '''Beta 5.7''' dropped it again, this time by a huge amount, leaving Chara at 48G. This is equal to your Base ATK at LV 20 in Undertale, as seen [https://undertale.fandom.com/wiki/Stats#Stat_Chart here].
+[[File:Chara (Beta 31.2 - Beta 52.0).png|thumb|217x217px|Beta 31.2 - Beta 52.0]]
+'''Beta 7.1''' buffed Chara a bit by making their ability kill the opponent right away instead of doing lethal damage. This was done as previously, Determination had a slight advantage due to Chara only making them lose a life (and set their HP to 0/15/10, depending on the version). '''Beta 7.2''' increased their cost to 50G as a slight nerf.
+'''Beta 8.3''' changed Chara quite a bit. They now cost 110G, but this cost will lower equal to the total cost of all dead enemy monsters. A few hours later, in '''Beta 8.3.1, '''Chara was changed again. They now cost 120G and their price cannot be lower than 30G. '''Beta 10.1''' nerfed Chara again. Now it will kill the player with the lowest amount of HP. This was done as there were a lot of decks that used Determination and stalled until they had enough money to place them. As a result, their HP would be very low and the opponent would be (almost) at full heath. This nerf prevents that.
+
+'''Beta 12.1''' reworked Chara. They now cost 30G by default, making this the cheapest version yet (not counting Beta 8.3's cost reduction). Their Magic will now deal 1 damage to the enemy for every dead monster, both yours and the enemy's. They can't attack themselves, though. '''Beta 13.1''' increased the cost to 40G.
+
+'''Beta 31.2''' gave Chara a completely new design. The first thing to notice is that their stats of 99/99 (based on the ATK and DEF of UT's [https://undertale.fandom.com/wiki/Real_Knife Real Knife] and [https://undertale.fandom.com/wiki/The_Locket The Locket] respectively) were changed for the very first time, to 10/10. Due to this, their cost also reached a new low at just 20G (making [https://undercards.fandom.com/wiki/Hyper_Goner Hyper Goner] the most expensive card in the game, which it currently still is). Their effect will now set the current HP of the user to 20, no matter what it was before, making them similar to [https://undercards.fandom.com/wiki/Asriel_Dreemurr Asriel Dreemurr]. They work also similar to [https://undercards.fandom.com/wiki/Gerson Gerson] as they have their own exclusive Artifact that they give to their user, Genocide: ''"Turn start: Kill a random enemy monster. Deal 1 DMG to you." '''''Beta 32.1''' nerfed them a little bit by also setting the user's Max HP to 20.
+
+'''Beta 36.1''' removed the HP modification and changed the Artifact to: ''"Turn start: Silence and kill a random enemy monster. Gain -1 max HP."'' As such, cards like [https://undercards.fandom.com/wiki/Flowey Flowey] aren't able to survive the effect anymore. You will also be more able to freely use [https://undercards.fandom.com/wiki/Artifacts Health] and [https://undercards.fandom.com/wiki/Innkeeper Innkeeper]. And finally, [https://undercards.fandom.com/wiki/Rouxls_Kaard Rouxls Kaard] and [https://undercards.fandom.com/wiki/Frisk Frisk] don't allow you to have more current HP than max HP, so you will still lose current HP even if you have one of them on your board. (This wasn't the case right away, though.) '''Beta 38.2''' nerfed the Artifact further to: ''"Turn start: Silence and kill a random enemy monster. Deal 1 DMG to you and gain -1 max HP." ''This was done so that people with the Artifact not at full HP will still get their current HP reduced (unless they have Frisk or Rouxls). '''Beta 39.0''' reduced their cost to an ever lower 17G, but nerfed Genocide to only trigger every 2 turns.
+
+'''Beta 52.1''' reduced their cost once more, to 14G. They now mention a counter, similar to [https://undercards.fandom.com/wiki/Soulless_Kris Soulless Kris]' '''Dark Fountain''' Artifact, which is related to the newly designed Genocide Artifact: ''"Turn start: Add a [https://undercards.fandom.com/wiki/Real_Knife Real Knife] to your hand. Turn end: Remove all Real Knives from your hand."'' The counter starts at 0 (as mentioned on Chara's card), but each use of the Real Knife increases that counter by 1, after which your max HP will drop by the amount. This is a way to make the killing more controllable, allowing the player to choose if they want to kill something and if so, which monster. But this comes at the cost of actually needing to pay for the kill and an accelerating reduction in max HP.
+
+'''Beta 74.2''' reduced real knife's cost from 3 to 2. 
+
+=== Stats ===
+ATK:
+* 99 (Pre Beta 31.2)
+* 10 (Post Beta 31.2, Current)
+HP:
+* 99 (Pre Beta 31.2)
+* 10 (Post Beta 31.2, Current)
+
+Cost:
+* 66 (Pre Beta 3.2)
+* 60 (Post Beta 3.2)
+* 48 (Post Beta 5.7)
+* 50 (Post Beta 7.2)
+* 110 (Beta 8.3)
+* 120 (Post Beta 8.3.1)
+* 30 (Post Beta 12.1)
+* 40 (Post Beta 13.1)
+* 20 (Post Beta 31.2)
+* 17 (Post Beta 39.0)
+* 14 (Post Beta 52.1, Current)
+Abilities:
+* Magic: Deal 999999 DMG to the enemy. (Pre Beta 7.1)
+* Magic: Kill the enemy. (Post Beta 7.1)
+** Reduce its cost by dead enemy monsters' cost. (Beta 8.3)
+** Reduce its cost by dead enemy monsters' cost (min: 30). (Post Beta 8.3.1)
+* Magic: Kill the player with the least HP.
+** Reduce its cost by dead enemy monsters' cost (min: 30). (Post Beta 10.1)
+* Disarmed. Magic: Deal 1 DMG to the enemy for each dead monster. (Post Beta 12.1)
+* Magic: Gain the Genocide Artifact. Set your current HP to 20. (Post Beta 31.2)
+* Magic: Gain the Genocide Artifact. Set your HP to 20. (Post Beta 32.1)
+* Magic: Gain the Genocide Artifact. (Post Beta 36.1)
+* Magic: Gain the Genocide Artifact. Counter starts at 0. (Post Beta 52.1, Current)
+Rarity: Red (DETERMINATION - Cannot be crafted or silenced)
+
+Song: Megalo Strike Back
+== Trivia ==
+* Beta 33.0 updated their image.
+** Among [https://undercards.fandom.com/wiki/Category:Determination_(Rarity) DT] monsters, they shares this with [https://undercards.fandom.com/wiki/Kris Kris].
+[[Category:Rework]]

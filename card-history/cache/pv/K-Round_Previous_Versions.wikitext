@@ -1,0 +1,17 @@
+[[File:K-Round.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/C-Round here].
+
+<span>K-Round was added as a </span>[https://undercards.fandom.com/wiki/Generated_Cards Generated]<span> card for C-Round in </span>'''Beta 30.0'''<span>. As a 7/7 for a minimum cost of 5G (which itself is as well in cases it gets bounced), it was already pretty powerful despite having no effect. That didn't stop '''Beta 43.0''' giving it both Haste and Candy, allowing it to attack the moment it transformed as well as recovering 3 HP from the counter-DMG done by the target when your turn ends.</span>
+
+=== Stats ===
+ATK: 7
+
+HP: 7
+
+Cost: 5
+
+Abilities:
+* N/A (Post Beta 30.0)
+* Haste. Candy. (Post Beta 43.0, Current)
+Rarity: Green (Generated)
+[[Category:Rework]]

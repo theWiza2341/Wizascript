@@ -1,0 +1,17 @@
+[[File:Spider_Sign.png|thumb|Beta 46.0]]Current version can be found [https://undercards.fandom.com/wiki/Spider_Sign here].
+
+Spider Sign was added in '''Beta 46.0''', as a 7G 6/6 [https://undercards.fandom.com/wiki/Category:Epic Epic] [https://undercards.fandom.com/wiki/Category:Arachnid Arachnid] that would transform all [https://undercards.fandom.com/wiki/Spider Spiders] in your deck into Spider Croissants and Spider Donuts randomly, with a 50/50 chance. '''Beta 52.0''' also made it transform Spiders in your hand.
+
+=== Stats ===
+ATK: 6
+
+HP: 6
+
+Cost: 7
+
+Abilities:
+*Magic: Randomly turn into Spider Croissants and Spider Donuts ...
+**all Spiders in your deck. (Post Beta 46.0)
+**all Spiders in your deck and hand. (Post Beta 52.0, Current)
+Rarity: Purple (Rare)
+[[Category:Rework]]

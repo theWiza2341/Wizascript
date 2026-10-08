@@ -1,0 +1,14 @@
+*Beta 30.0: New card: Ponman. DR COMMON. COST 4. ATK 3. HP 4. EFFECT: Dust: Summon every Ponman from your hand.
+**They are summoned from left to right, both from hand and to board, and the effect stops when the board is full.
+*Beta 46.0: COST 4 > 3. ATK 3 > 2. HP 4 > 3. Now is a Chess Figure. EFFECT UPDATE: Magic: If played on the left, gain +1 HP and Candy. If played on the right, gain +1 ATK and Haste.
+**Beta 46.0 added [[Chessboard]] and the [[:Category:Piece|Piece]] Tribe (then called "Chess Figure") with 5 members, this being one of them. As a result, it was entirely reworked. The "played left or right" effect was already present in [[Mister Society]]'s effect.
+*Beta 47.0: EFFECT UPDATE: Magic: If played on the left, give an ally Piece +2 ATK and Transparency. If played on the right, give an ally Piece +2 HP and Candy. Synergy: Give it both.
+*Beta 54.0: EFFECT UPDATE: Magic: If played on the left, gain +1 Dodge. Otherwise, gain +1 ATK and Haste. If you have an ally Chessboard, do both.
+*Beta 68.0: COST 3 > 1. ATK 2 > 1. HP 3 > 1. EFFECT UPDATE: Haste. Magic: Switch: Deal 1 DMG to random enemy monster or heal 2 HP to you.
+*Beta 68.1: EFFECT UPDATE: Haste. Magic: Switch: Gain +2 HP or heal 1 HP to you.
+
+<gallery>
+File:Ponman.png|Beta 30.0
+</gallery>
+
+[[Category:Rework]]

@@ -1,0 +1,28 @@
+[[File:Bloody Tree.png|thumb|234x234px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Bloody_Tree here].
+[[File:Bloody Tree (Beta 48.1).png|thumb|228x228px|Beta 48.1]]
+Bloody Tree was added in '''Beta 30.0'''. Originally, it was a 2G 2/1 monster that, with Magic, could trigger the Dust effect of an ally monster at will (though not affecting it, effectively triggering a copy of the effect in a similar matter as Pre-Beta 46.0 [https://undercards.fandom.com/wiki/Goner_Kid Goner Kid]), but only if that monster's cost is 3G or lower.
+[[File:Bloody Tree (Beta 49.1).png|thumb|228x228px|Beta 49.1]]
+'''Beta 48.1''' completely changed it, most likely due to the changes made to the [https://undercards.fandom.com/wiki/Angel_of_Death Lost Souls] around that time. It's now a 6G 5/6 monster with the Magic effect of dealing Fatigue DMG to the opponent (DMG taken for failing to draw a card due to an empty deck or use of [https://undercards.fandom.com/wiki/Artifacts#Preservation Preservation]). This is an almost identical recreation of Pre-Beta 38.2 [https://undercards.fandom.com/wiki/Shambling_Mass Shambling Mass]. '''Beta 49.1''' reduced its HP to 4, while '''Beta 52.0''' increased its ATK to 6.
+
+=== Stats ===
+ATK:
+* 2 (Post Beta 30.0)
+* 5 (Post Beta 48.1)
+* 6 (Post Beta 52.0, Current)
+HP:
+* 1 (Post Beta 30.0)
+* 6 (Post Beta 48.1)
+* 4 (Post Beta 49.1, Current)
+Cost:
+* 2 (Post Beta 30.0)
+* 6 (Post Beta 48.1, Current)
+Abilities:
+* Magic: Trigger an ally <= 3G monster's Dust effect. (Post Beta 30.0)
+* Magic: Deal Fatigue DMG to the enemy. (Post Beta 48.1, Current)
+Rarity: White (Common)
+
+=== Trivia ===
+* The +1 ATK buff in Beta 52.0 was undocumented, but intentional.
+** Beta 51.1 had increased the size of its image. This change will be skipped.
+[[Category:Rework]]

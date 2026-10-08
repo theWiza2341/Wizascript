@@ -1,0 +1,22 @@
+*Beta 6.6: New card: Fridge. COMMON Spell. SOUL: Patience. COST 2. EFFECT: Paralyze a monster and give it +5 HP.
+*Beta 7.1: COST 2 > 1.
+*Beta 9.3: COST 1 > 0.
+*Beta 31.0: COST 0 > 1. EFFECT UPDATE: Paralyze a monster and give it +4 HP.
+*Beta 50.0: Updated sprite. (Increased the size of the fridge.)
+*Beta 55.0: COMMON > BASE. EFFECT UPDATE: Look at [[Killer Cook|Eggs, Flour and Milk]]. Choose one to add to your hand with +2/+2.
+**Beta 55.0 was a rework of [[:Category:Patience]]. Fridge took the place of [[Protection]] as Patience's [[:Category:Base|Base]] spell.
+*Beta 55.1: EFFECT UPDATE: Look at Eggs, Flour, and Milk. Choose one to add to the top of your deck with +2/+2. Draw a card from the bottom of your deck.
+*Beta 56.0: Updated sprite. (Added a shadow of [[Snowdrake's Mom]] overworld sprite behind the fridge.)
+*Beta 61.1: BASE > COMMON.
+**[[Melt]] took the place of Fridge as Patience's Base spell.
+*Beta 65.0: EFFECT UPDATE: COST 3 > 1. EFFECT UPDATE: Draw a card from the bottom of your deck. Give the bottom 4 cards in your deck -1 cost.
+*Beta 66.0: EFFECT UPDATE: Give -1 cost to the bottom 4 cards of your deck. Draw a card.
+*Beta 69.0: EFFECT UPDATE: Give a monster Taunt. Draw a card.
+
+<gallery>
+File:Fridge (Original - Beta 54.9).png|Original - Beta 54.9
+File:Fridge (Beta 55.0).png|Beta 55.0
+File:Fridge (Beta 55.1).png|Beta 55.1
+</gallery>
+
+[[Category:Rework]]

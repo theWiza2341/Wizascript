@@ -1,0 +1,32 @@
+[[File:Mettaton NEO (Original - Beta 10.9).png|thumb|220x220px|Original - Beta 10.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/Mettaton_NEO here].[[File:Mettaton NEO (Beta 11.0).png|thumb|236x236px|Beta 11.0]]
+Mettaton NEO went through a series of changes. Starting with 8 ATK for 9G in '''Beta 4.3''', '''Beta 4.8''' increased its cost to 10G, while '''Beta 5.2''' dropped its ATK to 7. '''Beta 5.7''' dropped its cost back to 9G and '''Beta 7.2''' raised its ATK back to 8, though, bringing it back to its original state.
+[[File:Mettaton NEO (Beta 26.0).png|thumb|238x238px|Beta 26.0]]
+Mettaon NEO was heavily nerfed in the following few updates, mainly regarding its effect. Originally, when it died, it would deal its ATK as DMG to all enemies. '''Beta 11.0''' made it also damage your own monsters. '''Beta 26.0''' brought its cost back up to 10G, while '''Beta 31.0''' made the opponent take only half its ATK as DMG (which is 4 by default).[[File:Mettaton NEO (Beta 31.0).png|thumb|242x242px|Beta 31.0]]
+'''Beta 36.1''' increased its ATK to 10, meaning +2 DMG to monsters and +1 DMG to the opponent by default, giving it its first buff in quite a while. '''Beta 49.0''' followed this with a major buff: Removing its Disarmed, which it had from the very start (as it reflected its inability to attack in Undertale).
+[[File:Mettaton NEO (Beta 36.1).png|thumb|248x248px|Beta 36.1]]
+
+=== Stats ===
+ATK:
+* 8 (Post Beta 4.3)
+* 7 (Post Beta 5.2)
+* 8 (Post Beta 7.2)
+* 10 (Post Beta 36.1, Current)
+HP: 1
+
+Cost:
+* 9 (Post Beta 4.3)
+* 10 (Post Beta 4.8)
+* 9 (Post Beta 5.7)
+* 10 (Post Beta 26.0, Current)
+Abilities:
+* Disarmed. Dust: Deal its ATK as DMG to...
+** all enemies. (Post Beta 4.3)
+** all but you. (Post Beta 11.0)
+** all monsters and half to the enemy. (Post Beta 31.0)
+* Dust: Deal its ATK as DMG to ...
+** all monsters and half to the enemy. (Post Beta 49.0, Current)
+Rarity: Gold (Legendary)
+
+<nowiki>Song: Power of ''NEO''</nowiki>
+[[Category:Rework]]

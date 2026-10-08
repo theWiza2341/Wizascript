@@ -1,0 +1,36 @@
+*Alpha 3.0: New card: Resurrection. COMMON Spell. SOUL: Determination. COST 5. EFFECT: Copy your last 3 dead monsters to your hand.
+*Alpha 3.2: COST 5 > 6.
+*Alpha ?: COST 6 > 4. EFFECT UPDATE: Copy your last 2 dead monsters to your hand.
+**This is an undocumented change made after Alpha 3.2 and before Beta 1.0. No further information is known. Due to unclear information, the image gallery skips from Alpha 3.2 to Beta 1.1.
+*Beta 1.1: (COST 6 > 4.) EFFECT UPDATE: Add your last 2 dead monsters to your hand.
+** This change made Resurrection no longer copy cards, so the original dead monster could not be sent to your hand by another Resurrection again unless it died once more.
+*Beta 4.1: COST 4 > 1. EFFECT UPDATE: Add a random dead ally monster to your hand.
+** This rework was done because Resurrection was deemed too powerful when used with [[:Category:Legendary|Legendary]] cards.
+*Beta 13.1: COST 1 > 3. EFFECT UPDATE: Copy 2 random dead ally monsters to your hand.
+*Beta 33.0: Updated sprite.
+**The [[:Category:Determination|Determination]] spells [[Will to Fight]], [[Another Chance]], [[Same Fate]], [[Hyper Goner]] and [[Sacrifice]] also received updated sprites.
+*Beta 48.0: EFFECT UPDATE: Send 2 random non-[[:Category:Generated|generated]] monsters from your dustpile to your hand. If you have 15 or less HP also add random [[Angel of Death|Lost Soul]]. 
+**Adding a Lost Soul would only occur if there was room in the hand.
+*Beta 48.1: EFFECT UPDATE: Add a copy of 2 non GENERATED ally dead monsters to your hand. If you have < 15 HP, add the next Lost Soul too.
+**There was a typo in the patch notes and on the card. In order to reflect the in-game behavior, the card should have read "<= 15" rather than "< 15".
+**Non-Determination players would get a random Lost Soul instead of the next one.
+*Beta 51.1: Updated sprite. 
+**This change was very slight.
+*Beta 58.0: COST 3 > 2. EFFECT UPDATE: Add a copy of a random non-TOKEN dead ally monster to your hand twice. If you have 15 or less HP, give them -1 cost.
+*Beta 58.1: COST 2 > 4.
+*Beta 59.0: COST 4 > 3.
+*Beta 69.1: COST 3 > 2.
+*Beta 84.0: COST 2 > 1. EFFECT UPDATE: Look at 3 non-Generated monsters in your Dustpile. Choose one to burn and add a copy of it to your hand.
+*Beta 101.0: We have changed the "Burn" keyword to be named "Erase" to be more clear, unique and flavorful.
+**Resurrection's effect was reworded to: "Look at 3 non-Generated monsters in your dustpile and choose one. Erase it and add a copy of it to your hand."
+
+<gallery>
+File:Resurrection (Original - Beta 32.9).png|Original - Beta 32.9
+File:Resurrection (Beta 33.0).png|Beta 33.0
+File:Resurrection (Beta 48.0).png|Beta 48.0
+File:Resurrection (Beta 48.1).png|Beta 48.1
+File:Resurrection (Beta 51.1).png|Beta 51.1
+</gallery>
+
+[[Category:Rework]]
+[[Category:Missing]]

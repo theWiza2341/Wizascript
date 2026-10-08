@@ -1,0 +1,20 @@
+[[File:Smolder Cake.png|thumb|231x231px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Smolder_Cake here].
+[[File:Smolder Cake (Beta 42.1).png|thumb|226x226px|Beta 42.1]]
+Smolder Cake was added in '''Beta 30.0''' as the first monster just having Candy. It had stats of 4G 2/5 with this until '''Beta 42.1''', where it gained +2G +2/+1 to end up at 6G 4/6. '''Beta 43.0''' gave it -1 ATK.
+
+=== Stats ===
+ATK:
+* 2 (Post Beta 30.0)
+* 4 (Post Beta 42.1)
+* 3 (Post Beta 43.0, Current)
+HP:
+* 5 (Post Beta 30.0)
+* 6 (Post Beta 42.1, Current)
+Cost:
+* 4 (Post Beta 30.0)
+* 6 (Post Beta 42.1, Current)
+Ability: Candy.
+
+Rarity: White (Common)
+[[Category:Rework]]

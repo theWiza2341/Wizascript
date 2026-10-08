@@ -1,0 +1,28 @@
+[[File:Sacrifice.png|thumb|199x199px|Beta 27.0]]
+Current version can be found [[Sacrifice|here]].
+[[File:Sacrifice (Beta 33.0).png|thumb|200x200px|Beta 33.0]]
+Released in '''Beta 27.0''' as [https://undercards.fandom.com/wiki/Category:Determination Determination]'s 3rd [https://undercards.fandom.com/wiki/Category:Rare Rare] spell, Sacrifice is a 1G spell that lets you choose an ally monster of your choice. It will kill that monster, heal you by 4 HP and add a [https://undercards.fandom.com/wiki/Angel_of_Death Lost Soul] to your hand. '''Beta 43.0''' makes that Lost Soul cost 2G less.
+[[File:Sacrifice (Beta 43.0).png|thumb|195x195px|Beta 43.0]]
+'''Beta 46.1''' made it lose the chance to give [https://undercards.fandom.com/wiki/Thrashing_Machine Thrashing Machine] from the pool of Lost Souls. It shares this change with both Angel of Death and [https://undercards.fandom.com/wiki/Chaos_Blaster Chaos Blaster] (making the entire Tribe seperated from Thrashing Machine, similar to [https://undercards.fandom.com/wiki/Jevil Chaos Weapons]).
+[[File:Sacrifice (Beta 46.1).png|thumb|195x195px|Beta 46.1]]
+'''Beta 48.0''' reworked the class and many of its spells. Sacrifice was the only one to be replaced by another, this being [https://undercards.fandom.com/wiki/Faded_Memory Faded Memory].
+
+=== Stats ===
+SOUL Type: Determination
+
+Cost:
+* 1 (Post Beta 27.0)
+* N/A (Post Beta 48.0, Current)
+
+Effects:
+* Kill an ally monster, restore 4 HP to yourself and add to your hand ...
+** a random Lost Soul. (Post Beta 27.0)
+** a random Lost Soul with -2 cost. (Post Beta 43.0)
+** a random generated Lost Soul with -2 cost. (Post Beta 46.1) 
+* N/A (Post Beta 48.0, Current)
+
+Rarity: Blue (Rare)
+== Trivia ==
+* Beta 33.0 updated its image.
+** For Determination, it shares this with [https://undercards.fandom.com/wiki/Will_to_Fight Will to Fight], [https://undercards.fandom.com/wiki/Resurrection Resurrection], [https://undercards.fandom.com/wiki/Another_Chance Another Chance], [https://undercards.fandom.com/wiki/Same_Fate Same Fate] and [https://undercards.fandom.com/wiki/Hyper_Goner Hyper Goner].
+[[Category:Rework]]

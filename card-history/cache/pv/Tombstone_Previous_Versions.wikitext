@@ -1,0 +1,35 @@
+[[File:Tombstone (Original - Beta 46.0)|thumb|220x220px|Original - Beta 46.0]]
+Current Version can be found [[Tombstone|here]].
+[[File:Tombstone (Beta 46.1).png|thumb|257x257px|Beta 46.1]]
+Tombstone was added in '''Beta 30.0''' as a 3/7 for a very high cost of 13G. This was due to its effect being able to summon 2 different Dust monsters from your dustpile with a cost of 8G or less next to it. '''Beta 31.0''' increased that to 15G. '''Beta 31.2''' decreased that to 14G and nerfed its effect to not include 8G monsters. '''Beta 33.1''' and '''Beta 34.0''' both gave it -1 HP. '''Beta 46.1''' returned its cost to its original 13G.
+[[File:Tombstone (Beta 50.1).png|thumb|Beta 50.1]]
+'''Beta 50.1''' buffed [[Frisk]], which caused them to be reduced to 7G, and thus within Tombstone's range. As a result, Tombstone was nerfed to not make it able to summon [[:Category:Determination (Rarity)|Determination]] monsters. '''Beta 53.1''' made it also not able to summon [[:Category:Generate|Token]] monsters. '''Beta 55.0''' increased its cost back to 14G.
+[[File:Tombstone (Beta 53.1).png|thumb|Beta 53.1]]
+
+=== Stats ===
+ATK: 3
+
+HP:
+* 7 (Post Beta 30.0)
+* 6 (Post Beta 33.1)
+* 5 (Post Beta 34.0, Current)
+
+Cost:
+* 13 (Post Beta 30.0)
+* 15 (Post Beta 31.0)
+* 14 (Post Beta 31.2)
+* 13 (Post Beta 46.1)
+*14 (Post Beta 55.0, Current)
+
+Abilities:
+* Magic: Summon beside this from your dustpile ...
+** 2 different <= 8G Dust monsters. (Post Beta 30.0)
+** 2 different <= 7G Dust monsters. (Post Beta 31.2)
+** 2 different non-DT <= 7G Dust monsters. (Post Beta 50.1)
+**2 different non-DT and non-Token <= 7G Dust monsters. (Post Beta 53.1, Current)
+
+Rarity: Purple (Epic)
+
+== Trivia ==
+* Since its effect nerf in Beta 31.2, its description wasn't actually updated to say it can't summon 8G monsters. This lasted until Beta 35.0. It did function correctly however.
+[[Category:Rework]]

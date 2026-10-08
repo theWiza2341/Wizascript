@@ -1,0 +1,28 @@
+[[File:Bomb (Original - Beta 21.9).png|thumb|220x220px|Original - Beta 21.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/Bomb here].
+[[File:Bomb (Beta 22.0).png|thumb|293x293px|Beta 22.0]]
+The Bomb went through some minor changes. Starting out with 0/5, it gained +1 HP in '''Beta 3.2''' and +1 ATK in '''Beta 4.2''', leaving it at 1/6.
+
+During this time, Bomb's effect made it deal 3 damage to all enemies when your next turn starts, killing itself in the process. '''Beta 13.1''' buffed this by making it deal 1 extra damage to the enemy player, and '''Beta 18.1''' made it deal 1 extra damage to their monsters as well, making it deal 4 damage to all enemies. This, however, was completely reverted in '''Beta 22.0''', bringing it back to its Beta 4.2 version.
+
+'''Beta 32.1''' brought its HP back to 5.
+
+=== Stats ===
+ATK:
+* 0 (Pre  Beta 4.2)
+* 1 (Post Beta 4.2, Current)
+HP:
+* 5 (Pre  Beta 3.2)
+* 6 (Post Beta 3.2)
+* 5 (Post Beta 32.1, Current)
+Cost: 3
+
+Abilities:
+* Start of turn: Explode to deal...
+** 3 DMG to all enemies. (Pre Beta 13.1)
+** 3 DMG to all enemy monsters and 4 to the enemy. (Post Beta 13.1)
+** 4 DMG to all enemies. (Post Beta 19.0)
+** 3 DMG to all enemies. (Post Beta 22.0, Current)
+
+Rarity: White (Common)
+[[Category:Rework]]

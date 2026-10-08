@@ -1,0 +1,23 @@
+[[File:Toy Block.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Toy_Block here].
+[[File:Toy Block (Beta 41.1).png|thumb|294x294px|Beta 41.1]]
+Toy Block was added in '''Beta 30.0''' as a 3G 5/2 Taunt monster that would swap its own ATK and HP at the end of each turn (making it 2/5 when the enemy's turn starts). '''Beta 41.1''' gave it +1G and reworked its effect, losing Taunt and swapping its base ATK and HP as a result. Its new effect would give it +1 ATK at the end of each turn and +1 HP at the start (making it now start with 3/5 for the enemy). '''Beta 52.0 '''reworked it again, kinda giving a mix of both versions. It still is 4G, lacks Taunt and has a SoT and EoT effect that does the same, but that effect is now swapping its own stats like it did first. Its base stats also swapped back, but with an added +1 HP, leaving it at 5/3.
+
+=== Stats ===
+ATK:
+* 5 (Post Beta 30.0)
+* 2 (Post Beta 41.1)
+* 5 (Post Beta 52.0, Current)
+HP:
+* 2 (Post Beta 30.0)
+* 5 (Post Beta 41.1)
+* 3 (Post Beta 52.0, Current)
+Cost:
+* 3 (Post Beta 30.0)
+* 4 (Post Beta 41.1, Current)
+Abilities:
+* Taunt. Turn end: Swap its ATK and HP. (Post Beta 30.0)
+* Turn start: Gain +1 HP. Turn end: Gain +1 ATK. (Post Beta 41.1)
+* Turn start & Turn end: Swap its ATK and HP. (Post Beta 52.0, Current)
+Rarity: White (Common)
+[[Category:Rework]]

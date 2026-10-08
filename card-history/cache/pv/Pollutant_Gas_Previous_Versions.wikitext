@@ -1,0 +1,31 @@
+[[File:Pollutant Gas (Original - Beta 32.9).png|thumb|220x220px|Original - Beta 32.9]]
+Current version can be seen [[Pollutant Gas|here]].
+[[File:Pollutant Gas (Beta 33.0).png|thumb|293x293px|Beta 33.0]]
+Initially, Pollutant Gas simply gave KR to all enemy monsters. It costed 6G, was reduced to 5G in '''Alpha 3.2''' and was reduced again to 4G in '''Beta 2.0'''. '''Beta 6.0''' reduced it further down to 3G, but also reworked the effect.
+
+Now, it deals 1 DMG to all enemy monsters. Those under KR take 4 DMG instead. Later, however, its cost was returned to 4G and its effect was nerfed to deal 3 DMG to KR'd monsters. Both these changes were undocumented, but were more likely done at the same time either very soon after Beta 6.0 for being a mistake, or around Beta 6.8, when the Class got a rework.
+
+Either way, it stayed like that all the way until '''Beta 44.0''', where its cost dropped to 2G and its effect became a blend of new and old. Now, the enemy monsters under KR take 1 DMG. Afterwards, those not under KR will simply be given KR.
+
+=== Stats ===
+SOUL Type: [http://undercards.wikia.com/wiki/Decks#Perseverance Perseverance]
+
+Cost: 
+* 6 (Post Alpha 3.0)
+* 5 (Post Alpha 3.2)
+* 4 (Post Beta 2.0)
+* 3 (Post Beta 6.0)
+* 4 (Pre Beta 44.0)
+* 2 (Post Beta 44.0, Current)
+Effect:
+* Give KR to all enemy monsters. (Post Alpha 3.0)
+* Deal 1 DMG to all enemy monsters. If under KR, deal 4 DMG instead. (Post Beta 6.0)
+* Deal 1 DMG to all enemy monsters. If under KR, deal 3 DMG instead. (Pre Beta 44.0)
+* Deal 1 DMG to all enemy monsters under KR.
+** Then give KR to all enemy monsters. (Post Beta 44.0, Current)
+Rarity: Blue (Rare)
+== Trivia ==
+* Before Beta 4.3, KR was simply named "Poisoned".
+* Beta 33.0 updated its image.
+** For Perseverance, it shares this with [https://undercards.fandom.com/wiki/Poison Poison], [https://undercards.fandom.com/wiki/Termination Termination], [https://undercards.fandom.com/wiki/Contamination Contamination] and [https://undercards.fandom.com/wiki/Siphoning Siphoning].
+[[Category:Rework]]

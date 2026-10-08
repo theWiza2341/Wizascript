@@ -1,0 +1,25 @@
+[[File:Chessboard.png|thumb|257x257px|Beta 46.0]]
+Current Version can be found [[Chessboard|here]].
+[[File:Chessboard (Beta 46.1).png|thumb|Beta 46.1]]
+Chessboard was added in '''Beta 46.0''', alongside and working with the [[:Category:Piece|Piece]] Tribe (which was originally named Chess Figure). '''Beta 46.1''' added this to the Tribe (and renamed it). '''Beta 54.0''' reduced its HP from 5 to 4.
+
+=== Stats ===
+ATK: 4
+
+HP:
+
+* 5 (Post Beta 46.0)
+* 4 (Post Beta 54.0, Current)
+
+Cost: 5
+
+Abilities:
+* Magic: Copy all positive effects from all ally Pieces. (Beta 46.0)
+* '''[Now counts as a Piece.]''' (Post Beta 46.1, Current)
+Rarity: Blue (Rare)
+
+== Trivia ==
+
+* While it didn't change itself between Beta 46.1 and Beta 54.0, it did got 2 wording updates due to the removal of Ranged in Beta 47.0 and Thorns in Beta 49.0.
+
+[[Category:Rework]]

@@ -1,0 +1,19 @@
+[[File:Evil Eye.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Evil_Eye here].
+[[File:Evil Eye (Beta 41.0).png|thumb|294x294px|Beta 41.0]]
+Evil Eye was added in '''Beta 30.0''' where it was somewhat similar to [https://undercards.fandom.com/wiki/Eye Eye] to be able to have a look at cards in the enemy's hand and increase the price of them. In this case, a Turbo effect which shows 1 and a Magic effect which increased a random card's cost by 2G. '''Beta 41.0''' made its Magic increase the cost of the last card shown, which on its own means the card that was shown through its Turbo but can work together with other Evil Eyes and [https://undercards.fandom.com/wiki/Artifacts Spy]. '''Beta 43.0''' reverted this back.
+
+=== Stats ===
+ATK: 3
+
+HP: 3
+
+Cost: 3
+
+Abilities:
+* Turbo: Reveal a random card in the enemy's hand.
+** Magic: Give +2 cost to a random card in the enemy's hand. (Post Beta 30.0)
+** Magic: Give +2 cost to the last card revealed. (Post Beta 41.0)
+** Magic: Give +2 cost to a random card in the enemy's hand. (Post Beta 43.0, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

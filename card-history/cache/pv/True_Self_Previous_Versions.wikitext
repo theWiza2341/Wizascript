@@ -1,0 +1,23 @@
+[[File:True Self.png|thumb|Beta 55.0]]
+Current Version can be found [[Self Reflection|here]].
+
+True Self was added in '''Beta 55.0''' as a Token for Self Reflection and recreating of [[Snow Storm]], the card that got removed for these to take its place, being a 6G spell that kills all non-paralyzed monsters on the board. '''Beta 55.1''' increased its cost to 7G.
+
+=== Stats ===
+Main spell giver: Self Reflection
+
+Cost:
+
+* 6 (Beta 55.0)
+* 7 (Post Beta 55.1, Current)
+
+Effect: Kill all non-paralyzed monsters.
+
+Rarity: Green (Generated)
+
+=== Trivia ===
+
+* Snow Storm's latest version, since Beta 28.0, killed all Paralyzed monsters, thus the opposite targets of True Self.
+** Additionally, it was always 7G with that effect, the same cost as that of True Self since Beta 55.1.
+
+[[Category:Rework]]

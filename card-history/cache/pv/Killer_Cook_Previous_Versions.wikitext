@@ -1,0 +1,22 @@
+[[File:Killer Cook.png|thumb|195x195px|Beta 39.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Killer_Cook here].
+[[File:Killer Cook (Beta 41.0).png|thumb|196x196px|Beta 41.0]]
+Killer Cook was added in '''Beta 39.0''' as a 2/5 for 4G. '''Beta 41.0''' gave it +1 ATK and Cost. This was reverted in '''Beta 42.0'''.
+
+=== Stats ===
+ATK:
+* 2 (Post Beta 39.0)
+* 3 (Post Beta 41.0)
+* 2 (Post Beta 42.0, Current)
+HP: 5
+
+Cost:
+* 4 (Post Beta 39.0)
+* 5 (Post Beta 41.0)
+* 4 (Post Beta 42.0, Current)
+Ability: Magic: Add Eggs, Flour and Milk to your deck.
+
+Rarity: Gold (Legendary)
+
+Song: Can You Really Call This A Hotel, I Didn't Receive A Mint On My Pillow Or Anything
+[[Category:Rework]]

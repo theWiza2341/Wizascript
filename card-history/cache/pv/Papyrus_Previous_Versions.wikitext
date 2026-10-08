@@ -1,0 +1,48 @@
+[[File:Papyrus (Original - Beta 7.2).png|thumb|220x220px|Original - Beta 7.2]]
+Current Version can be found [[Papyrus|here]].
+[[File:Papyrus (Beta 7.3 - Beta 55.0).png|thumb|220x220px|Beta 7.3 - Beta 55.0]]
+Papyrus used to be one of the worst legendaries. His stats were pretty solid for being a 6/9 for 10G with the effect that every time he kills a monster, he can attack again. In other words, a variant of gaining Charge (as Charge can't be given to a monster that already attacked). Of course, this doesn't mean he's immune to dying if he kills one.
+
+This is a very helpful ability, as it makes you able to wipe most, if not all of the enemy board. But the problem was that he didn't have Charge, so he needed to wait a turn to be effective. While this would made Papyrus better in a Bravery Deck, due to that class having [[Final Charge]], it would cost around 20G to use this combo, and would only give you 1 monster that has become very weak due to the damage it took. Unlike a [[Woshua|Wosh]][[Asgore|gore]] combo, which costs around the same but would also give you 2 fully healed monsters.
+And while he could also be effective in a Kindness Deck, due to the fact that they can use their healing Spells to keep Papyrus alive, most people would kill Papyrus or make him useless before he could attack the next turn. This was fairly easy because of his decently high cost. This is why Papyrus ended up as one of the least used legendaries, even after he got +1 ATK in '''Beta 4.8''' and +1 HP in '''Beta 6.4''', for a total of 7/10 for 10G.
+
+'''Beta 7.1''' finally fixed that by giving Papyrus Charge. Although his cost raised to 14G due to this and his HP dropped back to 9, it made people use him a whole lot more. But being a 7/9 monster with Charge that could attack again after making a kill for 14G was a bit too much, so the next update, '''Beta 7.2''', gave Papyrus -2/+2, ending him with 5/11. His cost also dropped back to 10G but it was undocumented. And while it was said this was intentional, '''Beta 7.3''' raised it back up, but to 13G, 1 less from before. And in '''Beta 7.4''' (which makes it the 4th change in a row), his HP went back to the original 9, and his cost dropped to 12G. ''(In the end, he resulted with -2 ATK and Cost from Beta 7.1.)''
+
+'''Beta 9.3''' nerfed Papyrus a little again. Now, after killing a monster, he can only attack enemy monsters and not the opponent directly (making it now more like gaining Haste). '''Beta 34.0''' brought his cost back up to 13G. This was returned to 12G in '''Beta 55.1''', but also nerfed his effect again by replacing his default Charge with Haste as well.
+
+=== Stats ===
+ATK:
+* 6 (Pre Beta 4.8)
+* 7 (Post Beta 4.8)
+* 5 (Post Beta 7.2, Current)
+HP:
+* 9  (Pre Beta 6.4)
+* 10 (Post Beta 6.4)
+* 9  (Beta 7.1)
+* 11 (Post Beta 7.2)
+* 9  (Post Beta 7.4, Current)
+Cost:
+* 10 (Pre Beta 7.1)
+* 14 (Beta 7.1)
+* 10 (Beta 7.2)
+* 13 (Beta 7.3)
+* 12 (Post Beta 7.4)
+* 13 (Post Beta 34.0)
+*12 (Post Beta 55.1, Current)
+
+Abilities:
+* Whenever this attacks and kills, gain Charge. (Pre Beta 7.1)
+* Charge. If this attacks and kills, gain Charge. (Post Beta 7.1)
+* Charge. If this attacks and kills, gain Haste. (Post Beta 9.3)
+*Haste. If this attacks and kills, gain Haste. (Post Beta 55.1, Current)
+
+Rarity: Gold (Legendary)
+
+Song: Bonetrousle
+
+== Trivia ==
+[[File:Papyrus (April Fools' Day 2018).png|thumb|234x234px|April Fools' Day 2018]]
+* For '''April Fools' Day 2018''', his image changed to Underpants, an AU made by Sr Pelo.
+* Beta 21.1 updated his image.
+[[Category:Rework]]
+[[Category:April Fools' Day]]

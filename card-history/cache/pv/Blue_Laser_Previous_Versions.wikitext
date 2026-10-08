@@ -1,0 +1,21 @@
+[[File:Blue Laser.png|thumb|235x235px|Post Beta 6.6]]
+Current Version can be found [http://undercards.wikia.com/wiki/Blue_Laser here].
+[[File:Blue Laser (Beta 12.1).png|thumb|234x234px|Post Beta 12.1]]
+Blue Laser was added in '''Beta 6.6'''. Its first change happened in '''Beta 12.1''', where its ATK was buffed from 0 to 1. As a result, it will not die instantly from [http://undercards.wikia.com/wiki/Madjick Madjick]. [http://undercards.wikia.com/wiki/Orange_Laser Orange Laser] got the same change.
+
+'''Beta 20.0''' changed Blue Laser up without changing up Orange Laser, though, by dropping its HP by 1 but leaving Orange Laser unchanged.
+
+=== Stats ===
+ATK:
+* 0 (Post Beta 6.6)
+* 1 (Post Beta 12.1, Current)
+HP:
+* 8 (Post Beta 6.6)
+* 7 (Post Beta 20.0, Current)
+
+Cost: 4
+
+Ability: Deal 1 damage to an attacking enemy monster.
+
+Rarity: White (Common)
+[[Category:Rework]]

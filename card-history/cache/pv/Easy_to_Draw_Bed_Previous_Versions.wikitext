@@ -1,0 +1,19 @@
+[[File:Easy_to_Draw_Bed.png|thumb|Beta 51.0]]Current Version can be found [https://undercards.fandom.com/wiki/Easy_to_Draw_Bed here].
+
+Easy to Draw Bed was added in '''Beta 51.0'''. It was a 5G 4/5 monster that would replace itself with a new monster after it attacked, setting the new monster's base stats to 4/4 and giving it Haste. '''Beta 52.0''' gave the new monster +1 base HP but no longer giving it Haste.
+
+''This change was counted as a buff because it can still transform into a Haste or Charge monster, which allowed the new monster to basically perform a second attack. A Charge monster can also attack the opponent directly rather than being able to only attack a monster.''
+
+=== Stats ===
+ATK: 4
+
+HP: 5
+
+Cost: 5
+
+Abilities:
+*After attacking, transform into a random monster.
+**Set it to base 4/4 and give it Haste. (Post Beta 51.0)
+**Set it to base 4/5. (Post Beta 52.0, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

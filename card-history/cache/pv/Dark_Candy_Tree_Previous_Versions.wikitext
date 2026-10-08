@@ -1,0 +1,24 @@
+[[File:Dark Candy Tree.png|thumb|216x216px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Dark_Candy_Tree here].
+[[File:Dark Candy Tree (Beta 43.0).png|thumb|211x211px|Beta 43.0]]
+Dark Candy Tree (DCT) was added in '''Beta 30.0''' with a Support effect that would give Candy to the attacking monster. It also had Candy itself, until '''Beta 43.0''' removed it. '''Beta 48.0''' instead gave it Tribe synergy by also making its Support give +1/+1 to an attacking [https://undercards.fandom.com/wiki/Category:Plant Plant] (making it a miniature [https://undercards.fandom.com/wiki/Kris Kris]).[[File:Dark Candy Tree (Beta 48.0).png|thumb|214x214px|Beta 48.0]]
+'''Beta 50.1''' nerfed it quite heavily, no longer giving Candy but instead restore the attacker by 3 HP (meaning instantly, but once). '''Beta 51.0''' followed that heavily again by reducing its own HP (from 6 to 5), the healing HP (from 3 to 2) and the Plant buffing HP (from 1 to 0).
+[[File:Dark Candy Tree (Beta 50.1).png|thumb|211x211px|Beta 50.1]]
+
+=== Stats ===
+ATK: 3
+
+HP:
+* 6 (Post Beta 30.0)
+* 5 (Post Beta 51.0, Current)
+
+Cost: 6
+
+Abilities:
+* Candy. Support: Give Candy. (Post Beta 30.0)
+* Support: Give Candy. (Post Beta 43.0)
+* Support: Give Candy. If it's a Plant, also give it +1/+1. (Post Beta 48.0)
+* Support: Restore 3 HP. If it's a Plant, also give it +1/+1. (Post Beta 50.1)
+* Support: Restore 2 HP. If it's a Plant, also give it +1 ATK. (Post Beta 51.0, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

@@ -1,0 +1,32 @@
+[[File:Migospel (Original - Beta 21.9).png|thumb|220x220px|Original - Beta 21.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/Migospel here].
+[[File:Migospel (Beta 22.0).png|thumb|255x255px|Post Beta 22.0]]
+Migospel is essentially the upgraded version of [[Migosp]], much like it is the Hard Mode version of Migosp in Undertale.
+[[File:Migospel (Beta 28.0).png|thumb|258x258px|Post Beta 28.0]]
+Prior to Alpha 2.7, this card was a 3/4 monster for 6G that would give +3 HP to an ally monster, which makes Migospel the [http://undercards.wikia.com/wiki/Force_of_Nature Force of Nature] for non-Kindness users. '''Alpha 2.7''' itself dropped its cost to 5G, and '''Alpha 3.2''' dropped it even more to 4G. This stayed all the way up to Beta 7.5, where its effect was expanded to be able to target any monster instead of just allies. '''Beta 12.1''' gave it +1 ATK.
+[[File:Migospel (Beta 30.0).png|thumb|260x260px|Post Beta 30.0]]
+'''Beta 22.0''' nerfed its effect by only giving +2 HP, the same as Migosp. '''Beta 28.0''' reverted that a little by making it give +3 HP to monsters with <= 3 HP, while others still get +2 HP, making it also similar to [https://undercards.wikia.com/wiki/Feast Feast]. '''Beta 30.0''' reverted it back entirely by giving +3 HP no matter what. '''Beta 34.0''' gave it -1 HP.
+
+=== Stats ===
+ATK:
+* 3 (Pre Beta 12.1)
+* 4 (Post Beta 12.1, Current)
+
+HP:
+* 4 (Pre Beta 34.0)
+* 3 (Post Beta 34.0, Current)
+
+Cost:
+* 6 (Pre Alpha 2.7)
+* 5 (Post Alpha 2.7)
+* 4 (Post Alpha 3.2, Current)
+
+Abilities:
+* Magic: Give an ally monster +3 HP. (Pre Beta 7.5)
+* Magic: Give a monster...
+** +3 HP. (Post Beta 7.5)
+** +2 HP. (Post Beta 22.0)
+** +2 HP, +3 HP if its HP <= 3. (Post Beta 28.0)
+** +3 HP. (Post Beta 30.0, Current)
+Rarity: White (Common)
+[[Category:Rework]]

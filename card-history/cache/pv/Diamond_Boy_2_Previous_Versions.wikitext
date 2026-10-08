@@ -1,0 +1,26 @@
+[[File:Diamond Boy 2.png|thumb|253x253px|Beta 6.6]]
+Current Version can be found [http://undercards.wikia.com/wiki/Diamond_Boy_2 here].
+[[File:Diamond Boy 2 (Beta 13.1).png|thumb|255x255px|Beta 13.1]]
+Diamond Boy 2 was added in '''Beta 6.6'''. His first change was in '''Beta 13.1''', where he got -1/+1 in stats, going from 3/4 to 2/5.
+[[File:Diamond Boy 2 (Beta 31.0).png|thumb|255x255px|Beta 31.0]]
+'''Beta 31.0''' did a complete 180 to him, as he now makes the opponent take 2 less DMG instead of you. But due to this negative effect, it did receive great stat increases, these being +3/+1 for +1G, leaving it at 5/6 for 4G. '''Beta 31.2''' brought its HP back to 5.
+
+=== Stats ===
+ATK:
+* 3 (Post Beta 6.6)
+* 2 (Post Beta 13.1)
+* 5 (Post Beta 31.0, Current)
+HP:
+* 4 (Post Beta 6.6)
+* 5 (Post Beta 13.1)
+* 6 (Post Beta 31.0)
+* 5 (Post Beta 31.2, Current)
+Cost:
+* 3 (Post Beta 6.6)
+* 4 (Post Beta 31.0, Current)
+Abilities:
+* You have +2 Armor. (Post Beta 6.6)
+* Your opponent has +2 Armor. (Post Beta 31.0, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

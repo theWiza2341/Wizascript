@@ -1,0 +1,23 @@
+[[File:Sugar Pot.png|thumb|Beta 36.0]]
+Current Version can be found [[Sugar Pot|here]].
+
+Sugar Pot was added in '''Beta 36.0''', being one of the cards introducing "target in hand" effects. In this case, it's giving a monster in your hand +1/+1 for 3G while having a body of 2/3. '''Beta 54.0''' gave it +1 cost, but also doubled its effect to give the chosen monster +2/+2.
+
+=== Stats ===
+ATK: 2
+
+HP: 3
+
+Cost:
+
+* 3 (Post Beta 36.0)
+* 4 (Post Beta 54.0, Current)
+
+Abilities:
+
+* Magic: Give a monster in your hand +1/+1. (Post Beta 36.0)
+* Magic: Give a monster in your hand +2/+2. (Post Beta 54.0, Current)
+
+Rarity: White (Common)
+<br />
+[[Category:Rework]]

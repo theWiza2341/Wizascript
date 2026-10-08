@@ -1,0 +1,22 @@
+[[File:Great Door.png|thumb|211x211px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Great_Door here].
+[[File:Great Door (Beta 35.0).png|thumb|212x212px|Beta 35.0]]
+Great Door was added in '''Beta 30.0'''. With 3/3 for 6G, its first change was a 1 ATK nerf to 2/3 in '''Beta 35.0'''. Originally, its effect made it summon a random monster from your deck with a cost less than its own. '''Beta 50.1''' made it no longer give other Great Doors (that had their cost reduced, as it can't summon monsters with an equal cost). '''Beta 51.0''' followed that by making the summoned monster be the most expensive possible.
+[[File:Great Door (Beta 50.1).png|thumb|204x204px|Beta 50.1]]
+
+=== Stats ===
+ATK:
+* 3 (Post Beta 30.0)
+* 2 (Post Beta 35.0, Current)
+HP: 3
+
+Cost: 6
+
+Abilities:
+* Magic: Summon from your deck with a cost < its own ...
+** a random monster. (Post Beta 30.0)
+** a random other monster. (Post Beta 50.1)
+** a random most expensive other monster. (Post Beta 51.0, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

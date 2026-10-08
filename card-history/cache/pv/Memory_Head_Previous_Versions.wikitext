@@ -1,0 +1,30 @@
+[[File:Screenshot 127.png|thumb|234x234px|Pre Beta 5.3]]
+Current Version can be found [http://undercards.wikia.com/wiki/Memory_Head here].
+[[File:5.3 Memory Head.png|thumb|234x234px|Post Beta 5.3]]
+Memory Head started with 3/3 for 4G. '''Beta 5.3''' buffed that with +1 HP. Its effect allowed the user to send a random card in their opponent's hand back into their deck.
+[[File:Memory Head (Beta 47.1).png|thumb|230x230px|Beta 47.1]]
+After a long time, '''Beta 47.1''' reworked it. Now, as a 6/5 for 5G, its new Magic affects yourself, sending a random card from your hand back into your deck. However, a new duplicate of that card will also be added. But it will not choose another Memory Head nor a Determination card.
+
+'''Beta 53.0''' reworked it again. Now, as a 2/2/2, its Magic will add an exact copy of itself to your hand, but only if the Magic comes from a non-Generated Memory Head. So only those that started in your deck will activate their Magic.
+
+=== Stats ===
+ATK:
+* 3 (Pre Beta 47.1)
+* 6 (Post Beta 47.1)
+* 2 (Post Beta 53.0, Current)
+HP:
+* 3 (Pre Beta 5.3)
+* 4 (Post Beta 5.3)
+* 5 (Post Beta 47.1)
+* 2 (Post Beta 53.0, Current)
+Cost:
+* 4 (Pre Beta 47.1)
+* 5 (Post Beta 47.1)
+* 2 (Post Beta 53.0, Current)
+Abilities:
+* Magic: Send a random card from the enemy player's hand to their deck. (Pre Beta 47.1)
+* Magic: Send a random other non-DT card and a copy of it from your hand to your deck. (Post Beta 47.1)
+* Magic: If this isn't generated, exactly copy itself to your hand. (Post Beta 53.0, Current)
+
+Rarity: White (Common)
+[[Category:Rework]]

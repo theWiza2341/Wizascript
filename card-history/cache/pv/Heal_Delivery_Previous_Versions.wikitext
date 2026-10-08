@@ -1,0 +1,35 @@
+[[File:Heal Delivery (Original - Beta 7.0).png|thumb|220x220px|Original - Beta 7.0]]
+Current version can be seen [[Heal Delivery|here]].
+[[File:Heal Delivery (Beta 7.1 - Beta 18.9).png|thumb|220x220px|Beta 7.1 - Beta 18.9]]
+Since its inception, Heal Delivery has undergone a series of buffs in order to increase the winrates of [http://undercards.wikia.com/wiki/Decks#Kindness Kindness] as well as the overall use of this [[card]] when other cards such as [[Asriel]] and [[Asriel Dreemurr]] are also valid options. 
+
+In particular, the change in the ability of [[Feast]] in Beta 5.2 as well as the buff to [http://undercards.wikia.com/wiki/Decks#Perseverance Perseverance], caused Heal Delivery to see a greater buff during '''Beta 5.3''', encapsulating the old ability of [[Feast]] as well as its main ability of healing the player. Because before that, it only healed you.    
+
+Starting with 15 HP for 9G, '''Beta 2.0''' gave its first buff by dropping the cost by 2. '''Beta 4.2''' continued by restoring 5 more HP to you, leaving it restoring 25 HP to your for 7G. And as mention, it was in Beta 5.3 where it also gained the ability to fully heal all ally monsters. '''Beta 6.0''' topped it off with restoring +10 more HP to you, making you restore 30 HP and as such, makes Heal Delivery fully restore all allies for the same 7G.    
+
+From '''Beta 7.1''', nerfs were coming, starting with reverting the latest buff, making you only restore 20 HP while still fully restoring all ally monsters. '''Beta 7.2''' changed it a whole lot by healing both you and your monsters by 15 HP, but if your HP was <= 5, it would restore 30 HP instead (in other words, double the HP). This didn't mean much for the monsters, as most of them don't have more than 10 HP. [http://undercards.wikia.com/wiki/Longevity Longevity] was really the only way that they could have that high HP.    
+
+As such, this complicated version was removed in '''Beta 7.4'''. Instead, it returned to its very first version: only healing you for 9G. The only difference being that it now fully heals you. '''Beta 8.3''' buffed it by reducing its cost to 8G. '''Beta 9.3''' increased the cost to 10G, reduced your healing from 30 to 25, but now fully restores your monsters again, while also removing all the negative effects, just like Asriel does. '''Beta 18.1''' increased the cost to 11G. And finally, '''Beta 19.0''' replaced this spell with [https://undercards.fandom.com/wiki/Test_of_Will Test of Will].    
+
+Soul Type: Kindness
+
+Cost:
+* 9 (Pre Beta 2.0)
+* 7 (Post Beta 2.0)
+* 9 (Post Beta 7.4)
+* 8 (Post Beta 8.3)
+* 10 (Post Beta 9.3)
+* 11 (Post Beta 18.1)
+* N/A (Post Beta 19.0, Current)
+Effects:
+* Restore 15 HP to you. (Pre Beta 4.2)
+* Restore 20 HP to you. (Post Beta 4.2)
+* Restore 20 HP to you and fully heal your monsters. (Post Beta 5.3)
+* Restore 30 HP to you and fully heal your monsters. (Post Beta 6.0)
+* Restore 20 HP to you and fully heal your monsters. (Beta 7.1)
+* Restore 15 HP to all allies. If your HP <= 5, restore 30 HP instead. (Post Beta 7.2)
+* Restore 30 HP to you. (Post Beta 7.4)
+* Restore 25 HP to you.
+** Remove all negative effects and fully heal your monsters. (Post Beta 9.3)
+* N/A (Post Beta 19.0, Current)
+Rarity: Purple (Epic)[[Category:Rework]]

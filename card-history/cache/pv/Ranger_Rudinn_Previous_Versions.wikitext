@@ -1,0 +1,40 @@
+[[File:Ranger Rudinn.png|thumb|244x244px|Beta 30.0]]
+Current Version can be found [[Ranger Rudinn|here]].
+[[File:Ranger Rudinn (Beta 47.0).png|thumb|238x238px|Beta 47.0]]
+Ranger Rudinn (known as Rudinn Ranger in Deltarune) was added in '''Beta 30.0''' as an [[:Category:Epic|Epic]] 2/6 for 6G monster with the at that point new ability of Ranged, as well as providing synergy with other Ranged monsters, allowing them to attack the monster in front of them at the end of your turn.
+[[File:Ranger Rudinn (Beta 53.0).png|thumb|237x237px|Beta 53.0]]
+'''Beta 47.0''' removed Ranged, and thus redesigned this. It's now a [[:Category:Common|Common]] 4/4/4 monster that fuctions as a mix between [[Malius]], an old [[Editor 2]] and the new [[Starwalker Bird]]. If your deck lacks any [[:Category:Rare|Rare]] or Epic cards, you get to choose 1 card from your hand. That card will be returned to your deck with its cost reduced by 4, making it give a full refund. 
+
+This version was almost exactly moved to [[Starwalker]] in '''Beta 53.0''' (with the only change being that generated Rare and Epic cards don't count anymore). Ranger Rudinn now acts as a small [[Sad Dragon]], only having Dodge (1) like it, but at a mere 3/1 for 3G. '''Beta 55.0''' gave it +1 HP. 
+
+=== Stats ===
+ATK:
+* 2 (Post Beta 30.0)
+* 4 (Post Beta 47.0)
+* 3 (Post Beta 53.0, Current)
+HP:
+* 6 (Post Beta 30.0)
+* 4 (Post Beta 47.0)
+* 1 (Post Beta 53.0)
+*2 (Post Beta 55.0, Current)
+
+Cost:
+* 6 (Post Beta 30.0)
+* 4 (Post Beta 47.0)
+* 3 (Post Beta 53.0, Current)
+Abilities:
+* Ranged. Turn end: Your other Ranged monsters attack the monster in front of them.
+** (Post Beta 30.0)
+* Magic: If your deck has no Rare or Epic cards, choose a card in your hand.
+** Return it to your deck with -4 cost. (Post Beta 47.0)
+* Dodge (1). (Post Beta 53.0, Current)
+Rarities:
+* Purple (Epic) (Post Beta 30.0)
+* White (Common) (Post Beta 47.0, Current)
+
+=== Trivia ===
+* Beta 30.3 fixed the effect to be able to be used on monsters you just summoned.
+**[https://undercards.fandom.com/wiki/Politician_Bear Politician Bear] also got this change.
+* Beta 51.1 made its sprite a bit bigger. (Insignificant change to include in the images.)
+
+[[Category:Rework]]

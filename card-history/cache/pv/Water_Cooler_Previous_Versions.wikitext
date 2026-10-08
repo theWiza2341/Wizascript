@@ -1,0 +1,26 @@
+[[File:Water Cooler.png|thumb|234x234px|Beta 4.2]]Current Version can be found [http://undercards.wikia.com/wiki/Water_Cooler here].
+
+[[File:6.0 Water Cooler.png|thumb|235x235px|Beta 6.0]]
+Originally since '''Beta 4.2''', Water Cooler was a 1/5 monster with a cost of 3G that would heal all monsters on your board, including itself, by 1 HP at the end of your turn. This made Water Cooler work simmilar to Kindness's Passive Effect for healing monsters. '''Beta 6.0''' gave it +1 HP (to 6), while '''Beta 6.5''' increased its healing effect by 1 (to 2).
+[[File:Water Cooler (Beta 6.5).png|thumb|234x234px|Beta 6.5]]
+This stayed all the way until '''Beta 43.1''', where it was buffed again. Now it also heals its owner, making it better than Kindness' Passive Effect in every way (by functioning the same way, but healing your monsters by 2 HP instead of 1). '''Beta 45.0''' gave it +2/-3, leaving it at 3/3/3, making it offensively stronger, but defensively weaker.
+[[File:Water Cooler (Beta 43.1).png|thumb|234x234px|Beta 43.1]]
+
+=== Stats ===
+ATK:
+* 1 (Post Beta 4.2)
+* 3 (Post Beta 45.0, Current)
+
+HP:
+* 5 (Post Beta 4.2)
+* 6 (Post Beta 6.0)
+* 3 (Post Beta 45.0, Current)
+Cost: 3
+
+Abilities:
+* Turn end: Restore...
+** 1 HP to all ally monsters. (Post Beta 4.2)
+** 2 HP to all ally monsters. (Post Beta 6.5)
+** 2 HP to all allies. (Post Beta 43.1, Current)
+Rarity: White (Common)
+[[Category:Rework]]

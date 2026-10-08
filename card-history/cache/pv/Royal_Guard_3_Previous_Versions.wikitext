@@ -1,0 +1,19 @@
+[[File:RG 03.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Royal_Guard_3 here].
+
+Royal Guard 3 (RG 03) was added in '''Beta 30.0''', alongside [https://undercards.fandom.com/wiki/Royal_Guard_4 RG 04], as the only Undertale monsters added in this Deltarune Release Themed update. Much like [https://undercards.fandom.com/wiki/Royal_Guard_1 RG 01] and [https://undercards.fandom.com/wiki/Royal_Guard_2 RG 02], RG 03 and RG 04 have swapped stats, being in the middle ground of the other two, and are [https://undercards.fandom.com/wiki/Category:Common Common] instead of [https://undercards.fandom.com/wiki/Category:Basic Basic].
+
+Since their release, all four of them changes at the same time, starting in '''Beta 40.0''', where their effects able to affect other RG's of the same kind. In RG 03's case, this meant that before, when it died, all ally RG's except other 03's gained Candy. Now, all ally RG's gain it.
+
+=== Stats ===
+ATK: 8
+
+HP: 9
+
+Cost: 9
+
+Abilities:
+* Dust: Give all ally RG's Candy (except 03). (Post Beta 30.0)
+* Dust: Give all ally RG's Candy. (Post Beta 40.0, Current)
+Rarity: White (Common)
+[[Category:Rework]]

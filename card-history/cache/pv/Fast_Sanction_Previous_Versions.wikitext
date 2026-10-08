@@ -1,0 +1,23 @@
+[[File:Fast Sanction.png|thumb|189x189px|Beta 27.0]]
+Current Version can be found [https://undercards.wikia.com/wiki/Fast_Sanction here].
+[[File:Fast Sanction (Beta 28.0).png|thumb|190x190px|Beta 28.0]]
+Fast Sanction was added in '''Beta 27.0''' as [https://undercards.wikia.com/wiki/Category:Justice Justice]'s 3rd [https://undercards.wikia.com/wiki/Category:Rare Rare] Spell. Its first change was already in '''Beta 28.0''', which it shares with [https://undercards.wikia.com/wiki/Category:Bravery Bravery]'s [https://undercards.wikia.com/wiki/Rage Rage] and [https://undercards.wikia.com/wiki/Category:Perseverance Perseverance]'s [https://undercards.wikia.com/wiki/Siphoning Siphoning].
+[[File:Fast Sanction (Beta 44.0).png|thumb|188x188px|Beta 44.0]]
+At first, this card dealt 1-6 DMG to a monster. After Beta 28.0, this was changed to 2-5 DMG. The 2nd part of the effect, which adds a new copy to your hand if the DMG resulted in 3 or lower, thus the lower half, has stayed the same because of this. '''Beta 44.0''' buffed the 2nd effect by making the new copy have its cost reduced by/to 2. 
+
+The next update, '''Beta 44.1''', replaced this spell with [https://undercards.fandom.com/wiki/Blitz_Quiz Blitz Quiz]. Its image was kept, albeit updated, for Zap Cannon, one of its generated spells. 
+
+=== Stats ===
+SOUL Type: Justice
+
+Cost:
+* 4 (Post Beta 27.0)
+* N/A (Post Beta 44.1, Current)
+
+Effects:
+* Deal 1-6 DMG to a monster. If it's <= 3, copy this card to your hand. (Post Beta 27.0)
+* Deal 2-5 DMG to a monster. If it's <= 3, copy this card to your hand. (Post Beta 28.0)
+* Deal 2-5 DMG to a monster. If it's <= 3, copy this card to your hand with -2 cost. (Post Beta 44.0)
+* N/A (Post Beta 44.1, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

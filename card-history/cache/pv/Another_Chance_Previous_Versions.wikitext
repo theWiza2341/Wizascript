@@ -1,0 +1,44 @@
+[[File:Another Chance (Original - Beta 7.2).png|thumb|220x220px|Original - Beta 7.2]]
+Current Version can be found [http://undercards.wikia.com/wiki/Another_Chance here].
+[[File:Another Chance (Beta 7.3 - Beta 26.9).png|thumb|220x220px|Beta 7.3 - Beta 26.9]]
+Another Chance is a Determination Deck Effect Card. It used to give the user an extra life for 3G. This was reduced to 2G in '''Beta 2.6''' but returned to 3G in '''Beta 5.3'''.
+[[File:Another Chance (Beta 27.0 - Beta 52.0).png|thumb|219x219px|Beta 27.0 - Beta 52.0]]
+With Beta 6.7 making Another Chance not work for non-DT players if they get one with [http://undercards.wikia.com/wiki/Echo_Flower Echo Flower] and the class getting a rework in Beta 6.8, '''Beta 6.8''' also increased the cost of this card to 6G. This, however, was dropped to 5G in '''Beta 7.1''' and reduced back to its original 3G in '''Beta 7.3. Beta 7.6''' increased it to 4G.
+'''Beta 10.1''' reworked the class again, and changed the whole purpose of this card. This card will now give a monster of your choice the Dust effect of being resurrected with -2/-2, making it work like a single use of [http://undercards.wikia.com/wiki/The_Heroine The Heroine]'s ability, but able to stay on the board with 0/1 even if they only had 2/2 before they died. '''Beta 11.0''' buffed the effect by now also saving the ATK and HP buffs of the monster before being resurrected.
+
+'''Beta 21.0''' reworked the card again. Now, with +1 cost to 5G, it can only be used on enemy monsters, but when the monster it's used on dies, it will summon a base version of the same monster on your board. '''Beta 27.0''' buffed this by giving that monster +1/+1 as well. '''Beta 34.0''' buffed this again by reducing it back to 4G.
+
+'''Beta 48.0''' reworked the class and most of its spells, this included. Now, for 6G, it kills all monsters on the board (much liker [https://undercards.fandom.com/wiki/Hyper_Goner Hyper Goner]). Afterwards, a random [https://undercards.fandom.com/wiki/Angel_of_Death Lost Soul] is summoned as replacement for each of them. '''Beta 48.1''' reduced its cost back to 5G. (The Lost Souls themselves were also changed in both to fit the new designed class.) Its cost was reduced further down to 2G in '''Beta 52.1'''. But it effectively became very much like [https://undercards.fandom.com/wiki/Sacrifice Sacrfice], as it can now only kill a single ally monster of your choice, but will restore 3 HP to you after doing so. A Lost Soul is still summoned, but this is now one from the chain rather than randomly. 
+
+=== Stats ===
+Soul Type: Determination
+
+Cost:
+* 3 (Pre Beta 2.6)
+* 2 (Post Beta 2.6)
+* 3 (Post Beta 5.3)
+* 6 (Post Beta 6.8)
+* 5 (Post Beta 7.1)
+* 3 (Post Beta 7.3)
+* 4 (Post Beta 7.6)
+* 5 (Post Beta 21.0)
+* 4 (Post Beta 34.0)
+* 6 (Beta 48.0)
+* 5 (Post Beta 48.1)
+* 2 (Post Beta 52.1, Current)
+Effects:
+* Gain an extra life. (Post Alpha 3.0)
+* Give a monster:
+** "Dust: Resurrect with -2/-2 (min: 0/1)." (Post Beta 10.1)
+** "Dust: Resurrect with -2/-2 (min: 0/1) (keep ATK/HP buffs)." (Post Beta 11.0)
+* Give an enemy monster:
+** "Dust: Summon an enemy copy of this." (Post Beta 21.0)
+** "Dust: Summon an enemy copy of this with +1/+1." (Post Beta 27.0)
+* Kill all monsters and replace them with random Lost Souls. (Post Beta 48.0)
+* Kill an ally monster to restore 3 HP to you and summon the next Lost Soul.
+** (Post Beta 52.1, Current)
+Rarity: Blue (Rare)
+== Trivia ==
+* Beta 33.0 updated its image.
+** For Determination, it shares this with [https://undercards.fandom.com/wiki/Will_to_Fight Will to Fight], [https://undercards.fandom.com/wiki/Resurrection Resurrection], [https://undercards.fandom.com/wiki/Same_Fate Same Fate], [https://undercards.fandom.com/wiki/Hyper_Goner Hyper Goner] and [https://undercards.fandom.com/wiki/Sacrifice Sacrifice].
+[[Category:Rework]]

@@ -1,0 +1,47 @@
+[[File:BurgerPants (Original - Beta 5.1).png|thumb|220x220px|Original - Beta 5.1]]
+Current version can be seen [[Burgerpants|here]].
+[[File:BurgerPants (Beta 5.2 - Beta 15.9).png|thumb|220x220px|Beta 5.2 - Beta 15.9]]
+Initially Burgerpants costed 5G and he would gave you 10G. This was changed in '''Alpha 2.1''' where his cost was increased to 7G and he gave 12G, but both were a 5G profit. '''Alpha 2.7''' nerfed that by bringing him back to 5G, but now only gives 8 gold, making him give a 3G profit instead of the 5G from before. '''Beta 2.6''' nerfed him again by increasing his cost and given gold by 2G, ending him at 7G again and gives 10 gold. '''Beta 3.2''' returned his cost to 5G yet again, and returned him to give a 5G profit by making him still give 10 gold. However, he now also gives 5 gold to the enemy, making you both gain a 5G profit.
+[[File:Burgerpants (Beta 16.0).png|thumb|234x234px|Beta 16.0]]
+'''Beta 5.2''' buffed his ATK from 1 to 2, so [http://undercards.wikia.com/wiki/Sans Sans] would be the only 1/1 monster, making him the weakest, just like in Undertale. '''Beta 6.5''' buffed that again by giving him +1/+1 for a total of 3/2. But he now also only gives a 3G profit again, but still to both players, as he gives you 8 gold and the enemy 3. '''Beta 7.4''' nerfed his ATK back to 2. And '''Beta 9.1''' increased his cost and gold given to you by 1, leaving him at 6G and gives you 9 gold.
+[[File:Burgerpants (Beta 51.0).png|thumb|233x233px|Beta 51.0]]
+'''Beta 12.0''' nerfed him yet again, as now he will give the enemy their 3 gold at the end of your turn. This means that they still get their part after the use of a [http://undercards.wikia.com/wiki/Mettaton_Ex Mettaton EX]. And '''Beta 16.0''' nerfed that even further by giving the enemy 4 gold, while you still earn the same, staying at the 3 gold profit. '''Beta 51.0''' gave the condition of the 'Turn end Magic' its own keyword: Delay. [https://undercards.fandom.com/wiki/Asriel Asriel] also obtained this.
+
+=== Stats ===
+ATK: 
+* 1 (Pre Beta 5.2)
+* 2 (Post Beta 5.2)
+* 3 (Post Beta 6.5)
+* 2 (Post Beta 7.4, Current)
+HP: 
+* 1 (Pre Beta 6.5)
+* 2 (Post Beta 6.5, Current)
+
+Cost: 
+* 5 (Pre Alpha 2.1)
+* 7 (Post Alpha 2.1)
+* 5 (Post Alpha 2.7)
+* 7 (Post Beta 2.6)
+* 5 (Post Beta 3.2)
+* 6 (Post Beta 9.1, Current)
+Abilities: 
+* Magic: Earn 10 gold. (Pre Alpha 2.1) 
+* Magic: Earn 12 gold. (Post Alpha 2.1) 
+
+* Magic: Earn 8 gold. (Post Alpha 2.7)
+* Magic: Earn 10 gold. (Post Beta 2.6)
+
+* Magic: Earn 10 gold and give the enemy 5 gold. (Post Beta 3.2)
+* Magic: Earn 8 gold and give the enemy 3 gold. (Post Beta 6.5)
+* Magic: Earn 9 gold and give the enemy 3 gold. (Post Beta 9.1)
+* Magic: Earn 9 gold and Turn end: Give the enemy 3 gold. (Post Beta 12.0)
+* Magic: Earn 9 gold and Turn end: Give the enemy 4 gold. (Post Beta 16.0)
+* Magic: Earn 9 gold. Delay: Give the enemy 4 gold. (Post Beta 51.0, Current)
+** '''[Unchanged. Updated wording due to newly added Keyword.]'''
+
+Rarity: Blue (Rare)
+
+=== Trivia ===
+* '''Beta 23.0''' gave him -1 ATK, but this was considered a bug so '''Beta 24.0''' gave him +1 ATK. Due to being a bug, it will not be listed in the main history.
+* '''Beta 51.1''' updated his image.
+[[Category:Rework]]

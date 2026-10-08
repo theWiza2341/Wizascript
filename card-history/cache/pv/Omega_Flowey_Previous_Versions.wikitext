@@ -1,0 +1,44 @@
+[[File:Omega Flowey (Original - Beta 9.0).png|thumb|220x220px|Original - Beta 9.0]]
+Current Version can be found [[Omega Flowey|here]]. Previous Versions of Load can be found [[Load/Previous_Versions|here]].
+[[File:Omega Flowey (Beta 9.1 - Beta 51.9).png|thumb|220x220px|Beta 9.1 - Beta 51.9]]
+Omega Flowey (officially Photoshop Flowey) was added in '''Beta 5.3''' as the 4th [[:Category:Determination (Rarity)|DT]] monster. He was and sill is a monster with one of the highest stats in the game with a very impactful ability.
+[[File:Omega Flowey (Beta 52.0).png|thumb|Beta 52.0]]
+Originally, Omega Flowey would save the game's current state and then added a 8G Load Spell to your hand when played. When a game state was saved, all aspects of the game were saved except for the dustpile and turn number. As such, this included both boards, hands, decks, gold and even the number of seconds into the turn when Omega Flowey was played. Once the Load Spell was used, the game would be rewound back to the last saved state. This was particularly useful if you wished to see what cards your opponent has as well as getting yourself out from near death situations (though obviously not usable when you're actually dead). Load was also the first DT Spell (before the introduction of the Token Rarity in Beta 30.0).
+
+He started as a 12/12 monster with a cost of 24G. '''Beta 5.7''' dropped that cost to 20G, and '''Beta 6.5''' dropped it even further to 16G. But '''Beta 6.7''' changed that completely by giving him a new unique ability. This new ability would silence the opponent's SOUL effect, leaving them with no passive ability. There's also no cure to it, so Omega Flowey's ability is a permanent one. His cost went back up to 20G for this, but also gained +4/+4, for a total of 16/16. '''Beta 7.1''' returned that to 12/12, though.
+
+'''Beta 9.1 '''gave him back his loading ability, but now only works with the cards on the board. Load is now added to the owner's deck instead of hand. He gained -1/-1 for this. His cost and that of Load were set at 15G. '''Beta 19.0''' made his Magic add the Load to your hand instead of your deck again. After this, both Omega Flowey and Load started receiving cost changes, usually at the same time. In Omega Flowey's case, '''Beta 20.0''' gave him -1G, while '''Beta 22.0''' and '''Beta 33.1''' gave him +1G. '''Beta 52.0''' removed his [[:Category:Plant|Plant]] Tribe (which he had since Plant affecting effects became a thing), no longer making any DT monsters have a Tribe (as Omega was the only one ever). '''Beta 54.1''' gave him -1G, bringing him back to 15G.
+
+=== Stats ===
+ATK:
+* 12 (Post Beta 5.3)
+* 16 (Post Beta 6.7)
+* 12 (Post Beta 7.1)
+* 11 (Post Beta 9.1, Current)
+HP:
+* 12 (Post Beta 5.3)
+* 16 (Post Beta 6.7)
+* 12 (Post Beta 7.1)
+* 11 (Post Beta 9.1, Current)
+Cost:
+* 24 (Post Beta 5.3)
+* 20 (Post Beta 5.7)
+* 16 (Post Beta 6.5)
+* 20 (Post Beta 6.7)
+* 15 (Post Beta 9.1)
+* 14 (Post Beta 20.0)
+* 15 (Post Beta 22.0)
+* 16 (Post Beta 33.1)
+*15 (Post Beta 54.1, Current)
+
+Abilities:
+* Magic: Save the game and add a Load to your hand. (Post Beta 5.3)
+
+* Magic: Silence the enemy's soul effect. (Post Beta 6.7)
+* Magic: Save the board and add a Load to your deck. (Post Beta 9.1)
+* Magic: Save the board and add a Load to your hand. (Post Beta 19.0)
+* '''[No longer counts as a Plant.]''' (Post Beta 52.0, Current)
+Rarity: Red (DETERMINATION - Cannot be crafted or silenced)
+
+Song: Your Best Nightmare
+[[Category:Rework]]

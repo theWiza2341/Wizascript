@@ -1,0 +1,30 @@
+[[File:Ice Wolf (Original - Beta 30.9).png|thumb|220x220px|Original - Beta 30.9]]
+Current Version can be found [[Ice Wolf|here]].
+[[File:Ice Wolf (Beta 31.0).png|thumb|263x263px|Beta 31.0]]
+Ice Wolf, added in '''Beta 4.6''', has very high stats of 9/7 despite their fairly low cost of 7G. This is because Ice Wolf will summon an [[Ice]] on the enemy's board (as far left as possible, if it's possible). With Ice being buffed in Beta 7.4, '''Beta 8.1''' gave Ice Wolf its first change, a -1 cost buff. '''Beta 10.1''' continued by turning its Magic into a Dust effect, so the enemy Ice isn't summoned right away. However, it lost 1 ATK for this. '''Beta 14.0''' gave it another -1 ATK, but also +1 HP, swapping its stats from 8/7 to 7/8. '''Beta 22.0''' buffed it yet again, this time by gaining a Turbo effect which paralyzes a random enemy monster.
+[[File:Ice Wolf (Beta 31.1).png|thumb|Beta 31.1]]
+'''Beta 31.0''' nerfed it quite harch with -1 ATK once more, but also making its Turbo effect be able to target ally monsters. However, the next day gave us '''Beta 31.1''', in which its Turbo effect was reverted back. Its ATK stayed the same. '''Beta 54.1''' changed its Turbo to giving itself +1 HP.
+=== Stats ===
+ATK:
+* 9 (Post Beta 4.6)
+* 8 (Post Beta 10.1)
+* 7 (Post Beta 14.0)
+* 6 (Post Beta 31.0, Current)
+
+HP:
+* 7 (Post Beta 4.6)
+* 8 (Post Beta 14.0, Current)
+
+Cost:
+* 7 (Post Beta 4.6)
+* 6 (Post Beta 8.1, Current)
+Abilities:
+* Magic: Summon an enemy Ice. (Post Beta 4.6)
+* Dust: Summon an enemy Ice. (Post Beta 10.1)
+* Turbo: Paralyze a random enemy monster. Dust: Summon an enemy Ice. (Post Beta 22.0)
+* Turbo: Paralyze a random monster. Dust: Summon an enemy Ice. (Beta 31.0)
+* Turbo: Paralyze a random enemy monster. Dust: Summon an enemy Ice. (Post Beta 31.1)
+*Turbo: Gain +1 HP. Dust: Summon an enemy Ice. (Post Beta 54.1, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

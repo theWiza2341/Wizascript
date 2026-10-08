@@ -1,0 +1,28 @@
+[[File:Final Charge (Original - Beta 18.9).png|thumb|220x220px|Original - Beta 18.9]]
+Current version can be seen [[Final Charge|here]].
+[[File:Final Charge (Beta 19.0).png|thumb|209x209px|Beta 19.0]]
+Originally, Final Charge costed 10G. This was reduced to 9G in '''Beta 3.2''' and reduced further to 8G in '''Beta 4.1'''. It was returned back to 10G in '''Beta 6.2'''.  
+[[File:Final Charge (Beta 33.0).png|thumb|212x212px|Beta 33.0]]
+'''Beta 7.5''' changed its effect completely. Instead of making your monsters be able to attack after using it, it now gives your monsters Charge. This means that monsters who already attacked this turn cannot attack again, making 5+ direct attacks in one turn usually impossible. Because of this, its cost got reduced to 6G. It was brought up to 7G in '''Beta 19.0'''.  
+
+'''Beta 42.0''' reworked the class as a whole. This resulted to Final Charge being replaced by [https://undercards.fandom.com/wiki/Ambush Ambush] (but keeping its sprite).  
+
+Soul Type: Bravery
+
+Cost: 
+* 10 (Post Alpha 3.0)
+* 9 (Post Beta 3.2)
+* 8 (Post Beta 4.1)
+* 10 (Post Beta 6.2)
+* 6 (Post Beta 7.5)
+* 7 (Post Beta 19.0)
+* N/A (Post Beta 42.0, Current)
+Effect:
+* All ally monsters can attack again. (Post Alpha 3.0)
+* All ally monsters gain Charge. (Post Beta 7.5)
+* N/A (Post Beta 42.0, Current)
+Rarity: Purple (Epic)
+== Trivia ==
+* Beta 33.0 update its image.
+** For Bravery, it shares this with [https://undercards.fandom.com/wiki/Aaron's_Secret Aaron's Secret], [https://undercards.fandom.com/wiki/Froggit_Trio Froggit Trio] and [https://undercards.fandom.com/wiki/Rage Rage].
+[[Category:Rework]]

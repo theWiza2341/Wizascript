@@ -1,0 +1,27 @@
+[[File:Big Hat Charles.png|thumb|263x263px|Beta 30.0]]
+Current Version can be found [[Big Hat Charles|here]].
+[[File:Big Hat Charles (Beta 40.0).png|thumb|Beta 40.0]]
+Big Hat Charles was added in '''Beta 30.0''' as a 5/6 for 7G. '''Beta 40.0''' reduced its HP by 1. '''Beta 53.0''' changed Armor to always just reduce DMG by 1. In most cases, like this one, it only caused a wording update. Its HP nerf was reverted in '''Beta 54.1''', but reduced its ATK by 1 instead.
+[[File:Big Hat Charles (Beta 53.0).png|thumb|Beta 53.0]]
+
+=== Stats ===
+ATK:
+
+*5 (Post Beta 30.0)
+* 4 (Post Beta 54.1, Current)
+
+HP:
+* 6 (Post Beta 30.0)
+* 5 (Post Beta 40.0)
+*6 (Post Beta 54.1, Current)
+
+Cost: 7
+
+Abilities:
+
+* Armor (1). (Post Beta 30.0)
+* Armor. (Post Beta 53.0, Current)
+** '''[Unchanged. Updated wording due to Armor rework.]'''
+
+Rarity: White (Common)
+[[Category:Rework]]

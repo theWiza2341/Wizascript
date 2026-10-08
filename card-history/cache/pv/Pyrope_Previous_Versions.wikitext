@@ -1,0 +1,31 @@
+[[File:Pyrope (Original).png|thumb|222x222px|Pre Alpha 2.2]]
+Current Version can be found [http://undercards.wikia.com/wiki/Pyrope here].    
+
+[[File:Pyrope.png|thumb|224x224px|Post Alpha 2.2]]
+Pyrope originally had stats of 0/8, before being nerfed to 0/6 in '''Alpha 2.2''', and changed to 1/5 in '''Beta 4.2'''.    
+
+[[File:4.2 Pyrope.png|thumb|220x220px|Post Beta 4.2]]
+'''Beta 4.6''' gave it the ''Can't attack'' ability, making it unable to attack despite having 1 ATK (so its still possible to hurt attacking enemies).    
+
+'''Beta 6.4''' changed it back to its original state of 0 ATK but able to attack (and damage with the help of ATK buffs), but kept its 5 HP.    
+
+[[File:Pyrope 4.6.png|thumb|223x223px|Post Beta 4.6]][[File:Pyrope (Beta 30.0).png|thumb|133x133px|Beta 30.0]]
+=== Trivia ===
+There was a glitch discovered during Beta 4.5 that allowed for a turn to be skipped or for 6 damage to be dealt if you ended your turn just before the timer ran out with the Pyrope on board, this has since been fixed.  
+
+=== Stats ===
+ATK: 
+* 0 (Pre Beta 4.2) 
+* 1 (Post Beta 4.2) 
+* 0 (Post Beta 6.4, Current) 
+HP:
+* 8 (Pre Alpha 2.2)
+* 6 (Post Alpha 2.2)
+* 5 (Post Beta 4.2, Current)
+Cost: 5
+
+Abilities:
+* At the end of your turn, deal 3 damage to the enemy player. (Pre Beta 4.6)
+* Can't attack. At the end of your turn, deal 3 damage to the enemy player. (Post Beta 4.6)
+* At the end of your turn, deal 3 damage to the enemy player. (Post Beta 6.4, Current)
+Rarity: White (Common)[[Category:Rework]]

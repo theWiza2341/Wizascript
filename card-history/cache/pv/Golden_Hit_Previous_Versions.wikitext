@@ -1,0 +1,12 @@
+*Beta 27.0: New card: Golden Hit. RARE Spell. SOUL: Integrity. EFFECT: Spend all your gold and deal DMG to an enemy monster equals to the amount spent. Convert extra DMG into Gold
+*Beta 32.1: No longer ignores DMG reducing effects.
+**Previously, this card would ignore DMG reducing effects such as Armor when checking for the extra DMG. This has now been fixed, making it work properly like [[Casual Undyne]], [[Worsening]], and [[Rage]].
+*Beta 33.0: Updated sprite. 
+**The Integrity spells [[Fortune]], [[Expulsion]] and [[Cloning]] also got updated sprites.
+*Beta 101.0: EFFECT UPDATE: Loop (1). Spend all your G and deal DMG to an enemy monster equal to the amount spent. Earn G equal to excess DMG dealt.
+<gallery>
+File:Golden Hit.png|Beta 27.0
+File:Golden Hit (Beta 33.0).png|Beta 33.0
+</gallery>
+
+[[Category:Rework]]

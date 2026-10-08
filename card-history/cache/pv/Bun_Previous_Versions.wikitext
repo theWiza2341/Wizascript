@@ -1,0 +1,23 @@
+[[File:Bun (Original - Beta 56.9).png|thumb|208x208px|Original - Beta 56.9]]
+Current Version can be found [[Bunbun|here]].
+Bun was added in '''Beta 7.6''', as a 1/1/1 summon for Bunbun with a Dust effect of giving +4 ATK to all Bunbuns on your board. While it started out with a cost of 1G, like [[Gift Bear|Gift]], this was changed to 0G undocumented. (In Bun's case, this was most likely done during '''Beta 14.0''' when Bunbun was buffed.)
+
+'''Beta 17.0''' nerfed its effect and will now only give +4 ATK to a single random ally Bunbun. '''Beta 43.1''' buffed its effect, reverting it to its previous state. '''Beta 57.0''' nerfed its effect again, this time by only giving +3 ATK.
+=== Stats ===
+ATK: 1
+
+HP: 1
+
+Cost:
+* 1 (Post Beta 7.6)
+* 0 (Post Beta 14.0?, Current)
+Abilities:
+* Dust: Give +4 ATK to all ally Bunbun. (Post Beta 7.6)
+* Dust: Give +4 ATK to a random ally Bunbun. (Post Beta 17.0)
+* Dust: Give +4 ATK to all ally Bunbun. (Post Beta 43.1)
+*Dust: Give +3 ATK to all ally Bunbun. (Post Beta 57.0, Current)
+
+Rarities:
+* White (Common) (Post Beta 7.6)
+* Green (Generated) (Post Beta 30.0, Current)
+[[Category:Rework]]

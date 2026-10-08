@@ -1,0 +1,29 @@
+[[File:Susie.png|thumb|218x218px|Beta 30.0]]
+Current Version can be found [[Susie|here]].
+[[File:Susie (Beta 51.1).png|thumb|213x213px|Beta 51.1]]
+Susie was added in '''Beta 30.0''' as a 7G 8/8 monster that would attack a random enemy on its own every turn (including the enemy player and ignoring Taunt), much like how she uncontrolably attacks during most of Deltarune Chapter 1.
+[[File:Susie (Beta 53.0).png|thumb|212x212px|Beta 53.0]]
+'''Beta 51.1''' redesigned her. Dropping her ATK to 3, she now has Taunt and a Magic that sets the ATK and HP of all other monsters on the board to 3, like an all-board variant of [[Soothing]]. '''Beta 53.0''' gave her -2 HP, while '''Beta 55.1''' removed her Taunt and limited her ability on enemy monsters to only affect the one in front of her. (All other ally monsters are still affected the same.) '''Beta 57.1''' gave her +1 HP as well as her Taunt back.
+[[File:Susie (Beta 55.1).png|thumb|213x213px|Beta 55.1]]
+
+=== Stats ===
+ATK:
+* 8 (Post Beta 30.0)
+* 3 (Post Beta 51.1, Current)
+HP:
+* 8 (Post Beta 30.0)
+* 6 (Post Beta 53.0)
+*7 (Post Beta 57.1, Current)
+
+Cost: 7
+
+Abilities:
+* Turn start: Attack a random enemy. (Post Beta 30.0)
+* Taunt. Magic: Set all other monsters to 3/3. (Post Beta 51.1)
+*Magic: Set all ally monsters and the monster in front of this to 3/3. (Post Beta 55.1)
+*Taunt. Magic: Set all ally monsters and the monster in front of this to 3/3. (Post Beta 57.1, Current)
+
+Rarity: Gold (Legendary)
+
+Song: Vs. Susie
+[[Category:Rework]]

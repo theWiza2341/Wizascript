@@ -1,0 +1,25 @@
+[[File:Undyne's Spears (Original - Beta 13.9).png|thumb|220x220px|Original - Beta 13.9]]
+Current version can be seen [[Undyne's Spears|here]].
+[[File:Undyne's Spears (Beta 14.0).png|thumb|278x278px|Beta 14.0]]
+When class spells were released in '''Alpha 3.0''', this card costed 4G to deal 6 DMG randomly split among all enemy monsters. '''Alpha 3.2''' increased the cost to 6G, and '''Beta 2.6''' brought it down to 5G.
+
+'''Beta 3.1''' nerfed the effect to deal 5 DMG instead of 6. '''Beta 4.5''' followed that by increasing the cost back to 6G, but '''Beta 14.0''' brought it back down to 5G.
+
+=== Stats ===
+SOUL Type: Justice
+
+Cost:
+* 4 (Post Alpha 3.0)
+* 6 (Post Alpha 3.2)
+* 5 (Post Beta  2.6)
+* 6 (Post Beta  4.5)
+* 5 (Post Beta 14.0, Current)
+Effects:
+* Deal 6 DMG randomly split among all enemy monsters. (Post Alpha 3.0)
+
+* Deal 5 DMG randomly split among all enemy monsters. (Post Beta 3.1, Current)
+Rarity: Blue (Rare) 
+== Trivia ==
+* Beta 33.0 updated its image (which removed 1 Spear to have as many as the DMG).
+** For Justice, it shares this with [https://undercards.fandom.com/wiki/Punishment Punishment], [https://undercards.fandom.com/wiki/Strafe Strafe] and [https://undercards.fandom.com/wiki/Shootout Shootout].
+[[Category:Rework]]

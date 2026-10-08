@@ -1,0 +1,42 @@
+[[File:Contamination (Original - Beta 5.2).png|thumb|220x220px|Original - Beta 5.2]]
+Its current version can be seen [[Contamination|here]].
+[[File:Contamination (Beta 5.3 - Beta 25.9).png|thumb|220x220px|Beta 5.3 - Beta 25.9]]
+Originally, Contamination would give KR to all monsters in the opponent's hand. Now, the way KR worked changed from time to time. Up to Beta 5.0, it would deal 1 damage at the start of the owner's turn if they are on the board, able to kill them and after Beta 2.9, blocking healing.
+[[File:Contamination (Beta 26.0).png|thumb|222x222px|Beta 26.0]]
+With these rules for KR, Contamination gained buff after buff, dropping its price each time due to the more guess work it gave unlike [http://undercards.wikia.com/wiki/Pollutant_Gas Pollutant Gas], which at that time gave KR to all monsters on the field. It started out at 8G, dropped to 7G in '''Alpha 3.2''', dropped to 5G in '''Beta 2.0''', and finally, dropped to 4G in '''Beta 4.2'''.
+[[File:Contamination (Beta 32.0).png|thumb|222x222px|Beta 32.0]]
+'''Beta 5.0''' reworked KR so that it now not only can't be removed by returning the monster to a player's hand, but also damages monsters in hand, but couldn't kill a monster no matter where they were, leaving it at 1 HP (but kept the KR, able to be killed by [http://undercards.wikia.com/wiki/Termination Termination]). This made Contamination much more useful. It could result in a lot of late-game monsters entering the field with only 1 HP. Because of this, its Cost was increased to 7G. But because it was still guessing work, its cost was reduced to 5G in '''Beta 5.3''', and further reduced to 3G in '''Beta 6.2'''.
+[[File:Contamination (Beta 33.0).png|thumb|225x225px|Beta 33.0]]
+With the Class and KR rework of '''Beta 6.8''', giving it back the Pre Beta 2.9 version of able to kill, but unable to work in hand and no longer denying healing, Contamination got a much needed rework. Now, with Pollutant Gas working as a [http://undercards.wikia.com/wiki/Worsening Worsening] for all enemies, Contamination now works as a Termination for all enemies, killing every enemy monster under KR. Because of this, its Cost was increased again, this time to 8G, bringing it back to the very first price. '''Beta 18.1''' expanded this effect to target all monsters under KR, not just enemy monsters.
+[[File:Contamination (Beta 36.1).png|thumb|224x224px|Beta 36.1]]
+A secondary effect was also added. At first, each killed monster will add a new PV spell in the user's hand for 1 less cost. '''Beta 19.0''' made it unable to give new Contaminations, and non-PV players would instead get a spell of their own Soul. '''Beta 26.0''' removed the cost reduction effect, and '''Beta 32.0''' made it simply add a single other spell just from using, no longer needings kills, but also no longer being able to get more than one. '''Beta 36.1''' increased the cost to 10G, but was brought back to 8G in '''Beta 44.0''' alongside the complete removal of its secondary effect.
+
+=== Stats ===
+Soul Type: Perseverance
+
+Cost:
+* 8 (Pre Alpha 3.2)
+* 7 (Post Alpha 3.2)
+* 5 (Post Beta 2.0)
+* 4 (Post Beta 4.2)
+* 7 (Post Beta 5.0)
+* 5 (Post Beta 5.3)
+* 3 (Post Beta 6.2)
+* 8 (Post Beta 6.8)
+* 10 (Post Beta 36.1)
+* 8 (Post Beta 44.0, Current)
+Effects:
+* Give KR to all monsters in the enemy's hand. (Pre Beta 6.8)
+* Kill all enemy monsters under KR. (Post Beta 6.8)
+* Kill all monsters under KR. For each kill, add to your hand...
+** a random Perseverance spell with -1 cost. (Post Beta 18.1)
+** a random other spell of your Soul with -1 cost. (Post Beta 19.0)
+** a random other spell of your Soul. (Post Beta 26.0)
+* Kill all monsters under KR.
+** Add another spell of your Soul to your hand. (Post Beta 32.0)
+* Kill all monsters under KR. (Post Beta 44.0, Current)
+Rarity: Purple (Epic)
+== Trivia ==
+* Beta 33.0 updated its image.
+** For Perseverance, it shares this with [https://undercards.fandom.com/wiki/Poison Poison], [https://undercards.fandom.com/wiki/Pollutant_Gas Pollutant Gas], [https://undercards.fandom.com/wiki/Termination Termination] and [https://undercards.fandom.com/wiki/Siphoning Siphoning].
+[[Category:Rework]]

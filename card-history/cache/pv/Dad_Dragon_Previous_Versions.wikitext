@@ -1,0 +1,17 @@
+[[File:Dad Dragon.png|thumb|294x294px|Beta 36.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Dad_Dragon here].
+
+Dad Dragon was added in '''Beta 36.0''' as a 4/4 for 6G. '''Beta 49.0''' gave it +1 HP.
+
+=== Stats ===
+ATK: 4
+
+HP:
+* 4 (Post Beta 36.0)
+* 5 (Post Beta 49.0, Current)
+Cost: 6
+
+Ability: Summon a Dragon Kid whenever another ally monster dies.
+
+Rarity: Purple (Epic)
+[[Category:Rework]]

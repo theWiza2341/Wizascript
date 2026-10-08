@@ -1,0 +1,17 @@
+[[File:Tutorial Guy.png|thumb|261x261px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Tutorial_Guy here].
+
+Tutorial Guy, added in '''Beta 30.0''', had the ability to add 1 random [https://undercards.fandom.com/wiki/Category:Basic Basic] card to your hand, which got introduced in the very same update, and get its cost reduced by 1. In '''Beta 38.2''', this was buffed to letting you choose 1 out of 3.
+
+=== Stats ===
+ATK: 3
+
+HP: 3
+
+Cost: 4
+
+Abilities:
+* Magic: Add a random Basic card to your hand with -1 cost. (Post Beta 30.0)
+* Magic: See 3 random Basic cards. Choose 1. Add it to your hand with -1 cost. (Post Beta 38.2, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

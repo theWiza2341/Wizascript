@@ -1,0 +1,21 @@
+[[File:Left Tentacle.png|thumb|234x234px|Pre-release]]
+Current Version can be found [https://undercards.fandom.com/wiki/Onion_San here]. Previous Versions of Right Tentacle can be found [https://undercards.fandom.com/wiki/Right_Tentacle/Previous_Versions here].
+[[File:Left Tentacle (Beta 5.9).png|thumb|234x234px|Beta 5.9]]
+Before release, Left Tentacle was shown with 2 ATK. With its release in '''Beta 5.9''', this was dropped by 1.
+
+=== Stats ===
+ATK:
+* 2 (Pre-release)
+* 1 (Post Beta 5.9, Current)
+HP: 3
+
+Cost: 2
+
+Ability: Dust: Deal 3 DMG to the enemy.
+
+Rarities:
+* Purple (Epic) (Post Beta 5.9)
+* Green (Generated) (Post Beta 30.0, Current)
+
+== Trivia ==
+Right Tentacle understandably got the same changes, but with swapped ATK and HP.[[Category:Rework]]

@@ -1,0 +1,40 @@
+[[File:Evil Blueprints.png|thumb|204x204px|Beta 36.0]]
+Current Version can be found [[Evil Blueprints|here]].
+[[File:Evil Blueprints (Beta 43.0).png|thumb|199x199px|Beta 43.0]]
+Evil Blueprints were added in '''Beta 36.0'''. As a 3/4 for 4G, it had a Magic effect that lets you look at 3 random monsters with a Tribe and a cost of 10G or lower and choose 1 of them. It would then be added to your hand, but instead of its own Tribe, it had all Tribes, making it function identical to [[Thrashing Machine]]. '''Beta 43.0''' removed the need for the monster chosen to have a Tribe at all.
+
+'''Beta 56.0''' gave it -1/-2 and -2G, leaving it at 2/2/2. Its Magic was turned simply into a Delay that added a Thrashing Machine to your hand. (Thrashing Machine was made into a Token monster in this update.) '''Beta 56.1''' gave it +1 HP.
+[[File:Evil Blueprints (Beta 56.0).png|thumb|199x199px|Beta 56.0]]
+
+=== Stats ===
+ATK:
+
+* 3 (Post Beta 36.0)
+* 2 (Post Beta 56.0, Current)
+
+HP:
+
+* 4 (Post Beta 36.0)
+* 2 (Beta 56.0)
+* 3 (Post Beta 56.1, Current)
+
+Cost:
+
+* 4 (Post Beta 36.0)
+* 2 (Post Beta 56.0, Current)
+
+Abilities:
+*Magic: See 3 random <= 10G Tribe monsters. Choose 1.
+**Add it to your hand with all Tribes. (Post Beta 36.0)
+*Magic: See 3 random <= 10G monsters. Choose 1.
+** Add it to your hand with all Tribes. (Post Beta 43.0)
+* Delay: Add a Thrashing Machine to your hand. (Post Beta 56.0, Current)
+
+Rarity: Blue (Rare)
+
+=== Trivia ===
+
+* The Patch Notes of Beta 56.0 described its cost being reduced from 3G instead of 4G.
+** Thrashing Machine's stats were 3/4 for 3G prior to this update.
+
+[[Category:Rework]]

@@ -1,0 +1,20 @@
+[[File:Orange Laser-0.png|thumb|236x236px|Post Beta 6.6]]
+Current Version can be found [http://undercards.wikia.com/wiki/Orange_Laser here].
+[[File:Orange Laser (Beta 12.1).png|thumb|236x236px|Post Beta 12.1]]
+Orange Laser was added in '''Beta 6.6'''. Its first change happened in '''Beta 12.1''', where its ATK was buffed from 0 to 1. As a result, it will not die instantly from [http://undercards.wikia.com/wiki/Madjick Madjick]. [http://undercards.wikia.com/wiki/Blue_Laser Blue Laser] got the same change.
+=== Stats ===
+ATK:
+* 0 (Post Beta 6.6)
+* 1 (Post Beta 12.1, Current)
+HP: 8
+
+Cost: 4
+
+Ability: Start of turn: Deal 3 DMG to all enemy monsters that didn't attack last turn (except those played last turn).
+
+Rarity: White (Common)
+
+== Trivia ==
+* Its description was updated to clearify it cound't affect monsters that were just played.
+** Beta 33.1 fixed the typo of "atleast" to "at least".
+[[Category:Rework]]

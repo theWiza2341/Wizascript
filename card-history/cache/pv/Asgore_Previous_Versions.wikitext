@@ -1,0 +1,32 @@
+[[File:Asgore (Original - Beta 55.0).png|thumb|209x209px|Original - Beta 55.0]]
+Current Version can be found [[Asgore|here]].
+
+Asgore started off costing 16 gold to play. This was buffed to 15G in '''Beta 2.0''' and further to 13G in '''Beta 3.1''', where he also got +1 HP, from 7 to 8. His ATK of 7 never changed.
+
+This stayed for a long time, until '''Beta 21.0''' gave him his first nerf, increasing his cost to 14G. '''Beta 25.0''' followed that by nerfing his effect, changing it for the first time. As before, he would kill all damaged enemy monsters when played. Now, he also kills all damaged monsters, including ally monsters. '''Beta 55.1''' buffed him by decreased his cost to 12G, the cheapest he's ever been.
+
+=== Stats ===
+ATK: 7
+
+HP:
+* 7 (Pre Beta 3.1)
+* 8 (Post Beta 3.1, Current)
+Cost:
+* 16 (Pre Beta 2.0)
+* 15 (Post Beta 2.0)
+* 13 (Post Beta 3.1)
+* 14 (Post Beta 21.0)
+*12 (Post Beta 55.1, Current)
+
+Abilities:
+* Magic: Kill all damaged enemy monsters. (Pre Beta 25.0)
+* Magic: Kill all damaged monsters. (Post Beta 25.0, Current)
+
+Rarity: Gold (Legendary)
+
+Song: ASGORE
+
+=== Trivia ===
+
+* Asgore shares the moment of his release and first 2 changes with [[Undyne]], as seen [[Undyne/Previous_Versions|here]].
+[[Category:Rework]]

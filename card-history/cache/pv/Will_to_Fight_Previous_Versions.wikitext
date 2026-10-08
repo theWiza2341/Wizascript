@@ -1,0 +1,32 @@
+[[File:Will to Fight (Original - Beta 32.9).png|thumb|220x220px|Original - Beta 32.9]]
+Current version can be seen [[Will to Fight|here]].
+[[File:Will to Fight (Beta 33.0).png|thumb|293x293px|Beta 33.0]]
+Before '''Beta 4.1''', this card added ATK to a monster equal to its missing HP. This made it possible for cards such as [[Ice]] to get down to 1 HP, have Will to Fight applied to it, and then gain an additional 6 ATK. This costed 3G.
+[[File:Will to Fight (Beta 48.0).png|thumb|291x291px|Beta 48.0]]
+This was at times far too powerful when combined with [http://undercards.wikia.com/wiki/Same_Fate Same Fate], and was reworked in Beta 4.1 as a result. Now, it can only select an ally monster and will send it back to your deck with +4/+4. The cost was reduced to 2G, but was reduced to 1G in '''Beta 4.3'''.
+
+'''Beta 6.2''' buffed it by also making you draw a card, much like what happened with spells of other classes, like [http://undercards.wikia.com/wiki/Heal Heal], [http://undercards.wikia.com/wiki/Poison Poison] and [http://undercards.wikia.com/wiki/Protection Protection]. This was removed in '''Beta 10.2''', though.
+
+'''Beta 48.0''' reworked the class and most of its spells, this included. Its cost returned to 3G and will now add a random [https://undercards.fandom.com/wiki/Angel_of_Death Lost Soul] to the top of your deck with +2/+2 and Haste. '''Beta 48.1''' made DT's Passive and some of its spells no longer give Lost Souls randomly, but instead in a specific order. This was one of those spells.
+
+=== Stats ===
+Soul Type: Determination
+
+Cost:
+* 3 (Post Alpha 3.0)
+* 2 (Post Beta 4.1)
+* 1 (Post Beta 4.3)
+* 3 (Post Beta 48.0, Current)
+Effects:
+* Give a monster ATK equal to its missing HP. (Post Alpha 3.0)
+
+* Return an ally monster to your deck with +4/+4. (Post Beta 4.1)
+* Return an ally monster to your deck with +4/+4. Draw a card. (Post Beta 6.2)
+* Return an ally monster to your deck with +4/+4. (Post Beta 10.2)
+* Topdeck a random Lost Soul with +2/+2 and Haste. (Beta 48.0)
+* Topdeck the next Lost Soul with +2/+2 and Haste. (Post Beta 48.1, Current)
+Rarity: White (Common)
+== Trivia ==
+* Beta 33.0 updated its image.
+** For Determination, it shares this with [https://undercards.fandom.com/wiki/Resurrection Resurrection], [https://undercards.fandom.com/wiki/Another_Chance Another Chance], [https://undercards.fandom.com/wiki/Same_Fate Same Fate], [https://undercards.fandom.com/wiki/Hyper_Goner Hyper Goner] and [https://undercards.fandom.com/wiki/Sacrifice Sacrifice].
+[[Category:Rework]]

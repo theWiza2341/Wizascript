@@ -1,0 +1,38 @@
+[[File:Gaster Blaster (Original - Beta 7.0).png|thumb|Original - Beta 7.0]]
+Current Version can be found [[Sans|here]].
+[[File:Gaster Blaster Beta 7.1.png|thumb|235x235px|Beta 7.1]]
+
+The Gaster Blaster was a Spell Card able to be obtained through [[Gaster]] (until Beta 46.0), who used them as his way of damaging due to his mere 1 ATK. [[Sans]] (since Beta 3.7) also obtained them for similar reasons, and is now the main card using them. Since then, [[Mystery Machine]], Sans' [[Angel of Death|Lost Soul]] and the Science [[Artifacts|Artifact]] also give access to Gaster Blasters.
+[[File:Gaster Blaster (Beta 30.0).png|thumb|235x235px|Beta 30.0]]
+
+The Gaster Blaster has undergone many changes. Originally, it was an [[:Category:Epic|Epic]] rarity card, probably due to the fact that Gaster was also an Epic monster and Sans didn't give Blasters yet. It also costed 4G to use and wasn't even a Spell to begin with (making it presumably act as a monster without stats, killing itself right away after triggering its effect).
+[[File:Gaster Blaster (Beta 36.0).png|thumb|236x236px|Beta 36.0]]
+
+'''Alpha 2.2''' not only changed it into a spell, it also increased its cost to 8G. '''Beta 2.1''' increased its Rarity into [[:Category:Legendary|Legendary]], resulting in it making a sound when used. This is the first case of a card changing in rarity, and it was the only one until Beta 8.1, when [[Muffet]] also went from an Epic to Legendary. '''Beta 3.1''' decreased the cost to 6G, and '''Beta 4.5''' increased the cost to 7G.
+[[File:Gaster Blaster (Beta 37.0).png|thumb|236x236px|Beta 37.0]]
+
+'''Beta 7.1''' gave the first change in effect. Before, the Gaster Blaster dealt 8 DMG to a target of your choice, including the healthbar of both players. After Beta 7.1, the Blaster will only do 5 damage to a player, while still doing 8 damage to a monster. '''Beta 30.0''' gave it the proper [[:Category:Generate|Generated]] Rarity, making it the first (and currently only) card to change Rarity twice. It kept its sound effect.
+
+'''Beta 36.0''' removed its ability to target players as a whole. '''Beta 37.0''' counter-balanced this by reducing its cost back to 6G. '''Beta 57.0''' made it able to target the user again, for the whole 8 DMG, but not the opponent.
+
+=== Stats ===
+Main Spell giver: Sans
+
+Cost:
+* 4 (Pre Alpha 2.2)
+* 8 (Post Alpha 2.2)
+* 6 (Post Beta 3.1)
+* 7 (Post Beta 4.5)
+* 6 (Post Beta 37.0, Current)
+
+Effects:
+* Deal 8 DMG. (Pre Beta 7.1)
+* Deal 8 DMG to a monster or 5 to a player. (Post Beta 7.1)
+* Deal 8 DMG to a monster. (Post Beta 36.0)
+* Deal 8 DMG to a monster or you. (Post Beta 57.0, Current)
+
+Rarities:
+* Purple (Epic) (Pre Beta 2.1)
+* Gold (Legendary) (Post Beta 2.1)
+* Green (Generated) (Post Beta 30.0, Current)
+[[Category:Rework]]

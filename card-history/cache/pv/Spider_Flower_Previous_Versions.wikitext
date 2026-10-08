@@ -1,0 +1,17 @@
+[[File:Spider Flower.png|thumb|291x291px|Beta 46.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Spider_Flower here].
+
+Spider Flower was an [https://undercards.fandom.com/wiki/Category:Arachnid Arachnid] added in '''Beta 46.0. '''It's a 4G 2/2 monster with a Magic of summoning a Green Flower (an effectless 1/1 [https://undercards.fandom.com/wiki/Category:Plant Plant] Token). It also had a Synergy which gave the summoned Green Flower +2/+2 Base Stats (boosting it to 3/3). '''Beta 52.1''' changed that to make it summon a Red Flower instead (also a 3/3 Plant Token, but with Transparency).
+
+=== Stats ===
+ATK: 2
+
+HP: 2
+
+Cost: 4
+
+Abilities:
+* Magic: Summon a Green Flower. Synergy: Give it base +2/+2. (Post Beta 46.0)
+* Magic: Summon a Green Flower. Synergy: Summon a Red Flower instead. (Post Beta 52.1, Current)
+Rarity: White (Common)
+[[Category:Rework]]

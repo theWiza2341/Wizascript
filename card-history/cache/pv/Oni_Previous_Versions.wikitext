@@ -1,0 +1,19 @@
+[[File:Oni.png|thumb|235x235px|Post Beta 7.6]]
+Current Version can be found [http://undercards.wikia.com/wiki/Oni here].
+[[File:Oni (Beta 10.2).png|thumb|234x234px|Post Beta 10.2]]
+Oni was added in '''Beta 7.6''' as a 3/10 monster for 7G. '''Beta 10.2''' reduced its HP to 9, while '''Beta 36.1''' reduced its ATK to 2, leaving it with 2/9.
+
+=== Stats ===
+ATK:
+* 3 (Post Beta 7.6)
+* 2 (Post Beta 36.1, Current)
+
+HP:
+* 10 (Post Beta 7.6)
+* 9 (Post Beta 10.2, Current)
+Cost: 7
+
+Ability: Turn start: Gain +2 ATK.
+
+Rarity: White (Common)
+[[Category:Rework]]

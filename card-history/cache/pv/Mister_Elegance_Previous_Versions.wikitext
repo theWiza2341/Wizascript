@@ -1,0 +1,37 @@
+[[File:Mister Elegance (Original - Beta 45.9)|thumb|220x220px|Original - Beta 45.9]]
+Current Version can be found [[Mister Elegance|here]].
+[[File:Mister Elegance (Beta 46.0).png|thumb|257x257px|Beta 46.0]]
+Mister (Mr.) Elegance reversed its effect in the first major update after release. For as when in '''Beta 30.0''' it would deal 4 DMG to enemy monsters summoned in front of it (making it similar to [[Astigmatism]]), '''Beta 31.0''' will now let it deal 2 DMG to enemy monsters NOT summoned in front of it (making it more similar to [[Heats Flamesman]]).
+[[File:Mister Elegance (Beta 49.0).png|thumb|Beta 49.0]]
+'''Beta 35.0''' completely reworked it. Dropping its cost from 8G to 5G with stats from 4/6 to 2/5 (-3G -2/-1 total), its new effect includes Taunt and a special Turn Start and End effect. When your turn ends, it gains +2 ATK and when it starts, it gains -2 ATK. This effectively means that it has 2 extra ATK during the enemy's turn, making it a 4/5 Taunt for 5G. '''Beta 36.1''' droped its cost to 4G, making it equal to [[Mister Society|Mr. Society]]'s. '''Beta 41.0''' reworked the card engine, which allowed 'aura' effects to work. This resulted in this card getting reworked to passively gain +2 ATK during the opponent's turn.
+
+'''Beta 46.0''' added [[Chessboard]] and the [[:Category:Piece|Piece]] Tribe with 5 members, this being one of them. As a result, it was entirely reworked again. In stats, it gained +1/+1/-1, leaving it at 3/4 back at 5G. In effect, like the others, it uses the same "played left or right" type of effect already used by Mr. Society. In this case, it gains +1 ATK, Taunt AND +1 Thorns when played on the left. When played on the right, it gains +1 Armor instead. '''Beta 49.0''' made its left effect give it +1 HP instead of +1 Thorns (as Thorns was removed as a whole), thus it now gains +1/+1 and Taunt. During the next big Piece change of '''Beta 54.0''', this was buffed by giving it both effects if you have a [[Chessboard]] on the board.
+=== Stats ===
+ATK:
+* 4 (Post Beta 30.0)
+* 2 (Post Beta 35.0)
+* 3 (Post Beta 46.0, Current)
+HP:
+* 6 (Post Beta 30.0)
+* 5 (Post Beta 35.0)
+* 4 (Post Beta 46.0, Current)
+Cost:
+* 8 (Post Beta 30.0)
+* 5 (Post Beta 35.0)
+* 4 (Post Beta 36.1)
+* 5 (Post Beta 46.0, Current)
+
+Abilities:
+* Whenever an enemy monster is summoned, deal...
+** 4 DMG to it if it's in front of this. (Post Beta 30.0)
+** 2 DMG to it if it's not in front of this. (Post Beta 31.0)
+* Taunt.
+** Turn start: Gain -2 ATK. Turn end: Gain +2 ATK. (Post Beta 35.0)
+** Has +2 ATK during the opponent's turn. (Post Beta 41.0)
+* '''[Now counts as a Piece.] '''Magic: If played right, gain +1 Armor.
+** If played left, gain +1 ATK, Taunt and +1 Thorns. (Post Beta 46.0)
+** If played left, gain +1/+1 and Taunt. (Post Beta 49.0)
+* Magic: If played left, gain +1/+1 and Taunt. If played right, gain +1 Armor. If there's an ally Chessboard, gain both. (Post Beta 54.0, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

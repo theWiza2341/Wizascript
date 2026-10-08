@@ -1,0 +1,43 @@
+[[File:Igloo (Original - Beta 7.2).png|thumb|220x220px|Original - Beta 7.2]]
+Current version can be seen [http://undercards.wikia.com/wiki/Igloo here].
+[[File:Igloo Beta 7.3.png|thumb|236x236px|Beta 7.3]]
+Originally, Igloo was designed so that it would summon a random card from your deck onto your board at the end of your turn. This created many decks which were centered around Igloo with many expensive cards. Because of this original ability, the Igloo became quite popular and useful in most decks with the main risk being running out of cards quickly.
+[[File:Igloo (Beta 12.1).png|thumb|234x234px|Beta 12.1]]
+'''Beta 5.0''' nerfed this to summoning a random monster (including [http://undercards.wikia.com/wiki/Category:Generate generated] monsters like [http://undercards.wikia.com/wiki/Annoying_Dog Dog Residue] and [http://undercards.wikia.com/wiki/So_Sorry Doodlebog]) onto your board at the end of your turn. This was quickly nerfed again in the next update, '''Beta 5.1''', due to the fact that [http://undercards.wikia.com/wiki/Category:Epic Epic] and higher [http://undercards.wikia.com/wiki/Rarity Rarity] cards were summoned far too often and so it was changed to only summoning [http://undercards.wikia.com/wiki/Category:Common Common] cards. However, monsters are now summoned at the start of your turn. This means that monsters with 'At the end of your turn' abilities like [http://undercards.wikia.com/wiki/Pyrope Pyrope] and Charge monsters like [http://undercards.wikia.com/wiki/Ice_Cap Ice Cap] are now much more beneficial.
+[[File:Igloo (Beta 35.0).png|thumb|239x239px|Beta 35.0]]
+From '''Beta 5.7''' and onward, Igloo gained some small buffs, starting with +1 HP, from 0/9 to 0/10, while '''Beta 6.5''' dropped its cost from 6G to 5G. '''Beta 7.3''' made it able to summon [http://undercards.wikia.com/wiki/Category:Rare Rare] monsters, while '''Beta 12.1''' improved that further by making it able to summon Epic monsters as well. This stopped in '''Beta 35.0''', where its HP was quite lowered to 7.
+
+''During '''Beta 6.6''', Igloo lost the ability to summon generated monsters, just like [http://undercards.wikia.com/wiki/Assault Assault]. During '''Beta 8.0.1''', monsters summoned through effects like those of Igloo will now trigger the effect of cards like [https://undercards.fandom.com/wiki/Politics_Bear Politics Bear] and [https://undercards.fandom.com/wiki/Nice_Cream_Guy Nice Cream Guy] (including themselves when actually summoned through Igloo). And during '''Beta 30.0''', Igloo lost the ability to summon monsters that are now [https://undercards.fandom.com/wiki/Category:Basic Basic] cards. (This update also gave generated monsters their own Rarity, making it more clear this can't summon them).''
+
+'''Beta 48.0''' redesigned the card entirely. Now, it's a 4/4/4 with a Magic effect that lets you see the 3 cards at the bottom of the enemy's deck and copy one of your choice to your hand. '''Beta 56.0''' again redesigned the card, giving it -1 cost and HP, and changing its effect to, upon being played, returning an ally monster to your hand. This effect was the same as [https://undercards.fandom.com/wiki/Doggo Doggo]'s effect, while [https://undercards.fandom.com/wiki/Doggo Doggo] itself underwent a drastic change in the same season.
+
+=== Stats ===
+ATK:
+* 0 (Post Beta 4.8)
+* 4 (Post Beta 48.0, Current)
+HP:
+* 9 (Post Beta 4.8)
+* 10 (Post Beta 5.7)
+* 7 (Post Beta 35.0)
+* 4 (Post Beta 48.0)
+*3 (Post Beta 56.0, Current)
+
+Cost: 
+* 6 (Post Beta 4.8)
+* 5 (Post Beta 6.5)
+* 4 (Post Beta 48.0)
+*3 (Post Beta 56.0, Current)
+
+Abilities:
+* End of turn: Summon a random monster from your deck. (Post Beta 4.8)
+* End of turn: Summon a random monster. (Beta 5.0)
+* Start of turn: Summon a random Common monster. (Post Beta 5.1)
+* '''[Can't summon generated monsters.]''' (Post Beta 6.6)
+* Start of turn: Summon a random monster (<= Rare). (Post Beta 7.3)
+* Start of turn: Summon a random monster (<= Epic). (Post Beta 12.1)
+* Start of turn: Summon a random Common, Rare or Epic monster. (Post Beta 30.0)
+* Magic: See the 3 last cards in the enemy's deck. Choose 1. Copy it to your hand. (Post Beta 48.0)
+*Magic: Return an ally monster to your hand. (Post Beta 56.0, Current)
+
+Rarity: White (Common)
+[[Category:Rework]]

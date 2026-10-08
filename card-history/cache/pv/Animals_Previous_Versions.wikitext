@@ -1,0 +1,28 @@
+[[File:Animals.png|thumb|210x210px|Beta 36.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Animals here].
+[[File:Animals (Beta 39.0).png|thumb|208x208px|Beta 39.0]]
+Animals were added in '''Beta 36.0''' as a 7G 3/4 monster with Haste and the Magic effect of summoning an exact copy of itself (which is placed as far left as possible). '''Beta 39.0''' increased its cost to 9G and doubled its ATK and HP to 6/8, but its Magic effect was changed to not work on the left side (the first 2 slots), effectively giving up 2 attacks with halved DMG for a single attack with full DMG. When played on the right side, however, it gains -3/-4 and will then summon an exact copy of itself (with the stat drops). This effectively makes it work as it did before the change.
+[[File:Animals (Beta 41.1).png|thumb|208x208px|Beta 41.1]]
+However, the -3/-4 was seen as debuffs for both versions, which made them very powerful when combined with [https://undercards.fandom.com/wiki/Ball_Person Ball Person] or [https://undercards.fandom.com/wiki/Asriel Asriel], who would bring them both back to 6/8. '''Beta 41.1''' fixed that by making the -3/-4 come out of its base stats. '''Beta 51.0''' gave it -1/-1/-1 and changed its Magic to simply halve its own stats and then have the new stats be set as its base before summoning the copy. These stats are rounded up, so by default you are still left with two 3/4 monsters (but for 1G less).
+
+=== Stats ===
+ATK:
+* 3 (Post Beta 36.0)
+* 6 (Post Beta 39.0)
+* 5 (Post Beta 51.0, Current)
+HP:
+* 4 (Post Beta 36.0)
+* 8 (Post Beta 39.0)
+* 7 (Post Beta 51.0, Current)
+Cost:
+* 7 (Post Beta 36.0)
+* 9 (Post Beta 39.0)
+* 8 (Post Beta 51.0, Current)
+Abilities:
+* Haste. Magic: Summon an exact copy of itself. (Post Beta 36.0)
+* Haste. Magic: If played on the right, ...
+** gain -3/-4 and summon an exact copy of itself. (Post Beta 39.0)
+** gain -3/-4 base stats and summon an exact copy of itself. (Post Beta 41.1)
+** halve its stats as base stats (rounded up) and summon an exact copy of itself. (Post Beta 51.0, Current)
+Rarity: Blue (Rare)
+[[Category:Rework]]

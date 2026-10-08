@@ -1,0 +1,30 @@
+[[File:Knife (Original - Beta 13.0).png|thumb|220x220px|Original - Beta 13.0]]
+Current Version can be found [http://undercards.wikia.com/wiki/Knife here].
+[[File:Knife (Beta 13.1).png|thumb|234x234px|Beta 13.1]]
+Knife was added in '''Beta 6.6''', alongside 19 other cards (6 of which were also new Effect Cards for each Class). Originally, it would cost 1G to kill a monster with this. The trade-off being that you lose 1 life in the process. This was not worth it for most players, and made it useless for non-Determination players, so '''Beta 7.1''' buffed it by only doing 10 DMG to yourself, whilst costing 2G.
+[[File:Knife (Beta 18.1).png|thumb|234x234px|Beta 18.1]]
+'''Beta 9.1''' buffed it again. Now it deals DMG equal to the ATK of the killed monster. '''Beta 9.3''' reworked that to the monster's HP, because it was widely used on low ATK, high HP cards like [http://undercards.wikia.com/wiki/Igloo Igloo] or [http://undercards.wikia.com/wiki/MTT_Fountain MTT Fountain]. But because it was now heavily used on high ATK, low HP monsters like [http://undercards.wikia.com/wiki/Mad_Dummy Mad Dummy], '''Beta 10.1''' made the final change by making it deal DMG based on the monster's cost.
+[[File:Knife (Beta 30.0).png|thumb|235x235px|Beta 30.0]]
+'''Beta 13.1''' nerfed it by increasing the cost to 3G. '''Beta 18.1''' nerfed it further by not allowing you to kill ally monsters with it. This was done due to the strong combo with [http://undercards.wikia.com/wiki/Snow_Poff Snow Poff] and [http://undercards.wikia.com/wiki/Last_Dream Last Dream]. '''Beta 44.1''' nerfed it yet again, increasing its cost to a further 4G.
+
+=== Stats ===
+SOUL Type: Determination
+
+Cost:
+* 1 (Post Beta 6.6)
+* 2 (Post Beta 7.1)
+* 3 (Post Beta 13.1)
+* 4 (Post Beta 44.1, Current)
+Effects:
+* Kill a monster. Lose a life. (Post Beta 6.6)
+* Kill a monster. Lose 10 HP. (Post Beta 7.1)
+* Kill a monster. Lose HP equal to its ATK. (Post Beta 9.1)
+* Kill a monster. Lose HP equal to its HP. (Post Beta 9.3)
+* Kill a monster. Lose HP equal to its cost. (Post Beta 10.1)
+* Kill an enemy monster. Deal its cost as DMG to yourself. (Post Beta 18.1, Current)
+Rarities:
+* White (Common) (Post Beta 6.6)
+* Gray (Basic) (Post Beta 30.0, Current)
+
+== Trivia ==
+* Beta 30.0 introduced the [https://undercards.fandom.com/wiki/Category:Basic Basic] Rarity, which this gained.[[Category:Rework]]

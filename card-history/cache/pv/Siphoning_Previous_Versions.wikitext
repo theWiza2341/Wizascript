@@ -1,0 +1,32 @@
+[[File:Siphoning (Original - Beta 43.0)|thumb|220x220px|Original - Beta 43.0]]
+Current Version can be found [https://undercards.wikia.com/wiki/Siphoning here].
+[[File:Siphoning (Beta 43.1).png|thumb|291x291px|Beta 43.1]]
+Siphoning was added in '''Beta 27.0''' as [https://undercards.wikia.com/wiki/Category:Perseverance Perseverance]'s 3rd [https://undercards.wikia.com/wiki/Category:Rare Rare] Spell. Its first change was already in '''Beta 28.0''', which it shares with [https://undercards.wikia.com/wiki/Category:Bravery Bravery]'s [https://undercards.wikia.com/wiki/Rage Rage] and [https://undercards.wikia.com/wiki/Category:Justice Justice]'s [https://undercards.wikia.com/wiki/Fast_Sanction Fast Sanction].
+
+At first, this card would only work on monsters under KR, silencing the monster and make you restore HP equal to half its ATK, making it work as a reverse [https://undercards.wikia.com/wiki/Brain_Shift Brain Shift]. Beta 28.0 made it now no longer need the KR to Silence.
+
+'''Beta 29.0''' reworked its effect. It returned to just being able to silence monsters if they are under KR, but now affects all monsters on the board, making it similar to [https://undercards.wikia.com/wiki/Contamination Contamination]. The healing effect is still there, but is now set to restore 3 HP to you for each monster that got silenced. Its cost was increased from 2G to 3G for this, but was brought back to 2G in '''Beta 31.0''' alongside another effect change. It now no longer silences and you only restore 2 HP for each monster under KR instead of 3. But because it no longer silences, it can work multiple times in a row.
+
+'''Beta 43.1''' buffed it a bit by now letting it restore 2 HP to a target initially, with each KR'd monster adding up to that, identical to [https://undercards.fandom.com/wiki/Goner_Clam Goner Clam]'s buff earlier on (though it works with Future instead of KR). The effect is now also targetable rather than always on you (though this wasn't part of Goner Clam's buff). '''Beta 44.0''' reduced its cost and the healing from each KR'd monster drop by/to 1, but the initial heal was increased to 3.
+
+=== Stats ===
+SOUL Type: Perseverance
+
+Cost:
+* 2 (Post Beta 27.0)
+* 3 (Post Beta 29.0)
+* 2 (Post Beta 31.0)
+* 1 (Post Beta 44.0, Current)
+
+Effects:
+* Silence a monster under KR. You restore 50% of its ATK. (Post Beta 27.0)
+* Silence a monster. If under KR, you restore 50% of its ATK. (Post Beta 28.0)
+* Silence all monsters under KR. You restore 3 HP for each. (Post Beta 29.0)
+* Restore 2 HP to yourself for each monster under KR. (Post Beta 31.0)
+* Restore 2 HP. Restore 2 more HP for each monster under KR. (Post Beta 43.1)
+* Restore 3 HP. Restore 1 more HP for each monster under KR. (Post Beta 44.0, Current)
+Rarity: Blue (Rare)
+== Trivia ==
+* Beta 33.0 updated its image.
+** For Perseverance, it shares this with [https://undercards.fandom.com/wiki/Poison Poison], [https://undercards.fandom.com/wiki/Pollutant_Gas Pollutant Gas], [https://undercards.fandom.com/wiki/Termination Termination] and [https://undercards.fandom.com/wiki/Contamination Contamination].
+[[Category:Rework]]

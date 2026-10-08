@@ -1,0 +1,21 @@
+[[File:Test of Will.png|thumb|234x234px|Post Beta 19.0]]
+Test of Will was added in Beta 19.0, as replacement for [http://undercards.wikia.com/wiki/Heal_Delivery Heal Delivery]. Current Version can be found [http://undercards.wikia.com/wiki/Test_of_Will here].
+[[File:Test of Will (Beta 20.0).png|thumb|235x235px|Post Beta 20.0]]
+Costing 8G at first, '''Beta 20.0''' dropped it to 7G as its first change and buff. '''Beta 24.0''' reverted this back to 8G.
+[[File:Test of Will (Beta 24.0).png|thumb|231x231px|Post Beta 24.0]]
+
+=== Stats ===
+SOUL Type: Kindness
+
+Cost:
+* 8 (Post Beta 19.0)
+* 7 (Post Beta 20.0)
+* 8 (Post Beta 24.0, Current)
+Effect: Deal DMG to all monsters equal to their ATK.
+
+Rarity: Purple (Epic)
+
+== Trivia ==
+* Beta 33.0 updated its image.
+** For Kindness, it shares this with [https://undercards.fandom.com/wiki/Heal Heal], [https://undercards.fandom.com/wiki/Force_of_Nature Force of Nature], [https://undercards.fandom.com/wiki/Soothing Soothing] and [https://undercards.fandom.com/wiki/Octofriend Octofriend].
+[[Category:Rework]]

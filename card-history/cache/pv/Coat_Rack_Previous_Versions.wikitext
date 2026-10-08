@@ -1,0 +1,25 @@
+[[File:Coat Rack.png|thumb|293x293px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Coat_Rack here].
+[[File:Coat Rack (Beta 31.0).png|thumb|293x293px|Beta 31.0]]
+Coat Rack was very underwhelming when it was released in '''Beta 30.0'''. A 3/5 for 5G that lets you draw 2 cards is very good, but both these cards would increase their cost by 2, making it technically a 3/5 that draws 2 cards for 9G.
+
+This was unusable, so '''Beta 31.0''' gave it a huge buff. While its own cost was increased to 6G, drawn spells won't increase in cost at all. And drawn monsters not only were only given a +1 in cost, they also gain +1 ATK and HP as well, similar to [https://undercards.fandom.com/wiki/Final_Froggit Final Froggit].
+
+'''Beta 50.0''' gave +1/+1 to Coat Rack itself, buffing it to 4/6.
+
+=== Stats ===
+ATK:
+* 3 (Post Beta 30.0)
+* 4 (Post Beta 50.0, Current)
+HP:
+* 5 (Post Beta 30.0)
+* 6 (Post Beta 50.0, Current)
+
+Cost:
+* 5 (Post Beta 30.0)
+* 6 (Post Beta 31.0, Current)
+Abilities:
+* Magic: Draw 2 cards. They cost 2G more. (Post Beta 30.0)
+* Magic: Draw 2 cards. Drawn monsters gain +1/+1/+1. (Post Beta 31.0, Current)
+Rarity: White (Common)
+[[Category:Rework]]

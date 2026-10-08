@@ -1,0 +1,37 @@
+[[File:Abstract Art.png|thumb|Beta 51.0|199x199px]]
+Current Version can be found [[Abstract Art|here]].
+[[File:Abstract Art (Beta 54.0).png|thumb|Beta 54.0|199x199px]]
+Abstract Art was added in '''Beta 51.0''' as an [[:Category:Epic|Epic]] monster with 3/4 for 5G. '''Beta 54.0''' changed it to a [[:Category:Rare|Rare]], while '''Beta 54.1''' gave it +1/+1/+1. '''Beta 56.0''' gave it -1 Cost and ATK in return, leaving it at 3/5 for 5G.
+[[File:Abstract Art (Beta 54.1).png|thumb|199x199px|Beta 54.1]]
+
+=== Stats ===
+ATK:
+
+* 3 (Post Beta 51.0)
+* 4 (Post Beta 54.1)
+*3 (Post Beta 56.0, Current)
+
+HP:
+
+* 4 (Post Beta 51.0)
+* 5 (Post Beta 54.1, Current)
+
+Cost:
+
+* 5 (Post Beta 51.0)
+* 6 (Post Beta 54.1)
+*5 (Post Beta 56.0, Current)
+
+Ability: Trigger the Dust of any cheaper monster you summon.
+
+Rarities:
+
+* Purple (Epic) (Post Beta 51.0)
+* Blue (Rare) (Post Beta 54.0, Current)
+
+=== Trivia ===
+
+* This is the first card to have its first change be one in Rarity.
+
+<br />
+[[Category:Rework]]

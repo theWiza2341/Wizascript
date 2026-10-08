@@ -1,0 +1,27 @@
+[[File:Same Fate (Original - Beta 33.9)|thumb|220x220px|Original - Beta 33.9]]
+Current Version can be found [http://undercards.wikia.com/wiki/Same_Fate here] .
+[[File:Same Fate (Beta 34.0).png|thumb|293x293px|Beta 34.0]]
+Same Fate only gained nerfs over its lifetime. Starting at 4G, it gained +1G every time. The first time was in '''Beta 2.0''', followed by '''Beta 4.1''', then in '''Beta 11.0 '''and finally in''' Beta 34.0'''.
+
+It wasn't until '''Beta 41.0'''* where things changed, starting with its effect. Instead of setting the CURRENT HP of all monsters to 1, it now sets their MAX HP to 1 (which also sets their current HP to 1 by default), no longer setting them in a damaged state. '''Beta 43.1''' followed this with a simple cost drop back of -1G.
+
+''*This is only a guess, as it wasn't clearly stated anywhere, and was most likely a result of the Card Engine Rework at that time (with the introduction of Aura effects).''
+=== Stats ===
+SOUL Type: Determination
+
+Cost:
+* 4 (Post Alpha 3.0)
+* 5 (Post Beta 2.0)
+* 6 (Post Beta 4.1)
+* 7 (Post Beta 11.0)
+* 8 (Post Beta 34.0)
+* 7 (Post Beta 43.1, Current)
+Effects:
+* Set all monsters' current HP to 1. (Post Alpha 3.0)
+* Set all monsters' HP to 1. (Post Beta 41.0, Current)
+
+Rarity: Blue (Rare)
+== Trivia ==
+* Beta 33.0 updated its image.
+** For Determination, it shares this with [https://undercards.fandom.com/wiki/Will_to_Fight Will to Fight], [https://undercards.fandom.com/wiki/Resurrection Resurrection], [https://undercards.fandom.com/wiki/Another_Chance Another Chance], [https://undercards.fandom.com/wiki/Hyper_Goner Hyper Goner] and [https://undercards.fandom.com/wiki/Sacrifice Sacrifice].
+[[Category:Rework]]

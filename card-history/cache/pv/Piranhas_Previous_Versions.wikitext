@@ -1,0 +1,19 @@
+[[File:Piranhas.png|thumb|Beta 51.0]]Current Version can be found [https://undercards.fandom.com/wiki/Piranhas here].
+[[File:Piranhas (Beta 52.0).png|thumb|258x258px|Beta 52.0]]
+Piranhas was added in '''Beta 51.0, '''as a sort of replacement for Beta 34.0 [https://undercards.fandom.com/wiki/Starwalker_Bird Starwalker Bird], both being a 6G 3/3 with Haste and the ability to deal 1 DMG to a random enemy monster whenever it attacked and killed another. The differences are that Piranhas is an Epic rather than a Common and it uses Dodge (2) rather than Ranged (as Ranged was removed). '''Beta 52.0 '''nerfed its HP to 2. This was increased to 4 in '''Beta 53.0''', but it also lost 1 Dodge.
+
+=== Stats ===
+ATK: 3
+
+HP:
+*3 (Post Beta 51.0)
+*2 (Post Beta 52.0)
+*4 (Post Beta 53.0, Current)
+Cost: 6
+
+Abilities:
+* Haste. Dodge (2). Whenever this attacks and kills a monster, deal 1 DMG to a random enemy monster. (Post Beta 51.0)
+* Haste. Dodge (1). Whenever this attacks and kills a monster, deal 1 DMG to a random enemy monster. (Post Beta 53.0, Current)
+
+Rarity: Purple (Epic)
+[[Category:Rework]]

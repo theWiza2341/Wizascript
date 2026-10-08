@@ -1,0 +1,24 @@
+[[File:Doggo.png|thumb|215x215px|Pre Beta 12.0]]
+Current Version can be found [http://undercards.wikia.com/wiki/Doggo here].[[File:Doggo (Beta 12.0).png|thumb|218x218px|Post Beta 12.0]]Doggo has stayed the same since its release as a 3/4 for 4G monster that allows you to return an ally monster back to your hand, but got changed twice soon after each other, the first one being in '''Beta 12.0'''. In it, he was buffed by gaining +1 ATK and -1 in cost, but dropped 1 HP, leaving him with 4/3 for 3G. The second change was in '''Beta 14.0''', where his ability was buffed to reduce the cost of any [http://undercards.wikia.com/wiki/Category:Dog Dog] he puts back in your hand by 2. This synergy was removed much later, in '''Beta 47.0'''.
+
+'''Beta 56.0''' reworked the dog tribe entirely. Doggo gained +1 cost, ATK, and HP, becoming a 4 cost 4/4. Its effect made you choose a Dog in your hand, except another Doggo, and added an exact copy of the chosen card to your hand.
+[[File:Doggo (Beta 14.0).png|thumb|220x220px|Post Beta 14.0]]
+
+=== Stats ===
+ATK:
+* 3 (Pre Beta 12.0)
+* 4 (Post Beta 12.0, Current)
+HP:
+* 4 (Pre Beta 12.0)
+* 3 (Post Beta 12.0, Current)
+Cost:
+* 4 (Pre Beta 12.0)
+* 3 (Post Beta 12.0, Current)
+Abilities:
+* Magic: Return an ally monster to your hand. (Pre Beta 14.0)
+* Magic: Return an ally monster to your hand. If it's a Dog, give it -2 cost. (Post Beta 14.0)
+* Magic: Return an ally monster to your hand. (Pre Beta 47.0)
+*Magic: Choose a Dog in your hand (except Doggo). Add an exact copy of it to your hand. (Post Beta 56.0, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

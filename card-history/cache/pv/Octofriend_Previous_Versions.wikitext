@@ -1,0 +1,26 @@
+[[File:Octofriend.png|thumb|191x191px|Beta 27.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Octofriend here].
+[[File:Octofriend (Beta 33.0).png|thumb|192x192px|Beta 33.0]]
+Octofriend is the 3rd Rare Kindness spell, released in '''Beta 27.0'''. It originally gave +2 HP to the targeted monster. '''Beta 40.0''' changed that to giving it +1/+1. The targeted monster would then have both [https://undercards.fandom.com/wiki/Onion_San Tentacles] summoned adjacent to it. It costed 4G. '''Beta 52.1''' changed that by making the Tentacles be added to the user's hand instead for 2G. The Tentacles will have their cost reduced by/to 1G, to make the total cost the same.
+[[File:Octofriend (Beta 40.0).png|thumb|194x194px|Beta 40.0]]
+
+=== Stats ===
+[[File:Octofriend (Beta 42.0).png|thumb|189x189px|Beta 42.0]]
+SOUL Type: Kindness
+
+Cost:
+* 4 (Post Beta 27.0)
+* 2 (Post Beta 52.1, Current)
+
+Effects:
+* Give an ally monster +2 HP. Summon both Tentacles adjacent to it. (Post Beta 27.0)
+* Give an ally monster +1/+1. Summon both Tentacles adjacent to it. (Post Beta 40.0)
+* Give an ally monster +1/+1. Add both Tentacles to your hand with -1 cost. (Post Beta 52.1, Current)
+
+Rarity: Blue (Rare)
+
+== Trivia ==
+* Beta 33.0 updated its image.
+** For Kindness, it shares this with [https://undercards.fandom.com/wiki/Heal Heal], [https://undercards.fandom.com/wiki/Force_of_Nature Force of Nature], [https://undercards.fandom.com/wiki/Soothing Soothing] and [https://undercards.fandom.com/wiki/Test_of_Will Test of Will].
+** During Beta 42.0, it was updated again.
+[[Category:Rework]]

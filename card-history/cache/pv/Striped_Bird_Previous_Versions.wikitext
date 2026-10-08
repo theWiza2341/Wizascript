@@ -1,0 +1,27 @@
+[[File:Striped Bird.png|thumb|260x260px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Striped_Bird here].
+[[File:Striped Bird (Beta 31.0).png|thumb|262x262px|Beta 31.0]]
+Striped Bird was added in '''Beta 30.0''' as a 5G 4/3 monster with the somewhat odd Turbo effect which gives it Charge if you have 2 or more Disarmed monsters in your hand. '''Beta 31.0''', like many other DR cards, changed it. In this case, it gained +1 HP. '''Beta 43.1''' followed this with -1 cost, ending up with 4/4/4.
+[[File:Striped Bird (Beta 43.1).png|thumb|254x254px|Beta 43.1]]
+'''Beta 49.0''' reworked it. Gaining -1/+1 to end up at 3/5, it now has Haste and will Paralyze itself after attacking. '''Beta 50.0''' gave it +1 ATK, returning it to 4.
+[[File:Striped Bird (Beta 49.0).png|thumb|257x257px|Beta 49.0]]
+
+=== Stats ===
+ATK:
+* 4 (Post Beta 30.0)
+* 3 (Post Beta 49.0)
+* 4 (Post Beta 50.0, Current)
+
+HP:
+* 3 (Post Beta 30.0)
+* 4 (Post Beta 31.0)
+* 5 (Post Beta 49.0, Current)
+Cost:
+* 5 (Post Beta 30.0)
+* 4 (Post Beta 43.1, Current)
+Abilities:
+* Turbo: If you have 2+ Disarmed monsters in your hand, gain Charge. (Post Beta 30.0)
+* Haste. Paralyze itself after attacking. (Post Beta 49.0, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

@@ -1,0 +1,18 @@
+[[File:Cogwheel.png|thumb|294x294px|Beta 36.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Cogwheel here].
+
+Cogwheel was added in '''Beta 36.0'''. Every time your turn ended, the cheapest card in your hand would return to your deck and you draw a new card. In '''Beta 45.0''', it was changed to now return the most expensive one. In both cases, the card was chosen randomly if there were multiple cards with the same lowest/highest cost.
+
+=== Stats ===
+ATK: 2
+
+HP: 3
+
+Cost: 2
+
+Abilities:
+* Turn end: Shuffle from your hand to your deck...
+** the cheapest card. Draw a card. (Post Beta 36.0)
+** the most expensive card. Draw a card. (Post Beta 45.0, Current)
+Rarity: White (Common)
+[[Category:Rework]]

@@ -1,0 +1,24 @@
+[[File:Father Alvin.png|thumb|278x278px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Father_Alvin here].
+[[File:Father Alvin (Beta 40.0).png|thumb|282x282px|Beta 40.0]]
+Father Alvin was added in '''Beta 30.0'''. Its Magic effect made it move 2 random monsters from your dustpile back to your hand. '''Beta 40.0''' nerfed it by not allowing other Alvins already dead to be brought back.
+
+'''Beta 42.1''', alongside increasing its HP from 6 to 7, changed its Magic again. Now, it functions as a "Choose one" effect, showing 3 monsters from your dustpile and you can choose 1 of them to be added to your hand. It won't show multiple copies of the same monster, and while you can get other Alvins back, DT-monsters are now unobtainable from this.
+
+=== Stats ===
+ATK: 4
+
+HP:
+* 6 (Post Beta 30.0)
+* 7 (Post Beta 42.1, Current)
+
+Cost: 7
+
+Abilities:
+* Magic: Move randomly from your dustpile to your hand...
+** 2 monsters. (Post Beta 30.0)
+** 2 other monsters. (Post Beta 40.0)
+** 1 non-DT monster from a choice of 3 different ones.
+*** (Post Beta 42.1, Current)
+Rarity: Purple (Epic)
+[[Category:Rework]]

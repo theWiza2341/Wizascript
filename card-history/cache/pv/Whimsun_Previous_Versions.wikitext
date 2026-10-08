@@ -1,0 +1,27 @@
+[[File:Whimsun Original.png|thumb|232x232px|Pre Alpha 2.7]]
+Current Version can be found [http://undercards.wikia.com/wiki/Whimsun here].
+
+[[File:Screenshot 120.png|thumb|230x230px|Post Alpha 2.7]]
+Whimsun had quite a few changes. Starting out with 1/3, it was buffed to 2/3 in '''Alpha 2.7'''.
+
+[[File:Four.8 Whimsun.png|thumb|233x233px|Post Beta 4.8]]
+This made it possible to make Whimsun a maximum of 5/3 for only 3G. Because of this, '''Beta 4.8''' nerfed it with -1/+1, making it 1/4, with a maximum of 4/4.
+
+'''Beta 6.5''' buffed its ATK back up to 2, though, while keeping its HP at 4.
+
+Stats:
+
+ATK:
+* 1 (Pre Alpha 2.7)
+* 2 (Post Alpha 2.7)
+* 1 (Post Beta 4.8)
+* 2 (Post Beta 6.5, Current)
+HP:
+* 3 (Pre Beta 4.8)
+* 4 (Post Beta 4.8, Current)
+Cost: 3
+
+Ability: Battlecry/Enter/Magic: Gain +1 ATK for each ally monster.
+
+Rarity: White (Common)
+[[Category:Rework]]

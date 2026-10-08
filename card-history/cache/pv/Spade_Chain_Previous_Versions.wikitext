@@ -1,0 +1,17 @@
+[[File:Spade Chain.png|thumb|294x294px|Beta 39.1]]
+Current Version can be found [https://undercards.fandom.com/wiki/Spade_Chain here].
+
+Spade Chain was added in '''Beta 39.1''' with a cost of 11G. '''Beta 49.1''' decreased that to 10G.
+
+=== Stats ===
+ATK: 4
+
+HP: 8
+
+Cost:
+* 11 (Post Beta 39.1)
+* 10 (Post Beta 49.1, Current)
+Ability: Haste. Magic: Deal DMG to a monster equal to half its cost (rounded up).
+
+Rarity: Purple (Epic)
+[[Category:Rework]]

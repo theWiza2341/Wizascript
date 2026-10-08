@@ -1,0 +1,31 @@
+[[File:Vulkin (Original - Beta 13.9).png|thumb|220x220px|Original - Beta 13.9]]
+Current Version can be seen [[Vulkin|here]].
+
+Originally, Vulkin was 2/5 and costed 5G to play to and deal 3 damage to a target of your choice, exactly the same as Justice's [http://undercards.wikia.com/wiki/Punishment Punishment].
+
+'''Alpha 2.7''' gave it -2 HP and -1 cost. '''Beta 4.8''' gave it -1 HP, dropping its HP even further to a mere 2, leaving it with 2/2 for 4G.
+
+But not long after that, '''Beta 5.0 '''buffed Vulkin back up to its original state, but with +1/-1, so with 3/4 for 5G. '''Beta 6.5''' dropped its cost back to 4G, but made its ability deal only 2 damage instead of 3.
+
+'''Beta 14.0''' dropped its ATK back to 2, leaving it with 2/4 for 4G, the same stats and cost as [http://undercards.wikia.com/wiki/Vulkin's_Cloud its Cloud].
+
+=== Stats ===
+ATK:
+* 2 (Pre  Beta  5.0)
+* 3 (Post Beta  5.0)
+* 2 (Post Beta 14.0, Current)
+HP:
+* 5 (Pre  Alpha 2.7)
+* 3 (Post Alpha 2.7)
+* 2 (Post Beta  4.8)
+* 4 (Post Beta  5.0, Current)
+Cost:
+* 5 (Pre  Alpha 2.7)
+* 4 (Post Alpha 2.7)
+* 5 (Post Beta  5.0)
+* 4 (Post Beta  6.5, Current)
+Abilities:
+* Battlecry/Enter/Magic: Deal 3 damage. (Pre  Beta 6.5)
+* Battlecry/Enter/Magic: Deal 2 damage. (Post Beta 6.5, Current)
+Rarity: White (Common)
+[[Category:Rework]]

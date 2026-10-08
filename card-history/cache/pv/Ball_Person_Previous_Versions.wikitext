@@ -1,0 +1,29 @@
+[[File:Ball Person.png|thumb|212x212px|Beta 30.0]]
+Current Version can be found [https://undercards.fandom.com/wiki/Ball_Person here].
+[[File:Ball Person (Beta 34.0).png|thumb|210x210px|Beta 34.0]]
+Ball Person was added in '''Beta 30.0''' as a 4/4/4. '''Beta 34.0''' dropped both its Cost and ATK to 3. '''Beta 36.1''' removed its Dust of silencing all enemy monsters, leaving it with its Magic of silencing all ally monsters. '''Beta 41.0''' gave it a new Dust, now silencing a random enemy monster. This was removed again in '''Beta 52.1'''.
+[[File:Ball Person (Beta 36.1).png|thumb|212x212px|Beta 36.1]]
+
+=== Stats ===
+[[File:Ball Person (Beta 41.0).png|thumb|212x212px|Beta 41.0]]
+ATK:
+* 4 (Post Beta 30.0)
+* 3 (Post Beta 34.0, Current)
+HP: 4
+
+Cost:
+* 4 (Post Beta 30.0)
+* 3 (Post Beta 34.0, Current)
+Abilities:
+* Magic: Silence all ally monsters.
+** Dust: Silence all enemy monsters. (Post Beta 30.0)
+** (Post Beta 36.1)
+** Dust: Silence a random enemy monster. (Post Beta 41.0)
+** (Post Beta 52.1, Current)
+
+Rarity: White (Common)
+
+== Trivia ==
+* "Magic: Turn end" effects (better known as "Delay" on the UC Discord Server until it became official on Beta 51.0) were silenceable before Beta 31.0, which made this synergize well with [https://undercards.fandom.com/wiki/Burgerpants Burgerpants].
+** This was later confirmed to be a bug.
+[[Category:Rework]]

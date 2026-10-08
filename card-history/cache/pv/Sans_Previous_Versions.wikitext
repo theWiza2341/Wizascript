@@ -1,0 +1,70 @@
+[[File:Sans (Original - Beta 3.6).png|thumb|220x220px|Original - Beta 3.6]]
+Current Version of Sans and the Gaster Blaster can be found [[Sans|here]]. Much like in Undertale, people can't seem to figure out Sans' abilities.
+[[File:Sans (Beta 3.7 - Beta 7.1).png|thumb|220x220px|Beta 3.7 - Beta 7.1]]
+
+Sans' original ability was a 90% dodge rate. This was reduced to 80% in '''Alpha 2.1''', but with the added ability to put 2 Bones in the enemy's hand (which were not a spell until '''Alpha 2.2'''). These bones costed 0G and would deal 4 DMG to the user. '''Alpha 3.2''' gave Sans the 90% change to dodge again, but would now also apply KR to any monster that gets damaged by him rather than giving Bones. '''Beta 2.0''' decreased his cost from 8G to 6G to get more people to use him.
+[[File:Sans (Beta 7.2 - Beta 18.9).png|thumb|220x220px|Beta 7.2 - Beta 18.9]]
+
+During '''Beta 3.7''', he was reworked to give the player 1 Gaster Blaster and destroy 2 cards of the enemy's hand for the price of 8G, since beforehand Sans was only really used in [http://undercards.wikia.com/wiki/Decks#Perseverance Perseverance] and [http://undercards.wikia.com/wiki/Decks#Patience Patience] decks. This was then quickly nerfed in the next update, '''Beta 3.8''', to destroying 1 card and giving 1 Gaster Blaster. '''Beta 4.3''' changed that from instead of adding 1 Gaster Blaster to your hand, he adds 3 Gaster Blasters to you deck. '''Beta 5.0''' increased the cost from 8G to 9G, and '''Beta 6.5''' increased it again to 10G.
+[[File:Sans (Beta 19.0).png|thumb|234x234px|Beta 19.0]]
+
+'''Beta 7.2''' changed Sans so he gained back his dodging skills, but in a different style. Instead of a having a percentage dodging all attacks, he dodges the number of attacks listed on the card each turn, which was 3. But this was proven to be too strong for only a 5G monster, so '''Beta 7.3''' changed that to 2 dodges. He still gives Gaster Blasters, but now he gives 1 at the start of your turn, which was how [[Gaster]] gave them before he was changed with Sans in Beta 7.2. '''Beta 7.6''' changed that to making him give the Blasters at the end of your turn. '''Beta 9.1''' gave Sans 3 dodges again, but also increased his cost back to the original 8G. '''Beta 10.2''' changed him back, not only to Dodge (2), but also made him give Gaster Blasters at the start of your turn again. However, he now also gives a Gaster Blaster with a Magic effect. His cost dropped to 7G for this, even though it's not listed on the Patch Notes. '''Beta 19.0''' dropped his cost further to 6G.
+[[File:Sans (Beta 36.1).png|thumb|238x238px|Beta 36.1]]
+
+<u>Dodge went through a couple of undocumented changes itself during this time, going back and forth between it resetting at the start of both players' turns or only the owner's. '''Beta 20.0''' made the decission to only reset Dodge at the start of the owner's turn. This stayed until '''Beta 36.1''', which changed Dodge to no longer reset at all. (Both of these changes were mentioned in the Patch Notes.)</u>
+[[File:Sans (Beta 49.1).png|thumb|238x238px|Beta 49.1]]
+
+As a result, Sans' own Dodge was increased from 2 to 5. '''Beta 49.1''' buffed Sans once more. While his Dodge was reduced to 3, the Blasters he gives have their cost reduced by 2G. '''Beta 57.0''' changed his iconic 1/1 for the first time with +1 HP, but this was reverted in '''Beta 57.1'''.
+[[File:Sans (Beta 57.0).png|thumb|238x238px|Beta 57.0]]
+
+=== Stats ===
+ATK:
+* 1
+
+HP:
+* 1 (Pre Beta 57.0)
+* 2 (Beta 57.0)
+* 1 (Post Beta 57.1, Current)
+
+Cost:
+* 8 (Pre Beta 2.0)
+* 6 (Post Beta 2.0)
+* 8 (Post Beta 3.7)
+* 9 (Post Beta 5.0)
+* 10 (Post Beta 6.5)
+* 5 (Post Beta 7.2)
+* 8 (Post Beta 9.1)
+* 7 (Post Beta 10.2)
+* 6 (Post Beta 19.0, Current)
+
+Abilities:
+* Dodge (90%). (Pre Alpha 2.1)
+* Dodge (80%). Magic: Add 2 Bones to the enemy's hand. (Post Alpha 2.1)
+* Dodge (90%). Give KR to any monster this damages. (Post Alpha 3.2)
+* Magic: Remove from the game out of the enemy's hand ...
+** 2 random cards. Add 1 Gaster Blaster to your hand. (Beta 3.7)
+** 1 random card. Add 1 Gaster Blaster to your hand. (Post Beta 3.8)
+** 1 random card. Add 3 Gaster Blasters to your deck. (Post Beta 4.3)
+* Dodge (3). Turn start: Add a Gaster Blaster to your hand. (Beta 7.2)
+* Dodge (2). Turn start: Add a Gaster Blaster to your hand. (Post Beta 7.3)
+* Dodge (2). Turn end: Add a Gaster Blaster to your hand. (Post Beta 7.6)
+* Dodge (3). Turn end: Add a Gaster Blaster to your hand. (Post Beta 9.1)
+* Dodge (2). Magic & Turn start: Add a Gaster Blaster to your hand. (Post Beta 10.2)
+* Dodge (5). Magic & Turn start: Add a Gaster Blaster to your hand. (Post Beta 36.1)
+* Dodge (3). Magic & Turn start: Add a Gaster Blaster to your hand with -2 cost.
+** (Post Beta 49.1, Current)
+
+Rarity: Gold (Legendary)
+
+Song: Megalovania
+
+== Secret feature ==
+[[File:Get Dunked On!.png|thumb|192x192px|After killing Chara. (ATK, HP and Cost can vary.)]]
+Between Beta 3.7 and 7.1, when Sans was able to kill cards from the opponent's hand, there was a 50% change of him killing [[Chara]] if the opponent had them in their hand, no matter how many cards they were currently holding. This would change Sans's sprite and description. But, as Beta 7.2 removed the killing card ability, this easter egg was removed with it.
+
+== Trivia ==
+[[File:Super colored Sans.png|thumb|197x197px|Super colored Sans]]
+* This same image was used for a [http://undercards.wikia.com/wiki/Super_colored_cards Super colored card] of Sans during '''April Fools' Day 2017'''.[[File:Sans (April Fools 2018).png|thumb|203x203px|April Fools' Day 2018]]
+* For '''April Fools' Day 2018''', the image for Sans was replaced by an SANEES image, a character from Underpants, created by Sr Pelo.
+[[Category:Rework]]
+[[Category:April Fools' Day]]

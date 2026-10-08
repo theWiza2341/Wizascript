@@ -1,0 +1,38 @@
+[[File:Ferry (Original - Beta 49.0)|thumb|220x220px|Original - Beta 49.0]]
+Current Version can be found [[Ferry|here]].
+[[File:Ferry (Beta 49.1).png|thumb|260x260px|Beta 49.1]]
+Ferry originally was a 1/2 monster for 1G that would give 2G upon death when it was released in '''Beta 6.6'''. '''Beta 9.1''' nerfed it to a 1/1, making it the same as Undertale's weakest monster: [http://undercards.wikia.com/wiki/Sans Sans]. Much later, in '''Beta 19.0''', its HP was brought back to 2, but got nerfed as it now costs 2G and gives 3G upon death, which would still be a 1G profit.  
+[[File:Ferry (Beta 51.0).png|thumb|258x258px|Beta 51.0]]
+'''Beta 21.0''' changed that by increasing its cost by 1G again, but now actually decreasing the gold you earn from its Dust, making you actually get a 1G loss. It gained +1 ATK with this. '''Beta 24.0''' gave it +1 HP, while '''Beta 49.1''' gave it +1 ATK again, leaving it at 3/3/3. 
+[[File:Ferry (Beta 51.1).png|thumb|Beta 51.1]]
+'''Beta 51.0''' almost doubled this with +3G +2/+3. '''Beta 54.0''' gave it -1 HP. 
+=== Stats ===
+ATK:
+* 1 (Post Beta 6.6)
+* 2 (Post Beta 21.0)
+* 3 (Post Beta 49.1)
+* 5 (Post Beta 51.0, Current)
+
+HP:
+* 2 (Post Beta 6.6)
+* 1 (Post Beta 9.1)
+* 2 (Post Beta 19.0)
+* 3 (Post Beta 24.0)
+* 6 (Post Beta 51.0)
+*5 (Post Beta 54.0, Current)
+
+Cost:
+* 1 (Post Beta 6.6)
+* 2 (Post Beta 19.0)
+* 3 (Post Beta 21.0)
+* 6 (Post Beta 51.0, Current)
+Abilities:
+* Dust: Earn 2 gold. (Post Beta 6.6)
+* Dust: Earn 3 gold. (Post Beta 19.0)
+* Dust: Earn 2 gold. (Post Beta 21.0, Current)
+
+Rarity: White (Common)
+
+=== Trivia ===
+* Beta 51.1 updated its image.
+[[Category:Rework]]

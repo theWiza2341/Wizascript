@@ -1,0 +1,45 @@
+[[File:Temmie 2 (Original - Beta 13.3).png|thumb|Original - Beta 13.3|269x269px]]
+Current Version of Temmie and Temmie 2 can be found [[Temmie|here]]. Previous Versions of Temmie (and the precursor to Temmie 2 prior to Beta 6.1) can be found [[Temmie/Previous_Versions|here]].
+[[File:Temmie 2 (Beta 13.4 - Beta 54.9).png|thumb|269x269px|Beta 13.4 - Beta 54.9]]
+Temmie 2 was added in '''Beta 6.1''' as a way to rebalance Temmie. It had the same stats of 2/2 for 2G, but only had Charge. '''Beta 6.6''' gave both -1 HP. Temmie 2 was removed in '''Beta 7.1''' due to a rework of Temmie, but was brought back exactly the same in '''Beta 7.5'''.
+
+After Beta 7.6, Temmie 2 gained some changed for itself while Temmie stayed the same. Starting in '''Beta 9.3''', where its cost was increased by 1G. '''Beta 31.0''' reverted this, but got its effect nerfed to Haste instead. It also gained +1 HP, but this was reverted as well in '''Beta 33.0'''. This makes it the same as its Beta 7.5 version, and thus with the exact same stats as Temmie, but had Haste instead of Charge. '''Beta 53.1''' swapped those, leaving Temmie with Haste and Temmie 2 with Charge. '''Beta 55.0''' swapped them back (and gave another change to Temmie).
+=== Stats ===
+ATK:
+
+* 2 (Post Beta 6.1)
+* N/A (Post Beta 7.1)
+* 2 (Post Beta 7.5)
+
+HP:
+* 2 (Post Beta 6.1)
+*1 (Post Beta 6.6)
+*N/A (Post Beta 7.1)
+*1 (Post Beta 7.5)
+* 2 (Post Beta 31.0)
+* 1 (Post Beta 33.0, Current)
+
+Cost:
+* 2 (Post Beta 6.1)
+*N/A (Post Beta 7.1)
+*2 (Post Beta 7.5)
+* 3 (Post Beta 9.3)
+* 2 (Post Beta 31.0, Current)
+Abilities:
+* Charge. (Post Beta 6.1)
+*N/A (Post Beta 7.1)
+*Charge. (Post Beta 7.5)
+* Haste. (Post Beta 31.0)
+*Charge. (Post Beta 53.1)
+*Haste. (Post Beta 55.0, Current)
+
+Rarities:
+* Blue (Rare) (Post Beta 6.1)
+* Green (Generated) (Post Beta 30.0, Current)
+
+== Trivia ==
+
+* '''Beta 13.4''' changed its sprite by making its eyes closed, in order to make it different from Temmie's sprite.
+**[http://undercards.wikia.com/wiki/Allergic_Temmie Allergic Temmie] also gained a new sprite.
+* '''Beta 30.0''' introduced the [https://undercards.fandom.com/wiki/Generated_Cards Generated] Rarity, which Temmie 2 obtained.
+[[Category:Rework]]

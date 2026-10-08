@@ -1,0 +1,49 @@
+[[File:Undyne (Original - Beta 18.0).png|thumb|220x220px|Original - Beta 18.0]]
+Current version can be seen [[Undyne|here]].
+[[File:Undyne (Beta 19.0).png|thumb|234x234px|Post Beta 18.1]]
+Originally, Undyne costed 11G, had stats of 7/7 and would deal 10 DMG randomly split among all enemy monsters. However, before '''Alpha 2.1''' her effect could still target monsters that would've died. This made it so that even if the opponent's monsters had a total of 10 HP, not all of them would've died most of the time. Alpha 2.1 fixed that.  
+[[File:Undyne (Beta 29.0).png|thumb|235x235px|Beta 29.0]]
+'''Beta 2.0''' nerfed her by increasing the cost from 11G to 12G. '''Beta 3.1''' gave her +1/+1, but made her ability deal 2 less DMG. '''Beta 6.5''' increased her cost again, this time to 14G. '''Beta 7.6''' reworked the function of her ability again. Now, it can also target monsters that have been summoned due to Dust effects of other monsters, like those of [[Lamp]] and [[Snow Poff]], who were added in the same update. 
+
+'''Beta 8.3''' decreased her cost from 14G to 13G. This was reverted back in '''Beta 18.1'''. '''Beta 29.0''' gave her -1/+1, while '''Beta 31.0''' made her part of the [[:Category:Royal Guard|Royal Guard]] Tribe. '''Beta 55.1''' decreased her cost back to 13G, but also gave her -1 HP.  
+=== Stats ===
+ATK: 
+* 7 (Pre Beta 3.1)
+* 8 (Post Beta 3.1)
+* 7 (Post Beta 29.0, Current)
+HP: 
+* 7 (Pre Beta 3.1)
+* 8 (Post Beta 3.1)
+* 9 (Post Beta 29.0)
+*8 (Post Beta 55.1, Current)
+
+Cost: 
+* 11 (Pre Beta 2.0)
+* 12 (Post Beta 2.0)
+* 14 (Post Beta 6.5)
+* 13 (Post Beta 8.3)
+* 14 (Post Beta 18.1)
+*13 (Post Beta 55.1, Current)
+
+
+Abilities: 
+
+* Magic: Deal 10 DMG randomly split among all enemy monsters. (Pre Alpha 2.1) 
+
+* '''[Can't target dead monsters.]''' (Post Alpha 2.1)
+
+* Magic: Deal 8 DMG randomly split among all enemy monsters. (Post Beta 3.1)
+* '''[Can target summoned monsters.]''' (Post Beta 7.6)
+*'''[Now counts as a Royal Guard.]''' (Post Beta 31.0, Current)
+
+Rarity: Gold (Legendary)
+
+Song: NGAHHH!
+
+=== Trivia ===
+* '''April Fools' Day 2017''' had Undyne's picture changed to [https://www.youtube.com/watch?v=JxtpKo2rvos the sexy fish meme].[[File:Undyne (April Fools '17 Updated).png|thumb|234x234px|Sexy Fish]]
+** It also gave a [[Super colored cards|Super colored card]] of her.[[File:Super colored Undyne.png|thumb|237x237px|Super colored Undyne]]
+* '''April Fools' Day 2018''' did the same thing, but with an zoomed in picture.[[File:Undyne (April Fools' Day 2018).png|thumb|234x234px|April Fools' Day 2018]]
+** It also gave a [[:Category:Skin|Card Skin]] and [[Avatars|Avatar]] of her.
+[[Category:Rework]]
+[[Category:April Fools' Day]]

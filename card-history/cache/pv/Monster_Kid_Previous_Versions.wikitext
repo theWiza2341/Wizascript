@@ -1,0 +1,26 @@
+[[File:Monster Kid (Original - Beta 32.0)|thumb|220x220px|Original - Beta 32.0]]
+Current Version can be found [http://undercards.wikia.com/wiki/Monster_Kid here].
+[[File:Monster Kid (Beta 32.1).png|thumb|293x293px|Beta 32.1]]
+Since its debut, Monster Kid hasn't changed at all. That is, until '''Beta 9.1''', where its cost was increased from 2G to 3G. Beta '''10.2''' returned that to 2G, though.
+
+'''Beta 17.0''' nerfed MK a different way, this time in its effect. Before, upon death, it would give +1/+1 to all (remaining) ally monsters. Now, it only affects those adjacent to it. '''Beta 32.1''' increased its cost back to 3G. And '''Beta 42.1''' returned its Dust back to its previous state.
+=== Stats ===
+ATK: 2
+
+HP: 2
+
+Cost:
+* 2 (Pre Beta 9.1)
+* 3 (Post Beta 9.1)
+* 2 (Post Beta 10.2)
+* 3 (Post Beta 32.1, Current)
+Abilities:
+* Dust: Give all ally monsters +1/+1. (Pre Beta 17.0)
+* Dust: Give adjacent monsters +1/+1. (Post Beta 17.0)
+* Dust: Give all ally monsters +1/+1. (Post Beta 42.1, Current)
+
+Rarity: Blue (Rare)
+
+=== Trivia ===
+* Beta 21.1 updated its image.
+[[Category:Rework]]

@@ -1,0 +1,26 @@
+[[File:Mister Society.png|thumb|264x264px|Beta 30.0]]
+Current Version can be found [[Mister Society|here]].
+[[File:Mister Society (Beta 33.0).png|thumb|263x263px|Beta 33.0]]
+Mr. Society started with 3G 2/3 in '''Beta 30.0'''.''' Beta 33.0''' gave it +1 in all its stats. '''Beta 46.0''' added [[Chessboard]] and the [[:Category:Piece|Piece]] Tribe with 5 members, this being one of them. However, unlike all other members, this got no other change. This is because they took this card's effect design, being different based on if it's played on the left or right on the board. In this case, gaining Haste if played left, but gaining Transparency if played right. 
+[[File:Mister Society (Beta 46.0).png|thumb|Beta 46.0]]
+During the next big Piece change of '''Beta 54.0''', this got -1 HP, but also 2 buffs in its effect. First, playing it on the left now also gives it +1 HP, while playing it on the right gives it +1 ATK. Second, both effects will trigger if you have a [[Chessboard]] on the board (giving it Haste, Transparency AND +1/+1). 
+
+=== Stats ===
+ATK:
+* 2 (Post Beta 30.0)
+* 3 (Post Beta 33.0, Current)
+HP:
+* 3 (Post Beta 30.0)
+* 4 (Post Beta 33.0)
+*3 (Post Beta 54.0, Current)
+
+Cost:
+* 3 (Post Beta 30.0)
+* 4 (Post Beta 33.0, Current)
+Abilities:
+* Magic: Gain Haste if played left. Gain Transparency if played right. (Post Beta 30.0)
+* '''[Now counts as a Piece.]''' (Post Beta 46.0)
+*Magic: If played left, gain +1 HP and Haste. If played right, gain +1 ATK and Transparency. (Post Beta 54.0, Current)
+
+Rarity: Blue (Rare)
+[[Category:Rework]]

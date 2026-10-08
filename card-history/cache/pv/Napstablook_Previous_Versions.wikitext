@@ -1,0 +1,32 @@
+[[File:Napstablook (Original - Beta 7.0).png|thumb|167x167px|Original - Beta 7.0]]
+Current version can be seen [[Napstablook|here]].
+[[File:Napstablook Updated.png|thumb|245x245px|Post Beta 7.1]]
+Napstablook had exceptionally high stats, even from the beginning. It originally would gain -1/-1 at the end of your turn, so the enemy actually had to deal with a 4/5 monster during their turn. '''Alpha 2.1''' changed that to making the effect take place at the start of your turn, just like it does now. '''Beta 2.6''' droped its HP from 6 to 5, making it equal to its ATK. However, despite being a nerf, it is more helpful in some cases. As if its stats only change due to its effect, it now won't end up with 0/1 for a turn, making it a wasted slot due to it not being able to attack in order to kill itself.
+[[File:Beta 7.4 Blooky.png|thumb|235x235px|Post Beta 7.4]]
+'''Beta 6.5''' dropped its cost from 3G to 2G, leaving it with 5/5 for 2G. This was considered too powerful, and its ATK and HP were reduced by 1 in the next update, '''Beta 6.6'''. '''Beta 7.1''' returned it to its 3G, 5/5 version, though.
+
+And finally, '''Beta 7.4''' changed it again by only dropping it's ATK at the start of your turn, but also made it so that if it's ATK gets to 0, it dies, just like HP. This was done because Napstablook died almost instantly when facing Justice, as Justice's passive and Blooky's ability made it lose 2 HP at once. And when combined with [http://undercards.wikia.com/wiki/Punishment Punishment], it died right away. '''Beta 19.0''' nerfed its effect by making it trigger at the end of your turn again. '''Beta 20.0''' nerfed it further by dropping its HP to 4.
+[[File:Napstablook (Beta 19.0).png|thumb|234x234px|Post Beta 19.0]]
+
+=== Stats ===
+ATK:
+* 5 (Pre Beta 6.6)
+* 4 (Post Beta 6.6)
+* 5 (Post Beta 7.1, Current)
+HP:
+* 6 (Pre Beta 2.6)
+* 5 (Post Beta 2.6)
+* 4 (Post Beta 6.6)
+* 5 (Post Beta 7.1)
+* 4 (Post Beta 20.0, Current)
+Cost:
+* 3 (Pre Beta 6.5)
+* 2 (Post Beta 6.5)
+* 3 (Post Beta 7.1, Current)
+Abilities:
+* End of turn: Gain -1/-1. (Pre Alpha 2.1)
+* Start of turn: Gain -1/-1. (Post Alpha 2.1)
+* Start of turn: Gain -1 ATK. Dies if ATK = 0. (Post Beta 7.4)
+* End of turn: Gain -1 ATK. Dies if ATK = 0. (Post Beta 19.0, Current)
+Rarity: Purple (Epic)
+[[Category:Rework]]

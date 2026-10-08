@@ -1,0 +1,38 @@
+[[File:Snow Storm (Original - Beta 7.3).png|thumb|220x220px|Original - Beta 7.3]]
+Current version can be seen [[Snow Storm|here]]. 
+[[File:Snow Storm (Beta 7.4 - Beta 54.9).png|thumb|221x221px|Beta 7.4 - Beta 54.9]]
+Prior to '''Beta 3.4''', Snow Storm was 7G and caused both players to draw cards until they had 6 each in their hands. This was to due [[:Category:Patience|Patience]]'s original Passive Effect, which was to deal 30 DMG to the opponent once they tried to draw cards from an empty deck (which would kill them, aside from [[:Category:Determination|Determination]], who would lose a life). However, with the change of that passive during Beta 2.9 to paralyzing all enemies on their first turn, Snow Storm was reworked to transform every monster on the board into [[Ice]]. With this, its cost dropped to 5G. (The original version is now being used as the ability for the [[River Person]].) 
+'''Beta 5.7''' increased its price to 8G, however, as it was very widely used and able to change the game situation frequently, making it incredibly hard to beat when used correctly in combination with other cards. '''Beta 6.7''' increased it again to 9G, but that was only for 1 update, as '''Beta 6.8''' decreased its cost to 7G but now doesn't transform all monsters into just Ice, but also [[Ice Cap]] and [[Snowman]], all at random. This was done to prevent a situation where the Patience user had 2 or 3 Ice on the field and their opponent 4 Ice, making it impossible to get rid of them which led into cards dying because of a full hand. Combine that with the Patience user placing [[Pyrope]] and/or [[Gaster]], and it was pretty much lost hope for their opponent. 
+
+'''Beta 7.4''' dropped its cost to 6G, while '''Beta 15.0''' brought it back up to 7G and '''Beta 24.0''' brought it even further to 8G. '''Beta 28.0''' brought it back down again to 7G, but also changed its effect completely again. Now, it simply kills all paralyzed monsters, making it the equivelant of [[:Category:Perseverance|Perseverance]]'s [[Contamination]].  
+
+With the next big Patience Rework of '''Beta 55.0''', Snow Storm was replaced with [[Self Reflection]]. Its sprite was re-used for [[Change of Winds]] at the same time.  
+
+=== Stats ===
+Soul Type: Patience
+
+Cost: 
+* 7 (Post Alpha 3.0)
+* 5 (Post Beta 3.4)
+* 8 (Post Beta 5.7)
+* 9 (Beta 6.7)
+* 7 (Post Beta 6.8)
+* 6 (Post Beta 7.4)
+* 7 (Post Beta 15.0)
+* 8 (Post Beta 24.0)
+* 7 (Post Beta 28.0)
+*N/A (Post Beta 55.0, Current)
+
+Effects: 
+* Both players draw cards until they have 6 in their hand. (Post Alpha 3.0)
+
+* Turn all monsters into an Ice. (Post Beta 3.4)
+* Turn all monsters into an Ice, Ice Cap or Snowman. (Post Beta 6.8)
+* Kill all paralyzed monsters. (Post Beta 28.0)
+*N/A (Post Beta 55.0, Current)
+
+Rarity: Purple (Epic)
+
+=== Trivia ===
+* Beta 51.1 updated its image.
+[[Category:Rework]]

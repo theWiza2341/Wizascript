@@ -1,0 +1,50 @@
+[[File:Toriel (Original - Beta 8.0).png|thumb|220x220px|Original - Beta 8.0]]
+Current version can be seen [[Toriel|here]].
+[[File:Toriel (Beta 8.1 - Beta 28.9).png|thumb|220x220px|Beta 8.1 - Beta 28.9]]
+Originally Toriel's ability allowed her to bring the ATK of a single monster of your choice, both enemy and ally, to 0. With this effect and 4/6, she costed 6G. '''Beta 1.3''' undocumentedly changed that to 7G as well as changing her effect to setting a monster's ATK to 1 instead of 0. '''Beta 2.0''' dropped her cost back to 6.
+[[File:Toriel (Beta 29.0).png|thumb|293x293px|Beta 29.0]]
+'''Beta 5.2''' gave her +3/+2, making her end up with 7/8, just like her ex-husband [http://undercards.wikia.com/wiki/Asgore Asgore]. Her effect was also improved to match him by targeting all enemy monsters rather that a single one of your choice. So she now sets all enemy monsters' ATK to 1. (Her old has somewhat been given to [http://undercards.wikia.com/wiki/Faun Faun] for a while.) Her cost was also increased by 5, making her cost 11G, but this was increased to 13G in the next update, '''Beta 5.3''', making that also match Asgore (who was 13G at that time).
+[[File:Toriel (Beta 32.1).png|thumb|293x293px|Beta 32.1]]
+'''Beta 8.1''' nerfed her effect by also giving the enemy monsters Taunt. This can really backfire if the opponent plays [http://undercards.wikia.com/wiki/Asriel Asriel], which restores their ATK, but keeps Taunt on them. Because of this, '''Beta 8.3''' reduced her cost from 13G back to 11G, no longer matching Asgore's. '''Beta 24.0''' reworked her effect again, now setting the enemy monsters' ATK to 2, but no longer giving them Taunt. Her cost was increased to 12G for this, but was brought back to 11G in '''Beta 27.0'''.
+
+'''Beta 28.0''' reworked her again. She gained -2/-3 and -3G, leaving her at 5/5 for 8G, thus no longer matching any of her stats with those of Asgore. Her effect was brought back to set the ATK of a single monster to 1, but can now only target enemy monsters. She will also gain HP equal to the amount of ATK the target lost. This was shown to be very powerful, so '''Beta 29.0''' nerfed her HP to just a mere 2, followed by '''Beta 32.1''' dropping it to 1. '''Beta 34.0''' brought it back up to 2, but also increased her cost by 1G to 9G.
+
+=== Stats ===
+ATK: 
+* 4 (Pre  Beta  5.2)
+
+* 7 (Post Beta  5.2)
+* 5 (Post Beta 28.0, Current)
+HP: 
+* 6 (Pre  Beta  5.2)
+* 8 (Post Beta  5.2)
+* 5 (Post Beta 28.0)
+* 2 (Post Beta 29.0)
+* 1 (Post Beta 32.1)
+* 2 (Post Beta 34.0, Current)
+Cost:
+* 6 (Pre Beta 1.3)
+* 7 (Pre Beta 1.3)
+* 6 (Post Beta 2.0)
+* 11 (Beta 5.2)
+* 13 (Post Beta 5.3)
+* 11 (Post Beta 8.3)
+* 12 (Post Beta 24.0)
+* 11 (Post Beta 27.0)
+* 8 (Post Beta 28.0)
+* 9 (Post Beta 34.0, Current)
+Abilities:
+* Magic: Set a monster's ATK to 0. (Pre Beta 1.3)
+* Magic: Set a monster's ATK to 1. (Post Beta 1.3)
+* Magic: Set all enemy monsters' ATK to 1. (Post Beta 5.2)
+* Magic: Set all enemy monsters' ATK to 1 and give them Taunt. (Post Beta 8.1)
+* Magic: Set all enemy monsters' ATK to 2. (Post Beta 24.0)
+* Magic: Set an enemy monster's ATK to 1 and gain HP equal to its lost ATK. (Post Beta 28.0, Current)
+Rarity: Gold (Legendary)
+
+Song: Heartache
+
+=== Trivia ===
+* When Toriel's effect was reworked to gain HP in Beta 28.0, both the patch notes and the card didn't specifically mention that it could only be used on enemy monsters.
+** With her nerf in Beta 29.0 (to 2 HP), the wording was also fixed. This was also mentioned in the patch notes, listed as a "wording update".
+[[Category:Rework]]

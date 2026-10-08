@@ -1,0 +1,41 @@
+[[File:Moldessa (Original - Beta 23.9).png|thumb|220x220px|Original - Beta 23.9]]
+Current version can be seen [[Moldessa|here]]. [[File:Moldessa (Beta 24.0).png|thumb|216x216px|Beta 24.0]]
+
+Originally, Moldessa was a 4/2 for 4G monster that dealt 1-4 DMG to a random enemy monster when played. Its first few changes (each having quite a lot of time between them) were small buffs to make it more played, starting in '''Beta 5.3''' where its effect now deals 2-4 DMG. '''Beta 9.3''' gave it +1 ATK, but '''Beta 21.0''' reverted that and gave it a Dust instead (on top of its Magic). When it dies, a random other [http://undercards.wikia.com/wiki/Category:Mold Mold] was added to your hand. 
+[[File:Moldessa (Beta 26.0).png|thumb|218x218px|Beta 26.0]]
+In '''Beta 24.0''' and '''Beta 26.0''', Moldessa was a bit nerfed. The former gave it -1 ATK, reducing it to an even lower 3. But while the latter reverted that, it instead increased its cost for the first time, to 5G. It was in '''Beta 48.0''' where Moldessa was reworked to better work with the Tribe it's a part of. While it lost its Dust and its Magic now only deals 2 DMG by default, if there's an ally Mold, the Magic will always deal 4 DMG instead.
+[[File:Moldessa (Beta 48.0).png|thumb|215x215px|Beta 48.0]]
+'''Beta 50.1''' gave it an entirely new design, bringing its cost back to 4G and changing its HP for the first time, increasing it to 4. Its new effect is a simple Dust that makes you draw a Mold and give it +1 HP. '''Beta 53.0''' gave it -1 ATK again and changed its Dust to a Magic. The new Magic now can't draw another Moldessa.
+[[File:Moldessa (Beta 50.1).png|thumb|216x216px|Beta 50.1]]
+
+=== Stats ===
+ATK:
+* 4 (Pre Beta 9.3)
+* 5 (Post Beta 9.3)
+* 4 (Post Beta 21.0)
+* 3 (Post Beta 24.0)
+* 4 (Post Beta 26.0)
+* 3 (Post Beta 53.0, Current)
+
+HP:
+* 2 (Pre Beta 50.1)
+* 4 (Post Beta 50.1, Current)
+
+Cost:
+* 4 (Pre Beta 26.0)
+* 5 (Post Beta 26.0)
+* 4 (Post Beta 50.1, Current)
+
+Abilities:
+* Magic: Deal to a random enemy monster ...
+** 1-4 DMG. (Pre Beta 5.3)
+** 2-4 DMG. (Post Beta 5.3)
+** 2-4 DMG. Dust: Add a random other Mold to your hand. (Post Beta 21.0)
+** 2 DMG. If there's an ally Mold, deal 4 DMG instead. (Post Beta 48.0)
+* Dust: Draw a Mold with +1 HP. (Post Beta 50.1)
+* Magic: Draw a different Mold with +1 HP. (Post Beta 53.0, Current)
+Rarity: White (Common)
+
+=== Trivia ===
+* Beta 21.1 gave it a new image.
+[[Category:Rework]]

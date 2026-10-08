@@ -1,0 +1,64 @@
+# Builds Card History's data (one file per card / artifact) on the
+# `card-history` branch, from:
+#   - the Undercards wikis (Fandom Version History + Previous Versions, Miraheze patch table)
+#   - the official patch notes in card-history/sources/patch-notes/
+#   - feildmaster's Card-Tracker (public repo, cloned here)
+# Wizascript reads the result straight from that branch, so nothing here
+# touches main or notifies anyone, and fixing the reading logic needs no
+# Wizascript update.
+#
+# Runs: the day after Card-Tracker's 1st/15th snapshots, on "Run workflow",
+# and when the reading logic, errata or patch notes change on the branch.
+# This file must exist on main (for the schedule) and on card-history (for
+# the push trigger) - keep the two copies the same.
+name: Card History data
+
+on:
+  schedule:
+    - cron: "30 6 2,16 * *"
+  workflow_dispatch:
+  push:
+    branches: [card-history]
+    paths:
+      - "card-history/build/**"
+      - "card-history/errata.json"
+      - "card-history/sources/**"
+      - "card-history/assets/**"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: card-history-data
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: card-history
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Get Card-Tracker
+        run: git clone --quiet https://github.com/UCProjects/Card-Tracker.git "$RUNNER_TEMP/card-tracker"
+
+      - name: Build
+        run: node card-history/build/build.js --tracker "$RUNNER_TEMP/card-tracker"
+
+      - name: Save
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add card-history/data card-history/cache
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -m "Card History data [auto]" -q
+            git push -q
+          fi

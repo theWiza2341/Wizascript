@@ -1,6 +1,6 @@
 Fandom Version History: read live
 Version History: 271 versions
-Patch notes: 155 versions read, 9 corrections/additions to Version History
+Patch notes: 159 versions read, 9 corrections/additions to Version History
   Beta 17.0 Fire Trap: HP 7 > 5 -> 7 > 6 (patch notes, Season17_a.txt)
   Beta 28.0 Clam Girl: COST 7 > 4 -> 7 > 6 (patch notes, Season28_a.txt)
   Beta 38.1 Glad Dummy: COST 4 > 5 -> 4 > 6 (patch notes, Season38.1_a.txt)

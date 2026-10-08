@@ -1,6 +1,6 @@
 Fandom Version History: read live
 Version History: 271 versions
-Patch notes: 114 versions read, 8 corrections/additions to Version History
+Patch notes: 155 versions read, 9 corrections/additions to Version History
   Beta 17.0 Fire Trap: HP 7 > 5 -> 7 > 6 (patch notes, Season17_a.txt)
   Beta 28.0 Clam Girl: COST 7 > 4 -> 7 > 6 (patch notes, Season28_a.txt)
   Beta 38.1 Glad Dummy: COST 4 > 5 -> 4 > 6 (patch notes, Season38.1_a.txt)
@@ -9,6 +9,7 @@ Patch notes: 114 versions read, 8 corrections/additions to Version History
   Beta 49.1 Blockler O: added from the patch notes (Season49.1_a.txt)
   Beta 61.1 Soul Drain: added from the patch notes (Season61.1_b.txt)
   Beta 64.0 Evil Plan: added from the patch notes (Season64_i.txt)
+  Beta 71.1 Shovels x999: added from the patch notes (Season71.1_a.txt)
   errata: removed Generous Gifts from Beta 105.0
 Miraheze unreachable (HTTP 403), using the cached copy (2961 rows)
 Card-Tracker: 23853 snapshots of 931 cards, 931 cards today (commit 96bc601)

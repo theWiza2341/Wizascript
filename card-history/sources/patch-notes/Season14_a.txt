@@ -1,0 +1,39 @@
+Updates (Buff / Nerf / Balanced or reworked)
+Season 14
+Beta 14.0 (2017/09/01)
+## In game
+* The timer will be refreshed every 15 seconds to avoid bad surprises when you are lagging.
+## Matchmaking
+* We have improved the matchmaking a little bit.
+## Rankeds
+* New rank : LEGEND (top x% of masters)
+* DTP gains and losses have been inscread to move faster between divisions.
+* Demotions are back. (Sorry but It's the only way to avoid win trading).
+## Classes
+* [red soul] Determination (Nerf) : Start the game with 1 extra life. When you would die, gain 25 20 HP instead. {red}
+## Balancing (Monsters)
+* Rock. HP: 5 -> 6. {green}
+* Bunbun. HP: 4 -> 5. {green}
+* Doggo. EFFECT UPDATE: "Magic: Put an ally monster back to your hand. If it's a dog, reduce its cost by 2.". {green}
+* Charles -- RARITY: RARE > COMMON. {yellow}
+* Receptionist 2. RARITY: COMMON -> RARE. {yellow}
+* Ice Wolf. ATK: 8 -> 7. HP : 7 -> 8. {yellow}
+* Clam Girl. COST: 6 -> 7. ATK: 4 -> 5. HP: 3 -> 4. EFFECT UPDATE: "Magic: Reduce the cost of the spells in your hand by 2.". {yellow}
+* Bob. EFFECT UPDATE: "Charge. Magic: Add 3 random temmies to your hand (except Bob).". {yellow}
+* Mad Dummy. ATK: 6 -> 5. EFFECT UPDATE: "Transparency. Can only be damaged by a damage of 4 or greater.". {yellow}
+* Vulkin. ATK: 3 -> 2. {red}
+* Catty. ATK: 5 -> 4. {red}
+* Final Froggit. EFFECT UPDATE: "Magic: Give +1/+1 to all other ally Froggits wherever they are.". {red}
+* Red Bird. COST 4 -> 5. {red}
+* Crazy Bun. COST: 2 -> 3. {red}
+* Temmie Statue. COST: 5 -> 4. HP: 7 -> 6. EFFECT UPDATE: "Whenever you summon a Temmie, give it +1/+1.". {red}
+## Balancing (Spell)
+* Assault. EFFECT UPDATE: "Add 3 random monsters costing 3 or less in your deck with +1/+1.". {green}
+* Undyne's Spears. COST: 6 -> 5. {green}
+* Feast. COST: 4 -> 3. {green}
+* Shopping. EFFECT UPDATE: "Draw a card for each 5 gold you currently have.". {yellow}
+* Spider Web. COST: 2 -> 3. {red}
+* Hyper Goner. EFFECT UPDATE: "Start of turn: Reduce its cost by your missing HP (min : 5).". {red}
+## Bug fixes
+* Stats of the season will now show ranked stats only.
+* Angel of Death and Cloning will now correctly copy effects of monsters.

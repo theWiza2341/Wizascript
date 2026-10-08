@@ -1,0 +1,3 @@
+Season 76
+New cards
+* [card] Ball Dancer (cost 5, ATK 5, HP 5, blue soul): Magic: Give all monsters in your deck with equal or less cost than this +1/+1/+1.

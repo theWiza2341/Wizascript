@@ -1,0 +1,34 @@
+Beta 19.0 (2018/02/10)
+## Balancing (Artifacts)
+* Copycat -- Effect Update: Shuffle your starting hand into your deck. Add a copy of your opponent's hand into your hand (without buffs). {green}
+## Balancing (Monsters)
+* Omega Flowey -- Effect Update: Magic : Save the board and add a Load spell to your hand. {green}
+* Yellow Snail -- Effect Update: Magic : Give +2 HP to your other snails. {green}
+* Madjick -- HP 3 > 4. {green}
+* Grillby -- Cost 6 > 5; ATK 5 > 4; HP 4 > 3. {green}
+* Shambling Mass -- HP 5 > 6 {green}
+* Reaper Bird -- Effect Update: Magic: Draw a card. If it was an Amalgamate, give it +2 HP and Candy. {green}
+* Childrake -- ATK 4 > 3; HP 3 > 4 {green}
+* Snail Trainer -- Effect Update: Magic: Add a Snail to your hand. If you have atleast 2 snails on board, add Thundersnail instead. {green}
+* Everyman -- Effect Update: Magic: Can't be damaged during your turn. Magic: Give +2/+2 to another random ally Amalgamate. {green}
+* Sans -- Cost 7 > 6. {green}
+* Echo Fish -- Effect Update: Magic: Copy ATK, HP, Taunt, Charge and Haste of an enemy monster. {yellow}
+* Moldbygg -- HP 4 > 5. Effect Update: Taunt. End of turn: Give +1 HP to all other ally Molds in play. {red}
+* Ferry -- Cost 1 > 2; HP 1 > 2; Effect Update: Dust: Gain 3 gold. {red}
+* MTT Fountain -- HP 6 > 5. {red}
+* Coffin -- Cost 5 > 4. Effect Update: Dust: Summon a random dead ally monster (except Coffin). {red}
+* Lamp -- HP 2 > 1. {red}
+* Endogeny -- Cost 7 > 8. {red}
+## Balancing (Spells)
+* "Thundersnail" -- Cost 3 > 1. {green}
+* Heal Delivery >> Test of Will -- Cost 8 -- Deal damage to all monsters equals to their atk. {yellow}
+* Hyper Goner -- Effect Update: Kill all monsters. Start of turn : Reduce its cost by your missing HP (min 8). {red}
+* Contamination -- Effect Update: Kill all monsters under KR. Add another spell of your soul (cost -1) to your hand for each killed monster. {red}
+* Heal -- Cost 0 > 1. {red}
+## Quests
+* Loyalty quest has been replaced by a new daily reward system.
+* We have added to your account 1 [icon] every 45 Loyalty Points you had and 1 pack every 2 Loyalty Points remaining (Example : 80 LP = 1 [icon] + 17 packs).
+## Crafting
+* Number of [icon] required to craft a DT card : 2 -> 4.
+* Number of [icon] given for disenchanting a DT card : 1 -> 2.
+* We have doubled the amount of [icon] you had before the update.

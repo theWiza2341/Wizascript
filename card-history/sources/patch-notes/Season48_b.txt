@@ -1,0 +1,21 @@
+## Balancing (Monsters)
+* Madjick -- Cost 5 > 4. {green}
+* Dark Candy Tree -- EFFECT UPDATE: Support: Give the attacking monster Candy. If it is a Plant, also gives it +1/+1. {green}
+* TV -- EFFECT UPDATE: Turbo: Add a random card on the top of both decks. Yours costs 1 less. {green}
+* Editor 1 -- EFFECT UPDATE: Magic: Look at all Turbo monsters in your deck. Choose one and add it to the top of your deck. It costs 1 less. {green}
+* So Sorry -- HP 4 > 5. {green}
+* Bone Box -- HP 2 > 3. ATK 2 > 3. {green}
+* Goner Kid -- Cost 10 > 8. {green}
+* Coffin -- EFFECT UPDATE: Dust: Summon the cheapest dead ally monster (except itself) and remove it from your dustpile. {yellow}
+* Igloo -- Cost 5 > 4. HP 7 > 4. ATK 0 > 4. EFFECT UPDATE: Magic: Look at 3 cards at the bottom of the enemy deck. Choose one. Add a copy of it to your hand. {yellow}
+* Moldbygg -- Cost 3 > 5. HP 6 > 4. ATK 1 > 4. EFFECT UPDATE: Dust: If there is an ally Mold, summon a Moldsmal. {yellow}
+* Moldessa -- EFFECT UPATE: Magic: Deal 2 DMG to a random enemy monster. If there's an ally Mold, deal 4 instead. {yellow}
+* Gardener Asgore -- Cost 5 > 7. HP 4 > 5. ATK 4 > 3. EFFECT UPDATE Turn end: transform a random ally Green Flower into a Red Flower, if there are none summon a Green Flower instead. {yellow}
+* Echo Flower -- HP 6 > 4. ATK 1 > 2. {yellow}
+* Groom -- Cost 3 > 4 HP 3 > 4. ATK 2 > 4. EFFECT UPDATE: Turbo: If you have 6 cards or less in your hand, draw a card. {yellow}
+* Lost Toriel -- Cost 5 > 3. HP 4 > 3. ATK 4 > 5. EFFECT UPDATE: Dust: Reduce a random enemy monster's ATK by 5. If ATK becomes 0, kill it. {yellow}
+* Lost Asgore -- Cost 5 > 3. HP 3 > 5. ATK 2 > 3. {yellow}
+* Lost Sans -- Cost 5 > 3. EFFECT UPDATE: Dust: Add a Gaster Blaster to your hand. It costs 4 less. {yellow}
+* Lost Papyrus -- Cost 5 > 3. ATK 3 > 4. EFFECT UPDATE: Dust: Heal 5 HP to all allies. {yellow}
+* Lost Undyne -- Cost 5 > 3. HP 4 > 3. {yellow}
+* Lost Alphys -- Cost 5 > 3. ATK 3 > 2. {yellow}

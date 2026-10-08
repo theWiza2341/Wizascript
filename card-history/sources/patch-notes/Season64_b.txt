@@ -1,0 +1,11 @@
+New cards
+* [green soul] Mauswheel | COST 2 | ATK 4 | HP 4 | Magic: Add 8 Cursors to your deck and 1 to your hand.
+* [green soul] Prison Bars | COST 2 | spell | Paralyze an enemy monster. Deal 2 DMG to all other enemies.
+* [white soul] Rotablock | COST 2 | ATK 3 | HP 1 | Magic: Add 3 copies of random monsters costing 1 or less G from your dustpile to your deck.
+* [green soul] Sans Milk | COST 2 | spell | Give a monster +1 Dodge.
+* [white soul] Stuck Tasque | COST 2 | ATK 1 | HP 1 | Loop (1). Magic: Give a card and the one to its left in your hand -1 cost.
+* [blue soul] Alterman | COST 3 | ATK 2 | HP 4 | Taunt. Magic: Burn an ally monster to gain +3 HP.
+* [blue soul] Ambyu-Lance | COST 3 | ATK 2 | HP 3 | Dodge (1). Whenever you take DMG during your turn, spend a Dodge to heal 4 HP to all allies.
+* [white soul] Cafe Table | COST 3 | ATK 3 | HP 4 | Magic: Remove an ally monster's negative effects and give it Taunt.
+* [green soul] Dancing Stickman | COST 3 | ATK 3 | HP 3 | Magic: Give a monster Taunt. Give yourself +3 HP.
+* [white soul] Eggplant Trashbag | COST 3 | ATK 2 | HP 4 | Taunt. Magic: Look at 3 random BASE spells and choose one. Delay: Add it to your hand.

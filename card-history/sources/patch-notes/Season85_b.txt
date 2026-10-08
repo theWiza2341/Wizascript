@@ -1,0 +1,17 @@
+## Balancing (Spells)
+* Control Wire -- COST 2 > 1. {green}
+* Wereform -- COST 6 > 5. {green}
+* Crime Scene > Judgement -- COST 7 > 9. EFFECT UPDATE: If you have less HP than your opponent, deal DMG split among all enemy monsters equal to the difference. {yellow}
+* Defrosting -- COST 1 > 2. EFFECT UPDATE: Loop (3). If this has no Loop, summon a 8/5 Greater Dog with Dodge (1) and Haste. Program (2): No additional effect. {yellow}
+* Spider Web -- COST 1 > 2. EFFECT UPDATE: Give an enemy monster KR and -1/-1. Delay: If it's dead, summon 3 Spiders. {yellow}
+* Worsening -- COST 3 > 4. EFFECT UPDATE: Halve the stats of all enemy monsters with KR (rounded down). {yellow}
+* Poison -- COST 2 > 1. EFFECT UPDATE: Loop (1). Give a monster KR. Draw a card. {yellow}
+* Powerhouse -- COST 4 > 7. EFFECT UPDATE: Draw a card. Give all cards in your hand -2 cost (min. 1). {yellow}
+* Ambush -- COST 6 > 9. EFFECT UPDATE: Summon 4 random Generated monsters from your hand.. {yellow}
+* True Self -- COST 5 > 6. EFFECT UPDATE: Kill a monster. Kill all paralyzed enemy monsters. {yellow}
+* Last Dream -- EFFECT UPDATE: Give all ally monsters +1/+1. If you have exactly 1 HP, kill all enemy monsters and fully heal yourself. {yellow}
+* Mercenary Hire -- COST 5 > 12. EFFECT UPDATE: Look at 4 random non-DT monsters in the enemy deck costing 4 or more. Choose one. Summon a copy of the other 3. {yellow}
+* Cold Winter -- COST 1 > 6. EFFECT UPDATE: Deal 5 DMG randomly split among all enemy monsters. Add a Change of Winds to your hand for each one that died. {yellow}
+* Ice Prison -- COST 2 > 3. {red}
+## Balancing (Artifacts)
+* Generous Gifts -- EFFECT UPDATE: Whenever you take DMG during the enemy turn, gain counters equal to DMG taken. At 10 counters, earn 2 G. {yellow}

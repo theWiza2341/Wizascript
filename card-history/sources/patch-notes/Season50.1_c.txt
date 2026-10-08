@@ -1,0 +1,20 @@
+* Dark Candy Tree -- EFFECT UPDATE: Support: Restore 3 HP to the attacker. If it was a Plant, give it +1/+1 as well. {red}
+* Bookshelf -- EFFECT UPDATE: Magic: If your deck has no spell, look at all spells of your soul. Choose one to add to your hand, it costs 3 less (not below 2). {red}
+* Tombstone -- EFFECT UPDATE: Magic: Summon two different non-DT Dust monsters from your dustpile costing 7 or less on adjacent slots. {red}
+* Spider -- [white soul] > [grey soul]. {grey}
+* Shyren -- [white soul] > [grey soul]. {grey}
+* Jockington -- EFFECT UPDATE: Shock: Draw a card. {grey}
+## Balancing (Spells)
+* Mine -- EFFECT UPDATE: Turbo: Deal 2 DMG to yourself. Draw a card. {yellow}
+## Balancing (Artifacts)
+* Wiggle -- EFFECT UPDATE: At the start of the game, add a Moldsmal to your hand and a Moldstack and Moldbygg to your deck. {green}
+* Mines -- EFFECT UPDATE: Shock: Shuffle a Mine to your opponent's deck. {yellow}
+* Outbreak -- EFFECT UPDATE: At the start of every even turn summon a Soul Cage. The outbreak counter starts at 4. {grey}
+* Arcane Scepter -- EFFECT UPDATE: Shock: Cast a random spell on a random target. {grey}
+## Balancing (Other)
+* Lost Soul's order now is: Toriel -> Alphys -> Undyne -> Sans -> Papyrus -> Asgore. {yellow}
+## Keywords
+* Shock: Whenever you cast a spell with a base cost of 2 or more, trigger its effect.
+## Bundles
+* Spider Party bundle is now available.
+* Holy War cosmetics are now available in the cosmetic rotation.

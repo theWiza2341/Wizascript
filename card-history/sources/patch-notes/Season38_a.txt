@@ -1,0 +1,26 @@
+Season 38
+## Quests
+* Added 3 starting quests, 6 early season quests, 6 mid season quests.
+* Added goal quests (packs, shiny packs, ucp, dt fragments).
+* Added pass quests (skins, avatars, profiles...) for 450 UCP.
+## Daily rewards
+* Reduced daily reward values.
+* Replaced UCP by dust.
+* Replaced DT Fragment by Super pack.
+## Packs
+* Shiny, super and final packs can now drop Deltarune cards.
+* Reworked packs page.
+## Queues
+* Fun mode renamed to Standard.
+* Classic mode renamed to Ranked.
+* Ranked mode is now disabled for players under LV 10.
+## Standard matchmaking
+* Instant matchmaking :
+* Before LV 20 : Max 5 LV difference.
+* LV 20 - LV 49
+* LV 50 - LV 99
+* LV 100 - ∞
+## Ranked mode
+* Victories in LEGEND now grant 1 UCP.
+## Emails
+* You can now unsubscribe from "commercial" emails in the settings.

@@ -1,0 +1,25 @@
+## Balancing
+* Snow Poff. COST: 4 -> 5. {red}
+## Chat
+* Typing :me: in the chatbox will transform your message into a roleplay message (only works in private messages and the roleplay channel if you are not a Contributor).
+* (Contributors) Typing :rainbow: in the chatbox will add a rainbow animation on your message (don't abuse it !).
+## Profile page
+* You can now check your current XP and what will be the next big level reward.
+* You can now check your number of games for Classic, Ranked, Event and Tournament mode.
+* You can now check your win rate in ranked this season for each soul.
+## Decks and crafting
+* Cards are now into pages.
+## Settings page
+* Old Profile page is now on Settings page.
+* New options. More information here.
+## Help
+* Cards description are now colored everywhere and you can get information about an effect or an icon by right clicking on it.
+## Cards description
+* "At the start of your turn" -> "Start of turn: "
+* "At the end of your turn" -> "End of turn: "
+## Mails
+* We are now using a third party company to deliver emails.
+## In game
+* An icon has been added for : [icon] Determination, [icon] Silence, [icon] Paralyzed, [icon] Attack buff, [icon] Attack debuff, [icon] Charge, [icon] Haste, [icon] Candy, [icon] Transparency.
+## Tutorial
+* A music has been added for the Tutorial.

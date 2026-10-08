@@ -1,0 +1,22 @@
+## Balancing (Monsters)
+* Gaster -- COST 13 > 12. {green}
+* Politics Bear -- HP 3 > 4. {green}
+* Monster Kid -- COST 3 > 2. ATK 2 > 1. {green}
+* Sugar Pot -- ATK 2 > 3. {green}
+* Parsnik -- ATK 3 > 4. {green}
+* Shovels x999 -- EFFECT UPDATE: Magic: Fill both players' hands with Shovels. Yours cost 1 less. {green}
+* Striped Bird -- EFFECT UPDATE: Haste. After this attacks, Paralyze it. {green}
+* Susie Plush -- EFFECT UPDATE: Magic: Deal 2 DMG to you. If you have 10 or less HP, deal 2 DMG to all enemies instead. {green}
+* Alterman -- ATK 2 > 3. HP 4 > 3. {yellow}
+* Spider Reporter -- EFFECT UPDATE: Haste. Dust: Add a Spider Croissant to your deck. {yellow}
+* Gardener Asgore -- HP 6 > 5. EFFECT UPDATE: Magic: Summon an ally Red Flower and give it +1/+1 for every 5 Plants in your dustpile. {yellow}
+* Hanging Spider -- COST 2 > 3. ATK 3 > 1. EFFECT UPDATE: Delay: If this is dead, summon a Spider Croissant and add a Spider Donut to your hand. {yellow}
+* Dumpster -- EFFECT UPDATE: Magic: Draw a BASE card. {yellow}
+* Cafe Jukebox -- EFFECT UPDATE: Taunt. Magic: Look at 3 random different non-DT monsters in the enemy dustpile. Add one to your deck with +1/+1. {yellow}
+* Memory Keeper -- EFFECT UPDATE: Magic: Set a monster's HP to 2 and give it Dodge (1). Shock: Deal 2 DMG to the highest HP enemy monster. {yellow}
+* Innkeeper -- HP 6 > 5. {red}
+* MTT Fountain -- ATK 2 > 1. HP 4 > 5. {red}
+* The Reflection -- EFFECT UPDATE: Need: 35 or more monsters in both dustpiles. Magic: Burn them to add a copy of the enemy hand to your deck (except DT cards). {red}
+* Chara -- EFFECT UPDATE: Magic: Add the Genocide artifact. {red}
+* Big Mouth -- HP 6 > 7. EFFECT UPDATE: Magic and Turn start: Kill a random enemy monster costing 2 or less to heal 2 HP to you. {red}
+* Snail Pen -- EFFECT UPDATE: Magic: Add a copy of each ally Snail to your hand. {red}

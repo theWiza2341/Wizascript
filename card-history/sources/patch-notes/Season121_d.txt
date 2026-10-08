@@ -1,0 +1,15 @@
+## New Artifacts
+* Petal Feather (LEGENDARY) -- The third monster you play each turn gains Haste and +1/+1.
+## New mechanic
+* Quest: This monster will start a quest at the start of the game.
+## Ranked matchmaking
+* Master+ will now have to wait a few seconds before being able to tag a lower master tier or a diamond player for masters.
+* Non master matchmaking is now faster.
+## QOL update
+* Added a volume slider for music/sounds/jingles.
+* Music, sounds, and jingles should now work correctly on mobile.
+* New chat design and fixed auto scroll not scrolling when a big message is posted.
+* Reworked select card UI in game.
+* Effects that require selecting a card in your hands no longer open the card UI selection.
+* You can know if you are starting first or second during the mulligan.
+* You can now click on in game info icons to get more details (clicking on G will also display the amount of gold you will get next turn).

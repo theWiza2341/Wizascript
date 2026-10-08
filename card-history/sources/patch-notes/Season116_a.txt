@@ -1,0 +1,8 @@
+Game updates
+Season 116
+## Story
+* Snowdin zone is now available.
+## New cards
+* [card image] Jogboy Papyrus. COST 8. ATK 6. HP 9. Magic: Enchant enemy slots that have monsters with Blue Bones. Turn start and Dust: Remove all enemy Blue Bones and heal 3 HP to you for each one removed.
+* [card image] Strange Machine. COST 8. ATK 4. HP 2. This takes 1 less DMG for each enemy slot enchantment. Magic: Enchant enemy board slots with Green Tile, Yellow Tile, Purple Tile and Orange Tile.
+* [card image] Wall of Fire. COST 9. ATK 6. HP 6. Magic: Enchant all empty and non enchanted enemy board slots with The Flames.

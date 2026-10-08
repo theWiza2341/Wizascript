@@ -1,0 +1,10 @@
+Season 105
+## New cards
+* Final Pack -- cost 0, [green soul], rarity green heart. Look at a RARE, EPIC, LEGENDARY and DT monster. Choose one to add to your hand with -2 cost and Haste.
+* Pack -- cost 0, [green soul]. Look at 4 random monsters. Choose one to add to your hand.
+* Super Pack -- cost 0, [green soul]. Look at a COMMON, RARE, EPIC, and LEGENDARY monster. Choose one to add to your hand with -2 cost.
+* Golden Mirror -- cost 4, ATK 3, HP 3, rarity green hat. Charge. Enemy spells cost 1 more G. Dust: Release the caught monster.
+* Mo -- cost 5, ATK 4, HP 5, rarity purple hat. Taunt. Magic: Add 3 random non-DT cards costing 3+ G to your hand with -3 cost. Delay: Erase the ones still in your hand.
+* El Undercardio -- cost 7, ATK 5, HP 5, [yellow soul]. Magic: Fill your hand with random Packs (The better - the rarer).
+* Bryan -- cost 9, ATK 5, HP 7, rarity white hat. After an enemy monster dies during your turn, summon a Dynamite Stick with Charge. Magic: Summon a Dynamite Stick with Charge.
+* Ceroba Ketsukane -- cost 12, ATK 8, HP 5, rarity red hat. Dodge (1). Magic: Summon 2 Golden Mirrors adjacent to this card. They Catch the monsters in front of them. Turn start: Gain +1 Dodge.

@@ -1,0 +1,22 @@
+* Final Froggit -- Rarity [white soul] > [blue soul]. EFFECT UPDATE: Magic: Give all ally Froggits (except Final Froggit) +1/+1 wherever they are. {green}
+* Dad Slime -- HP 4 > 5. {green}
+* Mettaton NEO -- EFFECT UPDATE: Dust: Deal DMG equal to its ATK to all monsters and half to the opponent. {green}
+* Dog House -- Cost 5 > 4. HP 7 > 5. EFFECT UPDATE: Magic: Add an exact copy of an ally Dog from your hand to your hand. {yellow}
+* Popometer -- ATK 3 > 4. HP 6 > 4. EFFECT UPDATE: Armor (1). Disarmed. Support: Attack a random enemy monster on the edge of the board. {yellow}
+* Candle -- ATK 3 > 4. HP 3 > 7. EFFECT UPDATE: Taunt. Turn end: Deal 2 DMG to all allies. {yellow}
+* Spike Trap -- EFFECT UPDATE: Taunt. Whenever this gets damaged, gain +3 ATK. {yellow}
+* Snow Peff -- HP 2 > 4. EFFECT UPDATE: Disarmed. Whenever an enemy monster attacks, this takes 1 DMG. Dust: Summon a Greater Dog. {yellow}
+* Jumping Rabbit -- EFFECT UPDATE: Haste. Dust: If this died during your turn, shuffle Jumping Rabbit into your deck. Draw a card. {yellow}
+* Astigmatism -- Cost 7 > 6. HP 8 > 6. {yellow}
+* Dark Ponman -- RARITY [icon] > [blue icon]. {yellow}
+* Striped Bird -- ATK 4 > 3. HP 4 > 5. EFFECT UPDATE: Haste. Paralyze itself after attacking. {yellow}
+* Ficus Licker -- RARITY [white soul] > [grey soul]. ATK 1 > 2. HP 3 > 2. EFFECT UPDATE: Magic: Draw a card. {yellow}
+* Useless Bird -- EFFECT UPDATE: Taunt. Transparency. {yellow}
+* Alphys -- RARITY [purple soul] > [yellow soul]. Cost 5 > 7. ATK 3 > 5. EFFECT UPDATE: Magic: Add a Royal Invention of your soul to your hand. {yellow}
+* Starwalker Bird -- EFFECT UPDATE: Magic: If your deck has no RARE or EPIC card, draw 3 cards. {yellow}
+* Ponman Statue -- Cost 4 > 5. HP 2 > 3. EFFECT UPDATE: Synergy: Give +2 ATK and Haste to Pieces at its right and +2 HP and Taunt to Pieces at its left. {yellow}
+## Balancing (Spells)
+* Inflation -- Cost 1 > 2. EFFECT UPDATE: Increase the cost of all monsters in your hand by 1, and give them +2/+1. {yellow}
+* Poison -- EFFECT UPDATE: Deal 1 DMG to a monster and give it KR. If it already has KR, draw 2 cards. {yellow}
+## Balancing (Artifacts)
+* Will -- EFFECT UPDATE: At the start of the game add a Recruitment to your hand and at the top of your deck. {yellow}

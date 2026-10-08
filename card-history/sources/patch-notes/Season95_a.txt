@@ -1,0 +1,13 @@
+Game updates
+Season 95
+## New cards
+[card] Lasso | cost 0 | Look at the enemy hand. Choose a non-DT monster to summon and Paralyze.
+[card] Sweet Corn | cost 1 | Dust: Give Candy to its killer. | ATK 2 | HP 3
+[card] Dunebud | cost 2 | Shook: Summon a Dunebud and lose this Shook. | ATK 2 | HP 2
+[card] Lightning Bolt | cost 2 | Charge. Dust: If this died on your turn, deal 2 DMG to the lowest HP enemy monster. | ATK 2 | HP 2
+[card] Deolbat | cost 3 | Transparency. After a non-TOKEN spell is played, deal 3 DMG to the spell's owner. | ATK 3 | HP 4
+[card] Pops | cost 3 | Transparency. | ATK 2 | HP 2
+[card] Flameguy | cost 4 | Magic: Kill an ally monster to draw 2 cards. | ATK 5 | HP 4
+[card] Penilla | cost 4 | Magic: Both players draw a monster. Delay: If yours is still in your hand, swap them! | ATK 5 | HP 4
+[card] Rookman | cost 4 | Dodge (1). Bullseye: Summon a Pebble. | ATK 3 | HP 4
+[card] Rorrim | cost 4 | Taunt. Dust: If this was killed by a monster, Program (3): Summon a 4/4 copy of it with Taunt. | ATK 4 | HP 4

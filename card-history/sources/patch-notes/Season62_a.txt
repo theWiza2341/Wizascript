@@ -1,0 +1,24 @@
+## Balancing (Monsters)
+* Flower Can -- COST 4 > 3. ATK 3 > 2. {green}
+* Doggo -- COST 4 > 3. HP 5 > 4. {green}
+* Asriel -- COST 5 > 4. {green}
+* The Mascot -- COST 7 > 5. ATK 6 > 5. HP 7 > 5. {green}
+* Fireplace -- COST 7 > 6. HP 7 > 6. {green}
+* Cool Papyrus -- ATK 5 > 6. {green}
+* Burgerpants -- ATK 3 > 4. HP 5 > 3. {green}
+* Snow Frisk -- EFFECT UPDATE: Taunt. {green}
+* The Heroine -- EFFECT UPDATE: Instead of dying, return with base -2/-2 if you have a COMMON, RARE, EPIC, and LEGENDARY monster in your dustpile. Magic: Gain Taunt. {yellow}
+* Bratty -- EFFECT UPDATE: Magic: Magic: Burn a random spell in your hand to look at all spells with equal cost. Add one to your hand and give all spells in your hand -1 cost. {yellow}
+* Berdly -- EFFECT UPDATE: Magic and Turn start: If you have no ally monsters, reduce the cost of a random spell in your hand by 2. {yellow}
+* Blowing Rabbick -- EFFECT UPDATE: Whenever you cast a spell, return this to your hand with +1/+1 (keep buffs). {yellow}
+* Date Alphy -- ATK 3 > 4. HP 5 > 3 EFFECT UPDATE: Magic: Give an ally monster Haste. It can attack again. {yellow}
+* Anime Sword -- ATK 2 > 1. HP 1 > 2. EFFECT UPDATE: Delay: Give this monster's stats to a random one in your hand. {yellow}
+* Big Bomb -- HP 10 > 7. EFFECT UPDATE: Turn end: Burn a random card in your hand costing 7 G or which has a base HP of 7 to kill all monsters. {yellow}
+* Seam -- EFFECT UPDATE: Need: 3 or less cards in your deck. Magic: Add the Seap artifact. {yellow}
+* Spike Trap -- ATK 2 > 3. EFFECT UPDATE: Whenever this takes DMG during the enemy turn, give a random other ally monster +1/+1. {yellow}
+* Bomb -- EFFECT UPDATE: Delay: Deal 2 DMG to the opponent. Turn start: Sacrifice this to deal 2 DMG to all enemy monsters. {yellow}
+* Mom Slime -- ATK 4 > 5. EFFECT UPDATE: Shock: Summon a Kid Slime. {yellow}
+* Trader Temmie -- EFFECT UPDATE: Transparency. Turn end: If 5 or less cards in your hand, add a random spell costing 1 or less G to your hand. {yellow}
+* Butterflies -- HP 3 > 2. {red}
+* Lancer -- COST 7 > 8. {red}
+* Pile of Dust -- ATK 4 > 2. {red}

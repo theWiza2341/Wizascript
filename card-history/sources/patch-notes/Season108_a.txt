@@ -1,0 +1,19 @@
+Game updates
+Season 108
+## Balancing (Monsters)
+* Lemon Bread -- ATK 4 > 5. {green}
+* Sidewalk Froggit -- COST 4 > 3. HP 4 > 3. {green}
+* Trader Temmie -- COST 4 > 3. HP 4 > 3. {green}
+* Caged Jester -- COST 6 > 7. ATK 5 > 7. EFFECT UPDATE: Magic: Attain Freedom to give it a counter for every different non-TOKEN spell of another SOUL you cast this game. {yellow}
+* Dogamy -- EFFECT UPDATE: Magic: If you have an ally Dogaressa, give all Dogs in your hand +2/+2. {yellow}
+* Great Door -- ATK 3 > 5. HP 3 > 5. EFFECT UPDATE: Magic: Summon an enemy Petrified Monster. {yellow}
+* Seam -- EFFECT UPDATE: Taunt. Need: No non-Generated LEGENDARY monsters in your deck or dustpile. Magic: Add 2 Shadow Crystals to your hand. {yellow}
+* Crystal Cheese -- HP 4 > 3. {red}
+* Decibat -- ATK 3 > 2. {red}
+* Migosp -- HP 3 > 2. {red}
+* Mo -- COST 5 > 6. {red}
+* Ceroba Ketsukane -- COST 12 > 13. {red}
+* Golden Mirror -- EFFECT UPDATE: Charge. Non-TOKEN enemy spells cost +1 G. Dust: Release the caught monster. {red}
+* Dynamite Stick -- EFFECT UPDATE: Charge. Dust: Deal 1 DMG to a random enemy monster. {red}
+* Gamer -- ATK 3 > 4. EFFECT UPDATE: Magic and Bullseye: Deal 2 DMG to the lowest HP enemy monster and 1 DMG to the opponent. {red}
+* El Undercardio -- EFFECT UPDATE: Pack Distribution is changed from 60%/30%/10% to 75%/20%/5% {red}

@@ -1,0 +1,6 @@
+Beta 14.1 (2017/09/01)
+## Rankeds
+* LEGEND rand down glitch is now fixed.
+* SAPPHIRE rank has been removed.
+* Old SAPPHIRE X players during this season have been moved to EMERALD X. (Don't worry, you will climb faster than old EMERALD players.
+* DTP gains and losses has been lowered.

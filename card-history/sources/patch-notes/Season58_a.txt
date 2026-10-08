@@ -1,0 +1,18 @@
+## Balancing (Monsters)
+* Muffet's Pet -- ATK 2 > 3. HP 6 > 5. {green}
+* Kid Slime -- HP 1 > 2. {green}
+* Long Sink -- COST 6 > 5. HP 5 > 4. {green}
+* Final Froggit -- COST 7 > 6. HP 6 > 5. {green}
+* Reaper Bird -- HP 4 > 5. {green}
+* Seam -- COST 8 > 6. ATK 5 > 4. HP 5 > 4. {green}
+* Mad Dummy -- COST 13 > 12. {green}
+* Bookshelf -- HP 5 > 6. {green}
+* Asriel Dreemurr -- COST 18 > 17. ATK 10 > 11. HP 10 > 9. {green}
+* Omega Flowey -- COST 15 > 14. ATK 11 > 12. HP 11 > 12. Now a Plant. {green}
+* The Heroine -- ATK 9 > 8. HP 9 > 8. Now a Royal Guard. EFFECT UPDATE: Taunt. Instead of dying, return with -2/-2 base stats and lose Taunt. Gain Armor at 6/6 or Transparency at 4/4. {green}
+* Undyne -- EFFECT UPDATE: Magic: Deal 8 DMG randomly split among all enemy monsters. Summon a Spear with base stats equal to DMG not dealt. {green}
+* Grilling King -- COST 10 > 13. EFFECT UPDATE: Need: More cards in your dustpile than your deck. Magic: Summon a 5/5 Cake and two 3/3 Spincakes. {yellow}
+* Jerry -- EFFECT UPDATE: Taunt. When you have no other ally monsters, this takes 1 less DMG from monsters costing 4 or less G. {yellow}
+* Big Bob -- HP 3 > 4. EFFECT UPDATE: Delay: If this is damaged, draw 2 cards. {yellow}
+* Lost Alphys -- EFFECT UPDATE: Dust: Give the highest cost card in your hand -2 cost. {yellow}
+* Plated Pipe -- COST 7 > 6. EFFECT UPDATE: This takes 1 less DMG during your opponent's turn. Whenever this takes DMG, deal 1 DMG to your opponent. {yellow}

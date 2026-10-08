@@ -1,0 +1,10 @@
+Season 43
+## New spells
+* Cooking Practice (COST 0): Spend all your G. Summon a Spincake and give it +1/+1/+1 for each G spent.
+* Acceleration (COST 1): Choose a card from your hand. Burn it and draw 3 cards.
+* Spincake (COST 1, ATK 0, HP 1)
+* Campfire (COST 2): Restore 1 HP to ally monsters. Give 3 random monsters in your hand +1/+1.
+* Exploration (COST 3): Look at your deck and choose a card to draw. If it's <= EPIC, reduce its cost by 1.
+* Call of the Grave (COST 4): Summon 3 random 1/1 copies of Dust monsters with a cost of 3 or less from your dustpile.
+* Powerhouse (COST 8): Draw 2 cards, then reduce the cost of all cards in your hand by 2.
+* Worming Up (COST 9): Add a Worm to your hand for each monster on your board. Fill your board with Worms, then give all Worms in your board and hand +1 ATK.

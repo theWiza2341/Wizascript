@@ -1,0 +1,16 @@
+## Balancing (Monsters)
+* Papyrus -- ATK 5 > 6. {green}
+* Teacher Toriel -- HP 4 > 6. {green}
+* Mio Mio San -- COST 5 > 4. {green}
+* Memory Keeper -- ATK 3 > 4. {green}
+* Spaghetti -- HP 4 > 5. {green}
+* Big Mouth -- HP 6 > 7. {green}
+* Butterflies -- HP 2 > 3. {green}
+* Top Chef -- ATK 2 > 4. HP 3 > 2. {green}
+* Ball Person -- COST 2 > 3. ATK 3 > 2. HP 2 > 5. {green}
+* Jigsawry -- EFFECT UPDATE: Whenever you summon a Jigsawry, kill it. This gains its stats. Delay: If this isn't Generated, add a Jigsawry to your hand. {green}
+* Rapstablook -- ATK 3 > 4. HP 5 > 6. EFFECT UPDATE: Transparency. Whenever the opponent summons a monster, gain -1 ATK. At 1 or less ATK, kill this to deal 3 DMG to all enemy monsters. {green}
+* Mad Dummy -- EFFECT UPDATE: Can only be damaged by 4 or more DMG. Magic: Deal 3 DMG to all monsters and the opponent. Excess DMG is healed as HP to you. {green}
+* Golden Mascot -- COST 12 > 13. HP 6 > 7. EFFECT UPDATE: Taunt. In your hand, this has -2 cost for each LEGENDARY card you played this game (max: -10 cost). Magic: Add a Golden Hit to your hand and deck. {green}
+* Robot 98 -- EFFECT UPDATE: Dodge (98). Turn start: Lose all Dodge. {green}
+* Eye -- COST 6 > 3. ATK 5 > 4. HP 6 > 3. {green}

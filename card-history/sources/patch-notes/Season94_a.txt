@@ -1,0 +1,35 @@
+## New cards
+[card] The First Round | cost 1 | Deal 1 DMG. If the target has exactly 0 HP, add The Second Round to your hand.
+[card] The Second Round | cost 2 | Deal 2 DMG. If the target has exactly 0 HP, add The Third Round to your hand.
+[card] The Third Round | cost 3 | Deal 3 DMG. If the target has exactly 0 HP, add The Fourth Round to your hand.
+[card] The Fourth Round | cost 4 | Deal 4 DMG. If the target has exactly 0 HP, add The Fifth Round to your hand.
+[card] The Fifth Round | cost 5 | Deal 5 DMG. If the target has exactly 0 HP, add The Final Round to your hand.
+[card] The Final Round | cost 6 | Deal 6 DMG to all enemies. If you have a Clover, add The First Round to your hand!
+## Balancing (Monsters)
+* Lancer -- HP 5 > 6. {green}
+* Swatchling -- HP 4 > 5. {green}
+* Sad Bunbun -- ATK 2 > 3. {green}
+* Stoned Lancer -- ATK 3 > 4. {green}
+* Dad Dragon -- ATK 4 > 5. {green}
+* Recycle Bin -- COST 5 > 4. ATK 4 > 3. HP 5 > 6. {green}
+* Teacher Alphys -- HP 4 > 7. {green}
+* Cyber World Sign -- COST 7 > 6. {green}
+* Sans -- COST 6 > 5. {green}
+* Father Alvin -- EFFECT UPDATE: Taunt. Magic: Look at 3 random different non-DT monsters in your dustpile and choose one. Add it to your hand. {green}
+* Undyne -- EFFECT UPDATE: Magic: Deal 1 DMG to the lowest HP enemy monster 10 times. Summon a Spear with base stats equal to DMG not dealt. {green}
+* Soulless Kris -- EFFECT UPDATE: Charge. Magic: If you have none, open a Dark Fountain and give it +1 counter for every unique card you played this game. {green}
+* Jockington -- COST 3 > 2. HP 5 > 3. {yellow}
+* Mom Slime -- COST 5 > 4. ATK 5 > 3. {yellow}
+* New Cut Flowey > Clover. COST 10 > 9. ATK 4 > 7. HP 4 > 8. EFFECT UPDATE: Your Rounds cost 0. Magic: Add The First Round to your hand. {yellow}
+* Susie -- ATK 3 > 2. {red}
+* Baking Queen -- COST 9 > 10. {red}
+* Royal Papyrus -- EFFECT UPDATE: Need: 10+ non-Generated monsters costing 9 or more G in your Dustpile. Magic: Add the Underground Army artifact. {red}
+* Clover (Deltarune) > Renamed to "Clover Hydra". {gray}
+## Balancing (Spells)
+* Prison Bars -- COST 2 > 1. {green}
+* GIGA Kick > GIGA Missiles. EFFECT UPDATE: Deal 3 DMG To All Enemies. {yellow}
+* Breaking Love -- EFFECT UPDATE: Give -1/-1 to a monster. Draw a card. {red}
+## Balancing (Artifacts)
+* Undergrounds Army -- EFFECT UPDATE: Turn end: Send the most expensive non-Generated non-DT monster from your dustpile to your board. {yellow}
+## Balancing (Souls)
+* Integrity -- EFFECT UPDATE: Turn end: If you spent more G this turn than last turn, earn 1 G (except turn 1). Your G cap past turn 10 is 12. {yellow}

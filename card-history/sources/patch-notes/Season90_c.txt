@@ -1,0 +1,23 @@
+## Balancing (Monsters)
+* Cool Papyrus -- COST 10 > 9 {green}
+* Scarf Mouse -- ATK 2 > 3 {green}
+* Hanging Plug -- COST 5 > 4; HP 4 > 3 {green}
+* Papyrus -- COST 12 > 11 {green}
+* Jevil -- COST 12 > 11 {green}
+* GIGA Queen -- COST 20 > 15; EFFECT UPDATE: Need: You played 7+ unique TOKEN cards this game. Magic: Burn your hand and deck to add Detachable Hands to your hand. Equip GIGA Batteries. {green}
+* Coat Rack -- Magic: Draw 2 monsters. Give them +1/+1/+1. {green}
+* Library Loox -- COST 6 > 5; ATK 5 > 4; HP 6 > 5 {yellow}
+* Malius -- COST 6 > 5; ATK 7 > 6; HP 7 > 5; Magic: Choose a card in your hand to send to your deck. {yellow}
+* Barrier -- COST 25 > 40 {red}
+* Bookshelf -- COST 6 > 7 {red}
+* Seat of Gods -- EFFECT UPDATE: Magic: Switch: Give all monsters with 9 or more cost in your hand or deck -1 cost. Delay: Draw a card. {red}
+* Mane Ax -- ATK 7 > 6; EFFECT UPDATE: Haste. Magic: Silence a monster, then give it -2/-1. {red}
+* Spade King -- EFFECT UPDATE: Magic: Switch: Silence all enemy monsters or kill all enemy monsters with 2 HP or less. {gray}
+* Memorial Statue -- EFFECT UPDATE: Whenever this attacks a monster, Silence it. Magic: If you have equal or less monsters than the opponent, gain Haste. {gray}
+## Balancing (Spells)
+* Control Wire -- COST 1 > 0 {green}
+* GIGA Kick -- EFFECT UPDATE: An Ally Monster Attacks A Random Enemy Monster. Excess DMG Is Dealt To The Enemy. {green}
+* Jevilstail -- Effect Update: Give all ally monsters +1/+2. Give all monsters in your hand +1/+1. {red}
+## Balancing (Artifacts)
+* Preservation -- EFFECT UPDATE: Starts with 7 counters. Whenever you would overdraw a card, spend 1 counter to prevent this. {green}
+* Vitality -- Now has counters. {gray}

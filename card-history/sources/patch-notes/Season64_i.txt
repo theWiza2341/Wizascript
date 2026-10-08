@@ -1,0 +1,19 @@
+## Balancing (Spells)
+* Buttercup Treat -- COST 2 > 1. {green}
+* Pollutant Gas -- COST 2 > 3. EFFECT UPDATE: Summon 2 Toxic Clouds. {yellow}
+* Multi Shot -- EFFECT UPDATE: Deal 1 DMG. Delay: If this killed, add Multi Shot to your hand. {yellow}
+* Soul Drain -- EFFECT UPDATE: Loop (1). Deal 3 DMG to a monster. Delay: Burn the copy to heal 3 HP to you. {white}
+* Potato Chisps -- COST 3 > 2. EFFECT UPDATE: Add a copy of a non-DT monster with a tribe to your hand and give it +1/+1. {yellow}
+* Create a Machine -- COST 1 > 0. EFFECT UPDATE: Look at 3 random Thrashing Parts and choose one. Add it to your hand. {yellow}
+* Blitz Quiz -- COST 1 > 2. {red}
+* Zap Cannon -- COST 1 > 0. {green}
+* Trick Question -- COST 1 > 0. {green}
+## Balancing (Artifacts)
+* Evil Plan -- EFFECT UPDATE: At the start of the game, if you have Ultimathrash in your hand or deck, transform it into Failed Design to add all other Thrashing Parts into your deck and replace this artifact with the Ultimate Fusion artifact. Otherwise, add Create a Machine to your hand and deck. {yellow}
+## Keywords
+* Loop -- When you play this card while it has 1 or more Loop, add a copy of this to your hand with -1 Loop.
+* Program (x) -- If you have (x) more G than the card's cost, spend it when played to trigger this effect.
+* Shock / Support -- Now have icons on their cards to indicate their presence. If a card loses its Shock/Support the icon will disappear.
+## Other
+* Added 3 new Deltarune Chapter 2 backgrounds -- Cyber World, Queen's Palace and The City.
+* Catch / Release -- When a card is caught from any source, it is now removed from there.

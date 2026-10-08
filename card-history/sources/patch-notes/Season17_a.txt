@@ -1,0 +1,28 @@
+Beta 17.0 (2017/12/01)
+## Balancing (Monsters)
+* Asriel -- Cost 5 > 4. {green}
+* Whimsalot -- ATK 4 > 5. {green}
+* Lesser Dog -- HP 4 > 5; Effect Update: Dust: Reduce the cost of all the cards in your hand by 1. {green}
+* Mettabot -- Effect Update: Haste. {green}
+* Red Bird -- ATK 3 > 4. {green}
+* Lemon Bread -- It is now considered as a mold. {green}
+* Aaron -- ATK 6 > 5; HP 4 > 5. {yellow}
+* Knight Knight -- Effect Update: Whenever this attacks heal it by the amount of damage dealt. {yellow}
+* Bun -- Effect Update: Dust : Give +4 atk to a random ally Bunbun. {red}
+* Coffin -- Cost 4 > 5. {red}
+* Loren -- HP 6 > 5. {red}
+* Fire Trap -- HP 7 > 6. {red}
+* Monster Kid -- Effect Update: Dust: Give +1/+1 to adjacent monsters. {red}
+## Balancing (Spells)
+* Break -- Cost 1 > 0. {green}
+* Cloning -- Cost 4 > 3. {green}
+* Inflation -- Cost 2 > 1. {green}
+* Brain Freeze -- Cost 5 > 6. {red}
+* Cold Winter -- Cost 4 > 5. {red}
+* Hyper Goner -- Cost 34 > 35. {red}
+## Rarities
+* Longevity -- Rarity: Rare > Epic.
+* Soothing -- Rarity: Epic > Rare.
+## Other
+* Snowy logo !
+* Snowy card skin !

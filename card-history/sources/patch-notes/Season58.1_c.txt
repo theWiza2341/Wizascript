@@ -1,0 +1,11 @@
+## Balancing (Artifacts)
+* Draw -- EFFECT UPDATE: At the start of every 4 turns, draw a card if your hand isn't full. {green}
+* Power -- EFFECT UPDATE: At the end of turns 2, 5, 8, and 11, give the next monster in your deck +1/+1. {green}
+* Parachutism -- EFFECT UPDATE: At the start of your 5th turn and every 3 turns after that, summon a Mettabot. {green}
+* Solidity -- EFFECT UPDATE: Whenever an ally Taunt monster dies, add a Shield to the top of your deck. {green}
+* Noodles -- EFFECT UPDATE: At the start of the game, add a Instant Noodles to the top of your deck and shuffle one into the first 10 cards of your deck. {green}
+* Hourglass -- EFFECT UPDATE: At the start of the game, draw the cheapest monster from your deck and add a Time Warp to your hand. {yellow}
+* Reinforcement -- Legendary > Common. EFFECT UPDATE: At the start of your 7th turn, shuffle 3 Drafts into your deck and add one to your hand. {yellow}
+## Balancing (Souls)
+* Bravery -- EFFECT UPDATE: At the start of every 3rd turn, add a Recruitment to your hand. If you have 4 or less cards in your hand, add 2 Recruitments instead. {green}
+* Determination -- EFFECT UPDATE: The first time you would die, set your HP to 5 instead. When 7 monsters die (except Lost Souls), summon the next Lost Soul at 1/1, or 2/2 stats if you have 10 or less HP. Lost Soul order: Lost Alphys > Lost Papyrus > Lost Undyne > Lost Toriel > Lost Asgore > Lost Sans > Loop back to Lost Alphys. {red}

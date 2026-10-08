@@ -1,0 +1,19 @@
+## Balancing (Monsters)
+* Hooded Ralsei -- EFFECT UPDATE: Whenever you cast a spell that isn't Generated, add a copy of it to your hand. {green}
+* Dynamite Stick -- EFFECT UPDATE: Dust: Deal 1 DMG to a random enemy monster. {green}
+* Rudinn -- EFFECT UPDATE: Magic: Look at 2 random Deltarune monsters costing 2-4 G and choose one. Add it to your hand with +1 ATK. {green}
+* Bloxer -- EFFECT UPDATE: Magic: Look at 3 random monsters costing 3 or less G in your dustpile and choose one. Summon it. {green}
+* Punk Hamster -- ATK 3 > 4. {green}
+* Evil Blueprints -- HP 2 > 3. {green}
+* Painting -- ATK 4 > 5. {green}
+* Bratty -- EFFECT UPDATE: Magic: Look at all spells of the same cost as a random spell in your hand and choose one. Transform a random spell in your hand into it with -1 cost. {green}
+* Magic Crystal -- COST 9 > 12. EFFECT UPDATE: Your spells have -1 cost. In your hand, this has -2 cost for every different spell costing 1 or less G you cast this game (max: -10 cost). {yellow}
+* Astigmatism -- COST 6 > 7. ATK 3 > 5. EFFECT UPDATE: Whenever this kills a monster, add a Loox to your hand. Magic: Deal 2 DMG. {yellow}
+* Anime Sword -- EFFECT UPDATE: Dust: Give this monster's ATK and max HP to a random monster in your hand. {yellow}
+* Bone Drawer -- ATK 2 > 4. HP 4 > 3. EFFECT UPDATE: Dust: Add a Pile of Bones to your dustpile instead of this. {yellow}
+* Dark Candy Tree -- HP 5 > 6. EFFECT UPDATE: Support: Give the attacker +1 HP. If its a Plant, give it +1 ATK as well. {yellow}
+* Clam Boy -- EFFECT UPDATE: Transparency. Whenever this attacks and kills a monster, add a random 2-cost card to your hand with -1 cost. {yellow}
+* Snow Poff -- COST 4 > 2. ATK 0 > 3. HP 5 > 1. EFFECT UPDATE: Taunt. Dust: Draw a card. {yellow}
+* Rope Dog -- ATK 3 > 4. EFFECT UPDATE: Magic: Choose a Dog in your hand. Give it +1/+1. Synergy: Turn into a copy of the chosen Dog with this monster's stats. {yellow}
+* Dog House -- No longer a Dog. COST 4 > 3. HP 5 > 4. EFFECT UPDATE: Magic: Choose a Dog in your hand. Add an exact copy of it to the top of your deck. {yellow}
+* Doggo -- EFFECT UPDATE: All ally Dogs have +1/+1. {red}

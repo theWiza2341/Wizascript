@@ -1,0 +1,10 @@
+Season 46
+## New cards
+* Fly (COST 2, ATK 1, HP 1, white soul): Charge. Whenever you cast spell costing >= 2, summon a Fly.
+* Spider Bakery (COST 3, ATK 3, HP 3, white soul): Magic: Shuffle 2 Spiders into your deck. Synergy: Shuffle Spider Donut and Spider Croissant into your deck instead.
+* Spider Croissant (COST 4, ATK 4, HP 3, green soul): Haste. Dust: Summon a Spider.
+* Spider Donut (COST 4, ATK 3, HP 4, green soul): Haste. Taunt. Candy. Dust: Restore 3 HP to you.
+* Spider Flower (COST 4, ATK 2, HP 2, white soul): Magic: Summon a Green Flower. Synergy: Give the summoned Green Flower +2/+2 as base stats.
+* Spider Reporter (COST 4, ATK 4, HP 3, blue soul): Haste. Turbo: Shuffle 2 Spiders into your deck.
+* Chessboard (COST 5, ATK 4, HP 5, blue soul): Magic: Copy Thorns, Ranged, Haste, Charge, Transparency, Candy, Taunt, Armor and Dodge from all ally Chess Figures.
+* Spider Sign (COST 7, ATK 6, HP 6, purple soul): Magic: Transform all Spiders in your deck into Spider Donut and Spider Croissant (randomly).

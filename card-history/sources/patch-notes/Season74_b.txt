@@ -1,0 +1,15 @@
+## Balancing (Monsters)
+* Flower Fingers -- COST 5 > 4. {green}
+* Spincake -- EFFECT UPDATE: Taunt. {green}
+* Christmas Tree -- EFFECT UPDATE: Taunt. Magic: Summon 2 Gifts. Synergy: Summon 2 3/3 Gifts instead. {green}
+* Desk Lamp -- EFFECT UPDATE: Taunt. Dodge (1). Dust: Add a Dream to your hand. {green}
+* Big Mouth -- HP 7 > 6. EFFECT UPDATE: Magic and Turn end: Kill a random enemy monster costing 2 or less and heal 2 HP to you. {green}
+* Punk Hamster -- EFFECT UPDATE: Turbo: If this is Generated, deal 4 DMG to you. Dust: Add a copy to your opponent's deck. {green}
+* Mace -- COST 3 > 4. ATK 1 > 4. HP 4 > 5. EFFECT UPDATE: Magic: Deal 3 DMG to an ally monster and the opponent. {yellow}
+* Revoltplug -- ATK 1 > 2. HP 5 > 4. EFFECT UPDATE: Magic: Deal its ATK as DMG randomly split among all enemy monsters. {yellow}
+* Royal Loox -- COST 3 > 6. ATK 2 > 4. HP 3 > 4. EFFECT UPDATE: Magic: Deal 1 DMG to all enemies. Whenever you summon a monster costing 6 or more, trigger the Magic. {yellow}
+* Tasque Manager -- EFFECT UPDATE: Need: You have played 8 other non-TOKEN cards this turn. Magic: Deal 9 DMG to a monster and the opponent. {yellow}
+* Cauldron -- COST 7 > 4. ATK 8 > 3. HP 6 > 3. EFFECT UPDATE: Shock: Summon a Spincake with ATK and HP equal to the spell's cost. {yellow}
+* Bench -- ATK 0 > 5. EFFECT UPDATE: Magic: Draw a card. {yellow}
+* Spaghetti -- EFFECT UPDATE: Shock: Heal 3 HP to you. {yellow}
+* Oni -- COST 7 > 4. ATK 2 > 4. HP 2 > 4. EFFECT UPDATE: Turn end: If you have a spell from another soul in your hand, summon a Charles. {yellow}

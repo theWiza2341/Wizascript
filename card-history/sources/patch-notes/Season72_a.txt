@@ -1,0 +1,18 @@
+Season 72
+## Balancing (Monsters)
+* Toy Bricks -- ATK 3 > 4. HP 3 > 4. {green}
+* Jumping Rabbit -- COST 5 > 4. {green}
+* Piranhas -- ATK 3 > 4. {green}
+* Baron -- COST 9 > 8. {green}
+* Casual Undyne -- COST 12 > 11. {green}
+* Popumeter -- ATK 4 > 5. {green}
+* Snoelle -- COST 4 > 3. {green}
+* Gardener Asgore -- COST 7 > 6. {green}
+* Frisk -- EFFECT UPDATE: Taunt. Need: You spent 50+ G this game. Magic: Turn all cards in your deck into random Undertale LEGENDARY cards with -2 cost and fill your hand with them. {green}
+* Red Bird -- EFFECT UPDATE: Magic: Look at 3 monsters with cost equal to the most expensive other ally. Choose one to turn the ally into. {green}
+* Librarian -- ATK 3 > 4. EFFECT UPDATE: Need: Your deck has no non-Generated duplicates. Magic: Draw 3 cards. Add 4 random cards to your deck. Give them -1 cost. {green}
+* Asriel -- COST 5 > 7. EFFECT UPDATE: Magic: Remove negative effects from all other ally monsters and fully heal them. {yellow}
+* Mio Mio San -- COST 4 > 5. EFFECT UPDATE: Magic: Look at all non-DT monsters in the enemy hand. Choose one. Halve its ATK and HP. Add an exact copy to your hand. {yellow}
+* Big Bomb -- ATK 1 > 10. HP 8 > 10. EFFECT UPDATE: Magic: Kill all other monsters. Burn your hand. {yellow}
+* Snail Trainer -- EFFECT UPDATE: Need: You have 10 or more Snails in your Dustpile. Magic: Add Thundersnail to your hand. {yellow}
+* Angel Doll -- COST 4 > 5. EFFECT UPDATE: Magic: Remove a random other non-DT non-TOKEN monster from your Dustpile to summon it with 1 HP. {yellow}

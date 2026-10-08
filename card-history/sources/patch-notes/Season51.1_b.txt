@@ -1,0 +1,15 @@
+## Game
+* Opponent's artifacts are no longer hidden by the mulligan panel.
+* You are now able to know if you are playing first or not during mulligan.
+* Break and Doggo can no longer count the returned monster as a "Generated" Monster.
+* Souls and artifacts will now apply the generated icon on cards.
+* 2 new backgrounds.
+## Chat
+* Reworked chat system to fix a lot of issues.
+## Misc
+* "Generated" rarity renamed to "Token" and "cards that didn't start in your deck" will be referred as "Generated".
+## Shop
+* Pass cosmetics older than 1 year are now available in shops.
+## Bug fixes
+* Fixed generated card issues.
+* Fixed aura and exact copy interactions.

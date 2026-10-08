@@ -1,0 +1,4 @@
+## Bug fixes
+* Game timer will no longer get stuck at 1:00 when playing a card at the very end of the turn.
+## Misc
+* New keyword : Turbo : The card triggers its effect when drawn.

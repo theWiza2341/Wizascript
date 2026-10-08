@@ -1,0 +1,16 @@
+* Cool Bone -- COST 5 > 6. EFFECT UPDATE: Magic: Give all ally Dogs a random effect: Taunt, Dodge (1), Candy or Armor. {yellow}
+* Big Bob - COST 3 > 2. HP 4 > 2. EFFECT UPDATE: After this survives DMG during your turn, summon a Big Bob. {yellow}
+* Trash Tornado -- ATK 4 > 3. HP 3 > 4. EFFECT UPDATE: Loop (1). Taunt. Magic: Shuffle the copy into your deck with +1/+1. {yellow}
+* Totem -- COST 6 > 7. ATK 6 > 7. HP 6 > 7. EFFECT UPDATE: Need: 7+ 7-cost or 7-HP monsters in your Dustpile. Magic: Burn 7 of them to add Totemic Carvings to your hand. {yellow}
+* Gerson -- COST 7 > 6. ATK 4 > 5. HP 4 > 5. EFFECT UPDATE: Magic: Add Junk for Sale to your hand. {yellow}
+* The Reflection -- COST 10 > 8. ATK 9 > 7. HP 9 > 7. EFFECT UPDATE: Magic: Add a copy of all other enemy non-DT monsters on the board to your hand. They cost 2 less. {yellow}
+* Frisk -- COST 7 > 10. EFFECT UPDATE: Magic: Gain an upgraded version of the enemy Soul. Add an ACT Button to your hand. {yellow}
+* Pyrope -- ATK 0 > 3. EFFECT UPDATE: Transparency. Whenever this attacks a monster, deal 2 DMG to the opponent. {yellow}
+* Another Chance -- COST 3 > 4. {red}
+* Shovel -- EFFECT UPDATE: Loop (1). Program (4): If a copy with no Loop is in your hand, burn it to gain +4/+4 and Haste. {red}
+## Balancing (Spells)
+* Overgrowth -- EFFECT UPDATE: Give ally Generated monsters +1/+1 wherever they are. Program (2): Add 2 Green Flowers to your hand first. {green}
+* Reload -- COST 2 > 5. EFFECT UPDATE: Draw a Haste monster and a Turbo monster. Give them -1 cost. {yellow}
+* Totemic Carvings -- EFFECT UPDATE: Look at 7 7-cost monsters (except Totem). Choose one, set its cost to 0, then add all of them to your hand. {yellow}
+## Balancing (Artifacts)
+* Power -- EFFECT UPDATE: At the start of every 3rd turn give a random monster in your hand +1/+1. {green}

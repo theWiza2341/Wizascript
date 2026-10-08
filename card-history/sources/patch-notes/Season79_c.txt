@@ -1,0 +1,15 @@
+Season 79
+## Balancing (Monsters)
+* Fuku Fire -- ATK 3 > 4. {green}
+* Asgore's Truck -- COST 4 > 3. {green}
+* Placeholder Kris -- COST 12 > 11. {green}
+* Teacher Toriel -- HP 4 > 5. {green}
+* Killer Cook -- COST 4 > 3. ATK 3 > 2. {green}
+* Cyber Trash -- EFFECT UPDATE: Taunt. Magic: Program (1): Add a copy of 2 random BASE monsters from your Dustpile to your hand with -1 cost. {green}
+* Cyberdly -- EFFECT UPDATE: Need: You spent 14+ G on TOKEN cards this game. Magic: Add the IQ artifact. {green}
+* Ball Dancer -- EFFECT UPDATE: Magic: Give all monsters in your hand and deck with equal or less cost than this +1/+1/+1. {green}
+* Sadmobile -- EFFECT UPDATE: Magic: Draw a card. If you spent 7+ G last turn, give it -2 cost. {green}
+* Spamton Poster -- EFFECT UPDATE: Magic: Draw a spell. Shock: Add Hyperlink Blocked to the enemy deck equal to the spell's base cost. {green}
+* Nubert -- COST 7 > 6. ATK 6 > 3. HP 8 > 5. EFFECT UPDATE: Taunt. Magic: Gain +1/+1 for each ally monster with a unique Tribe. {yellow}
+* Shovels x999 - COST 9 > 6. EFFECT UPDATE: Turn end: Turn the lowest-cost non-Generated card in your hand into a Shovel. {yellow}
+* The Heroine -- ATK 8 > 7. {red}

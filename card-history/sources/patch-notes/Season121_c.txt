@@ -1,0 +1,8 @@
+* [card image] Yellow. COST 7. ATK 4. HP 4. Need: You've killed 2+ monsters this turn without attacking. Magic: Add a Quick Draw with Loop (2) to your hand.
+* [card image] Blue. COST 8. ATK 5. HP 5. Transparency. Need: You spent 8+ G on other cards this turn. Magic: Summon 3 Blue Roses.
+* [card image] Shinobeetle. COST 8. ATK 5. HP 9. Haste. This has -1 ATK for each other ally monster. Bullseye: This gains +1 HP and Haste and can attack again.
+* [card image] Duck of Doom. COST 9. ATK 1. HP 1. Haste. Bullseye: Kill all other monsters.
+* [card image] Pink. COST 9. ATK 7. HP 6. Mew Mew Magic can be used on enemy monsters. Quest: Let's fill the Doki-Meter!, mew!
+* [card image] Pink's Ghost. COST 9. ATK 6. HP 7. Haste. Before this attacks a monster, halve its stats and if it's not a DT add an exact copy of it to your hand.
+* [card image] Flowey. COST 10. ATK 9. HP 9. Haste. Quest: Obtain the Power of Friendship. After this attacks and kills a monster and Magic: Add an Our OMEGA! to your hand.
+* [card image] Terakota. COST 10. ATK 6. HP 7. Armor. Haste. Magic: Enchant an ally slot with Soil.

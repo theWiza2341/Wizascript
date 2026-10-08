@@ -1,0 +1,7 @@
+## Balancing (Spells)
+* Gemstone -- COST 2 > 1. EFFECT UPDATE: Deal 1 DMG. {yellow}
+* Fridge -- EFFECT UPDATE: Give -1 cost to the bottom 4 cards of your deck. Draw a card. {red}
+* Contamination -- COST 7 > 8. {red}
+## Balancing (Artifacts)
+* Good Food -- EFFECT UPDATE: Shock: Once per turn, heal 2 HP to you. {red}
+* Outbreak -- EFFECT UPDATE: Turn start: If it's turn 10 or later, increase it's counter by one and summon a Soul Cage if you don't have 2 of them already. {red}

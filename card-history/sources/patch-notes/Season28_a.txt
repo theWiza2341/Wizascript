@@ -1,0 +1,16 @@
+Season 28
+Beta 28.0
+## New game mode
+* Defenseless : Monsters won't counter attack.
+## New cards
+* [yellow soul] Mad Mew Mew -- Cost 6; ATK: 4; HP: 4; Magic: Summon a copy of an ally monster in board and halve both monster's stats (rounded up).
+## Rankeds
+* Harder to climb at highest ranks.
+## Balancing (Monsters)
+* Migospel -- Effect Update: Magic: Give +2 HP to a monster, if its HP are 3 or less, give +3 HP instead. {green}
+* Clam Girl -- Cost 7 > 6; ATK 5 > 4. {green}
+* Hot Dog Harpy -- Cost 7 > 6; HP 5 > 4. {green}
+* Temmie Statue -- Cost 3 > 4; ATK 0 > 1; Effect Update: Whenever you summon a Temmie, give +2/+1 to the summoned Temmie. {green}
+* Annoying Dog -- ATK 3 > 2; HP 2 > 3. {green}
+* Toriel -- Cost 11 > 8; ATK 7 > 5; HP 8 > 5; Effect Update: Magic: Set a monster's ATK to 1 and gain HP equal to the amount of ATK decreased. {yellow}
+* Skateboard Girl -- Cost 5 > 4; ATK 5 > 4; HP 5 > 4. {yellow}

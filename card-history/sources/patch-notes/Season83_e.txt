@@ -1,0 +1,1 @@
+[card] Grilling King | cost 10 | Need: 6 or less cards in your deck. Magic: Summon a 5/5 Cake and two 3/3 Spincakes. | ATK 5 | HP 6

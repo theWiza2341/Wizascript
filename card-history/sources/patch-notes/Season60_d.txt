@@ -1,0 +1,5 @@
+* Rapstablook -- COST 4. Transparency. Whenever your opponent summons a monster, give it and this -1 ATK. If this card's ATK reaches 0, kill this and a random enemy monster. ATK 3, [magenta soul], HP 5.
+* Rescue Helicopter -- COST 4. Haste. Taunt. Candy. ATK 6, [green soul], HP 6.
+* Spaghetti -- COST 4. Shock: Heal HP to you equal to the spell's cost and lose this Shock. ATK 4, [magenta soul], HP 4.
+* Tiny Bookshelf -- COST 4. Need: You spent 0 on spells last turn. Magic: Gain +1 ATK and Taunt. ATK 2, [white soul], HP 6.
+* Toy Bricks -- COST 4. Haste. Taunt. Magic: Burn 5 Toy Bricks in your Dustpile to shuffle 10 Rescue Helicopters into your deck. ATK 3, [blue soul], HP 3.

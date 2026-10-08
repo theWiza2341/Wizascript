@@ -1,0 +1,24 @@
+## Balancing (Monsters)
+* Asgore -- COST 12 > 11. {green}
+* Asriel Dreemurr -- COST 17 > 15. {green}
+* Axis -- ATK 3 > 4. {green}
+* Butler Ralsei -- COST 4 > 3. ATK 3 > 2. {green}
+* Clover -- COST 10 > 9. {green}
+* Echo Fish -- COST 5 > 4. {green}
+* Feather Storm -- COST 5 > 4. {green}
+* Tasque Painting -- HP 4 > 5. {green}
+* The Reflection - COST 8 > 6. ATK 7 > 5. HP 7 > 5. {green}
+* Vengeful Virgil -- ATK 2 > 3. {green}
+* Frisk -- COST 11 > 10. EFFECT UPDATE: Taunt. Magic: Gain an upgraded version of the enemy SOUL. Add an ACT Button to your hand. {green}
+* Minecart -- EFFECT UPDATE: Dust and Turn end: Add a Crystal Shard to your hand. {green}
+* Tasque Manager -- EFFECT UPDATE: Magic: Put the 3 least expensive non-TOKEN cards in your deck to the top of your deck. Give them -1 cost. {yellow}
+* Receptionist 3 -- ATK 3 > 4. HP 7 > 5. {yellow}
+* Spamton Shop -- COST 5 > 3. ATK 5 > 3. HP 5 > 4. {yellow}
+* Angel Doll -- HP 5 > 4. EFFECT UPDATE: Taunt. Dust: Give all allies +2 HP. {yellow}
+* Maus Hole -- COST 2 > 1. HP 3 > 2. EFFECT UPDATE: Magic: Look at 3 random different 1-cost cards. Choose one to add to your hand. {yellow}
+* Omega Flowey -- COST 10 > 11. EFFECT UPDATE: Haste. Magic: Save the board and add a Load to your hand. {yellow}
+* Spamequin - COST 6 > 5. ATK 6 > 5. HP 6 > 5. EFFECT UPDATE: Magic, Dust, Shock, and Turn start: Add a Pipis with Haste to your hand. {yellow}
+* Wheelvil -- COST 3 > 6. HP 6 > 5. EFFECT UPDATE: Taunt. Magic: Cast a random Chaos Weapon for each 8 HP you are missing. {yellow}
+* Chara -- COST 12 > 13. {red}
+* Moldmega -- EFFECT UPDATE: Taunt. Magic and Dust: Erase 5 Mold in your dustpile to summon a Moldbygg and trigger its Magic. {red}
+* Spike Trap - HP 4 > 3. {red}

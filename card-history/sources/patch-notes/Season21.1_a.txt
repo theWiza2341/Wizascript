@@ -1,0 +1,10 @@
+Beta 21.1
+## Shops
+* You can no longer select an avatar or a profile skin on the shop.
+* Card skins shop now displays authors.
+## Navbar
+* Added dividers and titles in dropdowns.
+## Profile
+* Added 2 menus : Avatars, profile skins.
+## Cards
+* Few card artworks have been modified.

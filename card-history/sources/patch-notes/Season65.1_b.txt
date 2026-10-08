@@ -1,0 +1,11 @@
+* Long Sink -- EFFECT UPDATE: Haste. Turn end: If this didn't attack this turn, heal 3 HP to you. {red}
+* Snoelle -- EFFECT UPDATE: Magic: Paralyze a monster. Delay: If it's dead, return to your deck with +1 base ATK. At 4 base ATK, turn into Snowgrave. {red}
+* Ice Crystal -- EFFECT UPDATE: Taunt. Magic: Paralyze a monster. Dust: Deal 3 DMG to all enemies. {red}
+## Balancing (Spells)
+* Buttercup Treat -- EFFECT UPDATE: Set an enemy monster's ATK to 1. Delay: Silence it and give it KR and Candy. {green}
+* Brain Shift -- EFFECT UPDATE: Force an enemy monster to attack another random enemy monster. If one dies, silence its killer. {green}
+* Worsening -- EFFECT UPDATE: Give -1/-1 to all enemy monsters. {yellow}
+* Snowgrave -- EFFECT UPDATE: If it's the first time you cast this, silence and kill a monster to add 5 Ice Crystals to your deck with its ATK and HP. {red}
+## Balancing (Souls)
+* Perseverance -- EFFECT UPDATE: Turn start: Give KR to the highest ATK enemy monster without KR. {yellow}
+* KR -- EFFECT UPDATE: When a monster with this effect dies, give its killer +1/+1. If there's no killer or its killer is dead, give a random living enemy monster +1/+1 instead. {yellow}

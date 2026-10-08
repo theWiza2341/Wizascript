@@ -1,0 +1,31 @@
+Beta 12.1 (2017/07/20)
+## Balancing (Monsters)
+* Migospel. ATK: 3 -> 4. {green}
+* Igloo. EFFECT UPDATE: "At the start of your turn, summon a random common, rare, or epic monster.". {green}
+* Gyftrot. COST: 8 -> 7. HP: 8 -> 7. {green}
+* Blue Laser. ATK: 0 -> 1. {green}
+* Orange Laser. ATK: 0 -> 1. {green}
+* Asriel Dreemurr. COST: 17 -> 18. EFFECT UPDATE: "Restore 30 HP to you.". {yellow}
+* Chara. EFFECT UPDATE: "Can't Attack. Magic: Deal 1 damage to your opponent for each monster that died during this match.". {yellow}
+* Flowey. EFFECT UPDATE: "Haste. Dust: Add this monster to your deck with +3 ATK but without Haste effect (keep ATK buffs).". {yellow}
+* Ice. EFFECT UPDATE: "Dust: Paralyze the killer.". {red}
+* Receptionist 2. ATK: 3 -> 2. {red}
+## Balancing (Spells)
+* Froggit Trio. EFFECT UPDATE: "If the opponent has at least one monster on the board summon 3 froggits.". {green}
+* Acceleration. COST: 2 -> 1. {green}
+* Brain Freeze. COST: 7 -> 5. {green}
+* Assault. EFFECT UPDATE: Summon a random 3G monster on your board. {yellow}
+## DT Cards
+* Available in rankeds.
+## Matchmaking (classic)
+* You can no longer face the same opponent two times in a row.
+* Beginner LV protection : 19 -> 14.
+* Beginner LV range : no range -> 7.
+## Rankeds
+* It's now impossible to demote from a division III. Only the Master rank is not concerned.
+* DTP after a demote : 50 -> 75.
+* You will win and lose a little bit less DTP.
+## Bug fixes
+* Muffet is now correctly buffed when an enemy Muffet's Pet is played.
+* Mettaton NEO should no longer randomly stay alive with a negative amount of HP.
+* The Heroine with another chance will no longer respawn with 8/8 and an another chance effect.

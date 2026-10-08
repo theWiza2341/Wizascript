@@ -1,0 +1,7 @@
+## Balancing (Spells)
+* Royal Bravery -- EFFECT UPDATE: Give an ally monster +1/+1, then deal its ATK as DMG to the monster in front of it. {green}
+## Balancing (Artifacts)
+* Spy -- EFFECT UPDATE: At the start of every 5th turn, add Spying to your hand. At the end of the turn, remove it. {green}
+* Copycat -- EFFECT UPDATE: At the start of the game reveal the first 3 cards in opponent's hand and shuffle a copy of them into your deck with -1 cost. {red}
+## Balancing (Souls)
+* Patience -- EFFECT UPDATE: Turn start: Deal 1 DMG to all paralyzed monsters. If there is none, Paralyze the leftmost enemy monster. {red}

@@ -1,0 +1,24 @@
+## Balancing (Monsters)
+* The Heroine -- Cost 18 > 15. {green}
+* Bratty -- ATK 6 > 5; HP 4 > 5. {green}
+* Omega Flowey -- Cost 15 > 14; Load -- 15 > 16. {yellow}
+* Asriel -- Cost 4 > 5; Effect Update: Magic: Remove all negative effects from your other monsters and at the end of the turn, heal them by 3 HP. {yellow}
+* Tree -- Cost 2 > 4; ATK 3 > 5; HP 4 > 5. {yellow}
+* Dancer Mettaton -- Cost 6 > 7; Effect Update: Haste. Restore 5 HP to its owner and summon a Mettabot whenever it attacks and kills a monster. {yellow}
+* Microwave -- Cost 2 > 3. {red}
+* Bunbun -- HP 5 > 4. {red}
+* Elder Puzzler -- HP 8 > 7. {red}
+* Dogamy -- HP 7 > 6. {red}
+* Dogaressa -- ATK 7 > 6. {red}
+* Angel of Death -- Cost 20 > 22. {red}
+* Napstablook -- HP 5 > 4. {red}
+* Blue Laser -- HP 8 > 7. {red}
+## Balancing (Spells)
+* Test of will -- Cost 8 > 7. {green}
+* Investment -- Cost 2 > 1. {green}
+* Penetration -- Cost 0 > 1; Effect Update: Silence an enemy Taunt Monster. If used in a non taunt monster, draw a card instead. {yellow}
+* Strength -- Effect Update: Give +2 ATK to a monster. If your opponent has more monsters on his board, give +3 ATK instead. {red}
+* Cold Winter -- Effect Update: Paralyze an enemy monster and adjacent ones. If already paralyzed, deal 2 damage instead. {red}
+## Balancing (Artifacts)
+* Reinforcement -- Add 5 random monsters with +2/+2 at the end of your deck when the game begins. {green}
+* Prosperity -- Whenever you play a monster, heal yourself by 20% of its cost. {red}

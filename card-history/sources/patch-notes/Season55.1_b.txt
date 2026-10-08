@@ -1,0 +1,13 @@
+* Temmie Statue -- EFFECT UPDATE: Whenever you summon a Temmie, give it +1/+1. {yellow}
+## Balancing (Spells)
+* Royal Bravery -- COST 3 > 1. EFFECT UPDATE: Shuffle your hand back into your deck. Then, draw 4 cards and give them -1 cost. {yellow}
+* Royal Patience -- COST 6 > 2. EFFECT UPDATE: Look at all cards in your deck and choose one to draw. If it's <= EPIC, give it -1 cost. {yellow}
+* Royal Perseverance -- COST 3 > 2. EFFECT UPDATE: Deal 3 DMG to a monster and give it KR. If it already has KR, deal 6 DMG instead and deal excess DMG to the opponent. {yellow}
+* Royal Integrity -- COST 2 > 0. EFFECT UPDATE: Add an exact copy of an ally monster to your hand with +2 cost. {yellow}
+* Royal Justice -- EFFECT UPDATE: Add the True Justice artifact. {yellow}
+* Fridge -- EFFECT UPDATE: Look at Eggs, Flour, and Milk. Choose one to add to the top of your deck with +2/+2. Draw a card from the bottom of your deck. {yellow}
+* True Self -- COST 6 > 7. {red}
+* Ice Prison -- EFFECT UPDATE: Silence an enemy monster. Paralyze it. {red}
+* Real Knife -- EFFECT UPDATE: Kill an enemy monster. Increase the Genocide counter by 1 and reduce your max HP by the Genocide counter. {red}
+## Balancing (Souls)
+* Patience -- EFFECT UPDATE: At the end of every even turn, if you have no Change of Winds in your hand and have 6 or less cards in your hand, add Change of Winds to the top of your deck. {yellow}

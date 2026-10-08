@@ -1,0 +1,13 @@
+Season 96
+## Server changes
+* We are working on reducing lag and softlocks.
+* Implemented anti-softlock system that will terminate games after 45 minutes, preventing long softlocks.
+## New cards
+[card] Icemeter | cost 3 | Turn end: Gain +1 HP for every spell you've spent 0 on this turn. | ATK 4 | HP 3
+[card] Frost Igloo | cost 6 | Turn start: Turn into Frostermit and set its base HP to this card's remaining HP. | ATK 6 | HP 6
+[card] Bowll | cost 7 | Armor. This takes +2 DMG from enemy monsters and spells. | ATK 8 | HP 9
+[card] Frostermit | cost 8 | Taunt. Armor. Charge. | ATK 5 | HP 7
+[card] Zenith Martlet | cost 15 | Armor. Magic: Trigger the Dust effects of all non-TOKEN monsters costing 9 or less G in your Dustpile. | ATK 7 | HP 7
+## Balancing (Monsters)
+* Tsunderplane -- EFFECT UPDATE : Haste. Magic: Deal 1 DMG to all enemy monsters and 3 DMG to the opponent. {yellow}
+* Ceroba -- EFFECT UPDATE : Whenever an enemy monster is played or attacks during the enemy turn, give the opponent -2 HP. Magic: Paralyze an enemy monster. {red}

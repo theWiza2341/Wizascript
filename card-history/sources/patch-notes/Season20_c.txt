@@ -1,0 +1,11 @@
+## Gameplay
+* Dodge. Only resets at the start of its owner's turn.
+## Matchmaking
+* Matchmaking in classic is more flexible for high elo players.
+## Misc
+* New options have been added to the game UI.
+* Copycat no longer have the Text "Without buffs" anymore.
+* Experience is now a free artifact for all players.
+* Frisk & Heroine -- No longer have the text "Immune to silence" anymore due to all DTs having silence immunity to begin with.
+## Bug fixes
+* Gaster blasters with Science artifact will now correctly deal 1 bonus damage against monsters.

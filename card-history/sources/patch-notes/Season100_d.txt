@@ -1,0 +1,20 @@
+* Receptionist 2 -- ATK 3 > 4. {green}
+* Redacted -- ATK 3 > 4. {green}
+* Searby -- HP 3 > 4. {green}
+* Shovel -- HP 2 > 3. {green}
+* Snow Frisk -- HP 2 > 3. {green}
+* Striped Bird -- HP 6 > 7. {green}
+* Town Hall Guy -- HP 3 > 4. {green}
+* Traffic Car -- ATK 4 > 5. {green}
+* Ultimathrash -- COST 10 > 9. {green}
+* Vending Machine -- COST 4 > 3. ATK 4 > 3. HP 4 > 3. {green}
+* Giga Froggit -- ATK 4 > 5. HP 4 > 6. EFFECT UPDATE: Magic: Switch: Give all other ally Froggits Taunt or Armor. {yellow}
+* Starlo -- COST 11 > 10. EFFECT UPDATE: Whenever you kill a Wanted monster, trigger this Magic. Magic: Add a Quick Draw to your hand. {yellow}
+* Ceroba -- EFFECT UPDATE: Taunt. Whenever an enemy monster is played or attacks during the enemy turn, give the opponent -2 HP. Magic: Paralyze an enemy monster. {red}
+* Clover -- COST 9 > 10. HP 8 > 7. No longer counts Thrashing Machines as Rounds. {red}
+## Balancing (Spells)
+* Silly Strings -- COST 10 > 9. {green}
+* Worm Infusion -- COST 3 > 2. {green}
+* Zephyr -- COST 4 > 3. {green}
+* Lasso -- COST 0 > 2. Rarity: [green hat icon] > [blue hat icon]. EFFECT UPDATE: Summon the cheapest monster from the enemy hand. Paralyze it and make it Wanted. {yellow}
+* Vasebreaker -- COST 2 > 1. EFFECT UPDATE: Deal 1 DMG to an enemy monster. If it died, summon a Vase. {yellow}

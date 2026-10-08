@@ -1,0 +1,5 @@
+Beta 13.3 (2017/08/08)
+## Quests
+* You can now switch a non completed quest if you had it for 24 hours or more.
+## Bug fixes
+* Final Charge now correctly works on monsters with Haste.

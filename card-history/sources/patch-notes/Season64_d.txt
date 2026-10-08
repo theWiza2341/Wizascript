@@ -1,0 +1,11 @@
+New cards
+* [blue soul] Maus Cage | COST 3 | ATK 3 | HP 4 | Need: 11 or more monsters costing 1 or less G in your dustpile. Magic: Add Mauswheel to your hand.
+* [green soul] Mobility Tracks | COST 3 | ATK 1 | HP 6 | Charge. Magic: Draw a card. Send your hand to your deck and draw the same number of cards.
+* [purple soul] Nubert | COST 3 | ATK 1 | HP 4 | Delay: If you played 3+ unique other cards this turn, add 2 exact copies of this to your deck.
+* [white soul] Pluggirl | COST 3 | ATK 2 | HP 3 | Dodge (1). Turn end: If this has any stat buffs, gain Taunt.
+* [green soul] Shovel | COST 3 | ATK 4 | HP 4 | Haste. Loop (1). Magic: If a copy with no Loop is in your hand, Program (4): Burn it to gain +4/+4.
+* [white soul] Small Plug | COST 3 | ATK 2 | HP 5 | Whenever you summon a Plug, give it Haste.
+* [white soul] Wig Person | COST 3 | ATK 4 | HP 2 | Magic: Swap an ally monster's ATK and HP. Silence it.
+* [white soul] Cyber Balloon | COST 4 | ATK 4 | HP 3 | Haste. Magic: Program (1): Earn 1 G for every Generated monster in your hand.
+* [white soul] Cyber Trash | COST 4 | ATK 4 | HP 4 | Taunt. Magic: Program (2): Add a copy of 2 random different BASE monsters from your dustpile to your hand with -1 cost.
+* [white soul] Cyber Tree | COST 4 | ATK 3 | HP 4 | Delay: Give 2 random other Generated ally monsters +1/+1 and Program (1): Repeat.

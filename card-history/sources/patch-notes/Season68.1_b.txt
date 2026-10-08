@@ -1,0 +1,11 @@
+## Balancing (Artifacts)
+* Noodles -- EFFECT UPDATE: At the start of the game, add Instant Noodles to your hand. {yellow}
+## Fixes
+* Removing negative effects will no longer sometimes full heal monsters.
+* Disconnecting from the game will no longer reduce Friendship EXP.
+* Preservation now works correctly.
+* Dog Cone no longer removes negative effects sometimes.
+* Endgame now only works with Pieces.
+* Shiny Shadow Crystal now looks at shiny LEGENDARIES.
+* Jigsawry no longer kills enemy Jigsawries on summon.
+* Red Flower rarity fixed.

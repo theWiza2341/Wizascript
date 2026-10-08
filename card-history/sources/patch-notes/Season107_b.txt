@@ -1,0 +1,14 @@
+* Memorial Statue -- HP 5 > 4. {red}
+* Sweet Corn -- ATK 3 > 2 {red}
+* Vengeful Virgil -- HP 4 > 3. {red}
+* Cyberdly -- COST 5 > 6. ATK 5 > 6. HP 5 > 6. EFFECT UPDATE: Magic: Add a Feather Storm to your hand for each different non-TOKEN Tribe in your dustpile. {red}
+* Minecart -- EFFECT UPDATE: Dust and Turn start: Add a Crystal Shard to your hand. {red}
+* Pizzasimp -- ATK 5 > 4. {red}
+* Dunebud -- EFFECT UPDATE: Shock: Summon a Dunebud. {red}
+* Big Hat Charles -- RARITY CHANGE: COMMON > BASE. {gray}
+* Bloody Tree -- RARITY CHANGE: COMMON > BASE. {gray}
+* Hathy -- RARITY CHANGE: COMMON > BASE. {gray}
+* Ralsei Dummy -- RARITY CHANGE: COMMON > BASE. {gray}
+* Ranger Rudinn -- RARITY CHANGE: COMMON > BASE. {gray}
+* Scissor Dancer -- RARITY CHANGE: COMMON > BASE. {gray}
+* Walk Sign -- RARITY CHANGE: COMMON > BASE. {gray}

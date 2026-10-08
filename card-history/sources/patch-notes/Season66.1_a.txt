@@ -1,0 +1,21 @@
+Mid Season 66
+## Balancing (Monsters)
+* Pink Laser -- COST 5 > 4. {green}
+* Bone -- EFFECT UPDATE: Dodge (1). Dust: Give a random enemy Dog +1/+1 and +1 Dodge. {green}
+* Snow Poff -- EFFECT UPDATE: Taunt. Delay: Draw a Dog. Dust: Draw a card. {green}
+* Too Many Dogs -- EFFECT UPDATE: Magic: If you don't have any Too Many Dogs in your hand, fill your hand with Dog Residue. {yellow}
+* Greater Dog -- ATK 4 > 5. HP 7 > 6. EFFECT UPDATE: Taunt. Magic: If you have a Dog in your hand, gain +3 HP. {yellow}
+* Soulless Kris -- EFFECT UPDATE: Haste. Magic: If you have none, open a Dark Fountain and give it +1 counter for every unique card you played this game. {yellow}
+* Soul Cage -- TOKEN > EPIC. COST 3 > 4. HP 3 > 6. EFFECT UPDATE: Haste. Dust: Add a Knife to the current turn player's hand. It costs 0. {yellow}
+* Pluggirl -- EFFECT UPDATE: Dodge (1). Turn end: If this has any ATK or HP buffs, gain Taunt. {yellow}
+* Stalagmite -- HP 3 > 2. {red}
+* Sans Dog -- No longer a Dog. {red}
+## Balancing (Spells)
+* Jevilstall -- EFFECT UPDATE: Delay: If you spent 4+ G on spells last turn, add this to your hand. Otherwise, disable the Freedom artifact. {yellow}
+* Defrosting -- COST 3 > 2. EFFECT UPDATE: Loop (3). If this has no Loop, summon a 10/10 Greater Dog with Haste and Dodge (1). Program (2): No additional effect. {yellow}
+## Balancing (Souls)
+* Patience -- EFFECT UPDATE: At the end of every 2nd turn, add Change of Winds to the top of your deck if your hand isn't full and you have no Change of Winds in your hand or deck. {red}
+## Balancing (Artifacts)
+* FREE KROMER -- EFFECT UPDATE: Turn start: If this has 3 or less counters, add an Irresistible Deal to your hand. If your hand is full, shuffle the rightmost card in your hand into your deck first. Turn end: If you have Irresistible Deal in your hand, cast a BIG SHOT!!!! {yellow}
+* Outbreak > Dark Fountain -- EFFECT UPDATE: Whenever you play a card you haven't played this game, gain a counter. Turn start: If this has 20+ counters, fill your hand with random Deltarune monsters. They cost 2 less G. {yellow}
+* IQ -- EFFECT UPDATE: Your TOKEN cards have -6 cost (min: 1). {red}

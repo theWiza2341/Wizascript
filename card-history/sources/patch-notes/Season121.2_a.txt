@@ -1,0 +1,9 @@
+Game updates
+Season 121
+Mid season update
+## Ranked
+* High master elo 1700 -> 1650.
+* Ultimate master elo 1850 -> 1800.
+* Low masters can no longer play against High Masters+.
+* Increased win streaks bonus at lower ranks.
+* Increased bonus elo for winning at lower ranks.

@@ -1,0 +1,23 @@
+## Balancing (Monsters)
+* Tree -- ATK 5 > 4; HP 5 > 6. {green}
+* Dad Slime -- ATK 4 > 5. {green}
+* Astigmatism -- Effect Update: Start of Turn: Kill the monster in front of it. If there were none, add a Loox to your hand. {green}
+* Ice Wolf -- Effect Update: Turbo: Paralyze a random enemy monster. Dust: Summon an enemy Ice. {green}
+* Librarian -- Effect Update: Magic: If your deck has no duplicate, put 3 random cards in it and draw 2 cards. {red}
+* Migospel -- Effect Update: Magic: Give +2 HP to a monster. {red}
+* Moldbygg -- Effect Update: Taunt. End of Turn: Give your molds in board (except moldbygg) +1 HP. {red}
+* Asriel -- Effect Update: Magic : Remove all negative effects from your monsters and End of turn : Heal them by 2. {red}
+* Grillby -- ATK 4 > 3. {red}
+* Mettaton -- ATK 2 > 1. {red}
+* Omega Flowey -- Cost 14 > 15; Load 16 > 17. {red}
+* Fuku Fire -- HP 3 > 2. {red}
+* Dancer Mettaton -- ATK 4 > 3. {red}
+* Elder Puzzler -- Effect Update: End of turn : Deal 2 damage to a random enemy monster if this card didn't attack this turn. {red}
+* Bomb -- Effect Update: Start of Turn: Sacrifice this and deal 3 damage to all enemies. {red}
+## Balancing (Spells)
+* Shopping -- Cost 3 > 0. Effect Update: Spend all your gold. Summon a random monster from your deck with a cost equals to the amount of gold spent. {yellow}
+* Feast -- Cost 3 > 4. {red}
+* Pie -- Cost 2 > 3. {red}
+* Explosion -- Effect Update: Deal 4 damage to a monster. If this kills the monster, deal 3 damage to adjacent monsters. {red}
+## Balancing (Artifacts)
+* Froggits -- Effect Update: At the start of the game, add a Tiny Froggit to your hand and a Froggit and Final Froggit to your deck. {yellow}

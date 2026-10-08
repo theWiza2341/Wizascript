@@ -1,0 +1,3 @@
+* Moldmega -- COST 9. Taunt. Magic: Burn up to 9 Molds in your dustpile. Summon a Moldsmal for every 3 Molds burned. ATK 6, [magenta soul], HP 9.
+* Baking Queen -- COST 10. Magic: Kill a damaged enemy monster. Heal HP to you equal to its ATK. ATK 6, [yellow soul], HP 6.
+* Golden Masoot -- COST 12. In your hand, this has -1 cost for each LEGENDARY card you played this game (max: -10 cost). Magic: Add a Golden Hit to your hand. ATK 6, [purple soul], HP 6.

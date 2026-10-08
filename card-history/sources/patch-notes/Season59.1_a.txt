@@ -1,0 +1,22 @@
+Standard queue
+* Reverted to old standard queue version
+## Balancing (Monsters)
+* Omega Flowey -- COST 14 > 11. ATK 12 > 9. HP 12 > 9. {green}
+* Mad Mew Mew -- COST 7 > 6. {green}
+* Lesser Dog -- HP 4 > 5. {green}
+* Clover -- COST 10 > 9. {green}
+* Fox Head -- HP 2 > 3. {green}
+* Striped Bird -- HP 5 > 6. {green}
+* Ball Person -- COST 2 > 3. HP 2 > 4. {green}
+* Green Fire -- EFFECT UPDATE: Magic: Deal 1 DMG to adjacent monsters and the monster in front of it. {green}
+* Bob -- EFFECT UPDATE: Charge. Magic: Add a copy of every different Temmie in your dustpile to your hand. (from lowest to highest cost, except Bob) {green}
+* Seam -- EFFECT UPDATE: Magic: If you have 3 or less cards in your deck, give all monsters in your hand and deck +3/+3. {green}
+* Berdly -- COST 6 > 5. EFFECT UPDATE: Turn end: If you have no other ally monsters, give a random spell in your hand -2 cost. {green}
+* Mystery Machine -- ATK 7 > 6. HP 5 > 6. EFFECT UPDATE: Magic: Silence this. Dust: Add 2 Gaster Blasters to your hand with -6 cost. {green}
+* Coffin -- EFFECT UPDATE: Magic: Look at the 2 cheapest monsters in your dustpile (except Coffin) and choose one to catch. Dust: Release it. {green}
+* Glad Dummy -- ATK 4 > 5. EFFECT UPDATE: Magic: Give an ally monster Taunt. {green}
+* Mom Slime -- COST 6 > 5. EFFECT UPDATE: Whenever you cast a spell costing 1 or less G, summon a Kid Slime. {yellow}
+* Long Sink -- HP 4 > 5. EFFECT UPDATE: Haste. Turn end: If this didn't attack this turn, heal 3 HP to you and gain +1 HP. {yellow}
+* Bloody Tree -- COST 6 > 5. ATK 6 > 5. EFFECT UPDATE: Dust: Deal Fatigue DMG to the opponent. {yellow}
+* Burgerpants -- COST 4 > 3. ATK 4 > 3. EFFECT UPDATE: Taunt. Turn end: Both players earn 5 G. {yellow}
+* Snail Trainer -- EFFECT UPDATE: Turbo: Draw a Snail. Magic: If you have 2 or more ally Snails, add Thundersnail to your hand. {yellow}

@@ -1,0 +1,23 @@
+Beta 12.0 (2017/07/03)
+## Refer a Friend (Referral system 2.0)
+* A new referral system has been added. More information here : Refer a Friend
+## New cards
+* [blue soul] Trash Tornado. Cost : 5. Atk : 3. Hp : 5. EFFECT: "Magic: Return both players' hand into their deck and they draw the same number of cards.".
+* [blue soul] Librarian. Cost : 4. Atk : 3. Hp : 3. EFFECT: "Magic: If your deck has no duplicate, put 4 new cards in it and draw 3 cards.".
+## Balancing (Classes)
+* [blue soul] Integrity (REWORK) : At the end of your turn, gain 1 gold for every 5 gold spent during the turn. {blue}
+## Balancing (Monsters)
+* Dog House. COST: 6 -> 5. {green}
+* Goner Kid. COST: 4 -> 3. {green}
+* Golden Flowers. COST: 5 -> 4. {green}
+* Doggo. COST: 4 -> 3. ATK: 3 -> 4. HP: 4 -> 3. {yellow}
+* Clam Boy. COST: 4 -> 5. ATK: 3 -> 4. HP: 4 -> 5. {yellow}
+* Flowey. EFFECT UPDATE: "Haste. Dust: Add this monster to your deck with +2 ATK (keep ATK buffs).". {yellow}
+* Onion San. HP: 8 -> 7. {red}
+* Burgerpants. EFFECT UPDATE: "Magic: Earn 9 gold and at end of your turn give your opponent 3 gold." {red}
+## Balancing (Spells)
+* Break. EFFECT UPDATE: "Return an allied monster to your hand and you get 20% of its cost.". {green}
+* Fortune. COST: 4 -> 5. {red}
+## Bug fixes
+* Opening more tabs should no longer make your private messages acting strangely.
+* Another Chance will work if played after a Silence.

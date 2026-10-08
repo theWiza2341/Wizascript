@@ -1,0 +1,11 @@
+* Shambling Mass -- EFFECT UPDATE: Magic: Kill an ally monster and gain +2/+2. {yellow}
+* Big Hat Charles -- HP 6 > 5. {red}
+* Nurse Mouth -- HP 7 > 6. {red}
+* Scarf Mouse -- HP 3 > 2. {red}
+* Father Alvin -- EFFECT UPDATE: Magic: Remove 2 random other monsters from your Dustpile and add them to your hand. {red}
+## Balancing (Spells)
+* Octofriend -- EFFECT UPDATE: Magic: give +1/+1 to an ally monster. Summon a Left tentacle on its left and a Right tentacle on its right. {green}
+* Soothing -- COST 3 > 4. {red}
+* Big Mine -- EFFECT UPDATE: Turbo: deal 5 DMG to you, 2 DMG to 2 random ally monsters and draw a card. {red}
+## Balancing (Artifacts)
+* Copycat -- EFFECT UPDATE: At the start of the game, reveal your opponent's starting hand and shuffle a copy of it into your deck. Reduce their cost by 1. {red}

@@ -1,0 +1,16 @@
+New cards
+* [card] Chalk (cost 1, green soul spell): Deal 5 DMG to your opponent. Draw a card. Delay: Give all ally monsters +1/+1.
+* [card] Sans Deltarune (cost 2, ATK 1, HP 1, purple soul): Dodge (1). Magic: Add your mom to your hand.
+* [card] Gift Bomb (cost 4, ATK 2, HP 2, pink soul): Dust: Summon 2 random monsters from your hand with a base cost of 3 or less.
+* [card] Teacher Alphys (cost 6, ATK 6, HP 4, orange soul): Need: Your Dustpile has monsters costing 1, 2, 3, 4, 5, 6, 7, 8, 9, and 10. Magic: Burn them to add 3 Chalks to your deck.
+* [card] Wheelvil (cost 7, ATK 7, HP 7, orange soul): Disarmed. Magic: Cast Club Chaos. Dust: If it's your turn, return to your hand with 0 cost. (image text: "* He can't do anything (LOL)!!!!11")
+* [card] Lab Sign (cost 11) (card cut off)
+## Balancing (Monsters)
+* Garbage -- COST 6 > 4. HP 6 > 4. EFFECT UPDATE: Magic and Dust: Add the BASE spell of your soul to your hand. {yellow}
+* Stage Lights -- COST 9 > 5. ATK 3 > 5. HP 9 > 5. EFFECT UPDATE: Magic: Add a copy of the most expensive other non-DT monster in the enemy hand to your hand. {yellow}
+* Spade King -- EFFECT UPDATE: Magic: Switch: Silence all enemy monsters or kill all enemy monsters with 2 HP or less. {yellow}
+* Mettaton NEO -- COST 8 > 10. EFFECT UPDATE: Dust: Deal this monster's ATK as DMG to all enemy monsters. {yellow}
+* Golden Mascot -- COST 13 > 6. ATK 6 > 5. HP 7 > 6. EFFECT UPDATE: Taunt. Dust: Add a random LEGENDARY to your hand. {yellow}
+* Spamton -- EFFECT UPDATE: Magic: Burn all Pipis in your Dustpile to add them to your hand with Haste. Give them +1/+1 for each Pipis that didn't fit. {yellow}
+* Spamton Shop -- EFFECT UPDATE: Turn end: Program (2): Summon a Pipis. {yellow}
+* Mad Mew Mew -- ATK 5 > 4. HP 5 > 4. EFFECT UPDATE: Magic: Halve a non-DT monster's stats (rounded up) and summon an exact copy of it. If it was an ally, earn 2 G. {yellow}

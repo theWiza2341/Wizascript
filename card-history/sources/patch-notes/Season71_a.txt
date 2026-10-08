@@ -1,0 +1,11 @@
+Season 71
+New cards
+* [card] Hanging Spider (cost 3, ATK 3, HP 2, purple soul): Delay: If this is dead, add 2 Spider Donuts to your hand and 2 Spider Croissants to your deck.
+## Balancing (Monsters)
+* Loren -- ATK 3 > 4. HP 3 > 4. {green}
+* Papyrus -- COST 12 > 11. {green}
+* Cafe Jukebox -- EFFECT UPDATE: Taunt. Magic: Look at 3 random different non-TOKEN spells you cast this game and add one to your deck. {green}
+* Mom Slime -- EFFECT UPDATE: Whenever you spend G on spells, summon a Kid Slime. {green}
+* Maus -- EFFECT UPDATE: Dust: Add a Cursor to your deck. If this is the only ally monster on board, add a Cursor to your hand. {green}
+* Rouxls Kaard -- EFFECT UPDATE: Transparency. You are Invulnerable. Magic: Add a Puzzle Box to the enemy hand. {green}
+* Skateboard Girl -- HP 4 > 5. EFFECT UPDATE:Haste. Delay: If this monster attacked and survived, add a copy of it to your hand. {green}

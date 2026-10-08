@@ -1,0 +1,11 @@
+New cards
+* [blue soul] Ioonman | COST 5 | ATK 4 | HP 6 | Magic: Program (2): Look at 3 random other Deltarune monsters costing 4-6 G. Burn one to add the other 2 to your hand with +1 HP.
+* [white soul] Milk Looker | COST 5 | ATK 3 | HP 5 | Dodge (1). After this loses a Dodge, add Sans Milk to your hand.
+* [white soul] Plugboy | COST 5 | ATK 3 | HP 3 | Magic and Dust: Give 2 random Plugs in your hand +1/+1.
+* [green soul] Round Devices | COST 5 | ATK 3 | HP 6 | Taunt. Support: Paralyze the attacker and give it Candy.
+* [white soul] Walk Sign | COST 5 | ATK 4 | HP 5 | Magic: Deal 3 DMG to a monster and you.
+* [white soul] Werewire | COST 5 | ATK 4 | HP 3 | Haste. Magic: If this has no monster caught, catch an ally Plug. Dust: Release it with this monster's stat buffs.
+* [white soul] Aesthetic Aaron | COST 6 | ATK 7 | HP 6 | Magic: Send a card in your hand to the enemy hand and draw a card.
+* [blue soul] Berdlycoaster | COST 6 | ATK 5 | HP 7 | Need: You have a TOKEN card with a base cost of 3+ G in your hand. Magic: Add Feather Storm to your hand.
+* [white soul] Broken Car | COST 6 | ATK 3 | HP 6 | Magic: Deal 1 DMG to a monster for each other monster on the board. If this deals 3 or less DMG, gain Haste.
+* [white soul] Cafe Jukebox | COST 6 | ATK 5 | HP 6 | Taunt. Magic: Look at 3 random non-TOKEN spells you cast this game and choose one. Add it to your deck.

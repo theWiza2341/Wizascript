@@ -1,0 +1,29 @@
+## Balancing (Monsters)
+* Animals -- HP 5 > 6. {green}
+* Big Bob -- ATK 2 > 3. {green}
+* Bone Painting -- HP 3 > 4. {green}
+* Broken Pillar -- HP 2 > 3. {green}
+* Candle -- HP 3 > 4. {green}
+* Catty -- COST 6 > 5. ATK 4 > 3. {green}
+* Catty's Dad -- COST 6 > 5. ATK 4 > 3. {green}
+* Cauldron -- COST 5 > 4. ATK 4 > 3. {green}
+* Chaos Duck -- COST 8 > 7. HP 5 > 4. {green}
+* Chilldrake -- ATK 3 > 4. {green}
+* Chujin -- COST 14 > 13. {green}
+* Date Alphys -- HP 3 > 4. {green}
+* Disco Ball -- ATK 4 > 5. {green}
+* First Starwalker -- HP 5 > 6. {green}
+* Frostermit -- ATK 5 > 6. {green}
+* Golden Flowers -- COST 5 > 4. HP 5 > 4. {green}
+* Golden Mascot -- HP 6 > 7. {green}
+* Goner Kid -- HP 3 > 4. {green}
+* Hanging Plug -- ATK 3 > 4. {green}
+* Janitor -- HP 2 > 3. {green}
+* Lancer's Bike -- HP 2 > 3. {green}
+* Mettabot Factory -- HP 5 > 6. {green}
+* Moldmega -- COST 10 > 9. {green}
+* MTT Reporter -- HP 3 > 4. {green}
+* Papyrus Statue -- ATK 3 > 4. {green}
+* Pillar -- HP 4 > 5. {green}
+* Pippin -- ATK 4 > 5. {green}
+* Pyrope -- HP 5 > 6. {green}

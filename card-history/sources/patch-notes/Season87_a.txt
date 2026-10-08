@@ -1,0 +1,5 @@
+Season 87
+## New cards
+[card] Noellecoaster | cost 2 | Has +1 cost in hand for each spell you cast (min 2 G). Magic: Gain +1/+1 for each and look at 2 spells with equal cost. Cast one on the monster in front. | ATK 0 | HP 1
+[card] Mettabot Factory | cost 4 | Shook: Fill your board with Mettabots. This takes 2 DMG. | ATK 3 | HP 5
+[card] Giant Toilet | cost 9 | Taunt. Need: Your hand and deck only have BASE cards (except Generated ones) and aren't empty. Magic: Your opponent draws 7 cards. | ATK 6 | HP 9

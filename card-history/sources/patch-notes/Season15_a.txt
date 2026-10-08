@@ -1,0 +1,27 @@
+Updates (Buff / Nerf / Balanced or reworked)
+Season 15
+Beta 15.0 (2017/10/01)
+## Classic
+* Slower matchmaking but fairer matches (still not based on LV).
+* Loyalty points are now available in this game mode.
+## Rankeds
+* Players in COPPER division can no longer lose DTP.
+* Players in IRON III can no longer rank down to COPPER I.
+* High rank players should get more DTP after beating a lower opponent.
+## Balancing (Monsters)
+* G. Follower 3 -- HP 5 > 6. {green}
+* Moldbygg -- HP 6 > 5 -- Effect Update: Taunt. End of turn: Give +1 HP to all ally Mold in play. {yellow}
+* Mad Dummy -- ATK 5 > 6 -- Effect Update: Can only be damaged by a damage of 4 or greater. {yellow}
+* Dogamy -- Effect Update: Magic: If Dogaressa is on your board, gain +3 ATK. {red}
+* Dogaressa -- Effect Update: Magic: If Dogamy is on your board, gain +3 HP. {red}
+* Manticore -- Cost 6 > 7. {red}
+* Allergic Temmie -- HP 2 > 1. {red}
+* Whimsalot -- Cost 6 > 7. {red}
+* Flowey -- HP 6 > 5. {red}
+* Elder Puzzler -- HP 9 > 8. {red}
+## Balancing (Spells)
+* Explosion -- Cost 6 > 7. Effect Update: Deal 4 damage to a monster. If the monster is dead, deal 4 damage to adjacent monsters. {yellow}
+* Penetration -- Effect Update: Remove the taunt effect of an opponent monster. If used on a non taunt monster, draw a card. {red}
+* Snowstorm -- Cost 6 > 7. {red}
+## Bug fixes
+* Everyman is an Amalgamate again.

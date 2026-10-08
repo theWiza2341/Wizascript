@@ -1,0 +1,20 @@
+Season 73
+New artifacts
+* Dealmaker: Whenever a monster costing more than 0 dies, gain a counter. If this reaches 3, spend them to earn 1 G.
+* Puppet Scarf: Whenever you or your monsters get more than 1 HP healed to them, deal DMG to a random enemy monster equal to half of healed HP (rounded up).
+* Thorn Ring: Whenever you cast a spell, gain counters equal to its cost. If this reaches 9+ counters, spend 9 to add a 4/4 Ice Crystal to your hand.
+* Elite Soldiers: Turn end: If you have 3 or less cards in your deck, add 5 random non-DT monsters to your deck and 2 to your hand with +3/+3. Then disable this.
+* Seam's Soap: Turn end: If you have 3 or less cards in your deck, give all monsters in your deck and hand +2/+2. Then disable this.
+* Glamburger: Earn 1 G and draw a card at the start of the game.
+## Balancing (Monsters)
+* Trash Tornado -- ATK 3 > 4. {green}
+* Grilling King -- COST 12 > 11. {green}
+* Angel Doll -- HP 3 > 4. {green}
+* Final Froggit -- EFFECT UPDATE: Magic: Give all other ally Froggits +1/+1 wherever they are. {green}
+* Pizzapants -- COST 5 > 4. {green}
+* Tree -- HP 6 > 7. EFFECT UPDATE: Magic: Deal 2 DMG to this. Synergy: Heal 2 HP to all allies. {green}
+* Hanging Spider -- COST 3 > 2. {green}
+* Business Dude -- EFFECT UPDATE: Taunt. Turn end: Spend all your G. Gain +1/+1 for each G spent. {yellow}
+* Dark Candy Tree -- ATK 3 > 4. HP 5 > 4. {yellow}
+* Donation Stump -- ATK 3 > 5 HP 4 > 5. EFFECT UPDATE: Magic: Deal 2 DMG to yourself. Synergy: Deal 2 DMG to your opponent too. {yellow}
+* Ghost Tree -- HP 2 > 3. EFFECT UPDATE: Whenever you summon a Plant, gain +1 HP. {yellow}

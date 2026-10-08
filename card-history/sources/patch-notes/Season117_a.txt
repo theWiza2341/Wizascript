@@ -1,0 +1,2 @@
+[card image] Fire-E. COST 4. ATK 3. HP 6.
+* Magic: Enchant an ally board slot with Incinerator.

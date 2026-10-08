@@ -1,0 +1,17 @@
+Season 78
+New cards
+* [card] ACT Button (cost 1, green soul spell): Loop (2). Look at all spells of the enemy Soul (max. RARE). Choose one to add to your hand.
+* [card] Junk for Sale (cost 3, green soul spell): Look at 2 3-cost monsters (max. EPIC) and add one to your hand with 0 cost. Delay: Add Junk for Sale to your hand if you have none.
+* [card] Shyra's Tomb (cost 6, ATK 7, HP 4, purple soul): Taunt. Need: 7 or more monsters in your Dustpile. Magic: Gain +3 HP.
+New artifacts (Frisk)
+* [icon] Torn Notebook: Turn start: Give KR and -1/-1 to the highest ATK enemy monster without KR.
+* [icon] Toy Knife: Turn end: Add a Change of Winds to the top of your deck if you don't have one in hand.
+* [icon] Tough Glove: At the start of every 3rd turn, add a Draft to your hand. If you have 4 or less cards in hand, add 2 instead. If you have 7 cards in your hand, add it to your deck.
+* [icon] Ballet Shoes: Turn end: Earn 1 G. If it's turn 10 or later, earn 1 more.
+* [icon] Burnt Pan: Turn end: Heal 1 HP to you and 2 HP to all damaged ally monsters. If there are none, give the rightmost ally monster +1/+1.
+* [icon] Empty Gun: Turn start and Turn end: Deal 1 DMG to the lowest HP enemy monster. If you have less HP than your opponent, deal 1 DMG to them too.
+* [icon] Worn Dagger: Whenever a monster dies (except Lost Souls), gain a counter. Turn end: Spend 7 counters to summon the next Lost Soul.
+## Balancing (Monsters)
+* Scissor Dancer -- COST 5 > 4. {green}
+* Tasque Singer -- EFFECT UPDATE: Magic: Kill all enemy monsters costing less than the amount of non-TOKEN cards you played this turn. {green}
+* Rope Dog -- EFFECT UPDATE: The first time this attacks a monster each turn, it can attack another monster. Synergy: Gain +2 ATK and Haste. {green}

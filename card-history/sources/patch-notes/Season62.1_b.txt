@@ -1,0 +1,6 @@
+## Balancing (Artifacts)
+* Hourglass-- EFFECT UPDATE: Counter starts at 4. Whenever you spend G on a Generated card, reduce the counter by 1. When the counter reaches 0, add a Time Warp to your hand and set the counter to 4. {yellow}
+* Seap -- EFFECT UPDATE: After you summon a non-Generated monster, give it +3/+3. {yellow}
+## Balancing (Souls)
+* Perseverance -- EFFECT UPDATE: Turn start: If there are no enemy monsters under KR, give the highest ATK enemy monster KR. {yellow}
+* KR -- EFFECT UPDATE: This takes +1 DMG during the enemy turn. When this is applied to a monster without KR, give it -1 ATK. {yellow}

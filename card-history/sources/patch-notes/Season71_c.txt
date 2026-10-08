@@ -1,0 +1,5 @@
+## Balancing (Artifacts)
+* Good Food -- EFFECT UPDATE: Shock: Heal 1 HP to you. {yellow}
+* Ultimate Fusion -- EFFECT UPDATE: Starts with 7 counters. At the start of every even turn until turn 15, send the rightmost card in your hand to the top of your deck and add the next Thrashing Part to your hand (from lowest to highest cost). Whenever you summon a Thrashing Part (except all tribes) for the first time, spend 1 counter. Turn end: If this has 0 counters, add Final Gambit! to your deck and disable this. {gray}
+## Balancing (Souls)
+* Integrity -- EFFECT UPDATE: Turn end: If you spent 5 or more G this turn, gain +1 G. Your G cap is 11. {red}

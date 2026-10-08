@@ -1,0 +1,22 @@
+Beta 21.0
+## New cards
+* [blue soul] Punk Hamster -- Cost 3; ATK 3; HP 4; Effect : Turbo: Deal 4 damage to you. Dust: Add this monster to your opponent's deck.
+* [blue soul] Snowdin Sign -- Cost 4; ATK 2; HP 2; Effect : Magic: Add a random spell of your class to your hand. Dust: Add a random spell to your hand.
+* [white soul] Dad Slime -- Cost 6; ATK 4; HP 4; Effect : Dust: Summon 2 Kid Slime.
+* [white soul] Hot Dog Vulkin -- Cost 5; ATK 3; HP 4; Effect : Magic: Deal 2 damage and give +2 ATK to a monster.
+* [white soul] Script Bomb -- Cost 3; ATK 1; HP 6; Effect : Start of turn: Sacrifice this to draw 2 cards. If you draw a Bomb, reduce its cost by 2.
+## Balancing (Monsters)
+* Clam Boy -- HP 4 > 5. {green}
+* Snail Trainer -- Effect Update: Turbo: Add a Snail to your hand. Magic: If you have 2+ Snails in play, add Thundersnail to your hand. {green}
+* Nacarat Jester -- ATK 5 > 6. {green}
+* Moldessa -- ATK 5 > 4; Effect Update: Magic: Deal 2-4 damage to a random enemy monster. Dust: Add a random other Mold to your hand. {green}
+* Moldbygg -- HP 5 > 6. {green}
+* Dog Food -- Effect Update: Dust: Summon a random Dog. If its cost is <= 3, add a Dog Food to your deck. {green}
+* Dancer Mettaton -- HP 7 > 6. {red}
+* Woshua -- HP 5 > 4. {red}
+* Innkeeper -- Effect Update: magic : Raise your hp max by 3. {red}
+* Timer -- HP 6 > 5. {red}
+* Mettabot -- HP 2 > 1. {red}
+* Asgore -- Cost 13 > 14. {red}
+* Ferry -- Cost 2 > 3; ATK 1 > 2; Effect Update: Dust: Gain 26(?). {red}
+* Sad Customer -- Effect Update: Magic: Reduce opponent's gold by 2. {red}

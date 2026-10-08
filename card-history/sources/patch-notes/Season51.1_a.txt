@@ -1,0 +1,12 @@
+Game updates
+Mid Season 51
+## Balancing (Monsters)
+* Muffet's Pet -- Effect update: Magic: Kill an enemy monster with 2 or less ATK. {green}
+* Business Snail -- Effect update: Snails in your hand have +1 cost. Snails on your board have +1/+1. {green}
+* Ralsei -- Cost 8 > 7. ATK 3 > 4. HP 3 > 4. Effect update: Magic: Look at all non-DT monsters in your hand and choose one. Summon a 3/3 copy of it. {yellow}
+* Red Bush -- HP 3 > 4. Effect update: Transparency. Has ATK equal to number of other ally Plants on board. {yellow}
+* Susie -- ATK 8 > 3. Effect update: Taunt. Magic: Set all other monsters stats to 3/3. {yellow}
+* Popometer -- Effect update: Armor (1). Disarmed. Support: Attack the rightmost enemy monster. {yellow}
+* Lamp -- Effect update: Taunt. Dust: Summon a random monster costing 3-5 G and set its base stats to 2/2. {red}
+## Balancing (Artifacts)
+* Will -> Ambition. Effect update: At the start of your 4th, 8th, and 12th turns, add a Dream to the top of your deck. {yellow}

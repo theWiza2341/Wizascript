@@ -1,0 +1,20 @@
+## Balancing (Monsters)
+* Jumping Frog -- HP 2 > 3 .EFFECT UPDATE: Magic: Deal this monster's ATK as DMG to an enemy monster. {green}
+* Gerson Tombstone -- EFFECT UPDATE: Magic: If your deck has no non-Generated duplicates, summon a random card costing 5-7 from your dustpile. {green}
+* Starwalker Bird -- EFFECT UPDATE: Magic: If your deck has no non-Generated RARE or EPIC card, draw 3 cards. {green}
+* Tree -- EFFECT UPDATE: Magic: Deal 2 DMG to this. Synergy: Fully heal this. {green}
+* Fire Chimney -- EFFECT UPDATE: Magic: If you played a card with a cost of 6 or more this turn, gain +1/+1 and Haste. {green}
+* Devil Doll -- HP 4 > 5. {green}
+* Aaron -- ATK 5 > 6. {green}
+* Snow Poff -- COST 2 > 4. EFFECT UPDATE: Disarmed. Whenever an enemy monster attacks, this takes 1 DMG. Dust: Summon a Greater Dog. {yellow}
+* Memory Head -- COST 5 > 2. ATK 6 > 2. HP 5 > 2. EFFECT UPDATE: Magic: If this isn't Generated, add an exact copy of it to your hand. {yellow}
+* Snowdrake's Mom -- COST 7 > 5. ATK 4 > 3. HP 4 > 3. EFFECT UPDATE: Magic: Give an Amalgamate in your hand +2/+2. Synergy: Give it +3/+3 instead. {yellow}
+* Ice E Mascot -- [blue soul] > [white soul]. COST 5 > 4. ATK 5 > 4. HP 4 > 3. EFFECT UPDATE:Magic: Add a random RARE monster from your dustpile to your hand. If there is none, draw a RARE monster from your deck. {yellow}
+* Lemon Bread -- EFFECT UPDATE: Haste. Magic: If you have an ally Amalgamate or Mold on the board, gain Taunt. {yellow}
+* Cracked Table -- EFFECT UPDATE: Magic: Add a Tea Set to your hand. If you have less HP than the opponent, give it -1 cost. {yellow}
+* Gerson -- ATK 4 > 3. HP 3 > 5. {yellow}
+* Piranhas -- HP 2 > 4. EFFECT UPDATE: Haste. Dodge (1). Whenever this attacks and kills a monster, deal 1 DMG to a random enemy monster. {yellow}
+* Ranger Rudinn -- COST 4 > 3. ATK 4 > 3. HP 2 > 1. EFFECT UPDATE: Dodge (1). {yellow}
+* Jumping Rabbit -- EFFECT UPDATE: Haste. Dust: If this died during your turn, draw a card and add Jumping Rabbit to your deck. {yellow}
+* Memorial Statue -- ATK 1 > 2. HP 6 > 5. EFFECT UPDATE: Whenever this attacks a monster, Silence it. {yellow}
+* Red Wagon -- EFFECT UPDATE: Haste. Magic: Catch an ally monster. Dust: Return it to your deck with +3/+3. {yellow}

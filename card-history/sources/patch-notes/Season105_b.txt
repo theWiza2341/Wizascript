@@ -1,0 +1,38 @@
+## Crafting
+* DT cards can now be crafted with DT Fragments.
+* DT crafting cost: 4 / Shiny DT crafting cost: 8
+* DT disenchant value: 2 (unchanged) / Shiny DT disenchant value: 4 (new)
+* Removed random DT crafting.
+## Balancing (Monsters)
+* Action Figures -- HP 4 > 5. {green}
+* Anime Sword -- ATK 1 > 2. {green}
+* Bomb -- ATK 3 > 4. {green}
+* Broken Pillar -- COST 4 > 3. {green}
+* Cyber Balloon -- HP 3 > 4. {green}
+* Dark Candy Tree -- ATK 4 > 5. {green}
+* Dark Throne -- Cost 4 > 3. HP 5 > 4. {green}
+* Shrine Mascot -- HP 4 > 5. {green}
+* Laggy TV -- COST 4 > 3. ATK 4 > 2. {green}
+* Monster Kid -- ATK 1 > 2. {green}
+* Papyrus Statue -- COST 5 > 4. ATK 4 > 3. {green}
+* Burgersimp -- COST 5 > 4. ATK 6 > 4. {green}
+* Rudinn -- ATK 3 > 4. {green}
+* Sand Dog -- COST 11 > 10. {green}
+* Sweet Corn -- ATK 2 > 3. {green}
+* The Barrier -- COST 40 > 35. ATK 20 > 30. HP 20 > 30. {green}
+* Ugly Fish -- HP 5 > 6. {green}
+* Whimsalot -- ATK 3 > 4. {green}
+* Mo -- COST 6 > 5. EFFECT UPDATE: Taunt. Magic: Add 3 random non-DT cards costing 3+ G to your hand with -3 cost. Delay: Erase the ones still in your hand. {green}
+* Mystery Machine -- EFFECT UPDATE: Magic: Kill an ally monster to add a Gaster Blaster to your hand. {green}
+* Pickaxe -- EFFECT UPDATE: Haste. Before this attacks, add a Gemstone to your hand. {green}
+* Royal Papyrus -- EFFECT UPDATE: Haste. Need: 10+ non-Generated monsters costing 9 or more G in your dustpile. Magic: Equip the Underground Army artifact. {green}
+* Seam -- COST 7 > 6. EFFECT UPDATE: Taunt. Need: Your deck has no LEGENDARY monsters. Magic: Add 2 Shadow Crystals to your hand. {green}
+* Snail Bucket -- EFFECT UPDATE: Taunt. Dust: Summon a Red Snail and a Yellow Snail. Randomly trigger one of their Magic. {green}
+* Cybershelf -- EFFECT UPDATE: Magic: Look at all spells of the enemy SOUL. Choose one to add to your hand. {yellow}
+* Grilling King -- HP 6 > 5. EFFECT UPDATE: Magic: Summon two 3/3 Spincakes. If you have 6 or less cards in your deck, transform them into 5/5 Cakes. {yellow}
+* Mauswheel -- EFFECT UPDATE: Loop (3). Dust: Add a Cursor to your hand and 2 to your deck. {yellow}
+* Bryan -- COST 8 > 9. {red}
+* Igloo -- COST 3 > 4. ATK 4 > 5. HP 3 > 4. {red}
+* Jar of Worms -- HP 4 > 3. {red}
+* Mister Elegance -- ATK 4 > 3. {red}
+* Spider Workers -- EFFECT UPDATE: Magic: Summon a Spider. Synergy: Summon a Spider Croissant instead. {red}

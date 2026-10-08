@@ -1,0 +1,7 @@
+## Rankeds
+* Removed level limit.
+* UCP rewards for LEGEND players: 400 > 300.
+## Friendship
+* Replaced UCP by shiny packs.
+## Cosmetics shop
+* Number of avatars in daily shop: 5 -> 12

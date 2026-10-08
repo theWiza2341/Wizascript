@@ -1,0 +1,7 @@
+Game updates
+Season 118
+## New cards
+* [card image] Wild Revolver. COST 4. Deal 6 DMG to a monster. For every excess DMG, give a random different monster in your hand -1/+1/+1 and Wanted.
+* [card image] Blackjack. COST 6. ATK 5. HP 6. Magic: Look at the next 6 cards in your deck. Turn one into a Wild Revolver.
+* [card image] Arcade Mew Mew. COST 7. ATK 4. HP 4. Magic: Halve the stats of the non-DT monster in front of this and summon an exact copy of it.
+* [card image] Tall Bloxer. COST 10. ATK 5. HP 5. Magic: Summon 3 random non-TOKEN monsters costing 3 or less from your dustpile.

@@ -1,0 +1,17 @@
+Season 97
+## New cards
+[card] Fortune Teller | cost 6 | Magic: Look at the top 3 cards of the enemy deck. Give one +2 cost. | ATK 6 | HP 7
+[card] Giftshopper | cost 6 | Dust: Give -4 cost to the most expensive card in both players' hands. | ATK 6 | HP 6
+[card] Spider Workers | cost 6 | Haste. Magic: Summon a Spider. Synergy: Summon a Spider Croissant instead. | ATK 3 | HP 4
+[card] Cardmaster | cost 7 | Taunt. Magic: For every 4 G your opponent has, earn 2 G and add a Draft to your hand. | ATK 4 | HP 4
+[card] Girlboss Cactus | cost 9 | Dust and Synergy: Add a Cactus to your hand with +2 HP and Haste. | ATK 7 | HP 9
+## Balancing (Monsters)
+* Mercenary Hire -- COST 8 > 12. EFFECT UPDATE: Summon every 9-cost Royal Guard. Give them -4/-4. {yellow}
+* Crimeter -- EFFECT UPDATE: Disarmed. Candy. After you cast a spell with a base cost of 2 or more G, attack the lowest HP enemy monster. {yellow}
+## Cosmetics
+* Added new DR/UTY free avatars.
+## Technical
+* Improved server during previous month.
+* Upgraded Java EE version from 4 to 6.
+* Upgrade Java JDK from 8 to 17.
+* Still monitoring for lags/softlocks.

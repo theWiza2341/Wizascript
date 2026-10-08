@@ -1,0 +1,26 @@
+Season 16
+Beta 16 (2017/11/01)
+## New cards
+* [yellow soul] Casual Undyne -- Cost: 12. ATK: 8. HP: 8. Effect : Haste. Deal the difference of damage dealt to an enemy monster to the enemy player.
+* [purple soul] Receptionist 3 -- Cost: 3. ATK: 3. HP: 6. Effect : Taunt. Magic: Summon a random enemy monster from his hand if his board isn't full.
+* [blue soul] Fire Trap -- Cost: 4. ATK: 0. HP: 7. Effect : End of turn: Deal damage equals to the number of turns this card remained on the board to the opponent.
+* [blue soul] Coffin -- Cost: 4. ATK: 2. HP: 3. Effect : Dust: Summon a random dead ally monster.
+* [white soul] Mace -- Cost: 3. ATK: 1. HP: 4. Effect : Can't attack. Taunt. Dust: Deal 3 damage to its killer
+## Balancing (Classes)
+* [blue soul] INTEGRITY (Nerf) : At the end of your turn, gain 1 gold for every 5 gold spent during the turn (max 2). {blue}
+## Balancing (Monsters)
+* Vegetoid -- Effect Update: Dust: Restore 5 HP to its owner. {green}
+* Candy dish -- Effect Update: Whenever you summon a monster, give it Candy. {green}
+* Burgerpants -- Effect Update: Magic: Earn 9 gold. End of turn: Give your enemy 4 gold. {red}
+* Endogeny -- ATK 5 > 4. {red}
+* Sad Dragon -- HP 4 > 3. {red}
+* Elder Puzzler -- ATK 6 > 5. {red}
+* Shyren -- Effect Update: Magic: Restore 4 HP. {red}
+* Muffet -- HP 11 > 10. {red}
+* Asriel -- Effect Update: Magic: Remove all negative effect from your monsters. {red}
+* Allergic Temmie -- Cost 2 > 3. HP 1 > 2. {red}
+## Balancing (Spells)
+* Shootout -- Cost 2 > 3. Effect Update: Deal 1 damage to everyone. If it killed something, trigger this spell again. {yellow}
+* Longevity -- Cost 4 > 5. {red}
+## Temporary game mode
+* ???

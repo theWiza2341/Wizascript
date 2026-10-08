@@ -1,0 +1,15 @@
+Beta 20.2 (2018/03/17)
+## Balancing (Monsters)
+* Sad Dragon -- HP 3 > 4. {green}
+* Gerson -- Effect Update: Armor (2). Magic: Add/replace a random Gerson's artifact (only one active). {green}
+* Gyftrot -- Cost 7 > 8; ATK 4 > 5; HP 7 > 8. {green}
+* Receptionist 1 -- Effect Update: Whenever it takes damage, reduce the cost of a random card in your hand by 2. {green}
+* Trash Tornado -- Effect Update: Magic: Put both players' hand into their deck, shuffle them and they draw the same number of cards. {yellow}
+* Clam Boy -- Cost 4 > 5; Effect Update: Transparency. {yellow}
+* Dancer Mettaton -- Cost 7 > 8; Effect Update: Haste. Restore 3 HP to its owner and summon a Mettabot whenever this attacks and kills a monster. {red}
+* Gaster Follower 3 -- ATK 6 > 5. {red}
+* The Heroine -- Cost 15 > 16. {red}
+## Balancing (Spells)
+* Punishment -- Effect Update: Deal 3 damage. If your opponent has more HP than you, deal 4 damage instead. {green}
+* Acceleration -- Effect Update: Put your hand into your deck, shuffle it then draw 4 cards. {yellow}
+* Brain Shift -- Effect Update: Deal a monster under KR's ATK to your opponent and remove the KR (max 10 damage). {red}

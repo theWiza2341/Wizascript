@@ -1,0 +1,19 @@
+Updates (Buff / Nerf / Balanced or reworked)
+Season 18
+Beta 18.0 (2018/01/01)
+## Artifacts
+* Arttifacts are here ! Discover what they do >here.
+* Artifacts will be unavailable for 1 or 2 weeks in ranked mode.
+## Quests
+* Packs as reward have been replaced by Gold. 1 pack = 100 G.
+## Rankeds
+* Min level : 20 -> 10.
+## Matchmaking
+* Matches should be found 2x faster in classic and ranked.
+* Level security for new players has been replaced by an elo security in classic.
+* We have made a soft reset of the elo in classic. Don't panic if you encounter few matchmaking issues the firsts days.
+## Balancing (Monsters)
+* Snow Poff. Cost : 5 > 4. {green}
+* Greater Dog -- Cost : 9 > 7. HP : 10 > 6. Effect : Taunt. Magic : Gain +3 HP if you have a dog in your hand. {yellow}
+## Balancing (Spells)
+* Brain Shift. Effect update : Deal a monster under KR's ATK to your opponent and remove the KR. {green}

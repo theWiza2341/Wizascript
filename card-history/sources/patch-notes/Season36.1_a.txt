@@ -1,0 +1,14 @@
+Season 36
+## New Card
+* Spade King -- COST: 9; ATK: 2; HP: 4. EFFECT: "Taunt. Magic: Kill all monsters with a cost <= 4 and gain +2/+2 for each killed monster." (shown as card image)
+## Balancing (Monsters)
+* Chest -- EFFECT UPDATE: "Dust: Draw 2 cards". {green}
+* Clean Rabbick -- COST 1 > 0. {green}
+* Gerson -- COST 8 > 7. {green}
+* Lamp -- COST 3 > 2. {green}
+* Purple Mascot -- ATK 6 > 5. EFFECT UPDATE: "Taunt". {green}
+* Rabbick -- EFFECT UPDATE: "Turbo: Add a Clean Rabbick to your hand. Dust: Summon a Clean Rabbick". {green}
+* Noelle -- Cost 8 > 9; HP 5 > 6. {green}
+* Mister Elegance -- Cost 5 > 4. {green}
+* Garbage -- Cost 7 > 6. {green}
+* Allergic Temmie -- Effect Update: Now also triggers its effect from Bob. {green}

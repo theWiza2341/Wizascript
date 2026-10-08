@@ -1,0 +1,6 @@
+## New cards
+* Stalagmite -- COST 1. Dust: Add a Gemstone to your hand. ATK 1, [white soul], HP 3.
+* Gemstone -- COST 2. Deal 2 DMG to a monster and the opponent. [green soul]
+* Pickaxe -- COST 2. Transparency. Whenever this attacks, add a Gemstone to your hand and lose this Shock. Shock: Gain Haste. ATK 1, [blue soul], HP 3.
+* Pink Crystals -- COST 2. Shock: Add a Crystal Shard to your hand and lose this Shock. If the spell cast was a Gemstone, Delay: Gain the Shock back. ATK 1, [magenta soul], HP 4.
+* Rock Pet -- COST 2. Need: You cast a spell with a base cost of 2 this turn. Magic: Gain Charge. ATK 2, [blue soul], HP 3.

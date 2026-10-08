@@ -1,0 +1,12 @@
+* Queen -- EFFECT UPDATE: Taunt. Magic: Choose An Enemy Monster. Summon A 4/4 Werewire That Catches That Monster. {red}
+* Librarian -- EFFECT UPDATE: Need: Your deck has no non-Generated duplicates. Magic: Draw 3 cards and add 3 random cards to your deck. They cost 1 less. {red}
+## Balancing (Spells)
+* ACT Button - COST 1 > 0. EFFECT UPDATE: Loop (2). Look at all spells (max. RARE) of the enemy soul. Choose one. Delay: Add it to your hand. {yellow}
+* Totemic Carvings - EFFECT UPDATE: Look at 7 7-cost monsters (except Totem). Choose one to add to your hand and set its cost to 0. {red}
+## Balancing (Artifacts)
+* Puppet Scarf - EFFECT UPDATE: Turn end: Swap the ATK and HP of all ally monsters without Transparency. {yellow}
+* Prosperity - EFFECT UPDATE: Whenever you play a non-Generated monster with a base cost of 4 or more, heal 1 HP to you. {red}
+* Glamburger - EFFECT UPDATE: At the start of turns 4, 7, and 10 earn 1 G. {red}
+* Ballet Shoes - EFFECT UPDATE: Turn end: Earn 1 G. {red}
+## Balancing (Souls)
+* Integrity - EFFECT UPDATE: Turn end: If you spent more G this turn than last turn (min. 1 last turn), earn 1 G. {yellow}

@@ -1,0 +1,11 @@
+{
+  "_help": "Hand corrections to the wiki's Version History, applied before anything is built. Each fix: { version: 'Beta 105.0', name: card or artifact name, action: 'remove' | 'replace' | 'add', text: the whole line for replace/add, e.g. 'Clam Girl -- Cost 7 > 6.', section: optional, why: a note }. Number mistakes the patch notes already prove are fixed automatically (see data/build-log.txt).",
+  "versionHistory": [
+    {
+      "version": "Beta 105.0",
+      "name": "Generous Gifts",
+      "action": "remove",
+      "why": "Version History pasted Flowey's text under Generous Gifts."
+    }
+  ]
+}

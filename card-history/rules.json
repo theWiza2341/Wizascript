@@ -1,0 +1,148 @@
+{
+  "_help": "Word lists for how Card History formats old card text. Read live by Wizascript on every page load - edit, commit, and players see it (no rebuild, no Wizascript update). Remove a key to use Wizascript's built-in list.",
+  "keywords": [
+    "determination",
+    "charge",
+    "haste",
+    "armor",
+    "disarmed",
+    "candy",
+    "support",
+    "transparency",
+    "invulnerable",
+    "taunt",
+    "dodge",
+    "shock",
+    "loop",
+    "bullseye",
+    "wanted",
+    "darkspawn",
+    "magic",
+    "dust",
+    "turn-start",
+    "turn-end",
+    "fatigue",
+    "turbo",
+    "paralyze",
+    "silence",
+    "synergy",
+    "delay",
+    "generated",
+    "need",
+    "program",
+    "erase",
+    "switch",
+    "catch",
+    "mold-spore",
+    "flowery-power"
+  ],
+  "tribes": [
+    "tem",
+    "dog",
+    "amalgamate",
+    "g-follower",
+    "lost-soul",
+    "frog",
+    "mold",
+    "snail",
+    "bomb",
+    "plant",
+    "royal-guard",
+    "all-monster-tribes",
+    "chaos-weapon",
+    "piece",
+    "arachnid",
+    "royal-invention",
+    "plug",
+    "thrashing-part",
+    "bargain",
+    "dance",
+    "giga-attack",
+    "round",
+    "pack",
+    "spider",
+    "turbo"
+  ],
+  "souls": [
+    "determination",
+    "patience",
+    "bravery",
+    "integrity",
+    "perseverance",
+    "kindness",
+    "justice"
+  ],
+  "enchantments": [
+    "the-flame"
+  ],
+  "legacyKeywords": [
+    [
+      "Battlecry",
+      "magic"
+    ],
+    [
+      "Deathrattle",
+      "dust"
+    ],
+    [
+      "Can't Attack",
+      "disarmed"
+    ],
+    [
+      "Can't attack",
+      "disarmed"
+    ],
+    [
+      "Burn",
+      "erase"
+    ],
+    [
+      "burn",
+      "erase"
+    ],
+    [
+      "End of turn",
+      "turn-end"
+    ],
+    [
+      "Start of turn",
+      "turn-start"
+    ],
+    [
+      "Thorns",
+      null
+    ],
+    [
+      "Ranged",
+      null
+    ],
+    [
+      "Future",
+      null
+    ]
+  ],
+  "legacyWithColon": [
+    [
+      "Enter",
+      "magic"
+    ],
+    [
+      "Death",
+      "dust"
+    ]
+  ],
+  "notLinks": [
+    "Heal",
+    "Draw",
+    "Hand",
+    "Board",
+    "Deck",
+    "Dustpile",
+    "Health",
+    "Power",
+    "Save"
+  ],
+  "plainPhrases": [
+    "\\bG\\.?\\s?Blasters?\\b"
+  ]
+}

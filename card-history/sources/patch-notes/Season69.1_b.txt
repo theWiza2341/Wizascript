@@ -1,0 +1,13 @@
+## Balancing (Spells)
+* Ice Shock-- COST 3 > 2. {green}
+* Royal Bravery -- COST 1 > 0. {green}
+* Resurrection -- COST 3 > 2.
+* Last Dream -- EFFECT UPDATE: Give all ally monsters +1/+1. If you have 1 HP, give ally non-Charge monsters +7/+7 instead. {green}
+* Royal Integrity -- EFFECT UPDATE: Add an exact copy of a monster to your hand. If it was LEGENDARY or DT, give it +2 cost. {green}
+* Royal Kindness -- COST 2 > 3. EFFECT UPDATE: Give all ally monsters Haste and Invulnerable for this turn. {green}
+* CLICK HERE TO DIE -- EFFECT UPDATE: Give the highest HP ally monster -6 HP. Excess HP loss is converted as DMG to you. {green}
+* Royal Perseverance -- COST 0 > 6 EFFECT UPDATE: Kill all enemies under KR. Give all enemy monsters -1/-1 and KR. {yellow}
+* Control Wire -- COST 5 > 4. EFFECT UPDATE: Summon an exact copy of an enemy monster. It gains +1/+1 and attacks the original. {yellow}
+## Balancing (Artifacts)
+* Adrenaline -- EFFECT UPDATE: Starts with 7 counters. Turn end: If you have less than 4 cards in hand, spend a counter to draw a card. Repeat until you have 4 or more cards in hand. {green}
+* Counterstrike > Criticals -- EFFECT UPDATE: At the start of every 5 turns, give all ally monsters +1 ATK wherever they are. {yellow}

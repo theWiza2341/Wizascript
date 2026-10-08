@@ -1,0 +1,11 @@
+* Carbed - HP 6 > 5. EFFECT UPDATE: Armor. Haste. This has +3 ATK while damaged. {yellow}
+* Receptionist 1 -- HP 6 > 5. EFFECT UPDATE: Whenever this takes DMG, give a random monster in your hand -1/+1/+1. {yellow}
+* Asgore -- ATK 7 > 5. {red}
+* Stickman -- HP 5 > 4. {red}
+* Final Froggit -- COST 6 > 7. EFFECT UPDATE: Magic: Give all ally Froggit (except Final Froggits) +1/+1 wherever they are. {red}
+## Balancing (Spells)
+* Powerhouse -- COST 5 > 4. {green}
+* Snow Warning -- EFFECT UPDATE: Add the Hail artifact and give it +3 counters. Deal 1 DMG to all monsters. {green}
+## Balancing (Artifacts)
+* Hail -- EFFECT UPDATE: Paralyzed monsters take +1 DMG. Turn start: Spend a counter to deal 1 DMG to all monsters. {yellow}
+* Generous Gifts -- EFFECT UPDATE: Whenever you take DMG during the enemy turn, gain counters equal to DMG taken. When this reaches 10+ counters, summon a 3/3 Gift. {yellow}

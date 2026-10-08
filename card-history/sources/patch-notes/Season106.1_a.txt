@@ -1,0 +1,8 @@
+Mid season update
+## Ranked
+* Removed MASTER and ONYX ranks.
+* Adjusted end-of-season rewards: Updated rewards.
+* You can no longer be demoted unless your division bar is empty.
+* Players in the LEGEND rank now earn 3 UCP per win.
+* Added UCP rewards for 100/110/.../200 ranked wins.
+* Note: We will continue to improve the ranked mode.

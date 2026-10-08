@@ -1,0 +1,14 @@
+* Mister Elegance -- COST 4 > 5. ATK 4 > 3. EFFECT UPDATE: Magic: Switch: Gain +1/+1 ATK and Armor or summon a copy of this. {yellow}
+* Mister Society -- COST 4 > 3. ATK 3 > 4. EFFECT UPDATE: Magic: Choose another non-TOKEN Piece in your hand. Switch: Add a copy of it into your hand or add 2 in your deck. {yellow}
+* Ponman Statue -- ATK 3 > 4. HP 2 > 4. EFFECT UPDATE: Need: 11 or more Ponmen in your Dustpile. Magic: Add Ponqueen to your hand.
+* Sword Emblem -- HP 4 > 6. EFFECT UPDATE: Haste. Whenever this takes DMG, Switch: Gain +1 Dodge or gain Transparency. {yellow}
+* Animals -- COST 8 > 6. HP 7 > 6. EFFECT UPDATE: Magic: Switch: Gain Haste or give the next 2 monsters in your deck +1/+2. {yellow}
+* Moldmega -- EFFECT UPDATE: Taunt. Magic and Dust: Burn 4 Molds in your dustpile to summon a Moldbygg and trigger its Magic. {yellow}
+* Spaghetti -- COST 4 > 8. ATK 4 > 3. HP 5 > 7. EFFECT UPDATE: Shock: Heal HP to you equal to the spell's cost and lose this Shock. {yellow}
+* Berdly Plush -- HP 6 > 5. {red}
+* Chilldrake -- EFFECT UPDATE: Magic: Switch: Draw a monster or draw a spell from your deck. {white}
+* Doodlebog -- EFFECT UPDATE: Magic: Switch: Gain +1 HP or +1 ATK. {white}
+## Balancing (Spells)
+* Contamination -- COST 8 > 7. {green}
+## Balancing (Artifacts)
+* Science -- EFFECT UPDATE: At the end of your 3rd turn, add 4 Gaster Blasters to your deck and 1 to the top of your deck. {yellow}

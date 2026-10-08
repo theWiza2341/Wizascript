@@ -1,0 +1,7 @@
+## Hot fixes
+* Shovels x999 -- ATK 9 > 6. HP 9 > 6.
+* Cursor -- ATK 4 > 3.
+* Snoelle -- ATK 1 > 2. HP 4 > 3. EFFECT UPDATE: Haste. Magic: Paralyze a monster. Delay: If it's dead and this is alive, return to your deck with +1 base ATK. At 5, turn into Snowgrave.
+* Ponqueen -- EFFECT UPDATE: Magic: Add Endgame. Burn 18 Pieces in your Dustpile to fill your hand with Ponmen with +3 ATK and Dodge (1).
+* Ponman Statue -- EFFECT UPDATE: Need: 18 or more non-TOKEN Pieces in your dustpile. Magic: Add Ponqueen to your hand.
+* Generous Gifts -- EFFECT UPDATE: Whenever you take DMG during the enemy turn, gain counters equal to DMG taken. When this reaches 10+ counters, spend them to summon a 3/2 Gift.

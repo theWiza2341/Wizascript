@@ -1,0 +1,7 @@
+## Balancing (Monsters)
+* Animals -- HP 5 > 6. {green}
+* The Reflection -- COST 10 > 9. {green}
+* Snowdrake -- HP 3 > 4. {green}
+* Pipis Cannon -- COST 9 > 7. EFFECT UPDATE: Magic: Burn up to 9 Hyperlinks Blocked in the enemy deck. For every 3 burned summon a Pipis with Charge. {green}
+* Chara -- EFFECT UPDATE: Magic: Equip the Genocide artifact and add a Real Knife to your hand. {green}
+* Shovel -- COST 3 > 2. EFFECT UPDATE: Haste. Loop (1). Program (4): If a copy with no Loop is in your hand, burn it to gain +4/+4. {green}

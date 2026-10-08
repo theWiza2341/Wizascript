@@ -1,0 +1,16 @@
+## Balancing (Monsters)
+* Final Froggit -- HP 5 > 6. {green}
+* Decibat -- ATK 2 > 3. HP 4 > 3. {green}
+* Zapper -- EFFECT UPDATE: Taunt. Need: You spent G on spells this turn. Magic: Erase a monster. {green}
+* Chara -- COST 13 > 14. EFFECT UPDATE: Magic: Erase a monster. Start the Genocide route. {green}
+* Pixel Kris -- COST 4 > 5. EFFECT UPDATE: Need: Your deck has no non-Generated Haste or Charge monsters. Magic: Gain ATK equal to the ATK of the monster in front and cast Proceed on it. {yellow}
+* Martlet -- COST 8 > 7. EFFECT UPDATE: Magic: Switch: Deal 7 DMG to the monster in front or deal 1 DMG to all enemies and gain Haste. Bullseye: Return to the top of your deck with -1 base cost. {red}
+* Mettabot Factory -- EFFECT UPDATE: Shock: Program (1). Fill your board with Mettabots. {red}
+* Mace -- EFFECT UPDATE: Magic: Deal 3 DMG to an ally monster to deal 3 DMG to the opponent. {red}
+## Balancing (Spells)
+* Ambush > Royal Signup -- COST 9 > 0. EFFECT UPDATE: Choose a card in your hand. Turn the other cards in your hand into Recruitments. Program (2): Turn them into Drafts instead. {yellow}
+* Laser Pointere -- COST 3 > 4. EFFECT UPDATE: Choose an enemy monster. Adjacent enemy monsters attack it. {red}
+## Balancing (Artifacts)
+* Dealmaker -- EFFECT UPDATE: After an ally non-TOKEN monster costing more than 0 dies, gain a counter. If this has 3, spend them to earn 1 G. {yellow}
+* Dark Fountain -- EFFECT UPDATE: Whenever you play a card you haven't played this game, gain a counter (max 20). When this reaches 20 counters, add 3 non-DT Deltarune monsters with -2/+2/+2 to your deck and turn this into a Dark World. {red}
+* Dark World -- EFFECT UPDATE: Starts with 20 counters. Turn start: Spend 2 counters to add a random non-DT Deltarune monster to your hand with -2/+2/+2. Repeat until your hand is full. {red}

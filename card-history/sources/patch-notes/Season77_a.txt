@@ -1,0 +1,13 @@
+Season 77
+New cards
+* [card] Reporter MTT (cost 7, ATK 5, HP 3, yellow soul): Magic: Return a non-DT ally monster to your hand with -8 cost (except Reporter MTT). Delay: Burn it if it's not on the board.
+## Balancing (Monsters)
+* Microwave -- ATK 2 > 3. {green}
+* Halberd -- ATK 5 > 4. HP 3 > 4. {green}
+* Greater Dog -- ATK 5 > 6. {green}
+* Cybershelf -- EFFECT UPDATE: Magic: Program (2): Look at all spells of the enemy soul. Add one to your hand. Delay: Give it -2 cost. {green}
+* Undyne -- EFFECT UPDATE: Magic: Deal 1 DMG to the lowest HP enemy monster 8 times. Summon a Spear with base stats equal to DMG not dealt. {green}
+* Tombstone -- EFFECT UPDATE: Magic: Summon two different non-Generated Dust monsters from your dustpile costing 7 or less. {green}
+* Wobbly Thing -- COST 3 > 1. ATK 3 > 2. HP 4 > 2. EFFECT UPDATE: Support: Kill this to give 2 random monsters in your hand +1/+1. {yellow}
+## Balancing (Artifacts)
+* Prosperity -- EFFECT UPDATE: Whenever you play a monster with a base cost of 4 or more, heal 1 HP to you. {green}

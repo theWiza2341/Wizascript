@@ -1,0 +1,10 @@
+* [card image] Shi. COST 4. ATK 4. HP 6. Disarmed. Turn start: Switch: Give all other ally monsters +1/+1 or deal 1 DMG to all enemies.
+* [card image] Trial Kris. COST 4. ATK 5. HP 4. Delay: Equip the True Justice artifact and give it a counter for every monster that died this turn.
+* [card image] Green. COST 5. ATK 0. HP 8. Taunt. Need: You and your allies healed 12+ HP this game. Magic: Give all other ally monsters +1/+1 and Candy.
+* [card image] Strengthmeter. COST 5. ATK 1. HP 7. Magic: Gain the ATK of adjacent ally monsters.
+* [card image] Seth. COST 6. ATK 5. HP 5. Need: 3+ monsters with negative effects. Magic: Give all enemy monsters -2/-2.
+* [card image] Terakota Archer. COST 6. ATK 3. HP 4. Magic: Deal DMG to an enemy monster equal to the number of cards in your hand. Bullseye: Summon a 2/3 Green Clover.
+* [card image] Giant Shrubbery. COST 7. ATK 5. HP 7. Taunt. Adjacent Plants have +2/+2.
+* [card image] Mantis Dancer. COST 7. ATK 3. HP 6. Magic: Deal 3 DMG. If it kills, cast Carousel.
+* [card image] Trial Ralsei. COST 7. ATK 5. HP 4. Delay: Summon a 3/3 copy of all non-DT ally monsters that died this turn.
+* [card image] Trial Susie. COST 7. ATK 3. HP 7. Haste. After this attacks and survives, set all monsters' HP to this card's HP and Silence this.

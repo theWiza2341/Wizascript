@@ -1,0 +1,6 @@
+[card] GIGA Punch | cost 0 | An Ally Monster Gains Dodge (1) And Attacks The Highest ATK Enemy Monster.
+[card] Swatch | cost 5 | Taunt. Turn end: If you spent 6+ G on spells this turn, add a copy of this with +1/+1 base stats to your hand. | ATK 3 | HP 7
+[card] GIGA Queen | cost 20 | Taunt. Need: You played 10+ unique TOKEN cards. Magic: Turn all cards in your hand and deck into Giga Attacks and equip GIGA Batteries. | ATK 10 | HP 15
+## Balancing (Monsters)
+* Jigsawry -- HP 4 > 3. ATK 3 > 4. EFFECT UPDATE: Magic: If you control 4 Jigsawrys, give them Dodge (1), Taunt, and Charge. {yellow}
+* Giant Toilet -- EFFECT UPDATE: Taunt. Need: Your hand and deck only have Generated cards and aren't empty. Magic: Your opponent draws all cards in their deck. {yellow}

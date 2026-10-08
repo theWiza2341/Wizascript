@@ -1,0 +1,8 @@
+## Balancing (Spells)
+* Shadow Crystal -- EFFECT UPDATE: Look at all LEGENDARY monsters (except Seam). Choose one. Delay: Add it to your hand. {yellow}
+* Cold Winter -- COST 5 > 6. {red}
+* Powerhouse -- COST 7 > 8. {red}
+* Thundersnail -- EFFECT UPDATE: Summon 4 different 1-cost Snails from your dustpile. Trigger their Magic, give them Haste and Dodge (1). {red}
+## Balancing (Artifacts)
+* Power -- EFFECT UPDATE: At the start of your 4th turn and every 3rd turn after that, gain a counter. After you play a monster, spend a counter to give it +1/+1. {yellow}
+* Will -- EFFECT UPDATE: At the start of the game, add a Recruitment to your hand. At the end of your 7th turn, give all ally monsters +1/+1. {red}

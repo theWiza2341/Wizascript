@@ -1,0 +1,8 @@
+Game updates
+Season 102
+## New cards
+* Hard Hat -- cost 1, rarity green hat. Give a monster Armor.
+* Vengeful Virgil -- cost 2, ATK 2, HP 4, rarity white hat. Haste. Wanted. Bullseye: Make the target's adjacent monsters Wanted.
+* Organ Piano -- cost 5, ATK 3, HP 6, rarity white hat. Taunt. Dust: Add a Lightning Bolt to your hand.
+* Pancakes -- cost 5, ATK 3, HP 5, rarity white hat. Magic: Fully heal a monster and heal the same amount of HP to you.
+* Gilbert -- cost 7, ATK 5, HP 5, rarity purple hat. Armor. Bullseye and Dust: Add a Hard Hat to your hand.

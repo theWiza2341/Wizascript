@@ -1,0 +1,19 @@
+## Balancing (Monsters)
+* Disguised Lancer - COST 7 > 6. {green}
+* Memorial Statue - EFFECT UPDATE: Whenever this attacks a monster, silence it. Magic: If you have equal or less monsters than the opponent, gain Haste. {green}
+* Iconman - COST 6 > 5. EFFECT UPDATE: Magic: Choose a card in your hand. Burn it to add 2 Recruitments to your hand. {green}
+* Cross Bomb -- COST 3 > 4. ATK 2 > 3. HP 2 > 4. EFFECT UPDATE: Dodge (1). Turn start: If there is a monster in front of this, kill this to deal 5 DMG to it and excess to the opponent. {yellow}
+* Stage Lights -- COST 6 > 7. ATK 8 > 3. HP 3 > 7. EFFECT UPDATE: Magic: Silence all enemy monsters. Give them -1/-1. {yellow}
+* Mettaton NEO -- COST 10 > 8. EFFECT UPDATE: Dust: Deal DMG equal to this monster's ATK to all monsters. {yellow}
+* Bone - EFFECT UPDATE: Dodge (1). After this loses a Dodge, give 2 random monsters in the opponent's hand +1/+1. {yellow}
+* Frisk - COST 10 > 11. {red}
+* Ice Crystal - EFFECT UPDATE: Taunt. Magic: Paralyze a monster. Dust: Deal 3 DMG to all enemy monsters. {red}
+## Balancing (Spells)
+* Overgrowth - EFFECT UPDATE: Give all Generated ally monsters +1/+1 wherever they are. Draw a card. {yellow}
+* Punishment - EFFECT UPDATE: Deal 3 DMG to an enemy monster. If you spent G last turn, deal 4 instead. {red}
+* Buttercup Treat - RARITY: [blue soul] > [pink soul] {gray}
+* Petrification - RARITY: [purple soul] > [blue soul] {gray}
+## Balancing (Artifacts)
+* Poke - EFFECT UPDATE: At the start of the game, reduce your opponent's HP by 5. {gray}
+## Misc
+* Player going first no longer gains a gold at the start of the game.

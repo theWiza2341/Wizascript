@@ -1,0 +1,4 @@
+## Balancing (Artifacts)
+* Empty Gun -- EFFECT UPDATE: Turn start and Turn end: Deal 1 DMG to the lowest HP enemy monster. {red}
+## Balancing (Souls)
+* Justice -- EFFECT UPDATE: Turn end: Deal 1 DMG to the lowest HP enemy monster. {red}

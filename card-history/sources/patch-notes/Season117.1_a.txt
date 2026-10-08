@@ -1,0 +1,2 @@
+[card image] Mauswheel. COST 4. ATK 4. HP 4.
+* Loop (1). Magic: Summon 3 Maice with Haste. Give them +1/+1 for each card you spent G on this turn (max. +3/+3).

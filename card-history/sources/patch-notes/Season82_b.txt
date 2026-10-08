@@ -1,0 +1,5 @@
+## Balancing (Artifacts)
+* Seedlings - EFFECT UPDATE: Turn end: Burn 9 non-TOKEN monsters in your Dustpile to summon a Red Flower. {yellow}
+* Dealmaker - EFFECT UPDATE: Whenever a non-TOKEN monster costing more than 0 dies, gain a counter. When this reaches 4, spend them to earn 1 G. {red}
+## Balancing (Souls)
+* Integrity -- Turn end: If you spent more G this turn than last turn, earn 1 G (except turn 1). {green}

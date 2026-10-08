@@ -1,0 +1,21 @@
+## New artifacts
+* Susie's Apron -- At the end of every 4th turn, enchant 2 random empty enemy slots with The Flames.
+## Balancing (Monsters)
+* C-Round -- ATK 1 > 2. HP 1 > 2. {green}
+* Mad Mew Mew -- HP 4 > 5. {green}
+* Cop Undyne -- HP 6 > 7. {green}
+* Tuning Fork -- HP 6 > 7. {green}
+* Werewerewire -- COST 11 > 10. {green}
+* Hopschef -- ATK 3 > 4. {green}
+* Arcade Mew Mew -- ATK 4 > 5. {green}
+* Goner Kid -- COST 8 > 7. {green}
+* Elimination Duck -- COST 12 > 11. {green}
+* Editor 2 -- HP 5 > 6. {green}
+* Mantis Dancer -- COST 7 > 6. HP 6 > 7. {green}
+* Chara -- COST 15 > 14. ATK 10 > 9. HP 10 > 9. {green}
+* Allergic Temmie -- HP 3 > 4. {green}
+* Eggplant Trashbag -- EFFECT UPDATE: Taunt. Magic: Look at 4 BASE spells and choose one. Add it to your hand. {green}
+* Berdly Plush -- EFFECT UPDATE: Need: You have a TOKEN with a base cost of 3+ in your hand. Magic: Give 3 random non-TOKEN cards in your hand -1 cost. {green}
+* Cauldron -- EFFECT UPDATE: Shock: Add a Spincake with Haste to your hand. Give it +1/+1/+1 for every 2 G the spell cost. {green}
+* G Follower 3 -- EFFECT UPDATE: Magic: Look at all other G Followers and add one to your hand. Synergy: Add it to your hand with -1 cost instead. {green}
+* Blackjack -- ATK 5 > 6. EFFECT UPDATE: Delay: Add a Wild Revolver to the top 6 cards of your deck. If a monster died with exactly 0 HP remaining this turn, add it to your hand instead. {yellow}

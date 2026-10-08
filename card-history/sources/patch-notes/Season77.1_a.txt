@@ -1,0 +1,9 @@
+Skt ASS @everyone Undercards is changing its update schedule. From now on the midseason update will only feature hotfixes and nerfs to stronger decks...
+Skt ASS 12/18/2022 7:58 AM
+Midseason 77 balancing update:
+- Librarian will cost 5 (previously 4). This might change in the near future.
+- Tombstone will retain the ability to summon 2 of the same monster if you have 2 of them in your dustpile. The "different" clause will be removed from the text. It's not a bug it's a feature
+- Royal Integrity will no longer be able to target Alphys
+- Whimsalot will no longer draw a monster
+These changes are expected to be live at the next server restart. The Librarian change is already in effect but might not display properly until the restart.
+@Patch Updates

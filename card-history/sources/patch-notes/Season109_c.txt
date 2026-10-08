@@ -1,0 +1,10 @@
+* Zoot Ralsei -- cost 5, ATK 3, HP 3, rarity purple winged soul. After an enemy Wanted monster dies, summon a 3/3 copy of it for you. Magic: Make an enemy monster Wanted and deal 1 DMG to it.
+* Crossganikk -- cost 6, ATK 4, HP 8, rarity white winged soul. Need: You spent G on spells last turn. Magic: Add 2 Dreams to your hand.
+* Guei -- cost 6, ATK 5, HP 5, rarity blue winged soul. Magic: Look at 2 random 1-cost, 2-cost, and 3-cost Dust monsters. Choose one to summon and kill.
+* Jackenstein -- cost 6, ATK 6, HP 6, rarity yellow winged soul. Taunt. Magic: Both players enter a DARK ZONE.
+* Pixel Elnina -- cost 6, ATK 5, HP 3, rarity blue winged soul. Haste. Magic: Summon a Pixel Lanino from your hand or deck.
+* Pixel Lancer -- cost 6, ATK 3, HP 5, rarity purple winged soul. Haste. Delay: Cast Spade on the lowest HP enemy monster.
+* Pixel Lanino -- cost 6, ATK 3, HP 5, rarity blue winged soul. Taunt. Magic: Summon a Pixel Elnina from your hand or deck.
+* Susiezilla -- cost 6, ATK 3, HP 3, rarity green winged soul. In your hand, this has +3 cost for each Susiezilla you played this game. Dodge (1). Magic: Attack all enemy monsters.
+* Treat Catcher -- cost 6, ATK 5, HP 5, rarity blue winged soul. Magic: Catch a non-TOKEN ally monster costing 2+ G to gain Haste, Candy, and +1/+1. Dust: Release it to your hand.
+* Wicabel -- cost 6, ATK 3, HP 8, rarity blue winged soul. Haste. Delay: If its HP is equal to its ATK, gain +2 ATK and fully heal this.

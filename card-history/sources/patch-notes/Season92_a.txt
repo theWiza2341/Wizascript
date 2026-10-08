@@ -1,0 +1,22 @@
+Changes made by elytrafae
+* Stats are now colored in effect descriptions!
+* Irresistible Deal has some extra color now
+* Added Switch Highlights Part 1
+* Added community requested wording changes, including new keywords for Catch and Burn, ironing out inconsistencies etc.
+* More coming soon!
+## Balancing (Monsters)
+* The Reflection -- COST 9 > 8. {green}
+* Tombstone -- COST 12 > 11. {green}
+* Dancer Mettaton -- EFFECT UPDATE: Haste. Whenever this attacks and kills a monster, heal 4 HP to you and summon a Mettabot. {green}
+* Ralsei -- COST 7 > 8. ATK 5 > 6. HP 4 > 5. {yellow}
+* Heats Flamesman -- ATK 2 > 4. EFFECT UPDATE: Turn end: Deal 1 DMG to everything except itself. {yellow}
+* Nubert -- ATK 3 > 4. HP 5 > 6. EFFECT UPDATE: Taunt. Magic: For each unique Tribe in your Dustpile, give +1/+1 to a random monster in your hand. {yellow}
+## Balancing (Spells)
+* Another Chance -- COST 5 > 4. {green}
+* Judgement -- COST 7 > 12. EFFECT UPDATE: Deal DMG split among all enemy monsters equal to your missing HP. {yellow}
+* Load -- COST 12 > 13. {red}
+* Prison Bars -- EFFECT UPDATE: Paralyze an enemy monster. Deal 1 DMG to all other enemies. {red}
+## Balancing (Artifacts)
+* Ultimate Fusion -- EFFECT UPDATE: Starts with 7 counters. At the start of every even turn until turn 15, send the rightmost card in your hand to the top of your deck and add the next Thrashing Part to your hand (from lowest to highest cost). Whenever you summon a Thrashing Part (except all tribes) for the first time, spend 1 counter. Turn end: If this has 0 counters, add Final Gambit! to the top of your deck and disable this. {green}
+* Vitality > Spike Band -- EFFECT UPDATE: After you take DMG, if you have 10 or less HP, deal 3 DMG to all enemies and disable this artifact. {yellow}
+* Adrenaline -- EFFECT UPDATE -- Starts with 5 counters. Turn end: If you have less than 4 cards in hand, spend a counter to draw a card. Repeat until you have 4 or more cards in hand. {red}

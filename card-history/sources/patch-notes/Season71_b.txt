@@ -1,0 +1,18 @@
+* Fox Head -- EFFECT UPDATE: Magic: Deal 1 DMG to the leftmost and rightmost living enemy monsters. {green}
+* Spamton NEO -- EFFECT UPDATE: Taunt. Magic: Give your opponent FREE KROMER. {green}
+* Iconman -- EFFECT UPDATE: Magic: Look at 3 random other Deltarune monsters costing 4-6 G. Burn one to add the other 2 to your hand with +1 HP. {green}
+* Cyber Tree -- EFFECT UPDATE: Delay: Give +1/+1 to all other Generated ally monsters. Program (1): Repeat. {green}
+* Red House -- EFFECT UPDATE: Taunt. Dust: Heal 2 HP to you. {green}
+* Dogamy -- COST 7 > 6. ATK 4 > 5. HP 3 > 6. EFFECT UPDATE: Magic: If you have an ally Dogaressa, give this and all ally Dogs on board and hand +1/+1. {yellow}
+* Dogaressa -- COST 7 > 6. ATK 3 > 6. HP 4 > 5. EFFECT UPDATE: Magic: If you have an ally Dogamy, gain +2/+3, Taunt, and +1 Dodge. {yellow}
+* Royal Guard 2 -- EFFECT UPDATE: Dust: Give 4 random Royal Guards in your hand -2 cost. {red}
+* Royal Papyrus -- EFFECT UPDATE: Haste. Magic: Give Taunt to all monsters with 9 or more base cost in your hand and deck. {red}
+* Casual Guard 1 -- EFFECT UPDATE: Magic: Draw a Royal Guard with Dust. Trigger it. If this is your only monster, gain Haste. {red}
+* Casual Guard 2 -- EFFECT UPDATE: Transparency. In your hand, this has -3 cost if you played a monster with a base cost of 9 or more G this turn. {red}
+* Nice Cream Guy -- COST 4 > 5. HP 4 > 5. {red}
+## Balancing (Spells)
+* Petrification -- EFFECT UPDATE: Kill an enemy monster. Summon a Petrified Monster for your opponent. {green}
+* Instant Noodles -- COST 12 > 10. {green}
+* Cloning -- COST 7 > 4. EFFECT UPDATE: Summon a 3/3 exact copy of a non-DT monster. If it can't attack, give it Haste. {yellow}
+* Fortune -- EFFECT UPDATE: Delay: Earn 5 G. {yellow}
+* Puzzle Box -- COST 2 > 3. {red}

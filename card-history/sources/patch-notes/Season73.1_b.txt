@@ -1,0 +1,12 @@
+## Balancing (Spells)
+* Feast -- COST 4 > 2. EFFECT UPDATE: Give a monster -1/-1. Delay: If it's dead, give all ally monsters +1/+1. {yellow}
+* Force of Nature -- COST 1 > 3. EFFECT UPDATE: Deal 3 DMG. Give excess DMG as HP to all allies. {yellow}
+* Royal Justice -- COST 4 > 2. EFFECT UPDATE: Add 1 of every non-TOKEN JUSTICE spell you cast this game to your hand. They cost 1 less. {yellow}
+* Undyne's Spears -- EFFECT UPDATE: Summon two Spears. They attack the lowest-ATK enemy monster(s). Program (8): Set their stats to 8/8 first. {yellow}
+* Energizer -- COST 1 > 3. EFFECT UPDATE: Give all ally monsters +1 ATK. Deal 1 DMG to all enemy monsters. {yellow}
+* Multi Shot -- COST 1 > 4. EFFECT UPDATE: Delay: Add the True Justice artifact. If you have it, trigger its Turn end until it has no counters, then add six. {yellow}
+## Balancing (Artifacts)
+* True Justice -- EFFECT UPDATE: Starts with 6 counters. Turn end and Shock: Spend a counter to deal 1 DMG to the lowest HP enemy monster. If you have less HP than the opponent, deal 1 DMG to them too. {yellow}
+* Draw -- EFFECT UPDATE: At the start of the game and every 6 turns, draw a card unless your hand is full. {yellow}
+* Glamburger -- EFFECT UPDATE: At the start of the game, earn 1 G. {red}
+* Thorn Ring -- EFFECT UPDATE: Whenever you cast a spell, gain counters equal to its cost. Turn end: If this has 10+ counters, spend all counters to summon an Ice Crystal. {red}

@@ -1,0 +1,11 @@
+Skt 9/16/2023 3:51 AM
+The midseason is here!
+* Spider Reporter ATK 4 > 3.
+* Void Laser COST 4 > 6.
+* MTT Fountain COST 5 > 6.
+* Ambush COST 9 > 10.
+* Reload COST 5 > 4.
+* Worsening COST 4 > 5. (rounded down) -> (rounded up)
+* Faded Memory - Look at all non-TOKEN Dust monsters...
+* Papyrus - Haste > Charge. (edited)
+@Patch Updates

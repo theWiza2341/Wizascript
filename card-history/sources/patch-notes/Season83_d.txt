@@ -1,0 +1,1 @@
+[card] Dusty Chest | cost 4 | Magic: Burn up to 9 monsters in your Dustpile. Draw a card for each 3 burned. | ATK 3 | HP 4

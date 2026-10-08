@@ -1,0 +1,11 @@
+Mid season
+## Balancing (Monsters)
+* Woshua -- HP 4 > 5
+* Ice -- COST 4 > 3. ATK 1 > 2. HP 6 > 4.
+* Noellecoaster -- COST 2 > 1.
+* Chaos Bomb -- COST 5 > 0.
+* Mirror -- ATK 6 > 5.
+* Mister Ruckus -- HP 5 > 6.
+* Mercenary Hire -- COST 10 > 8. EFFECT UPDATE: Summon copies of your non-DT monsters on the board. Delay: Add any that didn't fit to your hand with -1 cost.
+* Totem -- EFFECT UPDATE: Need: 7+ 7-cost or 7-HP monsters in your Dustpile. Magic: Burn 5 of them to add Totemic Carvings to your hand.
+* Noelle -- EFFECT UPDATE: Need: You've cast 4 different spells (min. 1 G) this game. Magic: Cast the most expensive spell in your deck on the monster in front (max. 10 cost).

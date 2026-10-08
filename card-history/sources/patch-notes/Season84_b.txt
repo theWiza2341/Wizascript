@@ -1,0 +1,18 @@
+## Balancing (Spells)
+* Vegetoid -- EFFECT UPDATE: Turn start: Restore 5 HP to its owner. {yellow}
+* Reload -- COST 2 > 5. EFFECT UPDATE: Give all non-TOKEN spells in your hand +1 Loop (except Reload). {yellow}
+* Vasebreaker -- COST 4 > 2. EFFECT UPDATE: Loop (1). Deal 1 DMG to an enemy monster. If it died, summon a Vase. {yellow}
+* Feast -- COST 3 > 5. EFFECT UPDATE: Give all ally monsters with 3 or less HP +2 HP. Delay: Give all ally monsters with 3 or less ATK +2 ATK. {yellow}
+* Worm Infusion -- COST 9 > 3. EFFECT UPDATE: Turn a non-DT monster into a Worm with the same stats. {yellow}
+* Resurrection -- COST 2 > 1. EFFECT UPDATE: Look at 3 non-Generated monsters in your Dustpile. Choose one to burn and add a copy of it to your hand. {yellow}
+* Another Chance -- EFFECT UPDATE: Kill all ally non-DT monsters. Delay: Summon them again. {yellow}
+* Brain Shift > Aftermath -- COST 4 > 2. EFFECT UPDATE: Summon 2 1/1 enemy Piles of Dust. {yellow}
+* Control Wire -- COST 6 > 2. EFFECT UPDATE: Look at all non-DT monsters in your opponents hand and choose one to copy to your hand. {yellow}
+* Call for Help -- COST 3 > 6. EFFECT UPDATE: Summon a copy of the last ally non-DT monster that died this game. {yellow}
+* Totemic Carvings -- EFFECT UPDATE: Look at 6 random different 6-cost monsters (except Totem). Choose one to add to your hand and set its cost to 0. {yellow}
+* Pile of Dust -- EFFECT UPDATE: Dust: Give +2/+2 to its killer. Turn end: Die. {yellow}
+* Campfire -- EFFECT UPDATE: Heal 3 HP randomly split among all ally monsters. Give 3 random monsters in your hand +1/+1. {red}
+* Froggit Trio -- EFFECT UPDATE: Summon 2 Froggits with Haste. Delay: If both are dead, add one to your hand with -1 cost. {red}
+* Royal Perseverance -- EFFECT UPDATE: Kill all enemy monsters under KR. Give all enemy monsters KR. {red}
+## Balancing (Artifacts)
+* Seedlings -- EFFECT UPDATE: Turn end: Burn 6 non-TOKEN monsters in your Dustpile to summon a Red Flower. {green}

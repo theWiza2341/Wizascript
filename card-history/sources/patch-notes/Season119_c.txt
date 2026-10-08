@@ -1,0 +1,7 @@
+## Balancing (Artifacts)
+* Evil Plan -- EFFECT UPDATE: The first time your hand is empty after playing a card, add all Thrashing Parts to your hand with -1 cost and disable this. If you have Ultimathrash at the start of the game, transform into Ultimate Fusion. {green}
+* Spike Band -- EFFECT UPDATE: After you take DMG and have 15 or less HP remaining, disable this and deal 3 DMG to all enemy monsters. Excess DMG is healed back to you. {green}
+* Thorn Ring -- EFFECT UPDATE: Shock: If the spell was non-TOKEN, gain a counter. Turn start: Spend 8 counters to earn 10 G. {red}
+## Balancing (Board Slots)
+* Incinerator -- EFFECT UPDATE: Starts with 5 counters. After a monster is played on this slot, if there is another ally monster, kill the monster played here to give a random ally monster +1/+1 and lose a counter. At 0 counters, this effect expires. {yellow}
+* Scattering Dust -- EFFECT UPDATE: This has 2 counters. After a monster dies on this slot (except Pile of Dust) during the enemy's turn, summon a Pile of Dust and lose a counter. Expires at 0 counters. {red}

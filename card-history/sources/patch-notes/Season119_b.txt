@@ -1,0 +1,20 @@
+## New artifact
+* Pixel Camera -- Turn end: If your board is full, add copies of all non-DT ally monsters to your deck with -1 cost and disable this.
+## Balancing (Monsters)
+* Queen -- COST 11 > 10. {green}
+* Meta Flowey -- COST 11 > 10. {green}
+* Pink Crystals -- COST 4 > 3. HP 4 > 3. {green}
+* Manticore -- COST 6 > 5. ATK 5 > 4. {green}
+* Pile of Dust -- ATK 2 > 0. {green}
+* Wall of Fire -- COST 9 > 8. {green}
+* Lancer -- EFFECT UPDATE: Enemy monsters take +2 DMG from spells. Magic: Add 2 Spades to your hand with -1 cost. {green}
+* Jogboy Papyrus -- COST 8 > 10. EFFECT UPDATE: Magic: Enchant all enemy slots with Blue Bones. {yellow}
+* Catti -- COST 3 > 2. ATK 3 > 2. EFFECT UPDATE: After you summon a monster, deal 1 DMG to a random enemy monster. {yellow}
+* Fire-E -- ATK 3 > 5. HP 6 > 3. {yellow}
+* Fire Chimney -- HP 3 > 2. {red}
+* Dunebud -- EFFECT UPDATE: Shock: Summon a Dunebud. Turn end: Lose this Shock. {red}
+* Tall Miner -- EFFECT UPDATE: Shock: If the spell wasn't a Crystal Shard, add one to your hand. {red}
+## Balancing (Spells)
+* Aftermath -- COST 3 > 2. {green}
+* Ice Shock -- COST 2 > 3. EFFECT UPDATE: Deal 2 DMG to a monster. If it killed, Paralyze the adjacent ones. {yellow}
+* Worm Infusion -- EFFECT UPDATE: Turn a non-DT ally monster into a Worm with the same stats. {red}

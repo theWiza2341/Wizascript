@@ -1,0 +1,21 @@
+## Balancing (Monsters)
+* Hot Dog Vulkin -- HP 6 > 7. {green}
+* MTT Fountain -- COST 6 > 5. {green}
+* Sword Emblem -- ATK 5 > 6. {green}
+* Wig Person -- HP 2 > 3. {green}
+* Zenith Martlet -- COST 15 > 12. {green}
+* Coffee Man -- COST 8 > 7. ATK 6 > 5. {green}
+* DT Extractor -- COST 13 > 10. ATK 13 > 10. HP 13 > 10. {green}
+* Ralsei Dummy -- ATK 2 > 3. HP 3 > 2. {green}
+* Snowdrake's Mom -- Now has Plant tribe. {green}
+* Gyftrot -- EFFECT UPDATE: Taunt. Magic: Draw up to 2 cards. {green}
+* Knight Knight -- EFFECT UPDATE: After this attacks and survives, heal this by the amount of DMG dealt. {green}
+* Noellecoaster -- EFFECT UPDATE: Has +1 cost in hand for each spell you cast (min 2 G). Magic: Gain +1/+1 for each and look at 3 spells with equal cost. Cast one on the monster in front. {green}
+* Shambling Mass -- ATK 3 > 4. HP 6 > 5. EFFECT UPDATE: Magic: Kill an ally monster to gain Haste and Armor. {yellow}
+* Angel Doll -- COST 5 ATK 3 > 5. HP 3 > 5. EFFECT UPDATE: Dust: Give all allies +2 HP. {yellow}
+* Rapstablook -- EFFECT UPDATE: Turn start: Die to deal 3 DMG to all enemies. {yellow}
+* River Boat -- EFFECT UPDATE: Magic: Draw up to 3 cards. Delay: Send any still in your hand back to your deck. {yellow}
+* Tasque -- EFFECT UPDATE: Haste. Magic: Gain +1/+1 for each other card with a base cost of 1 or more you played this turn. {yellow}
+* Mane Ax -- ATK 7 > 5. HP 5 > 6. {red}
+* Purple Mascot -- EFFECT UPDATE: Magic: Give all enemy monsters KR. Program (2): Give them -1/-1 (min. 1 HP). {red}
+* Whimsalot -- COST 3 > 4. HP 4 > 5. {red}

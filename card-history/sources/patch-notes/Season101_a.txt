@@ -1,0 +1,12 @@
+Season 101
+## New cards
+* Arcade Bat -- cost 2, ATK 2, HP 3, rarity green hat. Wanted.
+* Arcade Samurai -- cost 6, ATK 7, HP 8, rarity purple hat. Haste. Magic: Summon two Arcade Bats for the opponent.
+## Balancing (Monsters)
+* Bridge Seed -- ATK 0 > 1. {green}
+* Void Laser -- COST 6 > 5. {green}
+* Game Bomb -- HP 5 > 4. EFFECT UPDATE: Armor. Whenever this takes DMG, summon a Dynamite Stick. {yellow}
+* Jerry -- EFFECT UPDATE: Taunt. This takes 1 less DMG from monsters costing 4 or less G. {yellow}
+* Magic Lantern -- EFFECT UPDATE: Magic: If you have 4+ cards in your dustpile, Burn 4 of them to deal 4 DMG. {yellow}
+* Snowman -- ATK 3 > 4. HP 4 > 3. EFFECT UPDATE: Dust: Add a copy of this to your hand with -1 base cost and -1 base HP. {yellow}
+* Spike Trap -- EFFECT UPDATE: Taunt. Whenever this takes DMG during the enemy turn, give a random other ally monster +1/+1. {yellow}

@@ -1,0 +1,11 @@
+Game updates
+Season 100
+## New cards
+[card] Dual | cost 1 | Add a Quick Draw to both players' hands. Yours costs 0.
+[card] Quick Draw | cost 1 | Make a monster Wanted and deal 3 DMG to it. Bullseye: Draw a card.
+[card] Fake Train | cost 2 | Haste. Bullseye: Summon a copy of this with +2 ATK (keeps buffs). Turn end: Lose this Bullseye. | ATK 1 | HP 5
+[card] Bounty | cost 3 | Make 2 random enemy monsters Wanted. Delay: If both are dead, give 4 random monsters in your hand +1/+1.
+[card] Sandstorm | cost 3 | Deal 1 DMG to all enemy monsters. Repeat for each other card costing 1 or more you played this turn.
+[card] Reminisce | cost 6 | Look at 3 different non-TOKEN Dust monsters in your dustpile (max. 6 cost). Choose one to summon with Haste.
+[card] Oasis | cost 7 | Send your hand to your deck. Add 6 Change of Winds to your hand. Delay: Burn any still in your hand to heal 3 HP for each.
+[card] Trolley Problem | cost 7 | Summon a Fake Train.

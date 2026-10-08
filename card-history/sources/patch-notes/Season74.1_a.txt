@@ -1,0 +1,3 @@
+New cards
+* [card] Lanoer's Bike Bed (cost 2, ATK 2, HP 3, [icon]): Whenever you draw a monster, give it +1 ATK.
+* [card] Ruins Tree (cost 8, ATK 3, HP 7, purple soul): Candy. Turn end: Heal this monster's HP to you.

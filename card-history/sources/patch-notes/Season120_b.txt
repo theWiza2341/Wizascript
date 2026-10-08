@@ -1,0 +1,10 @@
+## Ranked rework
+* The ladder is now split into 2 different matchmaking modes. The goal is to make the grind less frustrating for beginners and revive high ranks.
+* Entry ranks: You are matched with opponents close to your MMR, and your progression is no longer reset at the end of the season.
+* High ranks: You are only matched with high-rank players (or diamonds), matchmaking is instant, and you can no longer drop to entry ranks. However, your progress is reset at the end of the season, so if your MMR is too low when the season ends, you can go back to entry ranks.
+* Entry rank icons: [icon] COPPER [icon] IRON [icon] GOLD [icon] EMERALD [icon] DIAMOND
+* High rank icons: [icon] MASTER [icon] HIGH MASTER [icon] ULTIMATE MASTER [icon] LEGEND
+* Ranked rewards have been significantly increased, but end-of-season rewards have been decreased to compensate.
+* Board color now reflects your current rank instead of your past rank.
+* Added a rank icon in chat that reflects your current rank.
+* Removed old Master and old Legend chat icons.

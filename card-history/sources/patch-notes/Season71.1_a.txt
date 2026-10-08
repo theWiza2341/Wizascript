@@ -1,0 +1,23 @@
+Mid Season 71
+## Balancing (Monsters)
+* Dancer Mettaton -- ATK 3 > 4. {green}
+* Laser Topper -- ATK 2 > 1. HP 2 > 4. {green}
+* Coffee Man -- ATK 5 > 6. {green}
+* Carnival Tent -- COST 7 > 6. {green}
+* Astigmatism -- COST 7 > 6. HP 6 > 5. {green}
+* Hot Dog Harpy -- HP 4 > 5. {green}
+* Hanging Plug -- COST 6 > 5. HP 5 > 4. {green}
+* River Person -- COST 8 > 7. {green}
+* Worm -- COST 0 > 2. ATK 0 > 2. {green}
+* Petrified Monster -- EFFECT UPDATE: Disarmed. Turn end: Die. Dust: Deal 2 DMG to all allies.
+* Traffic Car -- EFFECT UPDATE: Taunt. Whenever this kills a monster, deal 1 DMG to all enemy monsters. {green}
+* Mister Ruokus -- EFFECT UPDATE: Taunt. Magic: Switch: Set a monster's stats to 3/3 or deal 3 DMG to it. {green}
+* Round Devices -- EFFECT UPDATE: Taunt. Magic: Swap the ATK and HP of all other monsters. {yellow}
+* Jar of Worms -- COST 4 > 5. ATK 2 > 3. EFFECT UPDATE: Magic: Summon a Worm. If you spent G on spells last turn, summon another. {yellow}
+* Burning Snail -- ATK 2 > 1. EFFECT UPDATE: Haste. Magic: Gain +1 ATK for every other ally Snail. {yellow}
+* Blue Snail -- HP 1 > 2. EFFECT UPDATE: Magic: Give a random 1-cost Snail in your hand -1 cost. {yellow}
+* Snail Pen -- HP 3 > 2. No longer a Snail. EFFECT UPDATE: Magic: Add an exact copy of each base 1-cost ally Snail to your hand. {yellow}
+* Snail Trainer -- EFFECT UPDATE: Need: 2 or more ally Snails. Magic: Add Thundersnail to your hand. {yellow}
+* Business Snail -- EFFECT UPDATE: Whenever an ally Snail dies, earn 1 G and draw a card. {yellow}
+* Shovels x999 -- EFFECT UPDATE: Magic: Fill both players' hands with Shovels. {yellow}
+* Snoelle -- COST 3 > 4. {red}

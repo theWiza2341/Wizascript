@@ -1,0 +1,24 @@
+## Balancing (Monsters)
+* Hanging Plug -- ATK 2 > 3. {green}
+* Hammer of Justice -- COST 12 > 11. {green}
+* Violetta -- EFFECT UPDATE: Haste. Magic: Add a Blue Rose to your hand. Give it -1 cost for each other ally monster. {green}
+* Evil Blueprints -- EFFECT UPDATE: Magic: Add a Thrashing Machine to your hand. {green}
+* Snail Pen -- EFFECT UPDATE: Magic: Add an exact copy of each ally Snail to your hand. {green}
+* Echo Fish -- EFFECT UPDATE: Magic: Copy an enemy monster's current ATK, HP, Taunt, Candy, Charge, Haste, Darkspawn, Dodge, and Transparency. {green}
+* Rock Poster -- EFFECT UPDATE: Shock: Add a random spell of your SOUL that you haven't cast this game to your hand. If you cast them all, add a Rock Chord. {green}
+* Pixel Lizard -- EFFECT UPDATE: Turn end: If you spent G on TOKEN cards (except Lightning Bolt) this turn, add a Lightning Bolt to your hand. {green}
+* Game Bomb -- HP 4 > 3. {red}
+* Maus Hand -- COST 3 > 4. ATK 3 > 4. HP 3 > 4. {red}
+* Titan Fuzzy -- COST 2 > 3. ATK 2 > 3. HP 2 > 3. {red}
+## Balancing (Spells)
+* Powerhouse -- EFFECT UPDATE: Draw up to 2 cards and give all cards in your hand -1 cost. {green}
+* Soul Drain -- EFFECT UPDATE: Loop (1). Deal 3 DMG to a monster. Delay: Erase the copy from your hand to heal 4 HP to you. {green}
+* Rage -- EFFECT UPDATE: Deal an ally monster's ATK as DMG to the monster in front of it. Give the ally monster +1/+1. {green}
+* Food Stack -- COST 3 > 2. EFFECT UPDATE: Erase the copy. Deal 3 DMG to a random enemy monster. Repeat for every Loop this has. {red}
+## Balancing (Artifacts)
+* Odd Controller -- EFFECT UPDATE: Starts with 1 counter. Turn start: Gain a counter. Turn end: For each counter, give +1/+1 to a random ally monster. If you played less monsters this turn than the amount of counters, disable this. {green}
+## Name changes
+* Scissor Dancer -> Sheary
+* Striped Bird -> Normal NPC
+* Green Flower -> Green Clover (is now UT rarity)
+* Blue Flower -> Blue Rose

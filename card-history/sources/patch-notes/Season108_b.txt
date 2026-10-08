@@ -1,0 +1,8 @@
+## Balancing (Spells)
+* Dual -- EFFECT UPDATE: Add a Quick Draw to both players' hands. {red}
+* Feast -- COST 4 > 5. {red}
+## Balancing (Artifacts)
+* Freedom -- EFFECT UPDATE: After you cast a non-TOKEN spell of another SOUL you haven't cast this game, gain a counter. Turn start: Spend 7 counters to add Chaos Bomb to your hand. {yellow}
+* Seam's Seap -- EFFECT UPDATE: After you play a card and have 0 G, gain a counter (once per turn). Turn start: Spend 2 counters to add a Shadow Crystal to your hand. {green}
+* Hourglass -- EFFECT UPDATE: Starts with 5 counters. After you spend G on a Generated card, lose a counter. At 0 counters, add a Time Warp to your hand and reset the counters back to 5. {red}
+* Veteran -- RARITY: Common > Legendary. {red}

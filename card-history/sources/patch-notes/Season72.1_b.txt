@@ -1,0 +1,16 @@
+## Balancing (Monsters)
+* Goner Clam -- COST 5 > 4. {green}
+* Cop Undyne -- HP 5 > 6. {green}
+* Broken Pillar -- COST 5 > 4. {green}
+* Receptionist 2 -- ATK 2 > 3. HP 5 > 4. {green}
+* G Follower 1 -- COST 3 > 2. ATK 3 > 2. HP 3 > 2. {green}
+* G Follower 3 -- EFFECT UPDATE: Magic: Look at 2 random G Followers and add one to your hand. Synergy: Add both with -1 cost instead. {green}
+* Memorial Statue -- EFFECT UPDATE: Whenever this attacks a monster, Silence it. Magic: If you have less monsters than your opponent, gain Haste. {green}
+* Flower Can -- EFFECT UPDATE: Dust: Add 2 Green Flowers with Haste to your hand. Synergy: Gain Haste. {green}
+* Flower Jar -- ATK 3 > 2. EFFECT UPDATE: Magic: Catch Green Flower. Program (2): Catch Red Flower, then spend 2 G to catch a Blue Flower. Dust: Release it. {yellow}
+* Dark Ponman -- EFFECT UPDATE: Magic: Switch: Add 3 Ponmen to your hand or give all Ponmen in your hand and board +1/+1. {yellow}
+* Ragel -- COST 2 > 3. Synergy: Add Mushroom Dance to your hand. Delay: Burn it. {yellow}
+* Ambyu-Lance -- COST 3 > 6. ATK 2 > 5. HP 3 > 6. EFFECT UPDATE: Magic: If you have less than 15 HP, gain +1 ATK and Haste. If you have less than 10 HP, gain Candy and Taunt. {yellow}
+* Burger Bush -- ATK 1 > 3. EFFECT UPDATE: Transparency. Turn start: Gain 1 G for each ally Plant. {yellow}
+## Balancing (Spells)
+* Will to Fight -- COST 3 > 2. EFFECT UPDATE: Trigger the Dust effect of the next Lost Soul. Delay: Repeat. {yellow}

@@ -1,0 +1,17 @@
+## Balancing (Spells)
+* Crime Scene -- COST 8 > 7. {green}
+* Campfire -- COST 3 > 2. {green}
+* Ultimate Heal -- COST 4 > 2. {green}
+* Cloning -- [magenta soul] > [white soul]. COST 4 > 7. EFFECT UPDATE: Summon two copies of a non-DT monster. Set their base stats to 3/3. {yellow}
+* Fortune -- COST 2 > 4. EFFECT UPDATE: Loop (2). Delay: Earn 4 G and give the copy -1 cost. {yellow}
+* Expulsion -- COST 5 > 6. EFFECT UPDATE: Send a monster to the top of its owner's deck. If it's an ally, earn 6 G. {yellow}
+* Wereform -- COST 7 > 5. EFFECT UPDATE: Choose an ally non-DT monster. Summon a Werewire that catches it. {yellow}
+* Break > Mercenary Hire -- [white soul] > [magenta soul]. COST 0 > 6. EFFECT UPDATE: Summon the cheapest non-DT monster from your deck. If it costs 6 or less G, give it Haste. Else, Paralyze it. {yellow}
+* Dispatch > Silly Strings -- COST 1 > 12. EFFECT UPDATE: Kill an enemy non-DT monster. Add a copy to the top of your deck that costs 1. {yellow}
+* Final Gambit -- COST 7 > 13. {red}
+* Hyper Goner -- COST 11 > 13. {red}
+## Balancing (Artifacts)
+* Save -- EFFECT UPDATE: Whenever a monster dies (except Lost Souls), increase the counter by 1. Turn end: Spend 7 counters to summon the next Lost Soul with 1/1 base stats. If your board is full, trigger its Dust effect instead. Lost Soul order: Lost Alphys > Lost Papyrus > Lost Undyne > Lost Toriel > Lost Asgore > Lost Sans > Loop back to Lost Alphys. {green}
+* Prosperity -- EFFECT UPDATE: Whenever you play a monster, heal 1 HP to you for every 4 G its base cost is. {green}
+## Balancing (Souls)
+* Integrity -- EFFECT UPDATE: Turn end: Earn 1 G for every 5 G you spent this turn (max: 2). {green}

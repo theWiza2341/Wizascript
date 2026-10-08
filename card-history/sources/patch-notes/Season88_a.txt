@@ -1,0 +1,7 @@
+Season 88
+## New cards
+[card] Detachable Hands | cost 0 | Add one of each Giga Attacks to your hand and deck.
+[card] GIGA Balls | cost 0 | Summon 2 GIGA Baseballs.
+[card] GIGA Baseball | cost 0 | Taunt. Haste. Turn start: Die to deal 2 DMG to all enemies. | ATK 4 | HP 4
+[card] GIGA Glass | cost 0 | An Ally Monster Steals 3 HP From All Enemy Monsters.
+[card] GIGA Kick | cost 0 | An Ally Monster Attacks A Random Enemy Monster. Excess DMG Is Dealt To The Enemy.

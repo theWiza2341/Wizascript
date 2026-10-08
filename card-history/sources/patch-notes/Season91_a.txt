@@ -1,0 +1,29 @@
+## Balancing (Monsters)
+* Asriel -- COST 7 > 6 {green}
+* Mew Mew Wand -- HP 5 > 6 {green}
+* Crystal Cheese -- ATK 3 > 4 {green}
+* Wheelvil -- COST 4 > 3. HP 7 > 6 {green}
+* The Barrier -- EFFECT UPDATE: Taunt. Magic: Deal DMG to the opponent equal to half the amount of monsters in both dustpiles. {green}
+* Lab Sign -- COST 11 > 9. ATK 3 > 9. HP 3 > 9. EFFECT UPDATE: Magic: Shuffle your hand into your deck. Add every unique Amalgamate from your Dustpile to your hand and give them -1/+1/+1. {yellow}
+* DT Extractor -- COST 9 > 13. HP 9 > 13. ATK 9 > 13. EFFECT UPDATE: Magic: Swap your deck and Dustpile. If your Dustpile had more cards, take DMG and lose max HP equal to the difference. {yellow}
+* Giant Toilet -- COST 40 > 30. ATK 1 > 9. HP 1 > 9. EFFECT UPDATE: Taunt. Need: You have no other cards in your hand or deck. Magic: Gain +90/+90 and Charge. {yellow}
+* Red Bird -- HP 3 > 4. EFFECT UPDATE: Magic: Turn a monster into a random other monster of the same cost. {yellow}
+* GIGA Baseball -- EFFECT UPDATE: Taunt. Turn start: Die to heal 3 HP to all allies and deal 2 DMG to all enemies. {yellow}
+* Butler Ralsei -- COST 5 > 4. EFFECT UPDATE: Support: Program (1): Give the attacker +2 HP and trigger the Shook. Shook: Give +2 HP to you. {yellow}
+* Hathy -- HP 6 > 5 {red}
+* Politician Bear -- HP 4 > 3 {red}
+* Shyren's Agent -- EFFECT UPDATE: Magic: Heal 7 HP to an ally monster. Excess healing is dealt as DMG to the monster in front of this. {red}
+* Oni -- EFFECT UPDATE: Need: A non-TOKEN spell of another SOUL in your hand. Magic: Summon a Charles. {red}
+* Giga Queen -- COST 15 > 17 {red}
+## Balancing (Spells)
+* Assault -- COST 1 > 0 {green}
+* Load -- COST 14 > 12 {green}
+* Powerhouse -- COST 9 > 8 {green}
+* Feast -- EFFECT UPDATE: Give all ally monsters with 4 or less HP +2 HP. Delay: Give all ally monsters with 4 or less ATK +2 ATK. {green}
+* GIGA Glass -- EFFECT UPDATE: Kill An Enemy Monster. {yellow}
+* True Self -- COST 6 > 7 {red}
+* Detachable Hands -- EFFECT UPDATE: Add one of each tribe-giga-attack:2 to your hand. {red}
+* GIGA Kick -- EFFECT UPDATE: An Ally Monster Attacks A Random Enemy Monster. Excess DMG Is Dealt To The Enemy. (Max: 7) {red}
+* GIGA Punch -- EFFECT UPDATE: An Ally Monster Gains Dodge (1) And Attacks The Lowest ATK Enemy Monster. {red}
+## Balancing (Artifacts)
+* GIGA Batteries -- EFFECT UPDATE: You are immune to Fatigue. Turn start: If there's no ally GIGA Queen, gain a counter to summon one and add Detachable Hands to your hand, or two if this has a counter. At 2 counters disable this artifact. {yellow}

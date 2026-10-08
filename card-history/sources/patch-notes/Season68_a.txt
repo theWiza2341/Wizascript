@@ -1,0 +1,17 @@
+Season 68
+New cards
+* [white soul] Book Register | COST 3 | ATK 3 | HP 3 | Magic: If you have a spell from a different Soul in your hand, deal 3 DMG to a monster.
+* [green soul] Ponqueen | COST 5 | ATK 7 | HP 7 | Magic: Burn 11 Ponmen in your dustpile to fill your hand with Ponmen. Switch: Give them +1 Dodge or give them +3 HP. Delay: Add Endgame artifact.
+* [blue soul] The Manual | COST 5 | ATK 5 | HP 5 | Magic: Look at 3 different spells you've cast this game from other Souls. Add one to your hand with -2 cost.
+* [blue soul] Mister Ruokus | COST 8 | ATK 6 | HP 6 | Taunt. Magic: Switch: Set a monster's stats to 4/3 or deal 3 DMG to it.
+## Balancing (Monsters)
+* Rudolph -- COST 5 > 4. {green}
+* Queen -- COST 12 > 11. {green}
+* Dimensional Box -- ATK 3 > 4. HP 3 > 4. {green}
+* Mad Dummy -- COST 12 > 11. {green}
+* Snowdin Sign -- EFFECT UPDATE: Need: You spent G on spells last turn. Magic: Look at 3 random different RARE spells. Add one to your hand with -1 cost. {green}
+* Microwave -- EFFECT UPDATE: Taunt. Magic: Burn a card in your hand. {green}
+* Small Plug -- EFFECT UPDATE: Haste. Taunt. Magic: Switch: Give a Plug in your hand Haste or give it Taunt. {green}
+* Ponman -- COST 3 > 1. ATK 2 > 1. HP 3 > 1. EFFECT UPDATE: Haste. Magic: Switch: Deal 1 DMG to random enemy monster or heal 2 HP to you. {yellow}
+* Dark Ponman -- COST 3 > 4. EFFECT UPDATE: Haste. Magic: Switch: Draw a Piece with +1/+1 or add 3 Ponmen to your hand. {yellow}
+* Chessboard -- COST 3 > 4. ATK 3 > 2. HP 3 > 6. EFFECT UPDATE: Taunt. Magic: Summon a Ponman for each 3 Pieces in your dustpile. {yellow}

@@ -1,0 +1,10 @@
+* Spamton Poster -- ATK 4 > 3. HP 3 > 4. {yellow}
+* Chaos Blaster -- COST 5 > 4. ATK 6 > 5. HP 6 > 5. {yellow}
+* Toy Block -- ATK 5 > 6. HP 4 > 3. {yellow}
+* Shyren's Agent -- COST 6 > 7. HP 4 > 7. EFFECT UPDATE: Magic: Heal 7 HP to a damaged monster. Deal excess healing as DMG to the monster in front of this. {yellow}
+* Dark Ponman -- COST 3 > 4. {red}
+* Mirror -- EFFECT UPDATE: Haste. Whenever this attacks and kills a monster, catch it. Dust: Release an ally copy of it with the same base stats as this. {red}
+## Balancing (Spells)
+* Powerhouse -- COST 7 > 5. EFFECT UPDATE: Draw 2 cards. Give all cards in your hand -1 cost (min. 2). {yellow}
+## Balancing (Artifacts)
+* Dealmaker -- EFFECT UPDATE: Whenever a monster costing more than 0 dies, gain a counter. When this reaches 4, spend them to gain 1 G. {red}

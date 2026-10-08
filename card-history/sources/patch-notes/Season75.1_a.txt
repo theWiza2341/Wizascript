@@ -1,0 +1,8 @@
+Mid Season 75
+New cards
+* [card] Trash Rudinn (cost 3, ATK 3, HP 3, [icon]): Dust: Add a copy of a random other non-TOKEN monster costing 3 or less from your dustpile to your hand with Haste.
+* [card] Watching Man (cost 5, ATK 4, HP 4, [icon]): Transparency. Magic: Heal 2 HP to all ally monsters. Synergy: Give them +2 HP as well.
+* [card] Control Panel (cost 6, ATK 7, HP 4, blue soul): Magic: Program (1) and Dust: Add a Shovel to your hand.
+* [card] Swatchling (cost 6, ATK 5, HP 4, blue soul): Magic: Summon a Vase. If you have less monsters than the opponent, give it Dodge (1).
+* [card] Large Chest (cost 7, ATK 6, HP 7, pink soul): Delay: Earn G equal to the base cost of the first spell you cast this turn.
+* [card] Berdly Statue (cost 11, ATK 6, HP 7, blue soul): Haste. Taunt. This has -1 cost in your hand for each TOKEN card costing 1 or more you played this game. (max: -8 cost).

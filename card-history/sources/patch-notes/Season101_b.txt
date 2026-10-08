@@ -1,0 +1,21 @@
+* Chujin -- EFFECT UPDATE: Magic: Kill all enemy monsters, give all cards in your hand -3 cost, then draw up to 7 cards. You die in 3 turns! {yellow}
+* Chujin Tombstone -- EFFECT UPDATE: Magic: Switch: Send the 3 most or least expensive non-DT non-Generated monsters from your dustpile to your hand with -3 cost. {yellow}
+* Mystery Machine -- COST 5 > 3. HP 4 > 3. EFFECT UPDATE: Magic: Burn an ally monster to add a Gaster Blaster to your hand. {yellow}
+* Noelle -- EFFECT UPDATE: Need: You've spent G on 4 different spells this game. Magic: Look at a random EPIC spell of each SOUL. Add one to your hand with -2 cost. {yellow}
+* Yandereplane -- EFFECT UPDATE: Delay: If this didn't attack, die to deal 3 DMG to all enemies. {red}
+* Cauldron -- COST 4 > 5. HP 3 > 4. {red}
+* C-Round -- ATK 3 > 1. HP 2 > 1. {red}
+* Dalv -- HP 6 > 5. {red}
+* GIGA Queen -- HP 15 > 10. {red}
+## Balancing (Spells)
+* Bounty -- COST 3 > 2. {green}
+* Golden Hit -- EFFECT UPDATE: Loop (1). Spend all your G and deal DMG to an enemy monster equal to the amount spent. Earn G equal to excess DMG dealt. {green}
+* Royal Bravery -- EFFECT UPDATE: Send your hand to your deck. Draw 5 cards with -1 cost. {green}
+* Aftermath -- COST 2 > 1. EFFECT UPDATE: Summon a Pile of Dust for the opponent and give it KR. {yellow}
+* Oasis -- EFFECT UPDATE: Send your hand to your deck. Add 6 1-cost Change of Winds to your hand. Delay: Burn them to heal 3 HP for each burned. {yellow}
+* Buttercup Treat -- EFFECT UPDATE: Set a non-DT monster's ATK to 1. Delay: Silence it and give it KR and Candy. {red}
+* Sandstorm -- COST 3 > 4. EFFECT UPDATE: Deal 1 DMG to all enemy monsters for each other card costing 1 or more you played this turn. {red}
+## Balancing (Artifacts)
+* Spike Band -- EFFECT UPDATE: After you take DMG, if you have 10 or less HP, disable this artifact and deal 3 DMG to all enemy monsters. {red}
+## Misc
+* We have changed the "Burn" keyword to be named "Erase" to be more clear, unique and flavorful.

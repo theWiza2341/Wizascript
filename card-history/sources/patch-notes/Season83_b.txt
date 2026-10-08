@@ -1,0 +1,13 @@
+* Purple Mascot -- COST 4 > 3. ATK 4 > 3. HP 5 > 3. EFFECT UPDATE: Magic: Give all enemy monsters KR. Program (2): Give them -1/-1. {yellow}
+* Library Loox -- COST 4 > 6. ATK 4 > 5. HP 4 > 6. EFFECT UPDATE: Need: Your deck has no non-Generated duplicates. Magic: Deal DMG equal to the amount of empty spaces in your hand. {yellow}
+* Large Chest -- HP 7 > 6. ATK 6 > 5. EFFECT UPDATE: Dust: Fill your hand with random cards. {yellow}
+* Maus -- COST 2 > 1. EFFECT UPDATE: Dust: Add a Cursor to your hand. {yellow}
+* Spider Flower -- ATK 3 > 2. {red}
+* Mad Mew Mew -- COST 6 > 7. EFFECT UPDATE: Magic: Halve a non-DT monster's stats (rounded up) and summon an exact copy of it. If it was an ally, earn 3 G. {red}
+* Left Tentacle -- EFFECT UPDATE: Dust: Deal 2 DMG to the opponent. {red}
+## Balancing (Spells)
+* Defrosting -- COST 2 > 1. EFFECT UPDATE: Loop (3). If this has no Loop, summon a Greater Dog with Haste. Program (1): No additional effect. {yellow}
+* Longevity -- COST 2 > 4. EFFECT UPDATE: Give all ally monsters +2 HP and draw a card. Program (2): Give ally monsters in hand +2 HP. {yellow}
+* Hyperlink Blocked -- EFFECT UPDATE: Take 1 DMG. Draw a card (except Hyperlink Blocked). {red}
+## Balancing (Artifacts)
+* Will -- EFFECT UPDATE: At the start of the game and turn 4 add a Recruitment to your hand. {yellow}

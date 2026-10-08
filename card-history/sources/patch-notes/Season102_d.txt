@@ -1,0 +1,13 @@
+* Chujin -- ATK 8 > 6. {red}
+* Jerry -- HP 6 > 5. {red}
+* Pile of Dust -- HP 1 > 2. EFFECT UPDATE: Dust: Give its killer +2/+1. Turn end: Die. {red}
+* Vase -- EFFECT UPDATE: Dust: If this died during the enemy turn, give its killer -1/-1. {red}
+* Swatchling -- EFFECT UPDATE: Magic: Summon a Vase with Taunt. If you have less monsters than the opponent, give it Dodge (1). {gray}
+## Balancing (Spells)
+* Contamination -- COST 7 > 6. {green}
+* Judgement -- COST 12 > 11. {green}
+* Strafe -- COST 4 > 6. EFFECT UPDATE: Deal 6 DMG to an enemy monster. Excess DMG is dealt to its adjacent monsters. {yellow}
+## Misc
+* Added HP Debuff icon
+* Decks page remembers what you played last instead of defaulting to Kindness
+* Smartopia Arrived profile skin now correctly has its unique background music

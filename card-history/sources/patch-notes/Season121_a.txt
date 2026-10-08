@@ -1,0 +1,13 @@
+Game updates
+Season 121
+## New cards
+* [card image] Mew Mew Magic. COST 0. Halve an ally monster's ATK and HP. Gain Doki equal to the amount of stats reduced.
+* [card image] Our OMEGA!. COST 0. Look at Aqua, Seth, Green, Yellow, Blue and Orange. Add one to your hand. Delay: Send it from your hand to your deck.
+* [card image] Aqua. COST 1. ATK 1. HP 1. Need: You've drawn 3+ cards this turn. Magic: Deal 1 DMG to all enemies and draw a card.
+* [card image] Hopschef. COST 3. ATK 3. HP 2. Magic: Summon a 1/2 Sauerdough for the opponent. Delay: If it's dead, summon a Sauerdough for you. Otherwise, kill it.
+* [card image] Leafling. COST 3. ATK 1. HP 4. Support: If this wasn't triggered by Green Clover, fill your board with Green Clovers that attack the target.
+* [card image] Orange. COST 3. ATK 2. HP 1. Need: Your monsters attacked 3+ times this turn. Magic: Give all ally monsters +1 ATK and Haste. They can attack again.
+* [card image] Sauerdough. COST 3. ATK 3. HP 4. Dodge (1).
+* [card image] Cherry Tree. COST 4. ATK 4. HP 5. Turn start: Give yourself +2 HP.
+* [card image] Floradinn. COST 4. ATK 3. HP 5. Turn start: Add 2 Green Clovers to your hand.
+* [card image] Mr Butterfly. COST 4. ATK 3. HP 3. Need: You played a card costing 6+ G this turn. Magic: Summon a Blue Rose.

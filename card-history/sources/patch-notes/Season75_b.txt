@@ -1,0 +1,11 @@
+## Balancing (Monsters)
+* Malius -- ATK 6 > 7. {green}
+* Snowdin Sign -- ATK 3 > 4. {green}
+* Ice Wolf -- HP 8 > 9. EFFECT UPDATE: Dust: Summon an enemy Ice. {green}
+* Spider Flower -- COST 4 > 3 HP 4 > 3. EFFECT UPDATE: Magic: Switch: Catch a Spider or a Red Flower. Dust: Release it to your hand with -1 cost. {yellow}
+* Mirror -- COST 5 > 10. ATK 3 > 6. HP 3 > 6. EFFECT UPDATE: Haste. Whenever this attacks and kills a monster, catch it. Dust: Release an ally 6/6 copy of it. {yellow}
+* Hyperlink Blocked -- EFFECT UPDATE: Lose 1 HP. Draw a card (except Hyperlink Blocked). {yellow}
+* Tasque Painting -- ATK 4 > 3. {red}
+* Christmas Tree -- EFFECT UPDATE: Summon 2 Gifts. Synergy: Summon 2 2/2 Gifts instead. {red}
+## Balancing (Artifacts)
+* Thorn Ring -- EFFECT UPDATE: Shock: Gain a counter. Turn start: Spend 10 counters to gain 10 G. {green}

@@ -1,0 +1,12 @@
+Game updates
+Season 110
+## New cards
+* Pixel Vase -- cost 2, ATK 2, HP 2, rarity white winged soul. Taunt. Magic: Give an enemy monster -1/-1.
+* Titan Fuzzy -- cost 2, ATK 2, HP 2, rarity blue winged soul. Darkspawn. Shock: Gain +1/+1 for every 2 G the spell costs and gain Haste. This can attack again. Delay: Lose the Shock.
+* Laser Pointere -- cost 3, rarity green winged soul. Choose an enemy monster. All other enemy monsters attack it.
+* Chef Rouxls -- cost 7, ATK 5, HP 6, rarity orange winged soul. Magic: Addeth a Laser Pointere to your hand.
+## New artifacts
+* Gold Widow - After you spend 5+ G on a card, spend 1 more G to gain a counter and summon a Spider. If this has 6+ counters, spend them to add a 0-cost Spider Donut to your hand.
+## Game engine
+* Delay and additional effects will now trigger even if there was no target when the monster has been played.
+* Reworked triggers orders.

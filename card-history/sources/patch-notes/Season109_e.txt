@@ -1,0 +1,7 @@
+* Carol -- cost 9, ATK 5, HP 7, rarity orange winged soul. Magic: Paralyze an enemy monster and its adjacent ones.
+* Cuptower -- cost 9, ATK 4, HP 5, rarity purple winged soul. Haste. Dust: Summon 3 Cuptains with Haste.
+* Knightdyne -- cost 9, ATK 5, HP 6, rarity purple winged soul. Magic: Deal 1 DMG to the lowest HP enemy monster 5 times. For each enemy killed, summon a 2/3 Spear with Taunt.
+* Tenna -- cost 9, ATK 7, HP 7, rarity orange winged soul. Taunt. Magic: Choose a non-DT monster in the enemy hand. Delay: Summon a Grand Prize that Catches it.
+* Pumpkin Head -- cost 10, ATK 10, HP 10, rarity green winged soul. YOUR TAKING TOO LONG
+* Zapper -- cost 10, ATK 6, HP 7, rarity blue winged soul. Need: You spent G on spells this turn. Magic: Erase a monster.
+* Titan -- cost 15, ATK 12, HP 12, rarity red winged soul. Haste. Darkspawn. Magic: Darkness constricts you.

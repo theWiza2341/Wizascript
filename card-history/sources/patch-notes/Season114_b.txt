@@ -1,0 +1,22 @@
+## Balancing (Monsters)
+* Bookshelf -- ATK 4 > 5. {green}
+* Kris -- COST 10 > 9. {green}
+* Crystal Cheese -- COST 4 > 3. ATK 4 > 2. {yellow}
+* Lamp -- ATK 2 > 1. HP 1 > 2. {red}
+* Clover -- COST 8 > 9. {red}
+* Rockman -- HP 5 > 4. {red}
+* Maus Hole -- HP 2 > 1. {red}
+* Chujin Tombstone -- EFFECT UPDATE: Magic: Add 3 random non-DT non-Generated monsters from your dustpile to your hand with -3 cost. {red}
+* Purple Mascot -- EFFECT UPDATE: Magic: Give all enemy monsters KR. Program (3): Also give them -1/-1 (min. 1 HP). {red}
+* Berdly Plush -- EFFECT UPDATE: Magic: If you have a TOKEN with a base cost of 3+ G in your hand, give 2 random non-TOKEN cards in your hand -1 cost. {red}
+## Balancing (Spells)
+* ACT Button -- COST 1 > 0. EFFECT UPDATE: Loop (2). Look at all spells of the enemy SOUL. Choose one to add to your hand. {green}
+* Overgrowth -- COST 2 > 3. {red}
+* Royal Determination -- COST 4 > 5. {red}
+* Frozen Energy -- EFFECT UPDATE: Give a monster +2/+2 and Haste. Delay: Paralyze it. {red}
+## Balancing (Artifacts)
+* Gachapon -- EFFECT UPDATE: At the start of every 3rd turn, add a Gacha Ball to your hand. For each counter this has, use the next rarity for Gacha Ball (COMMON > RARE > EPIC > LEGENDARY > Loops back to COMMON) {red}
+* Parachutism -- EFFECT UPDATE: At the start of your 4th turn and every 3 turns after that summon a Mettabot. {red}
+* Gold Widow -- EFFECT UPDATE: After you spend 6+ G on a card, spend 1 more G to gain a counter and summon a Spider. If this has 5+ counters, spend them to add a Spider Donut to your hand with 0 cost. {red}
+## Misc
+* Removed LV from game UI.

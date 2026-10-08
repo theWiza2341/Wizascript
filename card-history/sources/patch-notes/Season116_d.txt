@@ -1,0 +1,17 @@
+## Balancing (Spells)
+* Silly Strings -- COST 9 > 8. {green}
+* Trick Question -- EFFECT UPDATE: Deal 3 DMG to a monster. Draw a monster. {green}
+* Zap Cannon -- EFFECT UPDATE: Deal 3 DMG to a monster. Draw a spell (except Blitz Quiz). {green}
+* Fridge -- EFFECT UPDATE: Give a monster +1 HP and Taunt. Draw a card. {green}
+* Vasebreaker -- COST 1 > 3. EFFECT UPDATE: Loop (2). Deal 2 DMG to a monster. If it killed, summon a Vase. {yellow}
+* Longevity -- COST 4 > 2. EFFECT UPDATE: Give all ally monsters +1 HP and draw a card. Program (2): Give all monsters in your hand +2 HP. {yellow}
+* Load -- COST 12 > 14. {red}
+* Blitz Quiz -- COST 2 > 3. {red}
+* Carousel -- COST 3 > 4. {red}
+* Overheat -- COST 4 > 5. {red}
+* Contamination -- COST 6 > 7. {red}
+* Strength -- COST 2 > 3. EFFECT UPDATE: Give all ally monsters +1/+1. {red}
+* Worsening -- EFFECT UPDATE: Give a monster -1/-2. Delay: If it's dead and this is non-Generated, add a Worsening to your hand. {red}
+* Royal Determination -- EFFECT UPDATE: Erase your dustpile. Summon the next Lost Soul with Haste and Taunt for every 7 monsters erased. {red}
+* Ice Shock -- EFFECT UPDATE: Deal 1 DMG to a monster. If it killed, Paralyze the adjacent monsters. {red}
+* Call of the Grave -- EFFECT UPDATE: Summon the next 1/1 Lost Soul with Haste. Program (2): Spend all counters on your Save artifact to give it +1/+1 for each 5 spent. {red}

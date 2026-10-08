@@ -1,0 +1,16 @@
+Ponmen with +3 ATK and Dodge (1).
+* Noelle -- EPIC > LEGENDARY. COST 9 > 6. HP 6 > 4. EFFECT UPDATE: Need: You spent G on spells last turn. Magic: Cast the highest cost spell from your deck (targets monster in front of this if possible). {yellow}
+* MTT Fountain -- EFFECT UPDATE: Haste. Whenever this takes DMG, heal the DMG taken as HP to you. {yellow}
+* Blue Snail -- HP 1 > 2. EFFECT UPDATE: Magic: Give Haste to all ally Snails. {yellow}
+* Sword Emblem -- ATK 4 > 5. EFFECT UPDATE: Whenever this takes DMG, Switch: Gain +1 Dodge or Transparency. {red}
+## Balancing (Spells)
+* Crown -- COST 2 > 1. {yellow}
+* Hyperlink Blocked -- COST 1 > 0. EFFECT UPDATE: Look at a random TOKEN and non-TOKEN card in your deck. Choose 1 to draw and lose 1 HP. {yellow}
+* Last Dream -- COST 0 > 4. EFFECT UPDATE: Give all ally monsters +1/+1. If you have 1 HP, Silence them. Give them +7/+7 and Haste. {yellow}
+* Fridge -- EFFECT UPDATE: Give a monster Taunt. Draw a card. {yellow}
+* Multi Shot -- EFFECT UPDATE: Deal DMG to a monster equal to this spell's cost. If it kills, add Multi Shot to your hand with +1 cost (keeps buffs). {yellow}
+* Cold Winter -- EFFECT UPDATE: Send an ally monster to your deck with +3/+3 and Taunt. {yellow}
+## Balancing (Artifacts)
+* Arcane Scepter -- EFFECT UPDATE: Turn start: Add Arcane Codes to your hand. If you can't, cast a random spell on a random target. {green}
+* Vitality -- EFFECT UPDATE: At the start of every 10 turns gain +10 HP. {yellow}
+* Endgame -- Ally Pieces trigger both Switch effects regardless of position. {red}

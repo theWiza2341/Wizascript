@@ -1,0 +1,20 @@
+Mid Season 68
+## Balancing (Monsters)
+* Spade King -- HP 8 > 9. {green}
+* Whimsalot -- COST 6 > 3. ATK 5 > 3. HP 6 > 4. {green}
+* Vulkin's Cloud -- HP 4 > 5. {green}
+* Big Hat Charles -- COST 7 > 6. HP 6 > 5. {green}
+* Forest Worm -- ATK 3 > 4. {green}
+* Glad Dummy -- HP 3 > 4. {green}
+* Fox Head -- ATK 2 > 3. {green}
+* Vulkin -- ATK 2 > 3. {green}
+* Fireplace -- HP 6 > 7. {green}
+* Snoring Monsters -- ATK 6 > 7. {green}
+* Halberd -- ATK 4 > 5. EFFECT UPDATE: Armor. Need: You played 3+ TOKEN cards with a base cost of 3+ G this game. Magic: Summon a Halberd. {yellow}
+* Moldmega -- COST 9 > 12. EFFECT UPDATE: Taunt. Magic and Dust: Burn 4 Molds in your dustpile to summon a Moldbygg and trigger its Magic. {yellow}
+* Ponman Statue -- EFFECT UPDATE: Need: 15 or more non-TOKEN Pieces in your dustpile. Magic: Add Ponqueen to your hand. {yellow}
+* Ponqueen -- EFFECT UPDATE: Magic: Burn 15 Pieces in your dustpile to fill your hand with Ponmen with +1 Dodge. Delay: Add Endgame. {yellow}
+* Ponman -- EFFECT UPDATE: Haste. Magic: Switch: Gain +2 HP or heal 1 HP to you. {yellow}
+## Balancing (Spells)
+* Pollutant Gas -- COST 3 > 4. {red}
+* Instant Noodles -- COST 2 > 12. EFFECT UPDATE: In your hand, this has -1 cost for each monster in both players' dustpiles. Give all monsters in your hand +1/+1. {yellow}

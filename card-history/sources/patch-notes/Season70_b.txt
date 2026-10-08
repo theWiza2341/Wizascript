@@ -1,0 +1,13 @@
+* Clam Girl -- COST 6 > 5. EFFECT UPDATE: Magic: Give 2 random spells in your hand -2 cost. {yellow}
+* Animals -- HP 6 > 5. EFFECT UPDATE: Magic: Switch: Gain Haste or give the next 2 monsters in your deck +1/+1. {red}
+* Vase -- EFFECT UPDATE: Taunt. Dust: If this died during the enemy turn, give its killer -1/-1. {red}
+* K-Round -- EFFECT UPDATE: Taunt. Candy. {red}
+* Cracked Table -- EFFECT UPDATE: Delay: Add a Tea Set to your hand. If you have less HP than the opponent, give it -1 cost. {red}
+* Police Line -- HP 4 > 2. {red}
+* Spider Flower -- HP 3 > 2. {red}
+## Balancing (Spells)
+* Will To Fight -- EFFECT UPDATE: Add the next Lost Soul to the top of your deck with +2/+2 and Haste. If you have 15 or less HP, earn 3 G. {green}
+* Last Dream -- EFFECT UPDATE: Give all ally monsters +1/+1. If you have 1 HP, give them +7/+7 instead. {green}
+* Control Wire -- EFFECT UPDATE: Summon an exact copy of an enemy monster. It attacks the original. {red}
+## Balancing (Artifacts)
+* Criticals -- EFFECT UPDATE: At the start of every 6 turns, give all ally monsters +1 ATK wherever they are. {red}

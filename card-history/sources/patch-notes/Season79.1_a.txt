@@ -1,0 +1,10 @@
+Lurker 2/14/2023 6:10 AM
+Midseason 79 Balance Changes:
+-Abstract Art is now 4g and 3/3
+-Oni is now non-Token
+-Book Register is now non-Token
+-Spamton Poster is no longer base cost
+Bug Fixes:
+-Nubert is now correctly 6 cost
+-Reflection can no longer copy your opponent's Reflection
+@Patch Updates

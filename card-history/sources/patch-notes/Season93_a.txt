@@ -1,0 +1,24 @@
+Season 93
+## New cards
+[card] Spamequin | cost 6 | Magic, Dust, Shook, Support, and Turn end: Add a Hyperlink Blocked to the enemy deck. | ATK 6 | HP 6
+[card] New Cut Flowey | cost 10 | Haste. Magic: Summon a Flowey on EVERY empty board space. | ATK 4 | HP 4
+## Balancing (Monsters)
+* Ball Person -- ATK 2 > 3. HP 5 > 4. {green}
+* Bookshelf -- ATK 3 > 4. {green}
+* Swatch -- EFFECT UPDATE: Taunt. Turn end: If you spent 6+ G on spells this turn, add a Swatch with -1/+1/+1 base stats to your hand. {green}
+* Pyrope -- EFFECT UPDATE: Transparency. Whenever this attacks a monster, deal 3 DMG to the opponent. {green}
+* Painting -- EFFECT UPDATE: Magic: Add a copy of a different ally monster (max. EPIC) to your deck. Delay: Draw a card. {yellow}
+* Candle -- COST 5 > 4. HP 7 > 3. EFFECT UPDATE: Dust: Summon a silenced copy of this with 1 HP. {yellow}
+* Receptionist 1 -- COST 6 > 5. ATK 3 > 5. HP 6 > 5. EFFECT UPDATE: Whenever this takes DMG, give a random card in your hand -1 cost. {yellow}
+* Spamton Shop -- HP 6 > 5. {red}
+* Rudolph -- ATK 5 > 4. EFFECT UPDATE: Need: Your deck has no non-Generated spells. Magic: Heal 5 HP to you. {red}
+* Giant Toilet -- EFFECT UPDATE: Taunt. Need: This is non-Generated and you have no other cards in your hand or deck. Magic: Gain +90/+90 and Charge. {red}
+## Balancing (Spells)
+* Cold Winter -- COST 6 > 5. {green}
+## Balancing (Souls)
+* Justice -- EFFECT UPDATE: Turn start: Deal 1 DMG to the lowest HP enemy monster. {yellow}
+## Changes by elytrafae
+* Optimized my changes to the translation system.
+* Added the possibility to use icons instead of text for rarities.
+* Added STATS command.
+* Removed automatic stat coloring (internal staff team shenanigans, will be back very soon).

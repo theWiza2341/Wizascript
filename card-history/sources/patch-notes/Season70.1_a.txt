@@ -1,0 +1,4 @@
+Mid Season 70
+New cards
+* [white soul] Casual Guard 1 | COST 5 | ATK 4 | HP 4 | Haste. Magic: Draw a Royal Guard with Dust. Trigger it.
+* [white soul] Casual Guard 2 | COST 5 | ATK 4 | HP 4 | Transparency. In your hand, this has -4 cost If you played a Royal Guard with a base cost of 9 or more this turn.

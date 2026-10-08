@@ -1,0 +1,21 @@
+## New card
+[card] Ralsei Dummy | cost 2 | Taunt. Shook: Gain +2 HP and lose this Shook. | ATK 2 | HP 3
+## New artifacts
+* Underground Army - Turn start: Send the most expensive non-Generated non-DT monster from your dustpile to your board. {yellow}
+## Balancing (Monsters)
+* Businessplug -- EFFECT UPDATE: Magic: Summon a 1/1 exact copy of a Plug from your hand. Copy any stat buffs it had. {green}
+* Cyberdly -- COST 7 > 6. {green}
+* Mystery Machine -- COST 7 > 5. ATK 6 > 4. HP 6 > 4. EFFECT UPDATE: Magic: Catch a copy of a non-DT ally monster. Dust: Release a 1/1/1 copy of it to your hand. Program (2): Gain Haste. {yellow}
+* Royal Papyrus -- EFFECT UPDATE: Haste. Need: 10+ non-Generated monsters costing 9 or more in your dustpile. Magic: Add the Underground Army artifact. {yellow}
+* Angel Doll -- ATK 4 > 3. HP 4 > 3. EFFECT UPDATE: Magic: Remove a random other non-DT non-TOKEN monster from your dustpile to summon it. Set its base HP to 1. {red}
+* Blowing Rabbick -- EFFECT UPDATE: Whenever you cast a spell costing 1 or more, return to your hand with +1/+1 (keep buffs). {red}
+## Balancing (Spells)
+* Judgement -- COST 9 > 7. {green}
+* Ambush -- EFFECT UPDATE: Summon 4 random Generated monsters from your hand. Give them Haste. {green}
+* Pie -- EFFECT UPDATE: Loop (1). Fully heal a monster. {yellow}
+* Faded Memory -- COST 1 > 2. EFFECT UPDATE: Look at all Dust monsters costing 9 or less G in your dustpile and choose one. Burn it to trigger its Dust. {yellow}
+* Last Dream -- COST 4 > 7. {red}
+* Powerhouse -- COST 7 > 9. EFFECT UPDATE: Give all cards in your hand -2 cost (min 1). Draw a card. {red}
+* Cloning -- EFFECT UPDATE: Summon a 3/3 copy of a non-DT monster. If it can't attack, give it Haste. {red}
+## Balancing (Artifacts)
+* Parachutism -- EFFECT UPDATE: At the start of every 3rd turn, summon a Mettabot. {green}

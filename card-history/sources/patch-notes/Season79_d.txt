@@ -1,0 +1,8 @@
+## Balancing (Spells)
+* Control Wire -- EFFECT UPDATE: Summon an exact copy of an enemy monster. It attacks the original. Delay: If yours is alive, heal 4 HP to it. {red}
+## Balancing (Artifacts)
+* Elite Soldiers -- EFFECT UPDATE: Turn end: If you have 3 or less cards in your deck, add 3 random non-DT monsters to your hand and 4 to your deck with -2/+2/+2 and disable this. {green}
+* Worn Dagger -- EFFECT UPDATE: Whenever a monster dies (except Lost Souls), gain a counter. Turn end: Spend 5 counters to summon the next Lost Soul. {green}
+* IQ -- EFFECT UPDATE: Your TOKEN cards cost 1 less (min. 1). {green}
+## Balancing (Souls)
+* Bravery -- EFFECT UPDATE: At the start of every 3rd turn, add a Recruitment to your hand. If your hand is full, add a Draft to your deck instead. {green}

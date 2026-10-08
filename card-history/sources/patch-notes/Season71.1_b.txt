@@ -1,0 +1,9 @@
+## Balancing (Spells)
+* Mercenary Hire -- COST 6 > 5. {green}
+* Silly Strings -- COST 12 > 10. {green}
+* Create a Machine -- EFFECT UPDATE: Look at all Thrashing Parts and add one to your hand. {green}
+* Contamination -- EFFECT UPDATE: Give 2 random damaged enemy monsters KR and kill them. {green}
+* Thundersnail -- COST 2 > 1. EFFECT UPDATE: Summon 4 different 1-cost Snails from your dustpile. Trigger their Magic, then give them +1 ATK, Haste, Dodge (1). {yellow}
+## Balancing (Artifacts)
+* Prosperity -- EFFECT UPDATE: Whenever you play a monster, heal 1 HP to you for every 4 G it costs. {yellow}
+* Dark Fountain -- EFFECT UPDATE: Whenever you play a card you haven't played this game, gain a counter (max 20). When this reaches 20 counters, add 20 random Deltarune monsters (max EPIC) to your deck. Turn start: If this has 20 counters, draw 2 cards and reduce their cost by 2. {yellow}

@@ -1,0 +1,13 @@
+Game updates
+Season 109
+## New cards
+* Gacha Ball -- cost 0, rarity green winged soul. Look at 4 random cards of the current rarity and add one to your hand. Add a counter to Gachapon.
+* Sharpshoot -- cost 0, rarity green winged soul, Loop (4) icon. Loop (4). Choose a monster. Give it Taunt and Wanted.
+* Cuptain -- cost 1, ATK 1, HP 1, rarity white winged soul, Loop (2) icon. Loop (2). Cuptains in your hand have +1 cost. This has +1/+1 for each other ally Cuptain.
+* Rock Chord -- cost 1, rarity green winged soul. Summon a Rock.
+* Cooking Poster -- cost 2, ATK 2, HP 3, rarity blue winged soul. Dust: Add a Food Stack to your hand. If you already have a Food Stack, give it +1 Loop instead.
+* Mizzle -- cost 2, ATK 1, HP 3, rarity white winged soul. Turn end: Heal 2 HP to the lowest HP damaged ally monster. If it was fully healed, gain +1/+1.
+* Monster Poster -- cost 2, ATK 1, HP 4, rarity blue winged soul. Magic: Add a Susiezilla to your hand. Give it +1/+1 for every 4 monsters in the enemy dustpile.
+* Ribbick -- cost 2, ATK 2, HP 3, rarity white winged soul. Magic: Deal 2 DMG to an ally monster and give it +2 ATK and Haste.
+* Rock Poster -- cost 2, ATK 3, HP 2, rarity blue winged soul. Shock: Add a random spell of your SOUL that you haven't cast this game to your hand. If you cast all of them, add a Rock Chord and lose this Shock.
+* Shadowguy -- cost 2, ATK 2, HP 2, rarity white winged soul, Loop (1) icon. Loop (1). Magic: Make a monster Wanted. If it's already Wanted, reveal 3 random monsters in the enemy hand and make them Wanted.

@@ -1,0 +1,4 @@
+* Constricting Darkness -- Starts at 5 counters. After an ally Titan Spawn dies during the enemy turn, lose 2 counters (once per turn). Turn end: If your board isn't full, gain a counter and summon a Titan Spawn with ATK and HP equal to the counters. If this has 0 counters, disable this instead. If this has 8 counters, begin The Roaring. TOKEN
+* DARK ZONE -- Starts at 25 counters. After you spend G on a card, lose counters equal to the G spent. At 0 counters, set this to 30 counters and summon a Pumpkin Head that attacks all enemy monsters. TOKEN
+* Odd Controller -- Turn start: Gain +1 counter. Turn end: For each counter, give +1/+1 to a random ally monster. If you played less monsters this turn than the amount of counters, disable this. TOKEN
+* The Roaring -- Turn start: Summon an Invulnerable Titan with Charge. TOKEN

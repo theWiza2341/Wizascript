@@ -1,0 +1,4 @@
+Season 90
+## New cards
+[card] Torch | cost 6 | Whenever a non-Generated monster dies, deal 1 DMG to your opponent. | ATK 5 | HP 5
+[card] Yandereplane | cost 7 | Haste. Turn end: If this didn't attack this turn, kill this to deal 3 DMG to all enemies. | ATK 6 | HP 4

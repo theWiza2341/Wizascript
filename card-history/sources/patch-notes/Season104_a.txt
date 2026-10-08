@@ -1,0 +1,5 @@
+Game updates
+Season 104
+## New cards
+* Mo -- cost 6, ATK 4, HP 5, rarity purple hat. Taunt. Magic: Add 3 random non-DT cards costing 3+ G to your hand with -2 cost. Delay: Erase the ones still in your hand.
+* Bryan -- cost 8, ATK 5, HP 7, rarity white hat. After an enemy monster dies during your turn, summon a Dynamite Stick with Charge. Magic: Summon 2 Dynamite Sticks with Charge.

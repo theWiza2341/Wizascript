@@ -1,0 +1,5 @@
+Game updates
+Season 123
+## New cards
+* [card image] White Flower. COST 1. ATK 2. HP 3. Mold Spore (0).
+* [card image] Armored Undyne. COST 11. ATK 7. HP 7. Armor. Magic: For each unique non-Generated Royal Guard in your dustpile, summon a Spear that attacks the lowest HP enemy.

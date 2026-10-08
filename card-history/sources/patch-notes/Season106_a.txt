@@ -1,0 +1,16 @@
+Season 106
+## New cards
+* Martlet -- cost 8, ATK 5, HP 6, rarity yellow hat. Magic: Switch: Deal 7 DMG to the monster in front or 1 DMG to all enemies and gain Haste. Bullseye: Return to your hand with -1 base cost.
+## Ranked Rework
+* Added cool new ranked rewards based on ranked wins.
+* UTY packs are now included in end-of-season rewards.
+* End-of-season rewards are now based on your highest rank of that season, not your current rank.
+* Removed demotion protection at all ranks.
+* Returning players will no longer start at COPPER IV.
+* Improved matchmaking quality.
+* Bonus: Win 100 ranked games in 6 different seasons this year to earn a unique frame in 2026.
+## Game
+* Increased turn timer from 1:00 to 1:30.
+* Increased animation durations.
+* Animation durations will progressively shorten during chained animations.
+* Shock now triggers its effect after a spell finishes casting instead of before. This prevents lag and is more intuitive. Shock cards have been adjusted for this.

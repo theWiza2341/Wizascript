@@ -1,0 +1,16 @@
+Game updates
+Season 115
+## Balancing (Monsters)
+* Knightdyne -- HP 6 > 7. {green}
+* Mirror -- COST 10 > 9. {green}
+* Vulkin -- ATK 3 > 4. {green}
+* Baron -- EFFECT UPDATE: Taunt. Magic: Give all other ally monsters +2 ATK. {green}
+* Angie -- EFFECT UPDATE: After an enemy monster dies during your turn, set a random enemy monster's HP to 1. Shock: Add a Gemstone with -1 cost to your hand. {green}
+* Chaos Duck -- EFFECT UPDATE: Magic: Turn a monster into an Apoca Duck with Haste. {green}
+* Golden Piano -- COST 7 > 5. ATK 4 > 3. HP 4 > 2. {yellow}
+* Onion San -- COST 8 > 11. ATK 7 > 9. EFFECT UPDATE: Magic: Summon a Left Tentacle and a Right Tentacle with +2/+2 adjacent to this monster. {yellow}
+* Spamton Shop -- ATK 3 > 2. EFFECT UPDATE: Turn end: Program (3): Summon 2 Pipis. {yellow}
+* Deflated Mascot -- HP 5 > 4. {red}
+* Pillar -- HP 5 > 4. {red}
+* Roaring Knight -- EFFECT UPDATE: Magic: Deal 12 DMG to all enemies. Add a Black Knife to the enemy deck (except the top) for every 10 DMG not dealt. {red}
+* Tall Miner -- EFFECT UPDATE: Magic and Bullseye: Add a 0-cost Gemstone to your hand. {red}

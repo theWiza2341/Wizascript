@@ -1,0 +1,13 @@
+Game updates
+Season 121
+Early season update
+## Gameplay
+* Spells can now be played even if there is no target available.
+* Added gray glow when a card has no available target.
+## DT Path
+* All players are now able to pick a determination path and unlock a DT card after completing some quests.
+## Bug fix
+* Monsters can no longer attack if the target is no longer available between attack start and real attack.
+## Balancing (Monsters)
+* Leafling -- Support: If this wasn't triggered by Green Clover, summon a 2/2 Green Clover that attack the target. {green}
+* Mr Butterfly -- COST 4 > 5. HP 3 > 4. {red}

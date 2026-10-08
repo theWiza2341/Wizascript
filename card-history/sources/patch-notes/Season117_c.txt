@@ -1,0 +1,6 @@
+## Balancing (Spells)
+* Control Wire -- EFFECT UPDATE: Look at all non-DT monsters in the enemy hand. Choose one to add an exact copy of it to your hand. {green}
+* Punishment -- EFFECT UPDATE: Deal 4 DMG to an enemy monster. {green}
+* Froggit Trio -- EFFECT UPDATE: Summon 2 Froggits with Haste. Delay: If both are dead, add a 0-cost Froggit with Haste to your hand. {green}
+* Oasis -- COST 6 > 5. EFFECT UPDATE: Add 3 Changes of Winds to your hand. Delay: Erase all Changes of Winds in your hand to heal 4 HP to you for each. {yellow}
+* Aftermath -- EFFECT UPDATE: Enchant 2 random occupied enemy slots with Scattering Dust. {yellow}

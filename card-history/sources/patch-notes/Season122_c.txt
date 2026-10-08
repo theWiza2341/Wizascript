@@ -1,0 +1,16 @@
+* Pizzapants -- HP 3 > 2. {red}
+* Head Hathy -- ATK 4 > 3. {red}
+* Soul Cage -- EFFECT UPDATE: Haste. Dust: Add a 1-cost Knife to the current turn player's hand. {red}
+* Leafling -- EFFECT UPDATE: Support: If this wasn't triggered by a Green Clover, Erase 2 non-TOKEN monsters in your dustpile to summon a 2/2 Green Clover that attacks the target. {red}
+* Tall Miner -- EFFECT UPDATE: Shock: Add a 0-cost Crystal Shard to your hand and lose this Shock. {red}
+* Bag o' Goodies -- EFFECT UPDATE: Magic: Look at 3 spells costing 2+ G. Choose one to add to your hand with -1 cost for each Gemstone you cast this turn. Shock: Add a Gemstone to your hand. {red}
+* Big Bob -- EFFECT UPDATE: Armor. After this survives DMG during your turn, summon a 0-cost Big Bob. {red}
+## Balancing (Spells)
+* Final Round -- COST 6 > 5. {green}
+* Pie -- EFFECT UPDATE: Loop (1). Fully heal a monster. If it was already full, give it +2 HP instead. {green}
+* Breaking Love -- EFFECT UPDATE: Give a monster -2/-1. Draw a card. {green}
+## Balancing (Artifacts)
+* Pixel Camera -- EFFECT UPDATE: Turn end: If your board is full, add copies of the 2 leftmost non-DT monsters to your hand and 2 rightmost non-DT monsters to your deck with -1 cost and disable this. {green}
+## QOL
+* Synergy cards will now glow in yellow when the condition is met.
+* Animations will now get faster and faster for the whole turn if it's TAKING TOO LONG.

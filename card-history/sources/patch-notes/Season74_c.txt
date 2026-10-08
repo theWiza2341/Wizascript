@@ -1,0 +1,12 @@
+* Bomb -- ATK 1 > 3. HP 5 > 3. EFFECT UPDATE: Magic: Burn the lowest cost non-Generated card in your hand to deal 3 DMG. {yellow}
+* Ficus Licker -- EFFECT UPDATE: Magic: Draw a Plant (except Ficus Licker). {yellow}
+* Vase -- ATK 3 > 2. HP 3 > 2. {red}
+## Balancing (Spells)
+* Pezza Time -- COST 2 > 4. EFFECT UPDATE: Deal 4 DMG to a non-DT monster. Delay: If it is damaged and alive, summon a copy of it with its current HP. {yellow}
+* Pie -- COST 3 > 2. EFFECT UPDATE: Give a monster +1 Dodge. If it's damaged, give it Taunt. {yellow}
+* Another Chance -- COST 2 > 3. EFFECT UPDATE: Deal 1 DMG to all monsters. For every monster it killed, summon the next Lost Soul with 2/2. {yellow}
+* Fortune -- COST 4 > 2. EFFECT UPDATE: Delay: Earn 3 G. {yellow}
+* Undyne's Spears -- EFFECT UPDATE: Summon two Spears. They attack the lowest-ATK enemy monster(s). Program (8): Set their stats to 7/6 first. {red}
+## Balancing (Artifacts)
+* Hail -- EFFECT UPDATE: Paralyzed monsters take +1 DMG. Turn end: Spend a counter to deal 1 DMG to all monsters. {yellow}
+* Thorn Ring -- EFFECT UPDATE: Whenever you cast a spell, gain counters equal to its cost. Turn end: Spend all counters. If spent 11 or more, add an Ice Crystal to your deck. {yellow}

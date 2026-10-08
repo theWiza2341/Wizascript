@@ -1,0 +1,12 @@
+Mid Season 76
+New cards
+* [card] Space Stickers (cost 3, ATK 3, HP 3, blue soul): Loop (1). Magic: Give +1/+1 to a monster with a Tribe in your hand.
+* [card] Mane Ax (cost 9, ATK 7, HP 5, purple soul): Haste. Magic: Silence a monster, then give it -2/-2.
+## Balancing (Monsters)
+* Elder Puzzler -- HP 7 > 8. {green}
+* Baking Queen -- COST 10 > 9. {green}
+* Rapstablook -- EFFECT UPDATE: Transparency. Whenever the opponent summons a monster, gain -1 ATK. At 2(?) ATK or less, kill this to deal 3 DMG to all enemies. {green}
+* Battleflies -- ATK 2 > 3. EFFECT UPDATE: Haste. Need: You spent G on spells last turn. Magic: Gain +2 ATK. {green}
+* Candle -- EFFECT UPDATE: Turn end: Deal 1 DMG to all other allies. {yellow}
+* Mad Mew Mew -- EFFECT UPDATE: Magic: Halve an other non-DT monster's stats (rounded up) and add an exact copy of it to your hand. If it was an ally, earn 3 G. {yellow}
+* Pizzapants -- ATK 3 > 2. HP 3 > 6. EFFECT UPDATE: Haste. Magic: Gain +1 ATK for every other Pizzapants you played this game. {yellow}

@@ -1,0 +1,17 @@
+## Balancing (Monsters)
+* Magic Crystal -- COST 8 > 7. {green}
+* Flower Jar -- ATK 2 > 3. {green}
+* Cogwheel -- COST 2 > 1. ATK 2 > 1. {green}
+* Green Fire -- EFFECT UPDATE: Magic: Deal 2 DMG to adjacent monsters and the monster in front of this. {green}
+* White Cloak -- EFFECT UPDATE: Need: 7+ TOKEN monsters in your dustpile. Magic: Erase them to add a 2-cost Ice Crystal to your hand. {green}
+* Yarn Ball -- EFFECT UPDATE: Magic: Send the 2 rightmost cards in your hand to your deck. Draw 3 cards. {green}
+* Axis -- COST 8 > 7. HP 8 > 7. {yellow}
+* Maus Cage -- EFFECT UPDATE: Need: 5+ non-Generated monsters costing 1 or less G in your dustpile. Magic: Add a Mauswheel to your hand. {yellow}
+* Mauswheel -- COST 2 > 4. EFFECT UPDATE: Loop (1). Magic: Summon 3 Maice with Haste. Give them +1/+1 for every card you spent G on last turn (max. +3/+3). {yellow}
+* Crazy Bun -- COST 3 > 2. EFFECT UPDATE: Magic: Deal 1 DMG to all other monsters. {yellow}
+* Temmie Egg -- COST 0 > 1. ATK 0 > 1. Is now a Tem. {yellow}
+* Tall Miner -- HP 6 > 5. EFFECT UPDATE: Shock: Add a Crystal Shard to your hand and lose this Shock. Give it -1 cost for every Gemstone you cast this turn. {yellow}
+* Bag O' Goodies -- EFFECT UPDATE: Magic: Look at 3 spells costing 2+ G. Choose one to add to your hand with -1 cost for each Gemstone you cast this turn. Shock: Add a 0-cost Gemstone to your hand. {yellow}
+* Chaos Blaster -- HP 6 > 5. {red}
+* Rockman -- ATK 3 > 2. HP 4 > 6. EFFECT UPDATE: Bullseye: Summon a Pebble. {red}
+* Elder Puzzler -- EFFECT UPDATE: Turn end: If this didn't attack this turn, deal 4 DMG to a random enemy monster. {red}

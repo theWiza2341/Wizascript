@@ -1,0 +1,3 @@
+* [card] Disguised Lancer (cost 7, ATK 5, HP 5, purple soul): Magic: Return all ally non-DT monsters to your hand. Summon Apoca Ducks with their stats in their places.
+* [card] Crimeter (cost 4, ATK 6, HP 5, blue soul): Disarmed. Candy. Shock: Attack the lowest HP enemy monster.
+* [card] Traffic Light (cost 6, ATK 3, HP 6, blue soul): Taunt. Magic: Give a random TOKEN, LEGENDARY and DT card in your hand or deck -2 cost.

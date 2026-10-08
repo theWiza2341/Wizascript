@@ -1,0 +1,2 @@
+[card image] Meta Flowey. COST 11. ATK 4. HP 4.
+* Haste. Immune to DMG if there's a Flowey and this doesn't have Taunt. Magic: Summon a Flowey in EVERY empty board space.

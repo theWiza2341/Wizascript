@@ -1,0 +1,8 @@
+Skt ASS 3/16/2023 7:22 AM
+@Patch Updates Midseason changes:
+Stage Lights - Cost 7 > 9
+Ferry - Cost 6 > 5. ATK 6 > 4.
+Muffet - Cost 9 > 10.
+The Reflection - Cost 8 > 10.
+Royal Integrity - Cost 0 > 1.
+Final Gambit! - Cost 13 > 7.

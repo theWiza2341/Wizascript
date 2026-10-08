@@ -1,0 +1,20 @@
+Season 70
+## Shops
+* Added discounts for card skins.
+## Balancing (Monsters)
+* Heroine -- COST 11 > 10. {green}
+* Angel of Death -- COST 14 > 13. {green}
+* Ultimathrash -- COST 12 > 10. {green}
+* Grillby -- COST 5 > 4. {green}
+* Diamond Boy 2 -- ATK 5 > 6. {green}
+* Purple Mascot -- HP 4 > 5. {green}
+* Ugly Fish -- COST 9 > 8. HP 4 > 5. {green}
+* Asriel -- COST 6 > 5. {green}
+* Soul Cage -- ATK 3 > 4. {green}
+* Big Hat Charles -- EFFECT UPDATE: Armor. Transparency. {green}
+* Burgersimp -- EFFECT UPDATE: Taunt. Magic: Program (6): Earn 8 G. {green}
+* Hathy -- EFFECT UPDATE: Support: Give the attacker +1 ATK. {green}
+* Sadmobile -- EFFECT UPDATE: Magic: Draw a card. If an ally monster costing 6 or more G died this turn, give the card -2 cost. {green}
+* So Sorry -- EFFECT UPDATE: Magic: Add a Doodlebog to your hand. {green}
+* Doodlebog -- EFFECT UPDATE: Loop (1). Magic: Switch: Gain +2 HP or +2 ATK. {green}
+* Ice Shock -- EFFECT UPDATE: Deal 2 DMG to a monster. If it kills, Paralyze the adjacent ones. {green}

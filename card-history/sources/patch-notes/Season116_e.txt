@@ -1,0 +1,11 @@
+## Balancing (Artifacts)
+* Seam's Seap -- EFFECT UPDATE: After you play a card and have 0 G, gain a counter (once per turn). Turn start: Spend 2 counters to add a Shadow Crystal to your hand with -1 cost. {green}
+* Wiggle -- EFFECT UPDATE: After you summon a Generated Mold, give it Haste. At the start of the game, add a Moldsmal to your hand. {green}
+* Health -- EFFECT UPDATE: At the start of the game, gain +7 HP. {green}
+* Evil Plan -- EFFECT UPDATE: The first time your hand is empty after playing a card, add all Thrashing Parts to your hand and disable this. If you have Ultimathrash at the start of the game, transform into Ultimate Fusion. {green}
+* Reinforcement -- EFFECT UPDATE: At the start of every 10th turn, add 4 Drafts to your hand. At the end of every 10th turn, give all monsters in your hand +1/+1. {yellow}
+* Save -- EFFECT UPDATE: After a monster dies (except Lost Souls), gain counters equal to its cost. If it's Generated or an enemy, gain counters equal to half its cost instead (rounded up). Turn end: Spend 20 counters to summon the next Lost Soul with 1/1 base stats. If your board is full, trigger its Dust instead. Lost Soul order: Lost Alphys > Lost Papyrus > Lost Undyne > Lost Toriel > Lost Asgore > Lost Sans > Loops back to Lost Alphys. {yellow}
+* Generous Gifts -- EFFECT UPDATE: After you play a monster costing 4+ G, gain a counter. Every 5 counters, summon a Gift and give it +1/+1 for every 5 counters this has. {red}
+* Empty Gun -- EFFECT UPDATE: Turn end: Deal 1 DMG to the lowest HP enemy monster. {red}
+## Balancing (Souls)
+* Integrity -- EFFECT UPDATE: Turn end: If you spent more G this turn than last turn, earn 1 G (except turn 1). Your G cap past turn 10 is 11. {red}

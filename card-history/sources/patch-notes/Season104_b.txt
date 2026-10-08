@@ -1,0 +1,29 @@
+## Balancing (Monsters)
+* Chest -- ATK 1 > 2. {green}
+* Cracked Geode -- COST 5 > 4. ATK 4 > 3. HP 4 > 3. {green}
+* Dad Slime -- ATK 5 > 6. {green}
+* Fan Rudinn -- HP 2 > 3. {green}
+* First Starwalker -- COST 7 > 6. HP 6 > 5. {green}
+* Lancer -- COST 8 > 7. HP 6 > 5. {green}
+* Mines Sign -- HP 4 > 5. {green}
+* Mister Elegance -- ATK 3 > 4. {green}
+* Painting -- COST 4 > 3. ATK 5 > 4. HP 4 > 3. {green}
+* Pebble -- ATK 1 > 2. {green}
+* Piranhas -- HP 3 > 4. {green}
+* Plugboy -- COST 5 > 4. ATK 4 > 3. {green}
+* Ragel -- ATK 2 > 3. {green}
+* Sans Deltarune -- COST 2 > 1. {green}
+* Space Stickers -- HP 3 > 4. {green}
+* Tasque Manager -- COST 7 > 6. ATK 5 > 4. HP 6 > 5. {green}
+* Werewire -- HP 3 > 4. {green}
+* Final Froggit -- EFFECT UPDATE: Taunt. Magic: Give all ally Froggits (except Final Froggit) +1/+1 wherever they are. {green}
+* Pile of Dust -- EFFECT UPDATE: Dust: Give its killer +2/+2. Turn end: Die. {green}
+* Vine -- EFFECT UPDATE: Taunt. In your hand, this has -1 cost for each Plant you've played this game. (max: -9 cost). {green}
+* Chujin -- COST 13 > 14. EFFECT UPDATE: Magic: Take the Unstable Serum! Kill all enemy monsters, give all cards in your hand -1 cost, and draw up to 7 cards. {yellow}
+* Chujin Tombstone -- COST 12 > 11. EFFECT UPDATE: Magic: Switch: Send the 3 most or least expensive non-DT non-Generated unique monsters from your dustpile to your hand with -3 cost. {yellow}
+* Large Chest -- COST 7 > 8. ATK 5 > 7. HP 6 > 7. EFFECT UPDATE: Need: 6+ unique rarities in your dustpile. Magic: Erase them to add 6 random monsters to your hand with -1/+1/+1. {yellow}
+* Mettabot Factory -- HP 6 > 4. EFFECT UPDATE: Shock: Fill your board with Mettabots. {yellow}
+* Royal Guard 2 -- EFFECT UPDATE: Dust: Give Haste to 4 random Royal Guards in your hand. {yellow}
+* Seam -- COST 8 > 7. EFFECT UPDATE: Taunt. Need: Your deck has no LEGENDARY monsters. Magic: Add a Shadow Crystal to your hand. {yellow}
+* Tasque Singer -- COST 5 > 6. ATK 5 > 4. {red}
+* Temmie Egg -- EFFECT UPDATE: Delay and Dust: Add a Temmie 2 to your hand. {red}

@@ -1,0 +1,1 @@
+* Gachapon -- At the start of every 3rd turn, add a Gacha Ball to your hand. For each counter this has, use the next rarity for Gacha Ball (COMMON > RARE > EPIC > LEGENDARY > DT > Loops back to COMMON)

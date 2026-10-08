@@ -1,0 +1,19 @@
+## Balancing (Monsters)
+* Toy Bricks -- HP 4 > 5. {green}
+* Snowy -- ATK 4 > 5. {green}
+* Mad Mew Mew-- HP 4 > 5. {green}
+* Stickman -- HP 4 > 5. {green}
+* Dog Cone -- ATK 1 > 2. HP 3 > 2. {green}
+* Pipis Cannon -- COST 10 > 9. {green}
+* Vending Machine -- COST 5 > 4. HP 5 > 4. {green}
+* So Sorry -- COST 5 > 4. ATK 4 > 3. {green}
+* Business Plug -- COST 7 > 6. ATK 5 > 4. {green}
+* Ambyu-Lance -- HP 6 > 7. {green}
+* First Starwalker -- COST 8 > 7. {green}
+* Mad Dummy -- COST 11 > 10. {green}
+* The Vessel -- COST 10 > 9. {green}
+* Plugboy -- ATK 3 > 4. {green}
+* Papyrus -- COST 11 > 13. EFFECT UPDATE: Haste. Armor. Whenever this attacks and kills a monster, it can attack another monster. {green}
+* The Heroine -- EFFECT UPDATE: Instead of dying, burn 5 random monsters in your Dustpile to return with -1/-2. Magic: Gain Taunt. {green}
+* Gerson Tombstone -- EFFECT UPDATE: Taunt. Need: Your deck has no non-Generated duplicates. Magic: Summon a random other monster costing 5-7 G from your dustpile. {green}
+* Gardener Asgore -- EFFECT UPDATE: Magic: Summon a Red Flower and give it +1/+1 for each 4 Plants in your dustpile. {green}

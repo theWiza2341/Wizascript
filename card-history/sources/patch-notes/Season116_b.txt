@@ -1,0 +1,33 @@
+## Balancing (Monsters)
+* Gerson -- HP 5 > 6. {green}
+* Greater Dog -- COST 7 > 6. ATK 6 > 5. {green}
+* Undyne -- COST 13 > 12. {green}
+* Bookshelf -- COST 7 > 6. ATK 5 > 4. {green}
+* Father Alvin -- ATK 5 > 7. {green}
+* Soulless Kris -- COST 10 > 8. {green}
+* Gamer -- HP 4 > 5. {green}
+* Big Hat Charles -- ATK 4 > 5. {green}
+* Gilbert -- ATK 5 > 6. {green}
+* Game Bomb -- ATK 3 > 4. {green}
+* Muffet's Pet -- ATK 3 > 4. {green}
+* The Mascot -- HP 5 > 6. {green}
+* Sad Dummy -- ATK 5 > 6. {green}
+* Mister Ruckus -- ATK 5 > 6. {green}
+* Omega Flowey -- COST 11 > 10. {green}
+* Wicabel -- COST 6 > 5. HP 8 > 7. {green}
+* Gachapon Machine -- HP 4 > 6. {green}
+* MTT Reporter -- HP 5 > 6. {green}
+* Broken Car -- HP 6 > 7. {green}
+* Meta Flowey -- Now correctly has the Plant tribe. {green}
+* Mister Elegance -- EFFECT UPDATE: Magic: Switch: Gain +1/+1 and Armor or Summon a copy of this with Haste. {green}
+* Berdly Plush -- EFFECT UPDATE: Magic: If you have a TOKEN with a base cost of 3+ G in your hand, give 3 random non-TOKEN cards in your hand -1 cost. {green}
+* Cyberdly -- EFFECT UPDATE: Haste. Magic: Gain +1/+1 for each unique non-TOKEN Tribe in your dustpile. After this attacks, add 2 Feather Storms to your hand. {green}
+* The Vessel -- EFFECT UPDATE: Magic: Add an exact copy of an ally monster to your hand and 3 to your deck. Turn into True Vessel (keep buffs). {green}
+* Elder Puzzler -- EFFECT UPDATE: Turn end: If this didn't attack this turn, deal 5 DMG to a random enemy monster. {green}
+* Searby -- EFFECT UPDATE: Deal 5 DMG to the monster in front of this. Bullseye: Draw a card with -2 cost. {green}
+* Angel of Death -- EFFECT UPDATE: Summon an exact copy of a monster. Give it Haste. Dust: Fill your board with random Lost Souls. {green}
+* Titan -- EFFECT UPDATE: Darkspawn. Taunt. Haste. Magic: Darkness constricts you. {green}
+* Animals -- EFFECT UPDATE: Magic: Switch: Gain Haste or Give the next 3 monsters in your deck +1/+1. {green}
+* Pyrope -- COST 5 > 4. HP 6 > 5. EFFECT UPDATE: Before this attacks a monster, deal 3 DMG to the opponent. {green}
+* Mauswheel -- EFFECT UPDATE: Loop (3). Magic: Add 3 Cursors with Haste to your deck. {green}
+* Chaos Blaster -- EFFECT UPDATE: Magic: Deal 5 DMG to you. Look at 2 random Lost Souls. Choose one to add to your hand with +1/+1/+1 and Haste. {green}

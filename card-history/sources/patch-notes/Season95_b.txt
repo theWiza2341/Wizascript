@@ -1,0 +1,14 @@
+[card] Tall Miner | cost 4 | Your Gemstones cost 0 0. Bullseye: Add a Gemstone to your hand. | ATK 3 | HP 6
+[card] Well | cost 4 | Turn end: Program (1): Add a random Undertale Yellow LEGENDARY to your hand. | ATK 4 | HP 5
+[card] Ceroba | cost 5 | Whenever an enemy monster is summoned or attacks during the enemy turn, the opponent loses 2 HP. Magic: Paralyze an enemy monster. | ATK 4 | HP 4
+[card] Dalv's Wardrobe | cost 5 | Dust: Summon a Pops. Give it +1/+1 for each non-TOKEN monster that died this turn. | ATK 3 | HP 5
+[card] Drink1 | cost 5 | Bullseye: Fully heal this monster. | ATK 3 | HP 7
+[card] El Ballador | cost 5 | Dodge (1). Whenever ANY monster attacks, swap that monster's ATK and HP. | ATK 3 | HP 5
+[card] Dalv | cost 6 | Transparency. Shook: Summon a Lightning Bolt and lose this Shook. Turn end: Regain this Shook. | ATK 3 | HP 6
+[card] Gamer | cost 6 | Magic: Deal 2 DMG to the lowest HP enemy monster and the opponent. Bullseye: Repeat. | ATK 3 | HP 4
+[card] Giga Froggit | cost 6 | Whenever this card gains ATK, deal that much DMG to all enemies. | ATK 4 | HP 4
+[card] Food Enjoyer | cost 7 | Haste. Magic: Choose a card in your hand. Delay: Burn it to fully heal this. | ATK 5 | HP 6
+[card] Clover | cost 9 | Your Rounds cost 0. Magic: Add The First Round to your hand. | ATK 7 | HP 8
+[card] TNT Man | cost 10 | Magic: Deal 1 DMG. Bullseye: Deal 4 DMG to everything. | ATK 5 | HP 9
+[card] Starlo | cost 11 | Time for a Dual! Magic: Give both players a Lasso. | ATK 7 | HP 7
+[card] Chujin | cost 14 | Magic: Kill all enemy monsters, draw up to 7 cards, and give them -3 cost. You die after 3 turns! | ATK 8 | HP 8

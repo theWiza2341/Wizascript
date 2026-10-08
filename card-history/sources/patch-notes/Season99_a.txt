@@ -1,0 +1,6 @@
+## New cards
+[card] Snake Miner | cost 3 | Delay and Bullseye: Add a Crystal Shard to your hand. | ATK 4 | HP 2
+[card] Mines Sign | cost 4 | Turn end: Add a Mine to the enemy deck. | ATK 4 | HP 4
+[card] Minecart | cost 7 | Dust: Add a Crystal Shard to your hand. | ATK 7 | HP 7
+[card] Searby | cost 7 | Magic: Deal 5 DMG to the monster in front of this. Bullseye: Draw a card. | ATK 5 | HP 3
+[card] Chujin Tombstone | cost 12 | Magic: Add 3 different non-Generated cards costing 3 or less G from your dustpile to your hand with -3 cost. | ATK 7 | HP 7

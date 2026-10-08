@@ -1,0 +1,4 @@
+Season 80
+New cards
+* [card] Bulldogzer (cost 0, ATK 30, HP 30, green soul): Charge. Running over your opponents with the power of luck!
+* [card] Dog Slots (cost 7, ATK 7, HP 7, yellow soul): Magic: If you have 7 G remaining, 7 monsters in your deck, and there are 7 non-TOKEN monsters on the board, add a Bulldogzer to your hand.

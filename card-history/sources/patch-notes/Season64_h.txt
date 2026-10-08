@@ -1,0 +1,11 @@
+New cards
+* [blue soul] Cyber World Sign | COST 7 | ATK 6 | HP 6 | Magic: Add 3 random different Program cards from your dustpile to your hand.
+* [green soul] Flame of Love | COST 7 | ATK 6 | HP 4 | Dodge (1). Magic: Give -3 ATK to an enemy monster and -1 ATK to its adjacent monsters.
+* [orange soul] Spamton ([[BIG SHOT!!]]) | COST 7 | ATK 8 | HP 6 | Magic, Dust, Shock, Support and Turn end: Shuffle 2 Hyperlinks Blocked into the opponent's deck.
+* [purple soul] Susie Statue | COST 7 | ATK 6 | HP 8 | Turn start: Attack a random enemy.
+* [purple soul] Arcade Machine | COST 9 | ATK 5 | HP 5 | Need: Your hand has no cards of the same rarity. Magic: Give all cards in your hand -3 cost.
+* [purple soul] Shovels x999 | COST 9 | ATK 9 | HP 9 | Magic: Add 999 Shovels to your deck (max: 99). Delay: Burn all Shovels in your deck.
+* [orange soul] Queen | COST 10 | ATK 8 | HP 9 | Taunt. Magic: Choose An Enemy Monster. Summon A Cyber Cage For The Opponent That Catches That Monster.
+* [blue soul] Werewerewire | COST 10 | ATK 5 | HP 6 | Haste. Magic: Turn all ally Plugs into Werewires that catch the originals and gain their stat buffs.
+* [purple soul] Queen Painting | COST 12 | ATK 6 | HP 8 | Haste. Support: Turn into Spamton Painting with the same base stats as this.
+* [purple soul] Spamton Painting | COST 12 | ATK 6 | HP 8 | Turn end: Give all other ally monsters Taunt. Support: Turn into Queen Painting with the same base stats as this.

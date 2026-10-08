@@ -1,0 +1,27 @@
+## Balancing (Monsters)
+* Biker Lancer -- HP 3 > 4. {green}
+* Pile of Dust -- ATK 1 > 4. {green}
+* Noelle -- COST 9 > 8. {green}
+* Snailmobile -- COST 5 > 4. {green}
+* Chaos Blaster -- HP 5 > 6. {green}
+* Ball Person -- COST 3 > 2. HP 4 > 2. {green}
+* Tutorial Guy -- COST 4 > 2. ATK 3 > 2. HP 3 > 1. {green}
+* Toy Block -- ATK 5 > 6. {green}
+* Lancer Painting -- COST 3 > 2. {green}
+* Ragel -- COST 3 > 2. {green}
+* Mad Dragon -- ATK 4 > 5. {green}
+* Killer Cook -- ATK 2 > 3. {green}
+* Useless Bird -- ATK 3 > 4. {green}
+* Small Bird -- ATK 3 > 4. HP 4 > 3. {green}
+* Cool Vulkin -- ATK 2 > 3. {green}
+* Date Alphys -- COST 5 > 4. {green}
+* Broken Pillar -- ATK 3 > 4. {green}
+* Hot Dog Harpy -- ATK 4 > 5. {green}
+* Innkeeper -- HP 5 > 6. {green}
+* Receptionist 1 -- COST 6 > 5. {green}
+* Jukebox -- COST 7 > 6. ATK 6 > 5. {green}
+* Muffet -- COST 9 > 10. ATK 4 > 8. HP 10 > 8. {green}
+* Starwalker Bird -- HP 5 > 6. {green}
+* Teacher Toriel -- COST 8 > 5. HP 9 > 4. {green}
+* Grillby -- HP 3 > 4. {green}
+* Janitor -- ATK 2 > 3. HP 3 > 2. {green}

@@ -1,0 +1,6 @@
+## Balancing (Spells)
+* Royal Integrity -- COST 3 > 2. {green}
+* Campfire -- COST 2 > 3 EFFECT UPDATE: Heal 4 HP randomly split among your monsters. Give 3 random monsters in your hand +1/+1. {yellow}
+## Balancing (Artifacts)
+* Power -- EFFECT UPDATE: At the end of turns 2, 5, 8, and 11, give +1/+1 to the next monster in your deck. {yellow}
+* Doom -- QoL-Change: Adding a counter to this artifact to clear up when it is going to trigger. {yellow}

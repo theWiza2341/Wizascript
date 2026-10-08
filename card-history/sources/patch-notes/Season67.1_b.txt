@@ -1,0 +1,15 @@
+* Kris -- COST 12 > 10. EFFECT UPDATE: Haste. Transparency. Whenever this attacks and kills a monster, gain +2/+1. Turn end: Draw a monster. It copies this card's buffs. {yellow}
+* Shambling Mass -- EFFECT UPDATE: Magic: Kill an ally monster to gain Haste and Candy. {yellow}
+* Muffet -- HP 10 > 9. EFFECT UPDATE: Haste. Delay and Turn end: Add a Spider Donut to your hand and a Spider Croissant to your deck. {red}
+* Cyberdly -- EFFECT UPDATE: Need: You spent 18+ G on TOKEN cards this game. Magic: Add the IQ artifact. {red}
+## Balancing (Spells)
+* Jevilstall -- EFFECT UPDATE: Delay: If you spent 4+ G on spells last turn, add this to your hand and draw a spell. Else, disable the Freedom artifact. {green}
+* Load -- COST 16 > 14. {green}
+* Scope -- EFFECT UPDATE: Look at 2 random cards in your deck and choose one to draw. {green}
+* Self Reflection -- EFFECT UPDATE: Paralyze a monster. Delay: If it was an ally, give it Candy and +1/+1. If it was an enemy, add True Self to your hand. {yellow}
+* Contamination -- EFFECT UPDATE: Kill 2 random damaged enemy monsters. {yellow}
+* True Self -- COST 7 > 5. EFFECT UPDATE: Kill an unparalyzed enemy monster and all copies of it on the enemy board. Burn all copies of it in their hand and deck. {yellow}
+## Balancing (Artifacts)
+* Veteran -- EFFECT UPDATE: Whenever an ally monster attacks and kills a monster, it gains +1 ATK. {green}
+* Preservation -- EFFECT UPDATE: Starts with 5 counters. Whenever you would overdraw a card, spend 1 counter to prevent this. {green}
+* Ambition -- EFFECT UPDATE: At the end of every 3 turns, add Dream to the top of your deck if you have no Dreams in hand or deck. {red}

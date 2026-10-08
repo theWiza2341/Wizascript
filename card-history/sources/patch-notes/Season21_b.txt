@@ -1,0 +1,26 @@
+## Balancing (Spells)
+* Assault -- Effect Update: Add 3 random monsters costing 3 or less in your deck with +1/+1. Draw a card. {green}
+* Heal -- Effect Update: Restore 3 HP. Draw a card. If used on a monster, remove all negative effects. {green}
+* Another Chance -- Cost 4 > 5; Effect Update: Give an enemy monster: "Dust: Summon this monster for your opponent". {yellow}
+* Longevity -- Cost 5 > 4; Effect Update: Fully heal a monster. Give +1 HP for each restored HP. Give Candy. {yellow}
+* Froggit Trio -- Effect Update: If your opponent has more monster on his board than you, summon 3 froggits. {red}
+* Fortune -- Cost 5 > 6; Effect Update: Earn 7 gold. {red}
+## Balancing (Artifacts)
+* Spy -- Effect Update: Reveal your opponent's hand at the first and every 5 turns. Whenever it reveals a spell, it costs 1 more. {green}
+* Draw -- Effect Update: Draw one more card every 4 turns (except turn 1). {yellow}
+* Froggits -- Effect Update: Summon 2 ally Tiny Froggits when your second turn begins. {red}
+## Game mode : Bots
+* A new temporary game mode has been added.
+## Profile Skins
+* "Simple" profile skins have been removed from the shop.
+* Cost : 500 UCP -> 350 UCP.
+* If you bought skins before the update, we gave you the difference.
+## Avatars
+* Bots and "Get Dunked On" avatars have been added to the shop.
+* Dating Undyne, Rabbit ShopKeeper, Thumbsup, Shyren have been removed from the shop.
+* Determination cost : 999 UCP -> 666 UCP.
+* Legendary cost : 500 UCP -> 350 UCP.
+* Epic cost : 250 UCP -> 200 UCP.
+* Note : If you bought avatars before the update, we gave you the difference.
+## Card Skins
+* You can now buy card skins.

@@ -1,0 +1,16 @@
+Beta 20.0 (2018/03/01)
+## Artifacts
+* [icon] Arcane Scepter -- Whenever you cast a spell, cast a random spell on a random target. {yellow}
+* [icon] Vitality -- Whenever an ally monster or spell heals a damaged monster to max HP, give +1 HP to the target.
+* [icon] Veteran -- Your monsters gain +1 ATK whenever they attack and kill a monster.
+* [icon] Spy -- Reveal your opponent's hand at the first and every 5 turns.
+* [icon] Hourglass -- Your Future effects are triggered one turn earlier.
+## Profile skins
+* You can unlock them for 250 or 500 UCP here.
+* They are visible on : Games, chat profile, profile.
+* There is an option to disable profile skins.
+## Rewards (LV up)
+* You will now get 10 UCP every 10 LVs (except for 50, 100, 150 and 200).
+* UCP have been given retroactively.
+## Balancing (Souls)
+* [red soul] DETERMINATION (Nerf) : Start the game with 1 extra life. When you would die, gain 15 HP instead. {red}

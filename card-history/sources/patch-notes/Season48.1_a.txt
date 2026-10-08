@@ -1,0 +1,21 @@
+Season 48
+Mid season
+## Friendship
+* Added a leaderboard.
+* Adjusting xp gains to make the system more fair.
+## Balancing (Monsters)
+* Bloody Tree -- EFFECT UPDATE: Magic: Deal Fatigue DMG to the enemy. {yellow}
+* Lost Undyne -- EFFECT UPDATE: Dust: Deal 2 DMG to 2 random enemy monsters. {yellow}
+* Lost Alphys -- EFFECT UPDATE: Dust: Add a random Common Amalgamate to your hand. It costs 2 less. {yellow}
+* Lost Papyrus -- EFFECT UPDATE: Dust: Draw a monster and give it +1/+1. {yellow}
+* Lost Sans -- EFFECT UPDATE: Dust: Add a Gaster Blaster to your hand. It costs 3 less. {yellow}
+* Lost Toriel -- EFFECT UPDATE: Dust: Reduce a random enemy monster's ATK by 3. {red}
+* Lost Souls -- HP 3. ATK 3. {red}
+## Balancing (Spells)
+* Another Chance -- Cost 6 > 5. {green}
+* Faded Memory -- EFFECT UPDATE: Look at all Lost Souls. Choose one to summon. {yellow}
+* Resurrection -- EFFECT UPDATE: Add 1 copy of 2 ally dead non-generated monsters to your hand. If you have <15 HP, add the next Lost Soul too. {yellow}
+* Last Dream -- EFFECT UPDATE: Summon the next Lost Soul with Haste. Then, if you have 15 HP or less, give all ally monsters +1/+1. {yellow}
+* Will to Fight -- EFFECT UPDATE: Add the next Lost Soul on the top of your deck with +2/+2 and Haste. {yellow}
+## Balancing (Souls)
+* DETERMINATION -- EFFECT UPDATE: Start with an extra life. Whenever 7 non-generated monsters die, add the next lost soul Lost Soul to your hand starting with first one. When you would die, restore 10 HP and summon a random Lost Soul instead. {yellow}

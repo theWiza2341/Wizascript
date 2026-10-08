@@ -1,0 +1,20 @@
+Season 67
+## Balancing (Monsters)
+* Tasque Manager -- COST 6 > 5. {green}
+* Spider Flower -- HP 2 > 3. EFFECT UPDATE: Magic: Choose a Plant or Arachnid costing 4 or less in your hand. Synergy: Summon a copy of it. {green}
+* Dog Residue -- EFFECT UPDATE: Turn end: If this card has ATK buffs, gain Taunt. {green}
+* Dog Treats -- ATK 3 > 2. EFFECT UPDATE: Haste. Dust: Give all ally Dogs +1/+1. {yellow}
+* Bone Painting -- COST 4 > 3. HP 4 > 3. EFFECT UPDATE: Magic: Give a Dog in your hand +1/+1 and Taunt. {yellow}
+* Dog Food -- COST 2 > 4. ATK 1 > 2. EFFECT UPDATE: Taunt. Magic: Give all Dogs in your hand +1/+1. {yellow}
+* Rope Dog -- COST 4 > 5. ATK 4 > 3. HP 4 > 7. EFFECT UPDATE: The first time this attacks a monster each turn, it can attack again. {yellow}
+* Cool Bone -- ATK 3 > 5. HP 7 > 5. EFFECT UPDATE: Magic: Add a 5/5/5 exact copy of an ally Dog to your hand. {red}
+* Bone Drawer -- EFFECT UPDATE: Dust: Add a Pile of Bones to your hand. {yellow}
+* Pile of Bones -- COST 3 > 5. EFFECT UPDATE: Taunt. Magic: Give a Dog in your hand +3/+3. {yellow}
+* Annoying Dog -- COST 4 > 3. ATK 3 > 1. HP 3 > 5. EFFECT UPDATE: Taunt. Magic: Add a Dog Residue to your hand. If this has ATK buffs, add another one. {yellow}
+* Doggo -- EFFECT UPDATE: Delay: If this has ATK buffs, Paralyze the monster in front of this. {yellow}
+* Dogamy -- COST 5 > 7. ATK 5 > 4. HP 4 > 3. EFFECT UPDATE: Haste. Magic: Summon a Dogaressa from your hand and give this card's stat buffs to it. {yellow}
+* Dogaressa -- COST 5 > 7. ATK 4 > 3. HP 5 > 4. EFFECT UPDATE: Taunt. Magic: Summon a Dogamy from your hand and give this card's stat buffs to it. {yellow}
+* Sand Dog -- EFFECT UPDATE: Magic: Summon an exact copy of this monster. {yellow}
+* Bloody Tree -- COST 5 > 4. ATK 5 > 3. HP 4 > 6. EFFECT UPDATE: Turn start: Gain +1 ATK. {yellow}
+* Cracked Geode -- COST 4 > 5. {red}
+* Pickaxe -- EFFECT UPDATE: Whenever this attacks, add a Gemstone to your hand. Shock: If this can't attack, gain Haste. {red}

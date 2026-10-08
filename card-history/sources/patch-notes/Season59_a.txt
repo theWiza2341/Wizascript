@@ -1,0 +1,26 @@
+## Balancing (Monsters)
+* Librarian -- HP 3 > 4. {green}
+* Flowey -- ATK 1 > 2. {green}
+* Manticore -- COST 7 > 6. {green}
+* Purple Mascot -- COST 5 > 4. HP 5 > 4. {green}
+* Angel of Death -- COST 17 > 16. {green}
+* Charles -- COST 3 > 2. HP 2 > 1. {green}
+* Pink Laser -- COST 6 > 5. {green}
+* Gyftrot -- ATK 5 > 6. {green}
+* Magic Lantern -- HP 5 > 6. {green}
+* Demon Flowey -- COST 7 > 6. ATK 7 > 6. HP 7 > 6. {green}
+* Abstract Art -- COST 3 > 2. {green}
+* Fox Bodyguard -- HP 6 > 7. {green}
+* Desk Lamp -- HP 3 > 4. {green}
+* Mettaton NEO -- ATK 10 > 13. {green}
+* Gerson Tombstone -- EFFECT UPDATE: Magic: Need: Your deck has no duplicates (except Generated cards). Magic: Summon a random other monster costing 5-7 G from your dustpile. {yellow}
+* Moldessa -- ATK 3 > 4. HP 4 > 3. EFFECT UPDATE: Magic and Dust: Draw a different Mold from your deck and give it +1 HP {yellow}
+* Loox -- EFFECT UPDATE: Magic: Deal 1 DMG. If it targeted an ally monster, gain Charge. {yellow}
+* Evil Eye -- EFFECT UPDATE: Turbo: Reveal a random card in the opponent's hand. Magic: Deal 1 DMG. If it killed a monster, heal 2 HP to you. {yellow}
+* Garbage -- HP 5 > 6. EFFECT UPDATE: Taunt. Dust: Add 2 random BASE spells to your hand. {yellow}
+* Carbed -- COST 6 > 5. HP 5 > 6. EFFECT UPDATE: Haste. This has +3 ATK while damaged. {yellow}
+* Elder Puzzler -- EFFECT UPDATE: Turn end: If this didn't attack this turn, deal 3 DMG to a random enemy monster. {yellow}
+* Toy Block -- ATK 6 > 5. HP 3 > 4. {yellow}
+* Magic Crystal -- COST 13 > 19. EFFECT UPDATE: In your hand, this has -1 cost for every G you spent on spells this game (max: -15 cost). Magic: Add a Crystal Shard to your hand. {yellow}
+* Papyrus Statue -- COST 6 > 5. ATK 1 > 3. HP 5 > 6. EFFECT UPDATE: Haste. Magic: If you have 5 or more cards in your hand, gain Taunt. {yellow}
+* Pile of Bones -- EFFECT UPDATE: No effect. {red}

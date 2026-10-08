@@ -1,0 +1,14 @@
+Season 37
+## Balancing (Monsters)
+* Scarf Mouse -- EFFECT UPDATE: Magic: Silence a monster. {green}
+* Librarian -- EFFECT UPDATE: Magic: If your deck has no duplicate, put 3 random cards in it, draw 2 cards and reduce their cost by 1. {green}
+* Coffee Man -- EFFECT UPDATE: Taunt. Magic: Silence a monster. {green}
+* Thrashing M -- EFFECT UPDATE: This card has all monster tribes. Dust: Give a random ally monster with a tribe +1/+1. {green}
+* Spade King -- EFFECT UPDATE: Now kills base cost of <= 4G monsters. {yellow}
+* Migosp -- EFFECT UPDATE: Magic: Give +1 HP to a random ally monster. {red}
+* Scissor Dancer -- EFFECT UPDATE: Magic: Deal 1 DMG to a monster. If it's at a central slot and not full HP, deal 4 DMG instead. {red}
+## Balancing (Spells)
+* G. Blaster -- COST 7 > 6. {green}
+* Multi Shot -- COST 5 > 1. EFFECT UPDATE: Deal 1 DMG. If this killed a monster, add Multi Shot into your hand. {yellow}
+## Balancing (Artifacts)
+* Solidity -- EFFECT UPDATE: Whenever you play a Taunt monster, give it +1 HP. {green}

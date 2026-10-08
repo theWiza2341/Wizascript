@@ -1,0 +1,20 @@
+## Balancing (Monsters)
+* Action Figures -- ATK 3 > 4. {green}
+* Father Alvin -- ATK 4 > 5. {green}
+* Elimination Duck -- COST 13 > 12. {green}
+* Totem -- EFFECT UPDATE: Magic: If you have 6 or more 6-cost monsters in your dustpile, burn 6 of them to add Totemic Carvings to your hand. {green}
+* Glowing Shroom -- EFFECT UPDATE: Magic: If played on the left, swap its stats. Whenever you spend G on spells, gain +1 ATK. {green}
+* Glad Dummy -- EFFECT UPDATE: Magic: Give adjacent ally monsters Taunt. {green}
+* Jukebox -- EFFECT UPDATE: Taunt. Magic: Look at 3 random monsters in your dustpile. Add one to your deck with +1/+1. {green}
+* Muffet's Pet -- EFFECT UPDATE: Magic: Give a monster -2 ATK. If it has 0 ATK, kill it. {green}
+* Cash Register -- EFFECT UPDATE: Magic: Trigger the Turbo effect of a monster in your hand. If played on the left, send it to your deck and draw a card. {green}
+* Baking Queen -- EFFECT UPDATE: Magic: Kill a damaged monster. Heal HP to you equal to its ATK. {green}
+* Pink Crystals -- EFFECT UPDATE: Shock: Add a Crystal Shard to your hand and lose this Shock. Turn end: If you cast a Gemstone this turn, gain the Shock back. {green}
+* Rudinn -- EFFECT UPDATE: Magic: Look at 3 random Deltarune monsters costing 2-4 G and choose one. Add it to your hand with +1 ATK. {green}
+* Burning Snail -- EFFECT UPDATE: Magic: Burn a card in your hand to draw a Snail. {green}
+* Stuffed Doll -- EFFECT UPDATE: Taunt. Magic: Look at 5 different random monsters and choose one. Delay: Add it to both players hands and give yours -1 cost. {green}
+* The Heroine -- COST 13 > 11. EFFECT UPDATE: Taunt. Instead of dying, return with base -2/-2 and no Taunt if you have a card of each non-DT rarity in your dustpile. {yellow}
+* Microwave -- COST 4 > 1. ATK 1 > 2. HP 5 > 2. EFFECT UPDATE: Taunt. Delay: If played on the left, burn the leftmost card in your hand. Otherwise, burn the rightmost card. {yellow}
+* Trash Tornado -- EFFECT UPDATE: Magic: Both players shuffle their leftmost and rightmost cards in their hand into their deck and draw that many cards. {red}
+* Coffin -- COST 4 > 5. {red}
+* First Starwalker -- COST 7 > 8. {red}

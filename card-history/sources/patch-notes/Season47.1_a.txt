@@ -1,0 +1,29 @@
+Season 47
+Mid season
+## Balancing (Monsters)
+* Scissor Dancer -- ATK 2 > 3. {green}
+* Faun -- HP 4 > 3. ATK 3 > 4. EFFECT UPDATE: Magic: Reduce a monster's ATK by 2 and add a random card to your hand with a cost equal to the monster's remaining ATK. {yellow}
+* Mettaton EX -- Cost 9 > 8. EFFECT UPDATE: Dust: If you have 15 or more gold, summon Mettaton EX. {yellow}
+* Reaper Bird -- ATK 4 > 5. Magic: Draw an Amalgamate or a Froggit. Synergy: Give it +1/+1. {yellow}
+* Memory Head -- Cost 4 > 5. HP 4 > 5. ATK 3 > 6. EFFECT UPDATE: Magic: Shuffle a random other non-DT card and a copy of it from your hand into your deck. {yellow}
+* Lemon Bread -- Cost 6 > 7. HP 6 > 7. {red}
+* Seam -- HP 6 > 5. ATK 6 > 5. {red}
+* MTT TV -- Cost 4 > 5. {red}
+* Fly -- EFFECT UPDATE: Charge. Whenever you cast a spell with a cost of 2 or higher, summon a Fly. {red}
+* Blue Flower -- HP 6 > 5. ATK 6 > 5. {red}
+## Balancing (Spells)
+* Instant Noodles -- Cost 4 > 2. EFFECT UPDATE: Give a monster +2/+2. Draw a card. {red}
+## Balancing (Artifacts)
+* Noodles -- EFFECT UPDATE: At the start of the game, shuffle 2 Instant Noodles into your deck. {green}
+* Arcane Scepter -- EFFECT UPDATE: Whenever you cast a spell with 2+ base cost, cast a random spell on a random target. {red}
+## Matchmaking
+* Reduced queue time.
+## Cosmetics
+* New Summer bundle available.
+* Vaporwave bundle is no longer available but cosmetics are now available separately.
+## Misc
+* Added a background music for the Vaporwave profile skin.
+## Bug fixes
+* Fixed a visual glitch where spells' cost won't update on aura effects.
+* Veteran artifact no longer blocks "do something with killer" effects.
+* Fixed multi Diamond Boy 1 interaction.

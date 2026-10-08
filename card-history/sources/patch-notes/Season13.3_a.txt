@@ -1,0 +1,17 @@
+Beta 13.4 (2017/08/??)
+## New Cards
+* [white soul] Candy Dish. COST: 3. ATK: 1. HP: 6. EFFECT: "Can't attack. Whenever you summon a monster, give it a Candy.".
+* [white soul] Bridge Seed. COST: 1. ATK: 0. HP: 1. EFFECT: "Taunt. Magic: Draw a card and gain +1HP. Trigger this effect again for each ally Bridge Seed on the board.".
+* [white soul] Shambling Mass. COST: 5. ATK: 6. HP: 5. EFFECT: "Magic: Deal fatigue damage to your opponent.".
+* [white soul] Dog Food. COST: 5. ATK: 2. HP: 3. EFFECT: "Dust: Summon a random dog.".
+* [white soul] Tiny Froggit. COST: 0. ATK: 1. HP: 1.
+* [blue soul] Elder Puzzler. COST: 8. ATK: 6. HP: 9. EFFECT: "End of turn: Deal 3 damage to a random enemy monster if this card didn't attack this turn.".
+* [blue soul] Red Bird. COST: 5. ATK: 3. HP: 3. EFFECT: "Magic: Turn a monster into a random monster of the same cost.".
+* [blue soul] Manticore. COST: 6. ATK: 5. HP: 4. EFFECT: "Magic: Both players draw two cards.".
+* [blue soul] Vulkin's Cloud. COST: 4. ATK: 2. HP: 4. EFFECT: "Transparency. At the start of your turn deal its ATK as damage to a random enemy.".
+* [blue soul] Disco Ball. COST: 4. ATK: 0. HP: 7. EFFECT: "At the end of your turn switch the ATK and HP of all other monsters.".
+* [purple soul] Bob. COST: 5. ATK: 2. HP: 2. EFFECT: "Magic: Fill your hand with random Temmies (except Bob).".
+* [purple soul] Dancer Mettaton. COST: 6. ATK: 4. HP: 7. EFFECT: "Restore 5 HP to its owner and summon a Mettabot whenever this attacks and kills a monster.".
+* [purple soul] Big Bomb. COST: 7. ATK: 1. HP: 10. EFFECT: "At the start of your turn kill all monsters on the board. Dust: Kill its killer.".
+* [purple soul] Innkeeper. COST: 6. ATK: 5. HP: 5. EFFECT: "Magic: Raise your max HP by 5.".
+* [red soul] Angel of Death. COST: 20. ATK: 10. HP: 12. EFFECT: "Magic: Summon a copy of a monster. Dust: Fill your empty spaces with Lost Souls.".

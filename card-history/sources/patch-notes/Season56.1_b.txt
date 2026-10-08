@@ -1,0 +1,10 @@
+* Dogamy -- EFFECT UPDATE: Dust: Give +2 ATK to 2 random Dogs in your hand. {red}
+* Dogaressa -- EFFECT UPDATE: Dust: Give +2 HP to 2 random Dogs in your hand. {red}
+* Loren -- [white soul] > [magenta soul] {red}
+* Thrashing Machine -- ATK 4 > 3. EFFECT UPDATE: Synergy: Gain +1 ATK. {red}
+* Trader Temmie -- ATK 4 > 3. EFFECT UPDATE: Transparency. Turn end: Add a random spell costing 1 or less G to your hand. {red}
+* Allergic Temmie -- COST 3 > 4. {red}
+## Balancing (Spells)
+* Spade -- COST 5 > 4. {green}
+## Balancing (Artifacts)
+* Ambition -- EFFECT UPDATE: At the end of your 3rd, 7th, 11th, 15th, and 19th turns, add a Dream to the top of your deck. {green}

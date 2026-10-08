@@ -1,0 +1,20 @@
+## Balancing (Monsters)
+* Rudolph -- EFFECT UPDATE: Magic: If your deck has no non-Generated spells, restore 6 HP to yourself. {green}
+* Bookshelf -- EFFECT UPDATE: Magic: If your deck has no non-Generated spells, look at all spells of your Soul. Choose one to add to your hand with -3 cost (not below 2). {green}
+* Librarian -- EFFECT UPDATE: Magic: If your deck has no non-Generated duplicates, add 3 random cards to your deck and draw 2 cards with -1 cost. {green}
+* Spider Sign -- EFFECT UPDATE: Magic: Transform all Spiders in your hand and deck to Spider Donuts and Spider Croissants (randomly). {green}
+* Muffet's Pet -- HP 5 > 6. {green}
+* Easy to Draw Bed -- EFFECT UPDATE: After this attacks, replace this with a random monster. Set its base stats to 4/5. {green}
+* Toy Block -- ATK 2 > 5. HP 4 > 3. EFFECT UPDATE: Turn start and Turn end: Swap its ATK and HP. {yellow}
+* Golden Flowers -- EFFECT UPDATE: Magic: Look at 2 random different non-TOKEN spells you played this game and choose one to add to your hand. {yellow}
+* Parsnik -- HP 2 > 4. EFFECT UPDATE: Magic: Paralyze a monster. If it was already paralyzed, deal 2 DMG to it. {yellow}
+* Gaster -- Cost 14 > 12. EFFECT UPDATE: Magic: Trigger every Synergy effect triggered this game. Cannot trigger the same twice. {yellow}
+* G Follower 3 -- EFFECT UPDATE: Magic: Look at 2 random G Followers. Choose one to add to your hand. Synergy: It costs 2 less. {yellow}
+* The Vessel -- Cost 12 > 10. EFFECT UPDATE: Magic: Add two exact copies of an ally monster (except itself) to your deck and one to your hand. {yellow}
+* Spike Trap -- ATK 0 > 1. EFFECT UPDATE: Taunt. Whenever this gets damaged, gain +2 ATK. {yellow}
+* Flowey -- EFFECT UPDATE: Haste. Dust: Return a Silenced copy of this to your deck with +2 ATK and Haste. {yellow}
+* Spider Bakery -- ATK 3 > 2. EFFECT UPDATE: Magic: Add a Spider to your hand and your deck. Synergy: Add Spider Donut and Spider Croissant instead. {yellow}
+* Spider Reporter -- HP 3 > 2. EFFECT UPDATE: Haste. Turbo: Add a Spider to your hand and to your deck. {yellow}
+* Library Loox -- HP 4 > 5. EFFECT UPDATE: Magic: Send a copy of a Generated card in your hand (except this) to the top of your deck with -1 cost. {yellow}
+* Gerson -- ATK 3 > 4. EFFECT UPDATE:Armor (1). Magic: Add a random different Gerson's artifact. {yellow}
+* Receptionist 2 -- HP 2 > 4. EFFECT UPDATE: Armor (1). Taunt. {yellow}

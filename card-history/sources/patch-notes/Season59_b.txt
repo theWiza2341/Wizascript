@@ -1,0 +1,9 @@
+## Balancing (Spells)
+* Create a Machine -- COST 1 > 0. {green}
+* Poison -- COST 2 > 1. {green}
+* Spade -- COST 4 > 3. {green}
+* Resurrection -- COST 4 > 3. {green}
+* Tea Set -- EFFECT UPDATE: Heal 3 HP. If this targeted a monster, also give it +1/+1. {red}
+* Inflation -- COST 1 > 2. {red}
+Note
+* Sorry for the latest 3 small updates. I (Onutrem) was very busy during May, but I will be as available as before for the upcoming updates. Have fun!

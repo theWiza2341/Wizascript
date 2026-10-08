@@ -1,0 +1,24 @@
+Mid season
+## Cosmetic Bundle
+* Vaporwave cosmetic bundle is now available!
+## Balancing (Monsters)
+* Angel of Death -- EFFECT UPDATE: Magic: Summon an exact copy of a monster. Dust: Fill your board with random generated Lost Souls. {green}
+* Chaos Blaster -- EFFECT UPDATE: Magic: Deal 5 DMG to yourself and add a random Generated Lost Soul to your hand. {green}
+* Chessboard -- Now is a Piece. {green}
+* Tombstone -- Cost 14 > 13. {green}
+* Script Bomb -- HP 6 > 5. EFFECT UPDATE: Dust: Draw a card and reduce its cost by 2. Turn start: Sacrifice this and trigger its Dust. {yellow}
+* Ponman Statue -- HP 3 > 2. EFFECT UPDATE: Magic: If played on the left, give an ally Piece +2 ATK and Transparency. If played on the right, give it +2 HP and Candy. Synergy: Affects all ally pieces. {yellow}
+* Thrashing Machine -- HP 3 > 4. Cost 4 > 3. EFFECT UPDATE: Removed Haste. {yellow}
+* Gaster Follower 3 -- EFFECT UPDATE: Magic: Look at 2 random Gaster Followers. Choose one one to add to your hand. Synergy: Add both instead. {red}
+* Gaster Follower 2 -- HP 4 > 3. {red}
+* Goner Clam -- Cost 5 > 6. Magic: Heal 4 HP. Synergy: Give all ally Gaster Followers +1/+1. {red}
+* Lesser Dog -- HP 5 > 4. {red}
+* Blue Snail -- EFFECT UPDATE: Magic: Give Haste to all ally Snails. Snails which cost 1 or less gain Charge instead. {red}
+## Balancing (Spells)
+* Sacrifice -- EFFECT UPDATE: Kill an ally monster. Heal yourself by 4 HP and add random generated Lost Soul to your hand with -2 cost. {green}
+* Punishment -- EFFECT UPDATE: Deal 4 DMG to a monster. {yellow}
+## Balancing (Artifacts)
+* Arcane Scepter -- EFFECT UPDATE: Whenever you cast a spell, cast a random spell on a random target. {green}
+## Tribes
+* Removed Bomb tribe.
+* Renamed Chess Figure to Piece.

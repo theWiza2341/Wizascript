@@ -1,0 +1,23 @@
+## Icons
+* [icon] Pack
+* [icon] DR Pack
+* [icon] Shiny Pack
+* [icon] Super Pack
+* [icon] Final Pack
+* [icon] Gold
+* [icon] Dust
+## Balancing (Monsters)
+* Chest -- HP 1 > 3 {green}
+* Hot Dog Vulkin -- HP 3 > 4. ATK 5 > 4. EFFECT UPDATE: Magic: Deal 2 DMG to an enemy monster or give +2 ATK to an ally monster. {green}
+* Migosp -- EFFECT UPDATE: Magic: Give +1 HP to an ally monster. {green}
+* Berdly -- ATK 3 > 4. Cost 5 > 6. {green}
+* Jukebox -- HP 6 > 7. EFFECT UPDATE: Magic: Look at 3 other random monsters in your dustpile. Add one to your deck with +1/+2. {green}
+* Spade King -- EFFECT UPDATE: Taunt. Magic: Kill all monsters with <= 2 HP and gain +2/+2 for each killed monster. {green}
+* Goner Kid -- COST 3 > 5. {red}
+## Balancing (Spells)
+* Rage -- EFFECT UPDATE: Give an ally monster +1/+1, then deal its ATK as DMG to the monster in front of it. {green}
+* Multi Shot -- EFFECT UPDATE: Deal 1 DMG. If it killed a monster, add Multi Shot to your hand. If it had >= 2 base HP, gain 1 G. {green}
+* Investment -- COST 2 > 1. EFFECT UPDATE: Look at 3 random cards in your deck. Send one to the top of your deck with -2 cost. {yellow}
+* Brain Shift -- EFFECT UPDATE: Deal a monster under KR's ATK to your opponent and remove the KR (max 8 DMG). {red}
+## Balancing (Artifacts)
+* Copycat -- EFFECT UPDATE: At the start of the game, reveal your opponent's starting hand and shuffle a copy of it into your deck. Those copies cost 2 less. {yellow}

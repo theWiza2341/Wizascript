@@ -1,0 +1,20 @@
+Season 50
+## New cards
+* Burning Snail (COST 1, ATK 1, HP 1, white soul): Magic: Trigger the Magic effect of a random ally Snail (Except Burning Snail).
+* Pile of Dust (COST 1, ATK 1, HP 1, white soul): Dust: Give +2/+2 to its killer.
+* Business Snail (COST 2, ATK 2, HP 2, white soul): Other Snails on your board and hand have +1/+1/+1.
+* Fire Chimney (COST 2, ATK 2, HP 3, blue soul): Magic: If you played a card with a cost of 7 or more this turn, gain +1/+1 and Haste.
+* Anime Sword (COST 3, ATK 2, HP 1, blue soul): Dust: Give this monster's ATK and max HP to a random monster in your hand.
+* Cross Bomb (COST 3, ATK 2, HP 2, white soul): Charge. Whenever this attacks the opponent, deal 1 DMG to the monster in front of this.
+* Jumping Frog (COST 3, ATK 1, HP 2, white soul): Magic: Deal this monster's ATK as DMG to an enemy monster.
+* Snail Bucket (COST 3, ATK 2, HP 2, white soul): Dust: Summon 2 random different 1-cost Snails and trigger their Magic effects.
+* Snail Pen (COST 3, ATK 2, HP 2, blue soul): Whenever you summon a Snail, trigger its Magic effect.
+* Cool Bone (COST 4, ATK 2, HP 6, blue soul): The first time this monster attacks a monster each turn, it can attack another monster.
+* Ice E Mascot (COST 4, ATK 2, HP 4, blue soul): Haste. Whenever this attacks a monster, Paralyze it.
+* Moldstack (COST 4, ATK 2, HP 5, white soul): Taunt. Dust: Add Moldsmal to your hand.
+* Soul Cage (COST 4, ATK 2, HP 5, green soul): Haste. Dust: If it's your opponent's turn, decrease Outbreak's counter by 1. If the counter reaches 0, lose the game.
+* Water Sausage (COST 4, ATK 2, HP 5, white soul): Taunt. Turbo: Restore 3 HP to you.
+* Biker Lancer (COST 5, ATK 3, HP 3, orange soul): Charge. Whenever this attacks the opponent, give 2 random monsters in your hand +1 ATK.
+* Library Loox (COST 5, ATK 4, HP 3, white soul): Magic: Add a copy of all cards in your hand that didn't start in your deck to your deck with -1 cost.
+* Mystery Machine (COST 7, ATK 6, HP 6, purple soul): Magic: Silence itself. Dust: Add 2 Gaster Blasters to your hand. They cost 0.
+* Soulless Kris (COST 13, ATK 4, HP 10, red soul): Haste. Magic: Give Outbreak artifact to your opponent and summon an enemy Soul Cage.

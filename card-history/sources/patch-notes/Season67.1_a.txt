@@ -1,0 +1,16 @@
+New cards
+* [green soul] Shadow Crystal | COST 3 | spell | Look at all LEGENDARY monsters (except Seam). Choose one to add to the top of your deck.
+* [orange soul] Placeholder Kris | COST 12 | ATK 4 | HP 10 | Support: Give the attacker +2/+2.
+## Balancing (Monsters)
+* Toriel -- ATK 5 > 6. HP 2 > 4. {green}
+* Ralsei -- COST 8 > 7. {green}
+* Caged Jester -- EFFECT UPDATE: Magic: Add a Jevilstall to your hand and add the Freedom artifact. If you spent 4+ G on spells last turn, increase its counter by 1. {green}
+* Killer Cook -- EFFECT UPDATE: Magic: Add Flour, Eggs and Milk to your deck. Dust: Draw a TOKEN card. {yellow}
+* Nubert -- COST 3 > 7. ATK 1 > 6. HP 4 > 8. EFFECT UPDATE: Need: 3+ monsters from different tribes in your dustpile. Magic: Gain Haste and Taunt. {yellow}
+* Seam -- EFFECT UPDATE: Magic: Catch a monster. Dust: Release it. Turn start: Silence this and add a Shadow Crystal to your hand. {yellow}
+* Queen -- COST 10 > 12. ATK 8 > 6. HP 9 > 7. EFFECT UPDATE: Taunt. Magic: Choose An Enemy Monster. Summon A 5/5 Werewire That Catches That Monster. {yellow}
+* Dog Cone -- EFFECT UPDATE: Loop (2). Magic: Heal 2 HP. {yellow}
+* Snowdin Sign -- COST 3 > 4. ATK 2 > 3. HP 2 > 5. EFFECT UPDATE: Need: You spent G on spells last turn. Magic: Look at 3 random RARE spells and add one to your hand. {yellow}
+* Cracked Geode -- ATK 3 > 4. HP 5 > 4. EFFECT UPDATE: Taunt. Dust: Deal 2 DMG to all monsters. {yellow}
+* Woshua -- COST 5 > 4. ATK 4 > 3. HP 3 > 4. EFFECT UPDATE: Magic: Give all enemy monsters -1 ATK. {yellow}
+* Whimsalot -- COST 7 > 6. EFFECT UPDATE: Magic: Give all monsters in your hand -1/-1/-1 (min: 1 HP). {yellow}

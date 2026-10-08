@@ -1,0 +1,28 @@
+Season 44
+## New artifacts
+* Parachutism - At the start of every 3 turns, summon a Mettabot.
+* Doom - At the start of your 13th turn, kill all monsters.
+* Collection - The first time you summon a tribe (besides All tribes) this game, add a Thrashing Machine to your hand.
+* Wiggle - At the start of the game, add Moldsmal to your hand and a Moldbygg to your deck.
+* Noodles - At the start of the game, add Instant Noodles to your hand.
+* Seedlings - Whenever you lose 10+ HP, summon a Blue Flower.
+* Adrenaline - After you play a card, if your hand is empty, draw 7 cards. Can only trigger once each game.
+## Balancing (Monsters)
+* Burger Bush -- It's now a plant. {green}
+* Pizzapants -- ATK 5 > 2. HP 5 > 3. COST 7 > 4. EFFECT UPDATE: Haste. Magic: Gain +1/+1 for each other ally Pizzapants summoned this game. {yellow}
+* Jumping Rabbit -- HP 4 > 3. EFFECT UPDATE: Haste. Dust: if this is your turn, add Jumping Rabbits to your hand. {yellow}
+* Redacted -- EFFECT UPDATE: Future (4): Add a random other Gaster Follower to your deck for each active Future effect. {red}
+## Balancing (Spells)
+* Fast Sanction -- EFFECT UPDATE: Deal 2-5 DMG. If the result was 3 or lower, add Fast Sanction to your hand with -2 cost. {green}
+* Termination -- EFFECT UPDATE: Paralyze a monster and give it KR. If it already has KR, kill it instead. {green}
+* Shopping -- COST 0 > 4. EFFECT UPDATE: Draw cards until their cost is 10 or higher (up to 7 cards in hand). {yellow}
+* Poison -- EFFECT UPDATE: Deal 1 DMG to a monster and give it KR. Draw a card. {yellow}
+* Siphoning -- COST 2 > 1. EFFECT UPDATE: Heal 3 HP. Heal 1 extra HP per monster with KR on the board. {yellow}
+* Worsening -- EFFECT UPDATE: Deal 2 DMG to a monster and the opponent. Increase DMG by 1 if the target has KR. {yellow}
+* Pollutant Gas -- COST 4 > 2. EFFECT UPDATE: Deal 1 DMG to all enemy monsters with KR, then give all enemy monsters KR. {yellow}
+* Contamination -- COST 10 > 8. EFFECT UPDATE: Kill all monsters under KR. {yellow}
+* Cloning -- COST 3 > 1. EFFECT UPDATE: Choose a monster from your hand. Add an exact copy of it to your hand. {yellow}
+* Worming Up -- COST 9 > 10. {red}
+## Balancing (Souls)
+* Integrity -- EFFECT UPDATE: Whenever you reach 0 g, gain 1 g (Once per turn). Your gold cap is 11 g. {yellow}
+* Perseverance -- EFFECT UPDATE: Whenever an enemy monster is attacked, give it KR. {red}

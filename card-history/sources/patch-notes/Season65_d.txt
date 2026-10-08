@@ -1,0 +1,13 @@
+## Balancing (Spells)
+* Final Gambit! -- COST 1 > 7. EFFECT UPDATE: Summon Ultimathrash, earn 7 G, deal 7 DMG to all enemies, heal 7 HP to all allies, and add 7 Drafts to your hand. {yellow}
+* Fridge -- Cost 3 > 1. EFFECT UPDATE: Draw a card from the bottom of your deck. Give the bottom 4 cards in your deck -1 cost. {yellow}
+* Draft -- EFFECT UPDATE: Look at 5 random different non-LEGENDARY monsters costing 5-6 G and add one to your hand with -1 cost. {yellow}
+* Rage -- EFFECT UPDATE: Deal an ally monster's ATK as DMG to the monster in front of it. Delay: Give the ally monster +1/+1. {red}
+## Balancing (Souls)
+* Justice -- EFFECT UPDATE: Turn end: Deal 1 DMG to the lowest HP enemy monster. If you have less HP than the opponent, deal 1 DMG to them. {green}
+* Determination -- EFFECT UPDATE: The first time you would die, set your HP to 5 instead. Start with the Save artifact. {green}
+* Kindness -- EFFECT UPDATE: Turn end: If its turn 3 or later, heal 1 HP to you and all damaged ally monsters. If there were no damaged ally monsters, give the rightmost ally monster +1 HP. {green}
+## Balancing (Artifacts)
+* SAVE -- EFFECT UPDATE: Whenever a monster dies (except Lost Souls), increase the counter by 1. Turn end: If you can, spend 7 counters to summon the next Lost Soul at 1/1, or 2/2 stats if you have 10 or less HP. Lost Soul order: Lost Alphys > Lost Papyrus > Lost Undyne > Lost Toriel > Lost Asgore > Lost Sans > Loop back to Lost Alphys. {yellow}
+* Ultimate Fusion -- EFFECT UPDATE: Start with 7 counters. At the start of every even turn, send the rightmost card in your hand to the top of your deck. Add the next Thrashing Part to your hand (from lowest to highest cost, ending at 7). Whenever you summon a Thrashing Part (except all tribes) for the first time, spend 1 counter. Turn end: If this has 0 counters, add Final Gambit! to your deck and disable this. {yellow}
+* Evil Plan -- EFFECT UPDATE: At the start of the game, burn an ally Ultimathrash wherever it is. Draw a card if it's in your hand. Transform into the Ultimate Fusion artifact. Otherwise, add Create a Machine to your hand and deck. {yellow}

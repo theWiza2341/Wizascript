@@ -1,0 +1,6 @@
+## Balancing (Spells)
+* Contamination -- COST 8 > 7. {green}
+* Breaking Love -- EFFECT UPDATE: Give -1/-1 to a monster. Draw a card. {green}
+* Create a Machine -- EFFECT UPDATE: Choose a monster. Add a Apoca Duck to your hand with Taunt and set its base stats equal to the stats of the chosen monster. {yellow}
+## Balancing (Artifacts)
+* Mines -- EFFECT UPDATE: Whenever you a spell you haven't cast this game, shuffle a Mine into enemy deck. {yellow}

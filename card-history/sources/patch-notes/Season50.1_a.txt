@@ -1,0 +1,11 @@
+## New cards
+* Dynamite Stick (COST 0, ATK 1, HP 1, green soul): Dust: Deal 1 DMG to 2 random enemies.
+* Tea Set (COST 1, green soul): Heal 4 HP. If this targeted a monster, also give it +1/+1.
+* Breaking Love (COST 2, [icon]): Earn 2 G.
+* Cracked Table (COST 4, ATK 4, HP 4, blue soul): Magic: Add a Tea Set to the hand of the player with the lowest HP.
+* Long Sink (COST 4, ATK 4, HP 4, white soul): Turn start: Restore 2 HP to itself and its owner. Silence this.
+* Date Alphys (COST 5, ATK 3, HP 5, purple soul): Magic: If you have a Taunt monster in your hand give a monster Taunt. If you have an Haste monster in your hand, also give Haste.
+* Game Bomb (COST 5, ATK 3, HP 5, white soul): Whenever this takes DMG, summon a Dynamite Stick.
+* Head Hathy (COST 5, ATK 4, HP 5, purple soul): Shock: If it's not a GENERATED spell, add Breaking Love to your hand.
+* Hooded Ralsei (COST 5, ATK 4, HP 4, orange soul): Shock: Return 25% of the spell's cost (rounded up).
+* Fireplace (COST 6, ATK 3, HP 7, blue soul): Taunt. Shock: Heal 3 HP to this.

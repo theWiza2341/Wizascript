@@ -1,0 +1,18 @@
+Updates (Buff / Nerf / Balanced or reworked)
+Season 41
+## Game engine
+* Reworked card effects engine (Aura effects now exist).
+* Reworked soul effects engine.
+* Reworked artifact effects engine.
+* If you notice any glitch, please report it on our Discord server.
+## Quests
+* Improved Quests page.
+* New season quests.
+## Packs
+* Added drop rates information.
+* Increased the chance of pulling a rare card in a Pack or DR Pack by 2%.
+* Decreased the chance of pulling a common card in a Pack or DR Pack by 2%.
+* Added colored shadows when hovering cards.
+* Added a shaking animation when hovering a shiny card.
+## Misc
+* You can now see which entity you can target while attacking.

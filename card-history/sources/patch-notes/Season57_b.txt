@@ -1,0 +1,13 @@
+* TV -- [white soul] > [icon] {gray}
+* Anime Sword -- [blue soul] > [white soul] {gray}
+## Balancing (Spells)
+* Royal Patience -- COST 2 > 1. {green}
+* Gaster Blaster -- EFFECT UPDATE: Deal 8 DMG to a monster or the player. {green}
+## Balancing (Souls)
+* Kindness -- EFFECT UPDATE: Turn end: If it's turn 3 or later, give your rightmost monster +1 HP and heal 1 HP to you. {yellow}
+* Justice -- EFFECT UPDATE: Turn end: Deal 1 DMG to a random damaged enemy monster. {yellow}
+## Balancing (Artifacts)
+* Power -- EFFECT UPDATE: At the end of turns 3, 6, 9, and 12, give +1/+1 to the next monster in your deck. {red}
+Cosmetics
+* New April Fools skins.
+* Old April Fools skins are back for a limited time.

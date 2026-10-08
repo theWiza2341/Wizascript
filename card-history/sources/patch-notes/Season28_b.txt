@@ -1,0 +1,7 @@
+## Balancing (Spells)
+* Acceleration -- Effect Update: Same, but now it doesn't trigger fatigue. {green}
+* Siphoning -- Effect Update: Silence a monster. If it was under KR before that, restore HP to yourself equal to 50% of it's ATK. {green}
+* Rage -- Cost 3 > 4 -- Effect Update: Deal selected ally monster's ATK as DMG to the monster in front of it and the extra damage to the opponent (max: 6). {green}
+* Fast Sanction -- Effect Update: Deal 2-5 DMG to a monster. If result was 3 or lower, send back this card to your hand. {yellow}
+* Snow Storm -- Cost 8 > 7-- Effect Update: Kill all paralyzed monsters in play. {yellow}
+* Slowing -- Send a paralyzed enemy monster to your opponent's deck and it costs 2 more. {red}

@@ -1,0 +1,7 @@
+Beta 16.1 (2017/11/23)
+## Rankeds
+* Rankeds are now disabled for players under LV 20.
+## Quests
+* Rankeds and dogs quests are now disabled for players under LV 20.
+## Bug fixes
+* Pie no longer works on charge/haste monsters that already attacked.

@@ -1,0 +1,8 @@
+## Balancing (Artifacts)
+* Arcane Scepter -- Effect Update: Whenever you cast a spell with a base cost equals or greater than 2, cast a random spell on a random target. {red}
+* Veteran -- Effect Update: Your monsters with 3 ATK or more gain +1 ATK when they attack and kill a monster. {red}
+* Preservation -- Effect Update: You won't draw at the start of your turn if your hand is full. {red}
+## Bug fixes
+* Vitality will now correctly work when healing to full hp (overhealing worked).
+## Misc
+* Longevity now has the text "rounded down" on the card to give more clarification to new players.

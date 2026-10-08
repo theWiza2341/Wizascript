@@ -1,0 +1,16 @@
+Updates (Buff / Nerf / Balanced or reworked)
+Mid Season 43
+## Balancing (Monsters)
+* Reaper Bird -- EFFECT UPDATE: Magic: Draw a card. If it's an Amalgamate or a Froggit, give it +2 HP and Candy. {green}
+* Bun -- EFFECT UPDATE: Dust: Give +4 ATK to all ally Bunbuns. {green}
+* Water Cooler -- EFFECT UPDATE: Turn end: Restore 2 HP to all allies. {green}
+* Gyftrot -- HP 7 > 8. {green}
+* Striped Bird -- COST 5 > 4. {green}
+* Lancer Painting -- COST 2 > 3. EFFECT UPDATE: Dust: Add a Spade to your hand. {yellow}
+* Shambling Mass -- COST 7 > 5. ATK 6 > 4. HP 6 > 4. {yellow}
+* Shyren -- HP 3 > 4. EFFECT UPDATE: Magic: Heal 3 HP. {yellow}
+* Mettabot -- COST 0 > 1. {red}
+## Balancing (Spells)
+* Same Fate -- COST 8 > 7. {green}
+* Siphoning -- EFFECT UPDATE: Heal 2 HP. Heal 2 extra HP for each monster under KR. {green}
+* Powerhouse -- EFFECT UPDATE: Draw 2 cards, then reduce the cost of all cards in your hand by 2 (Not below 2). {red}

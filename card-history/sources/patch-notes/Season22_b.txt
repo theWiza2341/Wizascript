@@ -1,0 +1,11 @@
+## Referrals
+* Recruiter icon is no longer claimable.
+* Avatars have been added as rewards.
+## Avatars
+* Avatars are now displayed on the ranking page.
+* Contributors can have their avatars in shiny version (toggleable).
+## Misc
+* Word "damage" replaced by DMG on cards.
+## Bug fixes
+* Fixed an issue when playing a silenced monster with a Magic effect asking for a target.
+* Big Mouth now correctly heals himself.

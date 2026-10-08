@@ -1,0 +1,15 @@
+## Balancing (Monsters)
+* Great Door -- EFFECT UPDATE: Magic: Summon a random other monster from your deck that costs less than this monster. {green}
+* Frisk -- Cost 14 > 7. EFFECT UPDATE: You are Invulnerable. Costs 1 more for each other monster. Magic: Gain 3 HP for each other monster. Dust: Add Frisk to your deck. {green}
+* Tree -- EFFECT UPDATE: Disarmed. Synergy: Silence itself. {green}
+* Donation Stump -- EFFECT UPDATE: Magic: The opponent loses 1 G. Synergy: Gain 1 G. {green}
+* Gardener Asgore -- EFFECT UPDATE: Turn end: Transform a random ally Green Flower into a Blue Flower. If there is none, summon a Green Flower instead. {green}
+* Library Loox -- HP 3 > 4. EFFECT UPDATE: Magic: Send a copy of all cards in your hand (except this) which didn't start in your deck to your deck with -1 cost. {yellow}
+* Red Flower -- Cost 5 > 3. ATK 5 > 3. HP 5 > 3. EFFECT UPDATE: Transparency. {yellow}
+* Lost Alphys -- EFFECT UPDATE: Dust: Give 2 random monsters in your hand +1/+1. {yellow}
+* Lost Papyrus -- EFFECT UPDATE: Dust: Heal 3 HP to a random damaged ally monster and yourself. {yellow}
+* Moldstack -- Cost 4 > 3. HP 5 > 4. EFFECT UPDATE: Taunt. Dust: Add a copy of a random other ally Mold to your hand. {yellow}
+* Moldessa -- Cost 5 > 4. HP 2 > 4. EFFECT UPDATE: Dust: Draw a Mold from your deck and give it +1 HP. {yellow}
+* Lemon Bread -- Cost 7 > 6. HP 7 > 6. EFFECT UPDATE: Magic: Gain Taunt. If you have 5 or more cards in your hand, gain Haste instead. {yellow}
+* Fly -- EFFECT UPDATE: Charge. Shock: Summon a Fly, Silence this and gain Charge. {yellow}
+* Bob -- EFFECT UPDATE: Haste. Magic: Add every other non-GENERATED Temmie to your hand (from lowest to highest cost). {red}

@@ -1,0 +1,31 @@
+Mid Season 49
+## Mulligan
+* You can no longer instantly draw the cards you put in your deck.
+## Balancing (Monsters)
+* Ferry -- ATK 2 > 3. {green}
+* Ice Drink Wolf -- Cost 8 > 7. {green}
+* Elder Puzzler -- EFFECT UPDATE: Turn end: Deal 2 DMG to a random enemy monster. {green}
+* Spade Chain -- Cost 11 > 10. {green}
+* Hot Dog Vulkin -- EFFECT UPDATE: Magic: Deal 3 DMG to an enemy or give +3 ATK to an ally monster. {green}
+* Sans -- EFFECT UPDATE: Dodge (3). Magic and Turn start: Add a Gaster Blaster to your hand with -2 cost. {green}
+* Naacrat Jester -- HP 3 > 4. {green}
+* Coffin -- Cost 4 > 5. EFFECT UPDATE: Magic: Look at 2 different cheapest monsters from your dustpile (except Coffin). Choose one to catch. Dust: Release it. {yellow}
+* Manticore -- Cost 7 > 6. EFFECT UPDATE: Magic: Both players draw up to 2 cards. {yellow}
+* Cash Register -- EFFECT UPDATE: Magic: Choose a Turbo monster from your hand. Activate its Turbo effect. {yellow}
+* Parsnik -- HP 4 > 2. EFFECT UPDATE: Magic: If played on the left, Paralyze an enemy monster. If played on the right, Silence it. {yellow}
+* Dark Ponman -- Cost 4 > 5. HP 3 > 4. EFFECT UPDATE: Magic: and Synergy: If played on the left, deal 2 DMG to a random enemy monster. If played on the right, draw a card. {yellow}
+* Blockler B -- Cost 5 > 6 HP 2 > 3. {yellow}
+* Blockler O -- Cost 5 > 6 ATK 2 > 3. {yellow}
+* Lancer -- EFFECT UPDATE: Enemy monsters take +2 DMG from spells. Magic: Add 2 Spades to your hand. {yellow}
+* Final Froggit -- EFFECT UPDATE: Magic: Give +1/+1 to all Froggits you own (except Final Froggit). Froggits in your deck also gain +1 cost. {red}
+* Lamp -- EFFECT UPDATE: Taunt. Dust: Summon a random other monster (cost <= 2) or Frisk with a low chance. {red}
+* Politician Bear -- ATK 5 > 4. HP 5 > 4. {red}
+* Bloody Tree -- HP 6 > 4. {red}
+* Seam -- EFFECT UPDATE: Magic: If you have 3 or less cards in your deck give all monsters in your deck and hand +2/+3. {red}
+## Balancing (Spells)
+* Royal Bravery -- EFFECT UPDATE: Give an ally monster +1/+1, then deal its ATK as DMG to the monster in front of it. {green}
+## Balancing (Artifacts)
+* Spy -- EFFECT UPDATE: At the start of every 5th turn, add Spying to your hand. At the end of the turn, remove it. {green}
+* Copycat -- EFFECT UPDATE: At the start of the game reveal the first 3 cards in opponent's hand and shuffle a copy of them into your deck with -1 cost. {red}
+## Balancing (Souls)
+* Patience -- EFFECT UPDATE: Turn start: Deal 1 DMG to all paralyzed monsters. If there is none, Paralyze the leftmost enemy monster. {red}

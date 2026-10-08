@@ -1,0 +1,11 @@
+New cards
+* [orange soul] Cyberdly | COST 6 | ATK 6 | HP 6 | Need: You spent 14+ G on TOKEN cards this game. Magic: Add the IQ artifact.
+* [purple soul] Halberd | COST 6 | ATK 4 | HP 3 | Dodge (1). Need: You played 3+ TOKEN cards with a base cost of 3+ G this game. Magic: Summon a Halberd.
+* [blue soul] Hanging Plug | COST 6 | ATK 3 | HP 5 | Magic: Turn a Plug in your hand into a Werewire that catches the original and gains its stat buffs.
+* [white soul] Stickman | COST 6 | ATK 6 | HP 4 | Magic: Give an enemy monster -3 ATK. Delay: If the monster is dead, add Dancing Stickman to your hand.
+* [purple soul] Tasque Manager | COST 6 | ATK 5 | HP 5 | Magic: Deal 1 DMG to an enemy monster for each card with a base cost of 1+ G played this turn. Excess DMG is dealt to the opponent.
+* [green soul] Tough Body | COST 6 | ATK 3 | HP 4 | Armor. Delay: Deal 4 DMG to a random enemy monster. Excess DMG is dealt to the opponent.
+* [white soul] Traffic Car | COST 6 | ATK 4 | HP 6 | Taunt. Whenever this kills a monster, deal 1 DMG to you and 1 DMG to all enemy monsters.
+* [blue soul] Businessplug | COST 7 | ATK 5 | HP 4 | Magic: Summon a 1/1 copy of a Plug from your hand. Copy any stat buffs it had.
+* [blue soul] Carnival Tent | COST 7 | ATK 4 | HP 4 | Magic: Cast all Generated spells in your hand (targets chosen randomly).
+* [white soul] Cauldron | COST 7 | ATK 8 | HP 6 | Support: Add Pie to your hand. Lose this Support. Turn end: Regain its Support.

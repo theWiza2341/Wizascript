@@ -1,0 +1,15 @@
+Season 45
+Mid season
+## New cards
+* Top Chef (COST 3, ATK 2, HP 2, blue soul): Dust: Summon a 2/2 Smolder Cake.
+* MTT TV (COST 4, ATK 3, HP 4, white soul): All cards cost 1 more.
+* Blookler B (COST 5, ATK 3, HP 2, blue soul): Haste. Dust: Summon Blookler O.
+* Blookler O (COST 5, ATK 2, HP 3, green soul): Taunt.
+* Chaos Blaster (COST 5, ATK 5, HP 5, white soul): Magic: Deal 5 DMG to you and add a random Lost Soul to your hand.
+* Rudolph (COST 5, ATK 5, HP 4, purple soul): Magic: If your deck has no spell, heal 5 HP to you.
+* Bookshelf (COST 6, ATK 4, HP 5, purple soul): Magic: If your deck has no spell, look at all spells of your soul. Choose one to add to your hand, it costs 3 less.
+* Seam (COST 8, ATK 6, HP 6, orange soul): Magic: If you have 3 or less cards in your deck, give all cards in your deck and hand +3/+3.
+## Balancing (Monsters)
+* Big Bob -- EFFECT UPDATE: Whenever this takes damage and survives, summon a Big Bob. {red}
+## Balancing (Spells)
+* Assault -- EFFECT UPDATE: If your opponent has equal or more monsters than you, give an ally monster +1 ATK and Haste. {green}

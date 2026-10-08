@@ -1,0 +1,25 @@
+## Balancing (Monsters)
+* Ball Person -- EFFECT UPDATE: Magic: Silence all monsters. Dust: Silence a random enemy monster. {green}
+* Dress Lion -- EFFECT UPDATE: Turbo: and Magic: Silence a random enemy monster. {green}
+* Mister Elegance -- EFFECT UPDATE: Has +2 ATK during opponent's turn. {green}
+* Dogamy -- EFFECT UPDATE: Has +2 ATK while you have Dogaressa in your hand. {green}
+* Dogaressa -- EFFECT UPDATE: Has +2 HP while you have Dogamy in your hand. {green}
+* Evil Eye -- EFFECT UPDATE: Turbo: Reveal a random card in your opponent's hand. Magic: Raise the cost of the last revealed card by 2. {green}
+* Sand Dog -- COST 10 > 11. EFFECT UPDATE: Magic: Summon a copy of this with -4/-7 and give it +1/+2 for each Dog in your hand. {yellow}
+* Parsnik -- EFFECT UPDATE: Magic: Paralyze a monster. If it's already paralyzed, deal 2 DMG to it instead. {red}
+* Ice -- HP 7 > 6. {red}
+* Killer Cook -- ATK 2 > 3. COST 4 > 5. {red}
+* Snowman -- COST 1 > 2. {red}
+* Small Bird -- EFFECT UPDATE: Magic: gain Charge if your opponent has a Taunt monster. {red}
+## Balancing (Spells)
+* Assault -- COST 1 > 0. EFFECT UPDATE: Add 3 random monsters costing 3 to your deck with +1/+1. {green}
+* Crown -- EFFECT UPDATE: Give a monster +1/+2. If it's a C-round, turn it into a K-round instead. Draw a card. {yellow}
+* Rage -- COST 4 > 3. EFFECT UPDATE: Give an ally monster +1/+1, then make it attack the monster in front of it. {yellow}
+* Hyper Goner -- EFFECT UPDATE: Kill all monsters. Reduce its cost by your missing hp (max: 30). {yellow}
+* Big Mine -- EFFECT UPDATE: Turbo: deal 5 DMG to yourself. Draw a card. {red}
+* Cold Winter -- EFFECT UPDATE: Paralyze a monster and the one on its left. If already paralyzed, deal 2 DMG to it instead. {red}
+* Protection -- COST 0 > 1. {red}
+## Balancing (Artifacts)
+* Solidity -- EFFECT UPDATE: Your Taunt monsters have +1 HP. {green}
+* Preservation -- EFFECT UPDATE: Whenever you would overdraw a card, take fatigue DMG instead. {green}
+* Science -- EFFECT UPDATE: Your Gaster Blasters cost 1 less. At the start of the game, shuffle 4 Gaster Blasters into your deck and add one to your hand. {green}

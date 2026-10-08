@@ -1,0 +1,5 @@
+* Cell Key -- COST 5. Magic: Look at all Chaos Weapons and choose one to add to your hand with -2 cost. ATK 6, [green soul], HP 6.
+* Mio Mio San -- COST 5. Magic: Halve an ally non-DT monster's stats (rounded up) and summon an exact copy of it. ATK 4, [yellow soul], HP 4.
+* Caged Kings -- COST 6. Need: You spent 0 on spells last turn. Magic: Add a Broken Key to your deck. ATK 5, [purple soul], HP 7.
+* Memory Keeper -- COST 6. Magic: Give an enemy monster Dodge (1) and set its HP to 1. Shock: Deal 2 DMG to a random enemy monster. ATK 3, [white soul], HP 5.
+* The Masoot -- COST 7. Shock: Add a Draft to your hand. ATK 6, [white soul], HP 7.

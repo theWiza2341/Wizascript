@@ -1,0 +1,3 @@
+* Bag o' Goodies -- COST 3. Delay: Add a Shield and a Gemstone to your hand. ATK 3, [icon], HP 2.
+* DT Extractor -- COST 9. Magic: Send your hand to your deck. Add a copy of each unique Amalgamate in your dustpile to your hand with -1 cost. ATK 9, [yellow soul], HP 9.
+Note: We will now release a new card every wednesday and saturday.

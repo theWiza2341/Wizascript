@@ -1,0 +1,17 @@
+Season 13
+Beta 13.0 (2017/08/01)
+## Ranked mode
+* Now open for all level.
+* Placement matches have been removed.
+* Promotional games have been removed for COPPER, IRON and GOLD divisions.
+* Promotional games have been added for all EMERALD divisions.
+* Rushing at the start of the season will help you climbing divisions.
+## Classic mode
+* Gold per victory: 15 -> 10. (ranked mode still 20 g)
+## Quests
+* New quests have been added.
+* Max number of quests per day: 1 -> 3.
+* Quests will only reset when completed.
+* Loyalty points can no longer be obtained in Classic mode.
+## Bug fixes
+* Gyftrot dust effect didn't work when the owner's hand was full.

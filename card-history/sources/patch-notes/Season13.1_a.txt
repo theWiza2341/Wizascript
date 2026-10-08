@@ -1,0 +1,41 @@
+Beta 13.1 (2017/08/06)
+## In game
+* LV are displayed again.
+* An icon have been added for "Can't attack" effects.
+## Classic
+* Gold per victory: 10 -> 15.
+## Ranked
+* You will no longer "be forced" by the system to decay to a division III to be able to start getting back a normal MMR if you have a bad one.
+* More queue time for a better matchmaking.
+## Balancing (Monsters)
+* Small Bird. EFFECT UPDATE: "Ignore Taunt effect. Magic: Gain Haste if there is a monster with Taunt in play.". {green}
+* Final Froggit. ATK: 7 -> 6. HP : 7 -> 6. EFFECT UPDATE: "Magic: Give +1/+1 to all other ally froggits and final froggits wherever they are.". {green}
+* Receptionist 1. ATK: 4 -> 3. HP: 6 -> 5. EFFECT UPDATE: "Earn 2 gold whenever this monster is damaged.". {green}
+* Ugly Fish. ATK: 3 -> 2. HP: 7 -> 8. EFFECT UPDATE: "Haste. Reduce the ATK of monsters damaged by this monster by 2.". {green}
+* Diamond Boy 2. ATK: 3 -> 2. HP: 4 -> 5. {green}
+* Trash Tornado. HP: 5 -> 6. {green}
+* Faun. EFFECT UPDATE: "Magic : Halve a monster's ATK (rounded down).". {green}
+* Bomb. EFFECT UPDATE: "At the start of your turn, destroy this and deal 3 damage to all enemy monsters and 4 to the opponent.". {green}
+* Big Bob. EFFECT UPDATE "Summon another Gig Bob if this monster is still alive after being damaged (keep ATK buffs).". {green}
+* Memorial Statue. COST: 4 -> 3. EFFACT UPDATE: "Silence every monsters damaged by this monster.". {yellow}
+* MTT Fountain. HP: 8 -> 6. {red}
+* Garbage. EFFECT UPDATE: "Taunt. Magic: End of turn: Set the HP of this to the ATK of all ally monsters.". {red}
+* Chara. COST: 30 -> 40.". {red}
+* Cactus. HP: 9 -> 7. {red}
+* Frisk. COST: 13 -> 14. {red}
+* Migosp. EFFECT UPDATE: "Magic: Give +2 HP to random ally monster.". {red}
+* Janitor. ATK: 3 -> 2. {red}
+* Sad Customer. HP: 5 -> 4. {red}
+* Bratty. HP: 5 -> 4. {red}
+## Balancing (Spells)
+* Strafe. EFFECT UPDATE: "Deal 2 damage to all enemies.". {green}
+* Soothing. EFFECT UPDATE: "Set a monster's ATK to 3 and HP to 2.". {green}
+* Penetration. EFFECT UPDATE: "Remove the Taunt effect of a Taunt monster. If used on a non Taunt monster, draw a card instead.". {green}
+* Resurrection. COST: 1 -> 3. EFFECT UPDATE: "Add 1 copy of 2 of your dead monsters to your hand.". {yellow}
+* Brainshift. EFFECT UPDATE: "Deal a monster under KR's ATK as damage to your opponent and remove the KR (doesn't work on "Can't attack" monsters).". {red}
+* Assault. EFFECT UPDATE: "Add 3 random monsters costing 3 or less in your deck with +1 ATK.". {red}
+* Knife. COST: 2 -> 3. {red}
+## DT rarity
+* Limited to 1 DT per deck in ranked.
+## Bug fixes
+* Asriel will now remove "Can't attack" effects.

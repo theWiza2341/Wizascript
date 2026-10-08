@@ -1,0 +1,21 @@
+Mid Season 54
+## Balancing (Monsters)
+* Red Bush -- EFFECT UPDATE: Transparency. This has +1 ATK for every other ally Plant. {green}
+* Mad Mew Mew -- HP 3 > 4. {green}
+* Snailmobile -- EFFECT UPDATE: Haste. Magic: Draw 2 cards 1 or less G from your deck. {green}
+* Rock -- ATK 2 > 3. {green}
+* The Warrior -- HP 8 > 9. EFFECT UPDATE: Magic: Deal 5 DMG to this. {green}
+* Big Hat Charles -- ATK 5 > 4. HP 5 > 6. {green}
+* Onion San-- ATK 7 > 8. {green}
+* Omega Flowey -- COST 16 > 15. {green}
+* Magic Crystal -- COST 10 > 9. {green}
+* Allergic Temmie -- HP 2 > 3. EFFECT UPDATE: Whenever you play a Temmie, deal 1 DMG to this and all enemy monsters. {yellow}
+* Top Chef -- HP 2 > 3. EFFECT UPDATE: Magic: Summon a 1/2 base stats Smolder Cake. Spend up to 2 G and give it +1/+1 for each G spent. {yellow}
+* Long Sink -- COST 4 > 6. EFFECT UPDATE: Whenever you cast a spell costing 1 or less G, summon a silenced 2/2 Long Sink. {yellow}
+* Trash Ball -- ATK 6 > 5. EFFECT UPDATE: Whenever you play a monster, deal 1 DMG to it. {yellow}
+* Hooded Ralsei -- EFFECT UPDATE: Shock: If the spell wasn't Generated, add a copy of it to your hand. {yellow}
+* Pizzapants -- HP 3 > 6. EFFECT UPDATE: Haste. This has +1 ATK for every other Pizzapants you played this game. {yellow}
+* Abstract Art -- COST 5 > 6. ATK 3 > 4. HP 4 > 5. {yellow}
+* Fireplace -- COST 6 > 7. ATK 3 > 4. EFFECT UPDATE: Transparency. Shock: Heal 3 HP to this. {yellow}
+* Ice Wolf -- EFFECT UPDATE: Turbo: Gain +1 HP. Dust: Summon an enemy Ice. {yellow}
+* Space Cooler -- ATK 3 > 4. EFFECT UPDATE: Turn end: Give a random monster in your hand +1/+1. {yellow}

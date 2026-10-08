@@ -1,0 +1,24 @@
+Season 44
+Mid season
+## Balancing (Monsters)
+* Business Dude -- EFFECT UPDATE: Magic: Summon a 1/1 copy of a random other monster from your deck. {green}
+* Allergic Temmie -- EFFECT UPDATE: Whenever you summon a Temmie (Except Allergic Temmie), deal 1 DMG to all enemy monsters. {green}
+* Golden Flowers -- ATK 0 > 3. HP 7 > 6. COST 4 > 6. EFFECT UPDATE: Magic: Look at 2 random spells costing <=10 g that you've cast this game. Choose one to add to your hand. {yellow}
+* Bob -- COST 5 > 6. EFFECT UPDATE: Haste. Magic: Add every other Temmie to your hand (From lowest to highest cost) {yellow}
+* Jumping Rabbit -- EFFECT UPDATE: Haste. Dust: If this died during your turn, draw a card, then add a Jumping Rabbit to the top of your deck. {yellow}
+* Thrashing Machine -- HP 5 > 4. COST 4 > 3. EFFECT UPDATE: This card has all monster tribes. {yellow}
+* Snail Trainer -- COST 6 > 7. {red}
+* Pizzapants -- COST 4 > 5. {red}
+## Balancing (Spells)
+* Brain Freeze -- COST 8 > 6. EFFECT UPDATE: End your turn. Trigger all ally Turn start and Turn end effects. {yellow}
+* Worming Up -- COST 10 > 9. EFFECT UPDATE: Fill the board with Worms, then give all Worms on the board +1 ATK. {yellow}
+* Fast Sanction -- COST 4 > 2. EFFECT UPDATE: Add Trick Question and Zap Cannon to your hand. {yellow}
+* Thundersnail -- COST 3 > 4. {red}
+* Knife -- COST 3 > 4. {red}
+* Little Mine -- COST 1 > 0. {red}
+* Mine -- COST 3 > 0. {red}
+* Big Mine -- COST 6 > 0. {red}
+## Balancing (Artifacts)
+* Doom -- EFFECT UPDATE: At the start of your 13th turn, silence and kill all monsters. {green}
+* Reinforcement -- RARITY Common > Legendary. EFFECT UPDATE: At the start of the game, add 5 random monsters with +2/+2 to the bottom of your deck. {yellow}
+* Seedlings -- EFFECT UPDATE: Whenever you lose 10 HP, summon a Blue Flower (Up to 3 times). {red}

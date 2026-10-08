@@ -1,0 +1,34 @@
+Mid Season 52
+## Balancing (Monsters)
+* Asriel -- EFFECT UPDATE: Magic: Remove all negative effects from all ally monsters. Delay: Heal 2 HP to all allies. {green}
+* Spider Flower -- EFFECT UPDATE: Magic: Summon a Green Flower. Synergy: Summon a Red Flower instead. {green}
+* G Follower 3 -- EFFECT UPDATE: Magic: Look at 2 random G Followers and choose one to add to your hand. Synergy: Add it to your hand with -2 cost instead. {green}
+* Big Mouth -- EFFECT UPDATE: Turn end: Kill a random enemy monster costing 2 or less and heal 2 HP to you. {yellow}
+* Tree -- EFFECT UPDATE: Magic: Deal 4 DMG to this. Synergy: Fully heal this. {yellow}
+* Cross Bomb -- EFFECT UPDATE: Charge. Turn end: If this didn't attack this turn, deal 2 DMG to the monster in front of it. {yellow}
+* Chara -- COST 17 > 14. EFFECT UPDATE: Magic: Add the Genocide artifact. Its counter starts at 0. {yellow}
+* Gardener Asgore -- HP 5 > 6. EFFECT UPDATE: Delay: Transform a random ally Green Flower into a Blue Flower. If there is none, summon a Red Flower instead. {yellow}
+* Ball Person -- EFFECT UPDATE: Magic: Silence all ally monsters. {red}
+* Starwalker -- EFFECT UPDATE: Charge. Turbo: If you have 3 or more spells in your hand, reduce this card's cost by 2. {red}
+* Ralsei -- COST 7 > 8. ATK 4 > 5. {red}
+* Spider Reporter -- HP 2 > 3. EFFECT UPDATE: Haste. Turbo: Add a Spider to your deck. {red}
+* Spider Donut -- EFFECT UPDATE: Haste. Taunt. Delay: Heal 3 HP to this and its owner. {red}
+## Balancing (Spells)
+* Royal Justice -- Cost 5 > 4. {green}
+* Force of Nature -- EFFECT UPDATE: Give an ally monster +3 HP or raise your max HP by 2 and heal 2 HP to you. {green}
+* Shopping -- EFFECT UPDATE: Draw 3 cards costing 5 or less from your deck. {yellow}
+* Fortune -- Cost 6 > 2. EFFECT UPDATE: Spend all your G. Delay: Regain it all and gain +3 G. {yellow}
+* Another Chance -- Cost: 5 > 2. EFFECT UPDATE: Kill an ally monster. Heal 3 HP to you and summon the next Lost Soul. {yellow}
+* Heal -- EFFECT UPDATE: Heal 3 HP. If this targeted you, draw a card. If this targeted a monster, remove negative effects from it. {yellow}
+* Octofriend -- COST: 4 > 2. EFFECT UPDATE: Give +1/+1 to an ally monster. Add a Left Tentacle and a Right Tentacle to your hand with -1 cost. {yellow}
+* Longevity -- COST: 4 > 3. EFFECT UPDATE: Shuffle 2 random monsters from your dustpile into your deck with +1 HP and draw up to 2 cards. {yellow}
+* Zap Cannon -- EFFECT UPDATE: Deal 2 DMG to a monster and draw a random spell from your deck (except Blitz Quiz). {yellow}
+* Trick Question -- EFFECT UPDATE: Deal 2 DMG to a monster and draw a random monster from your deck. {yellow}
+## Balancing (Artifacts)
+* Genocide -- EFFECT UPDATE: Turn start: Add a Real Knife to your hand. Turn end: Remove all Real Knives from your hand. {yellow}
+* Ambition -- EFFECT UPDATE: At the end of your 3rd, 7th, and 11th turns, add a Dream to the top of your deck. {yellow}
+## Balancing (Souls)
+* Kindness -- EFFECT UPDATE: Turn end: Heal 1 HP to you. If its turn 4 or later, give your rightmost ally monster +1 HP. {green}
+## Game
+* Timer will now be frozen during animations (max 1 min).
+* If you refresh the page during an animation, there will a timer to know when you will be able to play.

@@ -1,0 +1,18 @@
+## Balancing (Monsters)
+* Coat Rack -- ATK 3 > 4. HP 5 > 6. {green}
+* Blockler B -- Cost 6 > 5. {green}
+* Blockler O -- Cost 6 > 5. {green}
+* Dancer Mettaton -- Cost 8 > 7. {green}
+* Snowy -- ATK 3 > 4. {green}
+* Striped Bird -- ATK 3 > 4. {green}
+* Coffin -- Cost 5 > 4. {green}
+* Moldbygg -- EFFECT UPDATE: Taunt. Magic: If you have an ally Mold, catch Moldsmal. Dust: Release it. {green}
+## Balancing (Spells)
+* Thundersnail -- Cost 3 > 2. EFFECT UPDATE: Summon all dead ally 1-cost Snails and trigger their Magic effects. {yellow}
+* Feast -- Cost 1 > 4. EFFECT UPDATE: Fully heal all damaged ally monsters. Give undamaged ally monsters +1/+1. {yellow}
+* Royal Integrity -- EFFECT UPDATE: Add an exact copy of an ally monster to your hand (Except Alphys). {red}
+## Balancing (Artifacts)
+* Draw -- EFFECT UPDATE: At the start of every 5 turns draw a card if your hand isn't full. {green}
+## Balancing (Souls)
+* Kindness -- EFFECT UPDATE: At the end of your turn, restore 1 HP to you and all ally monsters. {red}
+* Justice -- EFFECT UPDATE: At the end of your turn, deal 1 DMG to a random enemy monster. {red}

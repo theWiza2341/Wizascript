@@ -1,0 +1,12 @@
+Season 65
+New cards
+* [green soul] Star | COST 0 | ATK 1 | HP 1 | Haste. Turn end: Die. Dust: Heal 1 HP to you.
+* [green soul] Blue House | COST 1 | ATK 2 | HP 2 | Dust: Silence and kill a random enemy Red House. If there were none, turn into a Red House.
+* [blue soul] Knight's Shield | COST 1 | spell | Give an ally monster Taunt and +1 HP for each empty ally board slot.
+* [green soul] Red House | COST 1 | ATK 2 | HP 2 | Transparency. Dust: Heal 2 HP to you.
+* [blue soul] Pezza Time | COST 2 | spell | Give a monster +1 Dodge. If it was damaged, give it Taunt as well.
+* [blue soul] Proceed | COST 2 | spell | Silence a monster. It attacks all of its enemy monsters.
+* [green soul] Vase | COST 2 | ATK 3 | HP 3 | Dust: If this died during the enemy turn, give its killer -1/-1.
+* [blue soul] Call for Help | COST 3 | spell | Summon a 3/3 copy of the last non-DT ally monster that died this game.
+* [orange soul] Snoelle | COST 3 | ATK 1 | HP 4 | Haste. Magic: Paralyze a monster. Delay: If it's dead, return to your hand with +1 base ATK. At 4 base ATK, turn into Snowgrave.
+* [green soul] Ice Crystal | COST 4 | ATK 1 | HP 6 | Armor. Taunt. Magic: Paralyze a monster. Dust: Deal 3 DMG to all enemies.

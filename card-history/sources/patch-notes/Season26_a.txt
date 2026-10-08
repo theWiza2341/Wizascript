@@ -1,0 +1,31 @@
+Beta 26.0
+## Ranked
+* Removed division V.
+* Faster climb for COPPER, IRON, GOLD, EMERALD.
+* Players under LV 10 can now climb.
+* Added a progress bar between divisions.
+## Month game mode (Random)
+* Play a game with a random soul, cards, artifacts.
+## Balancing (Monsters)
+* Robot 98 -- Cost 12 > 10. {green}
+* Eye -- Same, but now it is considered an amalgamate. {green}
+* Aaron -- ATK 5 > 6. {green}
+* Skateboard Girl -- ATK 4 > 5. {green}
+* Scarf Mouse -- Same. (Is now a card in the begginer's cardpool). {green}
+* Throne -- ATK 5 > 6. {green}
+* Gerson -- Effect Update: Armor (2). Magic: Add a random different Gerson's artifact. {green}
+* Parsnik -- Effect Update: Magic: Paralyze an enemy monster. If it was already paralyzed, deal 2 damage to it too. {green}
+* Angel of Death -- Cost 22 > 20; ATK 10 > 9; HP 12 > 11. {green}
+* Childrake -- Effect Update: Magic : If played on the left, add a monster from your deck to your hand. If played on the right, add a spell. {yellow}
+* Mettaton EX -- Cost 10 > 6; ATK 5 > 4; Effect Update: Magic: Decrease your and opponent's gold amount by your remaining gold amount. {yellow}
+* Small Bird -- Effect Update: Ignore Taunt effects. Magic: Gain Charge if your enemy has a Taunt or Armor monster. {yellow}
+* Mettaton NEO -- Cost 9 > 10. {red}
+* Moldessa -- Cost 4 > 5; ATK 3 > 4. {red}
+* Fox Head -- HP 3 > 2. {red}
+## Balancing (Spells)
+* Protection -- Effect Update: Give Taunt to a monster. Draw a card. {green}
+* Force of Nature -- Same, but this spell is in the starting cardpool instead of Heal. {green}
+* Thundersnail -- Effect Update: Summon all dead ally snails and trigger their Magic. Add a Napstablook to your hand. {green}
+* Contamination -- Effect Update: Kill all monsters under KR. Add another spell of your soul to your hand for each killed monster. {red}
+## Balancing (Artifacts)
+* Hourglass -- Your future effects are triggered one turn earlier. At the start of the game, add a goner kid to your deck. {green}

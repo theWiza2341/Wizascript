@@ -1,0 +1,19 @@
+* Starwalker -- [blue soul] > [white soul]. ATK 3 > 4. HP 2 > 4. EFFECT UPDATE: Magic: If your deck has no non-Generated RARE or EPIC cards, choose a card in your hand. Send it to your deck with -4 cost. {yellow}
+* Robot 98 -- EFFECT UPDATE: Can only be damaged by a DMG of 98 or greater. Turn start: Silence this. {yellow}
+* Moldessa -- ATK 4 > 3. EFFECT UPDATE: Magic: Draw a different Mold and give it +1 HP. {yellow}
+* Diamond Boy 1 -- EFFECT UPDATE: Your other non-Armor monsters take 1 less DMG. (Not stackable). {red}
+* Susie -- HP 8 > 6. {red}
+* Broken Pillar -- ATK 4 > 3. {red}
+## Balancing (Spells)
+* Froggit Trio -- COST 2 > 1. {green}
+* Overgrowth -- COST 4 > 3. EFFECT UPDATE: Give all Generated monsters in your hand, board, and deck +1/+1. {yellow}
+* Force of Nature -- EFFECT UPDATE: Give an ally +3 HP. {yellow}
+* Cooking Practice -- EFFECT UPDATE: Spend up to 10 G and summon a Spincake with a base cost, ATK, and HP equal to G spent. {yellow}
+* Soul Drain -- COST 0 > 2. EFFECT UPDATE: Choose a card from your hand. Burn it and trigger its Dust effect if it's a Lost Soul. Draw 2 cards. {yellow}
+* Zap Cannon-- EFFECT UPDATE: Deal 2 DMG to a monster and draw a random spell from your deck (except Blitz Quiz). {red}
+* Acceleration -- COST 1 > 2. {red}
+* Tea Set -- COST 1 > 2. {red}
+## Balancing (Artifacts)
+* Solidity -- EFFECT UPDATE: Whenever you play a Taunt monster, give it +1/+1. Taunt monsters in your hand cost 1 more. {yellow}
+## Keywords
+* Armor -- EFFECT UPDATE: Armor. This monster takes 1 less DMG. {yellow}

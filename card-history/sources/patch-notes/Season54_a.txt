@@ -1,0 +1,16 @@
+Season 54
+2020 is gone
+## New cards
+* Bone Drawer -- COST 3. Dust: Add a Pile of Bones into your dustpile instead of this. If this is still alive, turn into Pile of Bones. ATK 2, [white soul], HP 4.
+* Pile of Bones -- COST 3. Armor. ATK 4, [green soul], HP 5.
+* Potato Chisps -- COST 3. Add a copy of a monster with a tribe to your hand and give it +1/+1. [green soul]
+* Wobbly Thing -- COST 3. Magic: Kill this and summon an exact copy of it. ATK 3, [icon], HP 4.
+* Painting -- COST 4. Magic: Add a 1/1 copy of a non-DT ally monster to your hand. ATK 4, [white soul], HP 4.
+* Trash Ball -- COST 4. Whenever you play a monster, deal 1 DMG to this. ATK 6, [white soul], HP 4.
+* Vending Machine -- COST 5. Delay: Add a Potato Chisps to your hand. Give it -1 cost for every ally tribe. ATK 4, [blue soul], HP 5.
+* Magic Lantern -- COST 6. Magic: If you have 5 or more cards in your dustpile, remove 5 random cards from it and deal 3 DMG to a monster. ATK 4, [blue soul], HP 5.
+* Sadmobile -- COST 6. Magic: If an ally monster died this turn, draw a card. ATK 4, [icon], HP 7.
+* Totem -- COST 6. Magic: If your board is filled with 6-cost monsters, add 6 random 6-cost monsters to your hand. ATK 6, [blue soul], HP 6.
+* Cop Undyne -- COST 7. Charge. Whenever this attacks a monster, deal half its ATK as DMG to adjacent monsters (rounded down). ATK 4, [purple soul], HP 5.
+* Demon Flowey -- COST 7. Magic: Choose a card in your dustpile to catch. Dust: Return it and turn all other cards there into Demon Flowey. ATK 7, [magenta soul], HP 7.
+* Magic Crystal -- COST 12. Your spells cost 1 less. This costs 2 less G for every different spell costing 1 or less G you played this game. ATK 6, [blue soul], HP 6.

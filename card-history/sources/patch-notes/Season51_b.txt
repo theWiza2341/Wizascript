@@ -1,0 +1,12 @@
+* Carbed (COST 6, ATK 2, HP 6, white soul): Haste. Armor (1). Has +4 ATK when damaged.
+* Devil Doll (COST 6, ATK 3, HP 4, blue soul): Turbo: Deal 1 DMG to a random enemy monster. Magic: Deal 2 DMG to all damaged enemy monsters.
+* Piranhas (COST 6, ATK 3, HP 3, purple soul): Haste. Dodge (2). Whenever this attacks and kills a monster, deal 1 DMG to a random enemy monster.
+* Snoring Monsters (COST 6, ATK 6, HP 6, white soul): Whenever this attacks, deal excess DMG to your opponent.
+* Gerson Tombstone (COST 7, ATK 4, HP 4, purple soul): Magic: If your deck has no duplicate, summon a random card costing 4-7 from your dustpile.
+* Plated Pipe (COST 8, ATK 6, HP 5, purple soul): Armor (1). Whenever this takes DMG, shuffle a Mine into the opponent's deck.
+* Teacher Toriel (COST 10, ATK 4, HP 5, orange soul): Magic: Trigger the Turbo of each card in your hand. Gain +1/+1 for each Turbo effect triggered.
+* The Vessel (COST 12, ATK 6, HP 6, red soul): Magic: Add four exact copies of an ally monster (except itself) to your deck and one to your hand.
+* Vine (COST 12, ATK 7, HP 7, purple soul): Costs 1 less for each Plant you played this game (max: -9 cost).
+## New artifacts
+* Counterstrike -- Your monsters have +1 ATK during the enemy turn.
+* Evil Plan -- At the start of the game, add Create a Machine to your hand.

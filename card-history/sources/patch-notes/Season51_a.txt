@@ -1,0 +1,12 @@
+Season 51
+## New cards
+* Create a Machine (COST 1, green soul): Choose a monster. Add a Thrashing Machine with its cost and stats as base stats to your hand.
+* Rope Dog (COST 3, ATK 4, HP 4, blue soul): Charge. Magic: Summon an enemy Mace. Delay: Kill it.
+* Too Many Dogs (COST 3, ATK 3, HP 2, green soul): Magic: Fill your hand with Too Many Dogs.
+* Stuffed Doll (COST 4, ATK 3, HP 4, blue soul): Taunt. After this is attacked, gain Dodge (1) and attack a random enemy monster.
+* Abstract Art (COST 5, ATK 3, HP 4, purple soul): After you summon a monster that costs less than this, trigger its Dust effect.
+* Broken Pillar (COST 5, ATK 4, HP 2, green soul): Haste. Magic: Give an ally monster +1/+2.
+* Easy to Draw Bed (COST 5, ATK 4, HP 5, blue soul): After this attacks replace this by a random monster. Set its base stats to 4/4 and give it Haste.
+* Ficus (COST 5, ATK 2, HP 7, white soul): Whenever an ally Plant dies, gain +1 ATK.
+* Legendary Artifact (COST 5, ATK 4, HP 6, yellow soul): Taunt. Magic: Fill your hand with Too Many Dogs. Delay: Silence all Too Many Dogs in your hand.
+* Pillar (COST 5, ATK 2, HP 4, blue soul): Taunt. Magic: Give an ally monster +2/+1. Dust: Add Broken Pillar to your hand.

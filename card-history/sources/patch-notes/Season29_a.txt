@@ -1,0 +1,23 @@
+Updates (Buff / Nerf / Balanced or reworked)
+Season 29
+## Game mode
+* Legendary. All your cards are replaced by random legendary monsters.
+## Deltarune cards
+* One more season.
+## Balancing (Monsters)
+* Knight Knight -- Effect update : Whenever this attacks, heal itself by its amount of ATK. -- No longer part of the starting cardpool. {green}
+* Royal Guard 1 -- Same, but its now part of the starting carpool. {green}
+* Royal Guard 2-- Same, but its now part of the starting cardpool. {green}
+* Skateboard Girl -- Effect Update: Haste. Magic: End of Turn: If this attacked this turn, return to the owner's hand. {green}
+* Muffet -- Cost 10 > 9. {green}
+* Undyne -- ATK 8 > 7; HP 8 > 9. {yellow}
+* Reaper Bird -- Cost 6 > 5; ATK 6 > 4. {yellow}
+* Throne -- Cost 7 > 5; ATK 6 > 4; HP 6 > 4. {yellow}
+* Final Froggit -- Effect Update: Magic: Give +1/+1/+1 to all Frogs you own. {red}
+* Robot 98 -- Cost 10 > 11. {red}
+* Toriel -- HP 5 > 2. -- Wording Update: Magic: Set an enemy monster's ATK to 1 and gain HP equal to the amount of ATK decreased. {red}
+## Balancing (Spells)
+* Siphoning -- Cost 2 > 3 -- Effect Update: Silence all monsters under KR and restore 3 HP for each silenced monster. {yellow}
+* Force of Nature -- Cost 0 > 1 {red}
+## Balancing (Artifacts)
+* Criticals -- Removed from the game. (Owners have been refunded)

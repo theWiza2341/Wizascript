@@ -1,0 +1,16 @@
+## New cards
+* Butterflies. COST: 1. ATK: 1. HP: 1. [white soul] EFFECT: Dust: Add a random <= 3 G spell to your hand.
+* Eggs. COST: 2. ATK: 3. HP: 1. [green soul] EFFECT: Magic: If you have Flour and Milk in your dustpile, remove them and turn this into a Cake.
+* Flour. COST: 2. ATK: 2. HP: 2. [green soul] EFFECT: Magic: If you have Eggs and Milk in your dustpile, remove them and turn this into a Cake.
+* Milk. COST: 2. ATK: 1. HP: 3. [green soul] EFFECT: Magic: If you have Eggs and Flour in your dustpile, remove them and turn this into a Cake.
+* Asgore's Truck. COST: 4. ATK: 3. HP: 1. [white icon] EFFECT: Haste. Magic: Add 2 Green Flowers to your hand.
+* Dark Ponman. COST: 4. ATK: 4. HP: 3. [white icon] EFFECT: Magic: Send a Ponman from your dustpile to your hand.
+* Killer Cook. COST: 4. ATK: 2. HP: 5. [yellow soul] EFFECT: Magic: Add Eggs, Flour and Milk to your deck.
+* Spike Trap. COST: 4. ATK: 0. HP: 6. [white soul] EFFECT: Taunt. Thorns (4).
+* Dark Throne. COST: 5. ATK: 4. HP: 4. [purple icon] EFFECT: Magic: Draw a card that didn't start in your deck.
+* Flower Fingers. COST: 5. ATK: 4. HP: 5. [blue soul] EFFECT: Magic: Deal 1 DMG for each other ally Plant.
+* Popumeter. COST: 5. ATK: 3. HP: 6. [blue soul] EFFECT: Magic: Has +1 Thorns for each other monster on the board.
+* Christmas Tree. COST: 7. ATK: 3. HP: 9. [purple soul] EFFECT: Disarmed. Taunt. Magic: Summon 2 Olfts on adjacent slots.
+* Rabbick Hole. COST: 7. ATK: 3. HP: 4. [purple icon] EFFECT: Haste. Magic: Look at 3 random 4-cost monsters and catch one. Dust: Release it.
+* Ice Drink Wolf. COST: 8. ATK: 6. HP: 8. [blue icon] EFFECT: Magic: Choose between Ice, Ice Cap or Snowman. Add the chosen card to your hand.
+* Cake. COST: 10. ATK: 10. HP: 10. [green soul] EFFECT: Haste. Taunt. Candy. Dust: Restore 5 HP to all allies.

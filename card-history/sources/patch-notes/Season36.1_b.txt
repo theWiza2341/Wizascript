@@ -1,0 +1,26 @@
+* Sad Dragon -- ATK 4 > 5. {green}
+* Sans -- Effect Update: Now has 5 dodge instead of 2. {green}
+* Catty's Dad -- Effect Update: Same but now works on monsters summoned directly on the board through spells or monster effects. {green}
+* Catty -- Effect Update: Same but now works on monsters summoned directly on the board through spells or monster effects. {green}
+* Mettaton EX -- ATK 5 > 6. {green}
+* Mettaton NEO -- ATK 8 > 10. {green}
+* Final Froggit -- EFFECT UPDATE: "Magic: Give +1/+1/+1 to all ally Frogs (except Final Froggit) wherever they are". {green}
+* Microwave -- Cost 3 > 4; ATK 0 > 1. Effect Update: Disarmed. Magic: Give your monsters +1 HP. At the start of its 3rd turn, die and give +2/+1 to your monsters. {yellow}
+* Candy Dish -- ATK 1 > 3; HP 6 > 3. Effect Update: Magic: Give a monster Candy. {yellow}
+* Bratty -- EFFECT UPDATE: "Magic: Increase the cost of all spells in opponent's hand by 1". {yellow}
+* Chara -- EFFECT UPDATE: "Magic: Add Genocide artifact". {yellow}
+* Shrine Mascot -- ATK 2 > 1. HP 3 > 4. {yellow}
+* Oni -- ATK 3 > 2. {red}
+* Shyren -- HP 4 > 3. {red}
+* Alphys -- Effect Update: Now reduces the cost of amalgamate added to the hand by 1 instead of 2. {red}
+* Endogeny -- Effect Update: Magic: Return a random enemy monster to the enemy player's hand and reduce its cost by 2. {red}
+* Mettaton -- HP 5 > 4. {red}
+* Ball Person -- EFFECT UPDATE: "Magic: Silence all ally monsters". {red}
+## Balancing (Spells)
+* Investment -- EFFECT UPDATE: "Look at 3 random cards in your deck. Choose one and add it's copy to your hand with -2 cost". {green}
+* Aaron's Secret -- COST 5 > 2. EFFECT UPDATE: "Give +1 ATK to 3 random different allies on your board.". {yellow}
+* Contamination -- COST 8 > 10. {red}
+## Balancing (Artifacts)
+* Genocide - "Turn start: Gain -1 max HP, silence and kill a random enemy monster."
+## Status
+* Dodge -- Effect Update: Now doesn't refresh at the start of your turn.

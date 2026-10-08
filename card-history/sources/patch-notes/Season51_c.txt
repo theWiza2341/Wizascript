@@ -1,0 +1,33 @@
+## Balancing (Monsters)
+* Cactus -- ATK 0 > 1. HP 5 > 3. {green}
+* Cracked Table -- EFFECT UPDATE: Magic: Add a Tea Set to your hand, or your opponent's hand if they have lower HP. {green}
+* Great Door -- EFFECT UPDATE: Magic: Summon the most expensive other monster from your deck that costs less than this. {green}
+* Lamp -- EFFECT UPDATE: Taunt. Dust: Summon a random monster costing 3-6 G and set its stats to 2/2. {green}
+* Shambling Mass -- Cost 5 > 6. ATK 4 > 5. HP 4 > 6. EFFECT UPDATE: Magic: Kill an ally monster to gain +1 ATK and Haste. {green}
+* Small Bird -- HP 4 > 3. EFFECT UPDATE: Magic: If there is a Taunt monster on the board, gain Charge. {green}
+* Jerry -- EFFECT UPDATE: Taunt. This takes 1 less DMG from monsters costing 4 or less. {green}
+* Animals -- COST: 9 > 8. ATK: 6 > 5. HP: 8 > 7. EFFECT UPDATE: Haste. Magic: If played on the right, halve this monster's stats as base stats (rounded up) and summon a copy of it. {yellow}
+* Chaos Duck -- Cost 8 > 7. EFFECT UPDATE: Magic: Transform an ally monster into Apoca Duck. {yellow}
+* Dress Lion -- Cost 7 > 4. ATK 5 > 2. HP 7 > 4. EFFECT UPDATE: Turbo: Gain +1 ATK. Magic: Silence an enemy monster with as much or less ATK than this. {yellow}
+* Endogeny -- Cost 5 > 9. ATK 5 > 4. HP 4 > 4. EFFECT UPDATE: Magic: Return an enemy monster into your opponent's hand. {yellow}
+* Ferry -- Cost 3 > 6. ATK 3 > 5. HP 3 > 6. {yellow}
+* Ficus Licker -- [grey soul] > [white soul]. Is now a Plant. EFFECT UPDATE: Magic: Draw a Plant from your deck. {yellow}
+* Ice E Mascot -- Cost 4 > 5. ATK 2 > 4. EFFECT UPDATE: Magic: Add a random other monster from your dustpile with a cost equal to this card's cost to your hand and deck. {yellow}
+* Manticore -- Cost 6 > 7. EFFECT UPDATE: Magic: Both players draw 2 cards. {yellow}
+* Spade King -- ATK: 2 > 6. HP: 4 > 8. EFFECT UPDATE: Taunt. Magic: Kill all monsters with <= 2 HP. {yellow}
+* Dark Candy Tree -- HP 6 > 5. EFFECT UPDATE: Support: Restore 2 HP to the attacker. If it was a Plant, give it +1 ATK as well. {red}
+## Balancing (Spells)
+* Call of the Grave -- EFFECT UPDATE: Summon a 1/1 copy of 3 random different non-GENERATED Dust monsters from your dustpile with a cost of 3 or less. {green}
+* Faded Memory -- Now named Soul Drain. Cost 4 > 0. EFFECT UPDATE: Deal 2 DMG to yourself and draw a card. {yellow}
+* Last Dream -- Cost 6 > 4. EFFECT UPDATE: Give all ally monsters +1/+1. If you have 1 HP, give them +7/+7 instead. {yellow}
+* Longevity -- EFFECT UPDATE: Gain +10 max HP. {yellow}
+* Royal Determination -- EFFECT UPDATE: Gain an extra life. {yellow}
+* Campfire -- EFFECT UPDATE: Heal 3 HP randomly split among your monsters. Give 3 random monsters in your hand +1/+1. {red}
+## Balancing (Artifacts)
+* Poke -- EFFECT UPDATE: At the start of the game deal 5 DMG to your opponent and reduce their max HP by 5. {green}
+## Balancing (Souls)
+* Kindness -- EFFECT UPDATE: Turn end: Give the rightmost ally monster +1 HP and heal 1 HP to you. {green}
+## Keywords
+* Delay -- Current Magic:Turn end (turn end once)
+## Bug fixes
+* Fixed trash button on decks page.

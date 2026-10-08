@@ -1,0 +1,14 @@
+## Balancing (Monsters)
+* Plated Pipe -- COST 8 > 7. ATK 6 > 5. EFFECT UPDATE: This takes 1 less DMG during your opponent's turn. Whenever this takes DMG, deal 2 DMG to your opponent. {yellow}
+* Robot 98 -- COST 11 > 10. EFFECT UPDATE: Magic: Gain +98 Dodge. Turn start: Remove all Dodge this has. {yellow}
+* Snail Pen -- EFFECT UPDATE: Whenever you summon a Snail with a base cost of 2 or less, trigger its Magic effect. {yellow}
+* Snow Poff -- EFFECT UPDATE: Disarmed. Whenever an enemy monster attacks, deal 1 DMG to this. Magic: Catch a Greater Dog. Dust: Release it. {yellow}
+* Cop Undyne -- EFFECT UPDATE: Charge. Whenever this attacks a monster, deal 2 DMG to the target's adjacent monsters. {red}
+* Royal Guard 1 -- [gray soul] > [white soul]
+* Royal Guard 2 -- [gray soul] > [white soul]
+* Gyftrot -- [blue soul] > [gray soul]
+* Dad Slime -- [white soul] > [gray soul]
+## Balancing (Spells)
+* Shopping -- COST 4 > 3. {green}
+* Puzzle Box -- EFFECT UPDATE: Silence a monster. {yellow}
+* Load -- COST 17 > 18. {red}

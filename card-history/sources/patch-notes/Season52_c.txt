@@ -1,0 +1,19 @@
+* Cooking Practice -- EFFECT UPDATE: Spend up to 6 G and summon a Spincake with a base cost, ATK, and HP equal to the G spent. {yellow}
+* Exploration -- Cost 3 > 2. EFFECT UPDATE: Look at 5 cards at the top of your deck and choose one to draw. {yellow}
+* Penetration -- Cost 2 > 1. EFFECT UPDATE: Silence a monster. {yellow}
+* Scope -- EFFECT UPDATE: Look at 2 random cards in your deck and choose one to send to the top. {yellow}
+* Worming Up -- EFFECT UPDATE: Summon 2 Worms and give all ally Worms +2 ATK. {red}
+* Spider Web -- EFFECT UPDATE: Give an enemy monster -2 ATK and KR. If its remaining ATK <= 2 then add Muffet's Pet to your hand. Otherwise, add 2 Spiders instead. {red}
+## Balancing (Souls)
+* Determination -- EFFECT UPDATE: Start the game with an extra life. Whenever 5 non-TOKEN ally monsters die, add the next Lost Soul to your hand starting with the first one. If you have an extra life, lose one and set your current HP to 10 instead of dying. {yellow}
+* Integrity -- EFFECT UPDATE: At the end of every odd turn (except turn 1), gain 1 G. Your G cap is 11 G. {yellow}
+* Kindness -- EFFECT UPDATE: Turn end: Give the rigthmost ally monster +1 HP and restore 1 HP to yourself if it is past turn 4. {red}
+## Game
+* Added a button to show your dustpile.
+## Misc
+* Limited the amount of time a card can trigger its effect during the same turn to avoid infinite loop.
+* Animations will now get faster and faster for each time an effect is triggered by the same card during the same turn.
+## Bug fixes
+* Doggo and Break will no longer give "Generated" status to returned monsters.
+* Effects that copy cards will now correctly give "Generated" status.
+* Fixed ATK/HP swap aura issue.

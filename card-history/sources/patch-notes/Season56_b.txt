@@ -1,0 +1,14 @@
+* Rope Dog -- COST 3 > 4. ATK 6 > 4. HP 4 > 2. EFFECT UPDATE: Haste. Magic: Choose a Dog in your hand. Give it +1/+2. Synergy: Turn into a copy of the chosen Dog with this monster's stats and Haste. {yellow}
+* Greater Dog -- HP 6 > 7. EFFECT UPDATE: Taunt. This has +2 HP while you have a Dog in your hand. {yellow}
+* Dogamy -- ATK 3 > 4. EFFECT UPDATE: Dust: Give +4 ATK randomly split among all Dogs in your hand. {yellow}
+* Dogaressa -- HP 3 > 4. EFFECT UPDATE: Dust: Give +4 HP randomly split among all Dogs in your hand. {yellow}
+* Dog House -- Now a Dog. EFFECT UPDATE: All ally Dogs have +1/+1. {yellow}
+* Bone Painting -- EFFECT UPDATE: Magic: Look at 3 random Dogs in your dustpile and choose one to burn. Add the other 2 to your hand. {yellow}
+* Dynamite Stick -- EFFECT UPDATE: Dust: Deal 1 DMG to a random enemy. {red}
+## Balancing (Spells)
+* Trick Question -- COST 2 > 1. {green}
+* Zap Cannon -- COST 2 > 1. {green}
+* Spade -- COST 3 > 5. EFFECT UPDATE: Deal 3 DMG to an enemy monster. If it dies, deal 3 DMG to a random other enemy monster. {yellow}
+* Blitz Quiz -- COST 0 > 1. {red}
+## Balancing (Souls)
+* Bravery -- EFFECT UPDATE: At the start of every 3rd turn, add a Recruitment to your hand. If you have 3 or less cards in your hand, add 2 Recruitments to your hand instead. {green}

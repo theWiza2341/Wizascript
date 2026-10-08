@@ -1,0 +1,27 @@
+Updates (Buff / Nerf / Balanced or reworked)
+Season 27
+Beta 27.0
+## New game mode
+* HIBa
+## New cards
+* [blue soul] [green soul] Octofriend -- Cost 4. Give +2 HP to an ally monster. Summon a left tentacle to his left and a right tentacle to his right.
+* [blue soul] [yellow soul] Fast Sanction -- Cost 4. Deal 1-6 DMG to a monster. If result was 3 or lower, send back this card to your hand.
+* [blue soul] [red soul] Sacrifice -- Cost 1. Kill an ally monster and heal 4 HP. Add a lost soul to your hand.
+* [blue soul] [orange soul] Rage -- Cost 3. Deal selected ally monster's ATK as DMG to the monster in front of it.
+* [blue soul] [purple soul] Siphoning -- Cost 2. Silence a monster and heal HP to half the ATK of this monster if under KR (rounded up).
+* [blue soul] [light blue soul] Ice Replica -- Cost 2. Add a copy of a paralysed monster to your deck. If it was an ally monster, add it to the top of your deck instead.
+* [blue soul] [blue soul] Golden Hit -- Cost 0. Spend all your gold and deal DMG to an enemy monster equals to the amount spent. Convert extra DMG into Gold.
+## Balancing (Monsters)
+* [?]one Painting -- HP 3 > 4. {green}
+* Toriel -- Cost 12 > 11. {green}
+* Mettaton EX -- ATK 4 > 5. {green}
+* Sad Customer -- ATK 4 > 5. {green}
+* Parsnik -- Same, but now it's part of the starting cardpool. {green}
+* Disco Ball -- HP 7 > 8. {green}
+* Editor 1 -- Effect Update: Magic: Move a turbo monster from your deck to the top of your deck. It costs 1 less. {green}
+* Lost Toriel -- Cost 5 > 4. {green}
+* Lost Sans -- Cost 5 > 2. {green}
+* Lost Alphys -- Cost 5 > 3. {green}
+## Balancing (Spells)
+* Another Chance -- Effect Update: Give an enemy monster: "Dust: Summon this monster for your opponent with +1/+1". {green}
+* Protection -- Effect Update: Give Taunt to an ally monster. Draw a card. {red}

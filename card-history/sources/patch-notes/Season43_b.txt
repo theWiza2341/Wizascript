@@ -1,0 +1,26 @@
+## Balancing (Monsters)
+* Ficus Licker -- EFFECT UPDATE: Thorns (2). Magic: Give an ally monster +2 Thorns. {green}
+* K-round -- EFFECT UPDATE: Haste. Candy. {green}
+* Evil Blueprints -- EFFECT UPDATE: Look at 3 random monsters costing <=10 G and choose one. Add it to your hand with all tribes. {green}
+* Temmie Statue -- ATK 0 > 1. {green}
+* Mettabot -- COST 2 > 0. {green}
+* Mettaton -- COST 4 > 3. ATK 1 > 2. HP 4 > 5. EFFECT UPDATE: Can only take up to 3 DMG at a time. {yellow}
+* Evil Eye -- EFFECT UPDATE: Turbo: Reveal a random card from your opponent's hand. Magic: Raise the cost of a random card in your opponent's hand by 2. {yellow}
+* Battleflies -- EFFECT UPDATE: Whenever you cast a spell, this has +4 ATK until the start of your next turn. {yellow}
+* Mettaton Ex -- COST 6 > 9. HP 5 > 7. EFFECT UPDATE: All cards cost 2 more. {yellow}
+* Red Bush -- EFFECT UPDATE: Your other monsters have +1 ATK while this has Transparency. {red}
+* Dark Candy Tree -- EFFECT UPDATE: Support: Give the attacking monster Candy. {red}
+* Smolder Cake -- ATK 4 > 3. {red}
+* Hot Dog Vulkin -- COST 7 > 8. {red}
+* Snowy -- ATK 4 > 3. HP 6 > 5. {red}
+## Balancing (Spells)
+* Overheat -- COST 5 > 4. {green}
+* Sacrifice -- EFFECT UPDATE: Kill an ally monster and restore 4 HP to you. Add a Lost soul to your hand with -2 cost. {green}
+* Spade Chaos -- EFFECT UPDATE: Deal DMG to all enemies equal to the amount of empty slots on your side of the board. {green}
+* Recruitment -- EFFECT UPDATE: Look at 5 random monsters costing 4 or 5 (<= EPIC) and choose one. Add it to your hand with +1 HP. {green}
+* Feast -- EFFECT UPDATE: Give +2 HP to your monsters. If they have <=3 HP, give them an extra +1/+1. {yellow}
+* Pie -- EFFECT UPDATE: Give a monster Haste and +1 Dodge. {yellow}
+* Brain Shift -- EFFECT UPDATE: Force an enemy monster to attack another random enemy monster. {yellow}
+* Worsening -- EFFECT UPDATE: Deal 2 DMG to a monster. If it's under KR, deal 4 DMG to it instead and any excess to your opponent. {red}
+## Balancing (Souls)
+* Perseverance -- EFFECT UPDATE: Whenever an enemy monster is damaged during your turn, give it KR. {red}

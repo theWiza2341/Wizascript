@@ -1,0 +1,16 @@
+* Ice E Mascot -- ATK 4 > 5. EFFECT UPDATE: Magic: Add a random other monster from your dustpile with a cost equal to this card's cost to the top of your deck. {yellow}
+* Snow Poff -- Cost 4 > 2. HP 4 > 5. EFFECT UPDATE: Taunt. Magic: Look at 3 random Dogs and choose one to catch. Dust: Release it to your hand. {yellow}
+* Faun -- EFFECT UPDATE: Magic: Reduce an enemy monster's ATK by 2 and add a random card with a cost equal to the monster's remaining ATK to your hand. {red}
+* Blue Flower -- Cost 3 > 5. {red}
+* Omega Flowey -- No longer a Plant. {red}
+* Goner Clam -- EFFECT UPDATE: Magic: Heal 3 HP. Synergy: Give all ally G Followers +1/+1. {red}
+* Ice Drink Wolf -- HP 8 > 7. {red}
+* Nacarat Jester -- HP 4 > 3. {red}
+* Carbed -- HP 6 > 5. EFFECT UPDATE: Armor (1). Haste. Has +3 ATK while damaged. {red}
+* Small Bird -- ATK 4 > 3. HP 3 > 4. {red}
+* Flower Can -- Cost 3 > 4. ATK 2 > 3. {red}
+* Piranhas -- HP 3 > 2. {red}
+* Fire Trap -- Cost 4 > 5. ATK 0 > 1. {red}
+## Balancing (Spells)
+* Assault -- EFFECT UPDATE: Give an ally monster +1 ATK and Haste. {green}
+* Royal Determination -- Cost 4 > 3. {green}

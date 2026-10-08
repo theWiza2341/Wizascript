@@ -1,0 +1,21 @@
+Season 39
+## New quests
+* 15 new quests for the season.
+* New pass with Kris.
+## Status
+* Thorns : This monster will deal (x) DMG to the attacker.
+## Ranked
+* You can no longer play against an opponent too far from your current division.
+* Increased gains and losses for all divisions.
+## UCP shop
+* Added x3 Shiny packs for the 20€ offer.
+* Replaced DT Fragments by Super packs and Final packs.
+## Mobile ads for UCP
+* We have removed mobile ads because :
+* It was unfair -> It's not working for everyone (you need an android device).
+* It's was glitched -> Sometimes ads wouldn't load.
+* It's not worth for UC -> Contributed for less than 1$ a day.
+* What's next -> We are thinking of new ways to give you more UCP, stay tuned.
+## Artifact
+* Experience -> Is no longer free.
+* Power -> Is now free (we have refunded all Power artifacts).

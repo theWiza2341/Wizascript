@@ -1,0 +1,13 @@
+## Balancing (Spells)
+* Load -- COST 18 > 16. {green}
+* Fridge -- COST 1 > 2. [white soul] > [gray soul]. EFFECT UPDATE: Look at Eggs, Flour and Milk. Choose one to add to your hand with +2/+2. {yellow}
+* Protection -- COST 1 > 2. [gray soul] > [white soul]. EFFECT UPDATE: Give a monster +2/+2 and Haste. Delay: If its cost is the same as its base cost, Paralyze it. {yellow}
+* Exploration -- COST 2 > 3. EFFECT UPDATE: Draw a card from the bottom of your deck. Delay: Draw 2 cards from the bottom of your deck. {yellow}
+* Slowing -- EFFECT UPDATE: Deal an ally monster's HP as DMG to the monster in front of it. {yellow}
+* Cold Winter -- COST 4 > 2. EFFECT UPDATE: Look at Ice Cap, Ice and Snowman and choose one to burn. Add the others to your hand. {yellow}
+* Ice Replica -- EFFECT UPDATE: Paralyze a non-DT monster. Delay: Add a copy of it to your hand. Give it -2 cost if it was an ally monster. {yellow}
+* Defrosting -- EFFECT UPDATE: Deal 3 DMG to all damaged monsters. Delay: Deal 1 DMG to all monsters. {yellow}
+* Brain Freeze > Ice Prison -- COST 6 > 3. EFFECT UPDATE: Silence a monster. Paralyze it. Draw a card from the bottom of your deck. {yellow}
+* Snowstorm > Self Reflection -- COST 7 > 3. EFFECT UPDATE: Paralyze an enemy monster. Delay: Add True Self to your hand. {yellow}
+## Balancing (Souls)
+* Patience -- EFFECT UPDATE: At the end of every even turn, add Change of Winds to the top of your deck if you have no Change of Winds in your hand. {yellow}

@@ -1,0 +1,28 @@
+Season 45
+## Ranked
+* Min LV required: 15 -> 10.
+## Game
+* Animations at the start and end of turns will no longer waste your turn time (you will have 60 true seconds to play).
+* If you reconnect during one of these animations, it will replace the timer by a special timer of the remaining animation delay and you won't be able to play cards before the animation has finished.
+## Frame Skins
+* New frame skin for contributors.
+## Balancing (Monsters)
+* Golden Flowers -- EFFECT UPDATE: Look at 2 random different spells costing <=10 g that you've cast this game. Choose one to add to your hand. {green}
+* Cogwheel -- EFFECT UPDATE: Turn end: Shuffle the most expensive card in your hand into your deck and draw a card. {green}
+* Dark Ponman -- EFFECT UPDATE: Magic: Send two Ponmans from your dustpile to your hand. {green}
+* Butterflies -- EFFECT UPDATE: Haste. Dust: Add a random <=3 G spell to your hand. {green}
+* Thrashing Machine -- HP 4 > 3. COST 3 > 4. EFFECT UPDATE: Haste. This card has all monster tribes. {yellow}
+* Catti -- ATK 4 > 3. COST 7 > 6. {yellow}
+* Water Cooler -- ATK 1 > 3. HP 6 > 3. {yellow}
+* Rabbick Hole -- EFFECT UPDATE: Haste. Dust: summon a Rabbick. {yellow}
+* Jar of Worms -- HP 5 > 6. COST 4 > 5. EFFECT UPDATE: Magic: Summon a Worm. Turn Start: Add a Worm to your hand. Turn End: Give all ally Worms +1 ATK. {red}
+* Battleflies -- COST 3 > 4. {red}
+* Business Dude -- EFFECT UPDATE: Magic: Summon a 1/1 copy of a random other non-DT monster from your deck. {red}
+## Balancing (Spells)
+* Brain Freeze -- EFFECT UPDATE: Trigger all ally Turn start and Turn end effects. Draw a card. End your turn. {green}
+## Balancing (Artifacts)
+* Collection -- RARITY Common > Legendary. {yellow}
+## Bug fixes
+* Cloning an opponent card with a skin will no longer cause issue.
+* The sword/shield on a special card skin is now centered.
+* Brain freeze will no longer make enemy cards not playable without a refresh.

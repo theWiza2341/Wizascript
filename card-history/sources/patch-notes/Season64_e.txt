@@ -1,0 +1,11 @@
+New cards
+* [white soul] Tiny Tornado | COST 4 | ATK 3 | HP 4 | Haste. Whenever this attacks and kills a monster, add a Zephyr to your hand.
+* [blue soul] Trashy | COST 4 | ATK 2 | HP 5 | This has +2 ATK on the enemy turn and takes no DMG while attacking.
+* [blue soul] Virovirokun | COST 4 | ATK 2 | HP 5 | Transparency. Whenever you take DMG during your turn, gain +1/+1.
+* [white soul] Yarn Ball | COST 4 | ATK 4 | HP 5 | Magic: Send the 2 rightmost cards in your hand to your deck. Draw 2 cards.
+* [green soul] Zephyr | COST 4 | spell | Deal 5 DMG to an enemy monster. Deal the excess DMG to another random enemy one.
+* [white soul] Berdly Plush | COST 5 | ATK 4 | HP 6 | Turn end: If you have a TOKEN card with a base cost of 3+ G in your hand, give 2 random non-TOKEN cards in your hand -1 cost.
+* [blue soul] Burgersimp | COST 5 | ATK 6 | HP 4 | Magic: Program (6): Set your G to 0.
+* [white soul] Dumpster | COST 5 | ATK 5 | HP 6 | Delay: If you have a BASE card in your deck, Program (1): Draw it with -1 cost.
+* [green soul] Feather Storm | COST 5 | ATK 4 | HP 4 | Magic: Deal 2 DMG. Deal 1 DMG to all enemies.
+* [blue soul] Hatplug | COST 5 | ATK 2 | HP 4 | Dodge (1). After this loses a Dodge, give 3 random Plugs in your hand +1/+1.

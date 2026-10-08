@@ -1,0 +1,12 @@
+Season 64
+New cards
+* [green soul] Cursor | COST 1 | ATK 2 | HP 3 | Magic: Draw a card.
+* [green soul] Cyber Cage | COST 1 | ATK 5 | HP 1 | Dust: If it's the enemy turn, release the caught monster.
+* [green soul] Final Gambit! | COST 1 | spell | Deal 7 DMG to all enemies, heal 7 HP to all allies, earn 7 G, and add 7 Drafts to your hand.
+* [green soul] Hyperlink Blocked | COST 1 | spell | Look at a random TOKEN and non-TOKEN card in your deck. Choose one to draw.
+* [green soul] Laser Topper | COST 1 | ATK 2 | HP 2 | Haste. Turbo: Summon this if you have no ally monsters on the board.
+* [blue soul] Maus | COST 1 | ATK 1 | HP 2 | Magic: Turn every monster costing 1 or less G in your deck into Maus. Dust: Burn a Maus in your deck to summon one.
+* [green soul] Boxed Body | COST 2 | ATK 1 | HP 2 | Transparency. Dust: Deal 4 DMG to the highest HP enemy monster.
+* [white soul] Cheese Block | COST 2 | ATK 2 | HP 2 | Dust: Summon a 1/1 copy of another monster costing 1 or less G from your deck.
+* [white soul] Dog Cone | COST 2 | ATK 1 | HP 3 | Taunt. Loop (2).
+* [white soul] Maus Hole | COST 2 | ATK 1 | HP 3 | Whenever you summon a monster with a base cost of 1 or less G, give it +1 ATK.

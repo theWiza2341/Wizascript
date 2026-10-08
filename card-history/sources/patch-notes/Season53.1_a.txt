@@ -1,0 +1,20 @@
+## Bundle
+* Christmas bundle is now available.
+## Balancing (Monsters)
+* Jigsawry -- EFFECT UPDATE: Whenever you play another Jigsawry, remove it and add its ATK and HP to this monsters base stats. {green}
+* Alphys -- HP 5 > 6. {green}
+* Red Wagon -- COST 5 > 4. {green}
+* Ice E Mascot -- ATK 4 > 3 HP 3 > 5. {green}
+* Burning Snail -- ATK 1 > 2. {green}
+* Cool Papyrus -- EFFECT UPDATE: Haste. Whenever this attacks and kills a non-DT monster, add a 5/5/5 copy of the dead monster to your hand. {yellow}
+* Cool Bone -- HP 6 > 5 EFFECT UPDATE: Transparency. The first time this monster attacks a monster each turn, it can attack another monster. {yellow}
+* Temmie -- EFFECT UPDATE: Haste. Dust: Add a Temmie 2 to your hand. {yellow}
+* Temmie 2 -- EFFECT UPDATE: Charge. {yellow}
+* Rope Dog -- ATK 4 > 6 EFFECT UPDATE: Haste. Magic: Summon an enemy Mace. Delay: Kill it. {yellow}
+* Bob -- EFFECT UPDATE: Haste. Magic: Add a copy of every other different Temmie from your dustpile to your hand. (from lowest to highest cost) {yellow}
+* Tombstone -- EFFECT UPDATE: Magic: Summon two different non-DT and non-TOKEN Dust monsters from your dustpile costing 7 or less on adjacent slots. {yellow}
+* Whimsalot -- HP 5 > 6 EFFECT UPDATE: Magic: Give a random monster in your hand +1/+1. Repeat this for each other ally monster. {yellow}
+* Fishing Rod -- [white soul] > [grey soul]. {yellow}
+* Charles -- [white soul] > [grey soul]. {yellow}
+* Jerry -- [grey soul] > [white soul]. {yellow}
+* Blockler B -- ATK 3 > 2. {red}

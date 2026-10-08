@@ -1,0 +1,20 @@
+Game
+* Added 3 new backgrounds.
+## Balancing (Monsters)
+* School Tem -- EFFECT UPDATE: Charge. Magic: Burn a card in your hand costing 2 or less G. Gain +2/+2. {green}
+* Bunbun -- HP 4 > 5. {green}
+* Cool Bone -- COST 4 > 5. ATK 2 > 3. HP 5 > 7. {green}
+* Catti -- ATK 3 > 4. {green}
+* Undyne -- COST 14 > 13. HP 9 > 8. {green}
+* Casual Undyne -- HP 8 > 9. {green}
+* Asgore -- COST 14 > 12. {green}
+* Gaster -- COST 12 > 13. EFFECT UPDATE: Magic: Trigger all Synergy effects you triggered this game. Can only trigger the same effect up to 2 times. {green}
+* Soulless Kris -- COST 13 > 12. {green}
+* The Heroine -- COST 16 > 13. ATK 10 > 9. HP 10 > 9. EFFECT UPDATE: Instead of dying, return to its base stats with -3/-3. {yellow}
+* Susie -- EFFECT UPDATE: Magic: Set the stats of all other ally monsters and the monster in front of this to 3/3. {yellow}
+* Mettaton Ex -- COST 8 > 7. HP 7 > 8. EFFECT UPDATE: Dust: If you have 7 or more G, spend 7 G to summon a Mettaton Ex. {yellow}
+* Papyrus -- COST 13 > 12. EFFECT UPDATE: Haste. Whenever this attacks and kills a monster, it can attack another monster. {yellow}
+* Bookshelf -- COST 7 > 6. ATK 5 > 3. HP 5 > 6. EFFECT UPDATE: Need: Your deck has no non-Generated Spells. Magic: Look at all spells of your Soul and choose one to add to your hand. Give it -2 cost. {yellow}
+* Crystal Cheese -- EFFECT UPDATE: Magic: Look at 2 random Lost Souls and choose one to catch. Dust: Release a 1/1 copy of it. {yellow}
+* Scissor Dancer -- COST 4 > 5. HP 3 > 4. EFFECT UPDATE: Magic: Deal 1 DMG to a monster. If it's damaged, deal 4 DMG instead. {yellow}
+* Snail Bucket -- EFFECT UPDATE: Dust: Summon a Red Snail and a Yellow Snail. Randomly trigger one of their Magic. {yellow}

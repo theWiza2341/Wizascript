@@ -1,0 +1,6 @@
+New cards
+* [blue soul] Snow Warning | COST 4 | spell | Add the Hail artifact. Increase its counter by 3.
+* [green soul] Snowgrave | COST 4 | spell | Burn a monster. Add 7 Ice Crystals to your deck with its ATK and HP. Burn all ally Snoelles and Snowgraves wherever they are.
+* [blue soul] Vasebreaker | COST 4 | spell | Summon a Vase. If you have less monsters than the opponent, summon another.
+* [orange soul] Captn Rouxl | COST 6 | ATK 5 | HP 6 | Magic: Fill your board with Blue Houses and enemy board with Red Houses. Delay: Kill all Blue Houses.
+* [blue soul] Wereform | COST 7 | spell | Choose a non-DT monster with base cost of 9 or less. Turn its adjacent monsters into copies of it.

@@ -1,0 +1,19 @@
+## Balancing (Monsters)
+* Onion San -- HP 7 > 8. {green}
+* Fan Rudinn -- ATK 2 > 3. {green}
+* Woshua -- COST 6 > 5. HP 4 > 3. {green}
+* Dark Throne -- COST 5 > 4. ATK 4 > 3. {green}
+* The Vessel -- EFFECT UPDATE: Magic: Add 1 exact copy of a non-DT ally monster to your hand and 2 to your deck. Turn into the True Vessel (Keep buffs). {green}
+* Susie -- HP 6 > 7. EFFECT UPDATE: Taunt. Magic: Set the stats of all other ally monsters and the monster in front of this to 3/3. {green}
+* Legendary Artifact -- EFFECT UPDATE: Taunt. Magic: Fill your hand with Too Many Dogs. {green}
+* Too Many Dogs -- HP 2 > 3. EFFECT UPDATE: Magic: If you don't have any Too Many Dogs in your hand, fill your hand with Silenced Too Many Dogs. {green}
+* Thrashing M -- ATK 3 > 4. EFFECT UPDATE: No effect. {green}
+* Sadmobile -- EFFECT UPDATE: Magic: If an ally monster died this turn, draw a card. If 3 or more ally monsters died this turn, draw two cards with -1 cost instead. {green}
+* Space Cooler -- EFFECT UPDATE: Delay and Turn end: Give a random monster in your hand +1/+1. {green}
+* Flowey -- EFFECT UPDATE: Haste. Dust: Add a Silenced Flowey with +3/+3/+3 with Haste to your deck. {green}
+* Pizzapants -- HP 6 > 3. EFFECT UPDATE: Haste. This has +1/+1 for each other Pizzapants you played this game. {green}
+* Mad Mew Mew -- COST 5 > 7. ATK 4 > 5. EFFECT UPDATE: Magic: Half a non-DT other monster's stats and copy it to your hand with half stats (rounded down). If it was an ally, earn 3 G. {yellow}
+* Mad Dummy -- [blue soul] > [yellow soul]. COST 6 > 13. ATK 6 > 7. HP 1 > 4. EFFECT UPDATE: Can only be damaged by 4 or more DMG. Magic: Deal 3 DMG to all monsters and players. Excess DMG dealt is healed as HP to you. {yellow}
+* Stuffed Doll -- EFFECT UPDATE: Magic: If you have 6 Stuffed Dolls in your dustpile, burn them all and give all monsters in your hand and deck +3/+3. {yellow}
+* Sans -- HP 2 > 1. {red}
+* Royal Loox -- [white soul] > [blue soul]. {gray}

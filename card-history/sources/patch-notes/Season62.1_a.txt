@@ -1,0 +1,24 @@
+## Balancing (Monsters)
+* Water Sausage -- ATK 2 > 3. {green}
+* Orange Laser -- HP 6 > 7. {green}
+* Shyren -- EFFECT UPDATE: Magic: Heal 4 HP. {green}
+* Nurse Mouth -- HP 6 > 7. EFFECT UPDATE: Whenever an ally monster dies, heal 3 HP to you. {green}
+* Big Mouth -- EFFECT UPDATE: Magic: Kill a monster costing 2 or less G to heal 2 HP to you. {yellow}
+* School Tem -- ATK 1 > 2. HP 2 > 3. EFFECT UPDATE: Magic: Draw a Temmie and give it +1/+1. If you can't, gain +1/+1 and Haste. {yellow}
+* Loox -- COST 2 > 1. ATK 2 > 1. EFFECT UPDATE: Magic: Deal 1 DMG. If it targeted an ally monster, gain +1 ATK. {yellow}
+* Berdly -- EFFECT UPDATE: Turn end: Give a random spell in your hand -2 cost. {yellow}
+* Seam -- COST 6 > 7. ATK 4 > 6. HP 4 > 6. {yellow}
+* Striped Bird -- EFFECT UPDATE: Haste. After this attacks, Paralyze it. Delay: If this attacked, gain -1 HP. {red}
+## Balancing (Spells)
+* Contamination -- EFFECT UPDATE: Kill all enemy monsters under KR. Give all enemy monsters KR. {green}
+* Brain Shift -- EFFECT UPDATE: Both players draw a card. Force an enemy monster to attack another random enemy monster. {green}
+* Worsening -- EFFECT UPDATE: Deal 2 DMG to 2 random enemy monsters. {yellow}
+* Poison -- COST 1 > 2. EFFECT UPDATE: Give a monster KR. Draw 2 cards. {yellow}
+* Spider Web -- COST 3 > 1. EFFECT UPDATE: Give a monster Taunt. Paralyze the one in front of it. {yellow}
+* Worming Up > Worm Infusion -- COST 5 > 2. EFFECT UPDATE: Give a monster +1 ATK. Heal its ATK as HP to it and the excess to you. {yellow}
+* Siphoning -- COST 1 > 3. EFFECT UPDATE: Give a monster -2/-2 and the one in front of it +2/+2. If it killed, add a Draft to your deck. {yellow}
+* Pollutant Gas -- EFFECT UPDATE: Summon a Toxic Cloud. Delay: If it's alive, give it +1/+1. {yellow}
+* Termination > Buttercup Treat -- COST 4 > 2. EFFECT UPDATE: Set a non-DT monster's ATK to 1. Delay: Silence it. Give it KR, +1 ATK and Candy. {yellow}
+* Royal Perseverance -- COST 3 > 0. EFFECT UPDATE: Deal 1 DMG to all enemy monsters under KR. Give all enemy monsters KR. {yellow}
+* Powerhouse -- COST 5 > 7. EFFECT UPDATE: Draw 2 cards. Give all cards in your hand -2 cost (min: 2). {yellow}
+* Time Warp -- EFFECT UPDATE: Give all Generated cards in your hand and deck -1 cost. {yellow}

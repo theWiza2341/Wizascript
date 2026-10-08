@@ -1,0 +1,14 @@
+## Balancing (Monsters)
+* Chara -- COST 20 > 17. {green}
+* Ghost Tree -- ATK 1 > 3. HP 4 > 2. EFFECT UPDATE: Whenever you summon a plant, gain +1 HP. {yellow}
+* Animals -- COST 7 > 9. ATK 3 > 6. HP 4 > 8. EFFECT UPDATE: Haste. Magic: If played on the right side of the board, gain -3/-4, then summon an exact copy of this. {yellow}
+## Balancing (Spells)
+* Ice Replica -- COST 1 > 2. EFFECT UPDATE: Add an Ice cap, Ice and Snowman to your hand. {yellow}
+* Brain Freeze -- COST 7 > 8. {yellow}
+## Balancing (Artifacts)
+* Genocide -- At the start of every 2 turns, gain -1 max HP and deal 1 DMG to yourself, silence and kill a random enemy monster. {red}
+## Misc
+* Added Thorns and Armor icons.
+* Added a value indicator for Armor, Dodge and Thorns.
+* Cosmetic shop is now highlighted when new content is released.
+* Fading animation when a monster is played.

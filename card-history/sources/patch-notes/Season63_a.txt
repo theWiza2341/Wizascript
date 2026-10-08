@@ -1,0 +1,18 @@
+Hello everyone! Sorry for the smaller update this time, but with the release of Deltarune's Chapter 2, our staff team is busy working hard on creating a massive new update for next month!
+New card
+[card: Banana, cost 9, ATK 10, HP 10, text "POTASSIUM"]
+## Balancing (Monsters)
+* Timer -- COST 3 > 2. {green}
+* MTT Fountain -- COST 5 > 4. {green}
+* Date Alphys -- ATK 4 > 5. {green}
+* Gift Bear -- ATK 4 > 5. {green}
+* Tombstone -- COST 14 > 12. ATK 3 > 2. HP 5 > 4. {green}
+* Rabbick Hole -- COST 7 > 6. {green}
+* Demon Flowey -- COST 7 > 6. ATK 7 > 6. HP 7 > 6. {green}
+* Dynamite Stick -- EFFECT UPDATE: Dust: Deal 1 DMG to a random enemy monster and the opponent. {green}
+* Sad Customer -- COST 6 > 4. ATK 4 > 2. HP 5 > 3. EFFECT UPDATE: Magic: Look at 2 different random other monsters in your dustpile costing 5 or less G and choose one to catch. Dust: Release it. {yellow}
+* Void Laser -- HP 8 > 7. EFFECT UPDATE: Magic: Add 2 Gaster Blasters to your deck. Turn end: Give 2 random Gaster Blasters in your deck -1 cost. {yellow}
+* Robot 98 -- COST 10 > 9. EFFECT UPDATE: Dodge (98). Turn end: Lose 97 Dodge. {yellow}
+* Receptionist 2 -- HP 4 > 5. EFFECT UPDATE: Taunt. Magic: Gain +1 HP for every enemy monster on the board. {yellow}
+* MTT TV -- EFFECT UPDATE: Whenever a card is played, give its opponent +1 G. {yellow}
+* Stalagmite -- HP 3 > 2. {red}

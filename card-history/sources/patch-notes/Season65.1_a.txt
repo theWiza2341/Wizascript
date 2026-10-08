@@ -1,0 +1,21 @@
+Game updates
+Mid Season 65
+## Balancing (Monsters)
+* Soul Cage -- COST 4 > 3. ATK 4 > 3. HP 4 > 3. {green}
+* Angel of Death -- COST 16 > 14. {green}
+* Bloxer -- ATK 5 > 6. HP 4 > 5. {green}
+* Chara -- EFFECT UPDATE: Magic: Silence and kill a monster. Delay: Add the Genocide artifact. {green}
+* Spade Chain -- HP 8 > 9. EFFECT UPDATE: Haste. Magic: Deal 4 DMG to a monster. Deal 1 extra DMG for every 3 G it costs. {green}
+* Innkeeper -- EFFECT UPDATE: Magic: Give yourself +5 HP. {green}
+* Lost Undyne -- EFFECT UPDATE: Dust: Deal 2 DMG to the lowest HP living enemy monster. {green}
+* Lost Toriel -- EFFECT UPDATE: Dust: Give a random living enemy monster -3 ATK. {green}
+* Lost Asgore -- EFFECT UPDATE: Dust: Deal 4 DMG to a random damaged living enemy monster. {green}
+* Toxic Cloud -- EFFECT UPDATE: Haste. Taunt. Dust: Give its killer KR and -1/-1. {green}
+* Spider Sign -- COST 7 > 8. ATK 6 > 3. HP 6 > 7 EFFECT UPDATE: Whenever you summon an Arachnid, gain +1 ATK. Magic and Turn start: Summon a TOKEN Arachnid from your deck. {yellow}
+* Spider Reporter -- EFFECT UPDATE: Haste. Magic: Add a Spider Croissant to your deck. {yellow}
+* Muffet -- ATK 8 > 7. HP 8 > 10. EFFECT UPDATE: Haste. Magic and Turn end: Add a Spider Donut to your hand and a Spider Croissant to your deck. {yellow}
+* Spider Flower -- ATK 2 > 3. EFFECT UPDATE: Magic: Choose a Plant or Arachnid costing 4 or less G from your hand. Synergy: Summon it and draw a card. {yellow}
+* Great Door -- ATK 2 > 3. EFFECT UPDATE: Magic: Summon a random monster from your deck costing less G than this. {yellow}
+* Berdly -- HP 6 > 5. {red}
+* Boxed Body -- ATK 1 > 0. {red}
+* Pickaxe -- EFFECT UPDATE: Whenever this attacks, add a Gemstone to your hand. Shock: If this can't attack, gain Haste. {red}

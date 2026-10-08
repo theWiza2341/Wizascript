@@ -1,0 +1,6 @@
+## New cards
+* Vegetables -- COST 0. Turbo: Burn this, heal 2 HP to you and draw a card. [green soul]
+* Broken Key -- COST 1. Add a Cell Key to your deck. Draw a card. [green soul]
+* Glowing Shroom -- COST 1. Magic: If played on the left, swap this monster's stats. Shock: Gain +1 ATK. ATK 1, [white soul], HP 2.
+* Totemic Guard -- COST 3. Taunt. Delay: If you have 3 or more 6-cost monsters in your hand or dustpile, heal 5 HP to you. ATK 3, [blue soul], HP 3.
+* Cracked Geode -- COST 4. Need: You spent 0 on spells last turn. Magic: Look at 3 different random RARE spells and choose one to add to your hand with -1 cost. ATK 3, [blue soul], HP 5.

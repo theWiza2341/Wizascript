@@ -1,0 +1,11 @@
+## Balancing (Spells)
+* Powerhouse -- Cost 9 > 8. {green}
+* Longevity -- COST 3 > 2. {green}
+* Test of Will -- COST 8 > 7. {green}
+* Change of Winds -- EFFECT UPDATE: Look at the next 2 cards of your deck. Give them -1 cost. Choose one to draw. Send the other to the bottom of your deck. {green}
+## Balancing (Artifacts)
+* Science -- EFFECT UPDATE: Your Gaster Blasters cost 1 less G. At the start of the game, shuffle 4 Gaster Blasters into your deck and add one to the top of your deck. {yellow}
+## Balancing (Souls)
+* Integrity -- EFFECT UPDATE: At the end of every even turn, earn 1 G. Your G cap is 11 G. {green}
+* Justice -- EFFECT UPDATE: Turn end: Deal 1 DMG to the lowest HP damaged enemy monster. {green}
+* Kindness -- EFFECT UPDATE: Turn end: If it's turn 3 or later, give your rightmost monster +1 HP. {red}

@@ -1,0 +1,21 @@
+Standard queue
+* Reworked standard matchmaking.
+* The new matchmaking is based on winning/loosing streaks.
+* This will make this mode better for testing decks or completing quests.
+Waiting queue
+* Added an end game gold reward when waiting more than 1 min in the queue (+2 gold / min).
+Card skins
+* Love Knight old pass card skin is now available.
+* Love Knight old pass cosmetics will be back in the shop with a discount (from 2021-01-02 to 2021-01-09).
+* All pass card skins now have a landscape version (also available in card skins shop).
+* Owners of original pass card skins got the landscape version.
+Game
+* Added animated visual effects.
+* Added dustpile button for opponent.
+Keywords and stats
+* Added Need keyword: The effect can only trigger if the condition is met.
+* If the condition is met, the card aura will turn yellow instead of green.
+* Added a color variation for COST, ATK and HP stats when buffed or debuffed.
+* New colors for ATK and DMG.
+Decks
+* Removed shiny search filter.

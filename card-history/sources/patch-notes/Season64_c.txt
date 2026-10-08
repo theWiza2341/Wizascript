@@ -1,0 +1,11 @@
+New cards
+* [purple soul] Cybershelf | COST 4 | ATK 3 | HP 6 | Magic: Program (2): Look at all spells of the enemy soul. Add one to your hand.
+* [green soul] Failed Design | COST 4 | ATK 0 | HP 2 | Disarmed. Whenever an enemy monster attacks, this loses 1 HP. Dust: Summon an Apoca Duck with Taunt.
+* [blue soul] Glitch(?) | COST 4 | ATK 6 | HP 2 | Whenever you draw a card, turn it into Arcane Codes. Dust: Give all Arcane Codes in your hand -2 cost.
+* [purple soul] Policeblock(?) | COST 4 | ATK 6 | HP 3 | Dust: Add Prison Bars to your hand.
+* [blue soul] Revoltplug | COST 4 | ATK 1 | HP 5 | Magic: Deal DMG to a monster equal to this one's ATK. If it didn't kill, gain Haste.
+* [white soul] Sad Bunbun | COST 4 | ATK 2 | HP 5 | Magic: Look at all 0-cost monsters in your dustpile. Choose one to summon and gain +2 ATK.
+* [blue soul] Stoned Lancer | COST 4 | ATK 0 | HP 2 | Candy. Transparency. Magic and Shock: Gain +1/+1. Delay: Lose its Shock.
+* [purple soul] Susie Plush | COST 4 | ATK 3 | HP 7 | Magic: Deal 2 DMG to you. If you have 10 or less HP, Program (3): Deal 2 DMG to all enemies instead.
+* [blue soul] Tasque | COST 4 | ATK 2 | HP 3 | Whenever you play a card with a base cost of 1+ G, gain +1/+1.
+* [white soul] Tasque Painting | COST 4 | ATK 1 | HP 4 | Loop (1). Haste. Magic: Give the copy -1 cost for each other card with a base cost of 1+ G played this turn.

@@ -1,0 +1,20 @@
+## Balancing (Monsters)
+* Sand Dog -- COST 11 > 10. EFFECT UPDATE: Taunt. Magic: Summon a 0/1 copy of this and give it +1/+2 for each Dog in your hand. {green}
+* Goner Clam -- EFFECT UPDATE: Magic: Restore 2 HP to yourself. Restore 2 extra HP for each active Future effect. {green}
+* Garbage -- EFFECT UPDATE: Dust: Add 3 random <=3 G spells to your hand. {green}
+* Eye -- EFFECT UPDATE: Magic: Choose a card from your opponent's hand and increase its cost by 1. {green}
+* Battleflies -- EFFECT UPDATE: Whenever you cast a spell, set this card's ATK to 4. Turn start: gain -3 ATK. {green}
+* Royal guard 1 -- EFFECT UPDATE: Dust: Give Taunt to all ally Royal Guards. {green}
+* Royal guard 2 -- EFFECT UPDATE: Dust: Reduce the cost of all Royal Guards in your hand by 2. {green}
+* Royal guard 3 -- EFFECT UPDATE: Dust: Give Candy to all ally Royal Guards. {green}
+* Royal guard 4 -- EFFECT UPDATE: Dust: Give Ranged to all ally Royal Guards. {green}
+* Sword Emblem -- COST 6 > 7. EFFECT UPDATE: Armor (1). Magic: if played on the left, gain Taunt. If played on the right, gain Haste. {yellow}
+* Worm -- RARITY Generated > Common. {yellow}
+* Big Mouth -- HP 7 > 6. EFFECT UPDATE: Turn Start: and Turn End: Kill a random <=2 G monster and restore its HP. {yellow}
+* Sad Customer -- ATK 5 > 4. HP 4 > 5. {yellow}
+* Editor 2 -- HP 5 > 4. EFFECT UPDATE: Magic: look at 5 random monsters and choose one. Add it to your hand. {yellow}
+* Lost Soul 1 -- COST 4 > 5. ATK 3 > 4. {yellow}
+* Lost Soul 3 -- COST 2 > 5. ATK 1 > 2. HP 1 > 2. EFFECT UPDATE: Dodge (1). Dust: add 2 G Blasters to your deck and reduce their cost by 2. {yellow}
+* Lost Soul 4 -- ATK 2 > 3. HP 5 > 4. EFFECT UPDATE: Haste. Dust: add a copy of its killer to your hand and give it Haste. {yellow}
+* Lost Soul 6 -- COST 3 > 5. ATK 2 > 3. HP 3 > 5. EFFECT UPDATE: Dust: Add a random Amalgamate to your hand and reduce its cost by 2. {yellow}
+* Hot Dog Vulkin -- COST 5 > 7. HP 4 > 6. EFFECT UPDATE: Magic: Deal 3 DMG to an enemy monster or give [cut off at image edge] {yellow}

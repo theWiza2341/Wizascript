@@ -1,0 +1,6 @@
+## Balancing (Artifacts)
+* Collection -- EFFECT UPDATE: The first time you summon a tribe (besides All) this game, add a Thrashing Machine to your hand at the end of your turn. {yellow}
+## Balancing (Souls)
+* Kindness -- EFFECT UPDATE: Turn end: If its turn 3 or later, heal 1 HP to you and give the rightmost ally monster +1 HP. {green}
+* Justice -- EFFECT UPDATE: Turn end: Deal 1 DMG a random enemy monster. {green}
+* Determination -- EFFECT UPDATE: The first time you would die, set your HP to 10 instead. When 6 monsters die, summon the next Lost Soul at 1/1, or 2/2 stats if you have 15 or less HP. Lost Soul order: Lost Toriel > Lost Alphys > Lost Undyne > Lost Papyrus > Lost Asgore > Lost Sans > Loop back to Lost Toriel. {green}

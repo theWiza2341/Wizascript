@@ -1,0 +1,10 @@
+## Balancing (Spells)
+* Ice Replica -- COST 3 > 2. {green}
+* Overgrowth -- COST 3 > 2. {green}
+* Powerhouse -- COST 7 > 5. EFFECT UPDATE: Draw 2 cards and give all cards in your hand -1 cost. {yellow}
+* Investment -- EFFECT UPDATE: Look at 3 random cards in your deck. Give them -1 cost and choose one to draw. {yellow}
+* Feast -- EFFECT UPDATE: Give a monster -2/-2. Delay: If it is still alive, give all ally monsters +1/+1. {yellow}
+## Balancing (Artifacts)
+* Arcane Scepter -- EFFECT UPDATE: Turn end: Add Arcane Codes to your hand and give it -1 cost for each spell you cast this turn (except Arcane Codes). {yellow}
+## Balancing (Souls)
+* Patience -- EFFECT UPDATE: At the end of every 2nd turn, if your hand isn't full and your deck isn't empty, add Change of Winds to the top of your deck. {yellow}

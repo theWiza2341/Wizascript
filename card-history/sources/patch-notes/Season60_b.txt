@@ -1,0 +1,8 @@
+## Balancing (Spells)
+* Breaking Love -- COST 2 > 1. EFFECT UPDATE: Give an enemy monster -1/-1. Draw a card. {yellow}
+* Powerhouse -- Cost 8 > 7. EFFECT UPDATE: Draw 2 cards. Give all cards in your hand -2 cost (min: 2). {yellow}
+* Club Chaos -- Cost 0 > 5. {red}
+* Devilsknife -- Cost 0 > 5. {red}
+* Diamond Chaos -- Cost 0 > 5. {red}
+* Heart Chaos -- Cost 0 > 5. {red}
+* Spade Chaos -- Cost 0 > 5. {red}

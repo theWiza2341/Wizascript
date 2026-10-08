@@ -1,0 +1,24 @@
+## Balancing (Monsters)
+* Onion San -- ATK 8 > 9. {green}
+* Dancer Mettaton -- HP 6 > 7. {green}
+* Cursor -- COST 1 > 2. ATK 2 > 4. {green}
+* Blockler B -- ATK 2 > 3. {green}
+* Virovirokun -- ATK 2 > 3. {green}
+* Rotablock -- HP 1 > 2. {green}
+* Trash Ball -- HP 4 > 5. {green}
+* Cyber Cage -- ATK 5 > 4. {green}
+* Hooded Ralsei -- COST 5 > 4. {green}
+* Gerson -- ATK 3 > 4. HP 5 > 4. {green}
+* Pink Crystals -- COST 2 > 3 ATK 1 > 2. {green}
+* Candle -- EFFECT UPDATE: Taunt. Turn end: Deal 2 DMG to you. {yellow}
+* Susie Statue -- ATK 6 > 8. EFFECT UPDATE: Turn start: Attack a random enemy monster if there are any. {yellow}
+* Librarian -- EFFECT UPDATE: Need: Your deck has no duplicates (except Generated cards). Magic: Add 4 random cards to your deck and draw up to 3 cards with -1 cost. {yellow}
+* Ambyu-Lance -- EFFECT UPDATE: Dodge (1). Whenever you take DMG on your turn, heal 4 HP to all allies. {yellow}
+* Loren -- HP 5 > 3 EFFECT UPDATE: Magic: Summon 3 Stars. {yellow}
+* Ultimathrash -- EFFECT UPDATE: Charge. Candy. Carefully constructed through a successful Evil Plan. {yellow}
+* Final Gambit! -- EFFECT UPDATE: Summon Ultimathrash, earn 7 G, deal 7 DMG to all enemies, heal 7 HP to all allies, and add 7 Drafts to your hand. {yellow}
+* Maus -- EFFECT UPDATE: Dust: Add a Cursor to your deck. If this is your only monster, add another. {yellow}
+* Laser Topper -- EFFECT UPDATE: Haste. Turbo: Summon this if you have no ally monsters on the board. {yellow}
+* Totem -- EFFECT UPDATE: Need: This isn't Generated and 6+ 6-cost monsters in your dustpile. Magic: Burn 6 of them to add Totemic Carvings to your hand. {red}
+* Nurse Mouth -- EFFECT UPDATE: Whenever an ally monster costing 2 or more G dies, heal 3 HP to you. {red}
+* Chest -- COST 1 > 2. ATK 0 > 1. HP 3 > 2. {red}

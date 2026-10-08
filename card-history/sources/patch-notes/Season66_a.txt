@@ -1,0 +1,11 @@
+New cards
+* [green soul] CLICK HERE TO DIE | COST 0 | spell | Deal 6 DMG to the highest HP ally monster. DMG not dealt is dealt to you.
+* [green soul] Generosity | COST 0 | spell | Lose 6 G. The enemy gains 6 G.
+* [green soul] HOTSINGLE | COST 0 | spell | Delay: Summon a Ms Pipis. If you can't, turn a random ally monster into Ms Pipis.
+* [green soul] Irresistible Deal | COST 0 | spell | Choose a Bargain to cast. Add a counter to FREE KROMER.
+* [green soul] Jevilstall | COST 0 | spell | Delay: If you spent 4+ G on spells last turn, draw a card and add this to your deck. Else, disable the Freedom artifact.
+* [green soul] Ms Pipis | COST 0 | ATK 1 | HP 6 | Disarmed. Turn start: Die to give all monsters in your hand and board -2/-2 (min: 1/1 in hand).
+* [green soul] Press F1 For HELP | COST 0 | spell | Give the opponent +8 HP.
+* [green soul] Crystal Downpour | COST 4 | spell | Add 4 Gemstones to your hand with -1 cost.
+* [orange soul] Caged Jester | COST 6 | ATK 5 | HP 7 | Delay: If you spent 4+ G on spells last turn, add a Jevilstall to your hand and add the Freedom artifact.
+* [yellow soul] Royal Papyrus | COST 10 | ATK 6 | HP 9 | Taunt. Haste. Magic: Give Taunt to ally monsters with a base cost of 9+ G wherever they are and Haste to ones in hand.

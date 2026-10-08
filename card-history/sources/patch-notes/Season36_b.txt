@@ -1,0 +1,14 @@
+* Dad Dragon. COST: 6. ATK: 4. HP: 4. [purple icon] EFFECT: Whenever an ally monster dies (except Dragon Kid), summon a Dragon Kid.
+* Purple Mascot. COST: 6. ATK: 6. HP: 6. [blue icon] EFFECT: Taunt. Whenever this receives DMG, deal that much DMG to its owner (max 6 DMG).
+* Space Cooler. COST: 6. ATK: 2. HP: 6. [blue soul] EFFECT: Turn end: Give 2 random monsters in your hand +1/+1.
+* Animals. COST: 7. ATK: 3. HP: 4. [blue icon] EFFECT: Haste. Magic: Summon an exact copy of this monster.
+* Bloxer. COST: 7. ATK: 5. HP: 4. [blue icon] EFFECT: Magic: Look at 3 random monsters costing <= 3 G and choose one. Summon it.
+* Jukebox. COST: 7. ATK: 6. HP: 6. [white soul] EFFECT: Magic: Look at 3 other random monsters in your dustpile and choose one. Add a copy of it to your hand.
+## Balancing (Monsters)
+* Cactus -- HP 7 -> 5. {red}
+* Memorial Statue -- HP 7 -> 6. {red}
+* Clover -- COST 9 -> 10. {red}
+* Final Froggit -- ATK 6 -> 5. {red}
+* Chest -- HP 3 -> 1. EFFECT UPDATE: "Dust: Earn 10(?)". {red}
+## Balancing (Spells)
+* G. Blaster -- EFFECT UPDATE: "Deal 8(?) DMG to a monster". {red}

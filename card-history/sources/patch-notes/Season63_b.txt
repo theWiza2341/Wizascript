@@ -1,0 +1,17 @@
+## Balancing (Spells)
+* Ice Replica -- EFFECT UPDATE: Paralyze a non-DT monster and add a copy of it to your hand. Delay: If it was an ally, give it -2 cost in your hand. {green}
+* Ambush -- EFFECT UPDATE: Choose a monster costing 9 or less G in your hand and summon it with Haste. Delay: Paralyze it if you have more monsters than your opponent. {yellow}
+* Froggit Trio -- COST 1 > 4. EFFECT UPDATE: Summon 2 Froggits with Haste. Delay: If they are both dead, add one to your hand with -2 cost. {yellow}
+* Double Trouble > Rage -- EFFECT UPDATE: Give an ally monster +1/+1. Deal its ATK as DMG to the monster in front of it. {yellow}
+* Cooking Practice > Carousel -- COST 0 > 2. EFFECT UPDATE: Deal 1 DMG to all monsters. If any died, trigger this effect again. {yellow}
+* Fortune -- EFFECT UPDATE: Draw a card. Give -1 cost to a random 5, 6, 7, and 8-cost card in your hand. {yellow}
+* Undyne's Spears -- EFFECT UPDATE: Summon a 3/4 Spear with Taunt. Delay: If you played a Generated card this turn, summon another. {yellow}
+* Reload -- COST 1 > 2. EFFECT UPDATE: Draw a Haste monster and a Turbo monster. Give them -1 cost. {yellow}
+* Shootout > Energizer -- COST 3 > 1. EFFECT UPDATE: Deal 1 DMG to an ally monster twice. Give it +2 ATK and Haste. {yellow}
+* Siphoning -- COST 3 > 2. EFFECT UPDATE: Give a monster -2 HP to give the monster in front of it +2 HP. If this killed, add a Draft to your deck. {yellow}
+* Royal Patience -- COST 1 > 0. EFFECT UPDATE: Look at all cards in your deck and choose one to draw. {yellow}
+## Balancing (Artifacts)
+* Adrenaline -- EFFECT UPDATE: Starts with 7 counters. Turn end: If you have 2 or less cards in hand, draw cards until you have 3 cards in hand and spend 1 counter for each card drawn. {yellow}
+## Balancing (Souls)
+* Bravery -- EFFECT UPDATE: At the start of every 3rd turn, add a Recruitment to your hand. If you have 4 or less cards in your hand, add 2 Recruitments instead. If you have 7 cards in your hand, add Draft to your deck. {yellow}
+* KR -- EFFECT UPDATE: When this is applied to a monster without KR, give it -1 ATK. Whenever this takes DMG, it takes +1 DMG and loses KR. {red}

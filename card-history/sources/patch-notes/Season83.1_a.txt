@@ -1,0 +1,10 @@
+Skt 6/18/2023 7:15 AM
+@Patch Updates Midseason changes are live
+* Shovel: 2/4/4 -> 2/3/2
+* MTT Fountain: Cost 4 -> 5
+* Mister Ruckus: 8/6/6 -> 8/5/5
+* Campfire: Cost 2 -> 3
+* Siphoning: Cost 2 -> 3
+* River Person: Cost 7 -> 8
+* Animals: HP 6 -> 5
+* Piranhas: HP 4 -> 3 (edited)

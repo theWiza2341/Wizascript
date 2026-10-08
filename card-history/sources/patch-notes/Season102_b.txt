@@ -1,0 +1,1 @@
+* Axis -- cost 8, ATK 3, HP 8, rarity yellow hat. Haste. Armor. Whenever this survives DMG, gain +1 base ATK. At 6+ base ATK, Overheat.

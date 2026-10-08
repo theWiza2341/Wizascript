@@ -1,0 +1,9 @@
+Season 84
+## Balancing (Monsters)
+* Cyber Timer -- EFFECT UPDATE: Taunt. Magic and Turn start: Program (1): Cast Time Warp. {green}
+* Chaos Blaster -- COST 4 > 6. ATK 5 > 7. HP 5 > 7. {yellow}
+* Dog Slots -- EFFECT UPDATE: Magic: Send your hand to your deck. Add 7 Arcane Codes to your hand. {yellow}
+* Mad Mew Mew -- COST 7 > 4. EFFECT UPDATE: Magic: Halve an ally non-DT monster's stats (rounded up) and summon an exact copy of it. Program (4): Summon another. {yellow}
+* Totem -- COST 7 > 6. ATK 7 > 6. HP 7 > 6. EFFECT UPDATE: Need: 6+ 6-cost monsters in your Dustpile. Magic: Burn 4 of them to add Totemic Carvings to your hand and deck. {yellow}
+* Kris -- EFFECT UPDATE: Haste. Transparency. Whenever this attacks and kills a monster, gain +1/+1. Turn end: Draw a monster. It copies this card's buffs. {red}
+* Gerson Tombstone -- EFFECT UPDATE: Need: Your deck has no non-Generated duplicates. Magic: Summon a random other monster costing 5-7 G from your Dustpile. {red}

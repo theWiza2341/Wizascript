@@ -1,0 +1,26 @@
+## Balancing (Monsters)
+* Big Bomb -- COST 8 > 6. ATK 8 > 6. HP 8 > 6. {green}
+* Coffee Man -- HP 6 > 7. {green}
+* Dragon Kid -- ATK 2 > 3. {green}
+* G Follower 2 -- HP 3 > 4. {green}
+* Halberd -- ATK 4 > 5. {green}
+* Memory Keeper -- HP 5 > 6. {green}
+* Mew Mew Wand -- ATK 5 > 6. {green}
+* Migosp -- HP 2 > 3. {green}
+* Nacarat Jester -- HP 3 > 4. {green}
+* Pizzapants -- HP 2 > 3. {green}
+* Pizzasimp -- ATK 4 > 5. {green}
+* Reporter MTT -- HP 4 > 5. {green}
+* Sadmobile -- ATK 4 > 5. {green}
+* Shyra Tombstone -- COST 6 > 5. ATK 7 > 6. {green}
+* The Heroine -- COST 10 > 9. {green}
+* Too Many Dogs -- HP 2 > 3. {green}
+* Tough Body -- ATK 3 > 4. {green}
+* Cyber Timer -- EFFECT UPDATE: Taunt. Magic and Turn start: Cast Time Warp. {green}
+* Dynamite Stick -- EFFECT UPDATE: Charge. Dust: Deal 1 DMG to a random enemy monster and the opponent. {green}
+* Endogeny -- EFFECT UPDATE: Magic: Give a Dog in your hand +1 ATK and Haste or an Amalgamate in your hand +1 HP and Taunt. {green}
+* Large Chest -- COST 8 > 7. ATK 7 > 6. EFFECT UPDATE: Taunt. Need: 6+ unique rarities in your dustpile. Magic: Erase them to add 6 random monsters to your hand with -1/+1/+1. {green}
+* Loox -- EFFECT UPDATE: Magic: Deal 1 DMG. If it targeted an ally, gain +1 ATK. {green}
+* Rapstablook -- HP 6 > 5. EFFECT UPDATE: Dodge (1). Turn start: Die to deal 3 DMG to all enemies. {green}
+* Snowdrake's Mom -- HP 4 > 5. EFFECT UPDATE: Taunt. Delay: Summon a Vegetoid. Give it +1/+1 and Transparency if this has any ATK buffs. {green}
+* Trophy -- EFFECT UPDATE: Dust: Equip the Economics artifact. Increase its counter by 3. {green}

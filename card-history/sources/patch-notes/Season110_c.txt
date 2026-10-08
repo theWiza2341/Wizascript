@@ -1,0 +1,19 @@
+* Lawnmower -- EFFECT UPDATE: Transparency. Dust: Give all other ally monsters +1 ATK and Haste. {green}
+* Clean Rabbick -- EFFECT UPDATE: Haste. {green}
+* Stuffed Doll -- EFFECT UPDATE: Taunt. Magic: Look at 5 different random monsters and choose one. Add it to both players' hands and give yours -1 cost. {green}
+* Cardmaster -- EFFECT UPDATE: Taunt. Magic: Earn 2 G and add a Draft to your hand for every 3 G the opponent has. {green}
+* Mizzle -- EFFECT UPDATE: Turn end: Heal 2 HP to the lowest HP damaged ally. If it was fully healed, gain +1/+1. {green}
+* White Cloak -- EFFECT UPDATE: Need: 7+ TOKEN monsters in your dustpile. Magic: Erase them to add an Ice Crystal to your hand. {green}
+* Jackenstein -- EFFECT UPDATE: Taunt. Magic: Both players enter a DARK ZONE. Yours starts with 6 less counters. {green}
+* Lamp -- ATK 1 > 2. HP 2 > 1. {green}
+* Ferry -- COST 5 > 6. ATK 4 > 6. HP 5 > 6. {green}
+* Pumpkin Head -- Is now a Plant. {green}
+* Trash Rudinn -- HP 3 > 4. EFFECT UPDATE: Magic: Add every BASE Deltarune monster to your hand (cheapest to most expensive). Delay: Erase them. {yellow}
+* Abstract Art -- COST 4 > 3. EFFECT UPDATE: Magic: Give all ally Generated monsters Haste. {yellow}
+* Kris -- EFFECT UPDATE: Haste. Transparency. Whenever this attacks a monster, Silence it. If the attack killed, gain +1/+2. Turn end: Draw a monster. Give it this card's stat buffs. {yellow}
+* Zenith Martlet -- EFFECT UPDATE: Armor. Magic: Trigger the Dust effects of all non-TOKEN monsters costing 9 or less in your dustpile (max 3 per unique effect). {red}
+* Tasque Singer -- COST 6 > 7. {red}
+* Pixel Elnina -- EFFECT UPDATE: Taunt. Magic: Summon a Pixel Lanino from your deck or hand. {red}
+* Pixel Lanino -- EFFECT UPDATE: Haste. Magic: Summon a Pixel Elnina from your deck or hand. {red}
+* Organikk -- HP 3 > 5. EFFECT UPDATE: Support: Copy the ATK of the attacker. {red}
+* Cyberdly -- COST 6 > 7. {red}

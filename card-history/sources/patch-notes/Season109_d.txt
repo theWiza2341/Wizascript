@@ -1,0 +1,10 @@
+* Golden Piano -- cost 7, ATK 4, HP 4, rarity purple winged soul. Haste. Magic: Gain +1/+1 for every 2 monsters with a unique cost in your dustpile.
+* Rockstar Kris -- cost 7, ATK 4, HP 6, rarity purple winged soul. Haste. Shock: Regain this Support. Support: Gain +2/+2 and lose this Support.
+* Rockstar Ralsei -- cost 7, ATK 6, HP 7, rarity purple winged soul. Shock: Give the next card in your deck -2 cost. Support: Draw up to 1 card.
+* Winglade -- cost 7, ATK 5, HP 8, rarity blue winged soul. When an enemy monster with Haste or Charge is summoned, attack it. Magic: If there is an enemy with Taunt, gain Haste.
+* Zoot Kris -- cost 7, ATK 5, HP 6, rarity purple winged soul. Taunt. Magic: Add a Sharpshoot to your hand.
+* Gachapon Machine -- cost 8, ATK 6, HP 4, rarity purple winged soul. Magic: Look at 5 random non-DT monsters with a cost equal to the enemy G (max. 15 G). Choose one to summon.
+* Ramb -- cost 8, ATK 4, HP 8, rarity orange winged soul. Taunt. Magic: Equip the Odd Controller.
+* Titan Serpent -- cost 8, ATK 5, HP 6, rarity purple winged soul. Darkspawn. Haste. After this attacks a monster and survives, summon an exact copy of this and halve its stats (rounded up).
+* White Cloak -- cost 8, ATK 8, HP 8, rarity purple winged soul. Need: 7+ TOKEN monsters in your dustpile. Magic: Erase them to add an Ice Crystal to the top of your deck.
+* Zoot Susie -- cost 8, ATK 5, HP 5, rarity purple winged soul. Magic: Deal 4 DMG to a monster. Bullseye: Deal 3 DMG to its adjacent monsters and add a Recruitment to your hand.

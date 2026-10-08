@@ -1,0 +1,11 @@
+## Balancing (Spells)
+* Worm Infusion -- COST 3 > 2. {green}
+* Load -- COST 14 > 13. {green}
+* Call of the Grave -- EFFECT UPDATE: Summon the next 1/1 Lost Soul with Haste. Program (2): Spend all counters on your Save artifact to give it +1/+1 for each 4 spent. {green}
+* Snow Warning -- EFFECT UPDATE: Equip the Hail artifact and give it 4 counters. Deal 1 DMG to all monsters. {green}
+* Strafe -- EFFECT UPDATE: Deal 7 DMG to an enemy monster. Excess DMG is dealt to its adjacent monsters. {green}
+* Royal Signup -- COST 0 > 2. EFFECT UPDATE: Choose a card in your hand. Turn the other cards in your hand into Drafts. {yellow}
+* Exploration -- COST 3 > 2. EFFECT UPDATE: Draw 2 cards from the bottom of your deck. {yellow}
+* Oasis -- EFFECT UPDATE: Add 3 Changes of Winds to your hand. Delay: Erase all Changes of Winds in your hand to heal 3 HP to you for each. {red}
+## Balancing (Board Slots)
+* Incinerator -- EFFECT UPDATE: After a monster is played on this slot, if there is another ally monster, kill the monster played here and give a random ally monster +1 HP. {green}

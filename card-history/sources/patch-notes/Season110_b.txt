@@ -1,0 +1,22 @@
+## Balancing (Monsters)
+* Ficus -- HP 6 > 7. {green}
+* Lesser Dog -- ATK 4 > 5. {green}
+* Napstablook -- HP 4 > 5. {green}
+* Mom Slime -- HP 4 > 5. {green}
+* Pixel Susie -- ATK 3 > 4. {green}
+* So Sorry -- ATK 3 > 4. {green}
+* Crystal Cheese -- HP 3 > 4. {green}
+* Jukebox -- ATK 5 > 6. {green}
+* Cafe Jukebox -- ATK 5 > 6. {green}
+* Scissor Dancer -- ATK 3 > 4. {green}
+* Onionsan -- COST 10 > 8. ATK 9 > 7. HP 9 > 7. {green}
+* Chaos Blaster -- COST 6 > 5. ATK 7 > 6. HP 7 > 6. {green}
+* Easy to Draw Bed -- HP 5 > 6. EFFECT UPDATE: After this attacks and survives, turn it into a random monster with 4/6 base stats. {green}
+* Knightdyne -- ATK 5 > 6. HP 6 > 7. EFFECT UPDATE: Magic: Deal 1 DMG to the lowest HP enemy monster 4 times. For each enemy killed, summon a 2/3 Spear with Taunt. {green}
+* Tall Miner -- EFFECT UPDATE: Your Gemstones cost 0 G. Magic and Bullseye: Add a Gemstone to your hand. {green}
+* Memoryhead -- EFFECT UPDATE: Loop (2). Magic: Set the copy's stats to 2/3/3. {green}
+* Cool Papyrus -- EFFECT UPDATE: Haste. After this attacks and kills a non-DT monster, add a 3/4/5 copy of it to your hand. {green}
+* Fire Chimney -- EFFECT UPDATE: Loop (1). Magic: If you played a card with a base cost of 6 or more G this turn, gain +1/+1 and Haste. {green}
+* Too Many Dogs -- HP 3 > 2. EFFECT UPDATE: Haste. Magic: If you have no Too Many Dogs in your hand, fill your hand with Dog Residues. {green}
+* Pumpkin Head -- EFFECT UPDATE: YOUR TAKING TOO LONG {green}
+* Eggplant Trashbag -- EFFECT UPDATE: Magic: Look at 4 BASE spells and choose one. Delay: Add it to your hand. {green}

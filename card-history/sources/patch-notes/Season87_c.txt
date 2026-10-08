@@ -1,0 +1,16 @@
+## Balancing (Monsters)
+* Casual Undyne -- ATK 7 > 8. {green}
+* Royal Loox -- HP 4 > 5. {green}
+* Tsunderplane -- ATK 4 > 5. {green}
+* Pizzapants -- ATK 2 > 3. HP 6 > 2. EFFECT UPDATE: Haste. Magic: Gain +1/+1 for each other ally Pizzapants you played this game. {yellow}
+* Totem -- COST 6 > 7. ATK 6 > 7. HP 6 > 7. EFFECT UPDATE: Need: 7+ 7-cost or 7-HP monsters in your Dustpile. Magic: Burn them to add Totemic Carvings to your hand. {yellow}
+* Caged Jester -- EFFECT UPDATE: Need: You cast a spell of every soul this game. Magic: Add Chaos Bomb to your hand. {yellow}
+* Temmie Egg -- COST 3 > 0. ATK 1 > 0. EFFECT UPDATE: Turn start and Dust: Add a Temmie 2 to your hand. {yellow}
+* Noelle -- COST 6 > 3. ATK 3 > 2. HP 4 > 3. EFFECT UPDATE: Need: You've cast 7 different spells (min. 1 G) this game. Magic: Cast the most expensive spell in your deck on the monster in front (max. 10 cost). {yellow}
+* Big Bomb -- ATK 10 > 8. HP 10 > 8. EFFECT UPDATE: Magic: Add 3 Mines to the enemy deck. {yellow}
+* Angel Doll -- EFFECT UPDATE: After an ally monster dies (except Angel Doll), summon a copy of it and Silence this. {yellow}
+## Balancing (Spells)
+* Totemic Carvings -- EFFECT UPDATE: Look at 7 different 7-cost monsters (except Totem). Choose one to add to your hand with -7 cost. {yellow}
+* Mercenary Hire -- COST 12 > 10. EFFECT UPDATE: Summon copies of your non-DT monsters on the board. Delay: Add any that didn't fit to your hand with -5 cost. {yellow}
+## Balancing (Artifacts)
+* Evil Plan -- EFFECT UPDATE: The first time your hand is empty after playing a card, add all Thrashing Parts to your hand and disable this. If you have Ultimathrash at the start of the game, burn it wherever it is, draw a card if it's in hand, and transform into Ultimate Fusion. {yellow}

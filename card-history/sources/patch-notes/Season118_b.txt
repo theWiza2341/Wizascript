@@ -1,0 +1,20 @@
+## New artifact
+* Electro Guitar - COMMON: Turn end: If your board is full, gain a counter. Turn start: Spend 4 counters to add a Rock Chord to your hand.
+## Balancing (Monsters)
+* Heats Flamesman -- ATK 4 > 5. {green}
+* Astigmatism -- HP 5 > 6. {green}
+* Tsundereplane -- ATK 5 > 6. {green}
+* Ice-E -- HP 5 > 6. {green}
+* Oni -- HP 4 > 5. {green}
+* Shyren's Agent -- ATK 4 > 5. {green}
+* Golden Flowers -- EFFECT UPDATE: Magic: Look at 3 random non-TOKEN spells you've played this game. Choose one to add to your hand. {green}
+* Pixel Kris -- EFFECT UPDATE: Need: A monster costing 2+ G died this turn. Magic: Gain ATK equal to the ATK of the monster in front of this and make it Proceed. {yellow}
+* The Vessel -- COST 8 > 1. ATK 6 > 1. HP 6 > 1. EFFECT UPDATE: Loop (3). Magic: Send the copy to your deck, turn into True Vessel. Add a copy of the last other non-TOKEN card you played to your hand. If this has no Loop, the copy is exact (min. 1 HP). {yellow}
+* Tall Miner -- COST 4 > 5. ATK 3 > 5. EFFECT UPDATE: Shock: Add a Crystal Shard to your hand. If this was triggered by a Crystal Shard, instead add a Gemstone to your hand with -1 cost. {yellow}
+* True Vessel -- COST 2 > 1. ATK 6 > 1. HP 6 > 1. {yellow}
+* Maus Hole -- EFFECT UPDATE: Magic: Look at 3 random different non-DT 1-cost cards. Choose one to add to your hand. {red}
+* Rotablock -- EFFECT UPDATE: Magic: Add 3 copies of random non-DT monsters costing 1 or less G from your dustpile to your deck. {red}
+* Faun -- EFFECT UPDATE: Magic: Give an enemy monster -2 ATK. Add a random non-DT card of a cost equal to the monster's new ATK to your hand. {red}
+* Hanging Spider -- EFFECT UPDATE: Delay: If this died to a monster, summon a Spider Croissant and add a Spider Donut to your hand. {red}
+* Mauswheel -- EFFECT UPDATE: Magic: Summon 3 Maice with Haste. Give them +1/+1 for each other card you spent G on this turn (max. +3/+3). {red}
+* Maus Cage -- EFFECT UPDATE: Need: 6+ non-Generated monsters costing 1 or less G in your dustpile. Magic: Add a Mauswheel to your hand. {red}

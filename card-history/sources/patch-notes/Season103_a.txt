@@ -1,0 +1,5 @@
+Game updates
+Season 103
+## New cards
+* Ice-E -- cost 8, ATK 7, HP 5, [purple heart icon]. Magic: Paralyze a monster. If it was an ally monster costing 2+ G, summon 2 Ices.
+* Angie -- cost 9, ATK 7, HP 7, rarity purple hat. After an enemy monster dies on your turn, set a random other enemy monster's HP to 1. Shock: Add a Gemstone to your hand.

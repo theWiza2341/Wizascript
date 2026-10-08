@@ -1,0 +1,18 @@
+Season 112
+## Balancing (Monsters)
+* Crystal Tombstone -- ATK 3 > 4. {green}
+* Rabbick Hole -- Now has Plant Tribe. {green}
+* Rockman -- HP 4 > 5. {green}
+* Cracked Table -- EFFECT UPDATE: Magic: Add a Tea Set to your hand. If you have less HP than the opponent, give it -1 cost. {green}
+* Titan Fuzzy -- EFFECT UPDATE: Darkspawn. Shock: Gain +1/+1 for every 2 G the spell costs and gain Haste. This can attack again. {green}
+* Cyberdly -- COST 7 > 9. ATK 6 > 5. HP 6 > 5. EFFECT UPDATE: Haste. After this attacks and kills a monster, add a Feather Storm to your hand. Magic: Gain +1/+1 for each unique monster tribe in your dustpile. {yellow}
+* Golden Mascot -- COST 6 > 7. EFFECT UPDATE: Taunt. Dust: Add a Super Pack to your hand. {yellow}
+* Hanging Plug -- COST 4 > 3. ATK 4 > 3. HP 3 > 2. EFFECT UPDATE: Magic: Choose an ally monster costing 3 or less. Turn it into a 2/1 Werewire that catches it and copies its stat buffs. {yellow}
+* Martlet -- COST 7 > 8. EFFECT UPDATE: Magic: Switch: Deal 7 DMG to the monster in front or deal 1 DMG to all enemies and gain Haste. Bullseye: Return to your hand with -1 base cost (min. 2 cost). {red}
+* Soulless Kris -- COST 8 > 10. {red}
+* Knightdyne -- ATK 6 > 5. HP 7 > 6. {red}
+* Large Chest -- COST 7 > 9. EFFECT UPDATE: Need: 6+ unique rarities in your dustpile. Magic: Erase them to add 6 random monsters in your hand with -2/+1/+1. {red}
+## Balancing (Artifacts)
+* Gold Widow -- EFFECT UPDATE: After you spend 5+ G on a card, spend 1 more G to gain a counter and summon a Spider. If this has 5+ counters, spend them to add a Spider Donut to your hand with 0 cost. {green}
+* Dark Fountain -- EFFECT UPDATE: Whenever you play a card you haven't played this game, gain a counter (max 20). When this reaches 20 counters, add 3 Deltarune (max. EPIC) monsters with -2/+2/+2 to your deck and turn this into a Dark World. {red}
+* Dark World -- EFFECT UPDATE: Starts with 20 counters. Turn start: Spend 2 counters to add a random Deltarune monster (max. EPIC) to your hand with -2/+2/+2. Repeat until your hand is full. {red}

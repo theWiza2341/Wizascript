@@ -1,0 +1,12 @@
+## Story mode
+* Waterfall is now available! Be ready it won't be easy!
+## Gameplay
+* At the start and end of a turn, enchantment effects now resolve before monster effects. The order is enchantments, monsters, soul, then artifacts. Status effects still resolve before these effects.
+## Artifact names
+* Will -> Brave Ax.
+* Spy -> Insider Info.
+* Mines ->Cat Bomb.
+* Mine -> Explosion.
+## QOL
+* Buying an avatar, emote or profile skin now requires confirmation. The popup shows the cosmetic's type, name and final UCP price.
+* Story dialogue text no longer shifts between lines as it appears.

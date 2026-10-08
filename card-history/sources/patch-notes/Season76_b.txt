@@ -1,0 +1,18 @@
+## Balancing (Monsters)
+* Gardener Asgore -- ATK 3 > 4. {green}
+* Control Panel -- HP 4 > 5. {green}
+* Final Froggit -- COST 7 > 6. {green}
+* Cell Key -- COST 5 > 3. {green}
+* Head Hathy -- ATK 3 > 4. {green}
+* Whimsalot -- EFFECT UPDATE: Magic: Draw a monster. Give all monsters in your hand -1/-1/-1 (min 1/1). {green}
+* Caged Kings -- EFFECT UPDATE: Need: You spent G on spells last turn. Magic: Add a Broken Key to your deck and draw a card. {green}
+* Papyrus -- COST 13 > 11. EFFECT UPDATE: Haste. Whenever this attacks and kills a monster, it can attack another monster. Magic: Program (2): Gain Armor. {green}
+* Tasque Singer -- EFFECT UPDATE: Magic: Kill all enemy monsters costing less than the amount of non-TOKEN cards costing 1 or more that you played this turn. {green}
+* Maus - EFFECT UPDATE: Dust: Add a Cursor to your hand. If this is your only ally monster on board, give it +1 Loop. {green}
+* Glitch -- ATK 6 > 3. HP 3 > 4. EFFECT UPDATE: Magic: Switch: Gain +2 ATK or +2 HP. If this is in the center of the board, swap its stats. {yellow}
+* Abstract Art -- COST 2 > 5. ATK 2 > 3. HP 3 > 4. EFFECT UPDATE: Whenever you summon a monster with a base cost less than this, trigger its Dust. {yellow}
+* Hatplug -- EFFECT UPDATE: Dodge (1). Whenever this loses a Dodge, Draw a Plug with +2/+2. {yellow}
+* Iconman -- COST 5 > 6. EFFECT UPDATE: Magic: Choose a monster in your hand. Burn it to add 2 Recruitments to your hand. {yellow}
+* Seam -- COST 7 > 8. {red}
+* The Reflection -- COST 9 > 10. EFFECT UPDATE: Need: 40 or more monsters in both Dustpiles. Magic: Burn them to add a copy of the enemy hand to your deck (except DT cards). {red}
+* Frisk -- EFFECT UPDATE: Need: You spent 80+ G this game. Magic: Turn all cards in your deck into random Undertale LEGENDARY cards. They cost 2 less. {red}

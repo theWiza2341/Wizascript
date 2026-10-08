@@ -1,0 +1,8 @@
+Season 114
+## New cards
+* [card image] Black Knife. COST 0. Turbo: Erase this and draw a card. Deal 6 DMG randomly split among all ally monsters. Take any DMG not dealt.
+* [card image] Roaring Knight. COST 20. ATK 12. HP 8. Darkspawn. Magic: Deal 12 DMG to all enemies. Add a Black Knife to the opponent's deck for every 8 DMG not dealt.
+## Tutorial
+* Tutorial has been erased and replaced by the story mode early fights.
+## Story mode
+* Added a story mode where you play versus known monsters from Undertale. You can unlock rewards by beating challenges.

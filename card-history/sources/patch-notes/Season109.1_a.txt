@@ -1,0 +1,9 @@
+Hot fixes
+## Balancing (Monsters)
+* Titan -- COST 15 > 14. ATK 12 > 10. HP 12 > 10. {red}
+* Rockstar Ralsei -- HP 7 > 8. EFFECT UPDATE: Shock: Give the next monster in your deck -1 cost. Support: Draw up to 1 card. {red}
+## Balancing (Artifacts)
+* AbsorbAx -- EFFECT UPDATE: After a non-Generated enemy monster dies, you gain +1 HP. {red}
+* Constricting Darkness -- EFFECT UPDATE: Starts at 4 counters. After an ally Titan Spawn dies during the enemy turn, lose 2 counters (once per turn). Turn end: If your board isn't full, gain a counter and summon a Titan Spawn with ATK and HP equal to the counters. If this has 0 counters, disable this instead. If this has 7 counters, begin The Roaring. {red}
+## Bug fixes
+* Fixed glitches that could occur if a monster died during a trade.

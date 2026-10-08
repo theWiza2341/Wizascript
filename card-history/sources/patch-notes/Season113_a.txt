@@ -1,0 +1,14 @@
+Game updates
+Season 113
+## Balancing (Monsters)
+* Guei -- ATK 5 > 6. {green}
+* Fuku Fire -- COST 4 > 3. ATK 4 > 3. {green}
+* Ceroba Ketsukane -- COST 13 > 12. {green}
+* Chujin -- COST 14 > 13. {green}
+* Spade King -- EFFECT UPDATE: Taunt. Magic: Switch: Silence all enemy monsters or kill all enemy monsters with 2 HP or less. {green}
+* Cyber Balloon -- HP 4 > 3. EFFECT UPDATE: Haste. Magic: Gain 1 G for every Generated monster on your board. {yellow}
+* The Reflection -- COST 6 > 7. {red}
+* GIGA Queen -- COST 7 > 8. {red}
+* Tasque Painting -- HP 5 > 4. {red}
+* Kris -- EFFECT UPDATE: Haste. Whenever this attacks a monster, Silence it. If the attack killed, gain +1/+1. Turn end: Draw a monster. Give it this card's stat buffs. {red}
+* Zoot Ralsei -- EFFECT UPDATE: Whenever an enemy Wanted monster dies, summon a 2/3 copy of it. Magic: Make an enemy monster Wanted and deal 1 DMG to it. {red}

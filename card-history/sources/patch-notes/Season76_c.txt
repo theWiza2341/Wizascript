@@ -1,0 +1,9 @@
+## Balancing (Spells)
+* Shadow Crystal -- COST 2 > 1. {green}
+* Breaking Love -- EFFECT UPDATE: Give a monster -2/-1. Draw a card. {green}
+* Hyperlink Blocked -- EFFECT UPDATE: Deal 1 DMG to you and reduce your max HP by 1. Draw a card (except Hyperlink Blocked). {yellow}
+* Royal Perseverance -- COST 6 > 7. {red}
+## Balancing (Artifacts)
+* Thorn Ring -- EFFECT UPDATE: Shock: Gain a counter. Turn start: Spend 8 counters to gain 10 G. {green}
+## Balancing (Souls)
+* Bravery -- EFFECT UPDATE: At the start of every 4th turn add a Recruitment to your hand. If you have 4 or less cards in hand, add 2 instead. If you have 7 cards in your hand, add a Draft to your deck. {red}

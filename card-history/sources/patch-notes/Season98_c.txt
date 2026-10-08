@@ -1,0 +1,7 @@
+## Balancing (Spells)
+* Worsening -- COST 5 > 2. EFFECT UPDATE: Give a monster -2/-2. Delay: If it's dead and this is non-Generated, add a Worsening to your hand. {yellow}
+* Ambush -- EFFECT UPDATE: Choose an enemy monster. Summon 2 random monsters with 6 or less base cost from your deck to attack it. {yellow}
+* Mercenary Hire -- EFFECT UPDATE: Summon every 9-cost Royal Guard. Give them -4/-4 base stats. {red}
+## Balancing (Artifacts)
+* Dark Fountain -- EFFECT UPDATE: Whenever you play a card you haven't played this game, gain a counter (max 20). When this reaches 20 counters, add 30 random Deltarune monsters (max EPIC) to your deck. Turn start: If this has 20 counters, draw 2 cards and reduce their cost by 2. {green}
+* Worn Dagger -- EFFECT UPDATE: Whenever a monster dies (except Lost Souls), gain a counter. Turn end: Spend 5 counters to summon the next Lost Soul with 2/2 base stats. {red}

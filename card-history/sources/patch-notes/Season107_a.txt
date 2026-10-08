@@ -1,0 +1,21 @@
+Game updates
+Season 107
+## Ranked Update
+* MASTER and ONYX ranks are back.
+* Divisions per rank: 4 -> 3.
+* Updated end-of-season rewards and rewards per wins.
+## Balancing (Monsters)
+* Caged Kings -- COST 6 > 5. ATK 5 > 4. HP 7 > 6. {green}
+* Clam Boy -- 5 > 6 HP. {green}
+* Clover -- COST 9 > 8. {green}
+* Pancakes -- ATK 3 > 4. {green}
+* Space Cooler -- ATK 4 > 5. {green}
+* Toriel -- COST 9 > 8. {green}
+* Zenith Martlet -- COST 12 > 11. {green}
+* Sans Dog -- EFFECT UPDATE: Dodge (2). Magic: Add a Bone to the enemy hand. {green}
+* Icemeter -- EFFECT UPDATE: Taunt. Turn end: Gain +1 HP for every spell you've spent G on this turn. {green}
+* Large Chest -- EFFECT UPDATE: Taunt. Need: 6+ unique rarities in your dustpile. Magic: Erase them to add 6 random monsters to your hand with -2/+1/+1. {green}
+* Control Panel -- COST 6 > 7. HP 5 > 6. EFFECT UPDATE: Magic and Dust: Add a Shovel to your hand. {yellow}
+* Moldstack -- EFFECT UPDATE: Taunt. Delay: Add a copy of a random other ally Mold to your hand. {yellow}
+* TNT Man -- COST 10 > 12. ATK 5 > 6. HP 9 > 13. EFFECT UPDATE: Magic: Deal 1 DMG. Bullseye: Deal 6 DMG to everything. {yellow}
+* GIGA Queen -- COST 17 > 7. ATK 10 > 5. HP 10 > 5. EFFECT UPDATE: Taunt. Magic: Look At All Giga Attacks You Haven't Cast And Add One To Your Hand. Begin Your Imminent Showdown! {yellow}

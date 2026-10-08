@@ -1,0 +1,12 @@
+Game updates
+Season 120
+First of all: CHAPTER 5 UPDATE NEXT SEASON!!!
+## New cards
+* [card image] Maus Hand. COST 3. ATK 3. HP 3. Magic: Summon a copy of a monster with a base cost of 2 or less.
+* [card image] Pixel Lizard. COST 4. ATK 3. HP 5. Turn end: If you spent G on TOKEN spells this turn, add a Lightning Bolt to your hand.
+* [card image] Fire Fountain. COST 5. ATK 5. HP 6. Haste. Dust: Enchant this slot with The Flame.
+* [card image] Tuning Fork. COST 5. ATK 3. HP 6. Haste. Delay: If this monster's HP equals the amount of cards in your hand, gain +1/+1 and draw 2 cards.
+* [card image] Violetta. COST 5. ATK 4. HP 4. Magic: Add a Blue Flower to your hand. Give it -1 cost for each other ally monster.
+* [card image] Miss Mizzle. COST 7. ATK 4. HP 8. Haste. Monsters heal 2 more HP to allies. Magic and Dust: Add a Mizzle to your hand.
+* [card image] Rockstar Susie. COST 7. ATK 3. HP 7. Shock: Deal 2 DMG to this and all enemies. Lose this Shock. Support: Fully heal this and regain this Shock.
+* [card image] Hammer of Justice. COST 12. ATK 6. HP 5. Dodge (1). Magic: Give an ally monster +3/+3 and Haste. Enchant its slot with Gerson's Hammer.

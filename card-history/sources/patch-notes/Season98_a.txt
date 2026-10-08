@@ -1,0 +1,2 @@
+## New cards
+[card] Casino Sans | cost 6 | Dodge (3). Magic: Summon/Cast a random TOKEN card. | ATK 1 | HP 1

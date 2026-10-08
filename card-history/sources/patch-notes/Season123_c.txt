@@ -1,0 +1,12 @@
+* Lemon Bread -- EFFECT UPDATE: Taunt. Magic: Give all enemy monsters +1 Mold Spore for every Mold or Amalgamate you played this turn. {yellow}
+* Glitch -- COST set to 9. ATK 3 > 9. EFFECT UPDATE: KR. Mold Spore (0). Charge. Haste. Armor. Disarmed. Candy. Transparency. Taunt. Dodge (1). Wanted. Darkspawn. Flowery Power. Invulnerable for one turn. {yellow}
+* Casual Undyne -- EFFECT UPDATE: Haste. Whenever this attacks and kills, deal excess DMG to the monsters adjacent to the target. Bullseye: Summon a Spear. It attacks the opponent. {yellow}
+* Spamton Poster -- COST 6 > 3. HP 4 > 3. EFFECT UPDATE: Magic: Draw a spell. Shock: Add Hyperlink Blocked to your opponent's deck. {yellow}
+* Fire Trap -- ATK 1 > 4. EFFECT UPDATE: Turn start: Enchant a random empty enemy slot with The Flame. {yellow}
+* Cooler Cooler -- EFFECT UPDATE: Shock: Deal 2 DMG to this to summon a Mizzle. {red}
+## Balancing (Spells)
+* Sans Milk -- EFFECT UPDATE: Give a monster +1/+1 and +1 Dodge. {green}
+## Balancing (Artifacts)
+* Generous Gifts -- EFFECT UPDATE: After you play a monster costing 4+ G, gain a counter. Every 4 counters, summon a Gift and give it +1/+1 for every 4 counters this has. {green}
+* Susie's Apron -- EFFECT UPDATE: At the end of every 3rd turn, enchant a random empty enemy slot with The Flame. {yellow}
+* Shattered Rose -- EFFECT UPDATE: After an ally monster kills another monster during your turn, gain a counter. At 5, add an Ice Crystal to your hand and reset this back to 0. Support: Give the attacker +1/+1. {red}

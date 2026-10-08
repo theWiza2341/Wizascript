@@ -1,0 +1,21 @@
+* Alterman -- ATK 3 > 4. HP 3 > 2. {yellow}
+* Cyberdly -- COST 6 > 5. ATK 6 > 5. HP 6 > 5. EFFECT UPDATE: Magic: Add a Feather Storm to your hand for each different tribe in your dustpile. {yellow}
+* Reminisce -- COST 6 > 7. EFFECT UPDATE: Look at 3 different non-TOKEN Dust monsters in your dustpile (max. 9 cost). Choose one to summon with Haste. {yellow}
+* Mettabot Factory -- HP 4 > 6. {yellow}
+* Dunebud -- EFFECT UPDATE: Shock: Summon a Dunebud with Haste. {yellow}
+* Cauldron -- ATK 3 > 4. HP 4 > 6. EFFECT UPDATE: Shock: Add a 1/1/1 Spincake with Haste to your hand. Give it +1/+1/+1 for every 2 G the spell cost. {yellow}
+* Grilling King -- EFFECT UPDATE: Magic: Summon two 3/3 Spincakes. If you have 3 or less cards in your deck, transform them into 5/5 Cakes. {red}
+* Mo -- EFFECT UPDATE: Taunt. Magic: Add 3 random non-DT cards costing 5+ G to your hand and give them -3 cost. Delay: Erase the ones still in your hand. {red}
+* Bryan -- EFFECT UPDATE: After an enemy monster dies during your turn, trigger this Magic. Magic: Summon a Dynamite Stick. {gray}
+* Queen -- EFFECT UPDATE: Taunt. Magic: Choose An Enemy Monster. Summon A Werewire To Catch That Monster. {gray}
+* Crimeter -- EFFECT UPDATE: Disarmed. Candy. Shock: Attack the lowest HP enemy monster. {gray}
+## Balancing (Artifacts)
+* Seam's Seap -- EFFECT UPDATE: After you play a card and have 0 G, gain a counter (once per turn). Turn start: Spend 3 counters to add a Shadow Crystal to your hand. {green}
+## Settings
+* Added a setting to show border-breaking skins beneath card descriptions and stats without needing to hover. This will always be on for mobile players, so they no longer need to tap to see card text.
+## Chat
+* External link posting in chat has been restricted. Frequently used and trusted sites remain supported.
+* Removed DMs for non-staff members (for security purposes).
+## Misc
+* Updated filters for rarities.
+* Removed the Barrier animation.

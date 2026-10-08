@@ -1,0 +1,16 @@
+## Balancing (Spells)
+* Feast -- COST 5 > 4. {green}
+* ACT Button -- COST 0 > 1. EFFECT UPDATE: Loop (2). Look at all spells of the enemy Soul (max. RARE) and choose one. Add it to your hand. {yellow}
+* The Fifth Round -- COST 5 > 4. EFFECT UPDATE: Deal 5 DMG to an enemy. Bullseye: Add The Final Round to your hand. {yellow}
+* The First Round -- COST 1 > 0. EFFECT UPDATE: Deal 1 DMG to an enemy. Bullseye: Add The Second Round to your hand. {yellow}
+* The Fourth Round -- COST 4 > 3. EFFECT UPDATE: Deal 4 DMG to an enemy. Bullseye: Add The Fifth Round to your hand. {yellow}
+* The Second Round -- COST 2 > 1. EFFECT UPDATE: Deal 2 DMG to an enemy. Bullseye: Add The Third Round to your hand. {yellow}
+* The Third Round -- COST 3 > 2. EFFECT UPDATE: Deal 3 DMG to an enemy. Bullseye: Add The Fourth Round to your hand. {yellow}
+* GIGA Balls -- COST 0 > 1. {red}
+* GIGA Glass -- COST 0 > 1. {red}
+* GIGA Missiles -- COST 0 > 1. {red}
+* GIGA Punch -- COST 0 > 1. {red}
+* Soothing -- COST 2 > 3. {red}
+* Totemic Carvings -- EFFECT UPDATE: Look at 7 different non-DT 7-cost monsters (except Totem). Choose one to add to your hand with -7 cost. {gray}
+## Balancing (Artifacts)
+* GIGA Batteries > Imminent Showdown -- EFFECT UPDATE: Starts with 3 counters. After an ally GIGA Queen dies, spend a counter to return it to your deck with +2/+2/+2 base stats. After an ally GIGA Queen dies at 0 counters, add Detachable Hands to your hand and disable this. {yellow}

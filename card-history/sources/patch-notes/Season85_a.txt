@@ -1,0 +1,4 @@
+## Balancing (Monsters)
+* Chaos Duck -- COST 7 > 8. EFFECT UPDATE: Magic: Turn a monster into an Apoca Duck. {yellow}
+* Disguised Lancer -- EFFECT UPDATE: Magic: Return all other non-DT ally monsters to your hand. Summon Thrashing Machines with their stats in their places. {red}
+* Blue Snail -- EFFECT UPDATE: Magic: Give -1 cost to a random Snail in your deck. {red}

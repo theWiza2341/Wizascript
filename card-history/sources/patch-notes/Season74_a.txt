@@ -1,0 +1,1 @@
+* [artifact] Generous Gifts -- Whenever you take DMG, gain counters equal to DMG taken. When this reaches 11+, spend them to summon a 3/3 Gift. (Normal, 300 G)

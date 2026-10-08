@@ -1,0 +1,7 @@
+Mid Season 72
+* [card] Fluid Dance (cost 0, green soul spell): Give all ally Plants +2 HP.
+* [card] Mocking Dance (cost 0, green soul spell): Give all ally Plants Taunt.
+* [card] Mushroom Dance (cost 0, green soul spell): Choose a Dance to cast.
+* [card] Sweet Dance (cost 0, green soul spell): Give all ally Plants Candy.
+* [card] Swift Dance (cost 0, green soul spell): Give all ally Plants Haste.
+* [card] Stage Lights (cost 6, ATK 8, HP 3, purple soul): Dust: Summon the highest cost non-DT monster from both hands.

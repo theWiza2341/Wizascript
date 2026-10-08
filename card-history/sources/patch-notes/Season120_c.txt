@@ -1,0 +1,20 @@
+## Balancing (Monsters)
+* Librarby Sign -- ATK 5 > 6. {green}
+* Stoned Lancer -- HP 5 > 6. {green}
+* Dalv -- HP 5 > 6. {green}
+* Martlet -- HP 6 > 7. {green}
+* Gaster -- COST 12 > 11. {green}
+* Placeholder Kris -- COST 11 > 10. HP 10 > 9. {green}
+* Arcade Machine -- COST 9 > 8. ATK 5 > 4. HP 5 > 4. {green}
+* Shovel -- EFFECT UPDATE: Haste. Loop (1). Magic: Program (3): If a copy with no Loop is in your hand, Erase it to gain +3/+4. {green}
+* Snoring Monsters -- COST 6 > 10. ATK 7 > 6. HP 6 > 7. EFFECT UPDATE: After this kills a monster, gain +3 ATK. Magic: Deal 4 DMG to a monster. {yellow}
+* Titan -- COST 14 > 15. {red}
+* Soulless Kris -- COST 8 > 9. {red}
+## Balancing (Spells)
+* Longevity -- EFFECT UPDATE: Give all ally monsters +1 HP and draw a card. {green}
+* Powerhouse -- COST 8 > 5. EFFECT UPDATE: Draw up to 2 cards and give all cards in your hand -1 cost (min. 1). {yellow}
+## Balancing (Artifacts)
+* Collection -- EFFECT UPDATE: After you summon a monster with a Tribe you haven't summoned this game (except Thrashing Machine), add a Thrashing Machine with -1/-1/-1 to your hand. {green}
+## Misc
+* Chat now uses bigger avatars.
+* Fixed rollback animation (cards returning to hand) for bad connections.

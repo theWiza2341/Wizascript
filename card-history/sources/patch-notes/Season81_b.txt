@@ -1,0 +1,10 @@
+[card] Lab Sign | cost 11 | Transparency. Magic: Cast all non-TOKEN spells (max. 10 cost) you've cast this game on random targets. Can only cast the same spell once. | ATK 3 | HP 3
+## Balancing (Monsters)
+* Garbage -- COST 6 > 4. HP 6 > 4. EFFECT UPDATE: Magic and Dust: Add the BASE spell of your soul to your hand. {yellow}
+* Stage Lights -- COST 9 > 5. ATK 3 > 5. HP 9 > 5. EFFECT UPDATE: Magic: Add a copy of the most expensive other non-DT monster in the enemy hand to your hand. {yellow}
+* Spade King -- EFFECT UPDATE: Magic: Switch: Silence all enemy monsters or kill all enemy monsters with 2 HP or less. {yellow}
+* Mettaton NEO -- COST 8 > 10. EFFECT UPDATE: Dust: Deal this monster's ATK as DMG to all enemy monsters. {yellow}
+* Golden Mascot -- COST 13 > 6. ATK 6 > 5. HP 7 > 6. EFFECT UPDATE: Taunt. Dust: Add a random LEGENDARY to your hand. {yellow}
+* Spamton -- EFFECT UPDATE: Magic: Burn all Pipis in your Dustpile to add them to your hand with Haste. Give them +1/+1 for each Pipis that didn't fit. {green}
+* Spamton Shop -- EFFECT UPDATE: Turn end: Program (2): Summon a Pipis. {green}
+* Mad Mew Mew -- ATK 5 > 4. HP 5 > 4. EFFECT UPDATE: Magic: Halve a non-DT monster's stats (rounded up) and summon an exact copy of it. If it was an ally, earn 2 G. {yellow}

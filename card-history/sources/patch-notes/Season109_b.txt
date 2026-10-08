@@ -1,0 +1,10 @@
+* Cooler Cooler -- cost 3, ATK 3, HP 3, rarity blue winged soul. Shock: Deal 1 DMG to this to summon a Mizzle.
+* Food Stack -- cost 3, rarity green winged soul. Erase the copy. Deal 3 DMG to a random enemy. Repeat for every Loop this has.
+* Grand Prize -- cost 3, ATK 3, HP 3, rarity green winged soul. Dust: Release a copy to both hands. Give yours -1 cost.
+* Lawnmower -- cost 3, ATK 3, HP 3, rarity white winged soul. Transparency. Dust: Program (1): Give all other ally monsters +1 ATK and Haste.
+* Longanikk -- cost 3, ATK 3, HP 3, rarity white winged soul. Haste. Support: Copy the HP of the attacker.
+* Organikk -- cost 3, ATK 2, HP 3, rarity white winged soul. Dodge (1). Support: Copy the ATK of the attacker.
+* Pixel Kris -- cost 4, ATK 2, HP 6, rarity purple winged soul. Has +1 ATK for each missing HP. Need: Your deck has no non-Generated Haste or Charge cards. Magic: Cast Proceed on the monster in front of this.
+* Pixel Susie -- cost 4, ATK 3, HP 4, rarity purple winged soul. Taunt. Magic: Set an ally monster's stats to 3/3.
+* Friendogeny -- cost 5, ATK 4, HP 5, rarity blue winged soul. Magic: Draw a card. If this has ATK buffs, draw another. If this has HP buffs, gain Darkspawn.
+* Titan Spawn -- cost 5, ATK 5, HP 6, rarity purple winged soul. Darkspawn.

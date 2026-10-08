@@ -1,0 +1,13 @@
+Season 120
+Mid season update
+## Balancing (Monsters)
+* Soulless Kris -- EFFECT UPDATE: Charge. Magic: If you have none, open a Dark Fountain and give it a counter for every different non-TOKEN card you played this game. {red}
+## Balancing (Artifacts)
+* Evil Plan -- EFFECT UPDATE: The first time your hand is empty after playing a card, add all Thrashing Parts to your hand with +1 ATK and disable this. If you have Ultimathrash at the start of the game, transform into Ultimate Fusion. {red}
+* Dark Fountain -- EFFECT UPDATE: After you play a non-TOKEN card you haven't played this game, gain a counter (max 20). When this reaches 20 counters, add 3 Deltarune (max. EPIC) monsters with -2/+2/+2 to your deck and turn this into a Dark World. {red}
+## UCP Shop
+* UCP purchases now give DT Fragments as bonus instead of packs.
+## Misc
+* Updated site footer.
+* Added undercards featured streams and videos page.
+* Updated leaderboard design.

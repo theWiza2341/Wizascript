@@ -1,0 +1,19 @@
+## Balancing (Monsters)
+* Spikery -- COST 4 > 3. {green}
+* Leafling -- HP 3 > 4. {green}
+* Clam Girl -- HP 4 > 5. {green}
+* Swatchling -- HP 5 > 6. {green}
+* Hot Dog Vulkin -- ATK 5 > 6. {green}
+* Terakota -- COST 10 > 9. HP 7 > 6. {green}
+* Yellow -- COST 7 > 6. HP 4 > 3. {green}
+* Lightning Bolt -- COST 2 > 1. {green}
+* Everyman -- COST 6 > 5. ATK 5 > 4. {green}
+* Lady Garf -- HP 5 > 6. {green}
+* Annoying Dog -- EFFECT UPDATE: Taunt. Magic: Add a Dog Residue to your hand. Delay: If this has ATK buffs, add another. {green}
+* Burning Snail -- ATK 0 > 1. EFFECT UPDATE: Haste. Magic: Gain +1 ATK for each adjacent ally Snail. {green}
+* Cherry Tree -- EFFECT UPDATE: Turn start: Give yourself +3 HP. {green}
+* Kawkaw -- EFFECT UPDATE: Magic: Give a monster +1/+3 and Paralyze it. {green}
+* Blowing Rabbick -- EFFECT UPDATE: After you spend G on spells, return to your hand with +2/+1 (keeps ATK and HP buffs). {green}
+* Plated Pipe -- EFFECT UPDATE: Armor. After this takes DMG, deal 1 DMG to the opponent. {green}
+* Miss Mizzle -- HP 8 > 7. EFFECT UPDATE: Haste. Monsters heal 2 more HP to allies. Magic and Dust: Summon a 1/1 Mizzle. {green}
+* Alterman -- EFFECT UPDATE: Taunt. Magic: Silence and kill an ally monster to gain +3 HP. {green}

@@ -1,0 +1,20 @@
+Season 82
+## New card
+[card] Temmie Egg | cost 3 | Magic: Summon a Temmie. If you have at least 2 other Temmies, turn this into Temmie 2. | ATK 1 | HP 2
+## Rankeds
+* Added 2 new ranks between DIAMOND and LEGEND : ONYX and MASTER
+* You can no longer demote in LEGEND but your points can drop under 2200.
+* Added new end of season rewards for new ranks and improved LEGEND rewards.
+* Victories in LEGEND no longer give up.
+* Win streaks will no longer give bonus points after 6 victories.
+* Added a chat notification when a player reaches LEGEND.
+* You can now check the points of all LEGEND players in their chat profile.
+## Balancing (Monsters)
+* Sans Deltarune -- EFFECT UPDATE: Dodge (1). Magic: Switch: Reveal a random spell costing 1 or more in your or enemy hand. Turn it into a Gaster Blaster. {yellow}
+* Wheelvil -- COST 7 > 4. ATK 7 > 0. EFFECT UPDATE: Armor. Whenever this takes DMG, add a random Chaos Weapon to your hand. {yellow}
+* Cyberdly -- COST 6 > 7. EFFECT UPDATE: Magic: Add a Thrashing Machine to your hand with Haste and Candy for each unique tribe in your dustpile. {yellow}
+* Spider -- [icon] > [icon].
+* Fuku Fire -- [icon] > [icon].
+## Balancing (Artifacts)
+* Seedlings - EFFECT UPDATE: Turn end: Burn 9 non-TOKEN monsters in your Dustpile to summon a Red Flower. {yellow}
+* Dealmaker - EFFECT UPDATE: Whenever a non-TOKEN monster costing more than 0 dies, gain a counter. When this reaches 4, spend them to earn 1 G. {red}

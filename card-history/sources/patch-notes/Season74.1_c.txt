@@ -1,0 +1,14 @@
+## Balancing (Spells)
+* Tea Set -- EFFECT UPDATE: Heal 4 HP. If this targeted a monster also give it +1/+1. {green}
+* Real Knife -- COST 3 > 2. {green}
+* Pezza Time -- COST 4 > 2. EFFECT UPDATE: Add a copy of a damaged ally non-DT monster to your hand with its current HP. It costs 1 less per HP missing. {yellow}
+* Ultimate Heal -- COST 2 > 4. EFFECT UPDATE: Draw 3 monsters. Give them +2 HP. {yellow}
+* Feast -- COST 2 > 3. {red}
+## Balancing (Artifacts)
+* Seam's Soap -- EFFECT UPDATE: Turn end: If you have 3 or less cards in your deck, give all monsters in your hand and deck +2/+3 and Taunt. Then disable this. {green}
+* Spy -- EFFECT UPDATE: At the start of every 3 turns, reveal the enemy hand. Give the first spell revealed +1 cost. {yellow}
+* Thorn Ring -- EFFECT UPDATE: Shock: Gain a counter. Turn end: Spend 10 counters to earn 10 G. {yellow}
+* Glamburger -- EFFECT UPDATE: At the start of turn 3, 6, and 9 earn 1 G. {yellow}
+* Doom -- EFFECT UPDATE: At the start of every 12th turn, Silence and kill all monsters. {red}
+* Arcane Scepter -- EFFECT UPDATE: Turn start: Add Arcane Codes to your hand. {red}
+* Vitality -- EFFECT UPDATE: At the start of every 10th turn, gain +7 HP. {red}

@@ -3,7 +3,7 @@
   "repo": "theWiza2341/UC-Plugin-Report-Hub",
   "branch": "main",
   "tag": "WZ",
-  "minPlayers": 2,
+  "minPlayers": 1,
   "confirmed": [],
   "ignored": []
 }

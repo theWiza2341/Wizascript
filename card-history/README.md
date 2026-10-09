@@ -18,7 +18,8 @@ Wizascript reads these files on demand, so anything changed here reaches players
 | `sources/patch-notes/` | The official patch notes, Beta 12.0 onwards, as text, with one file per screenshot (`Season49.1_a.txt`). | You. Triggers a rebuild. |
 | `assets/sprites/` | Old art for reworked cards whose old art is gone from the game's server. | You. Triggers a rebuild. |
 | `build/` | The build script (Node, no dependencies). | You. Triggers a rebuild. |
-| `reports.json` | Versions confirmed as reported: players see a ⚠ on them (see Reports below). Read live. | You. |
+| `hub.json` | Where reports come from, and which get a ⚠ (see Reports below). | You. |
+| `reports.json`, `reports.md` | Reported versions (⚠ for players) and the catalogue of reports and bug reports. | The reports workflow. |
 | `cache/` | Last good copies of the wiki pages, used when a wiki can't be reached. | The Action. |
 | `data/` | The built histories. `index.json` has the build time and newest version, and `build-log.txt` says what the build did. | The Action. Don't edit by hand. |
 
@@ -51,20 +52,33 @@ After a run, check `data/build-log.txt`. A line like `Fandom Version History: un
 
 ## Reports
 
-Players right-click a version that looks wrong and choose **Report as Bugged/Inaccurate**. Reports stay on their computer. **My Reports** turns them into plain-text codes they paste in Undercards chat or on Discord:
+Players right-click a version that looks wrong and choose **Report as Bugged/Inaccurate**. **My Reports** turns their reports into chat lines, and **Send** opens Undercards' room 0 (the "void" room) with a line typed in. The player presses Enter; Wizascript never sends anything itself.
 
 ```
-WZR1 261008 161@28.0 20@PA Apowerband@-2.0 40@now
+#WZ1 CH 261008 161@28.0 20@PA Apowerband@-2.0 40@now
 ```
 
-That's format 1, the data build they saw (yymmdd), then `card id@version` or `A<artifact file name>@version`. `now` means today's card, and `-2.0` means `<2.0`. Each line is at most 250 characters, the chat's limit. Codes contain no links, since chat drops messages with links.
+The line is made up of:
+- `#WZ1`: the UC Report Hub's header, tag WZ, format 1;
+- `CH`: marks it as Card History;
+- the data build the player saw (yymmdd);
+- then `card id@version` or `A<artifact file name>@version`. `now` means today's card, and `-2.0` means `<2.0`.
 
-**Gathering them:** in My Reports, open **Collecting codes**.
-- **Collect report codes I see in chat** saves every code that reaches your chat while you're online. It's off by default.
-- The paste box takes any text with codes in it, such as a copied Discord channel.
-- **Download collected** gives one file with each reported version listed once, and how many different people reported it. Share that file for checking.
+Each line is at most 250 characters, the chat's limit. Wizascript's **Report a Bug** button sends `#WZ1 v1.6.0: <the player's own words>` the same way.
 
-**Shared ⚠ marks:** list a version in `reports.json` here and every player sees a ⚠ on it, for example `{ "items": { "c:161:28.0": { "n": 3 } } }`. Keys are `c:<card id>:<version>` or `a:<artifact file name>:<version>`, with `today` for today's card. Remove the entry once it's fixed. The file is edited by hand and read live, so no rebuild is needed.
+**How the reports get here:**
+1. The **UC Report Hub** (a separate public repo) reads room 0 from feildmaster's chat-log Discord every 6 hours and files every `#WZ1` message under its `reports/WZ/`.
+2. The **"Card History reports"** workflow (on `main`, 30 minutes after each hub run) runs `build/reports.js`, which writes two files here:
+   - `reports.json`: versions reported by at least `minPlayers` different players, or listed in `confirmed`. Players see a ⚠ on them.
+   - `reports.md`: the catalogue. Every reported version (players, data builds, who) and every written bug report, newest first.
+
+**`hub.json`** holds the settings:
+- `repo`: the hub repo, as owner/name;
+- `minPlayers`;
+- `confirmed`: keys that always get a ⚠;
+- `ignored`: keys that never do. Put a key here once it's fixed or isn't a bug.
+
+Keys are `c:<card id>:<version>`, `c:<card id>:today` or `a:<artifact file name>:<version>`, as listed in reports.md. Changes apply on the next run.
 
 ## Common fixes
 

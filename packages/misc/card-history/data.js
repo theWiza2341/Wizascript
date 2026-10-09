@@ -9,6 +9,7 @@
 //   data/artifacts/<name>.json  one artifact's versions (name lower-cased, letters/digits only)
 //   data/index.json             when it was built
 //   rules.json                  word lists for the text formatting (edit live, no rebuild)
+//   reports.json                versions players reported as wrong (written by the bot)
 //   assets/sprites/<Name>.png   old card art for reworked cards
 
 export const BASE = "https://raw.githubusercontent.com/theWiza2341/Wizascript/card-history/card-history/";
@@ -52,4 +53,5 @@ export const getIndex = () => cached("data/index.json");
 export const getCardData = (id) => cached(`data/cards/${id}.json`);
 export const getArtifactData = (name) => cached(`data/artifacts/${slug(name)}.json`);
 export const getRules = () => cached("rules.json").catch(() => null);
+export const getReports = () => cached("reports.json");
 export const spriteUrl = (file) => `${BASE}assets/sprites/${encodeURIComponent(file)}.png`;

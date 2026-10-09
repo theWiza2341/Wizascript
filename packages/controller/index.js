@@ -42,6 +42,7 @@ import {
 } from './settings.js';
 import { getTierListPad, toggleTierListFillScreen } from '../misc/tier-list/index.js';
 import { closeWishlistMenu } from '../misc/wishlist/menu.js';
+import { isReportMenuOpen, pressReportMenu, closeReportMenu } from '../misc/card-history/reports.js';
 import { getHudPosition, setHudPosition, getCursorSensitivity, setCursorSensitivity } from './storage.js';
 import { getPageWindow } from '../core/page-window.js';
 // Read-only accessor for a real Wizascript keybind's CURRENT e.code,
@@ -608,7 +609,8 @@ export function initController(plugin, controllerEnabledSetting) {
   // Tracks the checked-radio index as of LAST frame, for the edge-
   // triggered self-heal below (see its own comment at the use site).
   let lastKnownActiveCategoryIdx = -1;
-  const MODAL_ITEM_SELECTOR = 'button, input:not([type="hidden"]):not(.tabButton), select, a[href], .card, li[role="button"], .tabLabel';
+  // .wz-ch-reportable: Card History's versions (cards and artifact rows), so △ can report one.
+  const MODAL_ITEM_SELECTOR = 'button, input:not([type="hidden"]):not(.tabButton), select, a[href], .card, li[role="button"], .tabLabel, .wz-ch-reportable';
   function queryModalRoot() {
     // Prefer the last VISIBLE `.bootstrap-dialog`, not just the first one
     // in DOM order. Bootstrap can leave a just-closed dialog in the DOM
@@ -1454,6 +1456,22 @@ export function initController(plugin, controllerEnabledSetting) {
     if (ctor === PointerEvent) { opts.pointerId = 1; opts.isPrimary = true; opts.pointerType = 'mouse'; }
     el.dispatchEvent(new ctor(type, opts));
   }
+  // Primary + Middle Click: a real middle-click at the cursor (Card History
+  // opens on one). Skipped in matches, where UnderScript ends the turn on a
+  // middle-click - End Turn has its own button.
+  function middleClickAtCursor() {
+    if (document.getElementById('handCards')) return;
+    const shown = cursor.style.display;
+    cursor.style.display = 'none';
+    const el = document.elementFromPoint(x, y);
+    cursor.style.display = shown;
+    if (!el) return;
+    fire(el, 'pointerdown', PointerEvent, x, y, 1, 4);
+    fire(el, 'mousedown', MouseEvent, x, y, 1, 4);
+    fire(el, 'pointerup', PointerEvent, x, y, 1, 0);
+    fire(el, 'mouseup', MouseEvent, x, y, 1, 0);
+    fire(el, 'auxclick', MouseEvent, x, y, 1, 0);
+  }
   function dispatchClick(el, cx, cy, button) {
     if (button === 2) {
       fire(el, 'pointerdown', PointerEvent, cx, cy, 2, 2);
@@ -2243,7 +2261,7 @@ export function initController(plugin, controllerEnabledSetting) {
           const tierListComboInputs = tierListOpenForRelay
             ? CONTROLLER_ACTIONS.filter((a) => a.context === 'tierList').map((a) => getBoundButton(a.key))
             : [];
-          const comboRunners = { tierListFillScreen: toggleTierListFillScreen };
+          const comboRunners = { tierListFillScreen: toggleTierListFillScreen, middleClick: middleClickAtCursor };
           CONTROLLER_ACTIONS.forEach((action) => {
             let applies;
             if (action.context === 'tierList') applies = tierListOpenForRelay;
@@ -3049,6 +3067,15 @@ export function initController(plugin, controllerEnabledSetting) {
         dpadHeld = { up, down, left, right };
         refreshHighlight();
 
+        // Card History's report menu (opened with △ on a version) sits over
+        // the dialog: ✕ presses it, ○ closes just the menu.
+        if (isReportMenuOpen()) {
+          if (btn(0) && !btnHeld[0]) pressReportMenu();
+          if (btn(1) && !btnHeld[1]) closeReportMenu();
+          btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+          hud.textContent = `report menu\n${btnLabel(0)} report / undo   ${btnLabel(1)} close`;
+          return;
+        }
         if (btn(0) && !btnHeld[0]) activateHighlighted(0);
         if (btn(3) && !btnHeld[3]) activateHighlighted(2);
         // Same explicit isControllerCaptureActive() guard as the

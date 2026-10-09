@@ -83,7 +83,11 @@ export const CONTROLLER_ACTIONS = [
   // Primary + □ fills the screen there and still resets the Notepad
   // everywhere else. No keyboard keybind behind it: `run` names a
   // function index.js calls directly instead of relaying a key.
-  { key: 'tierListFillScreen', name: 'Fill Screen', packageLabel: 'Tier List', context: 'tierList', defaultButton: 2, run: 'tierListFillScreen' }
+  { key: 'tierListFillScreen', name: 'Fill Screen', packageLabel: 'Tier List', context: 'tierList', defaultButton: 2, run: 'tierListFillScreen' },
+  // A middle-click at the cursor, for anything that uses one (Card History
+  // opens on a middle-click). Not in matches: there a middle-click ends the
+  // turn (UnderScript), and End Turn has its own In-Game Input.
+  { key: 'middleClick', name: 'Middle Click', packageLabel: 'General', context: 'default', defaultButton: 0, run: 'middleClick' }
 ];
 export const CONTROLLER_ACTIONS_BY_KEY = {};
 CONTROLLER_ACTIONS.forEach((a) => { CONTROLLER_ACTIONS_BY_KEY[a.key] = a; });

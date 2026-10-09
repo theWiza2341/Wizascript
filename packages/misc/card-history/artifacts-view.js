@@ -13,6 +13,8 @@
 import { escHtml, norm, render, tr, trHtml } from "./game.js";
 import { formatText } from "./format.js";
 import { versionLabel } from "./cards-view.js";
+import { tagNode } from "./reports.js";
+import { slug } from "./data.js";
 
 const RARITIES = ["COMMON", "LEGENDARY", "TOKEN"];
 const asRarity = (x) => {
@@ -39,10 +41,10 @@ export function findArtifact(list, q) {
     || list.find((a) => norm(a.image) === n) || null;
 }
 
-function row(ver, rarity, f, todayName, todayHtml) {
+function row(ver, rarity, f, todayName, todayHtml, target) {
   const tr2 = document.createElement("tr");
   const v = document.createElement("td");
-  v.className = "wz-ch-art-ver";
+  v.className = "wz-ch-art-ver wz-ch-badge-spot";
   const label = versionLabel(ver.version);
   v.textContent = label.text + (ver.note || label.uncertain ? " *" : "");
   v.title = label.title + (ver.note ? `\n${ver.note}` : "") + (todayHtml !== undefined ? "\nToday's version." : "");
@@ -56,6 +58,11 @@ function row(ver, rarity, f, todayName, todayHtml) {
   // Inside a .cardDesc so the game's card-text colours and keyword styles apply.
   t.innerHTML = `<div class="cardDesc wz-ch-art-desc"><div>${oldName}${body}</div></div>`;
   tr2.append(v, r, t);
+  if (target) {
+    const d = document.createElement("div");
+    d.innerHTML = body;
+    tagNode(tr2, { ...target, label: todayHtml !== undefined ? "today" : label.text, shown: `${rarity || "?"}: ${(ver.name && norm(ver.name) !== norm(todayName) ? `(${ver.name}) ` : "")}${d.textContent.replace(/\s+/g, " ").trim()}`.slice(0, 140) });
+  }
   return tr2;
 }
 
@@ -103,12 +110,13 @@ export function artifactHistoryView(a, data, f, index) {
   head.innerHTML = `${a.image ? `<img src="images/artifacts/${escHtml(a.image)}.png" alt="">` : ""}<span class="wz-ch-art-title">${escHtml(todayName)}</span>`;
   const table = document.createElement("table");
   table.className = "wz-ch-art-list";
-  versions.forEach((v) => table.appendChild(row(v, v.shownRarity, f, todayName)));
-  table.appendChild(row(todayVer, today || (last && last.shownRarity), f, todayName, todayHtml));
+  const target = { kind: "a", id: slug(a.name), name: todayName, built: (index && index.builtAt) || "" };
+  versions.forEach((v) => table.appendChild(row(v, v.shownRarity, f, todayName, undefined, target)));
+  table.appendChild(row(todayVer, today || (last && last.shownRarity), f, todayName, todayHtml, target));
   node.append(head, table);
   const foot = document.createElement("div");
   foot.className = "wz-ch-foot";
-  foot.textContent = `${data ? "" : "No recorded history for this artifact yet. "}Sources: Undercards Wiki (Version History)${data && data.miraheze ? "; The Undercards Wiki (Miraheze)" : ""}; Undercards patch notes. Oldest first, today's last. * = not certain, or has a note - hover the version number.`;
+  foot.textContent = `${data ? "" : "No recorded history for this artifact yet. "}Sources: Undercards Wiki (Version History)${data && data.miraheze ? "; The Undercards Wiki (Miraheze)" : ""}; Undercards patch notes. Oldest first, today's last. * = not certain, or has a note - hover the version number. Looks wrong? Right-click the row to report it.`;
   node.appendChild(foot);
   return { node, wikiUrl: `https://undercards.fandom.com/wiki/${a.name.replace(/ /g, "_")}` };
 }

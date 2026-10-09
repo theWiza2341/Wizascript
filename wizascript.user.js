@@ -95,10 +95,10 @@
   var observer = null;
   function scan() {
     enhancers.forEach((enhance, key2) => {
-      const el2 = document.getElementById(ID_PREFIX + key2);
-      if (!el2 || el2.hasAttribute(ENHANCED_ATTR)) return;
-      el2.setAttribute(ENHANCED_ATTR, "true");
-      enhance(el2);
+      const el3 = document.getElementById(ID_PREFIX + key2);
+      if (!el3 || el3.hasAttribute(ENHANCED_ATTR)) return;
+      el3.setAttribute(ENHANCED_ATTR, "true");
+      enhance(el3);
     });
   }
   function ensureObserver() {
@@ -112,10 +112,10 @@
     else document.addEventListener("DOMContentLoaded", ensureObserver, { once: true });
   }
   function asButton(label, onClick) {
-    return (el2) => {
-      el2.readOnly = true;
-      el2.value = typeof label === "function" ? label() : label;
-      Object.assign(el2.style, {
+    return (el3) => {
+      el3.readOnly = true;
+      el3.value = typeof label === "function" ? label() : label;
+      Object.assign(el3.style, {
         cursor: "pointer",
         backgroundColor: "black",
         color: "white",
@@ -123,24 +123,24 @@
         borderRadius: "3px",
         textAlign: "center"
       });
-      el2.addEventListener("click", (e) => {
+      el3.addEventListener("click", (e) => {
         e.preventDefault();
-        onClick(el2);
+        onClick(el3);
       });
-      el2.addEventListener("keydown", (e) => {
+      el3.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          onClick(el2);
+          onClick(el3);
         }
       });
     };
   }
   function asInfo(text) {
-    return (el2) => {
-      el2.readOnly = true;
-      el2.tabIndex = -1;
-      el2.value = typeof text === "function" ? text() : text;
-      Object.assign(el2.style, {
+    return (el3) => {
+      el3.readOnly = true;
+      el3.tabIndex = -1;
+      el3.value = typeof text === "function" ? text() : text;
+      Object.assign(el3.style, {
         backgroundColor: "transparent",
         border: "none",
         color: "#ccc",
@@ -244,8 +244,8 @@
   function applySubSettingVisibility(pluginId, forceEnabled) {
     const enabled = forceEnabled !== void 0 ? forceEnabled : isPluginEnabled(pluginId);
     (SUB_SETTINGS[pluginId] || []).forEach((key2) => {
-      const el2 = document.getElementById(LS_PREFIX + key2);
-      const row2 = el2 && el2.closest(".flex-start");
+      const el3 = document.getElementById(LS_PREFIX + key2);
+      const row2 = el3 && el3.closest(".flex-start");
       if (row2) row2.style.display = enabled ? "" : "none";
     });
   }
@@ -283,8 +283,8 @@
       }
     });
     Object.entries(SUB_SETTINGS).forEach(([pluginId, keys]) => {
-      keys.forEach((key2) => registerSettingWidget(key2, (el2) => {
-        const row2 = el2.closest(".flex-start");
+      keys.forEach((key2) => registerSettingWidget(key2, (el3) => {
+        const row2 = el3.closest(".flex-start");
         if (row2) row2.classList.add("wizascript-subsetting");
         applySubSettingVisibility(pluginId);
       }));
@@ -402,15 +402,15 @@
     return !b.pluginId || isPluginEnabled(b.pluginId);
   }
   function isTypingContext() {
-    const el2 = document.activeElement;
-    if (!el2) return false;
-    const tag = el2.tagName;
-    return tag === "INPUT" || tag === "TEXTAREA" || el2.isContentEditable;
+    const el3 = document.activeElement;
+    if (!el3) return false;
+    const tag2 = el3.tagName;
+    return tag2 === "INPUT" || tag2 === "TEXTAREA" || el3.isContentEditable;
   }
-  function enhanceInput(el2, bindingKey, defaultCode) {
-    el2.setAttribute("data-wizascript-keybind-enhanced", "true");
-    el2.readOnly = true;
-    Object.assign(el2.style, {
+  function enhanceInput(el3, bindingKey, defaultCode) {
+    el3.setAttribute("data-wizascript-keybind-enhanced", "true");
+    el3.readOnly = true;
+    Object.assign(el3.style, {
       cursor: "pointer",
       backgroundColor: "black",
       color: "white",
@@ -419,50 +419,50 @@
       textAlign: "center"
     });
     function refreshDisplay() {
-      el2.value = codeToDisplay(readCode(bindingKey, defaultCode));
+      el3.value = codeToDisplay(readCode(bindingKey, defaultCode));
     }
     refreshDisplay();
-    el2.addEventListener("focus", () => {
-      el2.style.border = "1px solid #40E0D0";
-      el2.style.boxShadow = "0 0 4px #40E0D0";
-      el2.value = "...?";
+    el3.addEventListener("focus", () => {
+      el3.style.border = "1px solid #40E0D0";
+      el3.style.boxShadow = "0 0 4px #40E0D0";
+      el3.value = "...?";
       function capture(e) {
         e.preventDefault();
         const code = e.key === "Escape" ? "unbound" : e.code;
         writeCode(bindingKey, code);
         document.removeEventListener("keydown", capture, true);
-        el2.blur();
+        el3.blur();
       }
       document.addEventListener("keydown", capture, true);
-      el2.addEventListener("blur", function onBlur() {
-        el2.style.border = "1px solid #b4b4b4";
-        el2.style.boxShadow = "none";
+      el3.addEventListener("blur", function onBlur() {
+        el3.style.border = "1px solid #b4b4b4";
+        el3.style.boxShadow = "none";
         document.removeEventListener("keydown", capture, true);
         refreshDisplay();
         scheduleConflictRefresh();
-        el2.removeEventListener("blur", onBlur);
+        el3.removeEventListener("blur", onBlur);
       });
     });
   }
-  function enhanceInfoRow(el2) {
-    el2.setAttribute("data-wizascript-keybind-enhanced", "true");
-    el2.readOnly = true;
-    el2.tabIndex = -1;
-    el2.style.display = "none";
+  function enhanceInfoRow(el3) {
+    el3.setAttribute("data-wizascript-keybind-enhanced", "true");
+    el3.readOnly = true;
+    el3.tabIndex = -1;
+    el3.style.display = "none";
   }
   function startObserver() {
     if (observerStarted) return;
     observerStarted = true;
     const observer2 = new MutationObserver(() => {
       if (!bindingDefaults.size && !infoKeys.size) return;
-      document.querySelectorAll(`input[id^="${ID_PREFIX2}"]:not([data-wizascript-keybind-enhanced])`).forEach((el2) => {
-        const bindingKey = el2.id.slice(ID_PREFIX2.length);
+      document.querySelectorAll(`input[id^="${ID_PREFIX2}"]:not([data-wizascript-keybind-enhanced])`).forEach((el3) => {
+        const bindingKey = el3.id.slice(ID_PREFIX2.length);
         if (infoKeys.has(bindingKey)) {
-          enhanceInfoRow(el2);
+          enhanceInfoRow(el3);
           return;
         }
         if (!bindingDefaults.has(bindingKey)) return;
-        enhanceInput(el2, bindingKey, bindingDefaults.get(bindingKey));
+        enhanceInput(el3, bindingKey, bindingDefaults.get(bindingKey));
         scheduleConflictRefresh();
       });
     });
@@ -780,6 +780,8 @@ See how any card or artifact used to look. Turn it on in the **Miscellaneous** l
 - On **Artifacts**, middle-click an artifact to see its versions as a list, with rarity and text.
 - A **\\*** marks anything that isn't certain or has a note. Hover the version number to read it.
 - The histories come from the Undercards wikis, the official patch notes and feildmaster's Card-Tracker, and update by themselves after each patch, with no Wizascript update needed.
+- Something look wrong? **Right-click** that version and choose **Report as Bugged/Inaccurate** (\u2691). **My Reports** in the history window gives you short codes to paste in Undercards chat or on Discord. Codes in chat show as a short "\u2691 Card History report" line.
+- **Controller:** point the cursor at a card and press **Primary + \u2715** (the new **Middle Click** binding in the Controller Support tab) to open its history. **\u25B3** on a version reports it.
 
 ### Fixes
 - Controller Support: the default Concede button ("\u2212") no longer briefly opens UnderScript's menu outside a match.
@@ -884,9 +886,9 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       category: CATEGORY
     });
     const asVersionInfo = asInfo(SUITE_VERSION);
-    registerSettingWidget("about.version", (el2) => {
-      asVersionInfo(el2);
-      addLogo(el2);
+    registerSettingWidget("about.version", (el3) => {
+      asVersionInfo(el3);
+      addLogo(el3);
     });
     settingsApi.add({
       key: "about.changelog",
@@ -985,8 +987,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       throw new Error("The code is damaged or incomplete (make sure you copied all of it).");
     }
   }
-  function el(tag, props = {}, style = {}) {
-    const node = document.createElement(tag);
+  function el(tag2, props = {}, style = {}) {
+    const node = document.createElement(tag2);
     Object.assign(node, props);
     Object.assign(node.style, style);
     return node;
@@ -1783,7 +1785,11 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     // Primary + □ fills the screen there and still resets the Notepad
     // everywhere else. No keyboard keybind behind it: `run` names a
     // function index.js calls directly instead of relaying a key.
-    { key: "tierListFillScreen", name: "Fill Screen", packageLabel: "Tier List", context: "tierList", defaultButton: 2, run: "tierListFillScreen" }
+    { key: "tierListFillScreen", name: "Fill Screen", packageLabel: "Tier List", context: "tierList", defaultButton: 2, run: "tierListFillScreen" },
+    // A middle-click at the cursor, for anything that uses one (Card History
+    // opens on a middle-click). Not in matches: there a middle-click ends the
+    // turn (UnderScript), and End Turn has its own In-Game Input.
+    { key: "middleClick", name: "Middle Click", packageLabel: "General", context: "default", defaultButton: 0, run: "middleClick" }
   ];
   var CONTROLLER_ACTIONS_BY_KEY = {};
   CONTROLLER_ACTIONS.forEach((a) => {
@@ -1882,11 +1888,11 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   }
   var debugTextEnabledSetting = null;
   var debugTextCheckedLive = null;
-  function observeDebugTextCheckbox(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    debugTextCheckedLive = !!el2.checked;
-    el2.addEventListener("change", () => {
-      debugTextCheckedLive = !!el2.checked;
+  function observeDebugTextCheckbox(el3) {
+    el3.setAttribute("data-wc-enhanced", "true");
+    debugTextCheckedLive = !!el3.checked;
+    el3.addEventListener("change", () => {
+      debugTextCheckedLive = !!el3.checked;
     });
   }
   function isDebugTextEnabled() {
@@ -1918,11 +1924,11 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   var DEFAULT_HIGHLIGHT_COLOR = HIGHLIGHT_COLOR_PRESETS[0][1];
   var highlightColorSetting = null;
   var highlightColorLive = null;
-  function observeHighlightColorSelect(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    highlightColorLive = el2.value || null;
-    el2.addEventListener("change", () => {
-      highlightColorLive = el2.value || null;
+  function observeHighlightColorSelect(el3) {
+    el3.setAttribute("data-wc-enhanced", "true");
+    highlightColorLive = el3.value || null;
+    el3.addEventListener("change", () => {
+      highlightColorLive = el3.value || null;
     });
   }
   function getHighlightColor() {
@@ -1939,16 +1945,16 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     return controllerCaptureActive;
   }
   var boundInputRefreshers = [];
-  function enhanceControllerInfoRow(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    el2.readOnly = true;
-    el2.tabIndex = -1;
-    el2.style.display = "none";
+  function enhanceControllerInfoRow(el3) {
+    el3.setAttribute("data-wc-enhanced", "true");
+    el3.readOnly = true;
+    el3.tabIndex = -1;
+    el3.style.display = "none";
   }
-  function enhanceControllerCaptureInput(el2, readBound, writeBound) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    el2.readOnly = true;
-    Object.assign(el2.style, {
+  function enhanceControllerCaptureInput(el3, readBound, writeBound) {
+    el3.setAttribute("data-wc-enhanced", "true");
+    el3.readOnly = true;
+    Object.assign(el3.style, {
       cursor: "pointer",
       backgroundColor: "black",
       color: "white",
@@ -1957,14 +1963,14 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       textAlign: "center"
     });
     function refreshDisplay() {
-      el2.value = bindingToDisplay(readBound());
+      el3.value = bindingToDisplay(readBound());
     }
     refreshDisplay();
     boundInputRefreshers.push(refreshDisplay);
-    el2.addEventListener("focus", () => {
-      el2.style.border = "1px solid #40E0D0";
-      el2.style.boxShadow = "0 0 4px #40E0D0";
-      el2.value = "Press a button or key...";
+    el3.addEventListener("focus", () => {
+      el3.style.border = "1px solid #40E0D0";
+      el3.style.boxShadow = "0 0 4px #40E0D0";
+      el3.value = "Press a button or key...";
       controllerCaptureActive = true;
       let cancelled = false;
       let ignoreUntilReleased = /* @__PURE__ */ new Set();
@@ -1993,7 +1999,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         cancelled = true;
         writeBound(value);
         cleanup();
-        el2.blur();
+        el3.blur();
       }
       function onKeydown(e) {
         if (cancelled) return;
@@ -2002,7 +2008,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
           cancelled = true;
           writeBound(null);
           cleanup();
-          el2.blur();
+          el3.blur();
           return;
         }
         if (e.key === "Shift" || e.key === "Control" || e.key === "Alt" || e.key === "Meta") return;
@@ -2016,15 +2022,15 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       }
       document.addEventListener("keydown", onKeydown, true);
       requestAnimationFrame(captureFrame);
-      el2.addEventListener("blur", function onBlur() {
+      el3.addEventListener("blur", function onBlur() {
         cancelled = true;
         controllerCaptureActive = false;
-        el2.style.border = "1px solid #b4b4b4";
-        el2.style.boxShadow = "none";
+        el3.style.border = "1px solid #b4b4b4";
+        el3.style.boxShadow = "none";
         cleanup();
         refreshDisplay();
         scheduleControllerConflictRefresh();
-        el2.removeEventListener("blur", onBlur);
+        el3.removeEventListener("blur", onBlur);
       });
     });
   }
@@ -2032,11 +2038,11 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   function getPresetMenuState() {
     return presetMenuState;
   }
-  function enhancePresetSelector(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    el2.readOnly = true;
-    el2.tabIndex = 0;
-    Object.assign(el2.style, {
+  function enhancePresetSelector(el3) {
+    el3.setAttribute("data-wc-enhanced", "true");
+    el3.readOnly = true;
+    el3.tabIndex = 0;
+    Object.assign(el3.style, {
       cursor: "pointer",
       backgroundColor: "black",
       color: "white",
@@ -2045,13 +2051,13 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       textAlign: "center"
     });
     function refreshDisplay() {
-      el2.value = getPresetName(getActivePreset());
+      el3.value = getPresetName(getActivePreset());
     }
     refreshDisplay();
     boundInputRefreshers.push(refreshDisplay);
     let menuEl = null;
     function onOutsideClick(e) {
-      if (menuEl && !menuEl.contains(e.target) && e.target !== el2) closeMenu();
+      if (menuEl && !menuEl.contains(e.target) && e.target !== el3) closeMenu();
     }
     function onEscape(e) {
       if (e.key === "Escape") closeMenu();
@@ -2064,12 +2070,12 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       document.removeEventListener("mousedown", onOutsideClick, true);
       document.removeEventListener("keydown", onEscape, true);
     }
-    function openMenu2() {
+    function openMenu3() {
       if (menuEl) {
         closeMenu();
         return;
       }
-      const rect = el2.getBoundingClientRect();
+      const rect = el3.getBoundingClientRect();
       menuEl = document.createElement("div");
       Object.assign(menuEl.style, {
         position: "fixed",
@@ -2116,12 +2122,12 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       document.addEventListener("keydown", onEscape, true);
       presetMenuState = { rows: rowEls, activeIndex: Math.max(0, getActivePreset() - 1), close: closeMenu };
     }
-    el2.addEventListener("click", openMenu2);
+    el3.addEventListener("click", openMenu3);
   }
-  function enhancePresetNameInput(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    el2.readOnly = false;
-    Object.assign(el2.style, {
+  function enhancePresetNameInput(el3) {
+    el3.setAttribute("data-wc-enhanced", "true");
+    el3.readOnly = false;
+    Object.assign(el3.style, {
       backgroundColor: "black",
       color: "white",
       border: "1px solid #b4b4b4",
@@ -2129,24 +2135,24 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       textAlign: "center"
     });
     function refreshDisplay() {
-      if (document.activeElement !== el2) el2.value = getPresetName(getActivePreset());
+      if (document.activeElement !== el3) el3.value = getPresetName(getActivePreset());
     }
     refreshDisplay();
     boundInputRefreshers.push(refreshDisplay);
     function commit() {
-      setPresetName(getActivePreset(), el2.value);
+      setPresetName(getActivePreset(), el3.value);
       boundInputRefreshers.forEach((fn) => fn());
     }
-    el2.addEventListener("blur", commit);
-    el2.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") el2.blur();
+    el3.addEventListener("blur", commit);
+    el3.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") el3.blur();
     });
   }
-  function enhanceResetButton(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    el2.readOnly = true;
-    el2.tabIndex = 0;
-    Object.assign(el2.style, {
+  function enhanceResetButton(el3) {
+    el3.setAttribute("data-wc-enhanced", "true");
+    el3.readOnly = true;
+    el3.tabIndex = 0;
+    Object.assign(el3.style, {
       cursor: "pointer",
       backgroundColor: "black",
       color: "white",
@@ -2155,22 +2161,22 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       textAlign: "center"
     });
     function refreshDisplay() {
-      el2.value = "Double Click to Reset";
+      el3.value = "Double Click to Reset";
     }
     refreshDisplay();
     boundInputRefreshers.push(refreshDisplay);
-    el2.addEventListener("dblclick", () => {
+    el3.addEventListener("dblclick", () => {
       resetPresetBindings(getActivePreset(), CONTROLLER_ACTIONS.map((a) => a.key), HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key), TIER_LIST_PAD_ACTIONS.map((a) => a.key));
       boundInputRefreshers.forEach((fn) => fn());
-      el2.value = "\u2705 Reset to Defaults";
+      el3.value = "\u2705 Reset to Defaults";
       setTimeout(refreshDisplay, 1500);
     });
   }
-  function enhanceDetectControllerButton(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    el2.readOnly = true;
-    el2.tabIndex = 0;
-    Object.assign(el2.style, {
+  function enhanceDetectControllerButton(el3) {
+    el3.setAttribute("data-wc-enhanced", "true");
+    el3.readOnly = true;
+    el3.tabIndex = 0;
+    Object.assign(el3.style, {
       cursor: "pointer",
       backgroundColor: "black",
       color: "white",
@@ -2179,13 +2185,13 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       textAlign: "center"
     });
     function refreshDisplay() {
-      el2.value = isHidConnected() ? "\u2705 Controller Detected (WebHID)" : "\u{1F3AE} Click to Detect Controller (WebHID)";
+      el3.value = isHidConnected() ? "\u2705 Controller Detected (WebHID)" : "\u{1F3AE} Click to Detect Controller (WebHID)";
     }
     refreshDisplay();
     boundInputRefreshers.push(refreshDisplay);
-    el2.addEventListener("click", async () => {
+    el3.addEventListener("click", async () => {
       if (isHidConnected()) return;
-      el2.value = "Check your browser's device picker\u2026";
+      el3.value = "Check your browser's device picker\u2026";
       try {
         await connectWebHidController();
       } finally {
@@ -2327,64 +2333,64 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     const observer2 = new MutationObserver(() => {
       const matches = document.querySelectorAll(`input[id^="${idPrefix}"]:not([data-wc-enhanced]), select[id^="${idPrefix}"]:not([data-wc-enhanced])`);
       if (matches.length) scheduleControllerConflictRefresh();
-      matches.forEach((el2) => {
+      matches.forEach((el3) => {
         everFoundOne = true;
-        const bindingKey = el2.id.slice(idPrefix.length);
+        const bindingKey = el3.id.slice(idPrefix.length);
         if (bindingKey.startsWith("__info_")) {
-          enhanceControllerInfoRow(el2);
+          enhanceControllerInfoRow(el3);
           return;
         }
         if (bindingKey === "detectController") {
-          enhanceDetectControllerButton(el2);
+          enhanceDetectControllerButton(el3);
           return;
         }
         if (bindingKey === "presetSelector") {
-          enhancePresetSelector(el2);
+          enhancePresetSelector(el3);
           return;
         }
         if (bindingKey === "presetName") {
-          enhancePresetNameInput(el2);
+          enhancePresetNameInput(el3);
           return;
         }
         if (bindingKey === "resetPreset") {
-          enhanceResetButton(el2);
+          enhanceResetButton(el3);
           return;
         }
         if (bindingKey === "controllerPrimary") {
-          enhanceControllerCaptureInput(el2, () => getControllerPrimaryButton(), (v) => setControllerPrimaryButton(v));
+          enhanceControllerCaptureInput(el3, () => getControllerPrimaryButton(), (v) => setControllerPrimaryButton(v));
           return;
         }
         if (bindingKey === "channelGuide") {
-          enhanceControllerCaptureInput(el2, () => getChannelGuideButton(), (v) => setChannelGuideButton(v));
+          enhanceControllerCaptureInput(el3, () => getChannelGuideButton(), (v) => setChannelGuideButton(v));
           return;
         }
         if (CONTROLLER_ACTIONS_BY_KEY[bindingKey]) {
-          enhanceControllerCaptureInput(el2, () => getBoundButton(bindingKey), (v) => setBoundButton(bindingKey, v));
+          enhanceControllerCaptureInput(el3, () => getBoundButton(bindingKey), (v) => setBoundButton(bindingKey, v));
           return;
         }
         if (bindingKey.startsWith("tierlistPad_")) {
           const padKey = bindingKey.slice("tierlistPad_".length);
           if (TIER_LIST_PAD_ACTIONS_BY_KEY[padKey]) {
-            enhanceControllerCaptureInput(el2, () => getBoundTierListButton(padKey), (v) => setBoundTierListButton(padKey, v));
+            enhanceControllerCaptureInput(el3, () => getBoundTierListButton(padKey), (v) => setBoundTierListButton(padKey, v));
             return;
           }
         }
         if (bindingKey.startsWith("shortcut_")) {
           const shortcutKey = bindingKey.slice("shortcut_".length);
           if (HARDWARE_SHORTCUT_ACTIONS_BY_KEY[shortcutKey]) {
-            enhanceControllerCaptureInput(el2, () => getBoundShortcutButton(shortcutKey), (v) => setBoundShortcutButton(shortcutKey, v));
+            enhanceControllerCaptureInput(el3, () => getBoundShortcutButton(shortcutKey), (v) => setBoundShortcutButton(shortcutKey, v));
             return;
           }
         }
         if (bindingKey === "debugTextEnabled") {
-          observeDebugTextCheckbox(el2);
+          observeDebugTextCheckbox(el3);
           return;
         }
         if (bindingKey === "highlightColor") {
-          observeHighlightColorSelect(el2);
+          observeHighlightColorSelect(el3);
           return;
         }
-        el2.setAttribute("data-wc-enhanced", "true");
+        el3.setAttribute("data-wc-enhanced", "true");
       });
     });
     observer2.observe(document.body, { childList: true, subtree: true });
@@ -2610,8 +2616,11 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       points: () => [
         "<b>Middle-click</b> a card (Crafting, Decks) or an artifact (Artifacts) to open its history, oldest first.",
         "The number under each version is the patch it came from. <b>*</b> means not certain or has a note: rest the mouse on it.",
-        "<b>?</b> means that part isn't recorded anywhere. History comes from both Undercards wikis, the patch notes and feildmaster's Card-Tracker."
-      ]
+        "<b>?</b> means that part isn't recorded anywhere. History comes from both Undercards wikis, the patch notes and feildmaster's Card-Tracker.",
+        "Looks wrong? <b>Right-click</b> that version and report it (\u2691). <b>My Reports</b> gives you short codes to paste in chat or on Discord. <b>\u26A0</b> = already reported."
+      ].concat(isPluginEnabled("controller") ? [
+        `Controller: point the cursor at it and press Primary + ${ctl(getBoundButton("middleClick"))} (Middle Click). ${pad(3)} right-clicks to report.`
+      ] : [])
     },
     tierList: {
       tab: "Tier List",
@@ -2662,11 +2671,11 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
           default: "",
           category: "About"
         });
-        registerSettingWidget(`guide.${id}`, (el2) => {
-          el2.readOnly = true;
-          el2.tabIndex = -1;
-          el2.style.display = "none";
-          const row2 = el2.closest(".flex-start");
+        registerSettingWidget(`guide.${id}`, (el3) => {
+          el3.readOnly = true;
+          el3.tabIndex = -1;
+          el3.style.display = "none";
+          const row2 = el3.closest(".flex-start");
           if (!row2) return;
           const label = row2.querySelector("label");
           if (label) label.style.fontWeight = "bold";
@@ -2679,8 +2688,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       }
       const toggle = PLUGINS.find((p) => p.id === id);
       if (!toggle) return;
-      registerSettingWidget(toggle.key, (el2) => {
-        const row2 = el2.closest(".flex-start");
+      registerSettingWidget(toggle.key, (el3) => {
+        const row2 = el3.closest(".flex-start");
         const label = row2 && row2.querySelector("label");
         if (!label || row2.querySelector(".wizascript-guide-link")) return;
         const link = document.createElement("a");
@@ -2743,18 +2752,18 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     }
   }
   function makeArrow(view, text, dir) {
-    const el2 = document.createElement("div");
-    el2.className = `tabLabel ${ARROW_CLASS}`;
-    el2.dataset.dir = String(dir);
-    el2.textContent = text;
-    el2.title = dir < 0 ? "Previous tabs" : "More tabs";
-    el2.addEventListener("click", (e) => {
+    const el3 = document.createElement("div");
+    el3.className = `tabLabel ${ARROW_CLASS}`;
+    el3.dataset.dir = String(dir);
+    el3.textContent = text;
+    el3.title = dir < 0 ? "Previous tabs" : "More tabs";
+    el3.addEventListener("click", (e) => {
       e.preventDefault();
-      if (el2.classList.contains("disabled")) return;
+      if (el3.classList.contains("disabled")) return;
       currentPage += dir;
       layout(view);
     });
-    return el2;
+    return el3;
   }
   function ensureArrows(view) {
     let left = view.querySelector(`:scope > .${ARROW_CLASS}[data-dir="-1"]`);
@@ -3166,8 +3175,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   }
   function insertUnderlineMarkers(text, underlineTokens) {
     let result = text;
-    underlineTokens.forEach((token) => {
-      const re = new RegExp(`(^|[^A-Za-z0-9])(${escapeRegExp(token)})(?=([^A-Za-z0-9]|$))`, "g");
+    underlineTokens.forEach((token2) => {
+      const re = new RegExp(`(^|[^A-Za-z0-9])(${escapeRegExp(token2)})(?=([^A-Za-z0-9]|$))`, "g");
       result = result.replace(re, (m, pre, word) => pre + UL_OPEN + word + UL_CLOSE);
     });
     return result;
@@ -3847,19 +3856,19 @@ html, body { overflow-x: hidden !important; }
     if (!cardNameMap) return null;
     return cardNameMap.get(String(name).toLowerCase()) || null;
   }
-  function attachCardHover(el2, cardId) {
+  function attachCardHover(el3, cardId) {
     const pageWindow2 = getPageWindow();
     const displayCardHelp = pageWindow2.displayCardHelp;
     const removeCardHover = pageWindow2.removeCardHover;
     if (typeof displayCardHelp !== "function" || typeof removeCardHover !== "function") {
       return false;
     }
-    el2.dataset.ucHoverBound = "true";
-    el2.style.cursor = "pointer";
-    el2.addEventListener("mouseover", function() {
+    el3.dataset.ucHoverBound = "true";
+    el3.style.cursor = "pointer";
+    el3.addEventListener("mouseover", function() {
       displayCardHelp(this, cardId);
     });
-    el2.addEventListener("mouseleave", function() {
+    el3.addEventListener("mouseleave", function() {
       removeCardHover();
     });
     return true;
@@ -4011,33 +4020,33 @@ Version: v${version}`;
     function resetState() {
       GM_deleteValue(STATE_KEY);
     }
-    function makeEditable(el2, placeholder) {
-      el2.setAttribute("contenteditable", "true");
-      el2.spellcheck = false;
-      el2.addEventListener("focus", () => {
-        el2.dataset.prevText = el2.textContent.trim();
+    function makeEditable(el3, placeholder) {
+      el3.setAttribute("contenteditable", "true");
+      el3.spellcheck = false;
+      el3.addEventListener("focus", () => {
+        el3.dataset.prevText = el3.textContent.trim();
         enableInputBlocker();
       });
-      el2.addEventListener("blur", () => {
-        let t = sanitizeText(el2.textContent);
+      el3.addEventListener("blur", () => {
+        let t = sanitizeText(el3.textContent);
         if (!t) t = placeholder;
-        el2.textContent = t;
+        el3.textContent = t;
         saveState();
         disableInputBlocker();
       });
-      el2.addEventListener("keydown", (e) => {
+      el3.addEventListener("keydown", (e) => {
         if (overlay.classList.contains("viewer-mode")) return;
         if (e.key === "Enter") {
           e.preventDefault();
-          el2.blur();
+          el3.blur();
         }
         if (e.key === "Escape") {
           e.preventDefault();
-          el2.textContent = el2.dataset.prevText;
-          el2.blur();
+          el3.textContent = el3.dataset.prevText;
+          el3.blur();
         }
       });
-      el2.addEventListener("paste", (e) => {
+      el3.addEventListener("paste", (e) => {
         if (overlay.classList.contains("viewer-mode")) {
           e.preventDefault();
           return;
@@ -4372,15 +4381,15 @@ Version: v${version}`;
     function bindCardHovers() {
       if (!getCardHoversEnabled()) return;
       const cardNameMap = getCardNameMap();
-      container.querySelectorAll(".uc-card-ref").forEach((el2) => {
-        if (el2.dataset.ucHoverBound === "true") return;
-        const name = el2.textContent.trim();
+      container.querySelectorAll(".uc-card-ref").forEach((el3) => {
+        if (el3.dataset.ucHoverBound === "true") return;
+        const name = el3.textContent.trim();
         const cardId = getCardIdByExactGameLookup(name) || resolveCardId(name, cardNameMap);
         if (!cardId) {
           logger4.warn("hover", "Card not found for hover", name);
           return;
         }
-        attachCardHover(el2, cardId);
+        attachCardHover(el3, cardId);
       });
     }
     function applyFormattingOverlay() {
@@ -4476,21 +4485,21 @@ Version: v${version}`;
         ptr = ptr.nextElementSibling;
       }
       let h3 = null, hr1 = null, h2 = null, hr2 = null;
-      for (const el2 of originalPatchNotesNodes) {
-        if (!h3 && el2.tagName === "H3") {
-          h3 = el2.cloneNode(true);
+      for (const el3 of originalPatchNotesNodes) {
+        if (!h3 && el3.tagName === "H3") {
+          h3 = el3.cloneNode(true);
           continue;
         }
-        if (!hr1 && el2.tagName === "HR") {
-          hr1 = el2.cloneNode(true);
+        if (!hr1 && el3.tagName === "HR") {
+          hr1 = el3.cloneNode(true);
           continue;
         }
-        if (!h2 && el2.tagName === "H2") {
-          h2 = el2.cloneNode(true);
+        if (!h2 && el3.tagName === "H2") {
+          h2 = el3.cloneNode(true);
           continue;
         }
-        if (!hr2 && el2.tagName === "HR") {
-          hr2 = el2.cloneNode(true);
+        if (!hr2 && el3.tagName === "HR") {
+          hr2 = el3.cloneNode(true);
           continue;
         }
       }
@@ -4670,7 +4679,7 @@ Version: v${version}`;
   // packages/core/debug-logger.js
   function createLogger(featureName, initialCategories = {}) {
     const enabled = { ...initialCategories };
-    function tag(category) {
+    function tag2(category) {
       return category ? `[${featureName}:${category}]` : `[${featureName}]`;
     }
     function isEnabled(category) {
@@ -4682,14 +4691,14 @@ Version: v${version}`;
       },
       log(category, ...args) {
         if (!isEnabled(category)) return;
-        console.log(tag(category), ...args);
+        console.log(tag2(category), ...args);
       },
       warn(category, ...args) {
         if (!isEnabled(category)) return;
-        console.warn(tag(category), ...args);
+        console.warn(tag2(category), ...args);
       },
       error(category, ...args) {
-        console.error(tag(category), ...args);
+        console.error(tag2(category), ...args);
       }
     };
   }
@@ -5516,8 +5525,8 @@ Version: v${version}`;
       if (!cardTagsContainer) return;
       cardTagsContainer.innerHTML = "";
       const makeTag = (card, color, borderColor, list) => {
-        const tag = document.createElement("span");
-        Object.assign(tag.style, {
+        const tag2 = document.createElement("span");
+        Object.assign(tag2.style, {
           display: "inline-flex",
           alignItems: "center",
           gap: "5px",
@@ -5529,7 +5538,7 @@ Version: v${version}`;
           color: "#fff",
           whiteSpace: "nowrap"
         });
-        tag.textContent = card.name;
+        tag2.textContent = card.name;
         const x = document.createElement("span");
         x.textContent = "\xD7";
         Object.assign(x.style, { cursor: "pointer", fontWeight: "bold", marginLeft: "2px", lineHeight: "1" });
@@ -5538,8 +5547,8 @@ Version: v${version}`;
           applyFilters2();
           renderCardFilterTags();
         };
-        tag.appendChild(x);
-        return tag;
+        tag2.appendChild(x);
+        return tag2;
       };
       includeCards.forEach((c) => cardTagsContainer.appendChild(makeTag(c, "#14532d", "#4ade80", includeCards)));
       excludeCards.forEach((c) => cardTagsContainer.appendChild(makeTag(c, "#450a0a", "#f87171", excludeCards)));
@@ -6112,9 +6121,9 @@ Version: v${version}`;
       h: document.documentElement.clientHeight || window.innerHeight
     };
   }
-  function keepOnScreen(el2, margin = 0) {
-    if (!el2 || !el2.isConnected) return false;
-    const r = el2.getBoundingClientRect();
+  function keepOnScreen(el3, margin = 0) {
+    if (!el3 || !el3.isConnected) return false;
+    const r = el3.getBoundingClientRect();
     if (!r.width && !r.height) return false;
     const vp = viewport();
     const maxLeft = Math.max(margin, vp.w - r.width - margin);
@@ -6122,16 +6131,16 @@ Version: v${version}`;
     const left = Math.min(Math.max(r.left, margin), maxLeft);
     const top = Math.min(Math.max(r.top, margin), maxTop);
     if (Math.abs(left - r.left) < 0.5 && Math.abs(top - r.top) < 0.5) return false;
-    el2.style.left = left + "px";
-    el2.style.top = top + "px";
-    el2.style.right = "auto";
-    el2.style.bottom = "auto";
+    el3.style.left = left + "px";
+    el3.style.top = top + "px";
+    el3.style.right = "auto";
+    el3.style.bottom = "auto";
     return true;
   }
-  function watchOnScreen(el2, margin = 0) {
-    if (!el2) return;
-    watched.set(el2, margin);
-    keepOnScreen(el2, margin);
+  function watchOnScreen(el3, margin = 0) {
+    if (!el3) return;
+    watched.set(el3, margin);
+    keepOnScreen(el3, margin);
     if (listening) return;
     listening = true;
     window.addEventListener("resize", () => {
@@ -7232,8 +7241,8 @@ Version: v${version}`;
         tryReveal();
       }
       function isUnderScriptMenuOpen() {
-        const menu2 = document.querySelector('.menu-content[role="Menu"]');
-        return menu2 !== null && menu2.offsetParent !== null;
+        const menu3 = document.querySelector('.menu-content[role="Menu"]');
+        return menu3 !== null && menu3.offsetParent !== null;
       }
       function isBlockingModalOpen() {
         return document.body.classList.contains("modal-open") || document.querySelector(".modal-backdrop") !== null || isUnderScriptMenuOpen();
@@ -8712,9 +8721,9 @@ Version: v${version}`;
       }))
     }));
     lists.forEach((l) => {
-      const seen = /* @__PURE__ */ new Set();
+      const seen2 = /* @__PURE__ */ new Set();
       l.tiers.forEach((t) => {
-        t.items = t.items.filter((k) => seen.has(k) ? false : (seen.add(k), true));
+        t.items = t.items.filter((k) => seen2.has(k) ? false : (seen2.add(k), true));
       });
     });
     const active = lists.some((l) => l.id === raw.active) ? raw.active : lists[0].id;
@@ -8906,14 +8915,14 @@ Version: v${version}`;
   function duplicateList() {
     ensureLoaded();
     if (state.lists.length >= MAX_LISTS) return false;
-    const copy = JSON.parse(JSON.stringify(activeList()));
-    copy.id = uid("l");
-    copy.title = `${copy.title} (copy)`.slice(0, MAX_TITLE);
-    copy.tiers.forEach((t) => {
+    const copy2 = JSON.parse(JSON.stringify(activeList()));
+    copy2.id = uid("l");
+    copy2.title = `${copy2.title} (copy)`.slice(0, MAX_TITLE);
+    copy2.tiers.forEach((t) => {
       t.id = uid("t");
     });
-    state.lists.push(copy);
-    return setActiveList(copy.id);
+    state.lists.push(copy2);
+    return setActiveList(copy2.id);
   }
   function deleteActiveList() {
     ensureLoaded();
@@ -8953,7 +8962,7 @@ Version: v${version}`;
       list.texts[id] = label.trim().slice(0, MAX_TEXT);
     });
     let count = 0;
-    const seen = /* @__PURE__ */ new Set();
+    const seen2 = /* @__PURE__ */ new Set();
     list.tiers = data2.tiers.slice(0, MAX_TIERS).map((t) => {
       const tier = makeTier(
         typeof t.label === "string" ? t.label.slice(0, MAX_LABEL) : "?",
@@ -8967,8 +8976,8 @@ Version: v${version}`;
           if (!id) return;
           key2 = `text:${id}`;
         }
-        if (seen.has(key2)) return;
-        seen.add(key2);
+        if (seen2.has(key2)) return;
+        seen2.add(key2);
         tier.items.push(key2);
         count += 1;
       });
@@ -9057,9 +9066,9 @@ Version: v${version}`;
     return byId.get(String(id)) || null;
   }
   function stripHtml(text) {
-    const el2 = document.createElement("div");
-    el2.innerHTML = String(text);
-    return el2.textContent.trim();
+    const el3 = document.createElement("div");
+    el3.innerHTML = String(text);
+    return el3.textContent.trim();
   }
   function cardName(card) {
     const cached2 = nameCache.get(card.id);
@@ -9428,9 +9437,9 @@ Version: v${version}`;
       const index = list.tiers.findIndex((t) => t.id === tierId);
       const tier = list.tiers[index];
       if (!tier) return;
-      const el2 = document.createElement("div");
-      el2.className = "wz-tl-editor";
-      el2.dataset.tierId = tierId;
+      const el3 = document.createElement("div");
+      el3.className = "wz-tl-editor";
+      el3.dataset.tierId = tierId;
       const name = document.createElement("input");
       name.type = "text";
       name.maxLength = 40;
@@ -9496,15 +9505,15 @@ Version: v${version}`;
       del.classList.add("wz-tl-danger");
       btn("Done", () => {
       }, { close: true }).style.gridColumn = "1 / -1";
-      el2.append(name, swatches, grid);
-      body.appendChild(el2);
+      el3.append(name, swatches, grid);
+      body.appendChild(el3);
       const bodyRect = body.getBoundingClientRect();
       const aRect = anchor.getBoundingClientRect();
       let top = aRect.bottom - bodyRect.top + 2;
-      if (top + el2.offsetHeight > body.clientHeight) top = Math.max(2, aRect.top - bodyRect.top - el2.offsetHeight - 2);
-      el2.style.top = Math.max(2, top) + "px";
-      el2.style.left = "6px";
-      editor = { el: el2, tierId };
+      if (top + el3.offsetHeight > body.clientHeight) top = Math.max(2, aRect.top - bodyRect.top - el3.offsetHeight - 2);
+      el3.style.top = Math.max(2, top) + "px";
+      el3.style.left = "6px";
+      editor = { el: el3, tierId };
       name.focus();
       name.select();
     }
@@ -9846,11 +9855,11 @@ Version: v${version}`;
     let active = null;
     let suppressClick = false;
     function targetAt(x, y) {
-      const el2 = document.elementFromPoint(x, y);
-      if (!el2 || !root.contains(el2)) return { type: "outside" };
-      const row2 = el2.closest(".wz-tl-row");
+      const el3 = document.elementFromPoint(x, y);
+      if (!el3 || !root.contains(el3)) return { type: "outside" };
+      const row2 = el3.closest(".wz-tl-row");
       if (row2) return { type: "tier", tierId: row2.dataset.tierId, rowItems: row2.querySelector(".wz-tl-row-items") };
-      if (el2.closest(".wz-tl-picker")) return { type: "picker" };
+      if (el3.closest(".wz-tl-picker")) return { type: "picker" };
       return { type: "none" };
     }
     function clearHighlights() {
@@ -10028,8 +10037,8 @@ Version: v${version}`;
       box.style.top = top + "px";
     }
     function render2(item) {
-      const el2 = document.createElement("div");
-      el2.className = "wz-tl-preview";
+      const el3 = document.createElement("div");
+      el3.className = "wz-tl-preview";
       const pageWindow2 = getPageWindow();
       const $2 = pageWindow2.$;
       if (item.card && typeof pageWindow2.appendCard === "function" && $2) {
@@ -10037,8 +10046,8 @@ Version: v${version}`;
           const holder = $2("<div>");
           pageWindow2.appendCard(JSON.parse(JSON.stringify(item.card)), holder);
           if (holder.children().length) {
-            el2.appendChild(holder[0]);
-            return el2;
+            el3.appendChild(holder[0]);
+            return el3;
           }
         } catch (e) {
         }
@@ -10049,8 +10058,8 @@ Version: v${version}`;
       if (item.image) pic.style.backgroundImage = `url("${item.image}")`;
       else pic.style.display = "none";
       fallback.append(pic, item.label);
-      el2.appendChild(fallback);
-      return el2;
+      el3.appendChild(fallback);
+      return el3;
     }
     let overTile = null;
     let pressed = false;
@@ -10117,9 +10126,9 @@ Version: v${version}`;
   // packages/misc/tier-list/pad.js
   var TIER_AREA = /^(l:|t:|e:|add$)/;
   var PANEL_AREA = /^(p:|tab:|search$|clear$|f:)/;
-  function visible(el2) {
-    if (!el2 || !el2.isConnected || !el2.getClientRects().length) return false;
-    return getComputedStyle(el2).visibility !== "hidden";
+  function visible(el3) {
+    if (!el3 || !el3.isConnected || !el3.getClientRects().length) return false;
+    return getComputedStyle(el3).visibility !== "hidden";
   }
   function center(r) {
     return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
@@ -10140,23 +10149,23 @@ Version: v${version}`;
       if (sendMenu && sendMenu.el.isConnected) return { el: sendMenu.el, prefix: "qs" };
       const editor = root.querySelector(".wz-tl-editor");
       if (editor) return { el: editor, prefix: "ed" };
-      const menu2 = root.querySelector(".wz-tl-menu");
-      if (menu2) return { el: menu2, prefix: "lm" };
+      const menu3 = root.querySelector(".wz-tl-menu");
+      if (menu3) return { el: menu3, prefix: "lm" };
       return null;
     }
     function items() {
       const out = [];
-      const push = (el2, id) => {
-        if (visible(el2)) out.push({ el: el2, id });
+      const push = (el3, id) => {
+        if (visible(el3)) out.push({ el: el3, id });
       };
       const trap = trapRoot();
       if (trap) {
-        [...trap.el.querySelectorAll("button, input, .wz-tl-swatch")].forEach((el2, i) => push(el2, `${trap.prefix}:${i}`));
+        [...trap.el.querySelectorAll("button, input, .wz-tl-swatch")].forEach((el3, i) => push(el3, `${trap.prefix}:${i}`));
         return out;
       }
       const title = root.querySelector(".wz-tl-title");
       push(title, "title");
-      root.querySelectorAll(".wz-tl-header button").forEach((el2, i) => push(el2, `hb:${i}`));
+      root.querySelectorAll(".wz-tl-header button").forEach((el3, i) => push(el3, `hb:${i}`));
       root.querySelectorAll(".wz-tl-row").forEach((row2) => {
         const tierId = row2.dataset.tierId;
         push(row2.querySelector(".wz-tl-row-label"), `l:${tierId}`);
@@ -10166,10 +10175,10 @@ Version: v${version}`;
       push(root.querySelector(".wz-tl-add-row"), "add");
       const panel = root.querySelector(".wz-tl-picker");
       if (panel && visible(panel)) {
-        panel.querySelectorAll(".wz-tl-type-tab").forEach((el2) => push(el2, `tab:${el2.dataset.type}`));
+        panel.querySelectorAll(".wz-tl-type-tab").forEach((el3) => push(el3, `tab:${el3.dataset.type}`));
         push(panel.querySelector(".wz-tl-search-row input"), "search");
         push(panel.querySelector(".wz-tl-search-row button"), "clear");
-        panel.querySelectorAll(".wz-tl-toggle").forEach((el2, i) => push(el2, `f:${i}`));
+        panel.querySelectorAll(".wz-tl-toggle").forEach((el3, i) => push(el3, `f:${i}`));
         panel.querySelectorAll(".wz-tl-results .wz-tl-tile").forEach((t) => push(t, `p:${t.dataset.key}`));
       }
       return out;
@@ -10240,17 +10249,17 @@ Version: v${version}`;
       }
       dirty = false;
       const it = shown ? current() : null;
-      const el2 = it ? it.el : null;
-      if (el2 !== highlighted || el2 && el2.dataset.padId !== (it && it.id)) {
+      const el3 = it ? it.el : null;
+      if (el3 !== highlighted || el3 && el3.dataset.padId !== (it && it.id)) {
         if (highlighted) highlighted.classList.remove("wz-tl-pad-focus");
-        if (el2) {
-          el2.classList.add("wz-tl-pad-focus");
-          el2.dataset.padId = it.id;
+        if (el3) {
+          el3.classList.add("wz-tl-pad-focus");
+          el3.dataset.padId = it.id;
         }
-        highlighted = el2;
+        highlighted = el3;
       }
       placeMarker(it);
-      const wantPreview = el2 && el2.classList.contains("wz-tl-tile") && !held && !sendMenu ? el2 : null;
+      const wantPreview = el3 && el3.classList.contains("wz-tl-tile") && !held && !sendMenu ? el3 : null;
       if (wantPreview !== previewFor) {
         previewFor = wantPreview;
         if (wantPreview) preview.showNear(wantPreview);
@@ -10340,15 +10349,15 @@ Version: v${version}`;
         drop(it);
         return null;
       }
-      const el2 = it.el;
-      if (el2.classList.contains("wz-tl-tile")) {
-        held = { key: el2.dataset.key, from: it.id.startsWith("t:") ? "tier" : "panel" };
+      const el3 = it.el;
+      if (el3.classList.contains("wz-tl-tile")) {
+        held = { key: el3.dataset.key, from: it.id.startsWith("t:") ? "tier" : "panel" };
         dirty = true;
         return null;
       }
-      if (el2.tagName === "INPUT" && el2.type === "text") return { osk: el2 };
-      if (el2.tagName === "INPUT" && el2.type === "color") return null;
-      el2.click();
+      if (el3.tagName === "INPUT" && el3.type === "text") return { osk: el3 };
+      if (el3.tagName === "INPUT" && el3.type === "color") return null;
+      el3.click();
       dirty = true;
       return null;
     }
@@ -10392,12 +10401,12 @@ Version: v${version}`;
       const key2 = held ? held.key : it && it.el.classList.contains("wz-tl-tile") ? it.el.dataset.key : null;
       if (!key2) return;
       const list = getActiveList();
-      const menu2 = document.createElement("div");
-      menu2.className = "wz-tl-send";
+      const menu3 = document.createElement("div");
+      menu3.className = "wz-tl-send";
       const title = document.createElement("div");
       title.className = "wz-tl-send-title";
       title.textContent = "Send to tier";
-      menu2.appendChild(title);
+      menu3.appendChild(title);
       const currentTier = list.tiers.find((t) => t.items.includes(key2));
       list.tiers.forEach((t) => {
         const b = document.createElement("button");
@@ -10411,7 +10420,7 @@ Version: v${version}`;
           held = null;
           closeSendMenu();
         });
-        menu2.appendChild(b);
+        menu3.appendChild(b);
       });
       if (currentTier) {
         const b = document.createElement("button");
@@ -10423,19 +10432,19 @@ Version: v${version}`;
           held = null;
           closeSendMenu();
         });
-        menu2.appendChild(b);
+        menu3.appendChild(b);
       }
-      root.appendChild(menu2);
+      root.appendChild(menu3);
       const rr = root.getBoundingClientRect();
       const tr2 = (it ? it.el : root).getBoundingClientRect();
       let left = tr2.right - rr.left + 6;
-      if (left + menu2.offsetWidth > rr.width - 4) left = Math.max(4, tr2.left - rr.left - menu2.offsetWidth - 6);
+      if (left + menu3.offsetWidth > rr.width - 4) left = Math.max(4, tr2.left - rr.left - menu3.offsetWidth - 6);
       let top = tr2.top - rr.top;
-      if (top + menu2.offsetHeight > rr.height - 4) top = Math.max(4, rr.height - menu2.offsetHeight - 4);
-      menu2.style.left = left + "px";
-      menu2.style.top = Math.max(4, top) + "px";
-      sendMenu = { el: menu2, key: key2, returnTo: focusId, returnRect: lastRect };
-      const buttons = [...menu2.querySelectorAll("button")];
+      if (top + menu3.offsetHeight > rr.height - 4) top = Math.max(4, rr.height - menu3.offsetHeight - 4);
+      menu3.style.left = left + "px";
+      menu3.style.top = Math.max(4, top) + "px";
+      sendMenu = { el: menu3, key: key2, returnTo: focusId, returnRect: lastRect };
+      const buttons = [...menu3.querySelectorAll("button")];
       const start2 = Math.max(0, buttons.findIndex((b) => b.classList.contains("wz-tl-active")));
       focusId = `qs:${start2}`;
       dirty = true;
@@ -10553,19 +10562,19 @@ Version: v${version}`;
     return data.tags.find((t) => t.id === id) || null;
   }
   function createTag(name, color) {
-    const tag = {
+    const tag2 = {
       id: genTagId(),
       name: name.trim(),
       color: color || DEFAULT_COLORS[data.tags.length % DEFAULT_COLORS.length]
     };
-    data.tags.push(tag);
+    data.tags.push(tag2);
     writeData(data);
-    return tag;
+    return tag2;
   }
   function updateTag(id, patch) {
-    const tag = findTag(id);
-    if (!tag) return;
-    Object.assign(tag, patch);
+    const tag2 = findTag(id);
+    if (!tag2) return;
+    Object.assign(tag2, patch);
     writeData(data);
   }
   function deleteTag(id) {
@@ -10618,21 +10627,21 @@ Version: v${version}`;
     shared.tags.forEach((st) => {
       const name = String(st && st.name || "").trim();
       if (!name) return;
-      let tag = data.tags.find((t) => t.name.toLowerCase() === name.toLowerCase());
-      if (tag) {
-        summary.merged.push(tag.name);
+      let tag2 = data.tags.find((t) => t.name.toLowerCase() === name.toLowerCase());
+      if (tag2) {
+        summary.merged.push(tag2.name);
       } else {
         const color = /^#[0-9a-f]{3,8}$/i.test(st.color || "") ? st.color : DEFAULT_COLORS[data.tags.length % DEFAULT_COLORS.length];
-        tag = { id: genTagId(), name, color };
-        data.tags.push(tag);
+        tag2 = { id: genTagId(), name, color };
+        data.tags.push(tag2);
         summary.created.push(name);
       }
       (Array.isArray(st.cards) ? st.cards : []).forEach((rawId) => {
         const cardId = String(rawId);
         if (!/^[\w-]{1,32}$/.test(cardId)) return;
         const current = data.cardTags[cardId] || [];
-        if (current.includes(tag.id)) return;
-        data.cardTags[cardId] = [...current, tag.id];
+        if (current.includes(tag2.id)) return;
+        data.cardTags[cardId] = [...current, tag2.id];
         summary.cardsTagged++;
       });
     });
@@ -10644,9 +10653,9 @@ Version: v${version}`;
   var CARD_PAGES = ["/Crafting", "/Decks"];
   function pageItemKey(target) {
     if (!setting2("pageDrag", true) || !matchesPage(CARD_PAGES)) return null;
-    const el2 = target.closest && target.closest(".card[id]");
-    if (!el2 || !getCard(el2.id)) return null;
-    return `card:${el2.id}`;
+    const el3 = target.closest && target.closest(".card[id]");
+    if (!el3 || !getCard(el3.id)) return null;
+    return `card:${el3.id}`;
   }
   var CARD_SIZES = { Small: 64, Medium: 88, Large: 120 };
   var PREVIEW_DELAYS = ["1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "5"];
@@ -10745,8 +10754,8 @@ Version: v${version}`;
     }
     function openListsMenu() {
       closeListsMenu();
-      const menu2 = document.createElement("div");
-      menu2.className = "wz-tl-menu";
+      const menu3 = document.createElement("div");
+      menu3.className = "wz-tl-menu";
       getLists().forEach((l) => {
         const row2 = document.createElement("button");
         row2.type = "button";
@@ -10762,7 +10771,7 @@ Version: v${version}`;
           setActiveList(l.id);
           closeListsMenu();
         });
-        menu2.appendChild(row2);
+        menu3.appendChild(row2);
       });
       const actions = document.createElement("div");
       actions.className = "wz-tl-menu-actions";
@@ -10797,13 +10806,13 @@ Version: v${version}`;
         closeListsMenu();
         importListDialog();
       });
-      menu2.appendChild(actions);
-      win.root.appendChild(menu2);
+      menu3.appendChild(actions);
+      win.root.appendChild(menu3);
       const r = listsBtn.getBoundingClientRect();
       const rr = win.root.getBoundingClientRect();
-      menu2.style.left = Math.max(4, r.left - rr.left) + "px";
-      menu2.style.top = r.bottom - rr.top + 4 + "px";
-      listsMenu = menu2;
+      menu3.style.left = Math.max(4, r.left - rr.left) + "px";
+      menu3.style.top = r.bottom - rr.top + 4 + "px";
+      listsMenu = menu3;
       listsBtn.classList.add("wz-tl-active");
     }
     listsBtn.addEventListener("click", () => listsMenu ? closeListsMenu() : openListsMenu(), { signal });
@@ -10871,10 +10880,10 @@ Version: v${version}`;
       input.focus();
       input.select();
       let done = false;
-      const commit = (save) => {
+      const commit = (save3) => {
         if (done) return;
         done = true;
-        if (save && input.value.trim() && input.value.trim() !== current) renameText(textId, input.value);
+        if (save3 && input.value.trim() && input.value.trim() !== current) renameText(textId, input.value);
         else renderAll();
       };
       input.addEventListener("keydown", (ev) => {
@@ -11516,8 +11525,8 @@ Version: v${version}`;
       const ctx = activeCtx();
       const fillRgb = resolveColorToRgb(strokeColor);
       const imageData = ctx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-      const changed = floodFillPixels(imageData.data, CANVAS_WIDTH, CANVAS_HEIGHT, x, y, fillRgb);
-      if (!changed) {
+      const changed2 = floodFillPixels(imageData.data, CANVAS_WIDTH, CANVAS_HEIGHT, x, y, fillRgb);
+      if (!changed2) {
         undoStack2.pop();
         notifyHistoryChange();
         return;
@@ -12337,26 +12346,26 @@ Version: v${version}`;
       holder.style.transform = "translate(0, -50%)";
     }
   }
-  function decorateCorner(el2, tags) {
-    const existing = el2.querySelector(":scope > [" + INDICATOR_ATTR + '="corner"]');
-    if (getComputedStyle(el2).position === "static") el2.style.position = "relative";
+  function decorateCorner(el3, tags) {
+    const existing = el3.querySelector(":scope > [" + INDICATOR_ATTR + '="corner"]');
+    if (getComputedStyle(el3).position === "static") el3.style.position = "relative";
     const holder = existing || document.createElement("div");
     if (!existing) {
       holder.setAttribute(INDICATOR_ATTR, "corner");
       Object.assign(holder.style, { position: "absolute", top: "2px", right: "2px", zIndex: "50", display: "flex", gap: "2px", pointerEvents: "none" });
-      el2.appendChild(holder);
+      el3.appendChild(holder);
     }
     fillDots(holder, tags.slice(0, 4));
   }
-  function decorateOneCardElement(el2, tags) {
-    const leftExisting = el2.querySelector(":scope > [" + INDICATOR_ATTR + '="left"]');
-    const rightExisting = el2.querySelector(":scope > [" + INDICATOR_ATTR + '="right"]');
-    const cornerExisting = el2.querySelector(":scope > [" + INDICATOR_ATTR + '="corner"]');
+  function decorateOneCardElement(el3, tags) {
+    const leftExisting = el3.querySelector(":scope > [" + INDICATOR_ATTR + '="left"]');
+    const rightExisting = el3.querySelector(":scope > [" + INDICATOR_ATTR + '="right"]');
+    const cornerExisting = el3.querySelector(":scope > [" + INDICATOR_ATTR + '="corner"]');
     if (!tags.length) {
       [leftExisting, rightExisting, cornerExisting].forEach((h) => h && h.remove());
       return;
     }
-    const anchor = findRarityAnchor(el2);
+    const anchor = findRarityAnchor(el3);
     if (!anchor) {
       if (!rarityAnchorWarned) {
         rarityAnchorWarned = true;
@@ -12364,29 +12373,29 @@ Version: v${version}`;
       }
       if (leftExisting) leftExisting.remove();
       if (rightExisting) rightExisting.remove();
-      decorateCorner(el2, tags);
+      decorateCorner(el3, tags);
       return;
     }
     if (cornerExisting) cornerExisting.remove();
-    if (getComputedStyle(el2).position === "static") el2.style.position = "relative";
+    if (getComputedStyle(el3).position === "static") el3.style.position = "relative";
     const leftTags = tags.slice(0, 2);
     const rightTags = tags.slice(2, 4);
     const leftHolder = leftExisting || makeFlankHolder("left");
     const rightHolder = rightExisting || makeFlankHolder("right");
-    if (!leftExisting) el2.appendChild(leftHolder);
-    if (!rightExisting) el2.appendChild(rightHolder);
+    if (!leftExisting) el3.appendChild(leftHolder);
+    if (!rightExisting) el3.appendChild(rightHolder);
     fillDots(leftHolder, leftTags);
     fillDots(rightHolder, rightTags);
     leftHolder.style.display = leftTags.length ? "flex" : "none";
     rightHolder.style.display = rightTags.length ? "flex" : "none";
-    positionFlank(el2, anchor, leftHolder, "left");
-    positionFlank(el2, anchor, rightHolder, "right");
+    positionFlank(el3, anchor, leftHolder, "left");
+    positionFlank(el3, anchor, rightHolder, "right");
   }
   function decorateCard(cardId) {
     const els = Array.from(document.getElementsByClassName("card-" + cardId));
     if (!els.length) return;
     const tags = tagObjectsForCard(cardId);
-    els.forEach((el2) => decorateOneCardElement(el2, tags));
+    els.forEach((el3) => decorateOneCardElement(el3, tags));
   }
   function decorateAllCards() {
     taggedCardIds().forEach(decorateCard);
@@ -12431,20 +12440,20 @@ Version: v${version}`;
     wrapper.appendChild(intro);
     const list = document.createElement("div");
     list.style.cssText = "max-height:260px;overflow-y:auto;";
-    const boxes = tags.map((tag) => {
+    const boxes = tags.map((tag2) => {
       const row2 = document.createElement("label");
       row2.style.cssText = "display:flex;align-items:center;gap:8px;padding:4px 0;font-weight:normal;cursor:pointer;";
       const box = document.createElement("input");
       box.type = "checkbox";
       box.checked = true;
       const dot = document.createElement("span");
-      dot.style.cssText = `width:10px;height:10px;border-radius:50%;flex-shrink:0;background:${tag.color};`;
+      dot.style.cssText = `width:10px;height:10px;border-radius:50%;flex-shrink:0;background:${tag2.color};`;
       const text = document.createElement("span");
-      const n = countCards(tag.id);
-      text.textContent = `${tag.name} (${n} card${n === 1 ? "" : "s"})`;
+      const n = countCards(tag2.id);
+      text.textContent = `${tag2.name} (${n} card${n === 1 ? "" : "s"})`;
       row2.append(box, dot, text);
       list.appendChild(row2);
-      return { tag, box };
+      return { tag: tag2, box };
     });
     wrapper.appendChild(list);
     const status = document.createElement("div");
@@ -12535,9 +12544,9 @@ Version: v${version}`;
   }
   function openTagMenu(card, cards2, x, y) {
     closeTagMenu();
-    const menu2 = document.createElement("div");
-    menu2.className = "wiza-tag-menu";
-    Object.assign(menu2.style, {
+    const menu3 = document.createElement("div");
+    menu3.className = "wiza-tag-menu";
+    Object.assign(menu3.style, {
       position: "fixed",
       left: x + "px",
       top: y + "px",
@@ -12567,7 +12576,7 @@ Version: v${version}`;
       outline: "none",
       fontSize: "13px"
     });
-    menu2.appendChild(filterInput);
+    menu3.appendChild(filterInput);
     const rowsWrap = document.createElement("div");
     Object.assign(rowsWrap.style, { maxHeight: "220px", overflowY: "auto" });
     function makeRow({ label, onClick, active, secondary, swatch }) {
@@ -12628,53 +12637,53 @@ Version: v${version}`;
         rowsWrap.appendChild(empty);
         return;
       }
-      tags.forEach((tag) => {
+      tags.forEach((tag2) => {
         rowsWrap.appendChild(makeRow({
-          label: tag.name,
-          swatch: tag.color,
-          active: cardHasTag(card.id, tag.id),
+          label: tag2.name,
+          swatch: tag2.color,
+          active: cardHasTag(card.id, tag2.id),
           onClick: () => {
-            toggleCardTag(card.id, tag.id);
+            toggleCardTag(card.id, tag2.id);
             decorateCard(card.id);
             renderRows(filterInput.value);
           },
           secondary: {
             label: "\u{1F441}",
-            title: 'See cards tagged "' + tag.name + '"',
-            onClick: () => showCardsForTag(tag, cards2)
+            title: 'See cards tagged "' + tag2.name + '"',
+            onClick: () => showCardsForTag(tag2, cards2)
           }
         }));
       });
     }
     renderRows("");
-    menu2.appendChild(rowsWrap);
+    menu3.appendChild(rowsWrap);
     filterInput.addEventListener("input", () => renderRows(filterInput.value));
     const divider = document.createElement("div");
     divider.style.cssText = "height:1px;background:rgba(255,255,255,0.15);";
-    menu2.appendChild(divider);
+    menu3.appendChild(divider);
     const newTagRow = makeRow({ label: "+ New Tag", onClick: () => {
       closeTagMenu();
       promptNewTag(card, cards2, x, y);
     } });
     newTagRow.style.color = "#8f8";
-    menu2.appendChild(newTagRow);
+    menu3.appendChild(newTagRow);
     const manageRow = makeRow({ label: "Manage Tags\u2026", onClick: () => {
       closeTagMenu();
       openManageTagsDialog();
     } });
     manageRow.style.color = "#9ab";
-    menu2.appendChild(manageRow);
-    menu2.addEventListener("click", (ev) => ev.stopPropagation());
-    document.body.appendChild(menu2);
-    openMenuEl = menu2;
-    const rect = menu2.getBoundingClientRect();
-    if (rect.right > window.innerWidth) menu2.style.left = Math.max(0, window.innerWidth - rect.width - 8) + "px";
-    if (rect.bottom > window.innerHeight) menu2.style.top = Math.max(0, window.innerHeight - rect.height - 8) + "px";
+    menu3.appendChild(manageRow);
+    menu3.addEventListener("click", (ev) => ev.stopPropagation());
+    document.body.appendChild(menu3);
+    openMenuEl = menu3;
+    const rect = menu3.getBoundingClientRect();
+    if (rect.right > window.innerWidth) menu3.style.left = Math.max(0, window.innerWidth - rect.width - 8) + "px";
+    if (rect.bottom > window.innerHeight) menu3.style.top = Math.max(0, window.innerHeight - rect.height - 8) + "px";
     filterInput.focus();
     const openedAt = performance.now();
     function outsideCloser(e) {
       if (performance.now() - openedAt < 200) return;
-      if (menu2.contains(e.target)) return;
+      if (menu3.contains(e.target)) return;
       closeTagMenu();
     }
     outsideClick = outsideCloser;
@@ -12714,8 +12723,8 @@ Version: v${version}`;
           action: (d) => {
             const name = input.value.trim();
             if (!name) return;
-            const tag = createTag(name, colorInput.value);
-            toggleCardTag(card.id, tag.id);
+            const tag2 = createTag(name, colorInput.value);
+            toggleCardTag(card.id, tag2.id);
             decorateCard(card.id);
             d.close();
             openTagMenu(card, cards2, reopenX, reopenY);
@@ -12743,27 +12752,27 @@ Version: v${version}`;
         wrapper.appendChild(empty);
         return;
       }
-      allTags().forEach((tag) => {
+      allTags().forEach((tag2) => {
         const row2 = document.createElement("div");
         row2.style.cssText = "display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08);";
         const colorInput = document.createElement("input");
         colorInput.type = "color";
-        colorInput.value = tag.color || DEFAULT_COLORS[0];
+        colorInput.value = tag2.color || DEFAULT_COLORS[0];
         colorInput.style.cssText = "width:26px;height:26px;padding:0;border:none;background:none;flex-shrink:0;cursor:pointer;";
         colorInput.addEventListener("change", () => {
-          updateTag(tag.id, { color: colorInput.value });
+          updateTag(tag2.id, { color: colorInput.value });
           decorateAllCards();
         });
         row2.appendChild(colorInput);
         const nameInput = document.createElement("input");
         nameInput.type = "text";
-        nameInput.value = tag.name;
+        nameInput.value = tag2.name;
         nameInput.className = "form-control";
         nameInput.style.cssText = "flex:1;padding:5px 7px;font-size:13px;";
         nameInput.addEventListener("change", () => {
           const v = nameInput.value.trim();
-          if (v) updateTag(tag.id, { name: v });
-          else nameInput.value = tag.name;
+          if (v) updateTag(tag2.id, { name: v });
+          else nameInput.value = tag2.name;
           decorateAllCards();
         });
         row2.appendChild(nameInput);
@@ -12779,7 +12788,7 @@ Version: v${version}`;
         });
         delBtn.addEventListener("click", (e) => {
           if (e.detail !== 2) return;
-          deleteTag(tag.id);
+          deleteTag(tag2.id);
           decorateAllCards();
           renderList3();
         });
@@ -12805,20 +12814,20 @@ Version: v${version}`;
       ]
     });
   }
-  function showCardsForTag(tag, cards2) {
+  function showCardsForTag(tag2, cards2) {
     const pageWindow2 = getPageWindow();
     const BootstrapDialog2 = pageWindow2.BootstrapDialog;
-    const matches = cards2.filter((c) => c && c.id != null && cardHasTag(c.id, tag.id));
-    const listText = matches.length ? matches.map((c) => c.name).join(", ") : '(nothing tagged "' + tag.name + '" yet)';
+    const matches = cards2.filter((c) => c && c.id != null && cardHasTag(c.id, tag2.id));
+    const listText = matches.length ? matches.map((c) => c.name).join(", ") : '(nothing tagged "' + tag2.name + '" yet)';
     if (typeof BootstrapDialog2 === "undefined" || typeof BootstrapDialog2.show !== "function") {
-      alert('Cards tagged "' + tag.name + '": ' + listText);
+      alert('Cards tagged "' + tag2.name + '": ' + listText);
       return;
     }
     const wrapper = document.createElement("div");
     wrapper.style.cssText = "max-height:260px;overflow-y:auto;";
     wrapper.textContent = listText;
     BootstrapDialog2.show({
-      title: 'Tagged "' + tag.name + '" (' + matches.length + ")",
+      title: 'Tagged "' + tag2.name + '" (' + matches.length + ")",
       message: wrapper,
       cssClass: "mono",
       buttons: [{ label: "Close", action: (d) => d.close() }]
@@ -13019,15 +13028,15 @@ Version: v${version}`;
     const type = hit[1];
     return { key: `${type}:${file}`, type, file, name: nameFromFile(file) };
   }
-  function srcOf(el2) {
-    if (!(el2 instanceof Element)) return "";
-    if (el2.tagName === "IMG") return el2.getAttribute("src") || "";
-    const bg = getComputedStyle(el2).backgroundImage || "";
+  function srcOf(el3) {
+    if (!(el3 instanceof Element)) return "";
+    if (el3.tagName === "IMG") return el3.getAttribute("src") || "";
+    const bg = getComputedStyle(el3).backgroundImage || "";
     const m = bg.match(/url\(["']?([^"')]+)/);
     return m ? m[1] : "";
   }
-  function detectElement(el2) {
-    return fromSrc(srcOf(el2));
+  function detectElement(el3) {
+    return fromSrc(srcOf(el3));
   }
   function findCosmetic(target) {
     if (!(target instanceof Element)) return null;
@@ -13213,8 +13222,8 @@ Version: v${version}`;
 
   // packages/misc/wishlist/shop.js
   var SECTIONS = { "cosmetics-daily": "Daily", "cosmetics-new": "New", "cosmetics-sales": "Sale" };
-  function i18nKey(el2) {
-    return (el2.getAttribute("data-i18n") || "").replace(/^\[[a-z]+\]/i, "");
+  function i18nKey(el3) {
+    return (el3.getAttribute("data-i18n") || "").replace(/^\[[a-z]+\]/i, "");
   }
   function parseTimer(text) {
     const t = String(text == null ? "" : text).trim();
@@ -13233,7 +13242,7 @@ Version: v${version}`;
       timers[SECTIONS[i18nKey(h)]] = t ? parseTimer(t.textContent) : null;
     });
     const items = [];
-    const seen = /* @__PURE__ */ new Set();
+    const seen2 = /* @__PURE__ */ new Set();
     doc.querySelectorAll("img").forEach((img) => {
       const found = fromSrc(img.getAttribute("src"));
       if (!found) return;
@@ -13247,8 +13256,8 @@ Version: v${version}`;
       const sale = (box.textContent.match(/\(-\s*(\d+)\s*%\)/) || [])[1];
       const owned = [...box.querySelectorAll("[data-i18n]")].some((n) => i18nKey(n) === "cardskins-shop-owned");
       const id = `${section}|${found.key}`;
-      if (seen.has(id)) return;
-      seen.add(id);
+      if (seen2.has(id)) return;
+      seen2.add(id);
       items.push({
         ...found,
         name: form && form.getAttribute("data-name") || found.name,
@@ -13500,11 +13509,11 @@ Version: v${version}`;
     });
   }
   function registerTabWidgets() {
-    registerSettingWidget("wishlist.list", (el2) => {
-      el2.readOnly = true;
-      el2.tabIndex = -1;
-      el2.style.display = "none";
-      const row2 = el2.closest(".flex-start");
+    registerSettingWidget("wishlist.list", (el3) => {
+      el3.readOnly = true;
+      el3.tabIndex = -1;
+      el3.style.display = "none";
+      const row2 = el3.closest(".flex-start");
       if (!row2) return;
       const label = row2.querySelector("label");
       if (label) label.style.fontWeight = "bold";
@@ -13521,7 +13530,7 @@ Version: v${version}`;
       });
     });
     let checking = false;
-    registerSettingWidget("wishlist.checkNow", (el2) => {
+    registerSettingWidget("wishlist.checkNow", (el3) => {
       asButton("Check Shop Now", async (input) => {
         if (checking) return;
         checking = true;
@@ -13545,7 +13554,7 @@ Version: v${version}`;
           const next = getState().nextDailyAt;
           status.textContent = "Nothing from your wishlist is in the shop right now." + (next ? ` Next daily refresh in ${formatIn(next - Date.now())}.` : "");
         }
-      })(el2);
+      })(el3);
     });
   }
   function decorateShop(shop) {
@@ -13678,6 +13687,7 @@ Version: v${version}`;
   var getCardData = (id) => cached(`data/cards/${id}.json`);
   var getArtifactData = (name) => cached(`data/artifacts/${slug(name)}.json`);
   var getRules = () => cached("rules.json").catch(() => null);
+  var getReports = () => cached("reports.json");
   var spriteUrl = (file) => `${BASE}assets/sprites/${encodeURIComponent(file)}.png`;
 
   // packages/misc/card-history/game.js
@@ -13836,8 +13846,8 @@ Version: v${version}`;
   async function formatter() {
     if (fmt) return fmt;
     await ensureCards();
-    const remote = await getRules();
-    const R = Object.assign({}, DEFAULTS, remote && typeof remote === "object" ? remote : {});
+    const remote2 = await getRules();
+    const R = Object.assign({}, DEFAULTS, remote2 && typeof remote2 === "object" ? remote2 : {});
     const notLinks = new Set(R.notLinks || []);
     const cs = /* @__PURE__ */ new Map();
     const links = /* @__PURE__ */ new Set();
@@ -13905,14 +13915,14 @@ Version: v${version}`;
     const csNames = [...cs.keys()].sort((a, b) => b.length - a.length).map(escRe);
     const csRe = new RegExp(`(^|[^\\p{L}\\p{N}_'])(${csNames.join("|")})(?![\\p{L}\\p{N}_])`, "gu");
     const statRe = /(^|[^\d/])([+-]?\d+)\/([+-]?\d+)(?:\/([+-]?\d+))?(?![\d/])/g;
-    const plain = (R.plainPhrases || []).map((p) => {
+    const plain2 = (R.plainPhrases || []).map((p) => {
       try {
         return new RegExp(p, "g");
       } catch (e) {
         return null;
       }
     }).filter(Boolean);
-    fmt = { cs, cap, csRe, capRe, statRe, colonCodes, links, plain };
+    fmt = { cs, cap, csRe, capRe, statRe, colonCodes, links, plain: plain2 };
     return fmt;
   }
   var atSentenceStart = (before) => /(^|[.!?:]|\u0002)\s*$/.test(before);
@@ -13948,6 +13958,507 @@ Version: v${version}`;
     }).join("");
   }
 
+  // packages/misc/card-history/report-codes.js
+  var CHAT_MAX = 250;
+  var HEAD = "WZR1";
+  var encLabel = (label) => label === "today" ? "now" : String(label).replace(/^</, "-").replace(/[^A-Za-z0-9.?-]/g, "");
+  var decLabel = (label) => label === "now" ? "today" : label.replace(/^-/, "<");
+  var token = (r) => `${r.kind === "a" ? `A${r.id}` : r.id}@${encLabel(r.label)}`;
+  function buildDate(builtAt) {
+    const m = String(builtAt || "").match(/^\d{2}(\d{2})-(\d{2})-(\d{2})/);
+    return m ? m[1] + m[2] + m[3] : "000000";
+  }
+  function encodeLines(reports) {
+    const byDate = /* @__PURE__ */ new Map();
+    reports.forEach((r) => {
+      const d = buildDate(r.built);
+      if (!byDate.has(d)) byDate.set(d, []);
+      byDate.get(d).push(r);
+    });
+    const out = [];
+    byDate.forEach((list, d) => {
+      let cur = { line: `${HEAD} ${d}`, reports: [] };
+      list.forEach((r) => {
+        const t = token(r);
+        if (cur.reports.length && cur.line.length + 1 + t.length > CHAT_MAX) {
+          out.push(cur);
+          cur = { line: `${HEAD} ${d}`, reports: [] };
+        }
+        cur.line += ` ${t}`;
+        cur.reports.push(r);
+      });
+      out.push(cur);
+    });
+    return out;
+  }
+  var CODE_RE = /\bWZR1 (\d{6})((?: (?:A[a-z0-9]+|\d+)@[A-Za-z0-9.?-]+)+)/g;
+  function parseCodes(text) {
+    const out = [];
+    String(text || "").replace(CODE_RE, (line, date, rest) => {
+      const items = rest.trim().split(" ").map((t) => {
+        const at = t.lastIndexOf("@");
+        const who = t.slice(0, at);
+        const label = decLabel(t.slice(at + 1));
+        const kind = who[0] === "A" ? "a" : "c";
+        const id = kind === "a" ? who.slice(1) : who;
+        return { key: `${kind}:${id}:${label}`, kind, id, label };
+      });
+      out.push({ line, date, items });
+      return line;
+    });
+    return out;
+  }
+  var hasCode = (text) => {
+    CODE_RE.lastIndex = 0;
+    return CODE_RE.test(String(text || ""));
+  };
+
+  // packages/misc/card-history/collector.js
+  var STORE = "wizascript.cardHistory.collected";
+  var ON = "wizascript.cardHistory.collecting";
+  var MAX = 5e3;
+  var isCollecting = () => GM_getValue(ON, false) === true;
+  var setCollecting = (on) => GM_setValue(ON, !!on);
+  function load() {
+    try {
+      const v = JSON.parse(GM_getValue(STORE, "{}"));
+      return v && typeof v === "object" && v.items ? v : { items: {}, codes: 0 };
+    } catch (e) {
+      return { items: {}, codes: 0 };
+    }
+  }
+  var save = (v) => GM_setValue(STORE, JSON.stringify(v));
+  function tag(s) {
+    let h = 2166136261;
+    for (const c of String(s)) {
+      h ^= c.charCodeAt(0);
+      h = Math.imul(h, 16777619);
+    }
+    return (h >>> 0).toString(36);
+  }
+  function addCodes(text, from) {
+    const found = parseCodes(text);
+    if (!found.length) return 0;
+    const store = load();
+    const day = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+    let added = 0;
+    found.forEach(({ line, date, items }) => {
+      const who = tag(from ? `u:${from}` : `t:${line}`);
+      store.codes = (store.codes || 0) + 1;
+      items.forEach((it) => {
+        let e = store.items[it.key];
+        if (!e) {
+          if (Object.keys(store.items).length >= MAX) return;
+          e = { kind: it.kind, id: it.id, label: it.label, by: [], dates: [], first: day, last: day };
+          store.items[it.key] = e;
+        }
+        if (!e.by.includes(who)) {
+          e.by.push(who);
+          added++;
+        }
+        if (!e.dates.includes(date)) e.dates.push(date);
+        e.last = day;
+      });
+    });
+    save(store);
+    return added;
+  }
+  function collectedSummary() {
+    const s = load();
+    const items = Object.values(s.items);
+    return { versions: items.length, reports: items.reduce((n, e) => n + e.by.length, 0), codes: s.codes || 0 };
+  }
+  function clearCollected() {
+    save({ items: {}, codes: 0 });
+  }
+  function collectedFile(nameOf) {
+    const s = load();
+    const items = Object.entries(s.items).map(([key2, e]) => ({
+      key: key2,
+      kind: e.kind === "a" ? "artifact" : "card",
+      id: e.id,
+      name: nameOf(e) || "",
+      version: e.label,
+      reporters: e.by.length,
+      dataBuilds: e.dates.slice().sort(),
+      firstSeen: e.first,
+      lastSeen: e.last
+    })).sort((a, b) => b.reporters - a.reporters || a.name.localeCompare(b.name) || a.key.localeCompare(b.key));
+    return { format: "wizascript-card-history-reports 1", exported: (/* @__PURE__ */ new Date()).toISOString(), codesRead: s.codes || 0, items };
+  }
+  function messageOf(raw) {
+    try {
+      return typeof raw === "string" ? JSON.parse(raw) : raw;
+    } catch (e) {
+      return null;
+    }
+  }
+  function collectMessage(m) {
+    var _a;
+    if (!m || m.deleted || typeof m.message !== "string" || !hasCode(m.message)) return;
+    const from = m.user && ((_a = m.user.id) != null ? _a : m.user.username);
+    addCodes(m.message, from != null ? String(from) : "?");
+  }
+  function compact(root) {
+    const lists = root.matches && root.matches(".chat-messages") ? [root] : [...root.querySelectorAll ? root.querySelectorAll(".chat-messages") : []];
+    const scan2 = (el3) => {
+      const walker = document.createTreeWalker(el3, NodeFilter.SHOW_TEXT);
+      const hits = [];
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        if (n.parentElement && n.parentElement.closest(".wz-ch-chatcode")) continue;
+        if (hasCode(n.nodeValue)) hits.push(n);
+      }
+      hits.forEach((n) => {
+        const found = parseCodes(n.nodeValue);
+        const count = found.reduce((k, f) => k + f.items.length, 0);
+        const span = document.createElement("span");
+        span.className = "wz-ch-chatcode";
+        span.textContent = `\u2691 Card History report (${count})`;
+        span.title = n.nodeValue.trim();
+        span.dataset.code = n.nodeValue;
+        span.addEventListener("click", () => {
+          span.textContent = span.dataset.code;
+          span.classList.add("wz-ch-chatcode-open");
+        });
+        n.replaceWith(span);
+      });
+    };
+    if (root.closest && root.closest(".chat-messages")) scan2(root);
+    else lists.forEach(scan2);
+  }
+  var wired2 = false;
+  function initChatReports(plugin) {
+    if (wired2) return;
+    wired2 = true;
+    if (plugin && plugin.events) {
+      plugin.events.on("Chat:getMessage", (d) => {
+        if (isCollecting()) collectMessage(messageOf(d.chatMessage));
+      });
+      plugin.events.on("Chat:getPrivateMessage", (d) => {
+        if (isCollecting()) collectMessage(messageOf(d.chatMessage));
+      });
+      plugin.events.on("Chat:getHistory", (d) => {
+        if (!isCollecting()) return;
+        const list = messageOf(d.history);
+        if (Array.isArray(list)) list.forEach((m) => collectMessage(messageOf(m)));
+      });
+    }
+    const start = () => {
+      compact(document.body);
+      new MutationObserver((muts) => {
+        muts.forEach((mu) => mu.addedNodes.forEach((n) => {
+          if (n.nodeType !== 1) return;
+          if (n.closest(".chat-messages") || n.querySelector(".chat-messages")) compact(n);
+        }));
+      }).observe(document.body, { childList: true, subtree: true });
+    };
+    if (document.body) start();
+    else document.addEventListener("DOMContentLoaded", start);
+  }
+
+  // packages/misc/card-history/reports.js
+  var STORE2 = "wizascript.cardHistory.reports";
+  var DEFAULT_CHANNEL = "Undercards chat or the Discord";
+  function load2() {
+    try {
+      const v = JSON.parse(GM_getValue(STORE2, "[]"));
+      return Array.isArray(v) ? v : [];
+    } catch (e) {
+      return [];
+    }
+  }
+  function save2(list) {
+    GM_setValue(STORE2, JSON.stringify(list));
+    changed();
+  }
+  var listeners3 = /* @__PURE__ */ new Set();
+  var onReportsChanged = (fn) => {
+    listeners3.add(fn);
+    return () => listeners3.delete(fn);
+  };
+  function changed() {
+    listeners3.forEach((fn) => {
+      try {
+        fn();
+      } catch (e) {
+      }
+    });
+  }
+  var reportKey = (t) => `${t.kind}:${t.id}:${t.label}`;
+  var isReported = (t) => load2().some((r) => r.key === reportKey(t));
+  var unsentCount = () => load2().filter((r) => !r.sent).length;
+  function toggleReport(t) {
+    const key2 = reportKey(t);
+    const list = load2();
+    const i = list.findIndex((r) => r.key === key2);
+    if (i >= 0) list.splice(i, 1);
+    else list.push({ key: key2, kind: t.kind, id: String(t.id), name: t.name, label: t.label, shown: String(t.shown || "").slice(0, 140), built: t.built || "", at: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) });
+    save2(list);
+    return i < 0;
+  }
+  function removeReport(key2) {
+    save2(load2().filter((r) => r.key !== key2));
+  }
+  var remote = null;
+  async function remoteReports() {
+    if (remote) return remote;
+    const data2 = await getReports().catch(() => null);
+    remote = data2 && data2.items || {};
+    return remote;
+  }
+  var remoteCount = (t) => remote && remote[reportKey(t)] ? remote[reportKey(t)].n || 1 : 0;
+  function tagNode(node, target) {
+    node.dataset.wzChReport = JSON.stringify(target);
+    node.classList.add("wz-ch-reportable");
+    paintNode(node);
+  }
+  function paintNode(node) {
+    let t;
+    try {
+      t = JSON.parse(node.dataset.wzChReport);
+    } catch (e) {
+      return;
+    }
+    let badge = node.querySelector(":scope > .wz-ch-badge, :scope .wz-ch-badge");
+    const mine = isReported(t);
+    const others = remoteCount(t);
+    if (!mine && !others) {
+      if (badge) badge.remove();
+      return;
+    }
+    if (!badge) {
+      badge = document.createElement("div");
+      badge.className = "wz-ch-badge";
+      (node.querySelector(".wz-ch-badge-spot") || node).appendChild(badge);
+    }
+    badge.textContent = mine ? "\u2691" : "\u26A0";
+    badge.classList.toggle("wz-ch-badge-mine", mine);
+    const lines = [];
+    if (others) lines.push(`Reported as inaccurate by ${others} player${others === 1 ? "" : "s"}. Being checked.`);
+    if (mine) lines.push("You reported this. Right-click to undo; send it from My Reports.");
+    badge.title = lines.join("\n");
+  }
+  function repaintAll(root) {
+    root.querySelectorAll(".wz-ch-reportable").forEach(paintNode);
+  }
+  var menu2 = null;
+  var isReportMenuOpen = () => !!(menu2 && menu2.isConnected);
+  function pressReportMenu() {
+    const li = menu2 && menu2.querySelector("li:not(.wz-ch-menu-off)");
+    if (li) li.click();
+  }
+  function closeReportMenu() {
+    const was = !!(menu2 && menu2.isConnected);
+    if (menu2) menu2.remove();
+    menu2 = null;
+    return was;
+  }
+  function openMenu2(node, x, y) {
+    closeReportMenu();
+    const t = JSON.parse(node.dataset.wzChReport);
+    const mine = isReported(t);
+    menu2 = document.createElement("ul");
+    menu2.className = "wz-ch-menu";
+    const head = document.createElement("header");
+    head.textContent = `${t.name} - ${t.label === "today" ? "today" : t.label}`;
+    const li = document.createElement("li");
+    li.textContent = mine ? "\u2691 Undo my report" : "\u2691 Report as Bugged/Inaccurate";
+    li.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleReport(t);
+      closeReportMenu();
+    });
+    menu2.append(head, li);
+    const others = remoteCount(t);
+    if (others) {
+      const note = document.createElement("li");
+      note.className = "wz-ch-menu-off";
+      note.textContent = `\u26A0 Already reported by ${others}`;
+      menu2.appendChild(note);
+    }
+    document.body.appendChild(menu2);
+    const r = menu2.getBoundingClientRect();
+    menu2.style.left = `${Math.max(4, Math.min(x, window.innerWidth - r.width - 4))}px`;
+    menu2.style.top = `${Math.max(4, Math.min(y, window.innerHeight - r.height - 4))}px`;
+  }
+  var wired3 = false;
+  function wireReportMenu() {
+    if (wired3) return;
+    wired3 = true;
+    document.addEventListener("contextmenu", (e) => {
+      if (menu2 && menu2.contains(e.target)) {
+        e.preventDefault();
+        return;
+      }
+      const node = e.target.closest && e.target.closest(".wz-ch-reportable");
+      if (!node) return;
+      e.preventDefault();
+      e.stopPropagation();
+      openMenu2(node, e.clientX, e.clientY);
+    }, true);
+    document.addEventListener("mousedown", (e) => {
+      if (menu2 && e.button === 0 && !menu2.contains(e.target)) closeReportMenu();
+    }, true);
+    let swallowEscUp = false;
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && closeReportMenu()) {
+        e.stopPropagation();
+        swallowEscUp = true;
+      }
+    }, true);
+    document.addEventListener("keyup", (e) => {
+      if (e.key === "Escape" && swallowEscUp) {
+        swallowEscUp = false;
+        e.stopPropagation();
+      }
+    }, true);
+  }
+  async function copy(text, box) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (e) {
+    }
+    try {
+      box.focus();
+      box.select();
+      return document.execCommand("copy");
+    } catch (e) {
+      return false;
+    }
+  }
+  var el2 = (tag2, cls, text) => {
+    const e = document.createElement(tag2);
+    if (cls) e.className = cls;
+    if (text !== void 0) e.textContent = text;
+    return e;
+  };
+  var button = (label, cls, fn) => {
+    const b = el2("button", `btn ${cls}`, label);
+    b.type = "button";
+    b.addEventListener("click", fn);
+    return b;
+  };
+  function markSent(keys) {
+    save2(load2().map((r) => keys.has(r.key) ? { ...r, sent: true } : r));
+  }
+  function download(name, text) {
+    const url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+    const a = el2("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1e3);
+  }
+  function collectSection() {
+    const box = el2("details", "wz-ch-collect");
+    box.appendChild(el2("summary", "", "Collecting codes (for whoever gathers reports)"));
+    const status = el2("div", "wz-ch-dim");
+    const refresh = () => {
+      const s = collectedSummary();
+      status.textContent = `${s.versions} version${s.versions === 1 ? "" : "s"} reported, ${s.reports} report${s.reports === 1 ? "" : "s"} from ${s.codes} code${s.codes === 1 ? "" : "s"}.`;
+    };
+    const opt = el2("label", "wz-ch-myreports-opt");
+    const on = el2("input");
+    on.type = "checkbox";
+    on.checked = isCollecting();
+    on.addEventListener("change", () => setCollecting(on.checked));
+    opt.append(on, " Collect report codes I see in chat");
+    const paste = el2("textarea", "wz-ch-myreports-code");
+    paste.placeholder = "Or paste any text with codes in it (e.g. a copied Discord channel)";
+    const btns = el2("div", "wz-ch-myreports-btns");
+    btns.append(
+      button("Add pasted codes", "btn-default", () => {
+        const n = addCodes(paste.value, null);
+        paste.value = "";
+        refresh();
+        status.textContent = `${n} new. ${status.textContent}`;
+      }),
+      button("Download collected", "btn-primary", async () => {
+        const arts = await artifacts2().catch(() => []);
+        const nameOf = (e) => e.kind === "a" ? (arts.find((a) => norm(a.name) === e.id) || {}).name : (findCard(e.id) || {}).name;
+        download(`card-history-reports-${(/* @__PURE__ */ new Date()).toISOString().slice(0, 10)}.json`, JSON.stringify(collectedFile(nameOf), null, 1));
+      }),
+      button("Clear", "btn-default", () => {
+        if (window.confirm("Clear every collected report?")) {
+          clearCollected();
+          refresh();
+        }
+      })
+    );
+    box.append(opt, paste, btns, status);
+    refresh();
+    return box;
+  }
+  async function openMyReports() {
+    const api = dialogApi();
+    if (!api) return;
+    const rules = await getRules().catch(() => null);
+    const where = rules && rules.reports || {};
+    const channel = where.channel || DEFAULT_CHANNEL;
+    const wrap = el2("div", "wz-ch-myreports");
+    const collect = collectSection();
+    const render2 = () => {
+      const list = load2().sort((a, b) => (a.sent ? 1 : 0) - (b.sent ? 1 : 0));
+      wrap.replaceChildren();
+      if (!list.length) {
+        const p = el2("p");
+        p.innerHTML = "No reports yet. Right-click a version that looks wrong and choose <b>Report as Bugged/Inaccurate</b>.";
+        wrap.append(p, collect);
+        return;
+      }
+      const table = el2("table", "wz-ch-myreports-list");
+      list.forEach((r) => {
+        const tr2 = el2("tr");
+        tr2.innerHTML = `<td>${escHtml(r.name)}</td><td>${escHtml(r.label)}</td><td class="wz-ch-dim">${r.sent ? "sent" : "not sent"}</td><td></td>`;
+        tr2.lastChild.appendChild(button("\xD7", "btn-xs btn-default", () => {
+          removeReport(r.key);
+          render2();
+        }));
+        table.appendChild(tr2);
+      });
+      const unsent = list.filter((r) => !r.sent);
+      const toSend = unsent.length ? unsent : list;
+      const intro = el2("p");
+      intro.innerHTML = `${unsent.length ? "Paste" : "Everything's been sent. To send again, paste"} ${toSend.length === 1 ? "this" : "these"} in <b>${escHtml(channel)}</b>. Each line fits one chat message.`;
+      const lines = el2("div", "wz-ch-codelines");
+      const status = el2("div", "wz-ch-dim");
+      const encoded = encodeLines(toSend);
+      encoded.forEach(({ line, reports }) => {
+        const keys = new Set(reports.map((r) => r.key));
+        const row2 = el2("div", "wz-ch-codeline");
+        const code = el2("input", "wz-ch-code");
+        code.readOnly = true;
+        code.value = line;
+        code.addEventListener("focus", () => code.select());
+        row2.append(code, button("Copy", "btn-primary btn-sm", async () => {
+          const ok = await copy(line, code);
+          markSent(keys);
+          status.textContent = ok ? "Copied." : "Select the line and copy it.";
+        }));
+        lines.appendChild(row2);
+      });
+      const all = el2("div", "wz-ch-myreports-btns");
+      if (encoded.length > 1) {
+        all.appendChild(button("Copy all (for Discord)", "btn-default", async () => {
+          const ok = await copy(encoded.map((x) => x.line).join("\n"), lines.querySelector("input"));
+          markSent(new Set(toSend.map((r) => r.key)));
+          status.textContent = ok ? "Copied all lines." : "Couldn't copy - copy the lines one by one.";
+        }));
+      }
+      wrap.append(intro, table, lines, all, status, collect);
+    };
+    render2();
+    api.BD.show({
+      title: "My Card History Reports",
+      message: api.$(wrap),
+      buttons: [{ label: "Close", action: (d) => d.close() }]
+    });
+  }
+
   // packages/misc/card-history/cards-view.js
   var PER_ROW = 4;
   function versionLabel(v) {
@@ -13968,33 +14479,33 @@ Version: v${version}`;
     desc.appendChild(inner);
     gameFontSize(inner, 81);
   }
-  function setQuantity(el2, label, note) {
-    let q = el2.querySelector(".cardQuantity");
+  function setQuantity(el3, label, note) {
+    let q = el3.querySelector(".cardQuantity");
     if (!q) {
       q = document.createElement("div");
       q.className = "cardQuantity";
-      el2.appendChild(q);
+      el3.appendChild(q);
     }
     q.textContent = label.text + (note || label.uncertain ? " *" : "");
     q.title = label.title + (note ? `
 ${note}` : "");
   }
-  function tidy(el2) {
-    [...el2.classList].filter((c) => /^col-/.test(c)).forEach((c) => el2.classList.remove(c));
-    el2.classList.remove("pointer");
-    el2.removeAttribute("id");
-    el2.style.margin = "0";
-    el2.style.float = "none";
+  function tidy(el3) {
+    [...el3.classList].filter((c) => /^col-/.test(c)).forEach((c) => el3.classList.remove(c));
+    el3.classList.remove("pointer");
+    el3.removeAttribute("id");
+    el3.style.margin = "0";
+    el3.style.float = "none";
   }
   function plainCard(card) {
     const ext = card.extension === "DELTARUNE" ? "DELTARUNE" : card.extension === "UTY" ? "UTY" : "BASE";
-    const el2 = document.createElement("div");
-    el2.className = `card ${card.typeCard === 0 ? "monster" : "spell"} undertale-frame standard-skin`;
+    const el3 = document.createElement("div");
+    el3.className = `card ${card.typeCard === 0 ? "monster" : "spell"} undertale-frame standard-skin`;
     const part = (cls, text) => {
       const d = document.createElement("div");
       d.className = cls;
       if (text !== void 0) d.textContent = text;
-      el2.appendChild(d);
+      el3.appendChild(d);
       return d;
     };
     part("cardFrame");
@@ -14013,7 +14524,7 @@ ${note}` : "");
     }
     part("cardRarity").style.background = `url("images/rarity/${ext}_${card.rarity}.png") no-repeat transparent`;
     part("cardQuantity");
-    return el2;
+    return el3;
   }
   var makeCard = (card) => appendCard(card) || plainCard(card);
   function drawVersion(base, ver, f, currentDescHtml) {
@@ -14038,9 +14549,9 @@ ${note}` : "");
     card.tribes = Array.isArray(ver.tribes) ? ver.tribes : [];
     card.statuses = Array.isArray(ver.statuses) ? ver.statuses.map((x) => ({ statusType: "POSITIVE", statusBehavior: x.displayCounter ? "STACKABLE" : "UNIQUE", ...x })) : [];
     if (ver.soul !== void 0) card.soul = ver.soul;
-    const el2 = makeCard(card);
-    tidy(el2);
-    const art = el2.querySelector(".cardImage");
+    const el3 = makeCard(card);
+    tidy(el3);
+    const art = el3.querySelector(".cardImage");
     if (ver.sprite && art) art.style.backgroundImage = `url("${spriteUrl(ver.sprite)}")`;
     const usedToday = ver.image && allCards().some((c) => c.image === ver.image);
     if (!ver.sprite && ver.image && ver.image !== base.image && !usedToday && art) {
@@ -14050,7 +14561,7 @@ ${note}` : "");
       };
       probe.src = `images/cards/${ver.image}.png`;
     }
-    const nameEl = el2.querySelector(".cardName");
+    const nameEl = el3.querySelector(".cardName");
     if (nameEl) {
       const nd = nameEl.firstElementChild || nameEl;
       if (nd.textContent !== ver.name) {
@@ -14058,24 +14569,30 @@ ${note}` : "");
         if (nd !== nameEl) gameFontSize(nd, 25);
       }
     }
-    const costEl = el2.querySelector(".cardCost");
+    const costEl = el3.querySelector(".cardCost");
     if (costEl && ver.cost != null) costEl.textContent = ver.cost;
     if (isMonster) {
-      el2.querySelectorAll('[class*="ATK" i], [class*="attack" i]').forEach((n) => {
+      el3.querySelectorAll('[class*="ATK" i], [class*="attack" i]').forEach((n) => {
         if (ver.atk != null && !n.children.length) n.textContent = ver.atk;
       });
-      el2.querySelectorAll('[class*="cardHP" i], [class*="health" i]').forEach((n) => {
+      el3.querySelectorAll('[class*="cardHP" i], [class*="health" i]').forEach((n) => {
         if (ver.hp != null && !n.children.length) n.textContent = ver.hp;
       });
     }
-    const desc = el2.querySelector(".cardDesc");
+    const desc = el3.querySelector(".cardDesc");
     if (desc) {
       if (ver.sameAsToday && !ver.legacy && currentDescHtml !== null) desc.innerHTML = currentDescHtml;
       else if (ver.textKnown && !ver.truncated && ver.text) fitText(desc, formatText(ver.text, f));
       else fitText(desc, "?");
     }
-    setQuantity(el2, versionLabel(ver.version), ver.note);
-    return el2;
+    setQuantity(el3, versionLabel(ver.version), ver.note);
+    return el3;
+  }
+  var plain = (t) => String(t || "").replace(/\{\{[A-Z_]+:([^}]*)\}\}/g, "$1").replace(/\{\{([A-Z_]+)\}\}/g, "$1").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+  function seen(card, ver) {
+    var _a, _b, _c, _d;
+    const stats = card.typeCard === 0 ? `${(_a = ver.cost) != null ? _a : "?"}/${(_b = ver.atk) != null ? _b : "?"}/${(_c = ver.hp) != null ? _c : "?"}` : `${(_d = ver.cost) != null ? _d : "?"}`;
+    return `${stats} ${ver.rarity || ""} ${ver.name}: ${ver.textKnown && !ver.truncated ? plain(ver.text) : "?"}`.replace(/\s+/g, " ");
   }
   var n0 = (x) => x === null || x === void 0 ? void 0 : x;
   function cardHistoryView(base, data2, f, index) {
@@ -14098,7 +14615,13 @@ ${note}` : "");
     const grid = document.createElement("div");
     grid.className = "cardsPreview no-hover wz-ch-grid";
     grid.style.cssText = `display:grid;grid-template-columns:repeat(${PER_ROW},max-content);gap:38px 8px;justify-content:center;padding-bottom:28px;`;
-    versions.forEach((v) => grid.appendChild(drawVersion(base, v, f, currentDescHtml)));
+    const built = index && index.builtAt || "";
+    versions.forEach((v) => {
+      const el3 = drawVersion(base, v, f, currentDescHtml);
+      tagNode(el3, { kind: "c", id: base.id, name: base.name, label: versionLabel(v.version).text, shown: seen(base, v), built });
+      grid.appendChild(el3);
+    });
+    tagNode(nowEl, { kind: "c", id: base.id, name: base.name, label: "today", shown: seen(base, { ...base, atk: base.attack, textKnown: false }), built });
     grid.appendChild(nowEl);
     const node = document.createElement("div");
     node.appendChild(grid);
@@ -14113,7 +14636,7 @@ ${note}` : "");
     const lines = [`Sources: ${src.join("; ")}.`];
     if (!data2) lines.unshift("No recorded history for this card yet.");
     else if (!data2.firstFrom && !(versions[0] && versions[0].version && versions[0].version.source === "miraheze")) lines.push("Its first version isn't recorded; earlier stats are worked out backwards.");
-    lines.push("* = not certain, or has a note - hover the version number.");
+    lines.push("* = not certain, or has a note - hover the version number. Looks wrong? Right-click it to report it.");
     foot.textContent = lines.join(" ");
     node.appendChild(foot);
     const fit = () => {
@@ -14147,10 +14670,10 @@ ${note}` : "");
     const n = norm(s);
     return list.find((a) => norm(a.name) === n || norm(tr(`artifact-name-${a.id}`)) === n) || list.find((a) => norm(a.image) === n) || null;
   }
-  function row(ver, rarity, f, todayName, todayHtml) {
+  function row(ver, rarity, f, todayName, todayHtml, target) {
     const tr2 = document.createElement("tr");
     const v = document.createElement("td");
-    v.className = "wz-ch-art-ver";
+    v.className = "wz-ch-art-ver wz-ch-badge-spot";
     const label = versionLabel(ver.version);
     v.textContent = label.text + (ver.note || label.uncertain ? " *" : "");
     v.title = label.title + (ver.note ? `
@@ -14164,6 +14687,11 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     const body = todayHtml !== void 0 ? todayHtml : ver.textKnown && ver.text ? formatText(ver.text, f) : "?";
     t.innerHTML = `<div class="cardDesc wz-ch-art-desc"><div>${oldName}${body}</div></div>`;
     tr2.append(v, r, t);
+    if (target) {
+      const d = document.createElement("div");
+      d.innerHTML = body;
+      tagNode(tr2, { ...target, label: todayHtml !== void 0 ? "today" : label.text, shown: `${rarity || "?"}: ${ver.name && norm(ver.name) !== norm(todayName) ? `(${ver.name}) ` : ""}${d.textContent.replace(/\s+/g, " ").trim()}`.slice(0, 140) });
+    }
     return tr2;
   }
   function artifactHistoryView(a, data2, f, index) {
@@ -14206,23 +14734,29 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     head.innerHTML = `${a.image ? `<img src="images/artifacts/${escHtml(a.image)}.png" alt="">` : ""}<span class="wz-ch-art-title">${escHtml(todayName)}</span>`;
     const table = document.createElement("table");
     table.className = "wz-ch-art-list";
-    versions.forEach((v) => table.appendChild(row(v, v.shownRarity, f, todayName)));
-    table.appendChild(row(todayVer, today || last && last.shownRarity, f, todayName, todayHtml));
+    const target = { kind: "a", id: slug(a.name), name: todayName, built: index && index.builtAt || "" };
+    versions.forEach((v) => table.appendChild(row(v, v.shownRarity, f, todayName, void 0, target)));
+    table.appendChild(row(todayVer, today || last && last.shownRarity, f, todayName, todayHtml, target));
     node.append(head, table);
     const foot = document.createElement("div");
     foot.className = "wz-ch-foot";
-    foot.textContent = `${data2 ? "" : "No recorded history for this artifact yet. "}Sources: Undercards Wiki (Version History)${data2 && data2.miraheze ? "; The Undercards Wiki (Miraheze)" : ""}; Undercards patch notes. Oldest first, today's last. * = not certain, or has a note - hover the version number.`;
+    foot.textContent = `${data2 ? "" : "No recorded history for this artifact yet. "}Sources: Undercards Wiki (Version History)${data2 && data2.miraheze ? "; The Undercards Wiki (Miraheze)" : ""}; Undercards patch notes. Oldest first, today's last. * = not certain, or has a note - hover the version number. Looks wrong? Right-click the row to report it.`;
     node.appendChild(foot);
     return { node, wikiUrl: `https://undercards.fandom.com/wiki/${a.name.replace(/ /g, "_")}` };
   }
 
   // packages/misc/card-history/shell.js
+  var reportsLabel = () => {
+    const n = unsentCount();
+    return n ? `My Reports (${n})` : "My Reports";
+  };
   function openShell(title, wikiUrl) {
     const box = document.createElement("div");
     box.className = "wz-ch-loading";
     box.innerHTML = '<div class="wz-ch-loading-title">Loading...</div><div class="wz-ch-step"></div>';
     const state2 = { url: wikiUrl, shown: false, onShown: null };
     const api = dialogApi();
+    let off = null;
     if (api) {
       api.BD.show({
         title,
@@ -14232,7 +14766,12 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
           state2.shown = true;
           if (state2.onShown) state2.onShown();
         },
+        onhidden: () => {
+          if (off) off();
+          closeReportMenu();
+        },
         buttons: [
+          { id: "wz-ch-myreports-btn", label: reportsLabel(), action: () => openMyReports() },
           { label: "Open on the wiki", action: () => window.open(state2.url, "_blank", "noopener") },
           { label: "Close", cssClass: "btn-primary", action: (d) => d.close() }
         ]
@@ -14241,10 +14780,15 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       document.body.appendChild(box);
       state2.shown = true;
     }
+    off = onReportsChanged(() => {
+      repaintAll(box);
+      const b = document.getElementById("wz-ch-myreports-btn");
+      if (b) b.textContent = reportsLabel();
+    });
     return {
       step(text) {
-        const el2 = box.querySelector(".wz-ch-step");
-        if (el2) el2.textContent = text;
+        const el3 = box.querySelector(".wz-ch-step");
+        if (el3) el3.textContent = text;
       },
       fill(node, fit, url) {
         if (url) state2.url = url;
@@ -14283,6 +14827,33 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
 .wz-ch-art-list td.wz-ch-art-ver { width: 90px; text-align: center; font-size: 18px; white-space: nowrap; cursor: default; }
 .wz-ch-art-list td.wz-ch-art-rar { width: 120px; text-align: center; white-space: nowrap; }
 .wz-ch-art-list td.wz-ch-art-txt { font-size: 14px; line-height: 1.35; text-align: left; }
+/* Reports: badge on a version, its right-click menu, the My Reports dialog. */
+.wz-ch-reportable { position: relative; }
+.wz-ch-badge { position: absolute; top: 32px; left: 6px; z-index: 6; width: 24px; height: 24px; line-height: 22px; text-align: center;
+  font-size: 15px; border-radius: 50%; background: #000; color: #f5c542; border: 2px solid #f5c542; cursor: help; }
+.wz-ch-badge.wz-ch-badge-mine { color: #ff6b6b; border-color: #ff6b6b; }
+.wz-ch-art-list td.wz-ch-art-ver { position: relative; }
+.wz-ch-art-list td.wz-ch-art-ver .wz-ch-badge { top: 2px; left: auto; right: 2px; width: 20px; height: 20px; line-height: 18px; font-size: 12px; }
+.wz-ch-menu { position: fixed; z-index: 2000; list-style: none; margin: 0; padding: 4px 0; min-width: 220px; background: #000; color: #fff;
+  border: 2px solid #fff; font-size: 14px; }
+.wz-ch-menu header { padding: 4px 10px 6px; border-bottom: 1px solid #555; opacity: .85; }
+.wz-ch-menu li { padding: 6px 10px; cursor: pointer; }
+.wz-ch-menu li:hover { background: #333; }
+.wz-ch-menu li.wz-ch-menu-off { cursor: default; opacity: .7; }
+.wz-ch-menu li.wz-ch-menu-off:hover { background: none; }
+.wz-ch-myreports-list { width: 100%; margin: 6px 0 10px; }
+.wz-ch-myreports-list td { padding: 3px 6px; border-bottom: 1px solid #444; }
+.wz-ch-myreports-opt { display: block; font-weight: normal; margin: 4px 0 8px; }
+.wz-ch-myreports-btns { display: flex; gap: 8px; margin-bottom: 8px; }
+.wz-ch-myreports-code { width: 100%; height: 70px; font-family: monospace; font-size: 11px; background: #111; color: #ddd; }
+.wz-ch-codelines { margin: 8px 0; }
+.wz-ch-codeline { display: flex; gap: 6px; margin-bottom: 4px; }
+.wz-ch-codeline .wz-ch-code { flex: 1; font-family: monospace; font-size: 12px; background: #111; color: #ddd; border: 1px solid #555; padding: 2px 6px; }
+.wz-ch-collect { margin-top: 12px; border-top: 1px solid #444; padding-top: 8px; }
+.wz-ch-collect summary { cursor: pointer; opacity: .85; }
+.wz-ch-chatcode { opacity: .75; font-style: italic; cursor: pointer; }
+.wz-ch-chatcode.wz-ch-chatcode-open { font-style: normal; font-family: monospace; cursor: text; word-break: break-all; }
+.wz-ch-dim { opacity: .7; font-size: 12px; }
 .wz-ch-art-oldname { opacity: .75; margin-right: 6px; }
 /* A .cardDesc (for the game's card-text colours) laid out as plain text. */
 .wz-ch-art-list .cardDesc.wz-ch-art-desc { position: static !important; width: auto !important; height: auto !important; top: auto !important;
@@ -14311,7 +14882,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     const shell = openShell(`Previous Versions - ${base.name}`, `https://undercards.fandom.com/wiki/${base.name.replace(/ /g, "_")}/Previous_Versions`);
     try {
       shell.step("Reading the card's history...");
-      const [data2, index, f] = await Promise.all([getCardData(base.id), getIndex().catch(() => null), formatter()]);
+      const [data2, index, f] = await Promise.all([getCardData(base.id), getIndex().catch(() => null), formatter(), remoteReports()]);
       const view = cardHistoryView(base, data2, f, index);
       shell.fill(view.node, view.fit, view.wikiUrl);
     } catch (e) {
@@ -14326,7 +14897,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     const shell = openShell(`Artifact History - ${a.name}`, `https://undercards.fandom.com/wiki/${a.name.replace(/ /g, "_")}`);
     try {
       shell.step("Reading the artifact's history...");
-      const [data2, index, f] = await Promise.all([getArtifactData(a.name), getIndex().catch(() => null), formatter()]);
+      const [data2, index, f] = await Promise.all([getArtifactData(a.name), getIndex().catch(() => null), formatter(), remoteReports()]);
       const view = artifactHistoryView(a, data2, f, index);
       shell.fill(view.node, null, view.wikiUrl);
     } catch (e) {
@@ -14336,15 +14907,15 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
   }
   function cardUnder(e) {
     if (e.button !== 1 || !matchesPage(CARD_PAGES2) || !e.target.closest) return null;
-    const el2 = e.target.closest(".card");
-    if (!el2 || !el2.id || el2.closest(".modal")) return null;
-    return findCard(el2.id) ? el2.id : null;
+    const el3 = e.target.closest(".card");
+    if (!el3 || !el3.id || el3.closest(".modal")) return null;
+    return findCard(el3.id) ? el3.id : null;
   }
   function artifactUnder(e) {
     if (e.button !== 1 || !matchesPage(ARTIFACT_PAGES) || !e.target.closest || e.target.closest(".modal")) return null;
-    let el2 = e.target;
-    for (let i = 0; i < 4 && el2; i++, el2 = el2.parentElement) {
-      const img = el2.matches && el2.matches('img[src*="artifacts/"]') ? el2 : el2.querySelector && el2.querySelector('img[src*="artifacts/"]');
+    let el3 = e.target;
+    for (let i = 0; i < 4 && el3; i++, el3 = el3.parentElement) {
+      const img = el3.matches && el3.matches('img[src*="artifacts/"]') ? el3 : el3.querySelector && el3.querySelector('img[src*="artifacts/"]');
       if (img) {
         const m = img.getAttribute("src").match(/artifacts\/([^/?#]+)\.png/i);
         if (m) return decodeURIComponent(m[1]);
@@ -14352,10 +14923,12 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     }
     return null;
   }
-  function initCardHistory() {
+  function initCardHistory(plugin) {
     if (!isPluginEnabled("cardHistory")) return;
-    if (!matchesPage([...CARD_PAGES2, ...ARTIFACT_PAGES])) return;
     injectCardHistoryStyle();
+    initChatReports(plugin);
+    if (!matchesPage([...CARD_PAGES2, ...ARTIFACT_PAGES])) return;
+    wireReportMenu();
     document.addEventListener("mousedown", (e) => {
       if (cardUnder(e) || artifactUnder(e)) e.preventDefault();
     }, true);
@@ -14715,9 +15288,9 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       selectEl.appendChild(hint);
     }
     function updateSelectHighlight() {
-      selectRowEls.forEach((el2, i) => {
+      selectRowEls.forEach((el3, i) => {
         const active = i === selectIndex;
-        el2.style.boxShadow = active ? "inset 0 0 0 999px rgba(255,255,255,0.18)" : "none";
+        el3.style.boxShadow = active ? "inset 0 0 0 999px rgba(255,255,255,0.18)" : "none";
       });
     }
     function mount() {
@@ -14743,7 +15316,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       for (const sel of def.containerSelectors) {
         const container = document.querySelector(sel);
         if (!container) continue;
-        const items = Array.from(container.querySelectorAll(def.itemSelector)).filter((el2) => el2.offsetParent !== null);
+        const items = Array.from(container.querySelectorAll(def.itemSelector)).filter((el3) => el3.offsetParent !== null);
         if (items.length) {
           if (isDebugTextEnabled()) console.log(`[Wizascript Controller] group "${def.name}" found via "${sel}": ${items.length} items`);
           return { name: def.name, container, items };
@@ -14781,7 +15354,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       if (!host) return [];
       let els = Array.from(host.querySelectorAll(".card"));
       if (!els.length) els = Array.from(host.children);
-      return els.filter((el2) => el2.offsetParent !== null);
+      return els.filter((el3) => el3.offsetParent !== null);
     }
     function queryBoardMonsterCards() {
       const slots = Array.from(document.querySelectorAll(".droppableMonster.slot, .droppableMonster"));
@@ -14791,7 +15364,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       if (!rows.length) return [];
       let bestRow = rows[0], bestTop = -Infinity;
       for (const row2 of rows) {
-        const avgTop = row2.reduce((sum, el2) => sum + el2.getBoundingClientRect().top, 0) / row2.length;
+        const avgTop = row2.reduce((sum, el3) => sum + el3.getBoundingClientRect().top, 0) / row2.length;
         if (avgTop > bestTop) {
           bestTop = avgTop;
           bestRow = row2;
@@ -14802,11 +15375,11 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     function elArraysEqual(a, b) {
       if (a.length !== b.length) return false;
       const setA = new Set(a);
-      for (const el2 of b) if (!setA.has(el2)) return false;
+      for (const el3 of b) if (!setA.has(el3)) return false;
       return true;
     }
     function buildRowGrid(els, rowTolerance = 28) {
-      const withRect = els.map((el2) => ({ el: el2, r: el2.getBoundingClientRect() })).sort((a, b) => a.r.top - b.r.top);
+      const withRect = els.map((el3) => ({ el: el3, r: el3.getBoundingClientRect() })).sort((a, b) => a.r.top - b.r.top);
       const rows = [];
       for (const item of withRect) {
         let row2 = rows.find((r) => Math.abs(r.top - item.r.top) <= rowTolerance);
@@ -14863,7 +15436,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     let fieldNeedsReanchor = false;
     let fieldSubmenu = null;
     let lastKnownActiveCategoryIdx = -1;
-    const MODAL_ITEM_SELECTOR = 'button, input:not([type="hidden"]):not(.tabButton), select, a[href], .card, li[role="button"], .tabLabel';
+    const MODAL_ITEM_SELECTOR = 'button, input:not([type="hidden"]):not(.tabButton), select, a[href], .card, li[role="button"], .tabLabel, .wz-ch-reportable';
     function queryModalRoot() {
       const visibleDialogs = Array.from(document.querySelectorAll(".bootstrap-dialog")).filter((d) => getComputedStyle(d).display !== "none");
       const dialog = visibleDialogs[visibleDialogs.length - 1] || null;
@@ -14871,12 +15444,12 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         const tabbedRoot = dialog.querySelector(".tabbedView.left");
         return tabbedRoot ? { root: dialog, kind: "tabbed", tabbedRoot } : { root: dialog, kind: "plain" };
       }
-      const menu2 = document.querySelector(".menu-backdrop");
-      if (menu2 && getComputedStyle(menu2).display !== "none") return { root: menu2, kind: "menu" };
+      const menu3 = document.querySelector(".menu-backdrop");
+      if (menu3 && getComputedStyle(menu3).display !== "none") return { root: menu3, kind: "menu" };
       return null;
     }
     function queryModalItems(root) {
-      return Array.from(root.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el2) => el2.offsetParent !== null);
+      return Array.from(root.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el3) => el3.offsetParent !== null);
     }
     function queryScrollableListItems(root) {
       const scrollable = findScrollableDescendant(root);
@@ -14886,21 +15459,21 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         if (row2.tagName !== "DIV") return;
         Array.from(row2.children).filter((c) => c.tagName === "SPAN").forEach((s) => items.push(s));
       });
-      return items.filter((el2) => el2.offsetParent !== null);
+      return items.filter((el3) => el3.offsetParent !== null);
     }
     function sidebarLabels(view) {
       const out = [];
-      Array.from(view.children).forEach((el2) => {
-        if (el2.classList.contains("tabLabel")) out.push(el2);
-        else if (el2.classList.contains("tabContent") && el2.classList.contains("nested")) {
-          const inner = el2.querySelector(":scope > .tabbedView");
+      Array.from(view.children).forEach((el3) => {
+        if (el3.classList.contains("tabLabel")) out.push(el3);
+        else if (el3.classList.contains("tabContent") && el3.classList.contains("nested")) {
+          const inner = el3.querySelector(":scope > .tabbedView");
           if (inner) out.push(...sidebarLabels(inner));
         }
       });
       return out;
     }
     function queryCategoryItems(tabbedRoot) {
-      return sidebarLabels(tabbedRoot).filter((el2) => el2.offsetParent !== null).sort((a, b) => {
+      return sidebarLabels(tabbedRoot).filter((el3) => el3.offsetParent !== null).sort((a, b) => {
         const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
         if (Math.abs(ra.top - rb.top) > 2) return ra.top - rb.top;
         return ra.left - rb.left;
@@ -14926,12 +15499,12 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       return null;
     }
     function queryFieldRows(root) {
-      const flexRows = Array.from(root.querySelectorAll(".flex-start")).filter((row2) => row2.offsetParent !== null).map((row2) => Array.from(row2.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el2) => el2.offsetParent !== null)).filter((items) => items.length);
+      const flexRows = Array.from(root.querySelectorAll(".flex-start")).filter((row2) => row2.offsetParent !== null).map((row2) => Array.from(row2.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el3) => el3.offsetParent !== null)).filter((items) => items.length);
       const labelRows = /* @__PURE__ */ new Map();
-      Array.from(root.querySelectorAll(".tabLabel")).filter((el2) => el2.offsetParent !== null && !(el2.classList.contains("wizascript-tab-arrow") && el2.classList.contains("disabled"))).forEach((el2) => {
-        const key2 = el2.parentElement;
+      Array.from(root.querySelectorAll(".tabLabel")).filter((el3) => el3.offsetParent !== null && !(el3.classList.contains("wizascript-tab-arrow") && el3.classList.contains("disabled"))).forEach((el3) => {
+        const key2 = el3.parentElement;
         if (!labelRows.has(key2)) labelRows.set(key2, []);
-        labelRows.get(key2).push(el2);
+        labelRows.get(key2).push(el3);
       });
       const bareLabels = Array.from(labelRows.values()).map((row2) => row2.sort((a, b) => {
         const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
@@ -15002,7 +15575,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       return null;
     }
     function selectedColInTabRow(row2) {
-      if (!row2 || !row2.length || !row2.every((el2) => el2.classList && el2.classList.contains("tabLabel"))) return -1;
+      if (!row2 || !row2.length || !row2.every((el3) => el3.classList && el3.classList.contains("tabLabel"))) return -1;
       return row2.findIndex(isTabLabelChecked);
     }
     function findModalDismissButton(root) {
@@ -15053,15 +15626,15 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       const idx = itemIndexByGroupName[g.name] || 0;
       return g.items[idx] || null;
     }
-    function setHighlight(el2) {
-      if (!el2) return;
-      el2.style.outline = `${getHighlightThickness()}px solid ${getHighlightColor()}`;
-      el2.style.outlineOffset = "2px";
+    function setHighlight(el3) {
+      if (!el3) return;
+      el3.style.outline = `${getHighlightThickness()}px solid ${getHighlightColor()}`;
+      el3.style.outlineOffset = "2px";
     }
-    function clearHighlight(el2) {
-      if (!el2) return;
-      el2.style.outline = "";
-      el2.style.outlineOffset = "";
+    function clearHighlight(el3) {
+      if (!el3) return;
+      el3.style.outline = "";
+      el3.style.outlineOffset = "";
     }
     function refreshHighlight() {
       if (navInputMethod !== "dpad") {
@@ -15071,30 +15644,30 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         }
         return;
       }
-      const el2 = currentFocusedEl();
-      if (el2 === currentHighlightedEl) return;
+      const el3 = currentFocusedEl();
+      if (el3 === currentHighlightedEl) return;
       if (currentHighlightedEl) clearHighlight(currentHighlightedEl);
-      if (el2) setHighlight(el2);
-      currentHighlightedEl = el2;
+      if (el3) setHighlight(el3);
+      currentHighlightedEl = el3;
     }
-    function isTextInput(el2) {
-      if (!el2) return false;
-      if (el2.readOnly) return false;
-      if (el2.tagName === "TEXTAREA") return true;
-      if (el2.tagName === "INPUT") {
-        const type = (el2.type || "text").toLowerCase();
+    function isTextInput(el3) {
+      if (!el3) return false;
+      if (el3.readOnly) return false;
+      if (el3.tagName === "TEXTAREA") return true;
+      if (el3.tagName === "INPUT") {
+        const type = (el3.type || "text").toLowerCase();
         return ["text", "search", "email", "url", "tel", "password", "number"].includes(type);
       }
-      return !!el2.isContentEditable;
+      return !!el3.isContentEditable;
     }
-    function isSlider(el2) {
-      return !!el2 && el2.tagName === "INPUT" && (el2.type || "").toLowerCase() === "range";
+    function isSlider(el3) {
+      return !!el3 && el3.tagName === "INPUT" && (el3.type || "").toLowerCase() === "range";
     }
-    function isNativeSelect(el2) {
-      return !!el2 && el2.tagName === "SELECT";
+    function isNativeSelect(el3) {
+      return !!el3 && el3.tagName === "SELECT";
     }
-    function placeCaretAtPoint(el2, cx, cy) {
-      if (!el2 || !el2.isContentEditable) return;
+    function placeCaretAtPoint(el3, cx, cy) {
+      if (!el3 || !el3.isContentEditable) return;
       let range = null;
       if (document.caretRangeFromPoint) {
         range = document.caretRangeFromPoint(cx, cy);
@@ -15106,19 +15679,19 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
           range.collapse(true);
         }
       }
-      if (range && el2.contains(range.startContainer)) {
+      if (range && el3.contains(range.startContainer)) {
         const sel = pageWindow2.getSelection();
         sel.removeAllRanges();
         sel.addRange(range);
-        if (isDebugTextEnabled()) console.log("[Wizascript Controller] caret repositioned in", el2, "at", cx, cy);
+        if (isDebugTextEnabled()) console.log("[Wizascript Controller] caret repositioned in", el3, "at", cx, cy);
       }
     }
-    function firstTextNode(el2) {
-      const walker = document.createTreeWalker(el2, NodeFilter.SHOW_TEXT);
+    function firstTextNode(el3) {
+      const walker = document.createTreeWalker(el3, NodeFilter.SHOW_TEXT);
       return walker.nextNode();
     }
-    function lastTextNode(el2) {
-      const walker = document.createTreeWalker(el2, NodeFilter.SHOW_TEXT);
+    function lastTextNode(el3) {
+      const walker = document.createTreeWalker(el3, NodeFilter.SHOW_TEXT);
       let last = null, node;
       while (node = walker.nextNode()) last = node;
       return last;
@@ -15200,21 +15773,21 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       oskTarget = null;
       if (isDebugTextEnabled()) console.log("[Wizascript Controller] OSK closed");
     }
-    function dispatchEnterKey(el2) {
-      el2.focus();
-      const scope = el2.closest("form") || el2.closest(".chat-box") || el2.parentElement;
+    function dispatchEnterKey(el3) {
+      el3.focus();
+      const scope = el3.closest("form") || el3.closest(".chat-box") || el3.parentElement;
       const submitEl = scope && scope.querySelector('input[type="submit"]');
       if (submitEl) {
         submitEl.click();
         return;
       }
       const opts = { bubbles: true, cancelable: true, key: "Enter", code: "Enter", keyCode: 13, which: 13, view: pageWindow2 };
-      el2.dispatchEvent(new KeyboardEvent("keydown", opts));
-      el2.dispatchEvent(new KeyboardEvent("keypress", opts));
-      el2.dispatchEvent(new KeyboardEvent("keyup", opts));
+      el3.dispatchEvent(new KeyboardEvent("keydown", opts));
+      el3.dispatchEvent(new KeyboardEvent("keypress", opts));
+      el3.dispatchEvent(new KeyboardEvent("keyup", opts));
     }
     let scrollMirrorEl = null;
-    function measureTextWidth(el2, text) {
+    function measureTextWidth(el3, text) {
       if (!scrollMirrorEl) {
         scrollMirrorEl = document.createElement("span");
         Object.assign(scrollMirrorEl.style, {
@@ -15226,43 +15799,43 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         });
         document.body.appendChild(scrollMirrorEl);
       }
-      const cs = getComputedStyle(el2);
+      const cs = getComputedStyle(el3);
       scrollMirrorEl.style.font = cs.font;
       scrollMirrorEl.style.letterSpacing = cs.letterSpacing;
       scrollMirrorEl.style.textTransform = cs.textTransform;
       scrollMirrorEl.textContent = text;
       return scrollMirrorEl.getBoundingClientRect().width;
     }
-    function scrollFieldToCaret(el2) {
-      if (!el2 || el2.isContentEditable) return;
-      if (typeof el2.selectionEnd !== "number") return;
-      const pos = el2.selectionEnd;
-      const caretX = measureTextWidth(el2, el2.value.slice(0, pos));
-      const visibleWidth = el2.clientWidth;
+    function scrollFieldToCaret(el3) {
+      if (!el3 || el3.isContentEditable) return;
+      if (typeof el3.selectionEnd !== "number") return;
+      const pos = el3.selectionEnd;
+      const caretX = measureTextWidth(el3, el3.value.slice(0, pos));
+      const visibleWidth = el3.clientWidth;
       const margin = 12;
-      if (caretX - el2.scrollLeft > visibleWidth - margin) {
-        el2.scrollLeft = caretX - visibleWidth + margin;
-      } else if (caretX - el2.scrollLeft < margin) {
-        el2.scrollLeft = Math.max(0, caretX - margin);
+      if (caretX - el3.scrollLeft > visibleWidth - margin) {
+        el3.scrollLeft = caretX - visibleWidth + margin;
+      } else if (caretX - el3.scrollLeft < margin) {
+        el3.scrollLeft = Math.max(0, caretX - margin);
       }
     }
-    function typeChar(el2, ch) {
-      el2.focus();
+    function typeChar(el3, ch) {
+      el3.focus();
       const info = keyInfo(ch);
       const base = { bubbles: true, cancelable: true, key: ch, code: info.code, keyCode: info.keyCode, which: info.keyCode, view: pageWindow2 };
-      el2.dispatchEvent(new KeyboardEvent("keydown", base));
-      el2.dispatchEvent(new KeyboardEvent("keypress", base));
+      el3.dispatchEvent(new KeyboardEvent("keydown", base));
+      el3.dispatchEvent(new KeyboardEvent("keypress", base));
       document.execCommand("insertText", false, ch);
-      el2.dispatchEvent(new KeyboardEvent("keyup", base));
-      scrollFieldToCaret(el2);
+      el3.dispatchEvent(new KeyboardEvent("keyup", base));
+      scrollFieldToCaret(el3);
     }
-    function typeBackspace(el2) {
-      el2.focus();
+    function typeBackspace(el3) {
+      el3.focus();
       const base = { bubbles: true, cancelable: true, key: "Backspace", code: "Backspace", keyCode: 8, which: 8, view: pageWindow2 };
-      el2.dispatchEvent(new KeyboardEvent("keydown", base));
+      el3.dispatchEvent(new KeyboardEvent("keydown", base));
       document.execCommand("delete");
-      el2.dispatchEvent(new KeyboardEvent("keyup", base));
-      scrollFieldToCaret(el2);
+      el3.dispatchEvent(new KeyboardEvent("keyup", base));
+      scrollFieldToCaret(el3);
     }
     function pressKey(label) {
       if (!oskTarget) return;
@@ -15275,11 +15848,11 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     }
     let sliderTarget = null;
     const nativeValueSetter = Object.getOwnPropertyDescriptor(pageWindow2.HTMLInputElement.prototype, "value").set;
-    function openSlider(el2) {
-      sliderTarget = el2;
-      setHighlight(el2);
+    function openSlider(el3) {
+      sliderTarget = el3;
+      setHighlight(el3);
       cursor.style.display = "none";
-      if (isDebugTextEnabled()) console.log("[Wizascript Controller] slider focused", el2, "value=", el2.value, "min=", el2.min, "max=", el2.max, "step=", el2.step);
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] slider focused", el3, "value=", el3.value, "min=", el3.min, "max=", el3.max, "step=", el3.step);
     }
     function closeSlider() {
       if (sliderTarget) clearHighlight(sliderTarget);
@@ -15287,37 +15860,37 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     }
     function adjustSlider(dir) {
       if (!sliderTarget) return;
-      const el2 = sliderTarget;
-      const step = parseFloat(el2.step) || 1;
-      const min = el2.min !== "" ? parseFloat(el2.min) : -Infinity;
-      const max = el2.max !== "" ? parseFloat(el2.max) : Infinity;
-      let val = parseFloat(el2.value) || 0;
+      const el3 = sliderTarget;
+      const step = parseFloat(el3.step) || 1;
+      const min = el3.min !== "" ? parseFloat(el3.min) : -Infinity;
+      const max = el3.max !== "" ? parseFloat(el3.max) : Infinity;
+      let val = parseFloat(el3.value) || 0;
       val = Math.max(min, Math.min(max, val + dir * step));
-      nativeValueSetter.call(el2, String(val));
-      el2.dispatchEvent(new Event("input", { bubbles: true }));
-      el2.dispatchEvent(new Event("change", { bubbles: true }));
+      nativeValueSetter.call(el3, String(val));
+      el3.dispatchEvent(new Event("input", { bubbles: true }));
+      el3.dispatchEvent(new Event("change", { bubbles: true }));
     }
-    function setSliderValueFromPointer(el2, clientX) {
-      const rect = el2.getBoundingClientRect();
+    function setSliderValueFromPointer(el3, clientX) {
+      const rect = el3.getBoundingClientRect();
       if (!rect.width) return;
-      const min = el2.min !== "" ? parseFloat(el2.min) : 0;
-      const max = el2.max !== "" ? parseFloat(el2.max) : 100;
-      const step = parseFloat(el2.step) || 1;
+      const min = el3.min !== "" ? parseFloat(el3.min) : 0;
+      const max = el3.max !== "" ? parseFloat(el3.max) : 100;
+      const step = parseFloat(el3.step) || 1;
       let frac = (clientX - rect.left) / rect.width;
       frac = Math.max(0, Math.min(1, frac));
       let val = min + frac * (max - min);
       val = Math.round(val / step) * step;
       val = Math.max(min, Math.min(max, val));
-      nativeValueSetter.call(el2, String(val));
-      el2.dispatchEvent(new Event("input", { bubbles: true }));
-      el2.dispatchEvent(new Event("change", { bubbles: true }));
+      nativeValueSetter.call(el3, String(val));
+      el3.dispatchEvent(new Event("input", { bubbles: true }));
+      el3.dispatchEvent(new Event("change", { bubbles: true }));
     }
     let selectTarget = null, selectOptions = [], selectIndex = 0;
-    function openSelectPicker(el2) {
-      selectTarget = el2;
-      selectOptions = Array.from(el2.options);
+    function openSelectPicker(el3) {
+      selectTarget = el3;
+      selectOptions = Array.from(el3.options);
       selectIndex = Math.max(0, selectOptions.findIndex((o) => o.selected));
-      const selCs = getComputedStyle(el2);
+      const selCs = getComputedStyle(el3);
       const selBg = selCs.backgroundColor;
       selectEl.style.background = selBg && selBg !== "rgba(0, 0, 0, 0)" ? selBg : "#000";
       selectEl.style.border = `${selCs.borderTopWidth} ${selCs.borderTopStyle} ${selCs.borderTopColor}`;
@@ -15326,10 +15899,10 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       selectEl.style.fontSize = selCs.fontSize;
       renderSelectOptions();
       selectEl.style.display = "block";
-      positionPanelNear(selectEl, el2);
+      positionPanelNear(selectEl, el3);
       updateSelectHighlight();
       cursor.style.display = "block";
-      if (isDebugTextEnabled()) console.log("[Wizascript Controller] select picker opened", el2, selectOptions.map((o) => o.text));
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] select picker opened", el3, selectOptions.map((o) => o.text));
     }
     function closeSelectPicker() {
       selectEl.style.display = "none";
@@ -15345,16 +15918,16 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       }
       closeSelectPicker();
     }
-    function activateHighlighted(button) {
-      const el2 = currentFocusedEl();
-      if (!el2) return;
-      const rect = el2.getBoundingClientRect();
+    function activateHighlighted(button2) {
+      const el3 = currentFocusedEl();
+      if (!el3) return;
+      const rect = el3.getBoundingClientRect();
       const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
-      if (isPatchMakerResetButton(el2)) {
-        activatePatchMakerResetButton(el2, cx, cy);
+      if (isPatchMakerResetButton(el3)) {
+        activatePatchMakerResetButton(el3, cx, cy);
         return;
       }
-      dispatchClick(el2, cx, cy, button === 2 ? 2 : 0);
+      dispatchClick(el3, cx, cy, button2 === 2 ? 2 : 0);
       const openPresetMenu = getPresetMenuState();
       if (openPresetMenu) {
         fieldSubmenu = {
@@ -15368,31 +15941,31 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         };
         return;
       }
-      if (isNativeSelect(el2)) {
-        openSelectPicker(el2);
+      if (isNativeSelect(el3)) {
+        openSelectPicker(el3);
         return;
       }
-      if (isSlider(el2)) {
-        openSlider(el2);
+      if (isSlider(el3)) {
+        openSlider(el3);
         return;
       }
-      if (el2.matches && el2.matches(".uc-section-label, .uc-card-item")) {
-        el2.focus();
+      if (el3.matches && el3.matches(".uc-section-label, .uc-card-item")) {
+        el3.focus();
         return;
       }
-      if (el2.readOnly && (el2.tagName === "INPUT" || el2.tagName === "TEXTAREA")) {
-        el2.focus();
+      if (el3.readOnly && (el3.tagName === "INPUT" || el3.tagName === "TEXTAREA")) {
+        el3.focus();
         return;
       }
-      if (isTextInput(el2)) {
-        openOsk(el2);
-        if (el2.isContentEditable) placeCaretAtPoint(el2, cx, cy);
+      if (isTextInput(el3)) {
+        openOsk(el3);
+        if (el3.isContentEditable) placeCaretAtPoint(el3, cx, cy);
         return;
       }
-      if (!activeSubmenu && el2.classList.contains("dropdown-toggle")) {
-        const items = findDropdownMenuNear(el2);
+      if (!activeSubmenu && el3.classList.contains("dropdown-toggle")) {
+        const items = findDropdownMenuNear(el3);
         if (items.length) {
-          activeSubmenu = { toggle: el2, items, index: 0 };
+          activeSubmenu = { toggle: el3, items, index: 0 };
           refreshHighlight();
         }
       }
@@ -15440,8 +16013,8 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     function currentCursorSpeedMult() {
       return Math.max(0.3, Math.min(3, 1 - cursorSensitivity * 2));
     }
-    function findRealScrollable(el2) {
-      let node = el2;
+    function findRealScrollable(el3) {
+      let node = el3;
       while (node && node !== document.documentElement) {
         const cs = getComputedStyle(node);
         if (/(auto|scroll)/.test(cs.overflowY) && node.scrollHeight > node.clientHeight) return node;
@@ -15469,14 +16042,14 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       }
       return rowEls.length - 1;
     }
-    function fire(el2, type, ctor, clientX, clientY, button, buttons) {
+    function fire(el3, type, ctor, clientX, clientY, button2, buttons) {
       const opts = {
         bubbles: true,
         cancelable: true,
         view: pageWindow2,
         clientX,
         clientY,
-        button: button || 0,
+        button: button2 || 0,
         buttons: buttons || 0
       };
       if (ctor === PointerEvent) {
@@ -15484,47 +16057,60 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         opts.isPrimary = true;
         opts.pointerType = "mouse";
       }
-      el2.dispatchEvent(new ctor(type, opts));
+      el3.dispatchEvent(new ctor(type, opts));
     }
-    function dispatchClick(el2, cx, cy, button) {
-      if (button === 2) {
-        fire(el2, "pointerdown", PointerEvent, cx, cy, 2, 2);
-        fire(el2, "mousedown", MouseEvent, cx, cy, 2, 2);
-        fire(el2, "pointerup", PointerEvent, cx, cy, 2, 0);
-        fire(el2, "mouseup", MouseEvent, cx, cy, 2, 0);
-        fire(el2, "contextmenu", MouseEvent, cx, cy, 2, 0);
+    function middleClickAtCursor() {
+      if (document.getElementById("handCards")) return;
+      const shown = cursor.style.display;
+      cursor.style.display = "none";
+      const el3 = document.elementFromPoint(x, y);
+      cursor.style.display = shown;
+      if (!el3) return;
+      fire(el3, "pointerdown", PointerEvent, x, y, 1, 4);
+      fire(el3, "mousedown", MouseEvent, x, y, 1, 4);
+      fire(el3, "pointerup", PointerEvent, x, y, 1, 0);
+      fire(el3, "mouseup", MouseEvent, x, y, 1, 0);
+      fire(el3, "auxclick", MouseEvent, x, y, 1, 0);
+    }
+    function dispatchClick(el3, cx, cy, button2) {
+      if (button2 === 2) {
+        fire(el3, "pointerdown", PointerEvent, cx, cy, 2, 2);
+        fire(el3, "mousedown", MouseEvent, cx, cy, 2, 2);
+        fire(el3, "pointerup", PointerEvent, cx, cy, 2, 0);
+        fire(el3, "mouseup", MouseEvent, cx, cy, 2, 0);
+        fire(el3, "contextmenu", MouseEvent, cx, cy, 2, 0);
         return;
       }
-      fire(el2, "pointerdown", PointerEvent, cx, cy, 0, 1);
-      fire(el2, "mousedown", MouseEvent, cx, cy, 0, 1);
-      fire(el2, "pointerup", PointerEvent, cx, cy, 0, 0);
-      fire(el2, "mouseup", MouseEvent, cx, cy, 0, 0);
-      fire(el2, "click", MouseEvent, cx, cy, 0, 0);
+      fire(el3, "pointerdown", PointerEvent, cx, cy, 0, 1);
+      fire(el3, "mousedown", MouseEvent, cx, cy, 0, 1);
+      fire(el3, "pointerup", PointerEvent, cx, cy, 0, 0);
+      fire(el3, "mouseup", MouseEvent, cx, cy, 0, 0);
+      fire(el3, "click", MouseEvent, cx, cy, 0, 0);
     }
-    function isPatchMakerResetButton(el2) {
-      return !!el2 && el2.tagName === "BUTTON" && el2.textContent && el2.textContent.trim() === "Reset Data";
+    function isPatchMakerResetButton(el3) {
+      return !!el3 && el3.tagName === "BUTTON" && el3.textContent && el3.textContent.trim() === "Reset Data";
     }
     let lastResetBtnPressTime = 0;
-    function activatePatchMakerResetButton(el2, cx, cy) {
+    function activatePatchMakerResetButton(el3, cx, cy) {
       const now = performance.now();
       const isConfirmPress = now - lastResetBtnPressTime < DOUBLE_TAP_WINDOW_MS2;
       const detail = isConfirmPress ? 2 : 1;
-      fire(el2, "pointerdown", PointerEvent, cx, cy, 0, 1);
-      fire(el2, "mousedown", MouseEvent, cx, cy, 0, 1);
-      fire(el2, "pointerup", PointerEvent, cx, cy, 0, 0);
-      fire(el2, "mouseup", MouseEvent, cx, cy, 0, 0);
-      el2.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: pageWindow2, clientX: cx, clientY: cy, button: 0, buttons: 0, detail }));
+      fire(el3, "pointerdown", PointerEvent, cx, cy, 0, 1);
+      fire(el3, "mousedown", MouseEvent, cx, cy, 0, 1);
+      fire(el3, "pointerup", PointerEvent, cx, cy, 0, 0);
+      fire(el3, "mouseup", MouseEvent, cx, cy, 0, 0);
+      el3.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: pageWindow2, clientX: cx, clientY: cy, button: 0, buttons: 0, detail }));
       lastResetBtnPressTime = isConfirmPress ? 0 : now;
       if (isDebugTextEnabled()) console.log("[Wizascript Controller] Reset Data pressed, detail =", detail, isConfirmPress ? "(confirmed - resetting)" : "(press again to confirm)");
     }
-    function triggerElementClick(el2) {
-      if (!el2) return;
-      const r = el2.getBoundingClientRect();
-      dispatchClick(el2, r.left + r.width / 2, r.top + r.height / 2, 0);
+    function triggerElementClick(el3) {
+      if (!el3) return;
+      const r = el3.getBoundingClientRect();
+      dispatchClick(el3, r.left + r.width / 2, r.top + r.height / 2, 0);
     }
     function triggerConcede() {
-      const menu2 = document.querySelector(".menu-backdrop");
-      const wasMenuOpen = !!(menu2 && getComputedStyle(menu2).display !== "none");
+      const menu3 = document.querySelector(".menu-backdrop");
+      const wasMenuOpen = !!(menu3 && getComputedStyle(menu3).display !== "none");
       document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
       let attempts2 = 0;
       const MAX_ATTEMPTS = 30;
@@ -15576,13 +16162,13 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       })();
     }
     const drag = { left: null, right: null };
-    function beginPress(side, button) {
+    function beginPress(side, button2) {
       cursor.style.display = "none";
       const hitEl = document.elementFromPoint(x, y);
       cursor.style.display = "block";
       if (!hitEl) return;
       drag[side] = { downEl: hitEl };
-      if (button === 2) {
+      if (button2 === 2) {
         fire(hitEl, "pointerdown", PointerEvent, x, y, 2, 2);
         fire(hitEl, "mousedown", MouseEvent, x, y, 2, 2);
       } else {
@@ -15590,13 +16176,13 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         fire(hitEl, "mousedown", MouseEvent, x, y, 0, 1);
       }
     }
-    function continuePress(side, button) {
+    function continuePress(side, button2) {
       if (!drag[side]) return;
       cursor.style.display = "none";
       const hitEl = document.elementFromPoint(x, y);
       cursor.style.display = "block";
       if (!hitEl) return;
-      if (button === 2) {
+      if (button2 === 2) {
         fire(hitEl, "pointermove", PointerEvent, x, y, 2, 2);
         fire(hitEl, "mousemove", MouseEvent, x, y, 2, 2);
       } else {
@@ -15604,7 +16190,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         fire(hitEl, "mousemove", MouseEvent, x, y, 0, 1);
       }
     }
-    function endPress(side, button) {
+    function endPress(side, button2) {
       const state2 = drag[side];
       drag[side] = null;
       if (!state2) return;
@@ -15612,7 +16198,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       const hitEl = document.elementFromPoint(x, y);
       cursor.style.display = "block";
       if (!hitEl) return;
-      if (button === 2) {
+      if (button2 === 2) {
         fire(hitEl, "pointerup", PointerEvent, x, y, 2, 0);
         fire(hitEl, "mouseup", MouseEvent, x, y, 2, 0);
         if (hitEl === state2.downEl) fire(hitEl, "contextmenu", MouseEvent, x, y, 2, 0);
@@ -15646,11 +16232,11 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     }
     const hoverRules = collectHoverRules();
     const hoverStyleMap = /* @__PURE__ */ new Map();
-    function resolveHoverStyle(el2) {
+    function resolveHoverStyle(el3) {
       const finalProps = /* @__PURE__ */ new Map();
       for (const { selector, style } of hoverRules) {
         try {
-          if (!el2.matches(selector)) continue;
+          if (!el3.matches(selector)) continue;
         } catch (e) {
           continue;
         }
@@ -15660,8 +16246,8 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         }
       }
       if (!finalProps.size) return;
-      const originalProps = Array.from(finalProps.keys()).map((prop) => [prop, el2.style.getPropertyValue(prop), el2.style.getPropertyPriority(prop)]);
-      hoverStyleMap.set(el2, {
+      const originalProps = Array.from(finalProps.keys()).map((prop) => [prop, el3.style.getPropertyValue(prop), el3.style.getPropertyPriority(prop)]);
+      hoverStyleMap.set(el3, {
         finalProps: Array.from(finalProps.entries()).map(([p, [v, pr]]) => [p, v, pr]),
         originalProps
       });
@@ -15673,24 +16259,24 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       });
     });
     if (isDebugTextEnabled()) console.log(`[Wizascript Controller] resolved hover styles for ${hoverStyleMap.size} curated element(s)`);
-    function findHoverTarget(el2) {
-      if (!el2) return null;
-      if (hoverStyleMap.has(el2)) return el2;
-      const link = el2.closest && el2.closest("a");
+    function findHoverTarget(el3) {
+      if (!el3) return null;
+      if (hoverStyleMap.has(el3)) return el3;
+      const link = el3.closest && el3.closest("a");
       if (link && hoverStyleMap.has(link)) return link;
       return null;
     }
-    function applyCuratedHover(el2) {
-      const entry = hoverStyleMap.get(el2);
+    function applyCuratedHover(el3) {
+      const entry = hoverStyleMap.get(el3);
       if (!entry) return;
-      for (const [prop, val, pr] of entry.finalProps) el2.style.setProperty(prop, val, pr);
+      for (const [prop, val, pr] of entry.finalProps) el3.style.setProperty(prop, val, pr);
     }
-    function revertCuratedHover(el2) {
-      const entry = hoverStyleMap.get(el2);
+    function revertCuratedHover(el3) {
+      const entry = hoverStyleMap.get(el3);
       if (!entry) return;
       for (const [prop, val, pr] of entry.originalProps) {
-        if (val) el2.style.setProperty(prop, val, pr);
-        else el2.style.removeProperty(prop);
+        if (val) el3.style.setProperty(prop, val, pr);
+        else el3.style.removeProperty(prop);
       }
     }
     let hoverActiveEl = null;
@@ -15701,28 +16287,28 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       hoverActiveEl = target;
     }
     let lastHitEl = null;
-    function updateHover(el2, cx, cy) {
-      if (el2 !== lastHitEl) {
+    function updateHover(el3, cx, cy) {
+      if (el3 !== lastHitEl) {
         if (lastHitEl) {
           fire(lastHitEl, "pointerout", PointerEvent, cx, cy, 0, 0);
           fire(lastHitEl, "mouseout", MouseEvent, cx, cy, 0, 0);
           fire(lastHitEl, "pointerleave", PointerEvent, cx, cy, 0, 0);
           fire(lastHitEl, "mouseleave", MouseEvent, cx, cy, 0, 0);
         }
-        if (el2) {
-          fire(el2, "pointerover", PointerEvent, cx, cy, 0, 0);
-          fire(el2, "mouseover", MouseEvent, cx, cy, 0, 0);
-          fire(el2, "pointerenter", PointerEvent, cx, cy, 0, 0);
-          fire(el2, "mouseenter", MouseEvent, cx, cy, 0, 0);
+        if (el3) {
+          fire(el3, "pointerover", PointerEvent, cx, cy, 0, 0);
+          fire(el3, "mouseover", MouseEvent, cx, cy, 0, 0);
+          fire(el3, "pointerenter", PointerEvent, cx, cy, 0, 0);
+          fire(el3, "mouseenter", MouseEvent, cx, cy, 0, 0);
         }
-        lastHitEl = el2;
+        lastHitEl = el3;
       }
-      if (el2) {
-        fire(el2, "pointermove", PointerEvent, cx, cy, 0, 0);
-        fire(el2, "mousemove", MouseEvent, cx, cy, 0, 0);
+      if (el3) {
+        fire(el3, "pointermove", PointerEvent, cx, cy, 0, 0);
+        fire(el3, "mousemove", MouseEvent, cx, cy, 0, 0);
       }
       const focused = currentFocusedEl();
-      setHoverTarget(findHoverTarget(focused || el2));
+      setHoverTarget(findHoverTarget(focused || el3));
     }
     document.addEventListener("mousemove", (e) => {
       if (!e.isTrusted) return;
@@ -15914,7 +16500,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
             const codesFiredThisFrame = /* @__PURE__ */ new Set();
             const tierListOpenForRelay = !!getTierListPad();
             const tierListComboInputs = tierListOpenForRelay ? CONTROLLER_ACTIONS.filter((a) => a.context === "tierList").map((a) => getBoundButton(a.key)) : [];
-            const comboRunners = { tierListFillScreen: toggleTierListFillScreen };
+            const comboRunners = { tierListFillScreen: toggleTierListFillScreen, middleClick: middleClickAtCursor };
             CONTROLLER_ACTIONS.forEach((action) => {
               let applies;
               if (action.context === "tierList") applies = tierListOpenForRelay;
@@ -15958,18 +16544,18 @@ R1: resume typing   ${btnLabel(1)}: close` : ""}`;
               hud.textContent = `UC TV Guide loading\u2026
 release ${bindingToDisplay(guideBtn)} to cancel`;
             } else {
-              const playerSpans = Array.from(guideEl.querySelectorAll("span")).filter((el2) => el2.style.cursor === "pointer");
+              const playerSpans = Array.from(guideEl.querySelectorAll("span")).filter((el3) => el3.style.cursor === "pointer");
               const matches = [];
               const rows = [];
               const rowIndex = /* @__PURE__ */ new Map();
-              playerSpans.forEach((el2) => {
-                const row2 = el2.parentElement;
+              playerSpans.forEach((el3) => {
+                const row2 = el3.parentElement;
                 if (!rowIndex.has(row2)) {
                   rowIndex.set(row2, matches.length);
                   matches.push([]);
                   rows.push(row2);
                 }
-                matches[rowIndex.get(row2)].push(el2);
+                matches[rowIndex.get(row2)].push(el3);
               });
               if (!matches.length) {
                 guideMatchIndex = -1;
@@ -16236,7 +16822,7 @@ left/right = fine-tune   ${btnLabel(0)} hold = drag   ${btnLabel(1)} = done`;
           cursor.style.left = x + "px";
           cursor.style.top = y + "px";
           cursor.style.display = cursorRestingDisplay();
-          const mulliganCards = Array.from(mulliganHost.querySelectorAll(":scope > .card")).filter((el2) => el2.offsetParent !== null);
+          const mulliganCards = Array.from(mulliganHost.querySelectorAll(":scope > .card")).filter((el3) => el3.offsetParent !== null);
           const confirmBtn = document.querySelector(".bootstrap-dialog-footer-buttons .btn-primary") || document.querySelector(".modal-footer .btn-primary");
           const mulliganItems = confirmBtn ? [...mulliganCards, confirmBtn] : mulliganCards;
           if (!mulliganItems.length) {
@@ -16282,10 +16868,10 @@ left/right = fine-tune   ${btnLabel(0)} hold = drag   ${btnLabel(1)} = done`;
             updateHover(mulliganGrid[mulliganRow][mulliganCol], x, y);
           }
           if (btn(0) && !btnHeld[0]) {
-            const el2 = mulliganGrid[mulliganRow][mulliganCol];
-            const r = el2.getBoundingClientRect();
-            dispatchClick(el2, r.left + r.width / 2, r.top + r.height / 2, 0);
-            if (isDebugTextEnabled()) console.log("[Wizascript Controller] mulligan item clicked", el2);
+            const el3 = mulliganGrid[mulliganRow][mulliganCol];
+            const r = el3.getBoundingClientRect();
+            dispatchClick(el3, r.left + r.width / 2, r.top + r.height / 2, 0);
+            if (isDebugTextEnabled()) console.log("[Wizascript Controller] mulligan item clicked", el3);
           }
           btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
           const focusedIsConfirm = mulliganGrid[mulliganRow][mulliganCol] === confirmBtn;
@@ -16373,8 +16959,8 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
               findPrev:
                 for (let r = 0; r < fieldGrid.length; r++) {
                   for (let c = 0; c < fieldGrid[r].length; c++) {
-                    const el2 = fieldGrid[r][c];
-                    if (el2 === prevEl || prevArrowDir && el2.classList.contains("wizascript-tab-arrow") && el2.dataset.dir === prevArrowDir) {
+                    const el3 = fieldGrid[r][c];
+                    if (el3 === prevEl || prevArrowDir && el3.classList.contains("wizascript-tab-arrow") && el3.dataset.dir === prevArrowDir) {
                       fieldRow = r;
                       fieldCol = c;
                       break findPrev;
@@ -16395,8 +16981,8 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
               }
               if (isDebugTextEnabled()) {
                 const path = [];
-                for (let el2 = activeContent; el2 && el2 !== tabbedRoot; el2 = el2.parentElement) {
-                  if (el2.classList.contains("tabContent") && el2.previousElementSibling) path.unshift(el2.previousElementSibling.textContent.trim());
+                for (let el3 = activeContent; el3 && el3 !== tabbedRoot; el3 = el3.parentElement) {
+                  if (el3.classList.contains("tabContent") && el3.previousElementSibling) path.unshift(el3.previousElementSibling.textContent.trim());
                 }
                 console.log(
                   "[Wizascript Controller] settings: categories =",
@@ -16550,7 +17136,7 @@ ${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   \u2190/${btnLabel(1)} ba
             return;
           }
           if (!modalGrid || !elArraysEqual(gridFlat(modalGrid), modalItems)) {
-            modalGrid = kind === "menu" ? modalItems.map((el2) => [el2]) : buildRowGrid(modalItems);
+            modalGrid = kind === "menu" ? modalItems.map((el3) => [el3]) : buildRowGrid(modalItems);
             modalRow = 0;
             modalCol = 0;
           }
@@ -16584,6 +17170,14 @@ ${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   \u2190/${btnLabel(1)} ba
           }
           dpadHeld = { up, down, left, right };
           refreshHighlight();
+          if (isReportMenuOpen()) {
+            if (btn(0) && !btnHeld[0]) pressReportMenu();
+            if (btn(1) && !btnHeld[1]) closeReportMenu();
+            btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+            hud.textContent = `report menu
+${btnLabel(0)} report / undo   ${btnLabel(1)} close`;
+            return;
+          }
           if (btn(0) && !btnHeld[0]) activateHighlighted(0);
           if (btn(3) && !btnHeld[3]) activateHighlighted(2);
           if (btn(1) && !btnHeld[1] && !isControllerCaptureActive()) {
@@ -16794,10 +17388,10 @@ ${btnLabel(0)} drop here   ${btnLabel(1)} cancel`;
             }
             if (btn(0) && !btnHeld[0]) {
               if (navInputMethod === "dpad") {
-                const el2 = resolveGrid[resolveRow][resolveCol];
-                const r = el2.getBoundingClientRect();
-                dispatchClick(el2, r.left + r.width / 2, r.top + r.height / 2, 0);
-                if (isDebugTextEnabled()) console.log("[Wizascript Controller] resolve target confirmed (d-pad)", el2);
+                const el3 = resolveGrid[resolveRow][resolveCol];
+                const r = el3.getBoundingClientRect();
+                dispatchClick(el3, r.left + r.width / 2, r.top + r.height / 2, 0);
+                if (isDebugTextEnabled()) console.log("[Wizascript Controller] resolve target confirmed (d-pad)", el3);
               } else {
                 cursor.style.display = "none";
                 const hitEl2 = document.elementFromPoint(x, y);

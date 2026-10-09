@@ -9,6 +9,9 @@
 //   cards-view.js      one card per version, drawn with appendCard
 //   artifacts-view.js  one row per version
 //   shell.js           the window ("Loading..." first, then the history)
+//   reports.js         right-click a version -> report it; My Reports -> chat-sized codes
+//   report-codes.js    the code format (WZR1 ..., 250 characters max, no links)
+//   collector.js       gathering codes from chat or pasted text; short chat display
 //
 // The histories are built from the wikis, the official patch notes and
 // feildmaster's Card-Tracker by a GitHub Action (card-history/ on the
@@ -28,6 +31,8 @@ import { cardHistoryView } from "./cards-view.js";
 import { artifactHistoryView, findArtifact } from "./artifacts-view.js";
 import { openShell } from "./shell.js";
 import { injectCardHistoryStyle } from "./styles.js";
+import { remoteReports, wireReportMenu } from "./reports.js";
+import { initChatReports } from "./collector.js";
 
 const CARD_PAGES = ["/Crafting", "/Decks"];
 const ARTIFACT_PAGES = ["/Artifacts"];
@@ -41,7 +46,7 @@ async function openCard(id) {
   const shell = openShell(`Previous Versions - ${base.name}`, `https://undercards.fandom.com/wiki/${base.name.replace(/ /g, "_")}/Previous_Versions`);
   try {
     shell.step("Reading the card's history...");
-    const [data, index, f] = await Promise.all([getCardData(base.id), getIndex().catch(() => null), formatter()]);
+    const [data, index, f] = await Promise.all([getCardData(base.id), getIndex().catch(() => null), formatter(), remoteReports()]);
     const view = cardHistoryView(base, data, f, index);
     shell.fill(view.node, view.fit, view.wikiUrl);
   } catch (e) {
@@ -57,7 +62,7 @@ async function openArtifact(image) {
   const shell = openShell(`Artifact History - ${a.name}`, `https://undercards.fandom.com/wiki/${a.name.replace(/ /g, "_")}`);
   try {
     shell.step("Reading the artifact's history...");
-    const [data, index, f] = await Promise.all([getArtifactData(a.name), getIndex().catch(() => null), formatter()]);
+    const [data, index, f] = await Promise.all([getArtifactData(a.name), getIndex().catch(() => null), formatter(), remoteReports()]);
     const view = artifactHistoryView(a, data, f, index);
     shell.fill(view.node, null, view.wikiUrl);
   } catch (e) {
@@ -88,10 +93,13 @@ function artifactUnder(e) {
   return null;
 }
 
-export function initCardHistory() {
+export function initCardHistory(plugin) {
   if (!isPluginEnabled("cardHistory")) return;
-  if (!matchesPage([...CARD_PAGES, ...ARTIFACT_PAGES])) return;
+  // Chat is on every page: report codes in it are shown short, and collected if asked.
   injectCardHistoryStyle();
+  initChatReports(plugin);
+  if (!matchesPage([...CARD_PAGES, ...ARTIFACT_PAGES])) return;
+  wireReportMenu();
   // No browser auto-scroll on a middle-click over a card or artifact.
   document.addEventListener("mousedown", (e) => { if (cardUnder(e) || artifactUnder(e)) e.preventDefault(); }, true);
   document.addEventListener("auxclick", async (e) => {

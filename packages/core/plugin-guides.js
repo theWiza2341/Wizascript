@@ -137,8 +137,11 @@ const GUIDES = {
     points: () => [
       '<b>Middle-click</b> a card (Crafting, Decks) or an artifact (Artifacts) to open its history, oldest first.',
       'The number under each version is the patch it came from. <b>*</b> means not certain or has a note: rest the mouse on it.',
-      '<b>?</b> means that part isn\'t recorded anywhere. History comes from both Undercards wikis, the patch notes and feildmaster\'s Card-Tracker.'
-    ]
+      '<b>?</b> means that part isn\'t recorded anywhere. History comes from both Undercards wikis, the patch notes and feildmaster\'s Card-Tracker.',
+      'Looks wrong? <b>Right-click</b> that version and report it (⚑). <b>My Reports</b> gives you short codes to paste in chat or on Discord. <b>⚠</b> = already reported.'
+    ].concat(isPluginEnabled("controller") ? [
+      `Controller: point the cursor at it and press Primary + ${ctl(getBoundButton("middleClick"))} (Middle Click). ${pad(3)} right-clicks to report.`
+    ] : [])
   },
   tierList: {
     tab: "Tier List",

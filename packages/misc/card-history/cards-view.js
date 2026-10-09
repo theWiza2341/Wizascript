@@ -7,6 +7,7 @@
 import { allCards, appendCard, gameFontSize } from "./game.js";
 import { formatText } from "./format.js";
 import { spriteUrl } from "./data.js";
+import { tagNode } from "./reports.js";
 
 const PER_ROW = 4;
 
@@ -115,6 +116,13 @@ function drawVersion(base, ver, f, currentDescHtml) {
   return el;
 }
 
+// What the player saw, for whoever checks a report: "6/4/4 RARE Clam Girl: Magic: ...".
+const plain = (t) => String(t || "").replace(/\{\{[A-Z_]+:([^}]*)\}\}/g, "$1").replace(/\{\{([A-Z_]+)\}\}/g, "$1").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+function seen(card, ver) {
+  const stats = card.typeCard === 0 ? `${ver.cost ?? "?"}/${ver.atk ?? "?"}/${ver.hp ?? "?"}` : `${ver.cost ?? "?"}`;
+  return `${stats} ${ver.rarity || ""} ${ver.name}: ${ver.textKnown && !ver.truncated ? plain(ver.text) : "?"}`.replace(/\s+/g, " ");
+}
+
 const n0 = (x) => (x === null || x === undefined ? undefined : x);
 
 // -> { node, fit, wikiUrl } for the dialog.
@@ -140,7 +148,13 @@ export function cardHistoryView(base, data, f, index) {
   const grid = document.createElement("div");
   grid.className = "cardsPreview no-hover wz-ch-grid";
   grid.style.cssText = `display:grid;grid-template-columns:repeat(${PER_ROW},max-content);gap:38px 8px;justify-content:center;padding-bottom:28px;`;
-  versions.forEach((v) => grid.appendChild(drawVersion(base, v, f, currentDescHtml)));
+  const built = (index && index.builtAt) || "";
+  versions.forEach((v) => {
+    const el = drawVersion(base, v, f, currentDescHtml);
+    tagNode(el, { kind: "c", id: base.id, name: base.name, label: versionLabel(v.version).text, shown: seen(base, v), built });
+    grid.appendChild(el);
+  });
+  tagNode(nowEl, { kind: "c", id: base.id, name: base.name, label: "today", shown: seen(base, { ...base, atk: base.attack, textKnown: false }), built });
   grid.appendChild(nowEl);
 
   const node = document.createElement("div");
@@ -156,7 +170,7 @@ export function cardHistoryView(base, data, f, index) {
   const lines = [`Sources: ${src.join("; ")}.`];
   if (!data) lines.unshift("No recorded history for this card yet.");
   else if (!data.firstFrom && !(versions[0] && versions[0].version && versions[0].version.source === "miraheze")) lines.push("Its first version isn't recorded; earlier stats are worked out backwards.");
-  lines.push("* = not certain, or has a note - hover the version number.");
+  lines.push("* = not certain, or has a note - hover the version number. Looks wrong? Right-click it to report it.");
   foot.textContent = lines.join(" ");
   node.appendChild(foot);
 

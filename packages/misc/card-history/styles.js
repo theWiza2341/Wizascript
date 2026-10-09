@@ -38,8 +38,6 @@ const CSS = `
 .wz-ch-codelines { margin: 8px 0; }
 .wz-ch-codeline { display: flex; gap: 6px; margin-bottom: 4px; }
 .wz-ch-codeline .wz-ch-code { flex: 1; font-family: monospace; font-size: 12px; background: #111; color: #ddd; border: 1px solid #555; padding: 2px 6px; }
-.wz-ch-collect { margin-top: 12px; border-top: 1px solid #444; padding-top: 8px; }
-.wz-ch-collect summary { cursor: pointer; opacity: .85; }
 .wz-ch-chatcode { opacity: .75; font-style: italic; cursor: pointer; }
 .wz-ch-chatcode.wz-ch-chatcode-open { font-style: normal; font-family: monospace; cursor: text; word-break: break-all; }
 .wz-ch-dim { opacity: .7; font-size: 12px; }

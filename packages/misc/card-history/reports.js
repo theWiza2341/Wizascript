@@ -1,29 +1,28 @@
 // packages/misc/card-history/reports.js
 //
 // "Report as Bugged/Inaccurate": players flag a version that looks wrong, then
-// paste their reports as short codes in Undercards chat or a Discord channel.
+// send their reports as short chat messages in room 0 ("void"), where the UC
+// Report Hub collects them.
 //
 //   1. Right-click a version in the history window -> "Report as Bugged/
 //      Inaccurate". Saved on this computer only (GM wizascript.cardHistory.reports);
 //      the version gets a ⚑ badge. Right-click again to take it back.
 //   2. "My Reports" (history window button) turns them into chat lines of
-//      at most 250 characters (report-codes.js), each with a Copy button, plus
-//      "Copy all" for Discord. Copying marks them as sent.
-//   3. Whoever gathers them collects the codes from chat or pasted text and
-//      downloads one file (collector.js), which is shared for checking.
-//   4. Versions confirmed as reported can be listed by hand in
-//      card-history/reports.json on the `card-history` branch
-//      ({ "items": { "c:161:28.0": { "n": 3 } } }); they get a ⚠ for every player.
+//      at most 250 characters (report-codes.js). "Send" opens room 0 with a
+//      line typed in (core/uc-report.js); the player presses Enter. That, or
+//      "Copy", marks the line's reports as sent.
+//   3. The hub files them under reports/WZ/; the `card-history` branch's
+//      "Card History reports" Action turns them into card-history/reports.json:
+//      versions reported by 2+ players get a ⚠ for everyone.
 //
-// Nothing is ever sent by the script: the player pastes the code themselves.
+// Nothing is ever sent by the script: the player presses Enter themselves.
 
-import { getReports, getRules } from "./data.js";
-import { artifacts, dialogApi, escHtml, findCard, norm } from "./game.js";
+import { getReports } from "./data.js";
+import { dialogApi, escHtml } from "./game.js";
 import { encodeLines } from "./report-codes.js";
-import { addCodes, clearCollected, collectedFile, collectedSummary, isCollecting, setCollecting } from "./collector.js";
+import { canOpenVoid, openVoid } from "../../core/uc-report.js";
 
 const STORE = "wizascript.cardHistory.reports";
-const DEFAULT_CHANNEL = "Undercards chat or the Discord";
 
 // ---- this player's flags ----------------------------------------------
 
@@ -60,7 +59,7 @@ export function toggleReport(t) {
 }
 function removeReport(key) { save(load().filter((r) => r.key !== key)); }
 
-// ---- everyone's reports (card-history/reports.json, edited by hand) ------
+// ---- everyone's reports (card-history/reports.json, built from the hub) ----
 
 let remote = null;
 export async function remoteReports() {
@@ -186,57 +185,11 @@ const button = (label, cls, fn) => { const b = el("button", `btn ${cls}`, label)
 
 function markSent(keys) { save(load().map((r) => (keys.has(r.key) ? { ...r, sent: true } : r))); }
 
-function download(name, text) {
-  const url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
-  const a = el("a");
-  a.href = url;
-  a.download = name;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-// "Collecting codes": for whoever gathers everyone's reports.
-function collectSection() {
-  const box = el("details", "wz-ch-collect");
-  box.appendChild(el("summary", "", "Collecting codes (for whoever gathers reports)"));
-  const status = el("div", "wz-ch-dim");
-  const refresh = () => {
-    const s = collectedSummary();
-    status.textContent = `${s.versions} version${s.versions === 1 ? "" : "s"} reported, ${s.reports} report${s.reports === 1 ? "" : "s"} from ${s.codes} code${s.codes === 1 ? "" : "s"}.`;
-  };
-  const opt = el("label", "wz-ch-myreports-opt");
-  const on = el("input");
-  on.type = "checkbox";
-  on.checked = isCollecting();
-  on.addEventListener("change", () => setCollecting(on.checked));
-  opt.append(on, " Collect report codes I see in chat");
-  const paste = el("textarea", "wz-ch-myreports-code");
-  paste.placeholder = "Or paste any text with codes in it (e.g. a copied Discord channel)";
-  const btns = el("div", "wz-ch-myreports-btns");
-  btns.append(
-    button("Add pasted codes", "btn-default", () => { const n = addCodes(paste.value, null); paste.value = ""; refresh(); status.textContent = `${n} new. ${status.textContent}`; }),
-    button("Download collected", "btn-primary", async () => {
-      const arts = await artifacts().catch(() => []);
-      const nameOf = (e) => (e.kind === "a" ? (arts.find((a) => norm(a.name) === e.id) || {}).name : (findCard(e.id) || {}).name);
-      download(`card-history-reports-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(collectedFile(nameOf), null, 1));
-    }),
-    button("Clear", "btn-default", () => { if (window.confirm("Clear every collected report?")) { clearCollected(); refresh(); } })
-  );
-  box.append(opt, paste, btns, status);
-  refresh();
-  return box;
-}
-
 export async function openMyReports() {
   const api = dialogApi();
   if (!api) return;
-  const rules = await getRules().catch(() => null);
-  const where = (rules && rules.reports) || {};
-  const channel = where.channel || DEFAULT_CHANNEL;
   const wrap = el("div", "wz-ch-myreports");
-  const collect = collectSection();
+  const chat = canOpenVoid();
 
   const render = () => {
     const list = load().sort((a, b) => (a.sent ? 1 : 0) - (b.sent ? 1 : 0));
@@ -244,7 +197,7 @@ export async function openMyReports() {
     if (!list.length) {
       const p = el("p");
       p.innerHTML = "No reports yet. Right-click a version that looks wrong and choose <b>Report as Bugged/Inaccurate</b>.";
-      wrap.append(p, collect);
+      wrap.append(p);
       return;
     }
     const table = el("table", "wz-ch-myreports-list");
@@ -257,7 +210,9 @@ export async function openMyReports() {
     const unsent = list.filter((r) => !r.sent);
     const toSend = unsent.length ? unsent : list;
     const intro = el("p");
-    intro.innerHTML = `${unsent.length ? "Paste" : "Everything's been sent. To send again, paste"} ${toSend.length === 1 ? "this" : "these"} in <b>${escHtml(channel)}</b>. Each line fits one chat message.`;
+    intro.innerHTML = chat
+      ? `${unsent.length ? "" : "Everything's been sent. "}<b>Send</b> opens the chat with ${toSend.length === 1 ? "your report" : "a report line"} typed in: press <b>Enter</b> to send it. ${encodeLines(toSend).length > 1 ? "Send one line, then come back for the next." : ""}`
+      : "Open this on a page with chat (like Home) to send your reports.";
     const lines = el("div", "wz-ch-codelines");
     const status = el("div", "wz-ch-dim");
     const encoded = encodeLines(toSend);
@@ -268,22 +223,21 @@ export async function openMyReports() {
       code.readOnly = true;
       code.value = line;
       code.addEventListener("focus", () => code.select());
-      row.append(code, button("Copy", "btn-primary btn-sm", async () => {
+      row.appendChild(code);
+      if (chat) {
+        row.appendChild(button("Send", "btn-primary btn-sm", () => {
+          markSent(keys);
+          openVoid(line);
+        }));
+      }
+      row.appendChild(button("Copy", "btn-default btn-sm", async () => {
         const ok = await copy(line, code);
         markSent(keys);
         status.textContent = ok ? "Copied." : "Select the line and copy it.";
       }));
       lines.appendChild(row);
     });
-    const all = el("div", "wz-ch-myreports-btns");
-    if (encoded.length > 1) {
-      all.appendChild(button("Copy all (for Discord)", "btn-default", async () => {
-        const ok = await copy(encoded.map((x) => x.line).join("\n"), lines.querySelector("input"));
-        markSent(new Set(toSend.map((r) => r.key)));
-        status.textContent = ok ? "Copied all lines." : "Couldn't copy - copy the lines one by one.";
-      }));
-    }
-    wrap.append(intro, table, lines, all, status, collect);
+    wrap.append(intro, table, lines, status);
   };
   render();
   api.BD.show({

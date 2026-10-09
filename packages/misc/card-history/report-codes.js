@@ -1,13 +1,14 @@
 // packages/misc/card-history/report-codes.js
 //
-// Report codes: plain text, so players can paste them in Undercards chat
-// (250 characters at most, no links) or a Discord channel.
+// Report codes: one chat message each, sent in room 0 ("void") and collected
+// by the UC Report Hub (see core/uc-report.js).
 //
-//   WZR1 261008 161@28.0 20@PA Apowerband@108.0 40@now
-//   |    |      |                |
-//   |    |      card id@version  artifact: "A" + its file name@version
-//   |    the data build the player saw (yymmdd)
-//   format 1
+//   #WZ1 CH 261008 161@28.0 20@PA Apowerband@108.0 40@now
+//   |    |  |      |                |
+//   |    |  |      card id@version  artifact: "A" + its file name@version
+//   |    |  the data build the player saw (yymmdd)
+//   |    Card History (other #WZ1 messages are written bug reports)
+//   hub header: tag WZ, format 1
 //
 // Version labels are the ones the window shows ("28.0", "A2.7", "PA", "?"),
 // with "now" for today's card and "-" for "<" ("<1.6" -> "-1.6").
@@ -15,8 +16,10 @@
 // characters without warning, keeps letters, digits and @ : . - ? unchanged,
 // and drops messages with links.
 
-export const CHAT_MAX = 250;
-const HEAD = "WZR1";
+import { MAX_MESSAGE as CHAT_MAX, HEADER } from "../../core/uc-report.js";
+
+export { CHAT_MAX };
+const HEAD = `${HEADER}CH`;
 
 const encLabel = (label) => (label === "today" ? "now" : String(label).replace(/^</, "-").replace(/[^A-Za-z0-9.?-]/g, ""));
 const decLabel = (label) => (label === "now" ? "today" : label.replace(/^-/, "<"));
@@ -51,7 +54,7 @@ export function encodeLines(reports) {
   return out;
 }
 
-const CODE_RE = /\bWZR1 (\d{6})((?: (?:A[a-z0-9]+|\d+)@[A-Za-z0-9.?-]+)+)/g;
+const CODE_RE = /#WZ1 CH (\d{6})((?: (?:A[a-z0-9]+|\d+)@[A-Za-z0-9.?-]+)+)/g;
 
 // Any text (a chat message, a pasted Discord channel) -> the reports in it.
 //   [{ line, date, items: [{ key, kind, id, label }] }]

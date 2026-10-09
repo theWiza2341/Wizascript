@@ -17,6 +17,8 @@ import logoUrl from "../../assets/logo.png";
 import { SUITE_VERSION } from "./version.js";
 import { getPageWindow } from "./page-window.js";
 import { registerSettingWidget, asButton, asInfo } from "./setting-widgets.js";
+import { HEADER, canOpenVoid, openVoid } from "./uc-report.js";
+import { showInfoDialog } from "./share-code.js";
 
 const LAST_SEEN_KEY = "wizascript.lastSeenVersion";
 const CATEGORY = "Wizascript";
@@ -96,6 +98,29 @@ export function registerAboutSection(plugin) {
     category: CATEGORY
   });
   registerSettingWidget("about.changelog", asButton("View", () => openChangelog()));
+
+  // Report a Bug: opens room 0 (the "void" room) with "#WZ1 v1.6.0: <describe
+  // the bug here>" typed in and the prompt selected; the player writes over it
+  // and presses Enter. The UC Report Hub collects it (core/uc-report.js).
+  settingsApi.add({
+    key: "about.reportBug",
+    name: "Report a Bug",
+    note: "Opens the chat with a bug report started. Describe it, press Enter.",
+    type: "text",
+    default: "Report",
+    category: CATEGORY
+  });
+  registerSettingWidget("about.reportBug", asButton("Report", () => openBugReport()));
+}
+
+const BUG_PROMPT = "<describe the bug here>";
+
+export function openBugReport() {
+  if (!canOpenVoid()) {
+    showInfoDialog({ title: "Report a Bug", message: "Open Wizascript's settings on a page with chat (like Home) to report a bug." });
+    return;
+  }
+  openVoid(`${HEADER}v${SUITE_VERSION}: ${BUG_PROMPT}`, BUG_PROMPT);
 }
 
 // installState: "fresh" | "upgrade" | "done" (from runMigrations()).

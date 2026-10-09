@@ -30,8 +30,11 @@ See how any card or artifact used to look. Turn it on in the **Miscellaneous** l
 - On **Artifacts**, middle-click an artifact to see its versions as a list, with rarity and text.
 - A **\*** marks anything that isn't certain or has a note. Hover the version number to read it.
 - The histories come from the Undercards wikis, the official patch notes and feildmaster's Card-Tracker, and update by themselves after each patch, with no Wizascript update needed.
-- Something look wrong? **Right-click** that version and choose **Report as Bugged/Inaccurate** (⚑). **My Reports** in the history window gives you short codes to paste in Undercards chat or on Discord. Codes in chat show as a short "⚑ Card History report" line.
+- Something look wrong? **Right-click** that version and choose **Report as Bugged/Inaccurate** (⚑). **My Reports** in the history window has a **Send** button that opens the chat with your report typed in: just press Enter. Versions several players have reported show a **⚠**.
 - **Controller:** point the cursor at a card and press **Primary + ✕** (the new **Middle Click** binding in the Controller Support tab) to open its history. **△** on a version reports it.
+
+### New: Report a Bug
+**Report a Bug** in Wizascript's General tab opens the chat with a bug report started. Describe the problem and press Enter. Reports are collected automatically, so there's nothing else to do.
 
 ### Fixes
 - Controller Support: the default Concede button ("−") no longer briefly opens UnderScript's menu outside a match.

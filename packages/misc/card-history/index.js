@@ -10,8 +10,8 @@
 //   artifacts-view.js  one row per version
 //   shell.js           the window ("Loading..." first, then the history)
 //   reports.js         right-click a version -> report it; My Reports -> chat-sized codes
-//   report-codes.js    the code format (WZR1 ..., 250 characters max, no links)
-//   collector.js       gathering codes from chat or pasted text; short chat display
+//   report-codes.js    the code format (#WZ1 CH ..., one chat message each)
+//   chat-codes.js      codes in chat shown as one short line
 //
 // The histories are built from the wikis, the official patch notes and
 // feildmaster's Card-Tracker by a GitHub Action (card-history/ on the
@@ -32,7 +32,7 @@ import { artifactHistoryView, findArtifact } from "./artifacts-view.js";
 import { openShell } from "./shell.js";
 import { injectCardHistoryStyle } from "./styles.js";
 import { remoteReports, wireReportMenu } from "./reports.js";
-import { initChatReports } from "./collector.js";
+import { initChatCodes } from "./chat-codes.js";
 
 const CARD_PAGES = ["/Crafting", "/Decks"];
 const ARTIFACT_PAGES = ["/Artifacts"];
@@ -95,9 +95,9 @@ function artifactUnder(e) {
 
 export function initCardHistory(plugin) {
   if (!isPluginEnabled("cardHistory")) return;
-  // Chat is on every page: report codes in it are shown short, and collected if asked.
+  // Chat is on every page: report codes in it are shown short.
   injectCardHistoryStyle();
-  initChatReports(plugin);
+  initChatCodes();
   if (!matchesPage([...CARD_PAGES, ...ARTIFACT_PAGES])) return;
   wireReportMenu();
   // No browser auto-scroll on a middle-click over a card or artifact.

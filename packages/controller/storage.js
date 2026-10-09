@@ -145,11 +145,12 @@ export function migrateFlatBindingsToPresetOne(controllerActionKeys, hardwareSho
 // settings, not preset-scoped GM keys, and untouched by this on purpose;
 // resetting a PRESET shouldn't also silently flip an unrelated global
 // display preference.
-export function resetPresetBindings(presetN, controllerActionKeys, hardwareShortcutKeys) {
+export function resetPresetBindings(presetN, controllerActionKeys, hardwareShortcutKeys, tierListKeys = []) {
   const prefix = 'preset' + presetN + '.';
   csDelete(prefix + 'keybinds.__primary');
   csDelete(prefix + 'keybinds.__channelGuide');
   controllerActionKeys.forEach((key) => csDelete(prefix + 'keybinds.' + key));
   hardwareShortcutKeys.forEach((key) => csDelete(prefix + 'shortcuts.' + key));
+  tierListKeys.forEach((key) => csDelete(prefix + 'tierlist.' + key));
   console.log('[Wizascript Controller] reset preset ' + presetN + '\'s keybinds/shortcuts to their defaults.');
 }

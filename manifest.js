@@ -11,7 +11,12 @@ import { initPatchMaker } from "./packages/patch-maker/index.js";
 import { initTrueHubBridge } from "./packages/true-hub-bridge/index.js";
 import { initDeckTracker } from "./packages/deck-tracker/index.js";
 import { initUcTv } from "./packages/uc-tv/index.js";
+// Tier List Maker is a full plugin with its own tab; its files live in
+// packages/misc/tier-list/ because it started out as a Misc feature.
+import { initTierList } from "./packages/misc/tier-list/index.js";
 import { initMisc } from "./packages/misc/index.js";
+import { initWishlist } from "./packages/misc/wishlist/index.js";
+import { initCardHistory } from "./packages/misc/card-history/index.js";
 import { initController } from "./packages/controller/index.js";
 
 // NOTE: Doom Reminder (both "Classic" chat-ping and "Evil" clickbait-
@@ -49,7 +54,10 @@ bootstrap(plugin => {
   initTrueHubBridge(plugin);
   initDeckTracker(plugin); // shown to players as "Card Tracker"
   initUcTv(plugin);
+  initTierList(plugin);
   const miscSettings = initMisc(plugin);
+  initWishlist(plugin); // Miscellaneous, but with its own tab
+  initCardHistory(plugin); // Miscellaneous, no tab
   initKeybinds(plugin); // creates the Keybinds tab ahead of Controller Support's
   initController(plugin, miscSettings.enableController);
   // Last on each plugin's tab: the "How to use" box (plus the "?" links).

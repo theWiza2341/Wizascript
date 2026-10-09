@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.5.0
+// @version      1.6.0
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -24,7 +24,7 @@
   }
 
   // packages/core/version.js
-  var SUITE_VERSION = "1.5.0";
+  var SUITE_VERSION = "1.6.0";
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
@@ -66,21 +66,21 @@
   function resolve(v) {
     return typeof v === "function" ? v() : v;
   }
-  function createFeatureSettings(plugin, featureName, { tab, visible, categories = false } = {}) {
+  function createFeatureSettings(plugin, featureName, { tab, visible: visible2, categories = false } = {}) {
     const settingsApi = tab ? plugin.settings().page(tab) : plugin.settings();
     const registered = {};
     function add(key2, config) {
       const { category, page, hidden, ...rest } = config;
-      const isHidden = () => (visible ? !visible() : false) || resolve(hidden) === true;
+      const isHidden = () => (visible2 ? !visible2() : false) || resolve(hidden) === true;
       const dynamicCategory = categories && category ? { toString: () => isHidden() ? "N/A" : String(category), valueOf: () => isHidden() ? "N/A" : String(category) } : null;
-      const setting2 = settingsApi.add({
+      const setting4 = settingsApi.add({
         ...rest,
         ...dynamicCategory ? { category: dynamicCategory } : {},
         key: `${featureName}.${key2}`,
         hidden: isHidden
       });
-      registered[key2] = setting2;
-      return setting2;
+      registered[key2] = setting4;
+      return setting4;
     }
     function value(key2) {
       return registered[key2].value();
@@ -95,10 +95,10 @@
   var observer = null;
   function scan() {
     enhancers.forEach((enhance, key2) => {
-      const el2 = document.getElementById(ID_PREFIX + key2);
-      if (!el2 || el2.hasAttribute(ENHANCED_ATTR)) return;
-      el2.setAttribute(ENHANCED_ATTR, "true");
-      enhance(el2);
+      const el3 = document.getElementById(ID_PREFIX + key2);
+      if (!el3 || el3.hasAttribute(ENHANCED_ATTR)) return;
+      el3.setAttribute(ENHANCED_ATTR, "true");
+      enhance(el3);
     });
   }
   function ensureObserver() {
@@ -112,10 +112,10 @@
     else document.addEventListener("DOMContentLoaded", ensureObserver, { once: true });
   }
   function asButton(label, onClick) {
-    return (el2) => {
-      el2.readOnly = true;
-      el2.value = typeof label === "function" ? label() : label;
-      Object.assign(el2.style, {
+    return (el3) => {
+      el3.readOnly = true;
+      el3.value = typeof label === "function" ? label() : label;
+      Object.assign(el3.style, {
         cursor: "pointer",
         backgroundColor: "black",
         color: "white",
@@ -123,24 +123,24 @@
         borderRadius: "3px",
         textAlign: "center"
       });
-      el2.addEventListener("click", (e) => {
+      el3.addEventListener("click", (e) => {
         e.preventDefault();
-        onClick(el2);
+        onClick(el3);
       });
-      el2.addEventListener("keydown", (e) => {
+      el3.addEventListener("keydown", (e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          onClick(el2);
+          onClick(el3);
         }
       });
     };
   }
   function asInfo(text) {
-    return (el2) => {
-      el2.readOnly = true;
-      el2.tabIndex = -1;
-      el2.value = typeof text === "function" ? text() : text;
-      Object.assign(el2.style, {
+    return (el3) => {
+      el3.readOnly = true;
+      el3.tabIndex = -1;
+      el3.value = typeof text === "function" ? text() : text;
+      Object.assign(el3.style, {
         backgroundColor: "transparent",
         border: "none",
         color: "#ccc",
@@ -187,6 +187,16 @@
       legacyDefaultOn: true
     },
     {
+      id: "tierList",
+      category: "Plugins",
+      name: "Tier List Maker",
+      // Stored under "misc." because it started as a Miscellaneous
+      // feature in 1.6.0 development - kept so nobody's toggle resets.
+      key: "misc.enableTierList",
+      note: "Rank cards in your own drag-and-drop tier lists, on any page.",
+      usesKeybinds: true
+    },
+    {
       id: "controller",
       category: "Plugins",
       name: "Controller Support",
@@ -207,6 +217,21 @@
       name: "Card Tags",
       key: "misc.enableCardTags",
       note: "Right-click cards in Crafting/Decks to tag and search them."
+    },
+    {
+      id: "wishlist",
+      category: "Miscellaneous",
+      name: "Cosmetic Wishlist",
+      key: "wishlist.enabled",
+      // The one Miscellaneous plugin with a tab of its own (its list of pins).
+      note: "Pin avatars, emotes and profile skins; hear when the shop has them."
+    },
+    {
+      id: "cardHistory",
+      category: "Miscellaneous",
+      name: "Card History",
+      key: "cardHistory.enabled",
+      note: "Middle-click a card or artifact to see its earlier versions."
     }
   ];
   var LS_PREFIX = "underscript.plugin.Wizascript.";
@@ -219,9 +244,9 @@
   function applySubSettingVisibility(pluginId, forceEnabled) {
     const enabled = forceEnabled !== void 0 ? forceEnabled : isPluginEnabled(pluginId);
     (SUB_SETTINGS[pluginId] || []).forEach((key2) => {
-      const el2 = document.getElementById(LS_PREFIX + key2);
-      const row = el2 && el2.closest(".flex-start");
-      if (row) row.style.display = enabled ? "" : "none";
+      const el3 = document.getElementById(LS_PREFIX + key2);
+      const row2 = el3 && el3.closest(".flex-start");
+      if (row2) row2.style.display = enabled ? "" : "none";
     });
   }
   function injectSubSettingStyle() {
@@ -258,9 +283,9 @@
       }
     });
     Object.entries(SUB_SETTINGS).forEach(([pluginId, keys]) => {
-      keys.forEach((key2) => registerSettingWidget(key2, (el2) => {
-        const row = el2.closest(".flex-start");
-        if (row) row.classList.add("wizascript-subsetting");
+      keys.forEach((key2) => registerSettingWidget(key2, (el3) => {
+        const row2 = el3.closest(".flex-start");
+        if (row2) row2.classList.add("wizascript-subsetting");
         applySubSettingVisibility(pluginId);
       }));
     });
@@ -286,7 +311,8 @@
     "Patch Maker": "patchMaker",
     "UC TV": "ucTv",
     "Notepad": "notepad",
-    "Card Tracker": "cardTracker"
+    "Card Tracker": "cardTracker",
+    "Tier List": "tierList"
   };
   function pluginIdForLabel(label) {
     return LABEL_TO_PLUGIN[label] || null;
@@ -376,15 +402,15 @@
     return !b.pluginId || isPluginEnabled(b.pluginId);
   }
   function isTypingContext() {
-    const el2 = document.activeElement;
-    if (!el2) return false;
-    const tag = el2.tagName;
-    return tag === "INPUT" || tag === "TEXTAREA" || el2.isContentEditable;
+    const el3 = document.activeElement;
+    if (!el3) return false;
+    const tag = el3.tagName;
+    return tag === "INPUT" || tag === "TEXTAREA" || el3.isContentEditable;
   }
-  function enhanceInput(el2, bindingKey, defaultCode) {
-    el2.setAttribute("data-wizascript-keybind-enhanced", "true");
-    el2.readOnly = true;
-    Object.assign(el2.style, {
+  function enhanceInput(el3, bindingKey, defaultCode) {
+    el3.setAttribute("data-wizascript-keybind-enhanced", "true");
+    el3.readOnly = true;
+    Object.assign(el3.style, {
       cursor: "pointer",
       backgroundColor: "black",
       color: "white",
@@ -393,50 +419,50 @@
       textAlign: "center"
     });
     function refreshDisplay() {
-      el2.value = codeToDisplay(readCode(bindingKey, defaultCode));
+      el3.value = codeToDisplay(readCode(bindingKey, defaultCode));
     }
     refreshDisplay();
-    el2.addEventListener("focus", () => {
-      el2.style.border = "1px solid #40E0D0";
-      el2.style.boxShadow = "0 0 4px #40E0D0";
-      el2.value = "...?";
+    el3.addEventListener("focus", () => {
+      el3.style.border = "1px solid #40E0D0";
+      el3.style.boxShadow = "0 0 4px #40E0D0";
+      el3.value = "...?";
       function capture(e) {
         e.preventDefault();
         const code = e.key === "Escape" ? "unbound" : e.code;
         writeCode(bindingKey, code);
         document.removeEventListener("keydown", capture, true);
-        el2.blur();
+        el3.blur();
       }
       document.addEventListener("keydown", capture, true);
-      el2.addEventListener("blur", function onBlur() {
-        el2.style.border = "1px solid #b4b4b4";
-        el2.style.boxShadow = "none";
+      el3.addEventListener("blur", function onBlur() {
+        el3.style.border = "1px solid #b4b4b4";
+        el3.style.boxShadow = "none";
         document.removeEventListener("keydown", capture, true);
         refreshDisplay();
         scheduleConflictRefresh();
-        el2.removeEventListener("blur", onBlur);
+        el3.removeEventListener("blur", onBlur);
       });
     });
   }
-  function enhanceInfoRow(el2) {
-    el2.setAttribute("data-wizascript-keybind-enhanced", "true");
-    el2.readOnly = true;
-    el2.tabIndex = -1;
-    el2.style.display = "none";
+  function enhanceInfoRow(el3) {
+    el3.setAttribute("data-wizascript-keybind-enhanced", "true");
+    el3.readOnly = true;
+    el3.tabIndex = -1;
+    el3.style.display = "none";
   }
   function startObserver() {
     if (observerStarted) return;
     observerStarted = true;
     const observer2 = new MutationObserver(() => {
       if (!bindingDefaults.size && !infoKeys.size) return;
-      document.querySelectorAll(`input[id^="${ID_PREFIX2}"]:not([data-wizascript-keybind-enhanced])`).forEach((el2) => {
-        const bindingKey = el2.id.slice(ID_PREFIX2.length);
+      document.querySelectorAll(`input[id^="${ID_PREFIX2}"]:not([data-wizascript-keybind-enhanced])`).forEach((el3) => {
+        const bindingKey = el3.id.slice(ID_PREFIX2.length);
         if (infoKeys.has(bindingKey)) {
-          enhanceInfoRow(el2);
+          enhanceInfoRow(el3);
           return;
         }
         if (!bindingDefaults.has(bindingKey)) return;
-        enhanceInput(el2, bindingKey, bindingDefaults.get(bindingKey));
+        enhanceInput(el3, bindingKey, bindingDefaults.get(bindingKey));
         scheduleConflictRefresh();
       });
     });
@@ -470,8 +496,12 @@
         primaryHeld = true;
         comboFired = false;
         const now = Date.now();
-        tapCount = now - lastTapTime <= DOUBLE_TAP_WINDOW_MS ? tapCount + 1 : 1;
-        lastTapTime = now;
+        if (e.wizascriptNoDoubleTap) {
+          tapCount = 0;
+        } else {
+          tapCount = now - lastTapTime <= DOUBLE_TAP_WINDOW_MS ? tapCount + 1 : 1;
+          lastTapTime = now;
+        }
         if (tapCount === 2) {
           tapCount = 0;
           registry.forEach((b) => {
@@ -675,22 +705,22 @@
     const conflicts = computeKeybindConflicts();
     bindingDefaults.forEach((_, key2) => {
       const input = document.getElementById(ID_PREFIX2 + key2);
-      const row = input && input.closest(".flex-start");
-      if (!row) return;
+      const row2 = input && input.closest(".flex-start");
+      if (!row2) return;
       const messages = conflicts.get(key2) || [];
-      let warn = row.querySelector(`:scope > .${WARNING_CLASS}`);
+      let warn2 = row2.querySelector(`:scope > .${WARNING_CLASS}`);
       const text = messages.map((m) => `\u26A0 ${m}`).join("\n");
       if (!messages.length) {
-        if (warn) warn.remove();
+        if (warn2) warn2.remove();
         return;
       }
-      if (!warn) {
-        warn = document.createElement("div");
-        warn.className = `setting-description ${WARNING_CLASS}`;
-        Object.assign(warn.style, { color: "#ffb347", opacity: "1", whiteSpace: "pre-line" });
-        row.appendChild(warn);
+      if (!warn2) {
+        warn2 = document.createElement("div");
+        warn2.className = `setting-description ${WARNING_CLASS}`;
+        Object.assign(warn2.style, { color: "#ffb347", opacity: "1", whiteSpace: "pre-line" });
+        row2.appendChild(warn2);
       }
-      if (warn.textContent !== text) warn.textContent = text;
+      if (warn2.textContent !== text) warn2.textContent = text;
     });
   }
   var conflictRefreshQueued = false;
@@ -721,6 +751,46 @@
   var CHANGELOG_default = `# Changelog
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
+
+## 1.6.0
+
+### New: Tier List Maker
+Make your own tier lists right inside Undercards, using the game's current cards, so they never go out of date. Turn it on in the **Plugins** list.
+- Press **Primary + L** (Ctrl+L by default) on any page, even during matches, to show or hide the window. Move it by its title bar, resize it from any edge, or fill the screen with **\u25A1**.
+- Drag cards, souls, artifacts and your own text labels into tiers. Find cards with the same rarity, type and set icons as the Crafting page, or by name.
+- On Crafting and Decks, you can drag a card straight from the page into your list.
+- With **Card Tags** on, the card search also finds your tags. Type "wincon" to see every card you've tagged Wincon.
+- Rename, recolour, reorder, add or delete tiers. Undo with **\u21B6**.
+- Keep as many lists as you like with **Lists \u25BE**, and swap them with friends using **Share\u2026** and **Import\u2026** codes.
+- Rest the mouse on a card to see it in full.
+- **Controller support:** with Controller Support on, Primary + Touchpad opens it and the d-pad moves around the whole window. \u2715 picks a card up and puts it down, \u25B3 sends it straight to a tier, \u25A1 jumps between the tiers and the item panel, and \u25CB cancels (including in its menus, like the Lists menu). Primary + \u25A1 fills the screen and back. The window can be moved and resized with the controller cursor too. All of these can be changed in the Controller Support tab.
+- Its own settings tab: card size, window opacity, names on tiles, preview delay, whether ranked items are greyed out or hidden in the panel, dragging from Crafting/Decks, and turning it off during your own matches.
+
+### New: Cosmetic Wishlist
+Pin the avatars, emotes and profile skins you want, and Wizascript tells you when the Cosmetics Shop has them. Turn it on in the **Miscellaneous** list.
+- **Right-click** an avatar, emote or profile skin (in chat, in matches, or in the Cosmetics Shop) and choose **Add to Wishlist**. Right-click it again to remove it. With Controller Support on, point the cursor at it and press \u25B3, then \u2715.
+- When something you pinned is in the shop, a message pops up with its price (and any sale) and a **Take me there!** button that opens the shop with that item highlighted. Pinned items are outlined with a \u2605 in the shop.
+- The shop is checked once after each daily and weekly refresh, in the background, never during a match. You can change how often, or check only when you visit the shop yourself.
+- Things you buy leave your wishlist by themselves. Free cosmetics can't be pinned, since everyone already has them.
+- Its own tab lists everything you've pinned, with when it was last in the shop, a **\xD7** to remove each one, and **Check Shop Now**.
+
+### New: Card History
+See how any card or artifact used to look. Turn it on in the **Miscellaneous** list.
+- On **Crafting** or **Decks**, **middle-click** a card to see every earlier version of it, drawn as real cards: old cost, stats, rarity, text, tribes and powers, with the version number in the corner. Today's card is last.
+- On **Artifacts**, middle-click an artifact to see its versions as a list, with rarity and text.
+- A **\\*** marks anything that isn't certain or has a note. Hover the version number to read it.
+- The histories come from the Undercards wikis, the official patch notes and feildmaster's Card-Tracker, and update by themselves after each patch, with no Wizascript update needed.
+- Something look wrong? **Right-click** that version and choose **Report as Bugged/Inaccurate** (\u2691). **My Reports** in the history window has a **Send** button that opens the chat with your report typed in: just press Enter. Versions several players have reported show a **\u26A0**.
+- **Controller:** point the cursor at a card and press **Primary + \u2715** (the new **Middle Click** binding in the Controller Support tab) to open its history. **\u25B3** on a version reports it.
+
+### New: Report a Bug
+**Report a Bug** in Wizascript's General tab opens the chat with a bug report started. Describe the problem and press Enter. Reports are collected automatically, so there's nothing else to do.
+
+### Fixes
+- Controller Support: the default Concede button ("\u2212") no longer briefly opens UnderScript's menu outside a match.
+- Controller Support: double-tapping the Channel Guide button no longer opens Wizascript Settings (only double-tapping Primary does).
+- Controller Support: holding Controller Primary no longer also triggers an In-Game Input on the same button. Combos and In-Game Inputs can now share a button (like Toggle Tier List on Primary + Touchpad, and End Turn on Touchpad).
+- The Notepad and Card Tracker's trackers can no longer be dragged off the screen, where their close button couldn't be reached. Ones already off-screen come back into view, and they stay in view if you make the browser window smaller.
 
 ## 1.5.0
 
@@ -759,101 +829,55 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   // assets/logo.png
   var logo_default = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAQAElEQVR4Aaz9e8ws3ZffB33X3lXVz+Wcd8J4POO5eWY8vsRyCAECERBxU5AsAQKkIAUpCBSBiFAURRAUEVAIl4RAQsAeX2IbcREXQbiEJHbi2M4fSPyBhISEkBAISGLHjp3Yf3h+7znP83R3VW0+37Wrqvs557xjO6JOf3utvfZt7bW/a1d19znvW/6///Tvbsa/gPwS/+If/t3N+Jf+yO9uxp/8I7/S/hT4l/+ZX2nGn/5nf6UZf+aP/koz/hXkn/3nfk8z/hzS+Ff/2O9p9/jX/tjvbYk//nvbn//jv6/jT/z+9ufBX/gT/1jr+ANI8M//wfYXEn+o/YU/8R5//o//Ifre8K/9sT/IuOCf+4PtX/2jxh9of+6f/cc6/pnf3/4c+LN/5Pe1xB/+ve3Pgn/ln/497c/8U/j+T/1u5O/q+Cf/B+3P/JP//fan/w//KPjvtT/9T/wj4B9u//L//r/b/tT/7r/T/tT/9h9qf/J/899uf/If/wfbv/S//gfav/i/+m+1f+F/+d9s/5//+X+j/b//Z39/+3/9T/9r7f/5P/772v/jf/Rfbf/3P/Rfaf+3P/Bfbv/X3/f3tP/Lr/yX2v/5d/3d7f/0j/4X2v/xH/672j//D/2d7Y/+A39H+8P/9f98+yf+vv9c+8f/3v9s+1/8PX9b+5/8F/9T7X/4d/2t7ff/Hf+J9rv+9v94+0f+M/+x9g/+p//D7e//W39n+3v/lr+p/d1/87+3/Z3/kX9X+9v/g39D+9t+51/f/pN/01/X/pZ/37+x/c3/7t/R/qN/429v/6F/x29rv/Pf/lvbf+Cv/y3t3/9v+c3t3/PX/XL7G//aX27/zr/ml9vf8Dt+uf3bfvtvav/Wv/qX2r/5t/1S+zf91l9sf+1v+cX21/zmX2i/45d/of32X/qNib/6F3++/TbwW3/h59pvAb/5N/5s++Wf/5n2m8Av/dxPt18Ev/Czv6H9PPi5n/mpZvzsT/9kM37mN/xk++mfMn59+w0/+RMdvx4JfvonfqJ1/Drkr2s/8+s2/Dhyx7/hx9vPgJ/+Ifz4j7efBj9D+5/98Z9oP/vrfqL93E/8+vZzv/4n28//5E+13/hTP9V+4Tf8NPiZ9os//bPtF3/mZ9sv/ezPtd/0sz/f8XNI8MsbirarIXeg5qvZgJZy0ynqTnXxHVo21tHGxR9q3/ZWW4NNvBvv/y+F2EbZ5VZMcdgOJc39rdt+Tb9YYF8HrXi5n8uYrWqXLuy6mxn78l33JbL+S+NRxq8AWd5lFvrbF6Ys8sar16trsUlt8n7IkBQRCkkRvBviupNYFfzByntYJG5NNhuCl2ik/cryXriXW8Um7msOPbaBWhymO+W98X3prtmmFhP2h2Aau84b5c2zbnhXLRNUWu42j3tftv4VaOTx6Eq3pAvSRmZk53m5Km17O2rztddl4Rtvrv+GWVvMutyjcshdYX51IHjZtxSHcR/fMtflagr2E4HP9EHJOoy8sO3dXWdQpgKNOt7dnnFy0UiqeKcN71Tx/u1XsCiTLSW6wK6nnbeIwBxZw5si0EMqSIWrQqnyFmG9w8aIrkdEti9RhEVxSErURWxSXYorAh3peYwolG0DBVBSRL53GUIaofu2EZTvoVBemxB1hotG1vG2mdGke7u47svfTICVHUisTSnbmhu17mWkN9jlht7bbG2/LDNWtsGO2sdbt/EweJwdHmfXqco530tIASPSxkJQkzPuQzF1y2PFjsJ7Q5ZEg+P0ONowtm5Xjs0brxw3JW+ea/eTJeV6dpvt70CDo3ynty2ejYUQiW2djXmA58AN1yHyhQl5t234HKzBL/EWERbWFBEbIOumJ+FKQOKissmIrbxL7LUUVWRJWXpb9LLZLGsp2aYWZIBNuk9HUF9U7vqk7nnSFlsdcrdZbojY/Hdb9AIiNtsXstdJISmCdxARCt0uircC2n0dRZVlWfWDgKhZZ7kuWi3d/l7uuu3GF+Xsg22FAPtYu54Su+WabfDlvmyCQJaDRJRNjK/ASjpJUPbXvvJdHmEJiOZGDoVh/UZ+j/MO9od5F5B+uAyWRPfXuv1fWMPyzu76VfMeF+p7u6berhFTsI+NbKy3WeIWguSw0v1rrMHAIlRFRII3Xp10EUijhEzIWkoSshZkBaWqWtaq4U4OlKsxDNh7G9sG2gzYhzuZ7SjXobc7ytgG2tY7WV0ubgfufUib/QG0rzvcJhH4GawhVHMtkXrZ9Vy7SOpup4guhaSgTaAY4rLcQfHdq8zLwgb9AObNjrwad22v1m0Ds+GyYd2wfmDd5rA0PO7XcoEgNzTIsQJLAx1GJAk32VhKgjdMnSXY/MIkedXiQjaQZQKTUjS3ri0h0N3HgMMQjzkZdKX7isHovjXIu7Ke9ZAm+BXfrxDd8bR0fHZ5s62yzWX3menTx+xjLcxzJJrnBvYn0XAQX4S/8lpUJIUiQn40KaUoQKlFRi0V4hTVigQmZgLSDhvJLUfK4zDohtr1cezyXR3txkHTADY5IsexHravxqHt6DnsA3LYpfV7YLevA/7XBH4XkLrXAcrXKJC9RKiU0mNRAikVbCGh+x0pydqXKJfroh8ERO51s5wAl+usywyQV3Ch7xVYXray5TXbLFsfZNbNlAH6lXFNgh+STqglk2ftd6eNKCsyATGSmEhe24kOoQVYeAMyKFseZduiSI5C4S3LkpBNTgSDMRjR45uMOykX5p4h6Iw0iRMzhGYtF3y9WLLuc8ZjJqaAsuNxdh3rtn6hPsv08fr3RJlJHs+xMEeHdEt24ZGBzxKehiKAN32DCVCLCVLzBB/qIBM8kSQdZLJO6NMw6DSNSh2iT6mPaTuNExJgP03IOzycRj24jOx1Wx/6n4zs86WNubBPzHsaqUNav8dIIozY30lsA7BtIDnGWlgPsAR1B2su6IX9NAhLJ3+ox+idtO09ytvlonucKe+w3frb5Uqbq86W52vq3ea+W/k8Z322od2Zcd5omzLL16P+vJchhfUL8gIxkhC7hDROBCdKAuJ1kjRO3qYjEciAJsmEXVm9dRP+kNiIhBIEqUsnQUZG2ZY2KbWNgzT54aIs56XpCkHtXyf6ykGwyEQ23vD/7TITl1mvrO3A+bKVLY2rXq9X2nWc6XdmvX3MJce8OKmYawZOhBkn7ENPBh3+eh1BMkdUlVJVDZO+VhJggCyDxmHUZIyTJnAyIPDDaZLxeDrp8QEgnzaZZfQsWz4+6GmTjw8Penw8Ud5stu990bMvY3fpcaecp891079KotNI0u0gYUimaXR5wG+jahyRw6BxQD9QWCeowZqLau0o7PMB9paiEN9EeX276itA3Fdjr0v9ope3C207Xry5oNvOekV/pT7tlqDb2GzqnAwuW+44Y3cCnCHPBeIkIMXFJycJ0E/HBfIt+cgxOwnAAlaIkSABUNW0nd6stIkLqa9QxPGgtBfrYGvjBOgJFPJ4xsyb4cebC4Q0OY0z/u2kN9m9nldi9LLhM+v6zPq7POvQbT+f9cLh4H4HSIoz6z7fJcPVdwjm9PwIElGZ5K2FJBBFAQrrqKWqJPkHCDFCkg6TaILwp3GSSfcAWY0kKGR+2vD8CKGBpfHB+tOjPoBnYPnh6eEo23bDg54fH4HljpOeGOOG05Y42LdEeUo56fEBkDQP4BGknyTAw2m4S4pRJyfAWDMhRuR9Igy1kACRqLDdKOxrcZjuIPQD6ld5eWND7vAZ/fMrmwZegMsp0S0N17+87G3e2GDryK1N1jOO2xpHGVLkfCYBMGmMN4hhMviuct7IcIEQHSSAT8VMiDUTwQmQxGgtSbFCf98BGqszxOIbUCl6j9Bedn2CNo1ItZAMj7MoNDeBRvKtiU78RW/48XZBkrQvJK1J/xnif2YNJvon1v2JdVp+TzwsP72+yfr3WXeW6z+zfvfxGI7BK+t1Ujm5LpD/Ausv3Hlmg0SkSGKGGr41sa4oClDuyF/r2Mk/QhgTH5hQjxDLp7dJ19GJ+gS5Td4PyMQzpH9+0gfwccN3m/z4/KyP6N/doZe73fqH7M8YjPfxyQljPMrJ4vGfsRkfnk4kTMdT3lFOenIi3MM+n0Y9bDhNAwmxgWQ4jVX3iTDUQgJ0VPazHJBQlXQIpbTeQSQ/szk/BG/c55c3paSdZWK33UsSYq/zeJ/2Mv2OJIAQmQDIV0jyAiFeIc4rBHISOAGMvCu8S4RFJsUVYsyc/nMSommx3JKgSTKBO/pKm1fp1R8oymgUy45O/kLfkO8AJj+cY2zJ81yZ4wL7jHOSf5aT1cQ1+Y3PrMWk3gn+PWv+EWv8HvyIGP0oy2/6Ht22T6zb7T+xdifBZycS6Emw5KOV57sy73Vfr9fJItcWrDTYyKIw+cugiqzcAcZhhBQjp+SkKcl/gkAnTtkHcIJkDxDvUc8QdCf+Rwhtwn/3/KyPH5713YcnYPmXxo9lW7d/+kZyPOo7xv5IUnxkPifALp+3REj5+ECCAGQmAwnxuN8dMgkm1jB2TOORBNNU+11hexwakJkE7HUtRT0JpBIhikgpJBUQRjRRpfKJTfkhJPm3em/e0Y4NddmwbZfWjXdlSJCJkfKsz8jPEMDSj08vrxcerc79EQpCvDkZOF3fNpx53DAukO9qOAkgxgwx/GzsJPDz8aKmlYWxLDVWZuQK0XsEWHpGwpIQlJDJrygy8VdLBbq0MM4M4a5rI/FWnZnvzNxvPKK84teLgZ87+b2eJLXjYpD8joHJ/6uULY3v0b9n/TvczwnwwrqdVD0BZnkez9eToGUiLi36HSCC9bEGVUVUlST/qMHkT3Tyn6YTpDlB/IdEPu5AxGfw4enpIKwT4Lvn5yT/j5EAP/bhg37s4/MXsO0eez227EM5k+F5S54nyP98zPEdSWBkMqA7GRKPvls89AR4OpGcD+qPTSc97Ungu8Jp0iN4eHc3GEn0esNQNNZCHEB+JghV9thbHhHitQGGhKEs/5oJYDJ/CW/sve37z2/KMpt7Lz9T3vGJTXcyuZw6ZZ/+vjOkhABOBt8JXnk+fqO83wmcCP1RaNa7JCABZgi6NMlAFargiboMiQDAkG2lhfLXyCQgSo0IORFMfidWT4BVJqHnNSnfeEzxh9hXTusXEsDk/bSd/l6Xif0jk5+1/4iDI0/+TX5vG7DMZOEQcF+P4buJE8vjv2XCL7r4sY/EQ9ytLySxhqgKiF/KoMpjzzAMuj/9T+NJD5kADxAHUvGs7xPfMPmTfHsSJHGfIK7xjOzIRCAZvvsIyRPPJMW97vIGJ4GTxtLjkVD9TsKY3AWs7+Q/ZCbig7ovD1sSILkDPIOnxEQiTCQwIAEewQN3gQcnwjT0u8E4aBoq6+/Iu0AtqiRBZf8NthcaBBBxC2G+4RMb9hUg6GfgTf3Epn1iE99hJ73tWX/uSeAy6H2dGN1u8n96e+P0f1OSnrHd5jMkSOJDohdI/5q4cje46g2CmfxnSHeerxDC+6XE7wAAEABJREFUCWCs+Ux+PRKgdYJIWhWJFkWNVaeMkND3Faed8r1caZNgDCeAn/+vZNSVzLpCwjMstB8mqfHCN16f8e8zXxJ8xudP+P+JO9kn1mX8iJj+CP1HxOZ75D3c1o9K7vfZiQR88htOAM/lpJu39TkRl8a6QGN9iqKIqkICVB57jGEYNQyTxnGCFMBE8QfePEUf9Pj4qCfwYcPHjfw+/T8mWZ9vxDeRD8I/Q/odH/RXUfdXJclJBCfHrmPvd4+nPPlN+O9MfOPDY78TkBgfKX+E+E6CD74TGE9Ogg2Q/nkHJ7/vAk8pJ1k+QnzjYRpYJzD5eRSaxipjHItG7gSDUYveJUEICoTIC2IX6FKEVD5Dwi9hkn5m4/7y0cn9VXvG9iOOx7c02VOHMNZfka98GNz1F8iUSeC7AMTY7wJnHjn6XWDZEmHJJNhJ4hPbxF0lNVb1DhvZFYXV3uAEcAT2tj0BIpPJCWDiOQmOx598BJp5/p/5FueqFycA/n5mDZ8S5/xw+4k1HyCGh479M+0M9+2n/jXH68RfZOI74WaSz1iaeOwBx7q6/6VWlXfkHzXywXciASZO/pNBAjyeHtQ//D7wePHIKdvxwSRMPEHOR32AmCbsR5MUWP8Ochsm9ndJ8KdbkmTdXkZu/bMfpLb8mLZH7YRPabJT7/k/WAfPxuMD/j3oaSO/ZQLyPxqZ0KMeHsAJTB0nJ8I4QH6w3QUG5AD5E+x9hfGVI39HsR5SSnS+Bj3rlc25x4tJueGVTe44s+l3oM+LwSZ3eVFKNnmXr9bdn5PyxTroY1044S9sPoBIbya85T2wncFbJsIs3w0yCSDiBVw5lTtZ1u0ZWfns7iRYFSQCd4HYQbl0XdF1UV5Bi6IV2wrJjEVBEjRdKZiQFz5z+HncJPXp/4qPO0zkz5Q/s8bPh7zoc5bfSxM+wYf7ftov+Y2Sx87HHU78K3DiGUl+fGr4I3wUvkatqN8i/wQJgIkPHiD/A+Q39gTIzwAmGsR/vsMH9I4nfcedwTB5P0LUTIhn7CBtJEe3QWxs98/1H+mbbdzv6QHiP+jD46M+MP5H5rX8gP0D+vM38LSTn7vW0ztMJPHIoxwyE2GQH4FM/rwTjAMfhisHAID8eQeoJb8RqtwJKvqOUkPVpK8l7w4u80PYFXJ9ATbTjyDnTb6xoW+HfpUJ4PK9fP2izVGfBL7e/Qg2p25in7c6k9tl97G82e/6+VEIOAmuTgCIeeXxxF8T5gdhTk1egreQX2oCAdkTRXnSs/gvT/60Q7IVdPKLhFLeYTz+hUQzSd/4APzG/HsSmPyvxMSy46IuZxL72kF793nb+nqcC74n8H+2/zjdCd/S9zVufiuKxGaFyV+qSq2qw5AYxlHGiBzHiW99TjwWAEjiO0BPghPEARDqEWQS8Hkg5eNDnrpOhg+Pj9wdKEPWLO8Su+s+0PYDtpTovQ3trR846Zk53pO723I+6nb5vJHd8gn9iVP+iXr7+Ij+yBoekAn0R77RejyNepg6Tpz81k/jyLoHkn9DJkDViMw7ALFLSfyq9U1WeFBLIbRF5com/RAufCAz4S5s4IV2B3gkOXOSXcD5zm7duNzZDt1jefOpO+d4i7qcdbkb5578ToYdtp+zL+0Z68pY/oXYJN0fF3xqGivkXyNkJMHRWxSSoGDryDKkXw3qLRf6+XHKhJw5jfMOwDwX/PXcb8yfCcD6/UE4QRL0xJ05SGbWZCy6uN+GPNk3ontsz0FRK/PZPzF/SjYlSlUCshc20oQvnHKVzR6GUQn00YAQ42Ty32Dyn/IOMOkh5alLCObyI7ZH9BvhTpywJ5mc9/a9bJvh9sau5ziM9bRjH5Pyo0n7BZ72MsR+Xz8y/0SibnC9H3VYm0meOI0k96iHaQCWlFn/RPlEbCZjGDTukriNBjEcgZNgrIXYAUtQge1lZid+ED6hEstxIpp4V59enIxJPvTrnX6QMvut+cNVnnRflRf5rzp4rAtEuUJqkyzBnSHvPsg9ATrJrvLngfNGSPebV8aBrDNIYgnib2jIpnIjvvW03dqsEo88YJMsRVdiksDnCwaf3J7Td6ozyfqWmN8R3vX2x+vp623qv1RLDCf7IuaG3bzKhqrCRuxEH4aBTQJs5AgBBjCOI6ecCY48Ie9gop8oH4A8Xfed4KSHrc7yS5ymKesfNnlirgeQdmx7+eFkwk0QsMPtj7qtncsJ/D4l6DOOPJoAxnyYhtQtH7AnsLvPgyW2b+quMzwmY0ypM2a272Mm+alPSfxGMA2DLMehaqjA0rC+YbQcqkpuEjv0benNa4IH6vWr/J279WXr0yV2ytY7Vvq0o232aYxFm9SRvV1TJ8uq654EnK4+aZP4ebrePi+88ZjlU9d1F5LAhLtA0EzEHBMiM8/SIgm3QrgOkgC9RWiNom5Dx7aAVdJCP5/OCZLJYxoXEvzMyb8jk4DE7HekK3evOU/7XEf64HUzIOOKuaIQZIOAl1pV66A6jBrYxHEa1TFtJEeeJnUSW0JkTtYTxH5ICamR1o3Tne7yA6fv6eFB1vcxHrbxdpkkYl4T26QzJgjU5Xh7nMA2GsMgy2kYNA1GTWmCTRBoGnZb1Zhl19/r9B9oM9qOTL3LE+NP40hyDImJ8ilxs2UZf1NS5zYJxum2UVm+q3vnL3aXR3yzHIZBliNyGgYVeaPeQT94Ndrx+xDkUsJkzr+73pRkzzreKGY9apeM+E6nDFfkRDJMnitEvkC0C6frZSNYEp4Pzi982H4FL04A8ObEcBu3d+KQoT6x/e2NiWxSLy0gOmSHhGugW7LcxhpW5JoSO3JpygRgGJ7/+QCM4UrhwthnEs1wUu6kdxIYZ5LVbXzX8xq8Fq9LzBc8zpRSNUD4cRgJ+pgkNzFNxgfImoCwfqx4fHzQAZ63H/kw+fT8oKcn41GPm/7oOrdNO32Qj4ZtCSfJlEnwQIJ4PmO6O62dBNOIP2CEBBMkmYZBo0myg2Qd7zDUwlqMqpG1jUcZm9eZtkqbHdizf9GIHIDlbQ7PN2ga7mA/jKFqwrcTujGlHEmS95gG+h51g06UDbefxlEjmIZB0wA2/TSOlEFKEiD4QODN6jLU9cIeGiEpFBGIkP9o05VX8B5Jcsm6JOpD/iPJuiHKlgCj9mtFMWkWyDZz0l4hnJPARHuD6K/A5L/HKwlhu+8CSUL3of8V0s6w710SMO8KmkgEhTIRrONHJgl1dOPbo5D7kYPckZwAK6f6qnz02R/NSDjP18GjmBOVOvts8i/cNZieEUMliiob3k8bgp3kO2n/VsZE34ntD5TPkD3Bd+bPO/iW5dnYyh+s37dDfyIZnlLuiXDSI6R/2JIqE4CyE+B0sh8b2PxxHDRCNCeAMVi3zwZkHu5QS1EtG4hdhTPVcofLrmfdA7aOIo9Ri2WkfiQBc4y1ZGKM1gcIOlRNHBbTMCSRp3HQhJ/TMFAeUz+No06jMVAeNr2XT+PIAQOQp/FOZuwn2o+03+WY5WmcVEqpfgO7LOigApwvO8LlUJZZZEoWHqAY2CKoBxEQvty1Z5FB2XA/S0WRoMsqycQxgfz87BP1DLne+Ao0ye6T31+1gleDshPAj0Jn3wE4oS98Z5kJAJvJBcaD7HkHQKokwVfk2rq+uA5YGvMacj8nkO8kVwoXEtK+XBjf8/gO8IZfTk6XL8x9pc6fY5wAXgNLUbCuynp98jvAJ76WfOS0f+J0Np4fH/nG5UnPENqk/sBXix/4Xj2/XrT8+KyPiSek4fKTPnw0nrukz3PikXEe9eQkeH6QE+vh6YTk0ekR8OiU5IcEE48RCYjVyT8oE3SoGmpJ2O9aiso7hEp8AVH+CpJ3tOx2+hxJwnhOBqOWkOVQqvY7yZjxojxUTcNAYg4kA3omxJi2E/ZpwD6CYYTMG7CdxlETOI2jTqzzNE6bpIxtchl4/adxJFGmDvQybJOnZDBvnPWKg5W6r1BKngYFadRSesBqqNSuZx/stVSVRFGtu14VxShShKTIf321wKB5XnWFWH60eOMx59W/RXDiv0B6/ziXEpsTwPU+jZOM3AWukNbkZQgtTSC0MrZPekvD+mLi255tpPkgv/WmHMdjzSt3gSWf8c8m/u4Xd4KLge3iOwCJsnL6+1EwGLeWIsdwIrgniPcI+fO7eIj/ge/KP0DWj89P+vj8DMGfjx+XvuPX1/zBCfL77+J89x114CNl278jAT5u+AD5P/jOwFi+c+SdgLvB454EjxOPQJNOmQBs+AnSTINM/AEC5f6yH0Mt7EthjzawH+WAhKqQbmgtdXEd9iaF7ZZS1hdJBa0cMrSPW6MoUUK1FA0Gfoz4YwybnAZ8HqqmAb8TXZ8G7KzB8b3HaRxJikkTRD9NXXf8E+NEQoB7mfpJZWDAA3XgVKjgXu46dpyzg9V9dh1ZvwXa2D6wCLe3fqBUlVIUEfLlzxILJFogkx8pLjxbv0GyNx6BnAT5/O8kAK8khBPglQTpCQBJnQAQdl4ahDaRlQmwmOx3WK0r8g6RdSY/m9c/+Jr89F+6vDDehRP+nJj59qk/9pwhvuFEnUmABZ+dAF5HYT2VWIzE0ZvzwAdQP5L41P+QCfCYxPcvrEb/lfWDfszkh+yd9B/03Y8968e2suVH9MTHZyX5Pz6q3wGe8vR/hvhPxtODnp5OeQd4gPwPp1H7o884jhrZi75/RUMtuQf2uZQgKoKkEktQ7A+1xIbTSWrrhoaKzl454QnkYdfRlkxAD/pEypbjRWN8gRDzRE+CKJkEFZmJUCp3BUAMB+A42ucJv6dhwP8BgoNh1InyNKKzrmmYsBuj+rdKk04kwcQBNI3WwS65I5+w+9ssty3jOOg9Ro0MPo5jJsJIvRPENktjxKHBYKPt6DsMQ/azLfvQZmQx7mdU6utQVUpJyBEXISdAy2oCLpy8s3zKnnkMyiTYSb/LJD+EJEnOnMwma57c9M8xPJaRBNeWDJYSe0e56yY+h72yD339CDRjuEL+K0l1SeCL5zDxme9Ccl5chvxus9B+pa85E6ypehPHQScC/sjp7+/TMwE4/T/myf+USeBTfsd3EDv17z4k8a07GSw/fvck13+kzUffAXz6M85znv4PMvEfIf4jjzzGg5/5If+J5JtOI98yDRrxZyDmRh1Kkq6UIP6hCCCAlC9Iu5PZJE+wPv+XPRrBO5DrXnWUtzoHuEH+xjhGTwL1u4TkmVQkMX2iRpHJb1lL960Sw8GoRSPcScCbaaiUB03DjpE4G8MmR03EfRpHynekdxnSn6gz+Q9QJgFGAtQx0XC8Q5aHURMYh0Hv4T7Yxg1bvUlu9HG2Oo+51XsMJ4fblFpVSpEIPvEidi3/DfAM8a4Q7AzZziSB4UTY4d8IzpAxyc8Jfc32a36ANYkPQjMo+5QE77IT3zocxy7uGC2xcPLP4Gownsl/Zewkuwm/Y/uLeZ5zZqDFG888IbGhIa/NazxxAj1y2vQEeNDHp0c5AeFcHI8AABAASURBVL57fpZP/49+3gfWTfDvfBdIklOPtP3jx6dsm6d+Ev+Rk/+Ru8ADz/4PeoL4TxvxH5EPJj4/Ip128m97M0CcoRYVg3iXEoTcEFJcnBaswYTVJg9is8aV31pW7nSL9QOLvrat7OGq5pgAbYlj2ROhqTA+O66iUGHfi5SylsJdITI5B/SOqiETYdBQK+Sv/bMB63GMp2GAmwB+Tax1Sjn20x/9NKIbSX509uQ0dpltsZcTHXekcRxlecI+GRMTJLp9GkeZ3BN1ozG4PGDrmLAZWbe1vdcHnDYqCzKiVEWEpOAQbfJpuhDwPQkuToLt9D2b9Fv5HTEh7JWN2TFD4png36AkeZa3uuW+3jb6z4mFRFq1z38lEfe5riSBMWObmXOBFCt92FO7L29ohWTenNM4yo9AT9wFnvkAbOyPQf5rBR/v7wiQ+yPP9P5Q/JGT/QPoZciO7vLz80OS/hnSP4Knp1M+6iTxeeb3o44xscnj5L2oGtiLAbLYp4JfpYQKjHO4DXGZ9B2duCvEXYm/13aA08J6J/zCIQW8frDbLBv9muOxYWWsZmx3BDlQBvMGu40righZJtCrgZ8VDDi7Y6ysx08T8Kc/GrFG62AaBk0DGDcMoybib5zGkbvBSHnqH3ynkfJEknQUN7phG4BGadslgxzltA1J+LR50mFkgh3bGNjviT9RNkyOAWeNyqJqKWxKIRAiJMEH16b+maAR6FUzwbxyEl8Jtk/lTsZFKbHZ/g5uD9zPJ5ZhfX5H8jXHdZ3hD98zfRYIbWIn0HPcbe4rpDeyjnln6t1+3TY3xEZGkTdsHGrG4zSOmQSPJIHvBP4WyDCJjQ9PG8Eh9LP1lBAdubcz0ROPp43wkx55zHlgzIc87Ucl8U/j8bjj+X1i1lpUIFICYgU+iovznlg3+Lh2QNIlAbG3dXlti9fJuufEoi7nlMsysz+AusVwP9ovSBPfaE4Ixm0cNgecAAmlNyEpIhIFuaOWwt0gQNHAOhzXlHBmIL4j0uvc+TQOrH8YNA3Dxk104j9umJDTMCb5J+sbik+Mr+DKJPpI1gCXv4k+Sfb/Vn2O0dukI8OQzo0jcqgsrKOWwkYBAhAKNkWZBCuB6xvTNENQk26XPu1nAu6vTi2/hetez6bc9822tlFvfUE3vtmGupkNnt3W+ga3t3/eWEEncXnzaqkawMj6RseE2+wJPJwgLo9ETgbjCQI/2gaeIPQjjy8J7A/A+gN1HaP8SLVjmogpGB1HYxg0MF9HUYUwpQYx7SCs8gXliS3vJO0KMXcsENXrMWaInWtlzVcw7+AufOi7LeVCIgDi4/4r8ely5REJME97B+anjCO82vbZAImDxQjJcdxRC+vZ4LjWUjK+gxPgDr088Ji0gZiMxGQaiBVwrKaRui/0L+4Ao6bctC4z4HsZMmc5Zb99nNjYKcu0R89nT+SUwEbfE/UTE0/oI7odOYAzA05WFmIUbxwLLFEUERIvceWBwRv7Jm/aQjI4yAkC7yTom7XIsuOaX6nOPLYkcrNmzbSfrWM/Ti42bca+GBBgATNISdvF9eAmvbFNefpv5LevUUIFVNaRG8L6poENGI0xSfxADAyf2gnKJ+pPI/VgSr23n7byeIxRNRIvY+DD7IDuuRKlJHEiQrw68K1tsK+OnZGHSq5vIR6OSUfGjbhcILtx/UJe+Dxmm9Hr3e96NwbjOU4Zx4XEcJwANieB57ZsHGzNm+k9Bbi4JYKQQFJIigigXJc5UVhjLSUTfKhI66XKegc6Mcn41JqxcowM224Y6NPrywmy3sNfD5m0ifFG9Gxzoryhn0wTt+OJ2/wJUMdYu93jGCdvsPtY7siNHbm7DDqSYUQfhjzJKs7XUiHTjiAQhYiIizsE743ArQQyN5OAzwT53QbyWeFyvcibZnn15m2Y2dgE5LZcKC98uF0oL4x1j9uJ5g1dtHJ6NTavS+jVcIZXgMKGlVJUC2ANYy0aIeo4VCQYwQC57zBm3ZD1g/tQthzoa9RSNIDK2LUEMQHoJaEkR0jEB8gXDhGb9NF+Ehcn7rLOEHKGrCYshwNrvbDuA8TGsTojE3wFfd7wxm8vZ+uuswQXPo9dKF9SMh5jzcRwZtwdi5OM8mIfuMs4Zh2LmuNo2NddonsF/sq0rylYV+QavfYeA2LL2mtBgh6jqoHYDbUgsaOPYKhVCfYgpW2D25aMt2NffBp9jUkmb5J5I7Vv1y5bPuYt+wT5vwHfviF8tkF/oK37JTwWyGSyHHvSnEiMiQQwxi05Rso++QY7DCqLq6UqSijUr0bA/CHUATb5vZkm+iU35pzk92ZevGFsousOeMNoZ/J7424JcNXCpq0GG+cESLCBx6axYfnYw/zdEykiEgX/in0FwwYHOlFrBn5ADludZS1FQwD69k1WbnpRbLKXg3JIvAN4bqLIPkB0+3Y75Z2sK+tYIPzMXRGCQs4rcIwck/PlzG8bHW/Exng9v+nN4PeWN2xZtm5QfrM0rIM+zoVxOGh82BBT3x08j2N65W7ifZlJhNkHC/H0XjkJFu7i3rtmSTyb1wByPb4lSKyzAcuOQowTxMuylrIdNu9lHhjEtwLHd4fLxl62LH5s2ZEkhbxdnpQSAj9CZBO6P6s+qMsT8oEkcBk8ggdgCdz+8ZE29H0Cj37GzbG3cUmAHB95JAS6E88JsdumcdI4jspkMHFYdAFBaBqb34PJRjvY3gRIffHmGGzW+e1NiSy/yXUXNn8GV+N61ky/mc2bkU6IFaKsbNqyJUHbyc8GtUSD/0DCi44SUuHNqMhELXLAaw2kUTihIlHdhg2tUfLrvxJSUYeJnYAI/voQIXG3E0QR0mRPPyjbtxX/Vk749Bm/Z/yeWY+JmIT0Kc0hcJCeWOwEfyU+B17f9JJ4RRpv+vza5cvLJt+Qex/GeQUe94247wnhJDM8v33JJCCm1h3TBH4u+G2srOPAfXwJca6fuESEeIFQQTlQQhlLx7gQS8N6grLlZjPhB5er7R3lEVLuSELuZQjr0zvrnAQJE/yUxPfXevlNxeOjunzQbju+8aDPE3g0SIJjPObIuUx4dM/x4PodtHfZiflAvZNhchKMA49IAwsuBEIyMRrB86mSJ443mo0wyZP0bFaXJAEbe+Z0u4AriXFFOgmMhT4L5F/ZJGNJOauxQStozLFDJF1OzPTsQ/rBHmybok5mDPUAgfYGJEIFe4LOxZAUUj775tiM700P5hTwvLtsnJaNU9RYkV53wqerSW+Y+BsurOvCupzwZ5K9k/6sV9a+k/6FGL1AchP9MzFyAlj/BOE/vbxkAri8w/UvJIDhMTzmWyZXvxOcc76LLviQIJaZhPjmhLhC/BnY70wI1uG1rKxtZb07vO5GsovL8UHwih4ra45diS3uluUWW9vBsQcH6SO5czuQQiTASY8Q7z0mbBsg4xPJ8JTypE5u5OOD7olv8j8/PWxJQP3WPu8C6I/gCTI/MtajpXHovf0jbe7hhHEC9LtCvxMMQ+UELblws8Yn4eqAcgeYHXyfSGyQif+GfGNzz2yycUEa1/OrrrS7QgqTf+YusNJ3AU4Aj2c0xhUb1NgYcTIJciZ0u9gHBcGOCCWx0cudfmyCbaH0u8hSbGbryLFXyRvOXA0yNOZd+f69Qe4VfZeLywZfzy6QamHdTtj8oM8BkGRL8kFCEuDMOt9YZxLV8SAGrxDdSDKjZwJA+M8Q3qT/lPqrPqckCbDvCWDp9tmf8ZwEr56DQ8VznD0n859BJgAyie9EwN/ZEp/t78I6FmxOBsPrTBCDlVh4b1vKJsfdn/4IozoC2VEKfCjRY2sJKiiJ0kmPbuKXTIaQdaM8QMKvcZJtj9R1nHjUOSnJD0lNfMOktzzgRyDXp3ygD3ByeRwIv5M55WlUfvbY7W4HHuj/uCP/YfdJD9h9NzjxWcGPQrXWJFvIcVnloGVgCX6edmyIE+C8kf/t9YXHoFddKF8hwIWNu3IKzrQznAQLJFm3BGhsSoP8zcTjDiA2RGxEbgBzel7iScClQy/Ksu234Ad+dnvfNNG+ASTJ5JNejN0Mk565GqRYvwSESaLcySQQ5RmCzXzgn03+DRfHgbVdgBPgbHKyZh8IJq5Jmyc48TCZTerPxOgz5c+WJnziVU6GT+hGJgRtMnEYz+Mk+ZnnjTmT/Ju8EMuOa94NMjFNfmLrk9+PRdflmp9RXPb6VmJwwDExiFMDToCm29XjGcQ81HX1WOc+YGcjnADV5Tv0suu39j5dv4VHSHcgCQmZU54g9imT4XG7C2QCmPSP2G3bddo/eZz8/nvKu8rDTvzt8SfnJgkebT8S5UQCnuS7h5Phgfr3j0FVtRSFSACI6QRYHFyCfmUzTPDz22uS/syG+vS39OlvXLkDzIk3zZc3LZDfp7+xQqjGWCIBxHO1CSpOaJOf2RQ8nBfguR34QqAjIjeiIKOgF1EWbe/RFFJC/rmPMZP43mQ2vpFsK8RfQEpO+BWCLwcgSxJ9lkm/4OcM4U3+KzKR679wd7vwWeeiJD/x8MlsvJL0SVoOgVdgIr8moV/VH4Ve1J/1X+9O/03f2+Ud4432b3olsV6dCIzr8Y8kwI/9DmDiX1jDhZha78SflY9CTgbiPKdclI9GHAIraGAlNv5g7wQwtCWCuI5YohB2dQRxB8Q/YpP7fmArm42bQG/nssn1TWwEfYR8rk9pgprUwMR8+kLa5rYPtEsJqY/vujm9T+PIL3HGwHfiwGV+0PGdwATfk6H3nTj5jZP203+ire8A/pSfi+kfAuDoAl87Ma6cQD75nAQm+yHZpNSRVzCDJcl/0cKGGet8UVuMqxrkb2wCBlFIEGt1EFyU9GGTEaEkf0gRQYClgn9OnBt4zIH4ImmN5g2G/E7gRJJ/xp8OE90EnyF4Ski/gF1Pe5avsn6l3dXrv4efz0mCTAYIa/mGfIO4b8QgCYyedwaTG92J4TtEShMfm+tt29u/MWaHEw3wGJknvufGp4sB6ZP4yP0boUwC6mZsSfwkP+slEfwYtGN1bDY4Tk4AQ9vVLDmI/Bgc6IU3wk7sBUKlSLaltL6DRrb1OwFt/FiR2MmKfAAmbhLTCZDJMOog6Haiu/zoegPSm6hJ3p3sKQd+XAPDoHGsmniGH61bZpm6cQMEty8e1zgx7wQsjWkY+aWvyo9AldWFuDgVGkRdHUAHFjJfOdEvBpt0YZOvbKCROjaf+jP1M5u2zmetyGbysykraIxliHFN/oC0JrEJzbQ9sEze9ejBLkp7RCj0xYWPZJC8gY2xVsY17Hfj5Dfy1DcZOC2XXMeVROiYsWUy2A7JU/9CmliZBLS5UrfjYkIaTgRkf0w583XnBmydyGe9Eps9Md6I2yt4Sxt1JM2r4XL2uXCHAehnYn5mzk76+fbIs/tNTGev7QewbHbLBDFxIqwkQAP7XYAA8jL1OzKsDjUB5yVCn/C+3OsuJ7xHiVCklMppHHVKoiKtgwnYNu1p5VOxAAAQAElEQVR2ZLcNeYLbbuxtrLt+GgYIPigJDqkHntUHiD4MhW9vAKk3VKRh3bBOu5F2x19yGhkDTBtGpOsH2gy0raymRCjEBaHadoo6eEkONmRmY65sVseFE/KcWCD+Qt1Cmx0r+gpxGhvV7skPUcUGBJF2Ani+BG9RAsIbUkRssH6DTyd2TCZ/SvvKeN7U3efVmw0B7PsCYQwTfsGfPOkhVq6Jx58F9LqZ5Lhht80eJ8e4yn2cFPnIwVipM1bKrXwkB/HYdRP57GQBtp2pu4dtO86Mkyc8c/qDrhPA0n7suLK+1IlrSnx8J20HS4I7Oe0Xg9g7AQzHy3JPhMZ+ZDy5w1p6bwiyLAPFj6kd0k1aF3t2k2yhysSpuxPtXibpxk5EE9p1lmmHiNYHpAl5wGWjFvkxpZaiWjoKJCklcMDojlDsZRTX1dLbVveH6Me46HVDoa4wVkgyHIAMEEFbHUQ2xeTpJL9CFOOiXkZC9mXDijSaiZ+YlQmwP/5A1oC04pndcznABeWGUESIwySBqpCvfkJ5f8SbN6wxjjfRvhor/i488iwQYjnkHamT7Nck8gxxF68LHxfIdiD70meT+10kCXSMv/B4uGhmjhnbTNvZesoZu+F6S4M5t7p8bGHeTKLdhrwv51jE3WN7XsuOWS4vW92MtH7D0uvxJddv37Y2q8nPodZ/I1g4g1a2GbAfjiMFwkqMiSkKRXTi7Mi7bOl9uCf/vmfeo11PeU+yQ08SV+3lStkENOErBLTd8kASN1QYnZciQiEJgT84t2csz75eQEdLxxvkQqGd8nKfEH9QIkKl3MHlkCJCIa5t3BzPwSGIzSCoJtjKZq2Qxlg2af2GWc1tCHzbwK7I/1AgGC8IcOBfEFwDV5i3yYQPNNxQB6XAH+WbFdbDuunX8NFYvXawMq59W/AzJb4u+OBT3Kd2AsJbLsgk/kF6yEBbt1/otxqM0yDLmqDe46e+Ecb12NpXaIS9dXJRl379kGSMPv6qQx5tF8K12Q8bZXQT2H9VJcdmDK85AcEX4n2PniAeC7gth9CKXGl7gP1ojJtAZwFHnFGIfruDtn1ChpT7JCn3MJRl6+UgMcT+Uj+IXgpEvEfkQIVRGUt5sdG7Qw3nEpuzuRAW4wXPbKBh3XDdQp2D5D4rJGmM1SBPjvutN+q7mVbMlfNuczUClmDMdmBWI6CNoCfwwcTXVpbb0Y/dVaItokMimCuf/fHHa801s+5CAUEgA0ghJejEy34hvBaw4tsOr7VjztN3wZeD/D71Ib3J71N/l04C65Z5+m/Ed+waZE9CMId1MZ/w+Svo21dsXgfV/kzJMtEazgO0Xt6VbV02Mkfu0zflyvRuC/DrWDu6k2Il3nsMFvbgID+6y4bbrOzZQtuVvfEYjf6rdfanPw6t+PkePqhukPph1eW+Z5aG948EqKr1HkW1dBRa7YiIDFU4FgQgF0+wU0JCO2QnFzbETs9skjd2f+bM50bfTje47A9qfm50u5kTeoYMi4PgRTKOxzNyDuZktbwaj9YtJVHuOoGJDUmA1CEx4yixKhhPBLOBblt06MwpI9suCmR4DDaXiY51Ew7dI6gJ4mEIXb4O1+42n7lXftRaiIkxW/I1p5/xHZ8ku4nP8/YMrsByThuPJMgkPneClRglWEdj3B3CX8fDCPwu+GK/CvtW8K1QrpYub6hR5P2tJViX9ZJ7X1xfbFPWR1gPIWgnFYUiDIl3IPU3RwtkDFg/fnjvkhvW8XHF5wXfV+JteYD9X2xjfZazdeB278DetAMkGmM2eOh1G54PD3CndZDVPSHsYsP3jpCoF+srxW9fIYJlJkK+WK8FczStLMZwNi8sJsGmzjifYKOuPF+b5Ia/ervwocoywbcJ5ze+QcCWdjb8wiZfSY69/5zjrnl7XQjaujSt22JzkfiAM6yVhW66N/4e/ud3QXCCfvcQATRik9bFqXLDyrirgscfn/5B8sEHylJEqIAIS226sDf6aEOTN2Vl7hXf7f9O/NlxyvjMPN8Dr5v1X4mFcdl1S+CT3+in/5U85W5GbNoO1qZj/RL7rZBAiB0EJUldS5f9L93V7fG2yJ/VhrKVkbXYVrPPgF6Ly71vLZahUr5AxiIkJO8W6hdxwDfvV8PPFXS5yJxZWcMCyXfMexLYhj7Dp17n9jNcWLSyZwv93Ne60bA1j81BrIT3ArBvwfzpk3Wc6rqIixQSaynFbyASEUURsUHH5UWY9CsTrExmB+zIgrN2dIdPr/zWgA09841LEp5vY978lRpfR/r75FfkG+jyrDN6b0dSsOlOBMNjmjgm0MoiV8jkue1Lw4/G4lhXki43njWb9AUZeJ7EpYFtGQjaB/0C/xOpL/Rf5DLRlevd3sQ3+hgSew4ppPwRhULZQKgU/GEaxukbvpr4zOHnX/vuNcxsWsqN/F7fFfJfwJU1X3YQtwvx8sFwRXfdTN1Mux6PWQvEWEmkRjzss5HrzzVL7KAqPlX2ciiRf9N0hNwjd3p/eWE5+Z8XgmkY+7d2Q0XW41u8ibr8Vs59NviRuKNsiVOISaiUokIgdgRzR4T6xWYQd+9VI94rB03uJftp7nRc1eXMYyE65D/KG7/2sqX7+/C1bIzTPCZjt4TnW9kLw3pjTwHO2KN7eH/xORRhELaU1g168GoGb41FrEywemPZTG+o4W8KfEJd2KALG9XJf5YJvZPcvzb+MN70yh3hDbjP5XyVv15LghAIf+MwE4SFRwjPvaNBMhn4FQYMDHwtBoplVajiu/VcLO0KayibDIIXlE3+lNapC07+jqbsC7uKxyQ+JSF1GYoIiZe2y3FqxGjljrVAUGN2vHjkcawMx+u6xcskv0D0S5L+zC+4xoVfc5EcIFdiaszcUfMusJF/ZUzP0zIGTM46cVMFZxL4NZSAqFWdtHyjt5HapJ/GAbKPAOmvvcF0oNumbIM+DCTHLiu/xQwahrqNiyQBaimqUVSYt5RASqgK9SvjQnx3Dq3EPsHersBJnUCfWaOJvixX7bZenrVSb33l80HHopWxWmKV7wCNecQ+Jvr06Yd96WiUDeEnzsYG4bF1KSTQ1C/ONa0MuG4bunD6GH5294Zets08s5EdZ35oeZNJvZ/4+aviCz+57+AXxiMpuAO8GZDgDVzYdH82MDIBmG9m4TObvkKutsELDAhgbwuuJlhDRR/w37JsZeuVJMm7A2uJHYwVBCx2aR1kwjCO/9pDYYIDTFIYs2BDMIsS4mqM2fBnBfvpP9t3/5frkFcnAR90rwaJftni1hPgkuS/sv4rxL8QgyvxNGY/GgInwModxCRo7EXDZ4FgPq8L11TxpkbhZDaqhjz5Ia9PcYg8DaOmkfIw5m86p3GS/2vNp3Hkh06AtO00bvX+DYivyk9g2vpNkH8chkyKnlw156nVcxZIFQciQhzHHRmfVSvxXfF7YT8TxGZhfxMb+fNxKPWrFicC9StwG8uVvgmI77FWZNvABFAD9jKPgPd3l9YDP3YUPDteEXb2KKbiTV1xdsfCxCaiiZlgY0xUb1ie/myeT/I3TvQ3kxpkEiTh37ST3n/nJO17fbY/65z9/Sh01RWC+E4wEwjP6bkN+9LwybCTuRiUgvteUE0SSJX11BCbAVwPnASG7wKxBWeXhbIRDpCThSM1xwwxltRPtjhkBDoI9StjRd8VQuZhwV1rZnNn+w9xvZYr8sK6EhD8YkD2lOiO3cVJYGC/gtkgzvlBmLHy8cebTRJ4s8WcRrDugj9Gf9YvMkHHg/wQP0k8Qf4NEPw0TiTBXkbPX99HfiC1DbknQ0qPMWoaBhKggqHfDQbPVbbEK8QI4EtIeBXAxyikJK7etzX3r5/eK6d57utG8OVbMtvMJMPSPwu4DbZMAjjZHI8ccyUUKzlntHz8wXBIpqdOBwrq8driuLXBYQzrDiZZNsxM7k31hh7k5xa9k9en+BuEfjW5d7y+beRHvgDKeVfY6t+Q7mcCOJEubLrHNmE8j+82vuuYWCsLtV8mXC6OFXghRiXoNQRhA4jnXyThr8IG+sneVHjMKawtyZ5yzSC5nKc+USgJ+oXY0GA8UDr2ZGA6HVcjriY//i2Q0/7OTgCf/BD/6pN/J78ld4GzSc8XAia9174nwi6dAFfa+hujGfJ7zNum75vdWKEOVJyqpcinvxNgSLJC3GHUyUgij9uJPyEhOqT3Xz9J+K+2GCRHlqk7jfQFE7bE6PEGEqDySFSV83AHGEAtRQUfIooiAl0KifiKALVE47BZDWKV+wmB9+f6fX0731bq0maZpCcRrMPHrLOe4yzQgZhQFmWjsbcYc07v7Y7dVnApX7iF9DugkzuuyO7cStZtYFJvQp7+bIiliXphkwyTNzd1O8nfOMneSIZDQvT8OyZpe9MZ6Y1/g/CWZ0iRm894Jv7x07qTznMDJ0HzAvGvL0QZ4Mp7lQh4dLIS/BpC7yghecEH8SF4PuuzET0wJIFthCDbhbJvyXEYs3QUyqWEEugRQYAFGu402T9v2IyvMwnQk3iWpWN0A489rPPitQOv+5ryLNusZww4/fORgCRaiPnCmCt3l0aSeZOZFHI19cegUMGfGoXTuMpJkHcAnv+nwaQddRo3mNgQ+gR2ovvvf3XsSUFb6t0mkX09zqD+twKQjDtwlzEqsm5JUEvgQ7ArG0Lo4iLAxLxt6BxbWMq34URYiWUCcq+Gy3DAeqPcsaph28dt5gdlWf4AHDO23HvXaLcBizvnYAxg6WSwI7mpTJ46mzEf4JGFjcpNy0295iZeIPTZpxyJcCYp3lK/3D3qmAQb6H/hTnJBeuMv+9gmP5u+IBfPnQt2EDuIqwqhLYS2ePPR6z2wua66HvT2gjAtiWPyE4FD98kfxMB9Sig3sW+mVBgr9VAmB0VmUvZtYpS8AzRu1atM1Bm/rwbk9ZqcBNeMj9d87TEy6cHVa7cEfuxx+WqdeOTnAL4UWIiJH4F2MnhvYA4TN/wgCfChoKWfODeU0pMAkuZzu0/uxKgpyTxxBxh53Nlh4nfdiXCQ3klAvxOYBhJgHDUNSDAMlcegQU6AhOesJeNmPygSN+HVexDijXNr+k+B1woWgMx9RkeuPwjaOZHM012yBy1B3S5JgOS02wBt4DBscgUe2J+EyW7YblhfmWBHktBETMzKpGCTZzbHuFrmhs+celelbSt3/YqdfmlDp737JDl2HbJn25SL+pxr3ol2Pxo+4XyST80EkIpASCWUBLW0zXeCTuqmJDgBCYIQyD7GSk+P0eE+iZByjBDjhQYKdUOBYIVtDXrmy8FmTPu3cDrPjglr9OOb13ZBd3Kn9OMQxL46GXaJ7vLVZZCk3yVxMfkTxCQTgDnybkMc9lh4H+1PwSH7V0vBZ1CNqkwCSDuNnbwpIfNpHG93hk3vjzrYp4G6QRP2Gwb5DjBA/tHg5Df58/RnrloKCdBRSihACWSIiCkv74eRBTNv2wtzrhHHRvk9VnmdCdd73V/IwoWWGwAAEABJREFU9b5s3fC+uK3lF2MeCdAnYoK7Bh4sQWdvquFvN95JNqGTcyMpbf0s986WibLVpw6RU3abibKYLNisz5Ybdvs+nuf2pjcvDF9lEDzimoG1LGhGbLKE0O7Q0N0P6f7eBCdCIsdqYq824kcSvzLIO9CgAswq8tUYqnEYG2sm7ExsvJ4juTMBZjkJTHJL4570tjtZuuyHxwz5MxmQy449CYh3EiJlg/9NuR7WXNK/UCmdiCaosSdByhEiD+ON3JB9wjYhTyN2Tv4Radg+UpcYBmX/lJU7QOmoSJIhE4F5C+VaPH/gB7BPpcuIUIQhpKRQv3bJXrAgbI3YrqB1HXtj/xK5buqQ5mrGwnWUsz550uubddvvUJJQGLpsbOB6oDljEqua2zBwb7fynAt5bdvQE6Ox8Wv2X5hspX0D7pPSOrjXV8Zfadv7r3nCW19IAGPm1nfITV+3Oe2TxxJj9kApY+j4EdckpnUTdAex097W0qTf+ydxqN37RATkFycZkk2rxRsJbEcvyBI65vQ49smns302WW/k507HaX7hlE/4cYfyTvQu535n5FEnSQ/Z59Sv8ljGzEFhmcgkmHMvHJNGfBrxtB9eJ66p4KMTtRb8hoxOgISJazIjTXaT2gSfIPsE6VNSfzIoW07oO8axkgAdA2M4GYZKGQzbPE4CP4LVwtyglFChrsvIuFqvpShcF6FiKSkiNigvisjmZXnbUrfi/f8KGYdVDZ4YK9IcS2n9DiTAAmGNFWks2XFlkG91uLc1Tri93Ai89QaZG4S8B94Kk/212heB1vMZM4rb28mUm4MLcmGOLpcjOTxPgkHd3vCgwZhSyMEKCRkitAr+iItvNbvGfOkQ/THnI5TrcgzqAqPBXuQmJYHCmxhZ7pva9cJkhcbu3/hmqbH+3d8ZgprA/iDvvzefp30Sn+d/yH9J/SrX+dR3WyOTxn2NTIJZfaxZC7blPgmsc1isBvFq7Jv3gqjKwD0FDpaC/7UoyelHlgSnOKRO8kPycdrLozIJsKWkTcos8yg0Ve4YyLHeJUHlDrChInOuXXpudOZ0UlTqa6mqyAFU2tZSVJDF0ohQwe+IUOwy0MUVIF9sFpvWDPayJVa2tim5RDxW0IBlxsh8ugMJsHKCrAR2QRroBNEd8lEGfZcretsHu5MN8jc2npn9SuBTuqikXCjCKCnLnY5VoX7hP443+uMT45tIK3MubK51S5ftW6Pecxre6D6CciyPxxRdp8AL3e+ub+hNx+VJE8KuvArv9rETP1RLyM/+Jn6iulzSjpr9fPfAedmvdfN5hrwm8yXJftV5J/xWTjsnvBPE7RIQfCe7+8+sPcFYs+tonxK7E8H6Qp1jY2Rsci/WzS+pEIxS7G9VhYRDYtAwVo3juGHQeBB86AQnId4Tv9vdZxppT1/LacDOmCMYhqLBslbkprts2Ma3UYOly6CiG4PtBf/sZy0qyIgu7X9EKCLkq79bM9hL9q8Bgi9Lx+Ae5q8fm21Lnf3xHhnFQVvyu1WfsDOn7LIlQpeud8cEmZPS5APWW5If0q7QEF/skhER6XBEyIs5EF5UVZajKEqIhpKQ8hgNHgHG9fhJ/MPhnhhrlq23XLDXTs8cIRgmItBBMOD2smpsRQTOuiOCAq+uuE3Q224VxjHyf/rGhgwlNNQiJ0FFr65H8pLnxxnZZ580JqYJ3B9tOOW3R5/zHfl96vckmPMfiV9N8HdYOPkXmeAeK+F6CL/rrluw7XKPjYmQPoUURSo4WWqo7oSDfH5sGcdBA7BMTCPkB5YJyJ3Stk2n/eTksATjWEmiQTlejls1vJOus63L3m6gjVGz32C/6FNJhI6iWgt+b4hQRIe4AuwvWMB5yzv72eBN4wCwNHdyP+DqAmeSy+bwHXoC+DT5FuiYA1C3Z5DLDXvzZHfIYOORHQv1PyU250uXXlAdBpVaVWyr3V7Qgw0SC2QI80grY3suLyKB015ALoQFLlnvRdMDPTsRhqCYYKwQf0JC1VdX5zs9tjGyQRPN5faFt5ooqsUImfiZBJR7UgSfEUJFUt4B/Ai0BdqENEl9qifJd+I7EdD3xHCb2T+UmdTEed7BODNYILdty27PdlcSA/hu4DJYaOfEW+nT2kI41lyb9yXwzutxnEstqoNRNYwA0u0ETlJDbN8JRmQvjzwObcTPRLA+yMky0b/3rRr3cYZBnfxFQ+32Xh56G+r3BOhypP2gYQTUDaDSr+6SWJcDIa8jIsRL7y44sCZWrSTBCkeNBbnAHfN3IYYLcVpScrAgy7obCJwrjjKV6w4G8WA77slPlB3j9MVO4Vo6uTudi2FBfWGDXHZgjgVS57YRRREh3nLIlfdcEHPnIu7kzQ9asWhe+vJiJA+l4I+MkCzkq/kN7BKV6bK6uxB9DRRqCRmd/EVdRkonSKENr/wc0UjM1dhimY82kP1dAlA2+f3c7985nCDvT/5FM/1nYu/9sNyRSYXdfTJxTHwj93CW2+eeESv70bbApH9FKiVUq1FVnQS1yklgIpqAIyQcx7ETHml9xNYTYdB4b8M+7oCsmQhOgg3DF3LMMmMMYHwPc+MAdanjW91RikoFAVhD8YKk3C/5Yh+91I4mrz3hOJj8SMdmSblmnLJMLPMO4KDZcEg2oJNskU+UrkM2BnBQd/S5md1KuhOKADgcoIBjEbUqF0YAKsgk4HZXalWpgLYRkSM5ozyH513I5oV5ffLf+5ILZMUNwjXYay+MHIBxIkL5J4Q0AmlIKPJ1tKe/y8oKtzEkB7pG4ZQv6sR/L2sJ6mgnZU/ha8NXx3GGlCapk2CXmQic2gf5Fx6NaJcJQMxnNmTepNebOuOlPOrm3ECPmaC/pfcvQf8VNPo5No6lnSvEo5RQKaynFjn+A6TMZ29kEng0MaucECb3e+IPPTGmLl1/g/t0DB4rwVjs88je2mbs4+5zDU6oYdS4S+vuA9Iv+po/BX8Lfhf8jyiKTSqUV99/3uHDarAPC+vvWDJeGRtiaJlxRrfMBLDRm9Y7rHRYtRJE3zZMQsPBbAzeGNhy54x9CN4iIgkTpcjO1lI4bWpi8ILuMQ7y4m2vWxJELXJfRX+Y8Bx9MfYFn5jX/tkXo/tBnX0C3PPVr1B0RVaCtwi/a7tik5u4ZQEtlSiSCn0SJVQLa0kZciLUUrBhdxu5LW8OCH7YL/vnmDrAJqdP/ATkd0IcJz+nt+tnSHzNDVl5tGHDtrUunF4ex5jZj5k2qdPe0nB/ywXbmp/liAn9Hbtmn3aEFBHszQbiXQ3fCYaqCobEACFrYhitfwnq2Msx69BHQHmg77hh13c51lsb27zvxpEQw22Ogba9DT6hV6NU/C4bItcREZIMZY6bLwnI7/jvWLYYzsiZ+H2J/i2QA2bQwImwd159ujJgoy7BBjNdTmjp6SNCEZGECYhRNlQ7DrnrhoHs3jFuemXhDrzbup/7R4Sk+yRgQ/HDPi34sWPFF8OL3snvryKzJ2NEhCLCQ4l3RfBu6BvXl0lA06JQoX01SqhGkck/lECGKjJBPc1pLa4VV9bj8FiIpwN+hZx+bNlh0nZ94cPv0knvtpB8X9/iDWO9872Nssfs8J3AcP8u0057x6oRsw4vzpBwNVHwPVFD1RiKTDrvg+UwViX5B8uaydAJD1HZsxH7gUr9Vs6+LlfGM7Zx3dZ1I+N2nXGyXZXtHYMGbMPQH5Pti1FKUalVtVRFKR0RrAMo1JQ7TtyhJVz12lfLd/8eY+VQX7TwlfHVcUbOG/gleKXzyqatKRvEanvwGKjrTQx/B9TtlW5sDhWkHa6lpMMVx/NWxqK8MAd1GEcWbbBQ7JUEKaWq0Ef07+iDN06vhj8rG/8Om21Pyt6u98khUONAMGRQkvq7WAra/ZIwMRV2K8p2HifXg1LBUELVQM/yJjGpSPkZgAAyBt6kvwQc4s+GT/pd7rrLwKSdN7Iv9DuwrfEoQ+yFzcsy7RcwZ3nJvfMjk+v2ODk28v6xMDwSjskLiwjxIt4CAQqwDNVaNlT2qADL9xhN9vG9bRhoS9/BQK+0GQyXzYHU6ZM6RHd5sATsf3Jjq6vIrwA3IkIlCr5HQr7Cb7kyQt9Y7gbiOINli9FMnK4Q3jDxr8T9yj4YJEDLzi1Jb/0uEQhen+L2HuJPSBGhwu4HsGOlFJVaVUtRLoBF7tILrPuCkXXs5E87fUqtCvoFYzFwzmp+sn99USxmxb+EddAgiIHzRMCtgf2StA3DUAEwCAm65vcvQNfdElYiFBEqEggV9LoDP2sJ7ghA1GMP5A770/C1QVjDd9SFgN9jzjIJwjpM2gSbZbmyroWFL65jnCxb7jbbvwQbvNB/xZ7I9mvGzr7YJ4KEl14owNmI6GtkLWVHDfauvMPA3gzsZaJSh94JXpQ2E36zD8gdNfW6jfVeDoxZGaf3r8qybV+iVJVSiD9ARkT6HNGlfLEcQpZLXDNGjS8RmhyPmbjMxOVq8qNfDYifSWAbKB7jBka7FRSbznyKCJwJBT1iC1hEd6xUJKiJyqINsnsEJjxIsg+c/JttQFbsxaBfqTUXGhESsCeNlZkAibvNbWxw4kgVukiiZ75Z3hBiuA75omyhyPdvvbkmQUeWil+RqJR3HHaJuqbw85f9Sd/6QbJaJxFWfF/YiCT1l7rLBm2XbQPXd+tuWu/sbrPS1rbV7ehr2dCb7Qa2tpVT4lcDyRLLDYHvfoBgWawhOlhYTRT28YahFg1JWuSuI73nWQdBrf/aiHdjftm2eIwN1gt+HNJcA6EiqXveJandJEIEGr9h7eRfNc+rkvwQ/SZXXfJr54Vf4BdG28ZyECJCvIAlwIHYYGciQodDNb69GIJkYpvgJv3gR54DJMSukwxuV2lfamXcqihFTC6JbckNbPKtfGVDv4brAO10bGijJ71DKhEJBFLdzntIvButd9PtutWJNiH3jYjsv49XQpRtM6wDGa0/BtkXSJjEs9+pr2rI+zUs1O3o9sYGrsrfN1iTSd03VdiNphXDzd7UKDfavsNmW5mv/QBEnwS/W+C6gjeWKcPrC97Khi9J6vLAqW/SW/8K9Kv3qEUe6+t2tn+JUMn2Je+wpZQea2RE4N8GwROF1MwTRFOPDWvvMW3Kkz9P/AWid9Kb+DvOJIF15mBSBi84HYFemBS9vINt5QvCV1UCYQyQeBhN7g5/YMryNPLz+gAsJ+SkYeyoXySCFx6lSMzLemSsvK9slrGwuCQAxOkbTy0bnBtJ41C/LO/BiA6VWFpHb3Z7py/T6IACIgNaxD0o4BruBdANknJsSWwHfVui+9UYt6F2X03IFf+9nraty/oNyo3sSYBOd5YtAzXpaknXw93UMVr2dp6vGzxHgjkbsTrgcsLt/BP+mj6HJK9lX2ctRYVCNWo59r+UorIdgP5ioJZCXajQzvtYkUa22XSXjWyDLetyjJDtHYzjulIYCwRAjwgVZImCf5GQMtrEAckyvHZzZEbx/0LXuHNNja0AABAASURBVHAHSEB2E954u856y/Ks82UW4wZvBpNVA32XOFNLUc1yl9YHE37DuMlug+zjAMkHyA7Qx0yCWwKMEwmQNiRJkHcBPggVELUqokghFgbY1SQHm2XiLCmbrLfVpGq0Y/W809rdbmAM3FdEdAgprhCauGKTqPcvD0c5vgBeZXvLglYYt7gNDVNavwe+w3zcYkD0tsE2J/DKRtmW66MJRSUYY+VkW+9sqFnXmLdRvwNVwg9x2Ybw8IgeF4/fkviUiV3bsOZj2ULbDhT6kATEETqJJR0JXkvoK9SCzaCudpS7dgWbUUtRsZ1yRZZStn5dlrRFtnFdL5f35XAZIIP2tJbwMMJe9vDusYLvnPwtcaVg8pv0Z0hvvEF4k96wbjAvg1dQSjpXSk1ZLSFk9Slfi4bUq4Yk/JAyyT+ig9GYNt0Eh9zjNJEIG06bxDaBgfphmBhnVB0GlVoVpSR4ky9vahKEFa5s5MoGJqxvhGqWbByhICxSieiQhIqOlFKPCPmPUkoK/ZqXq2mazawX3ly2LPRM3XJD/kObzZfdH0sTzH/t2vCaaL6bXXXrQSVLTbIvWxJgynLDi0bHlhJHLHGgYfvyZVvGxbFhwIzZRnp/KG/oRk+EVdYbsUXBr+aRxdCJXCtvbA28EAhVKmvaQoWKgl6NWnp96bLYBiyNeqcXxihR2B9QDI8VzLnJYlkUyIgvZUjqaMSpNcnuL0t7R34/4hjny8Jpv+gN2TGjdxQuJSpOgArKBuu1VkhaVZP41k3ymt8NDyb9Dsi/J8FoHZKb6OM0vU+C06Rhs/kxqJAI/YNwxY/KukIRnEOGJG/kygpXNrIl8Ve11Fk1dgETK2hLF6VMPQhuKGKTQpdEUaF+BcHr2u3ddV8BA6/sV2iKdzedChPfQE37TbajTLd82Vf7zMryZSNLwBQ84kRK92pU+Ew2GqN0uc3CIhoQdiFTZ9ImX40xdqwQw1j4cLjwzcgNK99ErTwjJ5wQ298fEjGO9IQZGZPhPcW7WMLXLFfImXrKSFvBUOiUIFhRsG/oumgHqKOpDJrnHBG9bQQSRFgW6gIU8SYJmQi1BhRakcvaxPcMRwK8vwMsEH7Rfhd45U7gRHjlUaiY2Acge61FFTlA+MOOPoxFtg1j1ZhlJ0LHaMKPfswZj79JOE69PGxkHyeIP95g8tdxUD/9B5VaFUTDUIR8NXaUFyckG+r3NKCzSazeFpq5heQeCd6ItwwPsyPLtIpEby9fBE8gGCZc/gK2OeSWHY0RJH/r47GzjgqPn5BkmxHoXwLT9nINOcDcHpH985JkvS8zKANF0jHt6LsUkzdDjLNLRm6AUenb5ENj5WjMX/ST7DOJMGvxV4GULdc9EWjXMhHW7NtwYp/Z62IKWbJFKiiFBUaEIqKXkREuS7HVlYjeB8lr0yX3LaEspz3bi7GAhIyvgFWhAkLifUdreLkqyX/cAcgEP/749DfOEN0w6d+DzwA1CV8gfUep9dAr+mCyf4lx0OBESAzyyT9gSzmN1I2c+iMn/bjVjWkbxlFJetrW41sgyM/4wVwJR8dRyUXqdrV2bEw3tv7BrYmWDYjwWAchOcAhqWwIpIe1RP3LermtAStzfOs7PG7XW87RdclzZB2G3QdUHaBBhEvisgRsomjhVTSZvuEpQRzkV9bvdZF1tomxmhgDECJiJIhvNOSqBTIsJrvB14Ez5DfxE5B/l5kIJMDqROBuwAjKweRrm8HTMI9FRIiXjjWGsoxQwm+SIrpisUO+bAa8XKKdEsLAS3lZAYHREHJHI2b2ygcHLrNWkQQt7wDz3Pj6c+3f/uyfBVh7JsGeDJss9T4Btuf9CiFrrRqAZWIYVA9Qhz5A5GFERyb5kd3W21qvo8nfy9m/DiqJmjKYo5SqAH4mjCiKRLBWoPvrvtyoMCRbE7x5Q0qEIkIpJYUEAiiv4N1AHDbrsIqkUsL6jvu21ouU/fxAkjpGppN1Y9cxdxsG+2LYlsAmQ/BsA4IpI3m35ga7Llt3uzYd2TZQ4W4pGlrjzae3iWzyr5A6EwAC7ORPeb1qAalnUixaaOP27ruuDT882IoTyJyBCZAuWbM3loksuMZIy+0t6xgGi/1D8GJ8j7XVYfj2K+NATLbatq3bcnVdk1bQH4EaSbCSBB23b4KW/O4/7wqs8WKQAJfrqlJr5cTvKLXLWkvaSiYEtj0hkENikMk9OAk21HGQCW6bZaVdqb1vqVUm+o5S93JR+MQHhwxsEYq4A4uPcFmiVuEy7xGhQiFik5IKiESjhZT1WxmRNksj/AZ2iXq8dpvl1/DYhnI81+e8KJ7vhmB+Q8p6IfE1Io5+EehAWHJEbyr6XjZhVsqWrj/QBH3EHQKg5+ckGq08Hi4ciYbJ3Mk/y0RP8I1I/wf217Qtc5euW3xH8J0CuO/KOCvsWrdxnViGJ7Y8gCF1Ce0L0HevI6Oobxtoh99ZRxvPca8zrZhellS76zuknbdsk9LklxY+CC+UZ2THKidCx/KFzg9hpVaV2lFLgfhlKxd02y03QGoTu3Lqd9lJvxPestCmVPcDpSoYU2CXGNQiJENIEFGyHEEZRITcvtDvQIQqKLCrgpQuJySEMHepJkZUIEO3a9ct79Fb7JZe8rstlkYfqzGmvkKfSzmnfegIdYkd58qGkHp/yhEu6e7ay55tIwitTYCVVuzrO0J0cgpb64ANi5GPPatmiGxi978CsCh1CO+/kXolEa7cASxt71i05N1g1ULfxXcPsDLmyuTrLkmy1WUcM3G7fufHbr+X7uuy+wH7udoGFo9HneWCzDGRTojUaU8T1ug5OlyG43J7S5po4Y2lb9IJsfa/FpF2dCoXMINsiyxRQjcU9KJSQN1RVeq3Ud3GhOdOUarbFPpXUMSbTHRTxvJ+A/HnthhvsHwFb6EI4PmjqJY7MH5NdNtw1EVPDPqxlCQdqkISXqQM9A57Q+Fbr4bRQPjl9ru0bvRyb+RygjdeOZfn73rIesGRHaiKsL0DVW4bEYoAAjl0aL9cNAk6xAnYiFuHN76TY2XDAZs5E1hv7gx5Z27z1w1zkn3O/+LEZdMvG/mdAAcgv/vM3Anc31gY9x0grOdYkDtW5rW+pq11f1LHL0vGSN+sgxnkmMhDp03avpB9zFUzCbEwzwosDesMoS7bXXxuseqxc51thvWOVU2Fy28dtXQJuQoIUGpRl7XXVUuADFBqpd4oogHg9AqejiOO27OdddCMKx7329Gq2YvxgpHpqHeefkka5q6lyn+bdOQxayTRdgzoA/P2JAgSBYRUQsILqCQxjEICbYNYvdE2aR34hclih/tZ36V1Yy9b3iPnxRDMVJi4hPQ1otuo4KWyt5XQQBi8Cffwh/1GcQHhMjHqG71yOt/gmM580Js30pu0JvHVZD7IPkP+qy7+55jgzNeAToQzSeBEuFA+kiD7LLpuyZOS5+WU2Dy+5/Jdpc+7ymXr182P3F/rtM9+7LH7vdOx9TEW9fZI92EdLnvMLld4Amifa4U/8wbzyvBB0O8CDUoDgsc7gSN+WDblLs5SfosnqXD57YZa0ANYboBsxfZauz1lVUDQe2BgupLE9wk1s2kXFnQhEBcCeybg59yAqywv6Fc2ysFZWAF+K/jDbQniF43MMw1DfrV6GkedxvHQp2HQONRs0xOhqEaIl0ywwJNcOIMeetr0/oJcNoTfQErbjK1s2zeBsc8l5o2c1+WCEztqwQ4sjXJXV7I/9TL0/mJ+XFcjhsbKphsLRFh4LJmJ65W4XomfcSG+JvM55ZzxdYx3vBFr64655Vv+Jytnvh+fdWZf9vqsIyHO4AIsXX9hXI99Zr4LCXHZyhf0M7D0Pn9Tz7aL3KaPNzMn8PjUXcDZYOyUqS98i7NkO497oe4yLzKumShrJoZj0ZNglRPBMSOcfsFVgWBfgkNSG6wb8IUNKFw0KgcCY9QioxQksCwmO4QstVK3Y5CwizYtioxVksl/ZaMubNCZ4Di4rwT89e2il7dz/g8xXtHf8r8TeuV0mvMU8QbTXYXxajHBx054fkPI/3jradIj+mkaSQYnxpBJsN8NSgSLVS4+1JAdclTuQZ2+cYVtzW8b7vXN5DZMowQ2l3Ne9EKhUIH7KiUIeOBPqNruMnXVQHd9QS+uAxGhkA7IFz7nnZEHXsfG3+cvEH+GDEae2pDoAoEvG8HPl4scV8f8jO2NuCdsNyj7v9Vqm/fEMkHb18RM/2vCZY/zxhxddx2gnW1G/1HJNnAGtH2zNN798trH9HjZBz8sX2l3P7ZtbnOAZPA8Z6RxgU/m1YU4XOHXDM9mDoTVBwXx8qGXcSxiD8QeiMM0QNEwIMHII/tYA+4UlVr9dkOtVaV0hPUNqWOPOigsS5dCb0YUMjAgv7ilNbJ3JXuXDOQLZP8M8T+/nvX55U2fgOUL5VcnAQG9sqlehLlZGMuPORMn/gnCP55Oenx4UErr2JwQp5EkGEiCWlioESoRkAjmOhg7PKh1S8O6oX5FF+/eDxtDWf8awTzBfBJTqhShx4GKMVEifRtcTj1oi6+Uyz1E/w2ZvPiXvxr75GeTV+TCpi/edEhg8l8g/tmATG9J7o38xPQN+JBxfBNvVw6fq6y/0N5yh/fnlfrXV+rZqxf6vtAmgd3S9ZaJt5mxAG1sN2x/zfLMHIxjHdj+Asm7vOqd3Mb+jPx8tKUNfMh2yBzT0olFEryBiwFfLnxW8WPU4thwSDTvLQj2opbQAMZaNA1gDA7NotNQdRqRY9UDsgQ7VzZYN0otClCwu9xRsVUJskdFGuiiTT/5ixYFt6U9ASA/TudCILoJ//3nVxmfkJ9eXvT59U2vJIY3zxvqDRYXTvFoM2iaRkg/6QnSPz2c9EwSWBoP3A2cBBNJMLKooRaIFmLNeKHEu5OfwBxlbRck27R3IrbSLt01TSSDpe1GoRDMdMiInL8iEzhTS/erph7p46Hv7UL0CyBGQ2ceJ4G8qfjY2OD709+HxXHiQ1aT/Q3ivlrf5KvlN/AC2Y462rvccdEL7V+y/tr114s+b7bP2F3XcWv74nqTl/rexnVX+gPbDerMA5PcbT7T5zO2zykvOcd7/Sq3f6HNC+S37ruE8UbCG2eS4Mph4ASYHZ8tVg6g//8OlU0Za0B+ANFPY4XwYCo3OVXoy8bEhoIsbEpEKAKUokjUlILw4ZGRGNSoM/mNVdFPf25FF06sN06p11z8WZ9IgE8vJv+Lvv/0oh99+qzvP7/ItheS4EwgriTLQj+TrZbg9oSz40gCnGTCPz886vkRZBI8ZFI8TCPZPLDISsIU1QgVCU8aP2Z1yARKrLKewMeUUrbznNHQJfrGBuUV+S7aAYm6O1DJSxEhXO5Asf8dJU+h4c5mfb8bWE+f6V8l2Xdvnsmfp//m9376+7HHuEIC48Kp78ec/kjD6c9hcpDb+vmsV4P4djvEQn9JoHPid/2ykfAql9+T8aJPToR70P+zyUl/y8+uw/Y5Y+RYAAAQAElEQVSCLcuW7P1nbAfcdmvn9h7zE/XG0YbyZ/dNedFnEvQz+gvScAIYewJcuAvMPP4soJEA4tOn41cJ5FADDhVNSf6iBxP/VPUI6R8tNxQFrzsIUkd0myJ4FfEGLI2auknf2LKVtqsC8kee/jMfZi/8wnbm+c/OvrCAfvq/QfpXyP+i70mCT+AzSeD/TZJPsCsZ7VPOZKyMOfGoZYI/ctI/QfrnxwcSYMPDSbb7DuD/v9U0DBpYdS0hXsJLyQMZkCjJfi+pdVWSzPoPIDb7vbT+DhR4qRAro+6yxN1pX9CLBmJrH409Caz3PiKBJfseEhElI+0zp1tjg9fj8WfOz0wXkuDC6XiQH5I4jq9JeBP/IpPe8X/BlpK9eKXdK+R02fWG9ReI90J9Eg75koS9ynK3uy6RdRdZ73VXdONCAl2B5WWzXTe5len7yWCOz8zpBDA+U97lC/bP4MV+AvNoxxtrfoMr+WF8uwM4AVYnAKeYv92pBHGoQQIEB2RJ8ifxk/yDnpBPk+VAvNkw/RpoX9Q1uiQgqeXaePRJKBPgMjee/5f8duEN5184iT5zyn/mDvAJwn/6/Fl5+qPb9srdwf8TjT0BWANkqZqGQSee9f34Y/J/eHzQhy0JnkgAw0lwGkcWWnVLgFBIYCOQme7gtEYeYMuypbYraLuhWW5mrAKhfv2wDMH1bFmIlVELNmC5wxty6FmnJDz71CU2XioSaNxxGjm8SpkAqzIBeOb1HSD/A7rcMfcE2JPg1eSGSPk4hHyhbP0NMmUd5Vf0F+pevTeGy35GtzQg54slbV7AZ4OTO3VklrG90Pcz7YwX5Mtme2GOl63uZbe7Dt1tjW6/khgXkuWa+Ow27rtL6+AVvIBXxjSf3kj8M7iQBFfHg4NhdYy8x+wtZwz8gfwE9jj9x0oSVA7NQU+c/E8PyA39H8XTsW0ESekyG4EJjT1ge9cNbAs3mtAKWdKGgUNf8F7z2vgAvPJ118oH4Dk/AL96QUcSvCkfe0iGFz4Im/xv1Hkj/eGu0R8OJZn9bO/T/TGf/zn5H254Oj2wmIlFjWT4kMkysnITrOC3TwEEL5zLRViuIgOAzS4b6LlCy/eIu+KuH5Kurg5iEiiBTPLifNlQN1nSr8KmGAHZkdS5vhbKCUH6GwKfEpvvzRvsuwAn3sKG5w9b/KKbdwHIcPajECQ5Q5Iz8u0drnrN8rXvB23e7vBqHXLaZt1IgmK33gFR9zJtbXvZy5acyvltjnUnU0rPa8zMP+td+7t6241jzBzL/TaQ6P4WqJ/81+TVhcdrk/9KLByPTADHjNOTcMsfT8ch4EXRtJOfU//RIAFSWgdlJcgrxPNXl0bqLhP0vS6l24FF4nHnHiE/uuML5G98nUkCsFEXMvTM5tjxPQle/P8H48T3c/8rxD8Dk98nmk84E9TE8KPCNAwQfILoJz1vSeBHIZ/8TzwWPXJ3OI0jCxx4/q+ZNJW7UglBRx3/+6NGYBL4LnTPoV/rgtzEMZvu0t3egf6RaILL8pwFpWAsKQNbKAlO2bK4jrdapJIyaIMeEiYSo8vCRC7n45l99snmvXACgMXPvQaxvW7YE+HiRIBA5w2+szr+e/mmzzpDVBPrDMFc7wRw/T3yK0nIun+tmWXap7Sded7yUXfud3zq3sAZm/GGfKOc7ZHWjVe4YWnYDyP1bHNlLOA2wBw6I/28fzGvwJWT/wrhkvxt4TDuh1tIIrRwITRsCXAaChwpHJQVPhUl+Z0EG8oMew1/ADW+1F2eOeJ9uhsL+pIJ0vhFEmz6zCbNjHUFM85dcfRix1nUhUCdCVjHRRdOpAubdWUjvaF+9vedxxvvBBhJ4WkYcHrE4Ul5F3ASgMfppAcS4OH4ADzwCFQgmxEQEhCIZDBkSsKbSLY1W3mzfQfFcN2/Drif4a6WcD03oKCY5DcpCB4J27zGXdYQdm39pJDy8ccJYIgEaEDE13eClSTwYbEQYz8OOYYpHWvgpLiQGBdinvHHdsk9mLfPDjN36Pc4u01ioc5wfZeu2+HxrFte2Lsze3xGXjiRD2C7GNiuluCKfl//ZTnb0+5euq9hm6Xhdc6Qf2btXv9KTHw4e1cJmnzn9wFTS5AEBV6ExrHAo8o3PwVYvke5soAdF4Jg/ZK2RVec2jHvOpPPSfI1T/ub3jIhXM4k2NtvY81I37pTMsYCvJGNRQiC5skHcWrB8S0B/Ahkoj9C9nvYfhoHFjZoJMMH2g+1QKIAUkiJDIyJzvieo1nX3fVXQP59zEN6TIbay54wdd5YhgoG9gEpFQwllEQ34d/pHiOkXD/+dSl6AxPf8yAbB00jVoY3PuNHMlj2mM5aiPn8DrN6zBfZ7r20NK4mEm132y5d9w7sde4n+5VtKM/g6l9jd1C2beZwTNi+2Rbb8Lsfmqvmzd5ly/KCbaHdskvWumSflaeLBiw7vPbV8SAujXh5X3fyE2ZlbHkbgTkxwYv8HWComnaMFe5U+fGo5K2P09nSJ/S9TN0nCThzilxBniZOFLLaAdmRQSNIfRGLLPNkZzHeNJ9ijU8PJqVPtsD5kHgcEKe3NCTxC4SusqMnnD2lo53o+evvNGiC+MY4QP4kfqU/5GfBxSAKBYgrQAbI8l8PCHLvT6bgbw5x2JQk7fVd93xGkeTTKHXeXC5Iu2WkLglTwvVdb5TvQRvmCyA2XchmQI5GOeNqHSQxSIib3PYg69Bdx/740FlSruwRdnSTLfsdeuOGs2plLqNZ9qeMOxs7id11X0GuMxouNxRe2dYVYH9hc1hpkZZd0okOmGzINqlsBpnv6leT4+nYOaaVN3OAMxFOhEbKIyfOWAu8Apt0UthmWfxh9ADf1rzkM/qZr7/O8nP6Dn9YfePR5bwjk+KqC/LqhPAJvyHJT+D7QrqT+MIJGDhWNNgRA09HSDwNFWJ3nA59IEvvYDukz7buCzzOUApjRo5diEZE9KAgJeuhvBrvXwLTD74c+L3y6GdlNyJp49F3YGFGv7eUac82d2Wqe/Lb9iVEv5vtjgVpd9mHh2XGNtnTKN7QSAzXNeZt6B0Qkf3oCdN1E95lt9XebhuPFvry2sKJH+pgcbYhtnIoYofyJI6Iw1aiYAuVArAXo2ADtSAp1+iybOWC7StIjCP224hND8qBHhpKJB+Gim4wlm0JyiM46tDL9/wqe49P/EL7iW9pjM/U+atKf4/vJElJgjgp3vhA+8aHWCfExc/zJIJvt74NN04SB1VsAv6kQ2MtMnn3U/2BkzwxDfJjzoOlbZt0u2w/1Ow3IkfGMAaSphO/5Ng1A1UyAKjKK3g3UqDwQv32C/547xO0aPiN2IpUUrZth9eVyEa93uWcgraWJmonutRl4+Rq8iOO61Iyw1F3p8NoGbc6yevKMp/MHdOCoShUmCwCKQnRyzmWVCRln/Spzx+QPSjz9V+v466cZW3tQ+pjdllDPcYYBwqVPUhQrqXI+pC2QA+5Te4NNtvfo1JvFE7kqpF9HGnX4XLRZBvjdhvt9npsx1jWQcUHz2Vydz1kWUvJhKgklMtHPQFKW9ppQ7vyo+8/6wC/0P7o+5csf4/dP1gZ/tHqe39v74QALyTIC3cLJ4CxJ4H/pdHKs2XjdmtClBAOiYWWJLFJ7mf5p9PIr7uTnh86sswH20fsrne7/oxf6Uff2uGg9CAE43YUFlVKbJtmGYoAkkICvPPSX+7VesNNmIfdwPtu26XXiJk2WCBVlg8pCA82MsJbfKFM090dS4MBdINo14C4kDTIxykky2SdAdRRkBjrPVh7TVAXUpXkZEvghH8pTeBXBQwhuh8YMHi8AWOiBqTdUSDujrrplW9c6qZTV8FQ2Ld6w4i+Y6jHnf0Bmw/BvtcDH1J9x6+93u02+CBMMPYExjv0BCjqEj+L9YAfBVgGawtVYlLucJT/4o8+6YbP+lXKvwr5d/zICUFifG/wI9Yn8PnTq162RHgjEc7gyq+N1+sl/52p7wDBSVNDGnHoNNQ85U3wJP3jSR+e+GHLsA7STkK4jRPgge9o3W/cFjuUYJEdlYVUyinRC4gSQgDLDim0X4EeEZKh29VQDQQvawYq5DChXeqcRkPxXSDtm76XbfshBG13mOiHjv2+nKe1591gV/E4N5DlIZXw2h2PXVo/UImRQYehiI0Huwz1ckhsS47lNgfcD2TMMY5j0QhJpx1D7aTey8iT98mSu/dpGDSNQyfwYa9ZNtGNx2lILnR91OMERoB8sEy4DWCsTBLmPYEHYHnCt8mohTtG0YgcWZDlgByiaCB4FRQFaw7WesM7+z35/+KvfurJgOyJ8ElOBN8hvicpPpEEvht85m7gBHh9fdXb26vy+3w+G1x5DFr4HOA7gE+cISQ7eiJAPuVN8g+Q/SPETzw/6KNB2XbXu93jNHAaVE1jkfsPNZRgU1HJbLGgDtbYdRZaKESEIkJSKGKDQkps79gFmmzXdrWU/R0VhZf5CR1TQ2LndU/61LGZ/Kmb1AaPFjKsG6mvEgeDrINAN5T1nsNY8ardgIu8WGOolGDtAN8r+lAKcbmDyweIWba5l4IMghwbsh7dksCOiaKRjXPcp6HqZIzI0cRG7sS2nL60DZAbm+2gH2QjJO92H26P06gnw3d8pG3ec9ueT7Td4PLjNOjRCeGx8OEBHzIh0E9DSd8m5HFXKFWOSS2FOJWMWSVWQTSLgV4kNBBAUknSQ/i/+Kvfq+NTT4If+W7wWT/ijuAE+BF3gu9BT4DPeuGzwit44xfdM58HLtwBZu4AfgQSH7gyAQjsRAC9EC/yw8Okj08nfQfpv3t+1I+lfNDH5xN3hFM+ErndI4E5sVj3HWuQ4cHCxKI6GJbFSawHGUiDsqSQFBEHUGy4QSEZTdvlspLcu8l8NEzMTmrqbQBZpqdltt9tSLf/JoiH+DbsqLNu7H1y9pVRDY/adHvsaazREOuPDmIy1KIEmz2ij352hgxj6oWYAeoGtyVgIxjAWKShKGF9tI02JtFEhWFyTWPVyTDRdzl1cndiDwfZs3wa9XDqtpsc9Yjd++l9/RI+8J5JhCfwTLsny2nSM3iaxp4ozPkIFx6RnfyDHrjTGKehypiQk9fvtYABVDhQoxDHIH5IfYFW+LEU/OpG9JSc8pY/wvYjdON7pHF/+n/Ox58XdfK/8sPWWVc+CPs/s9H4bjnY8EyAGjhYZOefWeCHpxNkf8gE+LEPyA+P6I/y3cB1z4+Tnmjn9r7dTdtmDkV5cpUQy9gQSp115iIj4ibVdW02S4V45Zvy2uuyoF6nH7rauwqTPw0msBVk2pCkCi/aWycOxwnvMie+DE5/fYWtTyYDOrI/Ekm57lDKSmEwscFYSyf6VzKwhwbiP25IPftiR76z02byqc84E8GexqrTWIAlmAbl6bvJk+U3kPt2qrnfj9O4yUGZBKcx9/bpYUppPnivLZ9NfOzWn/Z2m8y+HmtkPCdC+la7b0PlEcgoyMJ6AXGpEL+y4r59dwAAEABJREFUv2VDSIJC7DHK9opN3n0IftH3nPD+0Gv4pE/wuPM58cpz/8t28r/Kz/5vnPxnvgnK058EWPkFsvEhOPh5ujLDWCId9QnhhT8/njjpH/SR0993gASPP5kAD6e8Azw+jDpx6kws1JsxMFBlIQmcZkgl0DErkXqg36OIkmtSRoRQJL9ZV7+w2pKFSC1Sv72ZjJQsEn6TTPjUktjU+5U6VpMcPQAN3TjhsnFvu9eT8PRJuScAH1ztrtdcedsx1KKBzR4h7I4JW+o+DQ+9aKSfQVONNYA0FmmoQgbkCY20n0iCE406KntXQE3ye08e2JeOQd7TnggjujHkvtl+A/bTSAIMwHJM8j9B+Hs808Z4OuSgJ0i/43EatCMTkUQ4DVUdBf+rRmIxgEqwBtZrWdALe2oIGS34YqJD6EbJrzv5Vqd/3fmaf1nNX3caL9j99afxygfdVwj/xtegJr1h4l8vZ82Q36f/yvO/+AbIG1ijycE2iR2QJ4idj0CPJ/kxyKQ38sMwtufHiW+GxlyoFzmxwJFNycUUcetXJ354KcDS8MJYKC9FxDeBUdJep7wielnY9Wte8XUtJE1jSggvsOuo7pFEd6PNnmXq7gl/6O5vZFt36sDF9K4wIHvL+kOFQiUuFTnUkDd9qIVYF+1yxD7aVopGt0tIjuVQ1KXbYO9tI5/7M3loMA5V01h1usfUCd5JTx1l7+sDSXEkB8T03iWwu+4x5ZD7upP4aRrlk92E3/E4TUqcqHO9sY2Xj0CbfsK3HZnwXicYwMh6B1AIXImiQvTiDvrGVV5fL/zgZfiHL2SWz3y4BXywvf34deZR58IPXx1+5DFmTv384MvJL2753tTCRBUnxhqysw7IIwvqd4FJ/sDbH3lO6sSf5EA80MZtT2PVNBQN9B9KQP4QIhGSGFopJd30QI/NEKlHRJYjIssUeN3pEnYp30ISoKl2pEG+XIFE8K5soPvLzKaMcPI7BpTy1LdM8pvghttA9LQhacQL4667Dchx6Nx9CdYOCELdQWwyEZDedNuHWuR4HZK2rutxpI62NW3RE4Ny1tWiccdQMvYjchyqptHANhpV3ptvwe1OkN3fAk3IE4Td23lP32EadE/qrLMNWHedZUflDlR1wpcD+DpxlzNG9MHrYF11h8lP4MqGkP8o3611uCzl3wXKvwPkX3PBzCmev+yiW/rHrY5FrjPZd6z84GX4W5+Wt/2VSZry+b84yIWTpSgDMQ15q3QiPJ4m7SeA9YfTmHVesAPowI+1sJlG8PzfwZBKSIoI9FBIQt0QyA4UidMgIlC/BfcLv/V6Rf7BIKElgnf6Z7G/yRfmLLmql6OXXQAuRUpxy4Xc6pdJvxO7W6gz8Q9g3XVUt+3j0C7LOuYpTF6orEhv/MBaBwzW30M9fqXLwTIRfBsE6DPsqFsZOdbyLilGCJf7MmAfau7rmLrLRT6wRvpYGq6bhordcL3ljls5ueFkoe1pg/tZt0ySY588F+OPYADj7rPXHSW5Uh0L9II0gmjdQ++uyJJ/EMwDy3Ff+WaioRyg/M5GuW1E3zvlptInN4sxiW0GfCgEE0e9AMML8qkwjTzjs+CHTZ7QjQk5DrUHln5epMeoLMgLK6EkfGFxESHPE5Ii4q8QpbcncMHYET/cv8+1z7HLu/ZCB+KKQDf2sm1G2kQiAClrQ0I2oC+uRnkDMc0YczfASNu2QSohdCHjDluZSl4qvNVQ1hPOo1zxx6B6swV3WLFnhvcMlKKhIg8UkiE0pr1Q11Gp913Ie1VLt2W/Q99tSNsMnBnvge1dmTrzxWMOjG+8IzvtB1BLwe8+bmUxlXWVhFgzUEcQKcyUZA1Y7giVWvpAxbIWFUtgSWVOYr2WQAfhNkiXGXm3D+hDiODEgbEWJYaKBMhprDJM9mkYNGEbK3Vb29viQoU5EiFFxIFyp0fc7BHf0Au2UhQ7wuVQ2SX2siFKtxfqSqEdMgp9kW4T0esjtrpNlk1G9Posa2sjiRFUQlj01eUDJIm+Ex7Jx6f+WGTyU85668AHDZWMtSUEjW1jahmFGTyXZZZRCkphfpbS26CbMBVZqCiuL7Htr6W6nrZCctiGzLL1HZuN/vWrOtpgLxsqftTSbbVs/Vy2TpsBVOAfsdxuoO7GBbcH1LtNQRpuV0LENrZ1IXUH2oV0b5HelULFJ+8No7qOnMBoQFJIOxoQ1nIaBk7qCsqBYUCvG1Kv/EReEiP2YagkQXmHwXYC8OVCC7YShYUZUkSg30AxbZFtQhE3uG8QlYhu8zgRm+5xjSgKy2+hMue37JvN/SK28ZDFcJ0liLjVocn1mG4+ylbxrq+utln6X0bjHfK3xArnG3eRRotG3x1Z5M2vxhsgIVDkOUtIvHToKGUDIVApgX/q0vo93M7llMQkpdvfUEOZHB6nul5SSELNcXfJMAreeGEPFUkl4pvAfGeXqiS3D6TrjEIhga1gKFmOWztxYeMdXzbFBfC+JJWHh5MeEw9d+p8bupzP6ZMeHsDpxDO65Ygc+bprODDtSeKkGAfliW6yD+Ug+0F0yPWe7HGcNA7ijgxmLixyAQU9ousRmyyb3MtRsm1EqKCXUlJGULYOAnsgs+5LyV2olKrEvU67WhhrQy0FnwvtbojY5rA0Nt8KesTmpzYZQhNXbFJdQnSf9Cb8V5KT/0ub2xm2d2hLEvXx3EdKPaSbpIBL6r6JdUTqLpfQnf5r2EU7EBHipbBuoHgMRLehZL3lVv+ubNs93A6wEPo3EIoAtClGCP+ErUOh9xdlmiuhyD9uELztENZ7lOenBz0/PQKk/7MjLj8+6GnDc8pTlh+dGIlJDyRIgjuFv73x12OGH29uSVB5HDIKsqgGKIEMFvI1IgL3gOUOFUV8YXNZ37AxfsTNXpirlKKCLaX1RNVRrkUVwteySetpcxlgL+WufZZtt21HUQTr2eqOBHQ5CvP3ejzLdhHWxLXJhpovK03tG8lgsu9QfhajbX7rxt3h+FENWxL/Th53BObyvAe0+WIpfLQMbEIPZAivVUIAPSReHdsYReplcTGP69HStkvbqMq71y5d10luzb5aijY3eBl+PDS0X1vTHBNbly3nS71h/Ct8lY9Pz/rw/KSP4AO/zFo3PvJj1QeD5PgAnp8eMkme+M5+/7e5jyTBY94hRhICTEO/M+x3Asjk07+WkqSvRLPgbkQoAqjDPgdv7xG91u2MLCnfA1JFUL/BhIugzPhZl5Jy2piR+SNCBXspRaXeweTeytXS9aWq3KHWolo6CvIetXR7LYU+d/B8GyKYG0QghV8H7nbMKjDJfaLfy7YR3rYd4suIXf+y3uTS/RW9wPSpWEaEIt6jUItFRuoh9A3WQdol7O1AMlf3F3VbEsvSbAY81OV72rDb/123dNltuv+NAQ3E/Yt+bnsDlXsz/GMCDN96udJ4X1e++/Ck7yD/R+RHpMu77vKHIwke+P7+ge/tH7gbnA44ATIRTn406phIgHF7DHIC9MeeyJMkIgicDmi/vAjD5V1aTwTvoYgQb4r9D+WI6DZk2G4ZRWFAyohg3hsxa+l6LZusXZa7chK+Fu2ybHV/ScmcJedjzq1P7HKri8DLhNjn6EDNl9cNeGHnZWXb8CQHekvir+w/VNl0IUXdjrbrOajELNsbIucORRhflrtNIRkpeOMlX4dkfJ/mtplwPqWNfX7L3QfLe+x197aG/40xjb1+l7vN5UROev9GHHDC7RiiVzhuXftLvpePHzn9DRLguw/PSvKjf9z0DyTFngTP3Ak+PD3c7gSPE58bAOT3Y9CD7wCQ3wlgjLUqyV8j7wBFclwTXkx3Gm/9AqyDXc/X9iaueIdwbzZPBjUSFvSI97KUXi4QL9BNXkvDdS5X/LM0dt2ENWz7ErUU3WyBzhzb2Df71iaQGyJoCyJob8gXOiIM1n5PKMfBsckY7ac/UjzyfHXas+t7W7e/Cxwji+gor5zHc38JWsQO16Uu3jvsi7hMcOMYn3lzvpRYkfbjm8D3L/3u7fZEhsSZBJR/sK3bAMfg3Vw498WLcH5hiS/Kt2LpRH/WO/LvpPfpf4+N/M9+DAKP/jzAY1D/oPz+9B8gl0k11JLkj4i7oOIii3AAMxBeNGVeNhHNfN28PLS400IRG7Ci3crYKfDCih7RZSYDpIygDJkjkKBsuuUOJ8GOe9uu38vYxixOhtSLAj1iGz8op45Ut/EuYUvI1x4T9AwEMcBECYV3bI6VA2RppL4xNMs0yxdtU/otxBRxh/sy/uADL+qxSwopofvL4+GLhafzXIbYt/TBFXfIOsr30rqTIH9XMonp63Lb9OPfHmciNGW7HIOk2Gx9LsKB3brRcCjHxsbLpvTcelfy/e7NK7wVi0/3jxvJd3nY7k78/DD8dMpHn0dO/iee/Z8g/yN44IPwaUOe/EOVie/T30SJCPHqs+IZLxzFdZTmQOzSwbAOaMBKexcppIS4Nj0HtG4TMsvo2ysiFBGSX8iIVBQR30Yp2I2v66ngtdm3dk4mI6LbyyajhAp6r/uB8RQSbUKh+6sv23Fh6RRuG2sbDKQxZiqtAL8wUysPZUkxdYZXR9xJ6/hULL+Agn4bpP5Y78E8IbAvfU8wUrZum2HdsN4ga9chrvfToH1LYEOa7Cv2lbZrlrHDg3VtcrsVe8o7W8O20raBPr5Xq/exIBmwdBt6tsXglniNhUK+WGdKqSSxH3msAU9Pm3w86dFlZH4b5JMewj9aQvgkPfKU2E5+EmDk8cfP/kMmQOUZOjYyhMObSO9YhJ27kZ8ApI3aQ1q/QT90eZf3uk2PiN2iiJt+Z7xT7+pRI0L5xxII8JKCFwpCCArKK8QfG6IoousRN5mJoFtZe517W7c0vEOWBjGw+Dbc0NhqQ+IlXwyXevAewfuOTNpQgfhGxF3dptNFX132g6m8VwfpIG4zqLM9AVEtBUm16S7vsH3Xs+/e322NHKtzIJMA28pYR5+sh8aW0Pgr+2GDL+j366DXF5behmVls/KYxJ7y+/6d2LblV5wQ/OEEwRMT3/CMmibkaKCPg/LER5r4I489w1A1lKLqYBNchBCKnA53vAgvjkUewUh9r8PBbGNJp/TUb4AXVoy8p466S9R9pYzkUmLX75vt7dyAqe6LmNwDUOFAyxKrX1gtbmBRuTbLtKLkSruMCEV8DSl4hd+lfA8ppd5fzO35740RoQhDXcp65EETgU7AC/GPKLK8R2AvtdutB20T7mfIF5FiXq+9g69ZXYa0At1GJPY9s/R+us0GpY02W9l9vI72DbvrbnYngUHfb7Vlp7K9XcRV6wjIkO+uTYXe6N1M065kjdW0ZMlamfjgumMcITTlLutBbpN8h4k+jJVfeGv+CjwQUMPP+xW9ENQdxFSh/cItAnIEgmCulFtKFm0JXPbCvgmWRReGsOsery9ot2Hpk1Gd/WnfX9TQyLaVzepo7JOxdsnca6Ix/gosNxybwXzbOB6LRtgmUSkAABAASURBVH519Jn7uxd9hwgKRq9VRMh/xLt+jSsiJMA7IhSSIiJRkHucS+mkrqVy8FgP1Yo0ChK4bBT0UqtSWmecKH1MBlZou1hnLsxrJy7eF8fH8gCx7Dpxcrutzx6b7L/bqL+V7+P4PtZus/d/L/Erx6Ivm5p1aWLuL8qYaQQJrGyiq1vBAni4MhCMAz69XT5k0VCNmtIBHPiF1zbrtRTVUlRAJYjFIKAFhPQumHY4QSBSMruDt1JOUF4Nyi3RA2MbZselE5WC+3c7i3fZARCX9Q1EgD6NPqs8fu9jfYP/Jisbuxro/o9D+T8Y1bEe/9GorHcbfLrp6zZ2S+mxUXgRVdz46kUwgmhE8A5cH7wZcnmH0qJdiMuWiJBjWgqxtm65obJfaUdav6GwZ1VHmT0ttapUQN9ai2opKgZjRsRtWmLIYnj19e3rbhmHlXiCnfy09fpdJ2JknY4Ov/aLJpSJjZUU+Xazef+OOvdiXmwep4/npthowztm+tMs6/Z2R3lrS5mGfk+436bcC5VaQ1+hdFvZJW1Sp2wZm3TwUnfwDEkRoePCTzvZHJgEgXMQIZz/GnViXbS+w9aGADvwze03NI/hIHwT9MPeEwN967PSZ0VfmMPkTp35rfuvd8/LLMN/xXvGfo9sQ73lO3i85W4O+8rcLJeY//+YO8MFuW1cSwOkVJ3Mff83nUni7ippv3NAslTl9kxm9/5YWUcHAEGQBEFVte04eioDysMFEiPrl3I0kLgKUJQpw79QMpEuUL6F3hp71he2bXOxbxS5ZekD+jSXvfdePoOlK5aQ2YJhDM2jaoqSYZ3eI60VPID0E/tJrpRLy9K1fqD+9Kw8oGv/UQgpK8WJVM+pow0/+T4x7Pgf5PdpJ7/v/h4UOyw/SJ3pCaHYRjPdnjbZQctMFv6K1kqfnIk+bcgNZGJbiMiIyMzIGJcHZJGMerIAJWu+ZS2TwKVLBocSTKEeBgWmfuo/EnwgT5zYDtpPbJZV6NbV7+RQwfIBs/ivReziv1P8XwD+un+F8fUVd2RB+vLD535/xJ15PuCKdYRiaz2FM5iGwfJHIiZlZGbwMCxGXVgx+xl+0jhZBXqFCnfiWuxV6Hvs+xOzfd85INvO11bxFp2D0jkIvbfQHguZWWN74mdUTmcOH3FoT1i790hMXk+gdZ8s2vugvQCuMpYmUfIISTUiYZRvwILknyFX5oDPaiOQ5NlHLOAC4evx3vhqQ9bNDIgkqUAtn1H/AsGTGT70V2zLJZCjrizSc4rF9azJqJUIKJrwOZKkRDl56Cqe0kksybSu4keWXQdDvECs12JnY7Apvn0sH3GyEdaJpRiFB0V6rK80dxfynUK+V8FT7F8U/cJFl6/+o6Av+gg6FLLd+VQQHrDHYDyPywFc89SclAoKK0Bm5Sggi3qAzGmIKDEjIyIz/bUnE24teusFCncWdvF+KfrtTd5iU/H7UCDzqdCB+nWKvxOrw60xBuMwaLBzobwKXpP2RODQ6+1/aM3SJ9hP+Z2w+lxBIO6TkCdFd0GZnm3kCoW7GhQLhVu6p2S53BQn4kDhx3MzotsZJBC48cGoudAbM7qewyb7RKMHPgyEw6sss+yw22BUboSLJwZuBsWG4MAqxFEMSo6gQjl4izxI3AtInNr0JjXT/vQ/QnLhvMi/sDOmYxCz+hzPwieuileFrDf7KvhR/J+D9Z95Tvnzk0+FaRdzEBSj8OAQFV7GJMkH8zjJGeng6XQVU2QZGQEXggs9MjJBpPXM5M3cIlszN3Fv0V2wvMF7FbMKWW/33QVeB2HZeONPu2yGDsN6+3fitRU/Mz16cGkPlb9z5vF+jDzezfpvv2sP2QfyerKvJ3u+QA5UEKdWjax40r9Dtal28Fbe5E8/2V+Bj+xjfs4tvrbC3G51H/kA3UQV1dCWXh/tYOIT6nwQSXxqMgoJH2aFAqt9yMQ7bWMq5jMUwzEfyCRRBXKQqEraw0l0EWET+ysFbxi1y2+BvscEvkvWnAS3PaLsNVbJh22KV7gz5p2CLdQhuPMJcA8V++fnZ+hAiKf++Vb8mqfBPO7gwZuwuNajNQoncyINlXAE54Yc+abIQoi0GpIB99IzaQOZSXOuAm0vh6DHRoELO0VdqAOwj8OwDd7xM9A3v/3VV9BB6hVfYwUXVeX5ag1g7oPW+tCatUe8BCyju53iv+bc/ce6lYST2iGyn5hlQsaKMn0P9nLKtODD89KOtmzHtDM/jNxuLdb8GWzFsq/qEiP38Kzxx7OdHvwgwBHHkMUHnQ90rG6T34FNQcySL5DN8IGi12AVhb76VNIOvo6MgiGBZRs6C7I+WEl98NVifTLITrIfmhOy2g3mUKzYGhecxMRHYxuMdZ9gA1XIKviJT2wq/KmbL1+FfGD4BHA/fMV3isEgrsbwHBjTOdCcAPtBmtkAkk81W5YYGZGZkREB+ZGZkRGRmQaPaENuWW/q+gToFD/Fy5u8Cnq3bpki1wGYxb9xOCbmVx/5VZyKqYOVmaFfnqnmDbQe74fWJ7DuB4f+IRkcrF+y9la+wjn25qT/Oygi7tPgQS7OOPR88WUGV/3aLm+1kWPHDnzdDssuWUCmyfc1/ydtMr7aItqhSU8QXAu52k4X8snhOJn3EQf6siFLP9RPMcS2ye+g2GEVsUCbi5nkmaVblh8FK3lCbeCg4CvBj9CcnoV2hsa8Hga3aQ7AsvoOPDQ+se8TbKaLF17FTYGvwp/FL8ZH//KF/SRPXIphrucg+R4b9iaJyfpMOmLon6MRGxReCJFWQzJiZiIKFCnFn7z9VbQq1t4bX116bP4aBPutfj0E4+uRip+3vwq+0N2v+2tUj0ZMI5vHiqwpeN7OPXsHq8gXVPQT5FJ78IozTvoY7INjKQcDlGrIpjyJT2rF7HZazcS48Pe+02f2KbYvyzCPGAzILf/yQeGWXnj5BDiZ9AFqYkecLKb0wwWnxZbPGQcDGPLRQsyHi/5BwclXUEGoQFTIttMmdlLpY7aNIpc+YduIN2yK98QZkn0ImIvnhZ9swgObGZvHh/WRrfHubN6dAhYeFPRDMiz9LhZse4T0r+kvu4D+EDhgjzHPOZZzQg6LzziZRx0AZDZHMhRiQbKLj6IXZ1KJIHNwy2hAh6D1Hq0LOgRCfxY1B6GKuw5AybO90a/h28JF34ozNUasy3P13LXfD742PqE8THjtWv8FB7k4yXHFYK2sWzn4pa6awefafpUPMnTVlSvrzNY8+8rPoMBnm/gCRHs4BsqVXz8B5uLFLEYL0MYe6FrcwaQP2b/Bw9/3TxelfUiOefjqIEifLPmJZ/G/2mQXjhV39n8wp4MkHJqTZMbRHFdy0Kv9oAiP1V+H4KBNcbyRbJz4Dt+Z83dQu4GPGb+HC/85twcxFXeBuT0TfbIBY4PYAP3uhdoQbRcLqROAUMyTAs2EKdjMjCYgq4izU8TjMDTJ2KvosSO31qvYO7qALUEDmcQEMaC5OG/MZuZM65lrVeFPWXzXy8E5qAOy1vySA9asHIBD+wN7DPPhPTmxn9aH7xgfU5zs67ON3GF8zrP0QzaM8gtkAZUoxLs+aeNWs0ETAcLgEwBnWhXkifcJHnEw2e8WqkRN+5TFD2KKq+2MYuK8JEm62sCIv/oM/b3fqf60mZFP5IOxToE1LRl9yuQyJD9xhPqrz0t89SGm/cwUuOJLnpCO32Pym919aV9MtktWvk808SuYdkRGFBB0U5yZFrBnZCbczC7kHLJYRS3YJ8sHOVvJGOg75ODKGh8plAPNioyEcvHwwT5ifmLfR6Hf+eoj6AA8kF8YH/mr/4TzO3JzsgEnsnCQN415kCPxBCPWXKadTLlt8rBr5j/bsVL5uMhbyzJrXdMXj6ftIjU7XQwvjkQ8mbAme5iZJguZi5ysovXXDBKhxMgum/ggxkHf03zGMVi6EnLSZhtJMlsf49h3yB6X/vIb8kn7Ast+kdF1k5e1umDjDRps58FNu1YNFE9tcM3l9KYcntO55v6qMz8iHJc+JWMf/WoM+js244gHNB/9XFA+1RYUb8y5IksMsQU66kaXTf0iRoNsyLK9AIXp1VqCMaTDNU/mdcmp9kx7uECxz0Mg20+HwAeGTwL2RO3qv0DbuWKTD3xKPz0X7ddBjsSym5kordXOHG0jv2a1LbAO2d+AWn1Zo2XFGIBkekFTmCs0EBG4mQaDHeD0xGsBKmwVuxZ7gb8vXhM1v2pUMk4Xj2KfDL+YGS1d4wxUn6N+nmDsGlPjjzcyfsdMHLLjiYnH/jOChAGKIjMjM8sgFng7YgwDOTMRs/SrHFzoI5+OzVDOz4Egu/gdmtO3NiKoja78vsY188iMwyTwYMzLrQMiVWNNKLbj0HCQi4OABfI0ZRff6dwf+DxkVz4lwzPPh7/aHaH9Ex4Urgr9zgvNGIdAsva8uPylP/A3E1Oy4s49E0s3ND5jH+bT89IaDmzic/Hp/J74IZUfWbE+bJIx2Y8HN5lRm0FSSiWp3EOmCb9XnQOA89uNv2KzQRr+9AQOeitRgg8ASbvrB8IF3gIjYVq0oEWbWdhBxBN4BoxXY9hiTZLH0DgLR6wYSu6AbErA9Jdc8Vgc0YI6jlFMRRn62mDkReZrg74TC/66gF48fPANDseMdaJ7nKxxLDPX5/haBcDmYoM1xwfrfyBXLs6Q7SAX6keNIl3iaf7AsTWOYP20n35+OIgnKKZyMaF9kaxxJIvvypkL9KiXFPvmYh17dRdfCty6bBOzTSzIzh+Mye/huLXvM+YLz7GYg+Y1caILWoOgPJys6SRHwvHGJyvHROkgkRjJpERWEfyaP1xsU6PkyVOWPsHPAHSmRUENujLMGAwJ48HklEwtwItWIgQn4xHXg+AEcCgeWjwLVd+DGFoYw8TJhoaRyICZ2A4zkzWuxiqcUXyE4pSMjZjSz6A38XjGjBsUqgq3irlFrsJG7vVDYW+N3xXp0Xqh8/vqTZDOD5D1Q2a79E2HzUyPo3VozAnNZeLBnCSrQGfePG/NmZzIfpDTAz/NX0X9Eo8hXnT1i2D9R4FT8zAefEo+4k7M+9iL+h0rbNbvL3vzpT0D8vlij4ofIb5jN+hnHZ764mHTHnu88cOwZNkM7Tt+D+YkeN1Dlr6g9WM/WIdzoTUaBzUgnBeWDMiB6wi/ycdFnrbvmGDcxHjzb8S83NpO1Ek4H3OSsCevxRkzuV+hZN5J6MJKwiPUf02IDSd6aHPF75h+WpSh5DCuYjxxxjGSV/4Rni5F43gUaGZSrIAir+Jv0ZBbb6Pot2j6bUMKvpvR++a23nv4MMCt92j0aa3FjBPrE4HRkrGBC1i5uuAx5qh5O2+swyy7cXpDDvp4HYQLYom0ngXaFV9+D8kzzsixik94Fu3d+6E9+SW+hs9kir98H/Tl8LCXK573GtuF7/g/ccTDnwhHaB6FI3wY1GfMU3lYX4v5g0rrWs/IhdZ3IDsXsrOrUzZPnQSdkg17+8t7AAAQAElEQVQU7pWrIUO0sjcSBuQzxBd6+yGYTnhqgJrMEecswsvH3Z0EFfQ3J+9Rf0kMebwRavFHeJHqz4II64HPZJffIJvaC4wuf6A5GGx6xSKmkoTupOCDd0hm5hHEzUwIUKgJXMC9Revdha2C3yh8/eFQ38fvmXMINv4U1UCWT8e/9e5+/jTQIchWsT1GYzxGTUC6XaRi5uQ5ww/mWjhDfLcu+fTXy0P+EciBFMWOF0tXXK3vIJ5y4EM0ikrFpkJV8Wo/9Ad5+lPt+XedJH/yh3mFe5j5A79i6QMcBPlWnMc4BBemkO8U/RcwSzcOF7rm8aAmHrQbtFUNPNy+ZPZN89c6FliXauwkN8VnHJJlfwcZurax8dynwUO3E0e3YnJbNYXAPeUrs4u0vN0OgO1E0IA12UccI/Fa0J0FC0p28Z2DAMYhkK/7zcWwpRqYsHWz0Zl+REACS/EiDo97Mt4RM2GTK+aJ34TXSnSCcAcxk8JPFexA63283XnLU/wu8Fn8YhU/hV+HYg+1W758KugQGMQMg8EYK5LxEc/UfIItOqPmf4SK3rhsvNbxYH0T8j2ZvQs91D/QJmjBVz5at/sQa37lmcX/xV7or3K4iFXgggof9qGAfwD7qNg/KXxYbetvu349XPill6zC1hj39YY/4s6LUHbhQaFfWfKCD0P5e83MW3ytC63JoEa8RrJ3ANXdKRuZOMAJzKOARBOkzLd0Ce88bdMu/Yo2FTkUxpPEc49CO2oztXgOwV1FTtJV+II2YH4KPLArMQ/8vGCCnFoUiwgKJVw0CMnQKlTrc8P5mUD+oBJDz/EJYp0kKjGCE0LMEwThChlJzKBAE25wp/hb73H9yrOp6Cn4rsIHO/IGd9kHJBu0td59gFpvxBcYJzOCMUKcNf+DQ6CNdKGONSgHBhv6aj99UE7mP4u/Mj9isTGyG8RyX9avT5H7KDzlXnAhk/d6s3/VX/Cj4L++PkN/qe/H57DB6yD4gNxjHQr3R6dwvwbu8MIcU/tKHTzAfdh8SC76tN/tOz4FkFX8D9YgHGNfT9amnB3k51jyWblBV/sCuTqBMrRs8iFXulfb8sGTpOJCHX8vt+qop4A3pOd1gINJCypqfY9zgWvxJO1+hWyg2g8WcTCwMKdGcIrFReORhw7VPfyYsZPhJB2hsa1POzznp36arzgcO2IW/yxYHQKhDoE+BfjqMwp9/uWxDX3JFH3f6pOg9c7hAWIdAKG1eBZ/RjCw5iAcJF9z03xdtMz1weY+Bmstkg9s8lWBVz82KAYIKZtQPmcco/+DQlMB3cnznQL9GvnXJ/EXRa9DYEZexY6sg/DJW78KXgfiXsVPf8VY4OUm2bE1BuO5wBmrxjz4FHg8gf0B3Gb/RzyIWTVwDzPFb6Zd63+B8mCc1MqAcmiMfJAX3cqHoQcGkUBHvDFwW/+GMflW+xX8DGB7PWjR5hlYxEq8oUNAMuZCtOApPxfM4lmkDoo2SQtVDMISbdyZwQ0yeFwQvkgBi5nPg7WdbL74MHsuFMOhpA1Pd3S4JOQARZqgUbCGvvr0HvoBV9BXnCr4eRj22PgUkF3Fv138W+8xv/404imukRkMGPoZxhy1YUdozmAy81U+DM1buLQdtJ/ohYpxElp5U/7UbvBCUAzlvnCnEO/xNYpWhauvMFXo2F3wMAWpNhX/s70OwdS/KGJBhX9nn7/YR7HGmWM+sN8vdrU/rD/izhh3Yli/FLxrAR/FeIFyYJzs6zn2uVhrJiW2lVx2DNzI77ki7zRwkzE6cjuJ6ouRmz4YS6ep3LBHvBwA7AplyJluOB0FHYCBB4m4fhJo0QssXm0qfm/aHFhRUw/gwgnVTMxLYxcYdfQ52PCDJGkux7Cd0pUAOdO5qJ6oEYyRmZEJ+IqiQlXRNg5D7xwAwW94ZIpcBb/tdQg69qvcaW9A/Vrv0ToHgTipuMRnEI8XGevSTAq1Ds1bONf8sXv+YjZDMr3VZ34anAQ8ZaOPbOp/sG6DPZiFdEe+U1yGC5ADIeZA3OGvCQ6CCn3p046fbPfFDw4TxTxjXlhj3tEXUwPa8/vgh5i9v8sHiFcb83xgO+AXjDW95IY1c1NzpzNTz5EnGuyr3ICy8rQdxua8uedTx4xl6vKQpdBk9iAEkUnNgmVsHhA+gORawCMeLFbJ0MIKhz/u3G5fHZxzLKRGUUz2NgpUjYsownqUj8am1+hXMY6RKPGJLNibccz0dQyH9CNcpBRqA+sQ9Obv8ipoFfdiCl/Fb5vlHiXDFH3rPRp9W2uROeC4GZkCE0jNBOb2/Em5ilcyq/BPQYuZt9oOeK3X/YhBHPmVHX34yFd4sH7luHLOPlB4LjaKy0yhfcdfFLnsVfAP3tgDV38OhuLK70FcybXHB/v9ijvjPeRDHdzBQ5DuePjC6n+37QjPecxd69AenlobL7kT+0m+Cqx5yrSTFm6ywY1Qt+zoIgoF79Fn2GQ/efwM/OzDSKP9+QdhhJkdHFQODIc/anXQxAX5mUmCuMAi1YfFHEb1UX+GJdI3N5sdoHyGl2OMvpYPzexlDhofj7LzVOQZQzI1KYrMjJyFam6hQu691UHg7d56L1mM3sUDrfVoFL2RjVhCxUQJBigEP7wHV441IGo+mqNn73WgiVdb+ZZfyTSN1aDjq0PidmTxIQaH83tUUVF4Ki596j7YjyrEh19GD4rwPvBwIcp+xB3bw/qB34F+mN1/2h3rzS4b7c/xiDdsd+yPFXfYaZOv5zTkNXev42S9YMowWtmUDOC9ZvHc2DGMW34SZX8yVmJQLNy0IFd/2SunT122M5o6G/ibeSxxBVBngZZlO/1Wew8ondEd5fSU55P+FAi1EkboIp6I3z3RbyPqH6SUpaB+A2z4WaMR8Rw4BhMXSWH0vdmxiSdOxsvMyMxoHIDWkVuL1oVehU/RS+/Yeu/VJh8BW+s9EtlI9QfZHDMzA+GJ4MJU89e80Lmv+q9k3MYqqp/9eHCzcmwj78eFD/KiAhNUvJMlT9imwqQAVfTS9Tc3Z7tYuuxqt46v9IO388RjyA/app9lDmDx4YN0V/uCDoJw+BPkwL5wWYfWqLoxryywZiXFUIuFl8c5fGcrId0u/SfQ6DHemE8AwshIsJ8cHE4TwYf2qyR5Frpl+2rYp2bTelTbUpcw7VeWDDSvAY11Vikwk9OokfBDW/Kl+INiFKpOMzIzGgdBxdxaQy5U4fc6EK1H6wJtvcXV13LKFhHEISBCRnAXJEREiguaXUiMNcOaLevCxLLs8cKyCOox9+TA/ypLn3ioOGl/uMBOPhkmjio82lx4cPlg9xu7WG3L7hjYYdneMX2XXXHk60NGsYvBHTxGm/ocHFb1OZjDFXNNMxc0OxdnZWk8lYlXyL+gTAF1xFv9ZswXVhs+Lzb0VkHqqc6WaJisDvQt1U89GFDkjZYgDBvi2G+ky/3iix2nZw9037IUNBd/KnhwaQce4ks7bSeHwn4qfHSc6ia+Ck/DUrORFGwD2ShsYJ0C7xc07K03DkKLJnmgfgcosaXjZMIZkZkGD+6UoRBcqDwj+SX2p5OEC5xb9Ct7dSP/ltUuoKhw5Dtx1Q8OgeyyGRSlbIf54FAcdRjwU/tJQRbOkG4/xj1ofwxe8tAfalM8+j7gJyj8+UmwCl+2w2NOP40j+STegtYmYIO8gyxVomUL/+lBB277L0ZQyDUOyonHi47t+QmAQp9x+jht0mX4t4PjkBGZfgyOCFRBJDaCywb1AUwGi5+aWH39QaKQXdCjhZmEddlD/Q6e4lfQU+HcJlmwQWNe5kdNR2ZSzC2SA3EtdMt9FP9k+6R9M2GDvilID8fjwZ1SClGyZokhYuhxvYhV7VrlAAbu2gfvASsZzOJ+squovKk0moev7MK0WaaAT4pXhS3doJAPcNLvcPsZ4kN+4KTtEJDNyCpigze8vvII1schuItpeyw+iDmgcS7wuOhe8yU30qX6xUEqlb4FGlY78rqJQ4JIpFpPxP8MfhsUJyWPKJqMuxJIjIlgvi3OR2bUXNjAlJQRmQngEIPgSjDu+jGRqBebI1PYcqEldAhsYz5TdvGju90sqXCZ+Wgpe3xzMb2gZiMzo42ibo0i5ucCvfUl/8T46RMjkz6Jr3QzMrbMdLzMYhTukjFFRkSmnnC8XcMuq2YtXsDAzZqGRQpirXdlyO1qsn3smfdQ8i9wDPtBsUteQFdf2c34VRuFO4tfLDuH4AAPcFDk6wfwWfTY1WbMv/hG/ENQf6AxBI1Ra2CB45Y+RNOv9GkXLyBwV/GTIY2xMMZfOvN4+QTA3x09KooSW3I9tZXeNz1ABr/ERkQmeouIjAgXSwQmIxI5rpemOXXJwrsu2wXjsLyXQM3z4sfcfYDkD+YcMjMyMxpze6JFSu8temvRQEo395AuJLbMZt/MipP5zhGYwLC7j+Tmhsw04xDrGrbn7LUawOawGdzIrMdPnMqMhqCNpAmfimYdcTGNdOFJxuSPpDYXnXQKQvpE2Q/iCYwx2y8snycO3uwnX3OEA/4Zhw4DB+cxcIxYirHmpnlp3gOQ7zPI18CJZQKRW22Qb1pYDxNHK/lUTGxam8diHgdzOMEheYCdoc+41UmimL4SAQF5+taYbFgyqUye32G2qQPtqLqlDTg6suK+ymsBbqWN4mXrrLmgWdTiKV99sNErnj5RV0ID1HAUMlTYT2SkPg0oWtmSA9CG3JKDIaBn4gfKB7m1SNoyiQemXKw2+QDaAmSWnMHlB/y/cCubDrMENMng1GZOxlw5tUDG0Gg78JEforeh5DOoV/2U9YQLB/uVKap62x9xLS7JDwIo9gQ9Q7Lja0zPoObyt5/kcPp6viiLZ0w4mJfHYa5mbO/MJ0AlQA3EYToKJekCbRTgDoMJZGZwD0i+IKYckvSA43KdHkfP0KTQxMwkXLzJD7wu7IjSNSdg24XVL3RhQ/bXpemDrnieIy5mHplzbjAF3RZU5BkqbBV8x97btA27dIO+jlMF3vBVn8zy1+FJbBNuR2/uM/q2wRmBuRARqAvxfs3G4ZFmnBLM+ypPm9IzZO0zKSfdZL8Ey2qutmkne2onj1e7Qk39oMAOfA4zxQ/rTV/66UI/3H56DJ7YKq7jaFAw5cWsYX33p71ujF6vmBhF1TSeqz9jao4aW/wO2QtH/VUITewkiBwhJssALNwyD40lxGWnMhP1VxidIhHqrjF4MjmFrrHQpYCSPAu06qNZWFIYFzbaC5d/DTNkeisWnsEURRHqHxHSF1YBZrRG4aI/OcNFnGoTRnuKKXr80/7Vlll29Ve/NvsNzlS8gtoykcFVzojAtBAyxOslk8FDvvaRjBvE8z/cSpFdluC9LtPTJn3msPZJFuC9U8sAugpJPgZve7FsHAeKHT98pk2MhR0i1nhK+hnP1bzOqjynTUx4r8GxUYqDseNpp1vZT+wnduEwN9xo5lY0CCvPUnBDft6aVmZGpoA9C6jYwohp2zlAjAAAEABJREFUi0CsOM8xpCuqGCsT5smQ0/Zk2UOXC778X21qlH1A416Tah0f+usH8OscMzMa7Y2HYR2bdYq5A9msX+zSM6PT1pt8gBh7gnZFqi0ZB8iO3tuwoWdmZNI2kFl6ZgYN3HmBTei/4m98IyLjeo08DSLp3EPxPsi3dO2CtWVHo4mbDI/nasMb0ywwMYG5sdsbxpcnWsXhaZluZumCdHFBu4bEItangWRMvl+dVxyZNYcFnC1P9iGt4pedA0DLvOnNPbViBi2B55BNPDIzMp+IjEANKNZFAXrxMwniCaatSVRh22uKo/vbbF4C4yJdII46amysMVlfn9zMQzaItrwgXKCZGeniHAWaGW3pw0bRvtpa+M8QsJt7c5/eWvQmpLkhN3wMx81okxvjImcOG5w55SAeyCh/7Jl5mfv0ky2wD0QElvjpUirfwNYobcNVjYjsTZXe0DHZyc5W6pFFL89he/Yce3p1Gj7BLHXH9WJ9tl19RrtiClYRFFnbLlYNvUAN4Nqmn0defFin9MsBIOoYGMnjrIfsggxi4V2W/oY5AV4HtBCVQZ1MeLadfG88pQP5WWbyku0reYEw2ggD+ZtbOVQ/baKnyUM2KJ6cyOnCyoQpRG7rbeqt7L2pmBvFWOg9wwU/7JKryFvZO0xbgxsx1N7bsEm/oCH/X4E5dtC+QabWFqxvICIyrhf7sPJ50nbSKIgGI6oPocJ400ON2MySJ642yTgk0B1+ZPgSCVI8AIpYuv0sfPvQDFU7anyydnyAOnIN/VvGl0C4xPMAMAcHhBX8P0FuE56zitKdiLxYMlEZaU5KJ/FQ0fsn8/lRNBlfNse+sMJUBEmCNLEw5cmyFTwvPVBFhh7SSbREKF6RQ8+YhdWzldxa9AZ6FluWDpD1/0zbmtoGKH79nzKFbrv8aOtiMNlt2MW2DVk6cXvD17jakZlHsw/yG8tusLhmnFEvg2K2Pl7A3iTQCydpud7SDR6EiisUu/S0vXTJ7wjasVFp2eDqVDbkjHEhZPKwKgbcJ7rBHF0XYtmujKz5q50miRdQU7RzY0OmruQ3wbTUpZDJiIiDQpqAybJ44aVBU1SLBlB6YUasQUZxU/AufNklgxPUgXjz1yQHFE2Rv8fpeWm+Bk6aloBYbQhLt0AfmPulXYloWNgjij78Pd+F1Bp6UvhCC7/RKcAqeHTaO51kr4LHRrt0QTb5rkPSab/4T/s2+hRrrIFh7+YMtU9MW1e8CRKBazAt5h3RAmSwMoG1k9d5IKiIqPyWXU50j5+R2IQwNxxaS+eoIwsNli0zY8rSW2vMRbbmvomemYHC/eSMDF9qkzDUsH0poct1hWA+xwpgrads13qSjI/qDh+3kwOsfmquhNJdg6QHlA4ScJv0ANxxdSF0/AQNpvBifuhQ4Rsu+Ac/iR8FdE8IHx8GfTLQJ+CAmW+FJhaD/HR7Li9W9RDCU1T7O1oEbWeBMaoYZAM4q11JaZKBNrejCC5kZBV1751ibLFtYMpdMmCTN/slB0Zog5M+hV3t8l/caGv4weqvthcwXuvRB3xwRnuHDWL1CQoJMaABrTmi1ou81n6Gkix7I88NzciIRucFjK1lFfPiNnRxobfiBvfpl7LRl3iZxQ3OzMjM4GFkZmRwwTy5rcGa4YTmi8z8uakjShmBp0qmQA95GTxcY6zNPHX1ASwrYo0XNWDCy5axLos8uMumrz0ELGU8CVqTOZjMwQSPcHGr2IHf+JPxXTpyTZDeloknZuJI3O8DYWIimifEjOMJGYKL+WljryB1+J36+RiHQB6gj/0IqKRog1T87CNF10AaG4Zr8UneewtBh2HfhoztpY1+9mnpQlfb1rP64asCnrpiVHtbvjs+V7y3b8TqwMwaOmhCSwo5Qmvy/wsu4mXtwZUvIDcY6BYLdG7E6i2dg94aDDp6Fw/Ijq659daifYuMxJ45eMoZdWEfQtHlqfqQSoW4Kp7MrlIrVFrIRzjQxeXD8wz+MC9Gu7jA0mpkjStJ7KrQSFNQg3U9CDaGN+nBYETm9hSKsXkCvM3PgVXsxyNOcIBTh4H2Q8wnQU2cyRGXOUsIQqExtg3wuHPOb+jB5KcNMVicTG5NPyPEnIviCBeDC58R5K+3oPuiNDZ8m+jNxViF2ly4KtS9d9u16Ts+wjoIW/ltFMoONtqFXbxl9RODnXbb1QYce/RfdnTF3obvjt8GdnQfzNYozDQQ4Qimv5AR4fWx1rlmsW0Z5OSM6Z+ZyABD/yU0HuiFDd7Ih3JU6NGn3no02hsTa8QTZ2ZkTjTLPKIQEentr/0fe39SDNzYqENspSMHvtLFgmQcn+34SKdNNTbR0LkZiacGFBlMTLpI+vCQKLOZIQdLYkRpDMLsuBmQonaBwy7wVehHSHcbNvEpNuhHDG6CIium4N8MjjV2Zs0osUjMCKQIPTIztLDMlBpQSMoIOHzVxkdUWwx/6RkNo9AbctPmZvTWYmMTtcGGirH3l4OwT723sk/G1wUtHVlFbF9k2wfbPmTbh7/lqx1ZvsKOj3gTC8yz+0Dk+o7evJ5gXREZEfokcNFzECpPEdJbqi1CTIggFOvOwoi9YVyQTZAN7r1HzUPco9um/PVokvHrrUUDySCZyVwmIlDiu2tUFjVFSeCgqpCtmCfFcn6LCN6pBs3VH6H6BqsP1upJBGNn+EJH4U5gS3GGGQp1VQEhcI9w0JqEQlPMh3EyAQpesg6CJsCsdAAmTnSDNs2SUAxxSiT+uDWw5hY5foW5ntho4xmZGS3CnBGDE0YOOCJweSIiGobMDP1qGS6chi70ltFbi957dApPxbhtPYRXuce+7JIbPoW9Nw5E2W5bj9uII3/hhm3fZZfPBdj25duIP2D79MPm+G0UH6z5et7JWsJAjRYRk1leyXwcLnsGvhkdJ2Eb3Bvrn3JHFrbByJvRvd7OWjq6sJGzrXXi4esYLRrcsLUcMhPJzAiQjJGZiKquieCiFqgpP6kRbmoDDUE1d8AClqdd/ti5sbmcYDwoLvWZaETnThAeOLhKQ9DNhERPnLHaSd7VzjCoGqTAiJgOCF1FzmxOH4Jhkw4ODocmxJzty0MiseadjHmB54QOc0cmciQbCiIiE/2CNuTFMdojIhM5wtxaEqM2prcWvU90F9euDd06hQgsbyXLtmMTD+hfm9i3S/uw7z9x+dxkJ8YNvPhIn5DPGzbmsYONgtyZ79bTc/XcWU8HjTUWgvUJWqc4WHdxtWewbHzEGeo7sdFQMVtM3npjrI7ezZvmAXQIJNsPHzP920IyTjMSm8EcI5IbiON5nYgLCKqVF1At0g/V0pCtux+1J6aNrmoFlKVsQOsOjZ3JwCBzMI0ZyZM7M0L24JJpIiRgu4Qcw2GRBBjYBe0iV+EDHQaBNk20JlaTcjQZHFvxMzL/HVrQGpk8m0BikRvIpM3IKB1eCacNWXZvDP4NX8ut/Hrra2NVlNsmvQp238RgH5C+99ivOv5Lv6mtxyabfbe42b9XH2y3jVhqX3babBt2tQkU2Q5vV0beemO+jYLM2FhDn/DaIhp6m7I5/ca3vSEL2aL6tWitIYM+4Hy02DxWj25G91zgoe9w33r5wfKbaMScyMzIbJGZEZODCzUERN2ukVkrF6aEVFoFHGkqGYEbWfVHXaFwL53iRJY9otFv3bmkIWDgHgpkxQ+Ucb+pw1rRh6IFWGQWkpkWc+CpQv8JBExAhyQLC9gy0RZaZA59JDVJYpMN3TK8kj3khL9tY9NaHxvde2gDu7hvoaLtmxjswh7694N25ELp0zZ53/cq7ovfftsutvd2te0cjGFnzH32nfLgjcLatxbbBHPfQAfrbY3cWG9rGb2xNnLThJbRxFc0bPLpWb7oXXKnn+2txkLXOB5XMvMovdNe6B0G4t7IZSMGvg2eSOJLzszILIQuZJHg0qBmJBsYuKmdKi/XEu3vfOBMdfHUrR7400vShFqExuixEJfrMpGnNZ/iRdLPp8LFFI4ZGpiHbiYq+iUUesDE+JlJGE1RPEASM1soeS1hAZt1c2dzsVsezGY0NqJ12uA+uFHc/ucSxUBFbn3TP4v4im3bYqOgJ/YbRQq2242CLnnfh4zffpNtu7TtcZNttal92GQfKJ/teQj2Lfxpo36ewxabiu4NnYOgdW2srfdWRXxl5OacJPkBLsArq490uGcohmJtvYXHI67kPngTv81hk6/sF3RsHb157BaLs0Wm9jQWI0RdCQlVPy5a6kdFvYpdBS3bFS82+roNlp2Iuld/t53RZHxBjfs0McmnMiTZ5CdgEgmIP99qsL+FSP8KPzMiMjMayNCvFunEkChxG22SQcuOL23twk4uumwTFLOLW21DdnEjmymkTkH1WejIG+jbLTaKWG3St9seBey3C/CR34Ztv5V9v91i/xA+Bk8Z/QY+Poh1i5t85HvBTfLFXj572M68ds1j35jb5sOgw6hDId5YY1ch9i02uEufoOh6byG0JXd0IF148e2xdfmL8Rmy+su+4asxFtA7kL0vX/qOw9hpKxCzVbyGX2ZGsreZMAhfOZ7FUlSsYqEOgYoZoKjteiD0/Z+aptRppwMuT1mKbHIQX9AiNKAQEZ4Msjm4kHnaLptUQbZA4BZZ1ePq47ak+QLaM9GzRSbMBmQWN2SDNrP07LFkElhyjy6592i9Rwetd8utT96iUeTNBb5FN++hwra835AL2/4RGwX6AhWr8RttgnyKd3x32owbdsm/fcT+228F6R/IZuwXvsmPNvEN+8Q+ZdpvHzcO0EfcsO2Wb7FzAHYdBLDtW+zAxc8au9C36Nfit607N2WnALvQw8XaSu7kS5Bt4l3fiOs2YlpG78j2g9WmMcRq72OcYsbRWKBhb+JsUZxVA9p/I6xHxk+Xi53ivRY8qr/HH3irvkvHA6VkDoJlHvLBKElAXXd7DjhHnoyPRT9Q5o3OhFc/y09bZsmZGZkDnPa5aLMScUWSFGHYeuvRLujaYOlw67QZW9RbfosuO5vRtz1c5BSK5M16FXrfP2ITKKztA5lC3MFG4W5i4CL++D32BQr5t4Hff4vt998N+9Fvx3aDb7/9HrvxW+z43GQ3/x438T+K99/+Yb18ZPvN+gd9FePGHG6Kx/xuE7eP0KGTvt9uyDfWsdc6tz20xm3bol9BfpYumfxsRo8uHd8q2C3M2CpGJx42tVPosu3wvss222D8ZXdf2h17wwf7hq4xJktunXEbe+w6SD7Fk9poQFyIeY0KVdHLJBb0Oi+myFEkL/DTsGU6qBXillTB9PwVGp4RGb7OKYgp3oBfv9vjyH2GLgT7IItZXIhBZiI2AGvhiSwe6K1Fbx18w0qWoHYxG9ffuHX6yk7Se6cYKIT+hu3ylu8UkbB9fMR2+y2qwH+LjcKrwv1H7BTnJlCwkvffsUk2SnYxqw8F7XbJbv/dhWwb+o2+xj8o+As+hvxB+wcxzMg3+nwA8Y2Yhd+YU2EVv+d/C7D0OS4AABAASURBVK1t45ALPvDbFr1v0cQXqIBlnwXaR5vtyOIr1tcqte1bfdLAT58eJX/HsgHmoYNRe8b+dtBaJJxwA5np2uARRuhKPYyqL73BkXhzU++87Sloq2KA0UVPu5me5uWDgRsVT2LFMz7mdbeThollRTgHYrQHk9ZhOINAluEhB7r8UoW+kKHFTvTWovUevcOWW/SGLtiOLEZvoEseaI3NtbxFd4L38Gb24raJAUXRt1v0Ufzb/hHCzgHYVTy82TcKbDOrqC9wcf5P7L8D5N2QLFz9fscHnQK2DwW8D9zoI9j+P/8IyQYxb//4n5D9Nnxu6Lcl/yNU/B/EvAkcBsV8Pwjb7Rb77Rbibdc693Aedhio0K2rgP0m3qIKdrOf5Fnku/zxExvI27aH2neKfkfebBsxsG0CNrW77U2vsdlHj83+smetNfa9RecF2VuLBucEdaMqCjjGdYpHUatyEaGfC76+82PH4dmHQpeOgZtDg048yRBx9IdrT5vsTQ3fQ1MTaIXkHIHAZE+xgDxtIRlkJmKLbIUGt66FN5LQorUevYMGxAYbtJiEd+n/BmxCZ4MmNuRtu7HZt9AbcWNzfQhcLB/Rbx+x8ebf+IqxUfw7h6BAIat4KcSdIt2RbxTmLqDfjOGDrPbCOAT4l46PY1DI9FUMwXHQd9puE8T5wPZBX9so9pvl3+OG/DFw01ehgd3z/ohdh/j2ERvFrzVq3TMHvW9h2Yw8mdzILt+JHdtGDl9AznYKeoevdvnusuNvGd5G/x15V7EP6M0v9H7d286ea9+Fqo1GTWS6cnggBNcgpHVT3hQtz5OidWFf5Pm1590uXyLgSV/6IevGLAKvA7UIGYTwdS5dtjdo1rRnYheQIxUiI+HMjNDiOOEtWbDQenTBSRkbw+ZsW8l6aylpxVtI7vbtQ8bmBOOvPkLfaZv6Hp0NWaA4VPyb+SO6CkZwEVG4HAB9Cux83dEh2MwUMEWoYt4GT/mp/x4bxWnQR/1WG8W901Z4xlLhCzcK/kbhm+ULbgJjmf3W5/AQd+dwvhf/TuHvt4/YgNbWb7cQN4pVB773LRo5aJt4iz70jm5QwOINnw3ZQN7pX7Y99mk37xyyDRtMjCr0LTb2ofqyNzv7iu64jKf9kyxsnXbQW4veAdyAXoqN2sjMyByg6hI8b5UuhftdYS8bPt/IfuWPsj8JKEC2TJbtDH0SFJoaJtQg+dQDiAXEcTNVJh4ECPECYSS3hjlDCxVa69GwNTEJab2TkDcoiSRQietqJ+FKptBlH3jqFLxsbGD1kQ6si2/RN6DNHYWyja9CKqCNg7DrEAguuH/EdmWKcuo7xbhNyH9i2Hbe0NvCP2J3399hoXTZ6mDUG15v+ZvGw9dtxLot/Mbv/vweirt7nr/Fvopfa7rF5oO9hwt/m8UOk8c29JU39E3oe2yb+uCnvIAdyCbeabMsxr7vWxU/fSVvsAsfu2XpC53Y7Cnjb4L2ELSOrbfa/8nZqj4yQ794xLz8t2pUbIYe1VLf658Ff1DOr7bLYaGLegq4odHmJ5xDeCN+BqAR4zlnw+QC6Pt+rE4I2HCr2/KwIWdmpE82C6TgM2vh+sGntR6t9+jwO/Sm6GpbYINU3C+g74uOD8lvtrGpkkFHb2ygD4X5Fh3eXDDIt4/oHIQuBjoIBl+N9lHYO4W4SRaDLhl0ilHY4MJHbPyWpWydAyDWQVhM3/L7PTb6b9Jf8Bv232Kn7/4BG8ScrDlpjsx9zn/jUG8b66VAOwWt9bfFGzkW+mBkirH1LTo+fYOB+i8QZ1vYYtuFPXb7IYtlY8wNP8XYsKldkGywd9pHoSO33qIzdodb13xatCZQIzlAFWUiR0bAwXWC6/1a5M8DcF6++iDy0lebahim6v0kGDdaRZQsSTW9gEH2Bl9ufSxcVImaIPOM4CEZPkFIBpnDng2T0KO1Hgn8NciLb7b13qKTlP8ObN7qU3Jt7JQ7MbeYtsaGNzbeYPN0KBrFI+4UVEc2S74ciDoYv4UZe9OnByj+KDtFKb2J6d9od6yhuy9yl33w9nGj7ztGPGJs+G3yZ8xV7NgdV8waOoXX4SbMtZl7ZO/RGgzEraODTnuhR0d2sRLnlfcoXSxsQ79yxyZgc1zFQ7/IfcrsteQGt9aZV1vIlJyRWYhvrpeip51vOTwpboSXtlM2gXJXG6WOiadswJK7LkntZRnPLG4RkgC3xVAAHlZkHDITj4HMRCwgcLeCF448+CUJXQno0XqPvrAhK7FwA9qowR25IP9qW/0aNtDA9Gn4SzckC8RqAuO5XTZjDxcTBVFcevrwlGw7bz6z7BRfzr6L90jsbcXZSse/7LvHUfHWV5Y9LNOn06fDTcB/ylrPc66dfG1GduQGUnlskQ1IBpL1sskhp/wE9QHdb+Qteh+5hjvjb9jrAGC3js9gvdEF+XViWKaf+lS8Hr23kNzEE8yrN+ygAc8pq1YyiyNVU0+4OClkWSS/FrssaqEuEd/bMI1PAR2G4QehXYpfAxZOBl9gPpevQAxAx7rlLAnGKYx3PTG3yLlIs2zCsMvWejQhxSQmWzTsTTa4t9J7b9FbCyWziReqX9kkC/i5HTmb56F2zUWFIOSwy7Zk2Vr3nHlEJjI2yUE8+4qzYlY7PtMGxwX2z+E77IkeY4wUM4Z0j5EtQjosvwX6Zj7zpvlPLJ9Qu6AY8NBDsZAjsUkG6puDW++h3LTeo4PWYYq8U8wF6QO0VaGjI8u/9xbdsrg5Vm+Te+m0t2GbnC2jMafWNK9CoGdEJL90hy4V/lm1N4t7/RYnJfyTDf+f2olDCHkDFG7p0Mv9na09PRJxAnHNcNpg7mARQiZdkZ+cka0ZjUXPRIjlozZtjPSWPcytDf9K6LS11mmfUBuy+qTkwoyn2A07o4eRqclbDp6VkbKFLrJADp1xsWAf7LxKdF/AewQHblwkE8B+YukThNMXUv5cXhtWAfDBZh0mAE7YHEz9UB2LB/2qvWT1KcgfjP7VFR9urO4iDtaZAmvPiIBALlQ+yRuF2n+Bl8JvPfr0Y496oy85buKOfAU27cUTNa73hD5pyMa8giuBbtZAFryGWmtpS2axU14Ff7HJu/KsQBPKKS2oDqxxBmQa4gu1iDmjGJf0LFmZVDuciX0tJiNTaObmJPR4JkF2IHvix4HIFA8buvsQz4nCTyzbYtmMHrKv2NkYswVPmJg1Uz9TT5LkxatoDioLPuHzwe8fgOPxCP8/sSTfJT/iIf4aLBk8pIMDWbDPRb7qan+H2vU/jZt26ZInSz7u99A4h+JqLPDa/gi3aa7gFMZajgcb7bXBrJlbux/OAc8UyJXzSe6Vwyt6ay7y1nv01qNd0Rs6yBbZnmiSZQMtGQGIr8jE3oBYYE/Q/OTBHLlnNcIucjZM/F7oB+ubNsnyoQt1/1yzbRi1fssehDFg28TgV3erhiyaT6lMXmpmKpUFySw+J14SMhLmth5OXNJXPsDJgzMzLC9uoU1Kt7UwK4HSQfnig5xJPCEyQmDhlsQkKwwVvYr9ESfFbqjAXGz3OL7A51c8hK/Bn59xB48fsCAZyLbw4wufgvuq/8D9J/4kPhix7sR6qD8w4y/bXbpk+1Vs2YQ1hubInB/gYA0Ha9Eh8bp0IAwSwMHw+hH1W4rOCzlKIckfeWsCeewNfaC3dznDOW/0BN4b90OHM5/cLnLm056ZwbAFC1EXc+NGngX8ZBW6ilysQpYsFqbMzo7ip8AJpDaI44PuqHoQ0xZkbh0C6Jd3e7Yw6adSkhYiSU3ImRmZAyQus0Xy5tAPaCkduQHLblM7SPo0IAYBMod+sbsfcZqRsZI/fcUx+kUgBStnwWy+3/L6VyZUEBSJCwRWwT9GER0qRHBXwf34Efe//oqviT8v8rDd/8RHdiDfJ7D/9SO+1A7fwdclnvp90edLdny+hBHzS6y2aZuyec6B2H99MreC5qsDcfeB4QBzGHwg+MQ4OOQFDv3Mw9h1/Z4eKYtCOp+VUxV9j8qzZIBTai/IfaZy3OgnjsGSXxG68BVFZARI8OR4XlQqO+UCVpELLmDmqgIXrLOGKctnyqsN/xmHkI7nNuyqe9nEGtiyhJ+QWAoN6XLLiKrfLB0LCRaYwa9skQmTICUuM8M89W84sWUOPziT/gMECyETmxIvBg1kYkvGaxnNsvSLHBEZXFq03/oslcSdd4qAoj/1pqRIDhU+b9gDPFz0nxT9D0Ch/fknBTzwx5/xif4p/uOP+DRkQ8b+NUH71x/0nSz70uX/Z3zR9vkd/vUnca/4I76utiFXfI0BOBR3DooOmDHWoMPwYH0Pr/MROgA68IcOP1+NglyE8kKKdCtXScYyeQLtW2sZBYrf8mDaM8svc3J8f9FeDVk0nq+ay5WahNkmbdks2Fngx/jPZQ/mfTDvAyfjIs8+ixnLspjoUD0ZQ3Iplt4er7NrQWKeCK7pkKMlI7RQkNkiMyMbPKBkJnazbWrPkK63jZCJLekDB0CDeEoGEZKrPe03ZexsTiaceIkjAtFvfm3ySZKCxJ28CfkyHy5+F8YXX0OEH/Hg7fzgzXsHX3/9GV8qXFBF/weFCf71R/z417/i8wVl/6TN8MHAx6y2P/EXP/FDvn/gA//4JwwU15C88Ef8hc9f/xyM/IND8MOx/2ROf4YOwyeH4Mv4wcHlAPsQsC7YB/v+VV/rdPB1AJQLcnJSVAFXIaRzlhHRyKGQmZHO9eAm/hkRGWGEr1fNpp8eqkFBY4up55c39YnhWeBHuOiZq5l5H6zhQJffiSy2P8Es811ITBjH9ThqYyaQVAP1P97t1UPLi8gsRpBiZCaq0GC9LX6NXAcBX8kj0XTkTsfjERHIIBMGmcUB57WPNidoi6inVx7jEByh4j8pgMOorwgHb/+DrzvCnQNgcADuLqY/KK4/LsVLof7rn+j/ih//vOB6GCjcT4rVoFh9IOAfwPKl7QfyD/sTSzGQpf97/BHVD3bMP8chgDVn5q6vT3e+Gt0p/rs+1cDxyXp14L12fRqQDxXNKCAqpP7xL+c0I7PgFxR5FSecyV6BGO2R5Ff3ZMnvULW926TLDrjZIwzsF7emAs5QMZ9jfip0g8I/Qcn4sIZDoKP4hAsKSTvBT8oc4skYeuIj6b9B+8mZBMiWqZUDOMlGZkaQoHyHCtzokaNNb30hMyOzEPZp8Twc2JtCZoQ24Fs0+k9k6FfMi2QFOEmSobcfRXCqGFT84MEBeFAsD76L3ymg+/Xt7zetCr+K9AeFqgL9pFgL/4zPf/6TohT/K6rQ/xWr2PH3pwVve/eTvvrih2z7C/8RVeTEG3b5vGL4ML8ffJX6wVesT0GHgK9DX1oLB1pr8yFgnQdfh3z4+RT0y4BcBHkJikx1oZIRK3+ZPJVr8RvCeogig8sP+HLPglu1JsO1HZ2b4XjipKL1NJZM2WLQIXBhI5/s4wHP/5/YOXx/zazIPuILmAdmDAjzflnDi2KQr7m2AAAH8UlEQVSP5uf7g0TINCjCQkIXXApab5GGj/lizyG7+OO7K23M0C9EYmQiA0yROWSaIjLWpVUCFX5oo7Xx/gGYt6GKgaJ46O1o/vRXoLsKxwX0Z3zx9cfwm5ZiVfEO+CAgu+ApUhW8ZWySC+pz+QShWMv+RxU4cRVHB0TF/UkcFb64QF8+Jd4/TSrGn37zf/J1yPBc/2LOP/ihmK9BFL8KX3hofaz3AY4HaycPB8WvvJwUVJCjWQ2kMpRCsTKZmZGZ2HKwxfmI7y5K2maHtfT6WHY5Am4OgnwoepTXguaTig7HKH4dALWLjWnHR/Yral1zZSO+yGAsMw/GHBNASfDzzQFQwxU4MShP35npBGUbLH3KFLje9Cr8Wexm+QzQOVKRLnogF2iwXJyR4RtbZkamgGlxcLEq5qeEKBEniTo5BKc3n68A/gSgGFQc+gSYUOH8+CvufpNSULxd62cAFRwFSdF+8jY3JAvygb8ocOETFr6wL1CoX0B24Us+9PkEdXD+iGLe+sMm/VsQ9wf93YY8v/9/+uCq+D/ji080fQXSAXfha71aO59+x3vxk6dnAURkRGTmAgJ3ymjOzNCv8JV+1oOiIu2KdSqmBBpkglyJNqNMRlz2sikGmN/fOaAHDYp3aP/Yx8llO+PAJhk3tvp8gvHLPm2MVk4INW+pKHWviZZ6fXIAruqQSURJFSysI4tBZgsVesuMzAEOQ6bkakv5WM+IyYEc12vqMD5qTj1AMb6yQ/POKYi1ShJZB4A3CoVwGveor0J3fkD8Gj8Mf4YK5z4OwpcOA1+LvubXosl+4/7JG3firyHX4bm7j2wT+LnvX/HJ4RK+HOMv+v1lm36InfbnofszPily/aBr0Fd+Bp9WZtmQa87M34f5K1T4wqE3vwpf8Lof4VyooJQX5ccIMgpm8kZOMzO4F+J65VQosilSeEuUQGzVliB1Nq/itEGtxIBwx3JS2JwN68hjnsdg9S354kNHmumLjYFQeXI/BZSfb4aoDj83LUtb0hLGypUZ2zISzkwYXAo7U7rQIhO+HAIMYURAGREZuADxRASGQnDZIWzSIxO/AJORaa2nFs8Ka8PP2ni9AY1HHHozLqhohE+KB7iQfvAHW4Wvzx+h79ZPUOwckC+K/W7Gb7x56xB9cphkG1CRfoOvYfuah27q8Gobst7ssonv8meOd4Hf+7/zde5OsT/4gVeF79/+VNGDBzhc/LwAXPh+xbLxgyOcr/BFLtESOTMjs+AXWWSk9QgoMuo6JZ2S/ZBgqFBL4Om9UPsENt2o8nMz5csuRemWnjIO035c5LKxlGWTTOCpW1Qs7JIHoHUzhSV/J7TvjKFFB5cyAcVFd2Kwp2xiDkQMli1TT3qYkWE0XDIiJmJcuSyZJcewZGb4GmSzDCyeXHrFSpBMZBKdpeo1oSLQIRDzc4GKY2EeCH09UkGJKa4DPL4+63CYv+Kutn+DgzbhMeOgPy546U8h11cWxvBYX4z19TqG7Av3eIxiP4g/4WIff9Yx17ReAMqL109BIHM7Nc5VSfUkn5npdCYWRD3DhtBlqwQjVyCr//cPtucaSntnMEGa/LSOwgqsazDZxAUaEfR0LATu2n7sddtS4t94/uIAPHtmKiHSs3KEnlYTPSOkg9BlLptUt0VGZloNkfAU4ioGfpkJZfhCjsjIFOJyaZERGVwrE9j0ndGFTwophtPgzagDobek2mAXj96cgnTxFfqBUodlsL9OoT/A85PlwacMsM+DP4K4oxeufiU/aMeXMR72vw/fB/a7UXEf2GWDmdeJv+eKLNbXu8OHmvXxB14qjpM1qgLE1pUPgdTodo4kAMnprPF0TtNWRKwZ5sR0vTG+m67Nf0fWdNgdu845TpuZBzdFr/cYaxuKfNVJXJjtsiKLVmCUKSP+3fvfHIDLsiUaeij0YJIjLSIjU0BKEFF6cKHzjDD7UbJEoRrKFlyyCa/i0KDrPRfshClxMyk0yKaCF+bB4CAc4JSNQjKjr+IahVb6QTECtcsfLv9HnFc/3sjT/8TnAOInHnFc/ZHP5fMg1mEcjHFoTmpHls9BcZ+SF/O1RrLWw/pOy1r3WC/k9Ihpd0XpgZ4zz3KYf1kIuewZ1QxHBFsZujJSFJPif/ViUpojMZF4sndTQGNVPLFp/pbeHxfn1YRNN1im/yD8mwPwi54zOzMrS5e/EgamDdFWmDv0P2YQy/aCN3+3TUex8G0iWCm3/CthKCTV8uB6cww7tpe3pYuLAsQuP7UFxaWf0k7aJItPFxp+2OT3CopS/dX2LZiN+l/BGKd91aa4F56xJrvf8JENxIQX/lyb5vVTmmh2+uQbU5ps43i82jJf9eH03xPjv3fSPLUE29UOpi5GXU0SpAuSC1ObLOtV1sGR7T/jbx6AJHX5bTRZ/7dy9dMAb4E91nKaC4a5vfHi0U5JPbNAVrnRsU4fMzoda0MoMhUm9tJpUyd0FZxsV5ZcUFg5wR67ZLWpz8S7TnSNvKB2Qf4K88IjJM4MgsKNwG1B3dTlP0L5k1MxT+UXYnNl/t9BTektloxg5nO0YvGShvokNTy1b6W/4fJtv3fjPADv9hddOXox/P+sOMmX9CxRJaeJY5APqTfJhGzyg3bzfAwd4qbouC3M9uIy8eRWOFG11PNdLytPNUyg6p7FrzjSDU+21lBPW//rR7ra87/u9//cQWv8u0G+m576C383xt/0+z8AAAD//yQXoawAAAAGSURBVAMAkdClQnW1sI8AAAAASUVORK5CYII=";
 
-  // packages/core/about.js
-  var LAST_SEEN_KEY = "wizascript.lastSeenVersion";
-  var CATEGORY = "Wizascript";
-  var LOGO_SIZE_PX = 96;
-  function addLogo(anyRowInput) {
-    const set = anyRowInput.closest("fieldset");
-    if (!set || set.querySelector(".wizascript-logo")) return;
-    set.style.position = "relative";
-    set.style.minHeight = `${LOGO_SIZE_PX + 24}px`;
-    const img = document.createElement("img");
-    img.className = "wizascript-logo";
-    img.src = logo_default;
-    img.alt = "Wizascript";
-    img.draggable = false;
-    Object.assign(img.style, {
-      position: "absolute",
-      right: "24px",
-      top: "50%",
-      transform: "translateY(-50%)",
-      width: `${LOGO_SIZE_PX}px`,
-      height: `${LOGO_SIZE_PX}px`,
-      objectFit: "contain",
-      pointerEvents: "none"
-    });
-    set.appendChild(img);
-  }
-  function escapeHtml(s) {
-    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
-  function markdownToHtml(md) {
-    const lib = getPageWindow().underscript && getPageWindow().underscript.lib;
-    if (lib && lib.showdown && lib.showdown.Converter) {
-      return new lib.showdown.Converter({ noHeaderId: true, strikethrough: true }).makeHtml(md);
-    }
-    return `<pre style="white-space:pre-wrap">${escapeHtml(md)}</pre>`;
-  }
-  function openChangelog() {
-    const BootstrapDialog2 = getPageWindow().BootstrapDialog;
-    const html = markdownToHtml(CHANGELOG_default);
-    if (!BootstrapDialog2 || typeof BootstrapDialog2.show !== "function") {
-      console.warn("[Wizascript] BootstrapDialog unavailable - cannot show the changelog here.");
-      return;
-    }
-    BootstrapDialog2.show({
-      title: "Wizascript Changelog",
-      message: `<div class="wizascript-changelog" style="white-space:normal">${html}</div>`,
-      cssClass: "mono",
-      buttons: [{ label: "Close", cssClass: "btn-primary", action: (d) => d.close() }]
-    });
-  }
-  function registerAboutSection(plugin) {
-    const settingsApi = plugin.settings();
-    settingsApi.add({
-      key: "about.version",
-      name: "Version",
-      type: "text",
-      default: SUITE_VERSION,
-      category: CATEGORY
-    });
-    const asVersionInfo = asInfo(SUITE_VERSION);
-    registerSettingWidget("about.version", (el2) => {
-      asVersionInfo(el2);
-      addLogo(el2);
-    });
-    settingsApi.add({
-      key: "about.changelog",
-      name: "Changelog",
-      note: "See what's changed in each Wizascript update.",
-      type: "text",
-      default: "View",
-      category: CATEGORY
-    });
-    registerSettingWidget("about.changelog", asButton("View", () => openChangelog()));
-  }
-  function showWhatsNew(plugin, installState) {
-    const lastSeen = GM_getValue(LAST_SEEN_KEY, null);
-    if (lastSeen === SUITE_VERSION) return;
-    const markSeen = () => GM_setValue(LAST_SEEN_KEY, SUITE_VERSION);
-    const isFresh = installState === "fresh";
-    const toast = isFresh ? {
-      title: "Welcome to Wizascript!",
-      text: "Wizascript's features start switched off. Turn on the ones you want in the Plugins list.",
-      buttons: [{ text: "Open Wizascript settings", className: "dismiss", onclick: () => plugin.settings().open() }]
-    } : {
-      title: `Wizascript updated to v${SUITE_VERSION}`,
-      text: "See what's new in this version.",
-      buttons: [{ text: "View changelog", className: "dismiss", onclick: () => openChangelog() }]
-    };
-    plugin.toast({
-      ...toast,
-      className: "dismissable",
-      onClose: () => {
-        markSeen();
+  // packages/core/uc-report.js
+  var MAX_MESSAGE = 250;
+  var TAG = "WZ";
+  var VERSION = 1;
+  var HEADER = `#${TAG}${VERSION} `;
+  var canOpenVoid = () => typeof getPageWindow().openRoom === "function";
+  function closeDialogs() {
+    const BD = getPageWindow().BootstrapDialog;
+    if (!BD) return false;
+    let any = false;
+    try {
+      if (BD.dialogs) Object.values(BD.dialogs).forEach((d) => {
+        if (d && typeof d.close === "function" && (!d.isOpened || d.isOpened())) {
+          d.close();
+          any = true;
+        }
+      });
+      else if (typeof BD.closeAll === "function") {
+        BD.closeAll();
+        any = true;
       }
-    });
+    } catch (e) {
+    }
+    return any;
+  }
+  function openVoid(message, select) {
+    const w = getPageWindow();
+    if (!canOpenVoid()) return false;
+    const go = () => {
+      if (!document.querySelector("#chat-public-0")) w.openRoom(0);
+      let tries = 0;
+      const fill = () => {
+        const input = document.querySelector("#chat-public-0 .chat-text");
+        if (!input) {
+          if (++tries < 40) setTimeout(fill, 100);
+          return;
+        }
+        input.value = message;
+        input.focus();
+        const at = select ? message.indexOf(select) : -1;
+        if (at >= 0) input.setSelectionRange(at, at + select.length);
+        else input.setSelectionRange(message.length, message.length);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      };
+      fill();
+    };
+    if (closeDialogs()) setTimeout(go, 350);
+    else go();
+    return true;
   }
 
   // packages/core/share-code.js
@@ -895,7 +919,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     const m = /^WZ-([A-Z]+)-(\d+)\.(.+)$/.exec(clean);
     if (!m) throw new Error("That doesn't look like a Wizascript code.");
     if (m[1] !== kind) {
-      const names = { BACKUP: "a settings backup", TAGS: "a Card Tags code" };
+      const names = { BACKUP: "a settings backup", TAGS: "a Card Tags code", TIER: "a tier list code" };
       throw new Error(`That's ${names[m[1]] || `a "${m[1]}" code`}, not ${names[kind] || kind}.`);
     }
     let bytes;
@@ -1021,7 +1045,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     wrapper.appendChild(file);
     const status = el("div", {}, { marginTop: "4px", minHeight: "1.2em" });
     wrapper.appendChild(status);
-    let busy = false;
+    let busy2 = false;
     BootstrapDialog2.show({
       title,
       message: wrapper,
@@ -1031,8 +1055,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
           label: actionLabel,
           cssClass: "btn-primary",
           action: async (d) => {
-            if (busy) return;
-            busy = true;
+            if (busy2) return;
+            busy2 = true;
             status.style.color = "";
             status.textContent = "Reading code\u2026";
             try {
@@ -1042,7 +1066,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
               status.style.color = "#f66";
               status.textContent = e && e.message ? e.message : String(e);
             } finally {
-              busy = false;
+              busy2 = false;
             }
           }
         },
@@ -1073,6 +1097,120 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     const wrapper = el("div");
     (Array.isArray(message) ? message : [message]).forEach((line) => wrapper.appendChild(el("p", { textContent: line })));
     BootstrapDialog2.show({ title, message: wrapper, buttons: [{ label: "OK", cssClass: "btn-primary", action: (d) => d.close() }] });
+  }
+
+  // packages/core/about.js
+  var LAST_SEEN_KEY = "wizascript.lastSeenVersion";
+  var CATEGORY = "Wizascript";
+  var LOGO_SIZE_PX = 96;
+  function addLogo(anyRowInput) {
+    const set = anyRowInput.closest("fieldset");
+    if (!set || set.querySelector(".wizascript-logo")) return;
+    set.style.position = "relative";
+    set.style.minHeight = `${LOGO_SIZE_PX + 24}px`;
+    const img = document.createElement("img");
+    img.className = "wizascript-logo";
+    img.src = logo_default;
+    img.alt = "Wizascript";
+    img.draggable = false;
+    Object.assign(img.style, {
+      position: "absolute",
+      right: "24px",
+      top: "50%",
+      transform: "translateY(-50%)",
+      width: `${LOGO_SIZE_PX}px`,
+      height: `${LOGO_SIZE_PX}px`,
+      objectFit: "contain",
+      pointerEvents: "none"
+    });
+    set.appendChild(img);
+  }
+  function escapeHtml(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function markdownToHtml(md) {
+    const lib = getPageWindow().underscript && getPageWindow().underscript.lib;
+    if (lib && lib.showdown && lib.showdown.Converter) {
+      return new lib.showdown.Converter({ noHeaderId: true, strikethrough: true }).makeHtml(md);
+    }
+    return `<pre style="white-space:pre-wrap">${escapeHtml(md)}</pre>`;
+  }
+  function openChangelog() {
+    const BootstrapDialog2 = getPageWindow().BootstrapDialog;
+    const html = markdownToHtml(CHANGELOG_default);
+    if (!BootstrapDialog2 || typeof BootstrapDialog2.show !== "function") {
+      console.warn("[Wizascript] BootstrapDialog unavailable - cannot show the changelog here.");
+      return;
+    }
+    BootstrapDialog2.show({
+      title: "Wizascript Changelog",
+      message: `<div class="wizascript-changelog" style="white-space:normal">${html}</div>`,
+      cssClass: "mono",
+      buttons: [{ label: "Close", cssClass: "btn-primary", action: (d) => d.close() }]
+    });
+  }
+  function registerAboutSection(plugin) {
+    const settingsApi = plugin.settings();
+    settingsApi.add({
+      key: "about.version",
+      name: "Version",
+      type: "text",
+      default: SUITE_VERSION,
+      category: CATEGORY
+    });
+    const asVersionInfo = asInfo(SUITE_VERSION);
+    registerSettingWidget("about.version", (el3) => {
+      asVersionInfo(el3);
+      addLogo(el3);
+    });
+    settingsApi.add({
+      key: "about.changelog",
+      name: "Changelog",
+      note: "See what's changed in each Wizascript update.",
+      type: "text",
+      default: "View",
+      category: CATEGORY
+    });
+    registerSettingWidget("about.changelog", asButton("View", () => openChangelog()));
+    settingsApi.add({
+      key: "about.reportBug",
+      name: "Report a Bug",
+      note: "Opens the chat with a bug report started. Describe it, press Enter.",
+      type: "text",
+      default: "Report",
+      category: CATEGORY
+    });
+    registerSettingWidget("about.reportBug", asButton("Report", () => openBugReport()));
+  }
+  var BUG_PROMPT = "<describe the bug here>";
+  function openBugReport() {
+    if (!canOpenVoid()) {
+      showInfoDialog({ title: "Report a Bug", message: "Open Wizascript's settings on a page with chat (like Home) to report a bug." });
+      return;
+    }
+    openVoid(`${HEADER}v${SUITE_VERSION}: ${BUG_PROMPT}`, BUG_PROMPT);
+  }
+  function showWhatsNew(plugin, installState) {
+    const lastSeen = GM_getValue(LAST_SEEN_KEY, null);
+    if (lastSeen === SUITE_VERSION) return;
+    const markSeen = () => GM_setValue(LAST_SEEN_KEY, SUITE_VERSION);
+    const isFresh = installState === "fresh";
+    const toast2 = isFresh ? {
+      title: "Welcome to Wizascript!",
+      text: "Wizascript's features start switched off. Turn on the ones you want in the Plugins list.",
+      buttons: [{ text: "Open Wizascript settings", className: "dismiss", onclick: () => plugin.settings().open() }]
+    } : {
+      title: `Wizascript updated to v${SUITE_VERSION}`,
+      text: "See what's new in this version.",
+      buttons: [{ text: "View changelog", className: "dismiss", onclick: () => openChangelog() }]
+    };
+    plugin.toast({
+      ...toast2,
+      className: "dismissable",
+      onClose: () => {
+        markSeen();
+      }
+    });
   }
 
   // packages/core/backup.js
@@ -1123,8 +1261,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       const hit = FEATURE_LABELS.find(([p]) => (GM_PREFIX2 + k).startsWith(GM_PREFIX2 + p));
       if (hit) found.add(hit[1]);
     });
-    const settings2 = Object.keys(backup.ls || {}).length;
-    const parts = [`${settings2} setting${settings2 === 1 ? "" : "s"}`];
+    const settings4 = Object.keys(backup.ls || {}).length;
+    const parts = [`${settings4} setting${settings4 === 1 ? "" : "s"}`];
     if (found.size) parts.push(`saved data for ${Array.from(found).join(", ")}`);
     return parts.join(", plus ");
   }
@@ -1380,8 +1518,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     const lv = dataView.getUint16(5, true);
     const rh = dataView.getUint16(7, true);
     const rv = dataView.getUint16(9, true);
-    const norm = (v) => Math.max(-1, Math.min(1, (v - 32768) / 32768));
-    hidState.axes = [norm(lh), norm(lv), norm(rh), norm(rv)];
+    const norm2 = (v) => Math.max(-1, Math.min(1, (v - 32768) / 32768));
+    hidState.axes = [norm2(lh), norm2(lv), norm2(rh), norm2(rv)];
     hidState.hat = hat;
     hidState.raw1 = raw1;
     hidState.raw2 = raw2;
@@ -1569,6 +1707,878 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     }
   }
 
+  // packages/controller/storage.js
+  var GM_PREFIX3 = "wizascript.controller.";
+  function csGet(key2, fallback) {
+    try {
+      const v = GM_getValue(GM_PREFIX3 + key2, null);
+      return v === null || v === void 0 ? fallback : v;
+    } catch (e) {
+      console.warn("[Wizascript Controller] GM_getValue failed, falling back to default:", e);
+      return fallback;
+    }
+  }
+  function csSet(key2, value) {
+    try {
+      GM_setValue(GM_PREFIX3 + key2, value);
+    } catch (e) {
+      console.warn("[Wizascript Controller] GM_setValue failed, binding will not persist:", e);
+    }
+  }
+  function csDelete(key2) {
+    try {
+      GM_deleteValue(GM_PREFIX3 + key2);
+    } catch (e) {
+      console.warn("[Wizascript Controller] GM_deleteValue failed:", e);
+    }
+  }
+  var PRESET_COUNT = 3;
+  var DEFAULT_PRESET_NAME_PREFIX = "Preset ";
+  function getActivePreset() {
+    const raw = csGet("activePreset", "1");
+    const n = parseInt(raw, 10);
+    return Number.isNaN(n) || n < 1 || n > PRESET_COUNT ? 1 : n;
+  }
+  function setActivePreset(n) {
+    csSet("activePreset", String(n));
+  }
+  function getPresetName(n) {
+    return csGet("presetName." + n, DEFAULT_PRESET_NAME_PREFIX + n);
+  }
+  function setPresetName(n, name) {
+    const trimmed = (name || "").trim();
+    csSet("presetName." + n, trimmed === "" ? DEFAULT_PRESET_NAME_PREFIX + n : trimmed);
+  }
+  function presetKey(rawKey) {
+    return "preset" + getActivePreset() + "." + rawKey;
+  }
+  function getHudPosition() {
+    const raw = csGet("debugHudPosition", null);
+    if (!raw) return null;
+    try {
+      const pos = JSON.parse(raw);
+      if (pos && typeof pos.left === "number" && typeof pos.top === "number") return pos;
+    } catch (e) {
+      console.warn("[Wizascript Controller] stored debug HUD position was invalid JSON, ignoring:", e);
+    }
+    return null;
+  }
+  function setHudPosition(left, top) {
+    csSet("debugHudPosition", JSON.stringify({ left, top }));
+  }
+  function getCursorSensitivity() {
+    const raw = csGet("cursorSensitivity", null);
+    if (raw === null) return 0;
+    const n = parseFloat(raw);
+    return Number.isNaN(n) ? 0 : Math.max(-1, Math.min(1, n));
+  }
+  function setCursorSensitivity(v) {
+    csSet("cursorSensitivity", String(Math.max(-1, Math.min(1, v))));
+  }
+  function migrateFlatBindingsToPresetOne(controllerActionKeys, hardwareShortcutKeys) {
+    if (csGet("migratedToPresetsV056", null) !== null) return;
+    const migrate = (rawKey) => {
+      const oldVal = csGet(rawKey, null);
+      if (oldVal === null) return;
+      const newKey = "preset1." + rawKey;
+      if (csGet(newKey, null) !== null) return;
+      csSet(newKey, oldVal);
+    };
+    migrate("keybinds.__primary");
+    controllerActionKeys.forEach((key2) => migrate("keybinds." + key2));
+    hardwareShortcutKeys.forEach((key2) => migrate("shortcuts." + key2));
+    csSet("migratedToPresetsV056", "true");
+    console.log("[Wizascript Controller] migrated any pre-preset-system bindings into Preset 1.");
+  }
+  function resetPresetBindings(presetN, controllerActionKeys, hardwareShortcutKeys, tierListKeys = []) {
+    const prefix = "preset" + presetN + ".";
+    csDelete(prefix + "keybinds.__primary");
+    csDelete(prefix + "keybinds.__channelGuide");
+    controllerActionKeys.forEach((key2) => csDelete(prefix + "keybinds." + key2));
+    hardwareShortcutKeys.forEach((key2) => csDelete(prefix + "shortcuts." + key2));
+    tierListKeys.forEach((key2) => csDelete(prefix + "tierlist." + key2));
+    console.log("[Wizascript Controller] reset preset " + presetN + "'s keybinds/shortcuts to their defaults.");
+  }
+
+  // packages/controller/settings.js
+  var CONTROLLER_ACTIONS = [
+    { key: "previousChannel", name: "Previous Channel", packageLabel: "UC TV", context: "channelSwitch", defaultButton: 14, dispatch: { code: "ArrowLeft", key: "ArrowLeft" } },
+    { key: "nextChannel", name: "Next Channel", packageLabel: "UC TV", context: "channelSwitch", defaultButton: 15, dispatch: { code: "ArrowRight", key: "ArrowRight" } },
+    { key: "toggleNotepad", name: "Toggle Notepad", packageLabel: "Notepad", context: "always", defaultButton: 3, dispatch: { code: "KeyO", key: "o" } },
+    { key: "resetNotepad", name: "Reset Notepad", packageLabel: "Notepad", context: "always", defaultButton: 2, dispatch: { code: "KeyN", key: "n" } },
+    { key: "undoNotepad", name: "Undo Drawing", packageLabel: "Notepad", context: "default", defaultButton: 13, dispatch: { code: "KeyZ", key: "z" } },
+    { key: "redoNotepad", name: "Redo Drawing", packageLabel: "Notepad", context: "default", defaultButton: 12, dispatch: { code: "KeyY", key: "y" } },
+    { key: "moveEntryUp", name: "Move Entry Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
+    { key: "moveEntryDown", name: "Move Entry Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
+    // Shortened from "Move Balance Section Up/Down" - the "- Primary +
+    // <button>" suffix registerControllerSettings() appends below already
+    // pushed the combined row name wide enough to force a horizontal
+    // scrollbar in the settings dialog. "Section" alone is unambiguous
+    // here (Patch Maker only has one thing called a "section"), matching
+    // "Entry"/"Card" already being bare nouns in the two actions above.
+    { key: "moveSectionUp", name: "Move Section Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
+    { key: "moveSectionDown", name: "Move Section Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
+    { key: "moveCardUp", name: "Move Card Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
+    { key: "moveCardDown", name: "Move Card Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
+    // Relays Patch Maker's own real "Cycle Category Up/Down" keybind
+    // (packages/patch-maker/overlay.js - Comma/Period by default,
+    // scope:'scoped'/selector:'.uc-li-text', same registry Move Entry/
+    // Section/Card Up/Down above already relay into successfully) exactly
+    // the same way those do: dispatch the real e.code Wizascript's own
+    // registry is listening for while Primary is synthetically held, and
+    // let that registry's own document.activeElement/selector check
+    // decide whether it actually applies. defaultButton is D-pad Left/
+    // Right (14/15) rather than Up/Down (12/13, already claimed by Move
+    // Entry/Section/Card in this same 'patchMaker' context) specifically
+    // to avoid a same-frame double-fire - Up/Down and Left/Right dispatch
+    // different e.codes, so sharing a button between two 'patchMaker'
+    // actions would relay BOTH every time it's pressed. Left/Right is
+    // free here: previousChannel/nextChannel above claim the same two
+    // buttons, but only under 'channelSwitch' context, which is mutually
+    // exclusive with 'patchMaker' by construction (see the `applies`
+    // check in index.js's relay). This is very likely the actual
+    // technical snag from the earlier, abandoned attempt at this exact
+    // feature - reusing Up/Down here would produce confusing dual
+    // behavior (moving the entry AND cycling its category on the same
+    // press) that could easily read as "wiring it was a pain," even
+    // though the underlying relay mechanism itself works correctly in
+    // isolation (proven by Move Entry/Section/Card already using it).
+    { key: "cycleCategoryUp", name: "Cycle Category Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 14, dispatch: { code: "Comma", key: "," } },
+    { key: "cycleCategoryDown", name: "Cycle Category Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 15, dispatch: { code: "Period", key: "." } },
+    // Relays Tier List Maker's own "Toggle Tier List" keybind (Primary + L
+    // by default), like Toggle Notepad. Default: Touchpad (17), which is
+    // also End Turn's default - fine, because In-Game Inputs stand down
+    // while Controller Primary is held (index.js), so Primary + Touchpad
+    // only toggles the tier list.
+    { key: "toggleTierList", name: "Toggle Tier List", packageLabel: "Tier List", context: "always", defaultButton: 17, dispatch: { code: "KeyL", key: "l" } },
+    // Context 'tierList' (1.6.0): applies only while the tier list window is
+    // open, and then WINS over any other combo on the same button - so
+    // Primary + □ fills the screen there and still resets the Notepad
+    // everywhere else. No keyboard keybind behind it: `run` names a
+    // function index.js calls directly instead of relaying a key.
+    { key: "tierListFillScreen", name: "Fill Screen", packageLabel: "Tier List", context: "tierList", defaultButton: 2, run: "tierListFillScreen" },
+    // A middle-click at the cursor, for anything that uses one (Card History
+    // opens on a middle-click). Not in matches: there a middle-click ends the
+    // turn (UnderScript), and End Turn has its own In-Game Input.
+    { key: "middleClick", name: "Middle Click", packageLabel: "General", context: "default", defaultButton: 0, run: "middleClick" }
+  ];
+  var CONTROLLER_ACTIONS_BY_KEY = {};
+  CONTROLLER_ACTIONS.forEach((a) => {
+    CONTROLLER_ACTIONS_BY_KEY[a.key] = a;
+  });
+  var HARDWARE_SHORTCUT_ACTIONS = [
+    { key: "openSettings", name: "Open Settings" },
+    { key: "yourDustpile", name: "Check Your Dustpile" },
+    { key: "opponentDustpile", name: "Check Opponent's Dustpile" },
+    { key: "endTurn", name: "End Turn" },
+    { key: "openWizascriptSettings", name: "Open Wizascript Settings" },
+    { key: "concede", name: "Concede" },
+    { key: "goHome", name: "Go to Home Page" },
+    // Key kept as-is (stored bindings use it); shown as Card Tracker since 1.5.0.
+    { key: "openDeckTrackerPresets", name: "Open Card Tracker Presets", pluginId: "cardTracker" }
+  ];
+  var HARDWARE_SHORTCUT_DEFAULTS = {
+    openSettings: 9,
+    yourDustpile: 10,
+    opponentDustpile: 11,
+    endTurn: 17,
+    openWizascriptSettings: 7,
+    concede: 8,
+    goHome: 16,
+    openDeckTrackerPresets: 6
+  };
+  var HARDWARE_SHORTCUT_ACTIONS_BY_KEY = {};
+  HARDWARE_SHORTCUT_ACTIONS.forEach((a) => {
+    HARDWARE_SHORTCUT_ACTIONS_BY_KEY[a.key] = a;
+  });
+  var TIER_LIST_PAD_ACTIONS = [
+    { key: "tlSelect", name: "Pick Up / Place / Press", defaultButton: 0 },
+    { key: "tlBack", name: "Cancel / Back / Close", defaultButton: 1 },
+    { key: "tlQuickSend", name: "Send to Tier\u2026", defaultButton: 3 },
+    { key: "tlJump", name: "Jump: Tiers \u2194 Items", defaultButton: 2 }
+  ];
+  var TIER_LIST_PAD_ACTIONS_BY_KEY = {};
+  TIER_LIST_PAD_ACTIONS.forEach((a) => {
+    TIER_LIST_PAD_ACTIONS_BY_KEY[a.key] = a;
+  });
+  var DEFAULT_PRIMARY_BUTTON = 4;
+  function encodeBoundInput(value) {
+    if (value === null || value === void 0) return "unbound";
+    if (typeof value === "number") return String(value);
+    if (value && value.type === "key") return "kb:" + value.code;
+    return "unbound";
+  }
+  function decodeBoundInput(raw, defaultValue) {
+    if (raw === "unbound") return null;
+    if (typeof raw === "string" && raw.indexOf("kb:") === 0) return { type: "key", code: raw.slice(3) };
+    const n = parseInt(raw, 10);
+    return Number.isNaN(n) ? defaultValue : n;
+  }
+  function getControllerPrimaryButton() {
+    return decodeBoundInput(csGet(presetKey("keybinds.__primary"), String(DEFAULT_PRIMARY_BUTTON)), DEFAULT_PRIMARY_BUTTON);
+  }
+  function setControllerPrimaryButton(value) {
+    csSet(presetKey("keybinds.__primary"), encodeBoundInput(value));
+  }
+  function getChannelGuideButton() {
+    return decodeBoundInput(csGet(presetKey("keybinds.__channelGuide"), "unbound"), null);
+  }
+  function setChannelGuideButton(value) {
+    csSet(presetKey("keybinds.__channelGuide"), encodeBoundInput(value));
+  }
+  function getBoundButton(actionKey) {
+    const action = CONTROLLER_ACTIONS_BY_KEY[actionKey];
+    return decodeBoundInput(csGet(presetKey("keybinds." + actionKey), String(action.defaultButton)), action.defaultButton);
+  }
+  function setBoundButton(actionKey, value) {
+    csSet(presetKey("keybinds." + actionKey), encodeBoundInput(value));
+  }
+  function getBoundTierListButton(actionKey) {
+    const action = TIER_LIST_PAD_ACTIONS_BY_KEY[actionKey];
+    return decodeBoundInput(csGet(presetKey("tierlist." + actionKey), String(action.defaultButton)), action.defaultButton);
+  }
+  function setBoundTierListButton(actionKey, value) {
+    csSet(presetKey("tierlist." + actionKey), encodeBoundInput(value));
+  }
+  function getBoundShortcutButton(actionKey) {
+    const defaultButton = HARDWARE_SHORTCUT_DEFAULTS[actionKey];
+    return decodeBoundInput(csGet(presetKey("shortcuts." + actionKey), String(defaultButton)), defaultButton);
+  }
+  function setBoundShortcutButton(actionKey, value) {
+    csSet(presetKey("shortcuts." + actionKey), encodeBoundInput(value));
+  }
+  var controllerEnabledSetting = null;
+  function isControllerSupportEnabled() {
+    if (!controllerEnabledSetting || typeof controllerEnabledSetting.value !== "function") return true;
+    try {
+      const v = controllerEnabledSetting.value();
+      return v === void 0 || v === null ? true : !!v;
+    } catch (e) {
+      return true;
+    }
+  }
+  var debugTextEnabledSetting = null;
+  var debugTextCheckedLive = null;
+  function observeDebugTextCheckbox(el3) {
+    el3.setAttribute("data-wc-enhanced", "true");
+    debugTextCheckedLive = !!el3.checked;
+    el3.addEventListener("change", () => {
+      debugTextCheckedLive = !!el3.checked;
+    });
+  }
+  function isDebugTextEnabled() {
+    if (debugTextCheckedLive !== null) return debugTextCheckedLive;
+    if (!debugTextEnabledSetting || typeof debugTextEnabledSetting.value !== "function") return false;
+    try {
+      return !!debugTextEnabledSetting.value();
+    } catch (e) {
+      return false;
+    }
+  }
+  var HIGHLIGHT_COLOR_PRESETS = [
+    ["Light Blue (default)", "#3ea6ff"],
+    ["Yellow", "#ffff00"],
+    // JUSTICE
+    ["Red", "red"],
+    // DETERMINATION
+    ["Green", "#00c000"],
+    // KINDNESS
+    ["Orange", "#fca500"],
+    // BRAVERY
+    ["Blue", "#0064ff"],
+    // INTEGRITY
+    ["Cyan", "#41fcff"],
+    // PATIENCE
+    ["Magenta", "#d535d9"]
+    // PERSEVERANCE
+  ];
+  var DEFAULT_HIGHLIGHT_COLOR = HIGHLIGHT_COLOR_PRESETS[0][1];
+  var highlightColorSetting = null;
+  var highlightColorLive = null;
+  function observeHighlightColorSelect(el3) {
+    el3.setAttribute("data-wc-enhanced", "true");
+    highlightColorLive = el3.value || null;
+    el3.addEventListener("change", () => {
+      highlightColorLive = el3.value || null;
+    });
+  }
+  function getHighlightColor() {
+    if (highlightColorLive) return highlightColorLive;
+    if (!highlightColorSetting || typeof highlightColorSetting.value !== "function") return DEFAULT_HIGHLIGHT_COLOR;
+    try {
+      return highlightColorSetting.value() || DEFAULT_HIGHLIGHT_COLOR;
+    } catch (e) {
+      return DEFAULT_HIGHLIGHT_COLOR;
+    }
+  }
+  var controllerCaptureActive = false;
+  function isControllerCaptureActive() {
+    return controllerCaptureActive;
+  }
+  var boundInputRefreshers = [];
+  function enhanceControllerInfoRow(el3) {
+    el3.setAttribute("data-wc-enhanced", "true");
+    el3.readOnly = true;
+    el3.tabIndex = -1;
+    el3.style.display = "none";
+  }
+  function enhanceControllerCaptureInput(el3, readBound, writeBound) {
+    el3.setAttribute("data-wc-enhanced", "true");
+    el3.readOnly = true;
+    Object.assign(el3.style, {
+      cursor: "pointer",
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      el3.value = bindingToDisplay(readBound());
+    }
+    refreshDisplay();
+    boundInputRefreshers.push(refreshDisplay);
+    el3.addEventListener("focus", () => {
+      el3.style.border = "1px solid #40E0D0";
+      el3.style.boxShadow = "0 0 4px #40E0D0";
+      el3.value = "Press a button or key...";
+      controllerCaptureActive = true;
+      let cancelled = false;
+      let ignoreUntilReleased = /* @__PURE__ */ new Set();
+      const gp0 = getMergedGamepad();
+      if (gp0) gp0.buttons.forEach((b, i) => {
+        if (b && b.pressed) ignoreUntilReleased.add(i);
+      });
+      function captureFrame() {
+        if (cancelled) return;
+        const gp = getMergedGamepad();
+        if (gp) {
+          gp.buttons.forEach((b, i) => {
+            if (!b) return;
+            if (!b.pressed) {
+              ignoreUntilReleased.delete(i);
+              return;
+            }
+            if (ignoreUntilReleased.has(i)) return;
+            finishCapture(i);
+          });
+        }
+        if (!cancelled) requestAnimationFrame(captureFrame);
+      }
+      function finishCapture(value) {
+        if (cancelled) return;
+        cancelled = true;
+        writeBound(value);
+        cleanup();
+        el3.blur();
+      }
+      function onKeydown(e) {
+        if (cancelled) return;
+        if (e.key === "Escape") {
+          e.preventDefault();
+          cancelled = true;
+          writeBound(null);
+          cleanup();
+          el3.blur();
+          return;
+        }
+        if (e.key === "Shift" || e.key === "Control" || e.key === "Alt" || e.key === "Meta") return;
+        const gpNow = getMergedGamepad();
+        if (gpNow && gpNow.buttons.some((b) => b && b.pressed)) return;
+        e.preventDefault();
+        finishCapture({ type: "key", code: e.code });
+      }
+      function cleanup() {
+        document.removeEventListener("keydown", onKeydown, true);
+      }
+      document.addEventListener("keydown", onKeydown, true);
+      requestAnimationFrame(captureFrame);
+      el3.addEventListener("blur", function onBlur() {
+        cancelled = true;
+        controllerCaptureActive = false;
+        el3.style.border = "1px solid #b4b4b4";
+        el3.style.boxShadow = "none";
+        cleanup();
+        refreshDisplay();
+        scheduleControllerConflictRefresh();
+        el3.removeEventListener("blur", onBlur);
+      });
+    });
+  }
+  var presetMenuState = null;
+  function getPresetMenuState() {
+    return presetMenuState;
+  }
+  function enhancePresetSelector(el3) {
+    el3.setAttribute("data-wc-enhanced", "true");
+    el3.readOnly = true;
+    el3.tabIndex = 0;
+    Object.assign(el3.style, {
+      cursor: "pointer",
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      el3.value = getPresetName(getActivePreset());
+    }
+    refreshDisplay();
+    boundInputRefreshers.push(refreshDisplay);
+    let menuEl = null;
+    function onOutsideClick(e) {
+      if (menuEl && !menuEl.contains(e.target) && e.target !== el3) closeMenu();
+    }
+    function onEscape(e) {
+      if (e.key === "Escape") closeMenu();
+    }
+    function closeMenu() {
+      if (!menuEl) return;
+      menuEl.remove();
+      menuEl = null;
+      presetMenuState = null;
+      document.removeEventListener("mousedown", onOutsideClick, true);
+      document.removeEventListener("keydown", onEscape, true);
+    }
+    function openMenu3() {
+      if (menuEl) {
+        closeMenu();
+        return;
+      }
+      const rect = el3.getBoundingClientRect();
+      menuEl = document.createElement("div");
+      Object.assign(menuEl.style, {
+        position: "fixed",
+        left: rect.left + "px",
+        top: rect.bottom + 2 + "px",
+        width: Math.max(rect.width, 140) + "px",
+        background: "#111",
+        border: "1px solid #40E0D0",
+        borderRadius: "3px",
+        zIndex: 2147483647,
+        overflow: "hidden",
+        fontFamily: "inherit"
+      });
+      const rowEls = [];
+      for (let n = 1; n <= PRESET_COUNT; n++) {
+        const isActive = n === getActivePreset();
+        const row2 = document.createElement("div");
+        row2.textContent = getPresetName(n) + (isActive ? "  \u2713" : "");
+        Object.assign(row2.style, {
+          padding: "6px 10px",
+          cursor: "pointer",
+          color: "white",
+          background: isActive ? "#333" : "transparent"
+        });
+        row2.addEventListener("mouseenter", () => {
+          row2.style.background = "#40E0D0";
+          row2.style.color = "black";
+        });
+        row2.addEventListener("mouseleave", () => {
+          row2.style.background = isActive ? "#333" : "transparent";
+          row2.style.color = "white";
+        });
+        row2.addEventListener("click", () => {
+          setActivePreset(n);
+          closeMenu();
+          boundInputRefreshers.forEach((fn) => fn());
+          if (isDebugTextEnabled()) console.log("[Wizascript Controller] switched to preset", n, "(" + getPresetName(n) + ")");
+        });
+        menuEl.appendChild(row2);
+        rowEls.push(row2);
+      }
+      document.body.appendChild(menuEl);
+      document.addEventListener("mousedown", onOutsideClick, true);
+      document.addEventListener("keydown", onEscape, true);
+      presetMenuState = { rows: rowEls, activeIndex: Math.max(0, getActivePreset() - 1), close: closeMenu };
+    }
+    el3.addEventListener("click", openMenu3);
+  }
+  function enhancePresetNameInput(el3) {
+    el3.setAttribute("data-wc-enhanced", "true");
+    el3.readOnly = false;
+    Object.assign(el3.style, {
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      if (document.activeElement !== el3) el3.value = getPresetName(getActivePreset());
+    }
+    refreshDisplay();
+    boundInputRefreshers.push(refreshDisplay);
+    function commit() {
+      setPresetName(getActivePreset(), el3.value);
+      boundInputRefreshers.forEach((fn) => fn());
+    }
+    el3.addEventListener("blur", commit);
+    el3.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") el3.blur();
+    });
+  }
+  function enhanceResetButton(el3) {
+    el3.setAttribute("data-wc-enhanced", "true");
+    el3.readOnly = true;
+    el3.tabIndex = 0;
+    Object.assign(el3.style, {
+      cursor: "pointer",
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      el3.value = "Double Click to Reset";
+    }
+    refreshDisplay();
+    boundInputRefreshers.push(refreshDisplay);
+    el3.addEventListener("dblclick", () => {
+      resetPresetBindings(getActivePreset(), CONTROLLER_ACTIONS.map((a) => a.key), HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key), TIER_LIST_PAD_ACTIONS.map((a) => a.key));
+      boundInputRefreshers.forEach((fn) => fn());
+      el3.value = "\u2705 Reset to Defaults";
+      setTimeout(refreshDisplay, 1500);
+    });
+  }
+  function enhanceDetectControllerButton(el3) {
+    el3.setAttribute("data-wc-enhanced", "true");
+    el3.readOnly = true;
+    el3.tabIndex = 0;
+    Object.assign(el3.style, {
+      cursor: "pointer",
+      backgroundColor: "black",
+      color: "white",
+      border: "1px solid #b4b4b4",
+      borderRadius: "3px",
+      textAlign: "center"
+    });
+    function refreshDisplay() {
+      el3.value = isHidConnected() ? "\u2705 Controller Detected (WebHID)" : "\u{1F3AE} Click to Detect Controller (WebHID)";
+    }
+    refreshDisplay();
+    boundInputRefreshers.push(refreshDisplay);
+    el3.addEventListener("click", async () => {
+      if (isHidConnected()) return;
+      el3.value = "Check your browser's device picker\u2026";
+      try {
+        await connectWebHidController();
+      } finally {
+        refreshDisplay();
+      }
+    });
+  }
+  var CONFLICT_CLASS = "wizascript-controller-warning";
+  var BUILT_IN_BUTTON_USES = {
+    0: "clicks / selects",
+    1: "goes back / cancels",
+    3: "right-clicks",
+    12: "navigates up",
+    13: "navigates down",
+    14: "navigates left",
+    15: "navigates right",
+    5: "opens UnderScript's menu (and switches tabs in Settings)"
+  };
+  var GUIDE_BUTTONS = /* @__PURE__ */ new Set([0, 12, 13, 14, 15]);
+  function sameInput(a, b) {
+    if (a === null || a === void 0 || b === null || b === void 0) return false;
+    if (typeof a === "number" || typeof b === "number") return a === b;
+    return a.type === "key" && b.type === "key" && a.code === b.code;
+  }
+  function contextsOverlap(a, b) {
+    if (a === "tierList" || b === "tierList") return a === b;
+    if (a === "always" || b === "always") return true;
+    const outside = (c) => c === "channelSwitch" || c === "default";
+    if (outside(a) && outside(b)) return true;
+    return a === "patchMaker" && b === "patchMaker";
+  }
+  function computeControllerConflicts() {
+    const out = /* @__PURE__ */ new Map();
+    const add = (key2, msg) => {
+      if (!out.has(key2)) out.set(key2, []);
+      out.get(key2).push(msg);
+    };
+    const primary2 = getControllerPrimaryButton();
+    const guide = isPluginEnabled("ucTv") ? getChannelGuideButton() : null;
+    const combos = CONTROLLER_ACTIONS.filter((a) => {
+      const id = pluginIdForLabel(a.packageLabel);
+      return !id || isPluginEnabled(id);
+    }).map((a) => ({ a, input: getBoundButton(a.key), code: a.dispatch ? getBoundKeybindCode(a.key, a.dispatch.code) : "run:" + a.key })).filter((c) => c.input !== null);
+    const shortcuts = HARDWARE_SHORTCUT_ACTIONS.filter((a) => !a.pluginId || isPluginEnabled(a.pluginId)).map((a) => ({ a, row: "shortcut_" + a.key, input: getBoundShortcutButton(a.key) })).filter((c) => c.input !== null);
+    if (primary2 !== null && typeof primary2 === "number" && BUILT_IN_BUTTON_USES[primary2]) {
+      add("controllerPrimary", `This button also ${BUILT_IN_BUTTON_USES[primary2]}, which stops working while it's your Primary.`);
+    }
+    if (guide !== null) {
+      if (sameInput(guide, primary2)) {
+        add("channelGuide", "Same button as Controller Primary.");
+        add("controllerPrimary", "Same button as Channel Guide.");
+      }
+      if (typeof guide === "number" && GUIDE_BUTTONS.has(guide)) {
+        add("channelGuide", "The channel guide uses the d-pad and " + bindingToDisplay(0) + " to pick a channel, so this button would clash with it.");
+      }
+    }
+    shortcuts.forEach(({ a, row: row2, input }, i) => {
+      if (sameInput(input, primary2)) {
+        add(row2, "Same button as Controller Primary - pressing Primary will also do this.");
+        add("controllerPrimary", `Same button as ${a.name} - pressing Primary will also do that.`);
+      }
+      if (sameInput(input, guide)) {
+        add(row2, "Same button as Channel Guide - both will happen.");
+        add("channelGuide", `Same button as ${a.name} - both will happen.`);
+      }
+      shortcuts.forEach(({ a: other, input: otherInput }, j) => {
+        if (i !== j && sameInput(input, otherInput)) add(row2, `Same button as ${other.name} - both will happen.`);
+      });
+      if (typeof input === "number" && BUILT_IN_BUTTON_USES[input]) {
+        add(row2, `This button also ${BUILT_IN_BUTTON_USES[input]}, so pressing it will do both.`);
+      }
+    });
+    const padControls = isPluginEnabled("tierList") ? TIER_LIST_PAD_ACTIONS.map((a) => ({ a, row: "tierlistPad_" + a.key, input: getBoundTierListButton(a.key) })).filter((c) => c.input !== null) : [];
+    padControls.forEach(({ a, row: row2, input }, i) => {
+      padControls.forEach(({ a: other, input: otherInput }, j) => {
+        if (i !== j && sameInput(input, otherInput)) add(row2, `Same button as ${other.name} - only one of them will work.`);
+      });
+      if (typeof input === "number" && input >= 12 && input <= 15) add(row2, "The d-pad moves around the tier list, so this button can't do this too.");
+      if (sameInput(input, primary2)) add(row2, "Same button as Controller Primary, so this can't be pressed.");
+      if (sameInput(input, guide)) add(row2, "Same button as Channel Guide - both will happen.");
+      if (input === 5) add(row2, "This button also opens UnderScript's menu, which would cover the tier list.");
+      shortcuts.forEach(({ a: sc, row: scRow, input: scInput }) => {
+        if (!sameInput(input, scInput)) return;
+        add(row2, `Also ${sc.name} (In-Game Inputs) - while the tier list is open, this wins.`);
+        add(scRow, `Also the Tier List's ${a.name} - while the tier list is open, that wins.`);
+      });
+    });
+    combos.forEach(({ a, input, code }, i) => {
+      if (sameInput(input, primary2)) add(a.key, "Same button as Controller Primary, so this combo can't be pressed.");
+      if (sameInput(input, guide)) add(a.key, "Same button as Channel Guide - both will happen.");
+      combos.forEach(({ a: other, input: otherInput, code: otherCode }, j) => {
+        if (i === j || !sameInput(input, otherInput) || code === otherCode) return;
+        if (!contextsOverlap(a.context, other.context)) return;
+        add(a.key, `Same button as ${other.name} - both will happen.`);
+      });
+    });
+    return out;
+  }
+  function refreshControllerConflictWarnings() {
+    const prefix = "underscript.plugin.Wizascript.controller.";
+    if (!document.querySelector(`[id^="${prefix}"]`)) return;
+    const conflicts = computeControllerConflicts();
+    const rowKeys = ["controllerPrimary", "channelGuide"].concat(CONTROLLER_ACTIONS.map((a) => a.key)).concat(HARDWARE_SHORTCUT_ACTIONS.map((a) => "shortcut_" + a.key)).concat(TIER_LIST_PAD_ACTIONS.map((a) => "tierlistPad_" + a.key));
+    rowKeys.forEach((key2) => {
+      const input = document.getElementById(prefix + key2);
+      const row2 = input && input.closest(".flex-start");
+      if (!row2) return;
+      const messages = conflicts.get(key2) || [];
+      let warn2 = row2.querySelector(`:scope > .${CONFLICT_CLASS}`);
+      if (!messages.length) {
+        if (warn2) warn2.remove();
+        return;
+      }
+      const text = messages.map((m) => "\u26A0 " + m).join("\n");
+      if (!warn2) {
+        warn2 = document.createElement("div");
+        warn2.className = `setting-description ${CONFLICT_CLASS}`;
+        Object.assign(warn2.style, { color: "#ffb347", opacity: "1", whiteSpace: "pre-line" });
+        row2.appendChild(warn2);
+      }
+      if (warn2.textContent !== text) warn2.textContent = text;
+    });
+  }
+  var controllerConflictRefreshQueued = false;
+  function scheduleControllerConflictRefresh() {
+    if (controllerConflictRefreshQueued) return;
+    controllerConflictRefreshQueued = true;
+    setTimeout(() => {
+      controllerConflictRefreshQueued = false;
+      refreshControllerConflictWarnings();
+    }, 0);
+  }
+  boundInputRefreshers.push(scheduleControllerConflictRefresh);
+  var controllerObserverStarted = false;
+  function startControllerKeybindObserver(idPrefix) {
+    if (controllerObserverStarted) return;
+    controllerObserverStarted = true;
+    let everFoundOne = false;
+    const observer2 = new MutationObserver(() => {
+      const matches = document.querySelectorAll(`input[id^="${idPrefix}"]:not([data-wc-enhanced]), select[id^="${idPrefix}"]:not([data-wc-enhanced])`);
+      if (matches.length) scheduleControllerConflictRefresh();
+      matches.forEach((el3) => {
+        everFoundOne = true;
+        const bindingKey = el3.id.slice(idPrefix.length);
+        if (bindingKey.startsWith("__info_")) {
+          enhanceControllerInfoRow(el3);
+          return;
+        }
+        if (bindingKey === "detectController") {
+          enhanceDetectControllerButton(el3);
+          return;
+        }
+        if (bindingKey === "presetSelector") {
+          enhancePresetSelector(el3);
+          return;
+        }
+        if (bindingKey === "presetName") {
+          enhancePresetNameInput(el3);
+          return;
+        }
+        if (bindingKey === "resetPreset") {
+          enhanceResetButton(el3);
+          return;
+        }
+        if (bindingKey === "controllerPrimary") {
+          enhanceControllerCaptureInput(el3, () => getControllerPrimaryButton(), (v) => setControllerPrimaryButton(v));
+          return;
+        }
+        if (bindingKey === "channelGuide") {
+          enhanceControllerCaptureInput(el3, () => getChannelGuideButton(), (v) => setChannelGuideButton(v));
+          return;
+        }
+        if (CONTROLLER_ACTIONS_BY_KEY[bindingKey]) {
+          enhanceControllerCaptureInput(el3, () => getBoundButton(bindingKey), (v) => setBoundButton(bindingKey, v));
+          return;
+        }
+        if (bindingKey.startsWith("tierlistPad_")) {
+          const padKey = bindingKey.slice("tierlistPad_".length);
+          if (TIER_LIST_PAD_ACTIONS_BY_KEY[padKey]) {
+            enhanceControllerCaptureInput(el3, () => getBoundTierListButton(padKey), (v) => setBoundTierListButton(padKey, v));
+            return;
+          }
+        }
+        if (bindingKey.startsWith("shortcut_")) {
+          const shortcutKey = bindingKey.slice("shortcut_".length);
+          if (HARDWARE_SHORTCUT_ACTIONS_BY_KEY[shortcutKey]) {
+            enhanceControllerCaptureInput(el3, () => getBoundShortcutButton(shortcutKey), (v) => setBoundShortcutButton(shortcutKey, v));
+            return;
+          }
+        }
+        if (bindingKey === "debugTextEnabled") {
+          observeDebugTextCheckbox(el3);
+          return;
+        }
+        if (bindingKey === "highlightColor") {
+          observeHighlightColorSelect(el3);
+          return;
+        }
+        el3.setAttribute("data-wc-enhanced", "true");
+      });
+    });
+    observer2.observe(document.body, { childList: true, subtree: true });
+    setTimeout(() => {
+      if (!everFoundOne && isDebugLogging()) {
+        console.warn('[Wizascript Controller] never found any "Keybinds - Controller" <input> elements to enhance after 15s - either the category never rendered, or the assumed id pattern (' + idPrefix + "<key>) is wrong.");
+      }
+    }, 15e3);
+  }
+  function registerControllerSettings(plugin, controllerEnabledSettingIn) {
+    migrateFlatBindingsToPresetOne(
+      CONTROLLER_ACTIONS.map((a) => a.key),
+      HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key)
+    );
+    controllerEnabledSetting = controllerEnabledSettingIn;
+    const settings4 = createFeatureSettings(plugin, "controller", {
+      tab: "Controller Support",
+      visible: () => isPluginEnabled("controller"),
+      categories: true
+    });
+    const SETUP = "Setup";
+    const GENERAL = "General";
+    const IN_GAME = "In-Game Inputs";
+    const hiddenUnless = (pluginId) => () => pluginId ? !isPluginEnabled(pluginId) : false;
+    settings4.add("detectController", {
+      name: "Detect Controller",
+      note: "Click if your controller isn't responding.",
+      type: "text",
+      default: "Click to Detect Controller (WebHID)",
+      category: SETUP
+    });
+    settings4.add("presetSelector", {
+      name: "Settings Preset",
+      note: "Click to switch presets.",
+      type: "text",
+      default: getPresetName(getActivePreset()),
+      category: SETUP
+    });
+    settings4.add("presetName", {
+      name: "Preset Name",
+      note: "Renames whichever preset is currently selected above.",
+      type: "text",
+      default: getPresetName(getActivePreset()),
+      category: SETUP
+    });
+    settings4.add("resetPreset", {
+      name: "Restore Settings to Default",
+      note: "Double Click to reset selected preset settings",
+      type: "text",
+      default: "Double Click to Reset",
+      category: SETUP
+    });
+    debugTextEnabledSetting = settings4.add("debugTextEnabled", {
+      name: "Enable Debug Text",
+      type: "boolean",
+      default: false,
+      category: GENERAL
+    });
+    highlightColorSetting = settings4.add("highlightColor", {
+      name: "Selection Outline Color",
+      type: "select",
+      data: HIGHLIGHT_COLOR_PRESETS,
+      default: DEFAULT_HIGHLIGHT_COLOR,
+      category: GENERAL
+    });
+    settings4.add("controllerPrimary", {
+      name: "Controller Primary",
+      note: "Click to remap. Hold for combos below, same as Wizascript's own Primary Key.",
+      type: "text",
+      default: buttonToDisplay(DEFAULT_PRIMARY_BUTTON),
+      category: GENERAL
+    });
+    settings4.add("__info_openSettings", { name: "Double Tap Primary \u2192 Open Wizascript Settings", type: "text", default: "", category: GENERAL });
+    const seenLabels = /* @__PURE__ */ new Set();
+    CONTROLLER_ACTIONS.forEach((action) => {
+      if (!seenLabels.has(action.packageLabel)) {
+        seenLabels.add(action.packageLabel);
+        if (action.packageLabel === "UC TV") {
+          settings4.add("channelGuide", {
+            name: "Channel Guide (hold)",
+            type: "text",
+            default: buttonToDisplay(null),
+            category: "UC TV",
+            hidden: hiddenUnless("ucTv")
+          });
+        }
+      }
+      settings4.add(action.key, {
+        name: action.name + " - Primary + <btn>",
+        type: "text",
+        default: buttonToDisplay(action.defaultButton),
+        category: action.packageLabel,
+        hidden: hiddenUnless(pluginIdForLabel(action.packageLabel))
+      });
+    });
+    TIER_LIST_PAD_ACTIONS.forEach((action) => {
+      settings4.add("tierlistPad_" + action.key, {
+        name: action.name,
+        note: "While the tier list is open. The d-pad moves around it.",
+        type: "text",
+        default: buttonToDisplay(action.defaultButton),
+        category: "Tier List",
+        hidden: hiddenUnless("tierList")
+      });
+    });
+    HARDWARE_SHORTCUT_ACTIONS.forEach((action) => {
+      settings4.add("shortcut_" + action.key, {
+        name: action.name,
+        type: "text",
+        default: buttonToDisplay(HARDWARE_SHORTCUT_DEFAULTS[action.key]),
+        category: IN_GAME,
+        hidden: hiddenUnless(action.pluginId)
+      });
+    });
+    startControllerKeybindObserver("underscript.plugin.Wizascript.controller.");
+  }
+
   // packages/core/plugin-guides.js
   function esc(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -1579,6 +2589,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   }
   var primary = () => `<b>${esc(getPrimaryKeyDisplay())}</b>`;
   var pad = (i) => `<b>${esc(bindingToDisplay(i))}</b>`;
+  var ctl = (binding) => `<b>${esc(bindingToDisplay(binding))}</b>`;
   var GUIDES = {
     patchMaker: {
       tab: "Patch Maker",
@@ -1655,6 +2666,45 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         "Tagged cards show coloured dots. Type a tag's name into the search bar to show only cards with that tag.",
         "<b>Manage Tags\u2026</b> (in the right-click menu) renames, recolours and deletes tags, and can <b>Share\u2026</b> / <b>Import\u2026</b> tags with friends."
       ]
+    },
+    wishlist: {
+      tab: "Cosmetic Wishlist",
+      pages: "every page (the shop is checked in the background)",
+      summary: "Pin avatars, emotes and profile skins you want, and get a message when the Cosmetics Shop has them.",
+      points: () => [
+        "<b>Right-click</b> an avatar, emote or profile skin (in chat, in matches, or in the Cosmetics Shop) and choose <b>Add to Wishlist</b>. Right-click it again to remove it, or use <b>\xD7</b> on this tab.",
+        "When something you pinned is in the shop, a message pops up with <b>Take me there!</b>. Things you buy leave the list by themselves.",
+        "The shop is checked after each refresh (see <b>Shop Check Frequency</b>), never during a match. <b>Check Shop Now</b> checks straight away.",
+        "Free cosmetics (0 UCP) can't be pinned - everyone already has them."
+      ].concat(isPluginEnabled("controller") ? [
+        `Controller: point the cursor at it, press ${pad(3)} to right-click, then ${pad(0)} on the menu. ${pad(1)} closes it.`
+      ] : [])
+    },
+    cardHistory: {
+      tab: null,
+      pages: "the Crafting, Decks and Artifacts pages",
+      summary: "See every earlier version of a card or artifact.",
+      points: () => [
+        "<b>Middle-click</b> a card (Crafting, Decks) or an artifact (Artifacts) to open its history, oldest first.",
+        "The number under each version is the patch it came from. <b>*</b> means not certain or has a note: rest the mouse on it.",
+        "<b>?</b> means that part isn't recorded anywhere. History comes from both Undercards wikis, the patch notes and feildmaster's Card-Tracker.",
+        "Looks wrong? <b>Right-click</b> that version and report it (\u2691). <b>My Reports</b> \u2192 <b>Send</b> opens the chat with it typed in: press Enter. <b>\u26A0</b> = already reported."
+      ].concat(isPluginEnabled("controller") ? [
+        `Controller: point the cursor at it and press Primary + ${ctl(getBoundButton("middleClick"))} (Middle Click). ${pad(3)} right-clicks to report.`
+      ] : [])
+    },
+    tierList: {
+      tab: "Tier List",
+      pages: "every page, including matches",
+      summary: "Rank cards, souls and artifacts in your own tier lists.",
+      points: () => [
+        `${key("toggleTierList", "KeyL")} shows/hides the window. Drag its title bar to move it, its edges to resize it; <b>\u25A1</b> fills the screen.`,
+        "Pick <b>Cards</b>, <b>Souls</b>, <b>Artifacts</b> or <b>Text</b> in the bottom panel, then drag items into a tier. With Card Tags on, the card search also finds your tags. On Crafting/Decks you can drag cards straight from the page.",
+        "Click a tier's label (or <b>\u2699</b>) to edit it. Drag an item back to the panel to unrank it. Rest the mouse on a card to see it in full.",
+        "<b>Lists \u25BE</b> switches or adds lists, and <b>Share\u2026</b> / <b>Import\u2026</b> swaps them with friends as codes. Saves automatically; <b>\u21B6</b> undoes."
+      ].concat(isPluginEnabled("controller") ? [
+        `Controller: Primary + ${ctl(getBoundButton("toggleTierList"))} opens it. The d-pad moves around; ${ctl(getBoundTierListButton("tlSelect"))} picks up / places, ${ctl(getBoundTierListButton("tlQuickSend"))} sends to a tier, ${ctl(getBoundTierListButton("tlJump"))} jumps between tiers and items, ${ctl(getBoundTierListButton("tlBack"))} cancels. Primary + ${ctl(getBoundButton("tierListFillScreen"))} fills the screen.`
+      ] : [])
     }
   };
   function pluginName(id) {
@@ -1681,38 +2731,38 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     Object.entries(GUIDES).forEach(([id, g]) => {
       if (g.tab) {
         const categorised = g.tab === "Controller Support";
-        const settings2 = createFeatureSettings(plugin, "guide", {
+        const settings4 = createFeatureSettings(plugin, "guide", {
           tab: g.tab,
           visible: () => isPluginEnabled(id),
           categories: categorised
         });
-        settings2.add(id, {
+        settings4.add(id, {
           name: `How to use ${pluginName(id)}`,
           type: "text",
           default: "",
           category: "About"
         });
-        registerSettingWidget(`guide.${id}`, (el2) => {
-          el2.readOnly = true;
-          el2.tabIndex = -1;
-          el2.style.display = "none";
-          const row = el2.closest(".flex-start");
-          if (!row) return;
-          const label = row.querySelector("label");
+        registerSettingWidget(`guide.${id}`, (el3) => {
+          el3.readOnly = true;
+          el3.tabIndex = -1;
+          el3.style.display = "none";
+          const row2 = el3.closest(".flex-start");
+          if (!row2) return;
+          const label = row2.querySelector("label");
           if (label) label.style.fontWeight = "bold";
           const box = document.createElement("div");
           box.className = "wizascript-guide";
           box.style.cssText = BOX_STYLE;
           box.innerHTML = guideHtml(id);
-          row.appendChild(box);
+          row2.appendChild(box);
         });
       }
       const toggle = PLUGINS.find((p) => p.id === id);
       if (!toggle) return;
-      registerSettingWidget(toggle.key, (el2) => {
-        const row = el2.closest(".flex-start");
-        const label = row && row.querySelector("label");
-        if (!label || row.querySelector(".wizascript-guide-link")) return;
+      registerSettingWidget(toggle.key, (el3) => {
+        const row2 = el3.closest(".flex-start");
+        const label = row2 && row2.querySelector("label");
+        if (!label || row2.querySelector(".wizascript-guide-link")) return;
         const link = document.createElement("a");
         link.href = "#";
         link.className = "wizascript-guide-link";
@@ -1773,18 +2823,18 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     }
   }
   function makeArrow(view, text, dir) {
-    const el2 = document.createElement("div");
-    el2.className = `tabLabel ${ARROW_CLASS}`;
-    el2.dataset.dir = String(dir);
-    el2.textContent = text;
-    el2.title = dir < 0 ? "Previous tabs" : "More tabs";
-    el2.addEventListener("click", (e) => {
+    const el3 = document.createElement("div");
+    el3.className = `tabLabel ${ARROW_CLASS}`;
+    el3.dataset.dir = String(dir);
+    el3.textContent = text;
+    el3.title = dir < 0 ? "Previous tabs" : "More tabs";
+    el3.addEventListener("click", (e) => {
       e.preventDefault();
-      if (el2.classList.contains("disabled")) return;
+      if (el3.classList.contains("disabled")) return;
       currentPage += dir;
       layout(view);
     });
-    return el2;
+    return el3;
   }
   function ensureArrows(view) {
     let left = view.querySelector(`:scope > .${ARROW_CLASS}[data-dir="-1"]`);
@@ -1912,26 +2962,26 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
 
   // packages/patch-maker/settings.js
   function registerPatchMakerSettings(plugin) {
-    const settings2 = createFeatureSettings(plugin, "patchmaker", {
+    const settings4 = createFeatureSettings(plugin, "patchmaker", {
       tab: "Patch Maker",
       visible: () => isPluginEnabled("patchMaker")
     });
     return {
-      settings: settings2,
+      settings: settings4,
       // The on/off switch itself now lives in the Plugins list (core/plugins.js).
       enabled: getPluginToggle("patchMaker"),
       // One suite-wide switch on the General tab since 1.5.0 (core/debug.js).
       debugLogging: debugLoggingSetting,
-      hideControls: settings2.add("hideControls", { name: "Hide Patch Maker controls", type: "boolean", default: false }),
-      cardHovers: settings2.add("enableCardHovers", { name: "Enable card hovers", type: "boolean", default: true }),
-      language: settings2.add("patchLanguage", {
+      hideControls: settings4.add("hideControls", { name: "Hide Patch Maker controls", type: "boolean", default: false }),
+      cardHovers: settings4.add("enableCardHovers", { name: "Enable card hovers", type: "boolean", default: true }),
+      language: settings4.add("patchLanguage", {
         name: "Select Language",
         type: "select",
         options: ["Auto / Default", "English", "French", "Spanish", "Portuguese", "Chinese", "Italian", "Polish", "German", "Russian"],
         default: "Auto / Default",
         onChange: () => location.reload()
       }),
-      openOnLoad: settings2.add("openPatchNotesOnPageLoad", { name: "Auto-Load Patch Maker", type: "boolean", default: false })
+      openOnLoad: settings4.add("openPatchNotesOnPageLoad", { name: "Auto-Load Patch Maker", type: "boolean", default: false })
     };
   }
 
@@ -2196,8 +3246,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   }
   function insertUnderlineMarkers(text, underlineTokens) {
     let result = text;
-    underlineTokens.forEach((token) => {
-      const re = new RegExp(`(^|[^A-Za-z0-9])(${escapeRegExp(token)})(?=([^A-Za-z0-9]|$))`, "g");
+    underlineTokens.forEach((token2) => {
+      const re = new RegExp(`(^|[^A-Za-z0-9])(${escapeRegExp(token2)})(?=([^A-Za-z0-9]|$))`, "g");
       result = result.replace(re, (m, pre, word) => pre + UL_OPEN + word + UL_CLOSE);
     });
     return result;
@@ -2731,12 +3781,12 @@ html, body { overflow-x: hidden !important; }
   }
   async function ensureLanguageLoaded(lang) {
     if (!lang || lang === "en" || loadedLanguages.has(lang)) return;
-    const i18n = getI18n();
-    if (!i18n) return;
+    const i18n2 = getI18n();
+    if (!i18n2) return;
     const version = getTranslateVersion();
     const path = `/translation/${lang}.json${version ? "?v=" + version : ""}`;
     await new Promise((resolve2, reject) => {
-      const deferred = i18n().load({ [lang]: path });
+      const deferred = i18n2().load({ [lang]: path });
       if (deferred && typeof deferred.done === "function") {
         deferred.done(resolve2);
         if (typeof deferred.fail === "function") deferred.fail(reject);
@@ -2747,10 +3797,10 @@ html, body { overflow-x: hidden !important; }
     loadedLanguages.add(lang);
   }
   function getLocalizedString(key2, ...args) {
-    const i18n = getI18n();
-    if (!i18n) return "";
+    const i18n2 = getI18n();
+    if (!i18n2) return "";
     try {
-      const value = i18n.apply(i18n, [key2, ...args]);
+      const value = i18n2.apply(i18n2, [key2, ...args]);
       return !value || value === key2 ? "" : String(value).trim();
     } catch {
       return "";
@@ -2758,16 +3808,16 @@ html, body { overflow-x: hidden !important; }
   }
   async function buildLocalizedFormattingData(selectedLanguageLabel, baseWordColors) {
     const lang = getResolvedLanguage(selectedLanguageLabel);
-    const i18n = getI18n();
+    const i18n2 = getI18n();
     const tokens = FALLBACK_KEYWORDS.concat(FALLBACK_TRIBES);
     const localizedColors = {};
-    if (!i18n) {
+    if (!i18n2) {
       return { tokens: [...new Set(tokens)].filter(Boolean).sort((a, b) => b.length - a.length), localizedColors };
     }
-    const originalLocale = i18n().locale;
+    const originalLocale = i18n2().locale;
     try {
       await ensureLanguageLoaded(lang);
-      i18n().locale = lang;
+      i18n2().locale = lang;
       KEYWORD_IDS.forEach((id) => {
         const text = getLocalizedString(`kw-${id}`);
         if (text) tokens.push(text);
@@ -2801,7 +3851,7 @@ html, body { overflow-x: hidden !important; }
       }
     } finally {
       try {
-        i18n().locale = originalLocale;
+        i18n2().locale = originalLocale;
       } catch {
       }
     }
@@ -2824,28 +3874,28 @@ html, body { overflow-x: hidden !important; }
   }
   async function buildLocalizedCardNameMap(selectedLanguageLabel, attempt = 0) {
     const lang = getResolvedLanguage(selectedLanguageLabel);
-    const i18n = getI18n();
-    const cards = getAllCards();
-    if (!cards.length && attempt < 40) {
+    const i18n2 = getI18n();
+    const cards2 = getAllCards();
+    if (!cards2.length && attempt < 40) {
       await new Promise((r) => setTimeout(r, 250));
       return buildLocalizedCardNameMap(selectedLanguageLabel, attempt + 1);
     }
     const map = /* @__PURE__ */ new Map();
-    if (!cards.length) return map;
-    const originalLocale = i18n ? i18n().locale : null;
+    if (!cards2.length) return map;
+    const originalLocale = i18n2 ? i18n2().locale : null;
     try {
-      if (i18n) {
+      if (i18n2) {
         await ensureLanguageLoaded(lang);
-        i18n().locale = lang;
+        i18n2().locale = lang;
       }
-      cards.forEach((card) => {
+      cards2.forEach((card) => {
         if (!card || !card.id) return;
         if (card.name) {
           addNameMapping(map, card.name, card.id);
           const englishPlural = getLocalizedString(`card-name-${card.id}`, 2);
           if (englishPlural) addNameMapping(map, englishPlural, card.id);
         }
-        if (i18n) {
+        if (i18n2) {
           const singular = getLocalizedString(`card-name-${card.id}`, 1);
           const plural = getLocalizedString(`card-name-${card.id}`, 2);
           if (singular) addNameMapping(map, singular, card.id);
@@ -2853,9 +3903,9 @@ html, body { overflow-x: hidden !important; }
         }
       });
     } finally {
-      if (i18n && originalLocale) {
+      if (i18n2 && originalLocale) {
         try {
-          i18n().locale = originalLocale;
+          i18n2().locale = originalLocale;
         } catch {
         }
       }
@@ -2877,19 +3927,19 @@ html, body { overflow-x: hidden !important; }
     if (!cardNameMap) return null;
     return cardNameMap.get(String(name).toLowerCase()) || null;
   }
-  function attachCardHover(el2, cardId) {
+  function attachCardHover(el3, cardId) {
     const pageWindow2 = getPageWindow();
     const displayCardHelp = pageWindow2.displayCardHelp;
     const removeCardHover = pageWindow2.removeCardHover;
     if (typeof displayCardHelp !== "function" || typeof removeCardHover !== "function") {
       return false;
     }
-    el2.dataset.ucHoverBound = "true";
-    el2.style.cursor = "pointer";
-    el2.addEventListener("mouseover", function() {
+    el3.dataset.ucHoverBound = "true";
+    el3.style.cursor = "pointer";
+    el3.addEventListener("mouseover", function() {
       displayCardHelp(this, cardId);
     });
-    el2.addEventListener("mouseleave", function() {
+    el3.addEventListener("mouseleave", function() {
       removeCardHover();
     });
     return true;
@@ -3013,10 +4063,10 @@ Version: v${version}`;
     });
     function saveState() {
       try {
-        const state = collectState();
-        if (state) {
-          GM_setValue(STATE_KEY, JSON.stringify(state));
-          logger4.log("save", "State saved.", { sections: state.sections.length });
+        const state2 = collectState();
+        if (state2) {
+          GM_setValue(STATE_KEY, JSON.stringify(state2));
+          logger4.log("save", "State saved.", { sections: state2.sections.length });
         }
       } catch (e) {
         logger4.error("save", "Failed to save state", e);
@@ -3041,33 +4091,33 @@ Version: v${version}`;
     function resetState() {
       GM_deleteValue(STATE_KEY);
     }
-    function makeEditable(el2, placeholder) {
-      el2.setAttribute("contenteditable", "true");
-      el2.spellcheck = false;
-      el2.addEventListener("focus", () => {
-        el2.dataset.prevText = el2.textContent.trim();
+    function makeEditable(el3, placeholder) {
+      el3.setAttribute("contenteditable", "true");
+      el3.spellcheck = false;
+      el3.addEventListener("focus", () => {
+        el3.dataset.prevText = el3.textContent.trim();
         enableInputBlocker();
       });
-      el2.addEventListener("blur", () => {
-        let t = sanitizeText(el2.textContent);
+      el3.addEventListener("blur", () => {
+        let t = sanitizeText(el3.textContent);
         if (!t) t = placeholder;
-        el2.textContent = t;
+        el3.textContent = t;
         saveState();
         disableInputBlocker();
       });
-      el2.addEventListener("keydown", (e) => {
+      el3.addEventListener("keydown", (e) => {
         if (overlay.classList.contains("viewer-mode")) return;
         if (e.key === "Enter") {
           e.preventDefault();
-          el2.blur();
+          el3.blur();
         }
         if (e.key === "Escape") {
           e.preventDefault();
-          el2.textContent = el2.dataset.prevText;
-          el2.blur();
+          el3.textContent = el3.dataset.prevText;
+          el3.blur();
         }
       });
-      el2.addEventListener("paste", (e) => {
+      el3.addEventListener("paste", (e) => {
         if (overlay.classList.contains("viewer-mode")) {
           e.preventDefault();
           return;
@@ -3402,15 +4452,15 @@ Version: v${version}`;
     function bindCardHovers() {
       if (!getCardHoversEnabled()) return;
       const cardNameMap = getCardNameMap();
-      container.querySelectorAll(".uc-card-ref").forEach((el2) => {
-        if (el2.dataset.ucHoverBound === "true") return;
-        const name = el2.textContent.trim();
+      container.querySelectorAll(".uc-card-ref").forEach((el3) => {
+        if (el3.dataset.ucHoverBound === "true") return;
+        const name = el3.textContent.trim();
         const cardId = getCardIdByExactGameLookup(name) || resolveCardId(name, cardNameMap);
         if (!cardId) {
           logger4.warn("hover", "Card not found for hover", name);
           return;
         }
-        attachCardHover(el2, cardId);
+        attachCardHover(el3, cardId);
       });
     }
     function applyFormattingOverlay() {
@@ -3434,14 +4484,14 @@ Version: v${version}`;
     }
     function collectState() {
       if (!container) return null;
-      const state = { title: "", sections: [], newCards: newCards.collectState(container) };
+      const state2 = { title: "", sections: [], newCards: newCards.collectState(container) };
       const h2 = container.querySelector("h2");
-      if (h2) state.title = h2.textContent.trim();
+      if (h2) state2.title = h2.textContent.trim();
       container.querySelectorAll("p.uc-section-header").forEach((p) => {
         const labelEl = p.querySelector(".uc-section-label");
         const ul = p.nextElementSibling;
         if (!ul) return;
-        state.sections.push({
+        state2.sections.push({
           label: labelEl ? labelEl.textContent.trim() : "",
           custom: p.dataset.custom === "true",
           collapsed: ul.style.display === "none",
@@ -3451,7 +4501,7 @@ Version: v${version}`;
           }))
         });
       });
-      return state;
+      return state2;
     }
     function restoreState(saved) {
       const h2 = container.querySelector("h2");
@@ -3506,21 +4556,21 @@ Version: v${version}`;
         ptr = ptr.nextElementSibling;
       }
       let h3 = null, hr1 = null, h2 = null, hr2 = null;
-      for (const el2 of originalPatchNotesNodes) {
-        if (!h3 && el2.tagName === "H3") {
-          h3 = el2.cloneNode(true);
+      for (const el3 of originalPatchNotesNodes) {
+        if (!h3 && el3.tagName === "H3") {
+          h3 = el3.cloneNode(true);
           continue;
         }
-        if (!hr1 && el2.tagName === "HR") {
-          hr1 = el2.cloneNode(true);
+        if (!hr1 && el3.tagName === "HR") {
+          hr1 = el3.cloneNode(true);
           continue;
         }
-        if (!h2 && el2.tagName === "H2") {
-          h2 = el2.cloneNode(true);
+        if (!h2 && el3.tagName === "H2") {
+          h2 = el3.cloneNode(true);
           continue;
         }
-        if (!hr2 && el2.tagName === "HR") {
-          hr2 = el2.cloneNode(true);
+        if (!hr2 && el3.tagName === "HR") {
+          hr2 = el3.cloneNode(true);
           continue;
         }
       }
@@ -3748,15 +4798,15 @@ Version: v${version}`;
     return matchesPage("/gameUpdates.jsp");
   }
   function initPatchMaker(plugin) {
-    const settings2 = registerPatchMakerSettings(plugin);
+    const settings4 = registerPatchMakerSettings(plugin);
     const logger4 = createLogger("PatchMaker");
     const originalWarn = logger4.warn.bind(logger4);
     const originalLog = logger4.log.bind(logger4);
     logger4.log = (...args) => {
-      if (settings2.debugLogging.value()) originalLog(...args);
+      if (settings4.debugLogging.value()) originalLog(...args);
     };
     logger4.warn = (...args) => {
-      if (settings2.debugLogging.value()) originalWarn(...args);
+      if (settings4.debugLogging.value()) originalWarn(...args);
     };
     let wordColors = { ...BASE_WORD_COLORS };
     let underlineTokens = [];
@@ -3767,16 +4817,16 @@ Version: v${version}`;
       version: FEATURE_VERSION,
       getWordColors: () => wordColors,
       getUnderlineTokens: () => underlineTokens,
-      getCardHoversEnabled: () => settings2.cardHovers.value(),
+      getCardHoversEnabled: () => settings4.cardHovers.value(),
       getCardNameMap: () => cardNameMap,
-      getHideControlsEnabled: () => settings2.hideControls.value(),
-      getOpenOnLoad: () => settings2.openOnLoad.value()
+      getHideControlsEnabled: () => settings4.hideControls.value(),
+      getOpenOnLoad: () => settings4.openOnLoad.value()
     });
-    settings2.hideControls.on((value) => overlay.setControlsHidden(value));
-    if (!settings2.enabled.value()) return;
+    settings4.hideControls.on((value) => overlay.setControlsHidden(value));
+    if (!settings4.enabled.value()) return;
     if (!isPatchNotesPage()) return;
     async function refreshLocalizedData() {
-      const languageLabel = settings2.language.value();
+      const languageLabel = settings4.language.value();
       const { tokens, localizedColors } = await buildLocalizedFormattingData(languageLabel, BASE_WORD_COLORS);
       underlineTokens = tokens;
       wordColors = { ...BASE_WORD_COLORS, ...localizedColors };
@@ -3790,22 +4840,22 @@ Version: v${version}`;
 
   // packages/true-hub-bridge/settings.js
   function registerTrueHubBridgeSettings(plugin) {
-    const settings2 = createFeatureSettings(plugin, "truehubbridge", {
+    const settings4 = createFeatureSettings(plugin, "truehubbridge", {
       tab: "True Hub Bridge",
       visible: () => isPluginEnabled("trueHub")
     });
     return {
-      settings: settings2,
+      settings: settings4,
       // The on/off switch itself now lives in the Plugins list (core/plugins.js).
       enabled: getPluginToggle("trueHub"),
       // One suite-wide switch on the General tab since 1.5.0 (core/debug.js).
       debugLogging: debugLoggingSetting,
-      autoOpen: settings2.add("autoOpenTrueHub", {
+      autoOpen: settings4.add("autoOpenTrueHub", {
         name: "Auto Open True Hub",
         type: "boolean",
         default: true
       }),
-      scrollPaging: settings2.add("enableScrollPaging", {
+      scrollPaging: settings4.add("enableScrollPaging", {
         name: "Enable Scroll Paging",
         type: "boolean",
         default: true
@@ -4148,10 +5198,10 @@ Version: v${version}`;
     }
   }
   function getCardById(id) {
-    const getCard = getPageWindow().getCard;
-    if (typeof getCard !== "function") return null;
+    const getCard2 = getPageWindow().getCard;
+    if (typeof getCard2 !== "function") return null;
     try {
-      return getCard(id);
+      return getCard2(id);
     } catch {
       return null;
     }
@@ -4330,13 +5380,13 @@ Version: v${version}`;
         artifactContainer.innerHTML = "";
         try {
           const decoded = decodeDeck(deck.deckCode);
-          const artifacts = ((decoded == null ? void 0 : decoded.artifactIds) || []).map((id) => getArtifactById(id)).filter(Boolean);
-          artifacts.forEach((artifact, index) => {
+          const artifacts3 = ((decoded == null ? void 0 : decoded.artifactIds) || []).map((id) => getArtifactById(id)).filter(Boolean);
+          artifacts3.forEach((artifact, index) => {
             const img = document.createElement("img");
             img.src = `images/artifacts/${artifact.image}.png`;
             img.title = artifact.name;
             artifactContainer.appendChild(img);
-            if (index < artifacts.length - 1) artifactContainer.append(" ");
+            if (index < artifacts3.length - 1) artifactContainer.append(" ");
           });
         } catch (err) {
           logger4.error("card", "Artifact decode failed", err, deck);
@@ -4402,8 +5452,8 @@ Version: v${version}`;
     function renderPage() {
       trueHubList.innerHTML = "";
       const start = (currentPage2 - 1) * DECKS_PER_PAGE;
-      const visible = filteredDecks.slice(start, start + DECKS_PER_PAGE);
-      visible.forEach((deck) => trueHubList.appendChild(buildCard(deck)));
+      const visible2 = filteredDecks.slice(start, start + DECKS_PER_PAGE);
+      visible2.forEach((deck) => trueHubList.appendChild(buildCard(deck)));
       syncNav();
     }
     function buildCardFilterPanel() {
@@ -4462,8 +5512,8 @@ Version: v${version}`;
         }
         cardDropdown.style.display = "grid";
         matches.forEach((card) => {
-          const row = document.createElement("div");
-          Object.assign(row.style, {
+          const row2 = document.createElement("div");
+          Object.assign(row2.style, {
             display: "flex",
             alignItems: "center",
             gap: "5px",
@@ -4532,9 +5582,9 @@ Version: v${version}`;
           };
           btnGroup.appendChild(btnInclude);
           btnGroup.appendChild(btnExclude);
-          row.appendChild(nameSpan);
-          row.appendChild(btnGroup);
-          cardDropdown.appendChild(row);
+          row2.appendChild(nameSpan);
+          row2.appendChild(btnGroup);
+          cardDropdown.appendChild(row2);
         });
       });
       document.addEventListener("click", (e) => {
@@ -4882,22 +5932,22 @@ Version: v${version}`;
     return matchesPage("/Hub");
   }
   function initTrueHubBridge(plugin) {
-    const settings2 = registerTrueHubBridgeSettings(plugin);
-    if (!settings2.enabled.value()) return;
+    const settings4 = registerTrueHubBridgeSettings(plugin);
+    if (!settings4.enabled.value()) return;
     if (!isHubPage()) return;
     const logger4 = createLogger("TrueHubBridge");
     const originalWarn = logger4.warn.bind(logger4);
     const originalLog = logger4.log.bind(logger4);
     logger4.log = (...args) => {
-      if (settings2.debugLogging.value()) originalLog(...args);
+      if (settings4.debugLogging.value()) originalLog(...args);
     };
     logger4.warn = (...args) => {
-      if (settings2.debugLogging.value()) originalWarn(...args);
+      if (settings4.debugLogging.value()) originalWarn(...args);
     };
     const overlay = createTrueHubOverlay({
       logger: logger4,
-      getAutoOpen: () => settings2.autoOpen.value(),
-      getScrollPaging: () => settings2.scrollPaging.value()
+      getAutoOpen: () => settings4.autoOpen.value(),
+      getScrollPaging: () => settings4.scrollPaging.value()
     });
     loadDecks().then((decks) => {
       overlay.setDecks(decks);
@@ -4907,24 +5957,24 @@ Version: v${version}`;
 
   // packages/deck-tracker/settings.js
   function registerDeckTrackerSettings(plugin) {
-    const settings2 = createFeatureSettings(plugin, "decktracker", {
+    const settings4 = createFeatureSettings(plugin, "decktracker", {
       tab: "Card Tracker",
       visible: () => isPluginEnabled("cardTracker")
     });
     const enabled = getPluginToggle("cardTracker");
     const debugLogging = debugLoggingSetting;
-    const retainUnclosedPresets = settings2.add("retainUnclosedPresets", {
+    const retainUnclosedPresets = settings4.add("retainUnclosedPresets", {
       name: "Retain Unclosed Presets Between Matches",
       type: "boolean",
       default: false
     });
-    const allowFavoritedRetainedWhileSpectating = settings2.add("allowFavoritedRetainedWhileSpectating", {
+    const allowFavoritedRetainedWhileSpectating = settings4.add("allowFavoritedRetainedWhileSpectating", {
       name: "Auto-load Presets While Spectating",
       note: "Applies to your own favorited/retained tracker presets specifically.",
       type: "boolean",
       default: false
     });
-    const dimOpacity = settings2.add("dimOpacity", {
+    const dimOpacity = settings4.add("dimOpacity", {
       name: "Tracker Dim Opacity",
       type: "slider",
       default: 0.4,
@@ -4933,7 +5983,7 @@ Version: v${version}`;
       step: 0.05
     });
     return {
-      settings: settings2,
+      settings: settings4,
       enabled,
       debugLogging,
       retainUnclosedPresets,
@@ -5133,7 +6183,47 @@ Version: v${version}`;
     }
   }
 
+  // packages/core/on-screen.js
+  var watched = /* @__PURE__ */ new Map();
+  var listening = false;
+  function viewport() {
+    return {
+      w: document.documentElement.clientWidth || window.innerWidth,
+      h: document.documentElement.clientHeight || window.innerHeight
+    };
+  }
+  function keepOnScreen(el3, margin = 0) {
+    if (!el3 || !el3.isConnected) return false;
+    const r = el3.getBoundingClientRect();
+    if (!r.width && !r.height) return false;
+    const vp = viewport();
+    const maxLeft = Math.max(margin, vp.w - r.width - margin);
+    const maxTop = Math.max(margin, vp.h - r.height - margin);
+    const left = Math.min(Math.max(r.left, margin), maxLeft);
+    const top = Math.min(Math.max(r.top, margin), maxTop);
+    if (Math.abs(left - r.left) < 0.5 && Math.abs(top - r.top) < 0.5) return false;
+    el3.style.left = left + "px";
+    el3.style.top = top + "px";
+    el3.style.right = "auto";
+    el3.style.bottom = "auto";
+    return true;
+  }
+  function watchOnScreen(el3, margin = 0) {
+    if (!el3) return;
+    watched.set(el3, margin);
+    keepOnScreen(el3, margin);
+    if (listening) return;
+    listening = true;
+    window.addEventListener("resize", () => {
+      watched.forEach((m, node) => {
+        if (!node.isConnected) watched.delete(node);
+        else keepOnScreen(node, m);
+      });
+    });
+  }
+
   // packages/deck-tracker/hud.js
+  var TRACKER_SCREEN_MARGIN = 8;
   var CARD_IMAGE_BASE = "https://undercards.net/images/cards/";
   var SPRITE_RATIO = "160 / 90";
   var MIN_WIDTH = 90;
@@ -5241,7 +6331,7 @@ Version: v${version}`;
           return;
         }
         items.forEach((item, idx) => {
-          const row = $("<div>").css({
+          const row2 = $("<div>").css({
             fontSize: "12px",
             padding: "3px 6px",
             background: "rgba(255,255,255,0.06)",
@@ -5250,19 +6340,19 @@ Version: v${version}`;
             justifyContent: "space-between",
             alignItems: "center"
           }).attr("title", "Right-click to remove this card");
-          row.append(
+          row2.append(
             $("<span>").css({ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }).text(item.name),
             $("<span>").css({ fontSize: "10px", color: "#777", flexShrink: 0, marginLeft: "6px" }).text(idx === 0 ? firstItemLabel : `+${idx}`)
           );
-          row.on("mouseenter", () => row.css("background", "rgba(255,255,255,0.12)"));
-          row.on("mouseleave", () => row.css("background", "rgba(255,255,255,0.06)"));
-          row.on("mousedown", (e) => e.stopPropagation());
-          row.on("contextmenu", (e) => {
+          row2.on("mouseenter", () => row2.css("background", "rgba(255,255,255,0.12)"));
+          row2.on("mouseleave", () => row2.css("background", "rgba(255,255,255,0.06)"));
+          row2.on("mousedown", (e) => e.stopPropagation());
+          row2.on("contextmenu", (e) => {
             e.preventDefault();
             e.stopPropagation();
             onRemoveListItem == null ? void 0 : onRemoveListItem(item);
           });
-          listBody.append(row);
+          listBody.append(row2);
         });
       }, applySizeList = function(newWidth) {
         width = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, newWidth));
@@ -5302,6 +6392,7 @@ Version: v${version}`;
       renderListItems(initialListItems);
       widget.append(listBody, resizeHandle);
       $("body").append(widget);
+      watchOnScreen(widget[0], TRACKER_SCREEN_MARGIN);
       applySizeList(width);
       return {
         widget,
@@ -5398,6 +6489,7 @@ Version: v${version}`;
       widget.append(nameLine, countEl, resizeHandle);
     }
     $("body").append(widget);
+    watchOnScreen(widget[0], TRACKER_SCREEN_MARGIN);
     if (star) star.on("mousedown", (e) => e.stopPropagation());
     closeBtn.on("mousedown", (e) => e.stopPropagation());
     function setSprite(newSprite) {
@@ -5439,6 +6531,7 @@ Version: v${version}`;
       if (Math.abs(e.clientX - startX) > 4 || Math.abs(e.clientY - startY) > 4) dragMoved = true;
       if (dragMoved) {
         widget.css({ left: e.clientX - offsetX + "px", top: e.clientY - offsetY + "px", right: "auto", bottom: "auto" });
+        keepOnScreen(widget[0], TRACKER_SCREEN_MARGIN);
       }
     });
     $(document).on("mouseup" + ns, function() {
@@ -5471,6 +6564,7 @@ Version: v${version}`;
     $(document).on("mousemove" + ns + "-resize", function(e) {
       if (!resizing) return;
       applySize(resizeStartWidth + (e.clientX - resizeStartX));
+      keepOnScreen(widget[0], TRACKER_SCREEN_MARGIN);
     });
     $(document).on("mouseup" + ns + "-resize", function() {
       if (!resizing) return;
@@ -5650,7 +6744,7 @@ Version: v${version}`;
   </svg>`;
   }
   function buildPresetRow(preset, onAdd, onCloseWidget, onDelete) {
-    const row = $("<div>").css({
+    const row2 = $("<div>").css({
       display: "flex",
       alignItems: "center",
       gap: "10px",
@@ -5719,7 +6813,7 @@ Version: v${version}`;
       active = !active;
       renderStar();
     });
-    row.append(heart, info, starBtn);
+    row2.append(heart, info, starBtn);
     if (preset.custom) {
       const trashBtn = $("<span>").css({
         width: "20px",
@@ -5732,11 +6826,11 @@ Version: v${version}`;
         e.stopPropagation();
         if (e.detail !== 2) return;
         onDelete(preset.id);
-        row.remove();
+        row2.remove();
       });
-      row.append(trashBtn);
+      row2.append(trashBtn);
     }
-    return row;
+    return row2;
   }
   function renderList(container, term, onAdd, onCloseWidget, onDelete) {
     container.empty();
@@ -5754,7 +6848,7 @@ Version: v${version}`;
     filtered.sort((a, b) => b.favorited - a.favorited).forEach((p) => container.append(buildPresetRow(p, onAdd, onCloseWidget, onDelete)));
   }
   function buildCustomRow(onCreateAdHoc) {
-    const row = $("<div>").css({
+    const row2 = $("<div>").css({
       display: "flex",
       alignItems: "center",
       gap: "10px",
@@ -5788,8 +6882,8 @@ Version: v${version}`;
       e.stopPropagation();
       onCreateAdHoc();
     });
-    row.append(info, addBtn);
-    return row;
+    row2.append(info, addBtn);
+    return row2;
   }
   function openHelpDialog() {
     const content = $("<div>").css({ fontSize: "13px", lineHeight: "1.5" });
@@ -5881,7 +6975,7 @@ Version: v${version}`;
     return getAllCards().filter((c) => c.name && c.image && c.name.toLowerCase().includes(t)).slice(0, 20);
   }
   function buildSpriteResultRow(card, onPick) {
-    const row = $("<div>").css({
+    const row2 = $("<div>").css({
       display: "flex",
       alignItems: "center",
       gap: "8px",
@@ -5893,7 +6987,7 @@ Version: v${version}`;
     }).on("mouseleave", function() {
       $(this).css("background", "");
     });
-    const thumb = $("<img>").attr("src", `${CARD_IMAGE_BASE2}${card.image}.png`).css({
+    const thumb2 = $("<img>").attr("src", `${CARD_IMAGE_BASE2}${card.image}.png`).css({
       width: "28px",
       aspectRatio: SPRITE_RATIO2,
       objectFit: "cover",
@@ -5902,9 +6996,9 @@ Version: v${version}`;
     }).on("error", function() {
       $(this).replaceWith($("<div>").css({ width: "28px", aspectRatio: SPRITE_RATIO2, background: "#333", flexShrink: 0 }));
     });
-    row.append(thumb, $("<span>").text(card.name));
-    row.on("click", () => onPick(card));
-    return row;
+    row2.append(thumb2, $("<span>").text(card.name));
+    row2.on("click", () => onPick(card));
+    return row2;
   }
   function openCustomTrackerBuilder({ onCreate }) {
     let selectedCard = null;
@@ -6099,19 +7193,19 @@ Version: v${version}`;
     GM_deleteValue(BUTTON_POSITION_KEY);
   }
   function initDeckTracker(plugin) {
-    const settings2 = registerDeckTrackerSettings(plugin);
-    if (!settings2.enabled.value()) return;
+    const settings4 = registerDeckTrackerSettings(plugin);
+    if (!settings4.enabled.value()) return;
     if (!isGamePage()) return;
     const logger4 = createLogger("DeckTracker");
     const originalWarn = logger4.warn.bind(logger4);
     const originalLog = logger4.log.bind(logger4);
     logger4.log = (...args) => {
-      if (settings2.debugLogging.value()) originalLog(...args);
+      if (settings4.debugLogging.value()) originalLog(...args);
     };
     logger4.warn = (...args) => {
-      if (settings2.debugLogging.value()) originalWarn(...args);
+      if (settings4.debugLogging.value()) originalWarn(...args);
     };
-    setRetainEnabledGetter(() => settings2.retainUnclosedPresets.value());
+    setRetainEnabledGetter(() => settings4.retainUnclosedPresets.value());
     registerBuiltInPresets();
     function handleAddPreset(id) {
       spawnPreset(id);
@@ -6218,8 +7312,8 @@ Version: v${version}`;
         tryReveal();
       }
       function isUnderScriptMenuOpen() {
-        const menu = document.querySelector('.menu-content[role="Menu"]');
-        return menu !== null && menu.offsetParent !== null;
+        const menu3 = document.querySelector('.menu-content[role="Menu"]');
+        return menu3 !== null && menu3.offsetParent !== null;
       }
       function isBlockingModalOpen() {
         return document.body.classList.contains("modal-open") || document.querySelector(".modal-backdrop") !== null || isUnderScriptMenuOpen();
@@ -6231,7 +7325,7 @@ Version: v${version}`;
         const shouldDim = isBlockingModalOpen();
         if (shouldDim !== isDimmed) {
           isDimmed = shouldDim;
-          btn.style.opacity = shouldDim ? String(settings2.dimOpacity.value()) : "1";
+          btn.style.opacity = shouldDim ? String(settings4.dimOpacity.value()) : "1";
           btn.style.pointerEvents = shouldDim ? "none" : "auto";
         }
       }, 250);
@@ -6313,7 +7407,7 @@ Version: v${version}`;
       }
     });
     function restoreFavoritedAndRetained() {
-      if (isSpectating() && !settings2.allowFavoritedRetainedWhileSpectating.value()) return;
+      if (isSpectating() && !settings4.allowFavoritedRetainedWhileSpectating.value()) return;
       const favoritedIds = getFavoritedPresetIds();
       const spawnedFavorites = favoritedIds.filter((id) => spawnPreset(id) !== null);
       if (spawnedFavorites.length) {
@@ -6326,7 +7420,7 @@ Version: v${version}`;
           favoritedIds.filter((id) => !spawnedFavorites.includes(id))
         );
       }
-      if (settings2.retainUnclosedPresets.value()) {
+      if (settings4.retainUnclosedPresets.value()) {
         const retainedIds = getRetainedPresetIds().filter((id) => !favoritedIds.includes(id));
         retainedIds.forEach((id) => spawnPreset(id));
         if (retainedIds.length) {
@@ -6389,18 +7483,18 @@ Version: v${version}`;
     settingsRef = ref;
   }
   function registerUcTvSettings(plugin, divisionTiers) {
-    const settings2 = createFeatureSettings(plugin, "ucTv", {
+    const settings4 = createFeatureSettings(plugin, "ucTv", {
       tab: "UC TV",
       visible: () => isPluginEnabled("ucTv")
     });
     const enabled = getPluginToggle("ucTv");
     const debugLogs = debugLoggingSetting;
-    const autoMode = settings2.add("autoMode", {
+    const autoMode = settings4.add("autoMode", {
       name: "Enable auto-mode when spectating",
       type: "boolean",
       default: false
     });
-    const countdownSeconds = settings2.add("countdownSeconds", {
+    const countdownSeconds = settings4.add("countdownSeconds", {
       name: "Auto-continue delay (seconds)",
       type: "select",
       data: Array.from({ length: 15 }, (_, i) => i + 1).map((n) => [`${n}`, n]),
@@ -6409,11 +7503,11 @@ Version: v${version}`;
     const filterDisabled = () => !filteringEnabled.value();
     const filterDependents = [];
     const addFilter = (key2, config) => {
-      const setting2 = settings2.add(key2, { ...config, disabled: filterDisabled });
-      filterDependents.push(setting2);
-      return setting2;
+      const setting4 = settings4.add(key2, { ...config, disabled: filterDisabled });
+      filterDependents.push(setting4);
+      return setting4;
     };
-    const filteringEnabled = settings2.add("filteringEnabled", {
+    const filteringEnabled = settings4.add("filteringEnabled", {
       name: "Enable Match Filtering",
       type: "boolean",
       default: true,
@@ -6530,14 +7624,14 @@ Version: v${version}`;
 
   // packages/uc-tv/game-list.js
   var ONCLICK_RE = /Spectate\?gameId=(\d+)&playerId=(\d+)/;
-  function readMode(row) {
-    const cell = row.querySelector("td.home-match-time");
+  function readMode(row2) {
+    const cell = row2.querySelector("td.home-match-time");
     if (!cell) return null;
     const extra = Array.from(cell.classList).find((c) => c !== "home-match-time");
     return extra || null;
   }
-  function readTimeText(row) {
-    const cell = row.querySelector("td.home-match-time");
+  function readTimeText(row2) {
+    const cell = row2.querySelector("td.home-match-time");
     return cell ? cell.textContent.trim() : null;
   }
   function parseElapsedSeconds(timeText) {
@@ -6592,31 +7686,31 @@ Version: v${version}`;
       rank: readDivision(cell)
     };
   }
-  function parseRow(row) {
-    const cells = Array.from(row.querySelectorAll("td.spectate-player"));
+  function parseRow(row2) {
+    const cells = Array.from(row2.querySelectorAll("td.spectate-player"));
     const players = cells.map(readPlayerCell).filter(Boolean);
     if (!players.length) return null;
-    const mode = readMode(row);
+    const mode = readMode(row2);
     const preferred = players.find((p) => p.level !== null) || players[0];
     return {
       gameId: players[0].gameId,
       playerId: preferred.playerId,
       mode,
-      time: readTimeText(row),
+      time: readTimeText(row2),
       levels: players.map((p) => p.level),
       // e.g. [580, null] for a CPU match
       ranks: players.map((p) => p.rank)
       // e.g. ["EMERALD_III", null]
     };
   }
-  function parseRowFull(row) {
-    const cells = Array.from(row.querySelectorAll("td.spectate-player"));
+  function parseRowFull(row2) {
+    const cells = Array.from(row2.querySelectorAll("td.spectate-player"));
     const players = cells.map(readPlayerCellFull).filter(Boolean);
     if (!players.length) return null;
     return {
       gameId: players[0].gameId,
-      mode: readMode(row),
-      time: readTimeText(row),
+      mode: readMode(row2),
+      time: readTimeText(row2),
       players
     };
   }
@@ -6702,15 +7796,15 @@ Version: v${version}`;
   }
   function showCountdownViaToast(plugin, seconds, onComplete) {
     let remaining = seconds;
-    const toast = plugin.toast({
+    const toast2 = plugin.toast({
       title: "UC TV",
       text: `Spectating a new match in ${remaining}s... (${cancelHint()})`
     });
     function cancel() {
       clearInterval(interval);
       activeCancelFn = null;
-      if (toast && typeof toast.setText === "function") toast.setText("Auto-continue canceled.");
-      if (toast && typeof toast.close === "function") setTimeout(() => toast.close(), 1500);
+      if (toast2 && typeof toast2.setText === "function") toast2.setText("Auto-continue canceled.");
+      if (toast2 && typeof toast2.close === "function") setTimeout(() => toast2.close(), 1500);
       logDebug("Auto-continue canceled - Primary pressed during countdown.");
     }
     activeCancelFn = cancel;
@@ -6719,12 +7813,12 @@ Version: v${version}`;
       if (remaining <= 0) {
         clearInterval(interval);
         activeCancelFn = null;
-        if (toast && typeof toast.close === "function") toast.close();
+        if (toast2 && typeof toast2.close === "function") toast2.close();
         onComplete();
         return;
       }
-      if (toast && typeof toast.setText === "function") {
-        toast.setText(`Spectating a new match in ${remaining}s... (${cancelHint()})`);
+      if (toast2 && typeof toast2.setText === "function") {
+        toast2.setText(`Spectating a new match in ${remaining}s... (${cancelHint()})`);
       }
     }, 1e3);
   }
@@ -6991,8 +8085,8 @@ Version: v${version}`;
     overlay.appendChild(header);
     list.forEach((entry) => {
       const isCurrent = entry.gameId === currentGameId;
-      const row = document.createElement("div");
-      row.style.cssText = `
+      const row2 = document.createElement("div");
+      row2.style.cssText = `
       display: flex;
       align-items: center;
       gap: 6px;
@@ -7007,7 +8101,7 @@ Version: v${version}`;
           const divider = document.createElement("span");
           divider.textContent = "vs";
           divider.style.cssText = "opacity:0.35; font-size:11px; flex-shrink:0;";
-          row.appendChild(divider);
+          row2.appendChild(divider);
         }
         const playerEl = document.createElement("span");
         playerEl.style.cssText = `
@@ -7049,13 +8143,13 @@ Version: v${version}`;
           logDebug(`[guide] Jumping to gameId=${entry.gameId}, playerId=${p.playerId}.`);
           jumpTo(plugin, entry.gameId, p.playerId);
         });
-        row.appendChild(playerEl);
+        row2.appendChild(playerEl);
       });
       const timeEl = document.createElement("span");
       timeEl.textContent = entry.time || "";
       timeEl.style.cssText = "color:#7dffb0; font-size:12px; flex-shrink:0; margin-left:4px;";
-      row.appendChild(timeEl);
-      overlay.appendChild(row);
+      row2.appendChild(timeEl);
+      overlay.appendChild(row2);
     });
     const legend = document.createElement("div");
     legend.style.cssText = `
@@ -7148,8 +8242,8 @@ Version: v${version}`;
     return matchesPage({ prefix: "/Spectate" });
   }
   function initUcTv(plugin) {
-    const settings2 = registerUcTvSettings(plugin, DIVISION_TIERS);
-    setSettingsRef(settings2);
+    const settings4 = registerUcTvSettings(plugin, DIVISION_TIERS);
+    setSettingsRef(settings4);
     if (CONFIG.debugLogs) dumpSettingsState();
     window.__ucTVScope = scopeActiveGames;
     window.__ucTVSettings = dumpSettingsState;
@@ -7174,6 +8268,2859 @@ Version: v${version}`;
     });
   }
 
+  // packages/misc/tier-list/styles.js
+  var STYLE_ID = "wizascript-tierlist-style";
+  var Z_WINDOW = 2147482e3;
+  var Z_FLOATING = 2147483100;
+  function injectTierListStyle() {
+    if (document.getElementById(STYLE_ID)) return;
+    const style = document.createElement("style");
+    style.id = STYLE_ID;
+    style.textContent = CSS2;
+    (document.head || document.documentElement).appendChild(style);
+  }
+  var CSS2 = `
+.wz-tl {
+  --wz-tl-tile: 72px;
+  --wz-tl-tile-h: calc(var(--wz-tl-tile) * 0.8);
+  --wz-tl-label: max(56px, var(--wz-tl-tile));
+  position: fixed;
+  z-index: ${Z_WINDOW};
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  background: #0d0d0d;
+  color: #fff;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.7);
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  user-select: none;
+}
+.wz-tl *, .wz-tl *::before, .wz-tl *::after { box-sizing: border-box; }
+/* Window Opacity setting: see-through only while the mouse is elsewhere
+   (and never mid-drag or with a menu/editor open), so it stays readable
+   while you use it. */
+.wz-tl { opacity: var(--wz-tl-opacity, 1); transition: opacity 0.15s; }
+.wz-tl:hover, .wz-tl:focus-within, .wz-tl.wz-tl-busy, .wz-tl.wz-tl-pad { opacity: 1; }
+/* Controller d-pad mode: the highlighted item (colour = Controller
+   Support's "Selection Outline Color"), drawn inside the element so
+   scrolling containers don't clip it. */
+.wz-tl .wz-tl-pad-focus {
+  outline: 3px solid var(--wz-tl-pad-color, #3ea6ff) !important;
+  outline-offset: -3px;
+  box-shadow: 0 0 8px var(--wz-tl-pad-color, #3ea6ff);
+}
+.wz-tl .wz-tl-row-items.wz-tl-pad-focus { outline-offset: -2px; }
+.wz-tl .wz-tl-tile.wz-tl-pad-held { opacity: 0.45; outline: 2px dashed #fff; outline-offset: -3px; }
+.wz-tl .wz-tl-tile.wz-tl-pad-held.wz-tl-pad-focus { opacity: 0.7; }
+.wz-tl-send {
+  position: absolute;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 90px;
+  max-height: calc(100% - 8px);
+  overflow-y: auto;
+  padding: 5px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  background: #1c1c1c;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+}
+.wz-tl-send-title { color: #bbb; font-size: 11px; text-align: center; }
+.wz-tl-send-tier {
+  min-height: 24px;
+  padding: 2px 8px;
+  border: 1px solid #000;
+  border-radius: 3px;
+  color: #000;
+  font: bold 13px Arial, sans-serif;
+  cursor: pointer;
+}
+.wz-tl-send-tier.wz-tl-active::after { content: "  \\2713"; }
+/* Show Names on Tiles = off. Text items keep their label (it IS the tile). */
+.wz-tl-nonames .wz-tl-tile:not(.wz-tl-text) .wz-tl-tile-name,
+.wz-tl-ghost.wz-tl-nonames:not(.wz-tl-text) .wz-tl-tile-name { display: none; }
+.wz-tl.wz-tl-max { left: 0 !important; top: 0 !important; width: 100vw !important; height: 100vh !important; border-radius: 0; }
+.wz-tl.wz-tl-max .wz-tl-resize { display: none; }
+
+.wz-tl-header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  background: #222;
+  border-bottom: 1px solid #555;
+  cursor: grab;
+  touch-action: none;
+}
+.wz-tl.wz-tl-max .wz-tl-header { cursor: default; }
+.wz-tl-grip { flex: 1 1 auto; min-width: 16px; align-self: stretch; }
+.wz-tl-title {
+  flex: 0 1 220px;
+  min-width: 60px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  color: #fff;
+  font: bold 13px Arial, sans-serif;
+  padding: 2px 4px;
+  outline: none;
+  text-overflow: ellipsis;
+}
+.wz-tl-title:hover, .wz-tl-title:focus { border-color: #666; background: rgba(255,255,255,0.06); }
+.wz-tl-btn {
+  flex: none;
+  padding: 2px 7px;
+  border: 1px solid #777;
+  border-radius: 3px;
+  background: #333;
+  color: #fff;
+  font: 12px Arial, sans-serif;
+  line-height: 16px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.wz-tl-btn:hover { background: #444; border-color: #aaa; }
+.wz-tl-btn:disabled { opacity: 0.35; cursor: default; background: #333; border-color: #777; }
+.wz-tl-btn.wz-tl-active { background: #4464bd; border-color: #8ea6e8; }
+.wz-tl-btn.wz-tl-danger { background: #8b1e1e; border-color: #e05555; }
+
+.wz-tl-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; position: relative; overflow: hidden; }
+
+.wz-tl-tiers { flex: 1 1 0; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+.wz-tl-row { display: flex; align-items: stretch; border-bottom: 1px solid #000; background: #1a1a1a; }
+.wz-tl-row-label {
+  flex: none;
+  width: var(--wz-tl-label);
+  min-height: calc(var(--wz-tl-tile-h) + 6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  color: #000;
+  font-weight: bold;
+  font-size: max(12px, calc(var(--wz-tl-tile) * 0.22));
+  text-align: center;
+  word-break: break-word;
+  cursor: pointer;
+}
+.wz-tl-row-items {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 3px;
+  padding: 3px;
+  min-height: calc(var(--wz-tl-tile-h) + 6px);
+}
+.wz-tl-row-tools {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  padding: 1px 3px;
+  background: #000;
+}
+.wz-tl-row-tools button {
+  width: 20px;
+  height: 15px;
+  padding: 0;
+  border: 1px solid #555;
+  border-radius: 3px;
+  background: #222;
+  color: #ddd;
+  font-size: 9px;
+  line-height: 13px;
+  cursor: pointer;
+}
+.wz-tl-row-tools button:hover { background: #3a3a3a; color: #fff; }
+.wz-tl-add-row { display: block; margin: 6px auto; }
+
+.wz-tl-tile {
+  position: relative;
+  flex: none;
+  width: var(--wz-tl-tile);
+  height: var(--wz-tl-tile-h);
+  border: 2px solid var(--wz-tl-rarity, #888);
+  border-radius: 3px;
+  background: #000 center / contain no-repeat;
+  image-rendering: pixelated;
+  cursor: grab;
+  touch-action: none;
+  overflow: hidden;
+}
+.wz-tl-tile-name {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 1px 2px;
+  background: rgba(0,0,0,0.72);
+  color: #fff;
+  font-size: max(9px, calc(var(--wz-tl-tile) * 0.12));
+  line-height: 1.15;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+.wz-tl-tile.wz-tl-noimg .wz-tl-tile-name { top: 0; display: flex; align-items: center; justify-content: center; white-space: normal; }
+.wz-tl-tile.wz-tl-placed { opacity: 0.35; }
+.wz-tl-tile.wz-tl-placed::after {
+  content: "\\2713";
+  position: absolute;
+  top: 1px; right: 3px;
+  color: #7fff7f;
+  font-weight: bold;
+  font-size: 12px;
+  text-shadow: 0 0 2px #000;
+}
+.wz-tl-tile.wz-tl-dragging { opacity: 0.25; }
+.wz-tl-marker {
+  flex: none;
+  width: 4px;
+  height: var(--wz-tl-tile-h);
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: 0 0 6px #8ea6e8;
+}
+.wz-tl-ghost {
+  position: fixed;
+  z-index: ${Z_FLOATING};
+  pointer-events: none;
+  opacity: 0.9;
+  transform: rotate(-3deg);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.7);
+}
+.wz-tl-ghost.wz-tl-ghost-remove { opacity: 0.55; filter: grayscale(1); }
+.wz-tl-ghost.wz-tl-ghost-remove::before {
+  content: "\\00D7";
+  position: absolute;
+  z-index: 1;
+  top: 1px; right: 3px;
+  color: #ff6b6b;
+  font: bold 16px Arial, sans-serif;
+  text-shadow: 0 0 3px #000;
+}
+.wz-tl-picker.wz-tl-drop-in { background: #1b2238; }
+
+.wz-tl-picker {
+  flex: 0 1 auto;
+  max-height: 60%;
+  transition: background 0.1s;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-top: 2px solid #555;
+  background: #141414;
+}
+.wz-tl-picker.wz-tl-hidden { display: none; }
+.wz-tl-filters { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 5px 6px; }
+.wz-tl-search-row { flex: none; display: flex; gap: 4px; }
+.wz-tl-search-row input {
+  flex: none;
+  width: 150px;
+  height: 26px;
+  padding: 2px 6px;
+  border: 1px solid #666;
+  border-radius: 3px;
+  background: #000;
+  color: #fff;
+  font: 12px Arial, sans-serif;
+}
+.wz-tl-card-toggles { display: contents; }
+.wz-tl-type-tabs { flex: none; display: flex; border: 1px solid #555; border-radius: 4px; overflow: hidden; }
+.wz-tl-type-tab {
+  height: 26px;
+  padding: 0 7px;
+  border: none;
+  border-right: 1px solid #555;
+  background: #1c1c1c;
+  color: #bbb;
+  font: 12px Arial, sans-serif;
+  cursor: pointer;
+}
+.wz-tl-type-tab:last-child { border-right: none; }
+.wz-tl-type-tab:hover { background: #2a2a2a; color: #fff; }
+.wz-tl-type-tab.wz-tl-active { background: #4464bd; color: #fff; }
+.wz-tl-tile-del {
+  position: absolute;
+  z-index: 2;
+  top: 1px; left: 1px;
+  width: 16px; height: 16px;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  background: rgba(0,0,0,0.75);
+  color: #ff8080;
+  font: bold 13px/16px Arial, sans-serif;
+  cursor: pointer;
+}
+.wz-tl-tile-del:hover { background: #8b1e1e; color: #fff; }
+.wz-tl-tile.wz-tl-text { background: #262626; }
+/* Soul sprites are much bigger than card art for their content - shrink
+   them so the heart sits above the name instead of filling the tile. */
+.wz-tl-results .wz-tl-tile.wz-tl-text .wz-tl-tile-name { padding-top: 16px; }
+.wz-tl-tile.wz-tl-soul { background-size: auto 46%; background-position: center 30%; }
+/* While a dialog (Settings, Share / Import) or UnderScript's Esc menu
+   (z-index 1010) is open, sit under it. */
+.wz-tl.wz-tl-under-modal { z-index: 1000; }
+.wz-tl-tile.wz-tl-text .wz-tl-tile-name { background: transparent; font-weight: bold; padding: 2px; line-height: 1.1; word-break: break-word; }
+.wz-tl-tile.wz-tl-text .wz-tl-tile-name input {
+  width: 100%;
+  border: 1px solid #8ea6e8;
+  background: #000;
+  color: #fff;
+  font: inherit;
+  text-align: center;
+  pointer-events: auto;
+}
+.wz-tl-toggle-group { flex: none; display: flex; gap: 2px; padding: 1px; border-radius: 4px; background: rgba(255,255,255,0.05); }
+.wz-tl-toggle {
+  height: 26px;
+  min-width: 26px;
+  padding: 2px 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0.45;
+  filter: grayscale(0.7);
+}
+.wz-tl-toggle img { max-height: 20px; max-width: 32px; image-rendering: pixelated; pointer-events: none; }
+.wz-tl-toggle:hover { opacity: 0.8; filter: none; }
+.wz-tl-toggle.wz-tl-on { opacity: 1; filter: none; border-color: #fff; background: rgba(68,100,189,0.55); }
+.wz-tl-toggle-text { color: #fff; font: bold 10px Arial, sans-serif; }
+.wz-tl-results { flex: 0 1 auto; height: calc(var(--wz-tl-tile-h) * 2 + 9px); min-height: min(calc(var(--wz-tl-tile-h) + 6px), 40px); overflow-y: auto; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 3px; padding: 0 6px 6px; }
+.wz-tl-hint { flex: none; padding: 0 8px 4px; color: #aaa; font-size: 12px; line-height: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.wz-tl-resize { position: absolute; z-index: 2; touch-action: none; }
+.wz-tl-resize-n, .wz-tl-resize-s { left: 8px; right: 8px; height: 7px; cursor: ns-resize; }
+.wz-tl-resize-n { top: -4px; }
+.wz-tl-resize-s { bottom: -4px; }
+.wz-tl-resize-e, .wz-tl-resize-w { top: 8px; bottom: 8px; width: 7px; cursor: ew-resize; }
+.wz-tl-resize-e { right: -4px; }
+.wz-tl-resize-w { left: -4px; }
+.wz-tl-resize-ne, .wz-tl-resize-nw, .wz-tl-resize-se, .wz-tl-resize-sw { width: 14px; height: 14px; }
+.wz-tl-resize-ne { top: -5px; right: -5px; cursor: nesw-resize; }
+.wz-tl-resize-sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
+.wz-tl-resize-nw { top: -5px; left: -5px; cursor: nwse-resize; }
+.wz-tl-resize-se { bottom: -5px; right: -5px; cursor: nwse-resize; }
+
+.wz-tl-editor {
+  position: absolute;
+  z-index: 5;
+  width: 230px;
+  max-width: calc(100% - 12px);
+  padding: 8px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  background: #1c1c1c;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+}
+.wz-tl-editor input[type="text"] {
+  width: 100%;
+  margin-bottom: 6px;
+  padding: 3px 5px;
+  border: 1px solid #666;
+  border-radius: 3px;
+  background: #000;
+  color: #fff;
+  font: 13px Arial, sans-serif;
+}
+.wz-tl-swatches { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; align-items: center; }
+.wz-tl-swatch { width: 20px; height: 20px; border: 1px solid #000; border-radius: 3px; cursor: pointer; }
+.wz-tl-swatch.wz-tl-active { box-shadow: 0 0 0 2px #fff; }
+.wz-tl-swatches input[type="color"] { width: 24px; height: 22px; padding: 0; border: none; background: none; cursor: pointer; }
+.wz-tl-editor-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.wz-tl-editor-buttons .wz-tl-btn { width: 100%; }
+
+.wz-tl-menu {
+  position: absolute;
+  z-index: 6;
+  min-width: 200px;
+  width: 260px;
+  max-width: calc(100% - 8px);
+  max-height: 60%;
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  background: #1c1c1c;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+}
+.wz-tl-menu-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 4px 6px;
+  border: none;
+  border-radius: 3px;
+  background: transparent;
+  color: #ddd;
+  font: 12px Arial, sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+.wz-tl-menu-item span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wz-tl-menu-item:hover { background: #2e2e2e; color: #fff; }
+.wz-tl-menu-item.wz-tl-active { background: #4464bd; color: #fff; }
+.wz-tl-menu-count { flex: none; opacity: 0.6; }
+.wz-tl-menu-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; padding-top: 4px; border-top: 1px solid #444; }
+.wz-tl-preview {
+  position: fixed;
+  z-index: ${Z_FLOATING};
+  pointer-events: none;
+}
+.wz-tl-preview-fallback {
+  width: 200px;
+  padding: 4px;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  background: #000;
+  color: #fff;
+  font: bold 13px Arial, sans-serif;
+  text-align: center;
+}
+.wz-tl-preview-fallback div {
+  height: 120px;
+  margin-bottom: 4px;
+  background: center / contain no-repeat;
+  image-rendering: pixelated;
+}
+`;
+
+  // packages/misc/tier-list/storage.js
+  var LISTS_KEY = "wizascript.tierlist.lists";
+  var WINDOW_KEY = "wizascript.tierlist.window";
+  function readJSON(key2, fallback) {
+    try {
+      const raw = GM_getValue(key2, null);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch (e) {
+      console.warn("[Tier List] Failed to read storage key", key2, e);
+      return fallback;
+    }
+  }
+  function writeJSON(key2, value) {
+    try {
+      GM_setValue(key2, JSON.stringify(value));
+    } catch (e) {
+      console.warn("[Tier List] Failed to write storage key", key2, e);
+    }
+  }
+  function loadLists() {
+    return readJSON(LISTS_KEY, null);
+  }
+  function saveLists(data2) {
+    writeJSON(LISTS_KEY, data2);
+  }
+  function loadWindowState() {
+    return readJSON(WINDOW_KEY, null);
+  }
+  function saveWindowState(state2) {
+    writeJSON(WINDOW_KEY, state2);
+  }
+
+  // packages/misc/tier-list/model.js
+  var DEFAULT_TIERS = [
+    ["S", "#ff7f7f"],
+    ["A", "#ffbf7f"],
+    ["B", "#ffdf7f"],
+    ["C", "#ffff7f"],
+    ["D", "#bfff7f"]
+  ];
+  var TIER_COLORS = [
+    "#ff7f7f",
+    "#ffbf7f",
+    "#ffdf7f",
+    "#ffff7f",
+    "#bfff7f",
+    "#7fff7f",
+    "#7fffff",
+    "#7fbfff",
+    "#7f7fff",
+    "#ff7fff",
+    "#bf7fbf",
+    "#cfcfcf"
+  ];
+  var MAX_UNDO = 50;
+  var SAVE_DELAY_MS = 300;
+  var MAX_LABEL = 40;
+  var MAX_TITLE = 60;
+  var MAX_TEXT = 40;
+  var MAX_LISTS = 50;
+  var DEFAULT_TITLE = "My Tier List";
+  var state = null;
+  var undoStack = [];
+  var listeners = /* @__PURE__ */ new Set();
+  var saveTimer = null;
+  function uid(prefix) {
+    return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+  function makeTier(label, color) {
+    return { id: uid("t"), label, color, items: [] };
+  }
+  function makeList(title = DEFAULT_TITLE) {
+    return { id: uid("l"), title, texts: {}, tiers: DEFAULT_TIERS.map(([l, c]) => makeTier(l, c)) };
+  }
+  function sanitize(raw) {
+    if (!raw || !Array.isArray(raw.lists) || !raw.lists.length) {
+      const list = makeList();
+      return { version: 1, active: list.id, lists: [list] };
+    }
+    const lists = raw.lists.map((l) => ({
+      id: typeof l.id === "string" ? l.id : uid("l"),
+      title: typeof l.title === "string" ? l.title.slice(0, MAX_TITLE) : DEFAULT_TITLE,
+      texts: Object.fromEntries(Object.entries(l.texts && typeof l.texts === "object" ? l.texts : {}).filter(([, v]) => typeof v === "string").map(([k, v]) => [k, v.slice(0, MAX_TEXT)])),
+      tiers: (Array.isArray(l.tiers) ? l.tiers : []).map((t) => ({
+        id: typeof t.id === "string" ? t.id : uid("t"),
+        label: typeof t.label === "string" ? t.label.slice(0, MAX_LABEL) : "?",
+        color: /^#[0-9a-f]{6}$/i.test(t.color) ? t.color : "#cfcfcf",
+        items: (Array.isArray(t.items) ? t.items : []).filter((k) => typeof k === "string")
+      }))
+    }));
+    lists.forEach((l) => {
+      const seen2 = /* @__PURE__ */ new Set();
+      l.tiers.forEach((t) => {
+        t.items = t.items.filter((k) => seen2.has(k) ? false : (seen2.add(k), true));
+      });
+    });
+    const active = lists.some((l) => l.id === raw.active) ? raw.active : lists[0].id;
+    return { version: 1, active, lists };
+  }
+  function ensureLoaded() {
+    if (!state) state = sanitize(loadLists());
+  }
+  function scheduleSave() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => saveLists(state), SAVE_DELAY_MS);
+  }
+  function flushSave() {
+    if (!state) return;
+    clearTimeout(saveTimer);
+    saveLists(state);
+  }
+  function notify() {
+    listeners.forEach((fn) => {
+      try {
+        fn();
+      } catch (e) {
+        console.error("[Tier List] listener failed", e);
+      }
+    });
+  }
+  function change(mutator) {
+    ensureLoaded();
+    const before = JSON.stringify(state);
+    const result = mutator(activeList());
+    if (result === false) return false;
+    if (JSON.stringify(state) === before) return false;
+    undoStack.push(before);
+    if (undoStack.length > MAX_UNDO) undoStack.shift();
+    scheduleSave();
+    notify();
+    return true;
+  }
+  function activeList() {
+    return state.lists.find((l) => l.id === state.active) || state.lists[0];
+  }
+  function findTier(list, tierId) {
+    return list.tiers.find((t) => t.id === tierId) || null;
+  }
+  function removeEverywhere(list, key2) {
+    list.tiers.forEach((t) => {
+      const i = t.items.indexOf(key2);
+      if (i !== -1) t.items.splice(i, 1);
+    });
+  }
+  function subscribe(fn) {
+    listeners.add(fn);
+    return () => listeners.delete(fn);
+  }
+  function getActiveList() {
+    ensureLoaded();
+    return activeList();
+  }
+  function isPlaced(key2) {
+    return getActiveList().tiers.some((t) => t.items.includes(key2));
+  }
+  function canUndo() {
+    return undoStack.length > 0;
+  }
+  function getLists() {
+    ensureLoaded();
+    return state.lists.map((l) => ({
+      id: l.id,
+      title: l.title,
+      count: l.tiers.reduce((n, t) => n + t.items.length, 0),
+      active: l.id === state.active
+    }));
+  }
+  function getTextLabel(textId) {
+    const t = getActiveList().texts[textId];
+    return typeof t === "string" ? t : null;
+  }
+  function getTextIds() {
+    return Object.keys(getActiveList().texts);
+  }
+  function placeItem(key2, tierId, index) {
+    return change((list) => {
+      const tier = findTier(list, tierId);
+      if (!tier || typeof key2 !== "string") return false;
+      removeEverywhere(list, key2);
+      const at = Math.max(0, Math.min(typeof index === "number" ? index : tier.items.length, tier.items.length));
+      tier.items.splice(at, 0, key2);
+    });
+  }
+  function removeItem(key2) {
+    return change((list) => removeEverywhere(list, key2));
+  }
+  function addTier(atIndex) {
+    return change((list) => {
+      const used = new Set(list.tiers.map((t) => t.color));
+      const color = TIER_COLORS.find((c) => !used.has(c)) || "#cfcfcf";
+      const at = typeof atIndex === "number" ? Math.max(0, Math.min(atIndex, list.tiers.length)) : list.tiers.length;
+      list.tiers.splice(at, 0, makeTier("New", color));
+    });
+  }
+  function deleteTier(tierId) {
+    return change((list) => {
+      const i = list.tiers.findIndex((t) => t.id === tierId);
+      if (i === -1) return false;
+      list.tiers.splice(i, 1);
+    });
+  }
+  function renameTier(tierId, label) {
+    return change((list) => {
+      const tier = findTier(list, tierId);
+      if (!tier) return false;
+      tier.label = String(label).slice(0, MAX_LABEL);
+    });
+  }
+  function recolorTier(tierId, color) {
+    if (!/^#[0-9a-f]{6}$/i.test(color)) return false;
+    return change((list) => {
+      const tier = findTier(list, tierId);
+      if (!tier) return false;
+      tier.color = color.toLowerCase();
+    });
+  }
+  function moveTier(tierId, delta) {
+    return change((list) => {
+      const i = list.tiers.findIndex((t) => t.id === tierId);
+      const j = i + delta;
+      if (i === -1 || j < 0 || j >= list.tiers.length) return false;
+      const [tier] = list.tiers.splice(i, 1);
+      list.tiers.splice(j, 0, tier);
+    });
+  }
+  function clearTier(tierId) {
+    return change((list) => {
+      const tier = findTier(list, tierId);
+      if (!tier) return false;
+      tier.items = [];
+    });
+  }
+  function setTitle(title) {
+    return change((list) => {
+      list.title = String(title).trim().slice(0, MAX_TITLE) || DEFAULT_TITLE;
+    });
+  }
+  function resetList() {
+    return change((list) => {
+      list.tiers = DEFAULT_TIERS.map(([l, c]) => makeTier(l, c));
+    });
+  }
+  function addText(label) {
+    const clean = String(label || "").trim().slice(0, MAX_TEXT);
+    if (!clean) return null;
+    const id = uid("x");
+    const ok = change((list) => {
+      list.texts[id] = clean;
+    });
+    return ok ? `text:${id}` : null;
+  }
+  function renameText(textId, label) {
+    const clean = String(label || "").trim().slice(0, MAX_TEXT);
+    if (!clean) return false;
+    return change((list) => {
+      if (!(textId in list.texts)) return false;
+      list.texts[textId] = clean;
+    });
+  }
+  function deleteText(textId) {
+    return change((list) => {
+      if (!(textId in list.texts)) return false;
+      delete list.texts[textId];
+      removeEverywhere(list, `text:${textId}`);
+    });
+  }
+  function setActiveList(listId) {
+    ensureLoaded();
+    if (state.active === listId || !state.lists.some((l) => l.id === listId)) return false;
+    state.active = listId;
+    undoStack.length = 0;
+    scheduleSave();
+    notify();
+    return true;
+  }
+  function createList() {
+    ensureLoaded();
+    if (state.lists.length >= MAX_LISTS) return false;
+    const list = makeList(`Tier List ${state.lists.length + 1}`);
+    state.lists.push(list);
+    return setActiveList(list.id);
+  }
+  function duplicateList() {
+    ensureLoaded();
+    if (state.lists.length >= MAX_LISTS) return false;
+    const copy2 = JSON.parse(JSON.stringify(activeList()));
+    copy2.id = uid("l");
+    copy2.title = `${copy2.title} (copy)`.slice(0, MAX_TITLE);
+    copy2.tiers.forEach((t) => {
+      t.id = uid("t");
+    });
+    state.lists.push(copy2);
+    return setActiveList(copy2.id);
+  }
+  function deleteActiveList() {
+    ensureLoaded();
+    const before = JSON.stringify(state);
+    const i = state.lists.findIndex((l) => l.id === state.active);
+    state.lists.splice(i, 1);
+    if (!state.lists.length) state.lists.push(makeList());
+    state.active = state.lists[Math.max(0, i - 1)].id;
+    undoStack.length = 0;
+    undoStack.push(before);
+    scheduleSave();
+    notify();
+    return true;
+  }
+  var ITEM_KEY = /^(card|soul|artifact|text):[A-Za-z0-9_-]{1,40}$/;
+  var MAX_TIERS = 30;
+  var MAX_ITEMS = 3e3;
+  function exportActiveList() {
+    const list = getActiveList();
+    return {
+      v: 1,
+      title: list.title,
+      texts: { ...list.texts },
+      tiers: list.tiers.map((t) => ({ label: t.label, color: t.color, items: t.items.slice() }))
+    };
+  }
+  function importList(data2) {
+    ensureLoaded();
+    if (!data2 || typeof data2 !== "object" || !Array.isArray(data2.tiers)) throw new Error("That code doesn't contain a tier list.");
+    if (state.lists.length >= MAX_LISTS) throw new Error(`You already have ${MAX_LISTS} lists. Delete one first.`);
+    const list = makeList();
+    const textMap = {};
+    Object.entries(data2.texts && typeof data2.texts === "object" ? data2.texts : {}).forEach(([oldId, label]) => {
+      if (typeof label !== "string" || !label.trim()) return;
+      const id = uid("x");
+      textMap[oldId] = id;
+      list.texts[id] = label.trim().slice(0, MAX_TEXT);
+    });
+    let count = 0;
+    const seen2 = /* @__PURE__ */ new Set();
+    list.tiers = data2.tiers.slice(0, MAX_TIERS).map((t) => {
+      const tier = makeTier(
+        typeof t.label === "string" ? t.label.slice(0, MAX_LABEL) : "?",
+        /^#[0-9a-f]{6}$/i.test(t && t.color) ? t.color.toLowerCase() : "#cfcfcf"
+      );
+      (Array.isArray(t.items) ? t.items : []).forEach((k) => {
+        if (typeof k !== "string" || !ITEM_KEY.test(k) || count >= MAX_ITEMS) return;
+        let key2 = k;
+        if (k.startsWith("text:")) {
+          const id = textMap[k.slice(5)];
+          if (!id) return;
+          key2 = `text:${id}`;
+        }
+        if (seen2.has(key2)) return;
+        seen2.add(key2);
+        tier.items.push(key2);
+        count += 1;
+      });
+      return tier;
+    });
+    if (!list.tiers.length) list.tiers = DEFAULT_TIERS.map(([l, c]) => makeTier(l, c));
+    let title = typeof data2.title === "string" && data2.title.trim() ? data2.title.trim().slice(0, MAX_TITLE) : "Imported list";
+    const titles = new Set(state.lists.map((l) => l.title));
+    if (titles.has(title)) {
+      let n = 2;
+      while (titles.has(`${title} (${n})`)) n += 1;
+      title = `${title} (${n})`.slice(0, MAX_TITLE);
+    }
+    list.title = title;
+    state.lists.push(list);
+    setActiveList(list.id);
+    return title;
+  }
+  function listUsesKind(kind) {
+    return getActiveList().tiers.some((t) => t.items.some((k) => k.startsWith(kind + ":")));
+  }
+  function undo() {
+    ensureLoaded();
+    const prev = undoStack.pop();
+    if (!prev) return false;
+    state = sanitize(JSON.parse(prev));
+    scheduleSave();
+    notify();
+    return true;
+  }
+
+  // packages/misc/tier-list/items.js
+  var cards = [];
+  var byId = /* @__PURE__ */ new Map();
+  var nameCache = /* @__PURE__ */ new Map();
+  var readyListeners = /* @__PURE__ */ new Set();
+  var HIDDEN_BY_DEFAULT = /* @__PURE__ */ new Set(["TOKEN", "GENERATED", "STORY"]);
+  var RARITY_COLORS = {
+    BASE: "#9a9a9a",
+    COMMON: "#e8e8e8",
+    RARE: "#58b4ff",
+    EPIC: "#c86bff",
+    LEGENDARY: "#ffcc00",
+    DETERMINATION: "#ff3030",
+    TOKEN: "#6b6b6b",
+    GENERATED: "#6b6b6b",
+    STORY: "#6b6b6b"
+  };
+  function setCards(list) {
+    if (!Array.isArray(list) || !list.length) return false;
+    cards = list.filter((c) => c && c.id !== void 0 && c.id !== null);
+    byId = new Map(cards.map((c) => [String(c.id), c]));
+    nameCache.clear();
+    readyListeners.forEach((fn) => {
+      try {
+        fn();
+      } catch (e) {
+      }
+    });
+    return true;
+  }
+  function readCachedCards() {
+    try {
+      const raw = getPageWindow().localStorage.getItem("allCards");
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function initItemData(plugin) {
+    if (!setCards(getAllCards())) setCards(readCachedCards());
+    const cachedArtifacts = readArtifactCache();
+    if (cachedArtifacts) setArtifacts(cachedArtifacts.list);
+    if (plugin && plugin.events) {
+      plugin.events.on("allCardsReady", (list) => setCards(list));
+    }
+  }
+  function onCardsReady(fn) {
+    readyListeners.add(fn);
+    return () => readyListeners.delete(fn);
+  }
+  function hasCards() {
+    return cards.length > 0;
+  }
+  function getCard(id) {
+    return byId.get(String(id)) || null;
+  }
+  function stripHtml(text) {
+    const el3 = document.createElement("div");
+    el3.innerHTML = String(text);
+    return el3.textContent.trim();
+  }
+  function cardName(card) {
+    const cached2 = nameCache.get(card.id);
+    if (cached2) return cached2;
+    let name = "";
+    try {
+      const $2 = getPageWindow().$;
+      if ($2 && $2.i18n) {
+        const key2 = `card-name-${card.fixedId || card.id}`;
+        const value = $2.i18n(key2, 1);
+        if (value && value !== key2) name = stripHtml(value);
+      }
+    } catch (e) {
+    }
+    if (!name) name = stripHtml(card.name || `Card ${card.id}`);
+    nameCache.set(card.id, name);
+    return name;
+  }
+  function cardImage(card) {
+    return card && card.image ? `/images/cards/${card.image}.png` : "";
+  }
+  function cardKey(card) {
+    return `card:${card.id}`;
+  }
+  var SOULS = ["DETERMINATION", "PATIENCE", "BRAVERY", "INTEGRITY", "PERSEVERANCE", "KINDNESS", "JUSTICE"];
+  var SOUL_COLORS3 = {
+    DETERMINATION: "#ff0000",
+    PATIENCE: "#41fcff",
+    BRAVERY: "#fca500",
+    INTEGRITY: "#0064ff",
+    PERSEVERANCE: "#d535d9",
+    KINDNESS: "#00c000",
+    JUSTICE: "#ffff00"
+  };
+  function i18n(key2, ...args) {
+    try {
+      const $2 = getPageWindow().$;
+      if ($2 && $2.i18n) {
+        const value = $2.i18n(key2, ...args);
+        if (value && value !== key2) return stripHtml(value);
+      }
+    } catch (e) {
+    }
+    return "";
+  }
+  function soulName(soul) {
+    return i18n(`soul-${soul.toLowerCase()}`, 1) || soul.charAt(0) + soul.slice(1).toLowerCase();
+  }
+  var ARTIFACT_CACHE_KEY = "wizascript.tierlist.artifacts";
+  var ARTIFACT_CACHE_MS = 24 * 60 * 60 * 1e3;
+  var artifacts = [];
+  var artifactsById = /* @__PURE__ */ new Map();
+  var artifactLoad = null;
+  function setArtifacts(list) {
+    if (!Array.isArray(list) || !list.length) return false;
+    artifacts = list.filter((a) => a && a.id !== void 0 && a.id !== null).map((a) => ({ id: a.id, name: a.name, image: a.image, rarity: a.rarity }));
+    artifactsById = new Map(artifacts.map((a) => [String(a.id), a]));
+    return true;
+  }
+  function readArtifactCache() {
+    try {
+      const raw = GM_getValue(ARTIFACT_CACHE_KEY, null);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function loadArtifacts() {
+    if (artifactLoad) return artifactLoad;
+    const cached2 = readArtifactCache();
+    if (cached2 && setArtifacts(cached2.list) && Date.now() - cached2.time < ARTIFACT_CACHE_MS) {
+      artifactLoad = Promise.resolve(true);
+      return artifactLoad;
+    }
+    artifactLoad = fetch("/DecksConfig", { credentials: "same-origin" }).then((r) => r.json()).then((data2) => {
+      const raw = data2 && data2.allArtifacts;
+      const list = typeof raw === "string" ? JSON.parse(raw) : raw;
+      if (!setArtifacts(list)) return artifacts.length > 0;
+      try {
+        GM_setValue(ARTIFACT_CACHE_KEY, JSON.stringify({ time: Date.now(), list: artifacts }));
+      } catch (e) {
+      }
+      return true;
+    }).catch(() => artifacts.length > 0).then((ok) => {
+      if (!ok) artifactLoad = null;
+      return ok;
+    });
+    return artifactLoad;
+  }
+  function hasArtifacts() {
+    return artifacts.length > 0;
+  }
+  function artifactName(a) {
+    return i18n(`artifact-name-${a.id}`, 1) || stripHtml(a.name || `Artifact ${a.id}`);
+  }
+  function resolveItem(key2) {
+    const str = String(key2);
+    const at = str.indexOf(":");
+    const kind = str.slice(0, at);
+    const id = str.slice(at + 1);
+    if (kind === "card") {
+      const card = getCard(id);
+      if (card) {
+        return { key: key2, kind, card, label: cardName(card), image: cardImage(card), rarity: card.rarity };
+      }
+      return { key: key2, kind, card: null, label: "Unknown card", image: "", rarity: null };
+    }
+    if (kind === "soul" && SOULS.includes(id)) {
+      return { key: key2, kind, card: null, label: soulName(id), image: `/images/souls/${id}.png`, rarity: null, color: SOUL_COLORS3[id] };
+    }
+    if (kind === "artifact") {
+      const a = artifactsById.get(id);
+      if (a) return { key: key2, kind, card: null, label: artifactName(a), image: a.image ? `/images/artifacts/${a.image}.png` : "", rarity: a.rarity };
+      return { key: key2, kind, card: null, label: "Artifact", image: "", rarity: null };
+    }
+    if (kind === "text") {
+      const label = getTextLabel(id);
+      return { key: key2, kind, card: null, label: label === null ? "(deleted text)" : label, image: "", rarity: null, text: true };
+    }
+    return { key: key2, kind, card: null, label: "Unknown item", image: "", rarity: null };
+  }
+  function searchSouls(text) {
+    const q = String(text || "").trim().toLowerCase();
+    return SOULS.filter((s) => !q || soulName(s).toLowerCase().includes(q) || s.toLowerCase().includes(q)).map((s) => `soul:${s}`);
+  }
+  function searchArtifacts(text) {
+    const q = String(text || "").trim().toLowerCase();
+    return artifacts.filter((a) => !q || artifactName(a).toLowerCase().includes(q) || String(a.name || "").toLowerCase().includes(q)).sort((a, b) => artifactName(a).localeCompare(artifactName(b))).map((a) => `artifact:${a.id}`);
+  }
+  function isFilterActive(f) {
+    return !!(String(f.text || "").trim() || f.rarities.size || f.tribes || f.monster || f.spell || f.sets.size);
+  }
+  function searchCards(f, limit = 150, opts = {}) {
+    if (!isFilterActive(f)) return { results: [], total: 0, tagHits: 0 };
+    const text = String(f.text || "").trim().toLowerCase();
+    let tagHits = 0;
+    const matches = cards.filter((c) => {
+      if (f.rarities.size) {
+        if (!f.rarities.has(c.rarity)) return false;
+      } else if (HIDDEN_BY_DEFAULT.has(c.rarity)) {
+        return false;
+      }
+      if (f.monster || f.spell) {
+        const isSpell = Number(c.typeCard) === 1;
+        if (!(f.monster && !isSpell || f.spell && isSpell)) return false;
+      }
+      if (f.tribes && !(Number(c.typeCard) !== 1 && Array.isArray(c.tribes) && c.tribes.length)) return false;
+      if (f.sets.size && !f.sets.has(c.extension)) return false;
+      if (opts.exclude && opts.exclude(cardKey(c))) return false;
+      if (text) {
+        const local = cardName(c).toLowerCase();
+        const english = stripHtml(c.name || "").toLowerCase();
+        if (!local.includes(text) && !english.includes(text)) {
+          const tags = opts.tagsFor ? opts.tagsFor(c.id) : [];
+          if (!tags.some((name) => name.toLowerCase().includes(text))) return false;
+          tagHits += 1;
+        }
+      }
+      return true;
+    });
+    matches.sort((a, b) => Number(a.cost) - Number(b.cost) || cardName(a).localeCompare(cardName(b)));
+    return { results: matches.slice(0, limit), total: matches.length, tagHits };
+  }
+
+  // packages/misc/tier-list/window.js
+  var MIN_W = 400;
+  var MIN_H = 340;
+  var DEFAULT_W = 680;
+  var DEFAULT_H = 500;
+  var MIN_TILE = 52;
+  var EDGES = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
+  function viewport2() {
+    return { w: document.documentElement.clientWidth || window.innerWidth, h: document.documentElement.clientHeight || window.innerHeight };
+  }
+  function clampGeometry(g) {
+    const vp = viewport2();
+    const width = Math.max(Math.min(MIN_W, vp.w), Math.min(g.width, vp.w));
+    const height = Math.max(Math.min(MIN_H, vp.h), Math.min(g.height, vp.h));
+    const left = Math.max(0, Math.min(g.left, vp.w - width));
+    const top = Math.max(0, Math.min(g.top, vp.h - height));
+    return { left, top, width, height };
+  }
+  function defaultGeometry() {
+    const vp = viewport2();
+    const width = Math.min(DEFAULT_W, vp.w);
+    const height = Math.min(DEFAULT_H, vp.h);
+    return { left: Math.round((vp.w - width) / 2), top: Math.round((vp.h - height) / 2), width, height };
+  }
+  function buildWindow({ signal, getPreferredTile, onTitleChange }) {
+    const saved = loadWindowState() || {};
+    const ui = {
+      geometry: clampGeometry(saved.geometry || defaultGeometry()),
+      maximised: !!saved.maximised,
+      pickerOpen: saved.pickerOpen !== false
+    };
+    const root = document.createElement("div");
+    root.className = "wz-tl";
+    const header = document.createElement("div");
+    header.className = "wz-tl-header";
+    const title = document.createElement("input");
+    title.type = "text";
+    title.className = "wz-tl-title";
+    title.maxLength = 60;
+    title.spellcheck = false;
+    title.title = "Click to rename this list";
+    title.addEventListener("change", () => onTitleChange(title.value), { signal });
+    title.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") title.blur();
+    }, { signal });
+    const buttons = document.createElement("span");
+    buttons.style.cssText = "display:flex;gap:4px;flex:none;";
+    const body = document.createElement("div");
+    body.className = "wz-tl-body";
+    const grip = document.createElement("div");
+    grip.className = "wz-tl-grip";
+    grip.title = "Drag to move, double-click to fill the screen";
+    header.append(title, grip, buttons);
+    root.append(header, body);
+    EDGES.forEach((edge) => {
+      const h = document.createElement("div");
+      h.className = `wz-tl-resize wz-tl-resize-${edge}`;
+      h.dataset.edge = edge;
+      root.appendChild(h);
+    });
+    function persist() {
+      saveWindowState({ geometry: ui.geometry, maximised: ui.maximised, pickerOpen: ui.pickerOpen });
+    }
+    function updateTileSize() {
+      const width = ui.maximised ? viewport2().w : ui.geometry.width;
+      const preferred = getPreferredTile();
+      const tile = Math.round(Math.max(MIN_TILE, Math.min(preferred, (width - 120) / 9)));
+      root.style.setProperty("--wz-tl-tile", tile + "px");
+    }
+    function apply2() {
+      const g = ui.geometry;
+      root.style.left = g.left + "px";
+      root.style.top = g.top + "px";
+      root.style.width = g.width + "px";
+      root.style.height = g.height + "px";
+      root.classList.toggle("wz-tl-max", ui.maximised);
+      updateTileSize();
+    }
+    function setMaximised(value) {
+      ui.maximised = !!value;
+      apply2();
+      persist();
+      onMaximiseChange.forEach((fn) => fn(ui.maximised));
+    }
+    const onMaximiseChange = /* @__PURE__ */ new Set();
+    function followPointer(onMove, onEnd) {
+      const move = (ev) => onMove(ev);
+      const end = () => {
+        document.removeEventListener("pointermove", move, true);
+        document.removeEventListener("pointerup", end, true);
+        document.removeEventListener("pointercancel", end, true);
+        onEnd();
+      };
+      document.addEventListener("pointermove", move, { capture: true, signal });
+      document.addEventListener("pointerup", end, { capture: true, signal });
+      document.addEventListener("pointercancel", end, { capture: true, signal });
+    }
+    header.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0 || ui.maximised) return;
+      if (e.target.closest("input, button, select")) return;
+      e.preventDefault();
+      const start = { x: e.clientX, y: e.clientY, left: ui.geometry.left, top: ui.geometry.top };
+      header.style.cursor = "grabbing";
+      followPointer((ev) => {
+        ui.geometry = clampGeometry({ ...ui.geometry, left: start.left + ev.clientX - start.x, top: start.top + ev.clientY - start.y });
+        apply2();
+      }, () => {
+        header.style.cursor = "";
+        persist();
+      });
+    }, { signal });
+    header.addEventListener("dblclick", (e) => {
+      if (e.target.closest("input, button, select")) return;
+      setMaximised(!ui.maximised);
+    }, { signal });
+    root.addEventListener("pointerdown", (e) => {
+      const handle = e.target.closest(".wz-tl-resize");
+      if (!handle || e.button !== 0 || ui.maximised) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const edge = handle.dataset.edge;
+      const start = { x: e.clientX, y: e.clientY, ...ui.geometry };
+      const vp = viewport2();
+      followPointer((ev) => {
+        const dx = ev.clientX - start.x;
+        const dy = ev.clientY - start.y;
+        let { left, top, width, height } = start;
+        if (edge.includes("e")) width = Math.min(start.width + dx, vp.w - start.left);
+        if (edge.includes("s")) height = Math.min(start.height + dy, vp.h - start.top);
+        if (edge.includes("w")) {
+          width = Math.min(start.width - dx, start.left + start.width);
+          width = Math.max(width, MIN_W);
+          left = start.left + start.width - width;
+        }
+        if (edge.includes("n")) {
+          height = Math.min(start.height - dy, start.top + start.height);
+          height = Math.max(height, MIN_H);
+          top = start.top + start.height - height;
+        }
+        ui.geometry = clampGeometry({ left, top, width: Math.max(MIN_W, width), height: Math.max(MIN_H, height) });
+        apply2();
+      }, () => persist());
+    }, { signal });
+    window.addEventListener("resize", () => {
+      ui.geometry = clampGeometry(ui.geometry);
+      apply2();
+    }, { signal });
+    apply2();
+    return {
+      root,
+      header,
+      body,
+      buttons,
+      title,
+      isMaximised: () => ui.maximised,
+      setMaximised,
+      onMaximiseChange: (fn) => onMaximiseChange.add(fn),
+      isPickerOpen: () => ui.pickerOpen,
+      setPickerOpen(value) {
+        ui.pickerOpen = !!value;
+        persist();
+      },
+      refreshTileSize: updateTileSize
+    };
+  }
+
+  // packages/misc/tier-list/tiers-view.js
+  function buildTile(key2, { placed = false } = {}) {
+    const item = resolveItem(key2);
+    const tile = document.createElement("div");
+    tile.className = "wz-tl-tile";
+    tile.dataset.key = key2;
+    tile.tabIndex = -1;
+    if (item.image) tile.style.backgroundImage = `url("${item.image}")`;
+    else tile.classList.add("wz-tl-noimg");
+    if (item.color) tile.style.setProperty("--wz-tl-rarity", item.color);
+    else if (item.rarity && RARITY_COLORS[item.rarity]) tile.style.setProperty("--wz-tl-rarity", RARITY_COLORS[item.rarity]);
+    if (item.kind === "soul") tile.classList.add("wz-tl-soul");
+    if (item.text) {
+      tile.classList.add("wz-tl-text");
+      tile.title = "Double-click to edit";
+    }
+    if (placed) tile.classList.add("wz-tl-placed");
+    const name = document.createElement("div");
+    name.className = "wz-tl-tile-name";
+    name.textContent = item.label;
+    tile.appendChild(name);
+    return tile;
+  }
+  function createTiersView({ body, signal }) {
+    const container = document.createElement("div");
+    container.className = "wz-tl-tiers";
+    body.appendChild(container);
+    let editor = null;
+    function closeEditor() {
+      if (editor) editor.el.remove();
+      editor = null;
+    }
+    function openEditor(tierId, anchor) {
+      closeEditor();
+      const list = getActiveList();
+      const index = list.tiers.findIndex((t) => t.id === tierId);
+      const tier = list.tiers[index];
+      if (!tier) return;
+      const el3 = document.createElement("div");
+      el3.className = "wz-tl-editor";
+      el3.dataset.tierId = tierId;
+      const name = document.createElement("input");
+      name.type = "text";
+      name.maxLength = 40;
+      name.value = tier.label;
+      name.placeholder = "Tier name";
+      const commitName = () => renameTier(tierId, name.value);
+      name.addEventListener("change", commitName);
+      name.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          commitName();
+          closeEditor();
+        }
+        if (e.key === "Escape") closeEditor();
+      });
+      const swatches = document.createElement("div");
+      swatches.className = "wz-tl-swatches";
+      TIER_COLORS.forEach((color) => {
+        const s = document.createElement("div");
+        s.className = "wz-tl-swatch" + (color === tier.color ? " wz-tl-active" : "");
+        s.style.background = color;
+        s.title = color;
+        s.addEventListener("click", () => {
+          recolorTier(tierId, color);
+          swatches.querySelectorAll(".wz-tl-swatch").forEach((n) => n.classList.toggle("wz-tl-active", n === s));
+          custom.value = color;
+        });
+        swatches.appendChild(s);
+      });
+      const custom = document.createElement("input");
+      custom.type = "color";
+      custom.value = tier.color;
+      custom.title = "Custom colour";
+      custom.addEventListener("change", () => recolorTier(tierId, custom.value));
+      swatches.appendChild(custom);
+      const grid = document.createElement("div");
+      grid.className = "wz-tl-editor-buttons";
+      const btn = (label, fn, opts = {}) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "wz-tl-btn";
+        b.textContent = label;
+        if (opts.disabled) b.disabled = true;
+        b.addEventListener("click", () => {
+          commitName();
+          fn();
+          if (opts.close) closeEditor();
+          else reopen();
+        });
+        grid.appendChild(b);
+        return b;
+      };
+      const reopen = () => {
+        const row2 = container.querySelector(`.wz-tl-row[data-tier-id="${tierId}"]`);
+        if (row2) openEditor(tierId, row2);
+        else closeEditor();
+      };
+      btn("\u25B2 Move up", () => moveTier(tierId, -1), { disabled: index === 0 });
+      btn("\u25BC Move down", () => moveTier(tierId, 1), { disabled: index === list.tiers.length - 1 });
+      btn("+ Row above", () => addTier(index), { close: true });
+      btn("+ Row below", () => addTier(index + 1), { close: true });
+      btn("Clear row", () => clearTier(tierId), { disabled: !tier.items.length });
+      const del = btn("Delete row", () => deleteTier(tierId), { close: true });
+      del.classList.add("wz-tl-danger");
+      btn("Done", () => {
+      }, { close: true }).style.gridColumn = "1 / -1";
+      el3.append(name, swatches, grid);
+      body.appendChild(el3);
+      const bodyRect = body.getBoundingClientRect();
+      const aRect = anchor.getBoundingClientRect();
+      let top = aRect.bottom - bodyRect.top + 2;
+      if (top + el3.offsetHeight > body.clientHeight) top = Math.max(2, aRect.top - bodyRect.top - el3.offsetHeight - 2);
+      el3.style.top = Math.max(2, top) + "px";
+      el3.style.left = "6px";
+      editor = { el: el3, tierId };
+      name.focus();
+      name.select();
+    }
+    function render2() {
+      const list = getActiveList();
+      const scroll = container.scrollTop;
+      container.innerHTML = "";
+      list.tiers.forEach((tier) => {
+        const row2 = document.createElement("div");
+        row2.className = "wz-tl-row";
+        row2.dataset.tierId = tier.id;
+        const label = document.createElement("div");
+        label.className = "wz-tl-row-label";
+        label.style.background = tier.color;
+        label.textContent = tier.label;
+        label.title = "Click to edit this tier";
+        label.addEventListener("click", () => openEditor(tier.id, row2));
+        const items = document.createElement("div");
+        items.className = "wz-tl-row-items";
+        tier.items.forEach((key2) => items.appendChild(buildTile(key2)));
+        const tools = document.createElement("div");
+        tools.className = "wz-tl-row-tools";
+        const gear = document.createElement("button");
+        gear.type = "button";
+        gear.textContent = "\u2699";
+        gear.title = "Edit this tier";
+        gear.addEventListener("click", () => openEditor(tier.id, row2));
+        const up = document.createElement("button");
+        up.type = "button";
+        up.textContent = "\u25B2";
+        up.title = "Move tier up";
+        up.addEventListener("click", () => moveTier(tier.id, -1));
+        const down = document.createElement("button");
+        down.type = "button";
+        down.textContent = "\u25BC";
+        down.title = "Move tier down";
+        down.addEventListener("click", () => moveTier(tier.id, 1));
+        tools.append(up, gear, down);
+        row2.append(label, items, tools);
+        container.appendChild(row2);
+      });
+      const add = document.createElement("button");
+      add.type = "button";
+      add.className = "wz-tl-btn wz-tl-add-row";
+      add.textContent = "+ Add tier";
+      add.addEventListener("click", () => addTier());
+      container.appendChild(add);
+      container.scrollTop = scroll;
+      if (editor && !list.tiers.some((t) => t.id === editor.tierId)) closeEditor();
+    }
+    document.addEventListener("pointerdown", (e) => {
+      if (!editor) return;
+      if (editor.el.contains(e.target)) return;
+      if (e.target.closest(".wz-tl-row-label, .wz-tl-row-tools")) return;
+      closeEditor();
+    }, { signal, capture: true });
+    return { render: render2, closeEditor, element: container };
+  }
+
+  // packages/misc/tier-list/picker.js
+  var RESULT_LIMIT = 150;
+  var SEARCH_DELAY_MS = 150;
+  var RARITY_TOGGLES = [
+    ["BASE", "images/rarity/BASE_BASE.png", "Base"],
+    ["TOKEN", "images/rarity/BASE_TOKEN.png", "Token"],
+    ["COMMON", "images/rarity/BASE_COMMON.png", "Common"],
+    ["RARE", "images/rarity/BASE_RARE.png", "Rare"],
+    ["EPIC", "images/rarity/BASE_EPIC.png", "Epic"],
+    ["LEGENDARY", "images/rarity/BASE_LEGENDARY.png", "Legendary"],
+    ["DETERMINATION", "images/rarity/BASE_DETERMINATION.png", "Determination"],
+    ["STORY", "images/rarity/BASE_STORY.png", "Story"]
+  ];
+  var KIND_TOGGLES = [
+    ["tribes", "images/tribes/ALL.png", "Monsters with tribes"],
+    ["monster", "images/souls/MONSTER.png", "Monsters"],
+    ["spell", "images/artifacts/Arcane_Scepter.png", "Spells"]
+  ];
+  var SET_TOGGLES = [
+    ["BASE", "images/rarity/BASE.png", "Undertale cards"],
+    ["DELTARUNE", "images/rarity/DELTARUNE.png", "Deltarune cards"],
+    ["UTY", "images/rarity/UTY.png", "Undertale Yellow cards"]
+  ];
+  var TYPES = [
+    ["cards", "Cards"],
+    ["souls", "Souls"],
+    ["artifacts", "Artifacts"],
+    ["text", "Text"]
+  ];
+  function createPicker({ body, signal, getOptions = () => ({}) }) {
+    const panel = document.createElement("div");
+    panel.className = "wz-tl-picker";
+    let type = "cards";
+    const state2 = { rarities: /* @__PURE__ */ new Set(), sets: /* @__PURE__ */ new Set(), tribes: false, monster: false, spell: false };
+    const toggles2 = [];
+    const searchText = { cards: "", souls: "", artifacts: "", text: "" };
+    const filters = document.createElement("div");
+    filters.className = "wz-tl-filters";
+    const tabs = document.createElement("div");
+    tabs.className = "wz-tl-type-tabs";
+    const tabButtons = TYPES.map(([value, label]) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "wz-tl-type-tab";
+      b.dataset.type = value;
+      b.textContent = label;
+      b.addEventListener("click", () => setType(value), { signal });
+      tabs.appendChild(b);
+      return b;
+    });
+    const search = document.createElement("input");
+    search.type = "text";
+    search.spellcheck = false;
+    const clear = document.createElement("button");
+    clear.type = "button";
+    clear.className = "wz-tl-btn";
+    const searchRow = document.createElement("div");
+    searchRow.className = "wz-tl-search-row";
+    searchRow.append(search, clear);
+    function makeToggle([value, src, title], isOn2, flip) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "wz-tl-toggle";
+      b.title = title;
+      b.dataset.filter = value;
+      const img = document.createElement("img");
+      img.src = "/" + src;
+      img.alt = title;
+      img.draggable = false;
+      img.addEventListener("error", () => {
+        img.remove();
+        b.textContent = title;
+        b.classList.add("wz-tl-toggle-text");
+      }, { once: true });
+      b.appendChild(img);
+      b.addEventListener("click", () => {
+        flip(value);
+        render2();
+      }, { signal });
+      toggles2.push({ el: b, isOn: () => isOn2(value) });
+      return b;
+    }
+    function group(defs, isOn2, flip) {
+      const g = document.createElement("div");
+      g.className = "wz-tl-toggle-group";
+      defs.forEach((d) => g.appendChild(makeToggle(d, isOn2, flip)));
+      return g;
+    }
+    const flipSet = (set) => (v) => set.has(v) ? set.delete(v) : set.add(v);
+    const cardToggles = document.createElement("div");
+    cardToggles.className = "wz-tl-card-toggles";
+    cardToggles.append(
+      group(RARITY_TOGGLES, (v) => state2.rarities.has(v), flipSet(state2.rarities)),
+      group(KIND_TOGGLES, (v) => state2[v], (v) => {
+        state2[v] = !state2[v];
+      }),
+      group(SET_TOGGLES, (v) => state2.sets.has(v), flipSet(state2.sets))
+    );
+    filters.append(tabs, searchRow, cardToggles);
+    const hint = document.createElement("div");
+    hint.className = "wz-tl-hint";
+    const results = document.createElement("div");
+    results.className = "wz-tl-results";
+    panel.append(filters, hint, results);
+    body.appendChild(panel);
+    function cardFilters() {
+      return { text: search.value, ...state2 };
+    }
+    function setType(value) {
+      searchText[type] = search.value;
+      type = value;
+      search.value = searchText[type];
+      if (type === "artifacts" && !hasArtifacts()) {
+        loadArtifacts().then(() => {
+          if (type === "artifacts") render2();
+        });
+      }
+      render2();
+      search.focus();
+    }
+    function syncControls() {
+      tabButtons.forEach((b) => b.classList.toggle("wz-tl-active", b.dataset.type === type));
+      cardToggles.style.visibility = type === "cards" ? "" : "hidden";
+      toggles2.forEach((t) => t.el.classList.toggle("wz-tl-on", t.isOn()));
+      if (type === "text") {
+        search.placeholder = "New text item\u2026";
+        search.maxLength = MAX_TEXT;
+        clear.textContent = "Add";
+        clear.title = "Add this text as an item you can rank";
+        clear.disabled = !search.value.trim();
+      } else {
+        search.placeholder = type === "cards" ? getOptions().tagsFor ? "Cards or tags\u2026" : "Search cards\u2026" : type === "souls" ? "Search souls\u2026" : "Search artifacts\u2026";
+        search.removeAttribute("maxLength");
+        clear.textContent = "Clear";
+        clear.title = "Clear the search and filters";
+        clear.disabled = type === "cards" ? !isFilterActive(cardFilters()) : !search.value;
+      }
+    }
+    function unranked(keys) {
+      return getOptions().hideRanked ? keys.filter((k) => !isPlaced(k)) : keys;
+    }
+    function showKeys(keys, { deletable = false } = {}) {
+      const frag = document.createDocumentFragment();
+      keys.forEach((key2) => {
+        const tile = buildTile(key2, { placed: isPlaced(key2) });
+        if (deletable) {
+          const del = document.createElement("button");
+          del.type = "button";
+          del.className = "wz-tl-tile-del";
+          del.textContent = "\xD7";
+          del.title = "Delete this text item";
+          del.addEventListener("click", (e) => {
+            e.stopPropagation();
+            deleteText(key2.slice(5));
+          });
+          tile.appendChild(del);
+        }
+        frag.appendChild(tile);
+      });
+      results.appendChild(frag);
+    }
+    function renderCards() {
+      if (!hasCards()) {
+        hint.textContent = "No card data yet. Open the Decks or Crafting page once, then come back.";
+        return;
+      }
+      const f = cardFilters();
+      if (!isFilterActive(f)) {
+        hint.textContent = "Search or tick a filter to list cards, then drag them into a tier.";
+        return;
+      }
+      const opts = getOptions();
+      const { results: cards2, total, tagHits } = searchCards(f, RESULT_LIMIT, {
+        tagsFor: opts.tagsFor,
+        exclude: opts.hideRanked ? (k) => isPlaced(k) : null
+      });
+      if (!total) {
+        hint.textContent = opts.hideRanked ? "No unranked cards match." : "No cards match.";
+        return;
+      }
+      const tagNote = tagHits ? ` (${tagHits} by Card Tag)` : "";
+      hint.textContent = total > cards2.length ? `Showing ${cards2.length} of ${total} cards${tagNote}. Narrow the search to see the rest.` : `${total} card${total === 1 ? "" : "s"}${tagNote}. Drag one into a tier.`;
+      showKeys(cards2.map(cardKey));
+    }
+    function renderSouls() {
+      const keys = unranked(searchSouls(search.value));
+      hint.textContent = keys.length ? "Drag a soul into a tier." : "No souls match.";
+      showKeys(keys);
+    }
+    function renderArtifacts() {
+      if (!hasArtifacts()) {
+        hint.textContent = "Loading artifacts\u2026 (if this stays, open the Decks page once, then try again)";
+        return;
+      }
+      const keys = unranked(searchArtifacts(search.value));
+      hint.textContent = keys.length ? `${keys.length} artifact${keys.length === 1 ? "" : "s"}. Drag one into a tier.` : "No artifacts match.";
+      showKeys(keys);
+    }
+    function renderText() {
+      const all = getTextIds().map((id) => `text:${id}`);
+      const keys = unranked(all);
+      hint.textContent = keys.length ? "Drag a text item into a tier. Double-click one to edit it." : all.length ? "All your text items are ranked. Type a label and press Add for a new one." : "Type a label (e.g. an archetype) and press Add to make a text item.";
+      showKeys(keys, { deletable: true });
+    }
+    function render2() {
+      results.innerHTML = "";
+      syncControls();
+      if (type === "cards") renderCards();
+      else if (type === "souls") renderSouls();
+      else if (type === "artifacts") renderArtifacts();
+      else renderText();
+    }
+    function addTextItem() {
+      if (addText(search.value)) {
+        search.value = "";
+        render2();
+      }
+    }
+    let searchTimer = null;
+    search.addEventListener("input", () => {
+      if (type === "text") {
+        syncControls();
+        return;
+      }
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(render2, SEARCH_DELAY_MS);
+    }, { signal });
+    search.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && type === "text") {
+        addTextItem();
+        return;
+      }
+      if (e.key === "Escape" && search.value) {
+        search.value = "";
+        render2();
+      }
+    }, { signal });
+    clear.addEventListener("click", () => {
+      if (type === "text") {
+        addTextItem();
+        return;
+      }
+      search.value = "";
+      if (type === "cards") {
+        state2.rarities.clear();
+        state2.sets.clear();
+        state2.tribes = state2.monster = state2.spell = false;
+      }
+      render2();
+    }, { signal });
+    const stopListening = onCardsReady(() => {
+      if (type === "cards") render2();
+    });
+    signal.addEventListener("abort", stopListening);
+    render2();
+    return {
+      element: panel,
+      render: render2,
+      setOpen(open) {
+        panel.classList.toggle("wz-tl-hidden", !open);
+      },
+      focusSearch() {
+        search.focus();
+      }
+    };
+  }
+
+  // packages/misc/tier-list/drag.js
+  var DRAG_THRESHOLD = 6;
+  function insertionIndex(tiles, x, y) {
+    for (let i = 0; i < tiles.length; i++) {
+      const r = tiles[i].getBoundingClientRect();
+      if (y < r.top) return i;
+      if (y <= r.bottom && x < r.left + r.width / 2) return i;
+    }
+    return tiles.length;
+  }
+  function attachDrag({ root, signal, onDrop, onDragStart, pageItemKey: pageItemKey2, buildGhost }) {
+    let pending = null;
+    let active = null;
+    let suppressClick = false;
+    function targetAt(x, y) {
+      const el3 = document.elementFromPoint(x, y);
+      if (!el3 || !root.contains(el3)) return { type: "outside" };
+      const row2 = el3.closest(".wz-tl-row");
+      if (row2) return { type: "tier", tierId: row2.dataset.tierId, rowItems: row2.querySelector(".wz-tl-row-items") };
+      if (el3.closest(".wz-tl-picker")) return { type: "picker" };
+      return { type: "none" };
+    }
+    function clearHighlights() {
+      if (!active) return;
+      if (active.marker) active.marker.remove();
+      active.marker = null;
+      root.querySelectorAll(".wz-tl-drop-in").forEach((n) => n.classList.remove("wz-tl-drop-in"));
+      active.ghost.classList.remove("wz-tl-ghost-remove");
+    }
+    function update(x, y) {
+      active.ghost.style.left = x - active.offsetX + "px";
+      active.ghost.style.top = y - active.offsetY + "px";
+      const t = targetAt(x, y);
+      clearHighlights();
+      active.target = t;
+      if (t.type === "tier") {
+        const tiles = [...t.rowItems.querySelectorAll(".wz-tl-tile")].filter((n) => n !== active.tile);
+        t.index = insertionIndex(tiles, x, y);
+        const marker = document.createElement("div");
+        marker.className = "wz-tl-marker";
+        if (t.index < tiles.length) t.rowItems.insertBefore(marker, tiles[t.index]);
+        else t.rowItems.appendChild(marker);
+        active.marker = marker;
+      } else if ((t.type === "picker" || t.type === "outside") && active.from.type === "tier") {
+        active.ghost.classList.add("wz-tl-ghost-remove");
+        if (t.type === "picker") {
+          const picker = root.querySelector(".wz-tl-picker");
+          if (picker) picker.classList.add("wz-tl-drop-in");
+        }
+      }
+    }
+    function begin(x, y) {
+      const { tile, key: key2, from, offsetX, offsetY } = pending;
+      const fromPage = from.type === "page";
+      const ghost = fromPage ? buildGhost(key2) : tile.cloneNode(true);
+      ghost.classList.add("wz-tl-ghost");
+      ghost.classList.remove("wz-tl-placed");
+      const size = getComputedStyle(root).getPropertyValue("--wz-tl-tile");
+      ghost.style.setProperty("--wz-tl-tile", size);
+      if (fromPage) {
+        ghost.style.width = size;
+        ghost.style.height = `calc(${size} * 0.8)`;
+      } else {
+        const rect = tile.getBoundingClientRect();
+        ghost.style.width = rect.width + "px";
+        ghost.style.height = rect.height + "px";
+      }
+      ghost.style.zIndex = String(Z_FLOATING);
+      if (root.classList.contains("wz-tl-nonames")) ghost.classList.add("wz-tl-nonames");
+      root.classList.add("wz-tl-busy");
+      document.body.appendChild(ghost);
+      if (tile) tile.classList.add("wz-tl-dragging");
+      active = { tile, key: key2, from, ghost, offsetX, offsetY, target: null, marker: null };
+      pending = null;
+      if (onDragStart) onDragStart();
+      update(x, y);
+    }
+    function finish(cancelled) {
+      if (!active) return;
+      const { key: key2, from, target, tile, ghost } = active;
+      clearHighlights();
+      ghost.remove();
+      root.classList.remove("wz-tl-busy");
+      if (tile) tile.classList.remove("wz-tl-dragging");
+      active = null;
+      suppressClick = true;
+      setTimeout(() => {
+        suppressClick = false;
+      }, 0);
+      if (cancelled || !target) return;
+      const clean = target.type === "tier" ? { type: "tier", tierId: target.tierId, index: target.index } : { type: target.type };
+      onDrop({ key: key2, from, target: clean });
+    }
+    document.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0 || !pageItemKey2 || root.contains(e.target)) return;
+      const key2 = pageItemKey2(e.target);
+      if (!key2) return;
+      pending = {
+        tile: null,
+        key: key2,
+        from: { type: "page" },
+        startX: e.clientX,
+        startY: e.clientY,
+        offsetX: 20,
+        offsetY: 20
+      };
+    }, { signal, capture: true });
+    ["dragstart", "selectstart"].forEach((type) => {
+      document.addEventListener(type, (e) => {
+        if (active || pending && pending.from.type === "page") e.preventDefault();
+      }, { signal, capture: true });
+    });
+    root.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      if (e.target.closest(".wz-tl-tile-del, input")) return;
+      const tile = e.target.closest(".wz-tl-tile");
+      if (!tile || !root.contains(tile) || !tile.dataset.key) return;
+      e.preventDefault();
+      const row2 = tile.closest(".wz-tl-row");
+      const rect = tile.getBoundingClientRect();
+      pending = {
+        tile,
+        key: tile.dataset.key,
+        from: row2 ? { type: "tier", tierId: row2.dataset.tierId } : { type: "picker" },
+        startX: e.clientX,
+        startY: e.clientY,
+        offsetX: e.clientX - rect.left,
+        offsetY: e.clientY - rect.top
+      };
+    }, { signal });
+    document.addEventListener("pointermove", (e) => {
+      if (pending) {
+        if (Math.hypot(e.clientX - pending.startX, e.clientY - pending.startY) < DRAG_THRESHOLD) return;
+        begin(e.clientX, e.clientY);
+      }
+      if (active) {
+        e.preventDefault();
+        update(e.clientX, e.clientY);
+      }
+    }, { signal });
+    document.addEventListener("pointerup", (e) => {
+      pending = null;
+      if (active) {
+        update(e.clientX, e.clientY);
+        finish(false);
+      }
+    }, { signal });
+    document.addEventListener("pointercancel", () => {
+      pending = null;
+      finish(true);
+    }, { signal });
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape" || !active) return;
+      e.preventDefault();
+      e.stopPropagation();
+      finish(true);
+    }, { signal, capture: true });
+    document.addEventListener("click", (e) => {
+      if (!suppressClick) return;
+      suppressClick = false;
+      e.preventDefault();
+      e.stopPropagation();
+    }, { signal, capture: true });
+    return {
+      isDragging: () => !!active,
+      cancel: () => {
+        pending = null;
+        finish(true);
+      }
+    };
+  }
+
+  // packages/misc/tier-list/preview.js
+  function attachPreview({ root, signal, isDragging, getDelayMs = () => 2e3 }) {
+    let timer = null;
+    let box = null;
+    let lastX = 0;
+    let lastY = 0;
+    function hide() {
+      clearTimeout(timer);
+      timer = null;
+      if (box) box.remove();
+      box = null;
+    }
+    function position() {
+      if (!box) return;
+      const r = box.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      let left = lastX + 18;
+      let top = lastY + 12;
+      if (left + r.width > vw - 4) left = Math.max(4, lastX - r.width - 18);
+      if (top + r.height > vh - 4) top = Math.max(4, vh - r.height - 4);
+      box.style.left = left + "px";
+      box.style.top = top + "px";
+    }
+    function render2(item) {
+      const el3 = document.createElement("div");
+      el3.className = "wz-tl-preview";
+      const pageWindow2 = getPageWindow();
+      const $2 = pageWindow2.$;
+      if (item.card && typeof pageWindow2.appendCard === "function" && $2) {
+        try {
+          const holder = $2("<div>");
+          pageWindow2.appendCard(JSON.parse(JSON.stringify(item.card)), holder);
+          if (holder.children().length) {
+            el3.appendChild(holder[0]);
+            return el3;
+          }
+        } catch (e) {
+        }
+      }
+      const fallback = document.createElement("div");
+      fallback.className = "wz-tl-preview-fallback";
+      const pic = document.createElement("div");
+      if (item.image) pic.style.backgroundImage = `url("${item.image}")`;
+      else pic.style.display = "none";
+      fallback.append(pic, item.label);
+      el3.appendChild(fallback);
+      return el3;
+    }
+    let overTile = null;
+    let pressed = false;
+    function arm() {
+      clearTimeout(timer);
+      timer = null;
+      const tile = overTile;
+      if (!tile || pressed || isDragging() || box) return;
+      if (tile.classList.contains("wz-tl-text")) return;
+      timer = setTimeout(() => {
+        if (pressed || isDragging() || !tile.isConnected || overTile !== tile) return;
+        const item = resolveItem(tile.dataset.key);
+        box = render2(item);
+        box.dataset.key = tile.dataset.key;
+        document.body.appendChild(box);
+        position();
+      }, getDelayMs());
+    }
+    root.addEventListener("pointerover", (e) => {
+      const tile = e.target.closest(".wz-tl-tile");
+      if (!tile || !tile.dataset.key || tile === overTile) return;
+      hide();
+      overTile = tile;
+      arm();
+    }, { signal });
+    root.addEventListener("pointerout", (e) => {
+      const tile = e.target.closest(".wz-tl-tile");
+      if (!tile || tile !== overTile) return;
+      if (e.relatedTarget && tile.contains(e.relatedTarget)) return;
+      overTile = null;
+      hide();
+    }, { signal });
+    root.addEventListener("pointermove", (e) => {
+      lastX = e.clientX;
+      lastY = e.clientY;
+      position();
+    }, { signal });
+    document.addEventListener("pointerdown", () => {
+      pressed = true;
+      hide();
+    }, { signal, capture: true });
+    document.addEventListener("pointerup", () => {
+      pressed = false;
+      if (overTile && overTile.isConnected) arm();
+      else overTile = null;
+    }, { signal, capture: true });
+    signal.addEventListener("abort", hide);
+    function showNear(tile) {
+      hide();
+      const r = tile.getBoundingClientRect();
+      lastX = r.right;
+      lastY = r.top;
+      overTile = tile;
+      pressed = false;
+      arm();
+    }
+    function clear() {
+      overTile = null;
+      hide();
+    }
+    return { hide: clear, showNear };
+  }
+
+  // packages/misc/tier-list/pad.js
+  var TIER_AREA = /^(l:|t:|e:|add$)/;
+  var PANEL_AREA = /^(p:|tab:|search$|clear$|f:)/;
+  function visible(el3) {
+    if (!el3 || !el3.isConnected || !el3.getClientRects().length) return false;
+    return getComputedStyle(el3).visibility !== "hidden";
+  }
+  function center(r) {
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  }
+  function createPad({ root, tiers, picker, preview, closeListsMenu, isListsMenuOpen, hide }) {
+    let focusId = null;
+    let lastRect = null;
+    let held = null;
+    let sendMenu = null;
+    let shown = true;
+    let lastTier = null;
+    let lastPanel = null;
+    let highlighted = null;
+    let dirty = true;
+    let marker = null;
+    let previewFor = null;
+    function trapRoot() {
+      if (sendMenu && sendMenu.el.isConnected) return { el: sendMenu.el, prefix: "qs" };
+      const editor = root.querySelector(".wz-tl-editor");
+      if (editor) return { el: editor, prefix: "ed" };
+      const menu3 = root.querySelector(".wz-tl-menu");
+      if (menu3) return { el: menu3, prefix: "lm" };
+      return null;
+    }
+    function items() {
+      const out = [];
+      const push = (el3, id) => {
+        if (visible(el3)) out.push({ el: el3, id });
+      };
+      const trap = trapRoot();
+      if (trap) {
+        [...trap.el.querySelectorAll("button, input, .wz-tl-swatch")].forEach((el3, i) => push(el3, `${trap.prefix}:${i}`));
+        return out;
+      }
+      const title = root.querySelector(".wz-tl-title");
+      push(title, "title");
+      root.querySelectorAll(".wz-tl-header button").forEach((el3, i) => push(el3, `hb:${i}`));
+      root.querySelectorAll(".wz-tl-row").forEach((row2) => {
+        const tierId = row2.dataset.tierId;
+        push(row2.querySelector(".wz-tl-row-label"), `l:${tierId}`);
+        row2.querySelectorAll(".wz-tl-row-items .wz-tl-tile").forEach((t) => push(t, `t:${t.dataset.key}`));
+        if (held) push(row2.querySelector(".wz-tl-row-items"), `e:${tierId}`);
+      });
+      push(root.querySelector(".wz-tl-add-row"), "add");
+      const panel = root.querySelector(".wz-tl-picker");
+      if (panel && visible(panel)) {
+        panel.querySelectorAll(".wz-tl-type-tab").forEach((el3) => push(el3, `tab:${el3.dataset.type}`));
+        push(panel.querySelector(".wz-tl-search-row input"), "search");
+        push(panel.querySelector(".wz-tl-search-row button"), "clear");
+        panel.querySelectorAll(".wz-tl-toggle").forEach((el3, i) => push(el3, `f:${i}`));
+        panel.querySelectorAll(".wz-tl-results .wz-tl-tile").forEach((t) => push(t, `p:${t.dataset.key}`));
+      }
+      return out;
+    }
+    function find(list, id) {
+      return list.find((it) => it.id === id) || null;
+    }
+    function current(list = items()) {
+      let it = focusId ? find(list, focusId) : null;
+      if (!it && list.length) {
+        if (lastRect) {
+          const c = center(lastRect);
+          it = list.reduce((best, cand) => {
+            const p = center(cand.el.getBoundingClientRect());
+            const d = Math.hypot(p.x - c.x, p.y - c.y);
+            return !best || d < best.d ? { it: cand, d } : best;
+          }, null).it;
+        } else {
+          it = list[0];
+        }
+        setFocus(it);
+      }
+      return it;
+    }
+    function setFocus(it) {
+      if (!it) return;
+      focusId = it.id;
+      lastRect = it.el.getBoundingClientRect();
+      if (TIER_AREA.test(it.id)) lastTier = it.id;
+      else if (PANEL_AREA.test(it.id)) lastPanel = it.id;
+      it.el.scrollIntoView({ block: "nearest", inline: "nearest" });
+      lastRect = it.el.getBoundingClientRect();
+    }
+    function placeMarker(it) {
+      if (marker) {
+        marker.remove();
+        marker = null;
+      }
+      if (!held || !it) return;
+      let rowItems = null;
+      let before = null;
+      if (it.id.startsWith("t:")) {
+        rowItems = it.el.parentElement;
+        before = it.el;
+        if (it.el.dataset.key === held.key) return;
+      } else if (it.id.startsWith("e:") || it.id.startsWith("l:")) {
+        const row2 = it.el.closest(".wz-tl-row");
+        rowItems = row2 && row2.querySelector(".wz-tl-row-items");
+      }
+      if (!rowItems) return;
+      marker = document.createElement("div");
+      marker.className = "wz-tl-marker";
+      rowItems.insertBefore(marker, before);
+    }
+    function syncHeld() {
+      root.querySelectorAll(".wz-tl-pad-held").forEach((n) => {
+        if (!held || n.dataset.key !== held.key) n.classList.remove("wz-tl-pad-held");
+      });
+      if (held) root.querySelectorAll(`.wz-tl-tile[data-key="${CSS.escape(held.key)}"]`).forEach((n) => n.classList.add("wz-tl-pad-held"));
+    }
+    function draw(color) {
+      root.classList.add("wz-tl-pad");
+      if (color) root.style.setProperty("--wz-tl-pad-color", color);
+      if (!dirty && shown && highlighted && highlighted.isConnected && highlighted.dataset.padId === focusId) {
+        if (held && marker && !marker.isConnected) placeMarker({ id: focusId, el: highlighted });
+        if (held) syncHeld();
+        return;
+      }
+      dirty = false;
+      const it = shown ? current() : null;
+      const el3 = it ? it.el : null;
+      if (el3 !== highlighted || el3 && el3.dataset.padId !== (it && it.id)) {
+        if (highlighted) highlighted.classList.remove("wz-tl-pad-focus");
+        if (el3) {
+          el3.classList.add("wz-tl-pad-focus");
+          el3.dataset.padId = it.id;
+        }
+        highlighted = el3;
+      }
+      placeMarker(it);
+      const wantPreview = el3 && el3.classList.contains("wz-tl-tile") && !held && !sendMenu ? el3 : null;
+      if (wantPreview !== previewFor) {
+        previewFor = wantPreview;
+        if (wantPreview) preview.showNear(wantPreview);
+        else preview.hide();
+      }
+      syncHeld();
+    }
+    function clearDrawing() {
+      if (highlighted) highlighted.classList.remove("wz-tl-pad-focus");
+      highlighted = null;
+      previewFor = null;
+      dirty = true;
+      if (marker) {
+        marker.remove();
+        marker = null;
+      }
+      root.querySelectorAll(".wz-tl-pad-held").forEach((n) => n.classList.remove("wz-tl-pad-held"));
+      root.classList.remove("wz-tl-pad");
+      preview.hide();
+    }
+    function nav(dir) {
+      const list = items();
+      const it = current(list);
+      if (!it) return;
+      const cr = it.el.getBoundingClientRect();
+      const c = center(cr);
+      let best = null;
+      list.forEach((cand) => {
+        if (cand === it) return;
+        const r = cand.el.getBoundingClientRect();
+        const p = center(r);
+        const dx = p.x - c.x;
+        const dy = p.y - c.y;
+        let primary2;
+        let ortho;
+        const sameRow = Math.abs(dy) <= Math.max(cr.height, r.height) * 0.6;
+        if (dir === "left") {
+          if (dx > -4 || !sameRow) return;
+          primary2 = -dx;
+          ortho = Math.abs(dy);
+        } else if (dir === "right") {
+          if (dx < 4 || !sameRow) return;
+          primary2 = dx;
+          ortho = Math.abs(dy);
+        } else if (dir === "up") {
+          if (dy > -4) return;
+          primary2 = -dy;
+          ortho = Math.abs(dx);
+        } else {
+          if (dy < 4) return;
+          primary2 = dy;
+          ortho = Math.abs(dx);
+        }
+        const score = primary2 + ortho * (dir === "left" || dir === "right" ? 4 : 1.5);
+        if (!best || score < best.score) best = { cand, score };
+      });
+      if (best) setFocus(best.cand);
+      dirty = true;
+    }
+    function tierIndexOf(tierId, key2) {
+      const tier = getActiveList().tiers.find((t) => t.id === tierId);
+      if (!tier) return -1;
+      return tier.items.filter((k) => k !== held.key).indexOf(key2);
+    }
+    function drop(it) {
+      const key2 = held.key;
+      if (it.id.startsWith("t:")) {
+        const tierId = it.el.closest(".wz-tl-row").dataset.tierId;
+        const target = it.id.slice(2);
+        if (target !== key2) placeItem(key2, tierId, tierIndexOf(tierId, target));
+      } else if (it.id.startsWith("e:") || it.id.startsWith("l:")) {
+        placeItem(key2, it.id.slice(2));
+      } else if (PANEL_AREA.test(it.id)) {
+        if (held.from === "tier") removeItem(key2);
+      } else {
+        return false;
+      }
+      held = null;
+      if (isPlaced(key2) && (it.id.startsWith("t:") || it.id.startsWith("e:") || it.id.startsWith("l:"))) focusId = `t:${key2}`;
+      dirty = true;
+      return true;
+    }
+    function press() {
+      const it = current();
+      if (!it) return null;
+      if (held) {
+        drop(it);
+        return null;
+      }
+      const el3 = it.el;
+      if (el3.classList.contains("wz-tl-tile")) {
+        held = { key: el3.dataset.key, from: it.id.startsWith("t:") ? "tier" : "panel" };
+        dirty = true;
+        return null;
+      }
+      if (el3.tagName === "INPUT" && el3.type === "text") return { osk: el3 };
+      if (el3.tagName === "INPUT" && el3.type === "color") return null;
+      el3.click();
+      dirty = true;
+      return null;
+    }
+    function closeSendMenu() {
+      if (sendMenu) {
+        sendMenu.el.remove();
+        focusId = sendMenu.returnTo;
+        if (sendMenu.returnRect) lastRect = sendMenu.returnRect;
+      }
+      sendMenu = null;
+      dirty = true;
+    }
+    function back() {
+      if (sendMenu) {
+        closeSendMenu();
+        return;
+      }
+      if (held) {
+        held = null;
+        dirty = true;
+        return;
+      }
+      if (root.querySelector(".wz-tl-editor")) {
+        tiers.closeEditor();
+        dirty = true;
+        return;
+      }
+      if (isListsMenuOpen()) {
+        closeListsMenu();
+        dirty = true;
+        return;
+      }
+      hide();
+    }
+    function quickSend() {
+      if (sendMenu) {
+        closeSendMenu();
+        return;
+      }
+      const it = current();
+      const key2 = held ? held.key : it && it.el.classList.contains("wz-tl-tile") ? it.el.dataset.key : null;
+      if (!key2) return;
+      const list = getActiveList();
+      const menu3 = document.createElement("div");
+      menu3.className = "wz-tl-send";
+      const title = document.createElement("div");
+      title.className = "wz-tl-send-title";
+      title.textContent = "Send to tier";
+      menu3.appendChild(title);
+      const currentTier = list.tiers.find((t) => t.items.includes(key2));
+      list.tiers.forEach((t) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "wz-tl-send-tier";
+        b.style.background = t.color;
+        b.textContent = t.label;
+        if (currentTier && currentTier.id === t.id) b.classList.add("wz-tl-active");
+        b.addEventListener("click", () => {
+          placeItem(key2, t.id);
+          held = null;
+          closeSendMenu();
+        });
+        menu3.appendChild(b);
+      });
+      if (currentTier) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "wz-tl-btn";
+        b.textContent = "Unrank";
+        b.addEventListener("click", () => {
+          removeItem(key2);
+          held = null;
+          closeSendMenu();
+        });
+        menu3.appendChild(b);
+      }
+      root.appendChild(menu3);
+      const rr = root.getBoundingClientRect();
+      const tr2 = (it ? it.el : root).getBoundingClientRect();
+      let left = tr2.right - rr.left + 6;
+      if (left + menu3.offsetWidth > rr.width - 4) left = Math.max(4, tr2.left - rr.left - menu3.offsetWidth - 6);
+      let top = tr2.top - rr.top;
+      if (top + menu3.offsetHeight > rr.height - 4) top = Math.max(4, rr.height - menu3.offsetHeight - 4);
+      menu3.style.left = left + "px";
+      menu3.style.top = Math.max(4, top) + "px";
+      sendMenu = { el: menu3, key: key2, returnTo: focusId, returnRect: lastRect };
+      const buttons = [...menu3.querySelectorAll("button")];
+      const start2 = Math.max(0, buttons.findIndex((b) => b.classList.contains("wz-tl-active")));
+      focusId = `qs:${start2}`;
+      dirty = true;
+    }
+    function jump() {
+      if (trapRoot()) return;
+      const list = items();
+      const it = current(list);
+      const inTiers = it && TIER_AREA.test(it.id);
+      if (it && inTiers) lastTier = it.id;
+      else if (it && PANEL_AREA.test(it.id)) lastPanel = it.id;
+      let target = null;
+      if (inTiers) {
+        target = lastPanel && find(list, lastPanel) || list.find((x) => x.id.startsWith("p:")) || find(list, "search");
+      } else {
+        target = lastTier && find(list, lastTier) || list.find((x) => x.id.startsWith("t:")) || list.find((x) => x.id.startsWith("l:"));
+      }
+      if (target) setFocus(target);
+      dirty = true;
+    }
+    function start() {
+      const list = items();
+      const first = list.find((x) => x.id.startsWith("p:")) || find(list, "search") || list[0];
+      if (first) setFocus(first);
+    }
+    return {
+      start,
+      draw,
+      nav,
+      press,
+      back,
+      quickSend,
+      jump,
+      clearDrawing,
+      // Cursor mode (stick moved): hide the highlight and drop any held item.
+      setShown(value) {
+        if (shown === !!value) return;
+        shown = !!value;
+        if (!shown) {
+          held = null;
+          closeSendMenu();
+          clearDrawing();
+        }
+        dirty = true;
+      },
+      isShown: () => shown,
+      // "send" | "holding" | "idle" - Controller Support writes the HUD text
+      // with the player's actual button names.
+      state() {
+        if (sendMenu) return "send";
+        if (held) return "holding";
+        return "idle";
+      }
+    };
+  }
+
+  // packages/misc/card-tags/storage.js
+  var DATA_KEY = "wizascript.misc.cardTags.data";
+  var DEFAULT_COLORS = ["#4dabf7", "#51cf66", "#ffa94d", "#ff6b6b", "#cc5de8", "#20c997", "#ffd43b"];
+  function genTagId() {
+    return "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+  function emptyData() {
+    return { tags: [], cardTags: {} };
+  }
+  function readData() {
+    let raw;
+    try {
+      raw = GM_getValue(DATA_KEY, null);
+    } catch (e) {
+      console.warn("[CardTags] Failed to read storage key", DATA_KEY, e);
+      return emptyData();
+    }
+    if (!raw) return emptyData();
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch (e) {
+      console.warn("[CardTags] Failed to parse stored data, starting fresh.", e);
+      return emptyData();
+    }
+    if (Array.isArray(parsed.tags) && parsed.tags.length && typeof parsed.tags[0] === "string") {
+      const nameToId = {};
+      const upgradedTags = parsed.tags.map((name, i) => {
+        const id = genTagId();
+        nameToId[name] = id;
+        return { id, name, color: DEFAULT_COLORS[i % DEFAULT_COLORS.length] };
+      });
+      const upgradedCardTags = {};
+      Object.keys(parsed.cardTags || {}).forEach((cardId) => {
+        const ids = (parsed.cardTags[cardId] || []).map((name) => nameToId[name]).filter(Boolean);
+        if (ids.length) upgradedCardTags[cardId] = ids;
+      });
+      const upgraded = { tags: upgradedTags, cardTags: upgradedCardTags };
+      writeData(upgraded);
+      return upgraded;
+    }
+    return {
+      tags: Array.isArray(parsed.tags) ? parsed.tags : [],
+      cardTags: parsed.cardTags && typeof parsed.cardTags === "object" ? parsed.cardTags : {}
+    };
+  }
+  function writeData(value) {
+    try {
+      GM_setValue(DATA_KEY, JSON.stringify(value));
+    } catch (e) {
+      console.warn("[CardTags] Failed to write storage key", DATA_KEY, e);
+    }
+  }
+  var data = readData();
+  function allTags() {
+    return data.tags;
+  }
+  function findTag(id) {
+    return data.tags.find((t) => t.id === id) || null;
+  }
+  function createTag(name, color) {
+    const tag = {
+      id: genTagId(),
+      name: name.trim(),
+      color: color || DEFAULT_COLORS[data.tags.length % DEFAULT_COLORS.length]
+    };
+    data.tags.push(tag);
+    writeData(data);
+    return tag;
+  }
+  function updateTag(id, patch) {
+    const tag = findTag(id);
+    if (!tag) return;
+    Object.assign(tag, patch);
+    writeData(data);
+  }
+  function deleteTag(id) {
+    data.tags = data.tags.filter((t) => t.id !== id);
+    Object.keys(data.cardTags).forEach((cardId) => {
+      data.cardTags[cardId] = data.cardTags[cardId].filter((tagId) => tagId !== id);
+      if (!data.cardTags[cardId].length) delete data.cardTags[cardId];
+    });
+    writeData(data);
+  }
+  function tagIdsForCard(cardId) {
+    return data.cardTags[cardId] || [];
+  }
+  function tagObjectsForCard(cardId) {
+    return tagIdsForCard(cardId).map(findTag).filter(Boolean);
+  }
+  function cardHasTag(cardId, tagId) {
+    return tagIdsForCard(cardId).includes(tagId);
+  }
+  function toggleCardTag(cardId, tagId) {
+    const current = data.cardTags[cardId] || [];
+    const has = current.includes(tagId);
+    const next = has ? current.filter((t) => t !== tagId) : [...current, tagId];
+    if (next.length) {
+      data.cardTags[cardId] = next;
+    } else {
+      delete data.cardTags[cardId];
+    }
+    writeData(data);
+  }
+  function taggedCardIds() {
+    return Object.keys(data.cardTags);
+  }
+  function exportTags(tagIds) {
+    const wanted = new Set(tagIds);
+    return {
+      format: 1,
+      tags: data.tags.filter((t) => wanted.has(t.id)).map((t) => ({
+        name: t.name,
+        color: t.color,
+        cards: Object.keys(data.cardTags).filter((cardId) => data.cardTags[cardId].includes(t.id))
+      }))
+    };
+  }
+  function importTags(shared) {
+    if (!shared || shared.format !== 1 || !Array.isArray(shared.tags)) {
+      throw new Error("That code isn't a Card Tags code this version understands.");
+    }
+    const summary = { created: [], merged: [], cardsTagged: 0 };
+    shared.tags.forEach((st) => {
+      const name = String(st && st.name || "").trim();
+      if (!name) return;
+      let tag = data.tags.find((t) => t.name.toLowerCase() === name.toLowerCase());
+      if (tag) {
+        summary.merged.push(tag.name);
+      } else {
+        const color = /^#[0-9a-f]{3,8}$/i.test(st.color || "") ? st.color : DEFAULT_COLORS[data.tags.length % DEFAULT_COLORS.length];
+        tag = { id: genTagId(), name, color };
+        data.tags.push(tag);
+        summary.created.push(name);
+      }
+      (Array.isArray(st.cards) ? st.cards : []).forEach((rawId) => {
+        const cardId = String(rawId);
+        if (!/^[\w-]{1,32}$/.test(cardId)) return;
+        const current = data.cardTags[cardId] || [];
+        if (current.includes(tag.id)) return;
+        data.cardTags[cardId] = [...current, tag.id];
+        summary.cardsTagged++;
+      });
+    });
+    writeData(data);
+    return summary;
+  }
+
+  // packages/misc/tier-list/index.js
+  var CARD_PAGES = ["/Crafting", "/Decks"];
+  function pageItemKey(target) {
+    if (!setting2("pageDrag", true) || !matchesPage(CARD_PAGES)) return null;
+    const el3 = target.closest && target.closest(".card[id]");
+    if (!el3 || !getCard(el3.id)) return null;
+    return `card:${el3.id}`;
+  }
+  var CARD_SIZES = { Small: 64, Medium: 88, Large: 120 };
+  var PREVIEW_DELAYS = ["1", "1.5", "2", "2.5", "3", "3.5", "4", "4.5", "5"];
+  var OPACITIES = ["100%", "90%", "80%", "70%", "60%", "50%"];
+  var RANKED_SHOW = "Greyed out";
+  var RANKED_HIDE = "Hidden";
+  var settings2 = null;
+  var mounted = null;
+  function preferredTile() {
+    const v = settings2 ? settings2.value("cardSize") : "Medium";
+    return CARD_SIZES[v] || CARD_SIZES.Medium;
+  }
+  function setting2(key2, fallback) {
+    return settings2 ? settings2.value(key2) : fallback;
+  }
+  function blockedHere() {
+    return !!setting2("hideInMatches", false) && matchesPage("/Game");
+  }
+  function applyLook() {
+    if (!mounted) return;
+    const root = mounted.win.root;
+    const pct = parseInt(setting2("opacity", "100%"), 10);
+    root.style.setProperty("--wz-tl-opacity", String((Number.isFinite(pct) ? Math.min(100, Math.max(50, pct)) : 100) / 100));
+    root.classList.toggle("wz-tl-nonames", !setting2("showNames", true));
+  }
+  function previewDelayMs() {
+    const v = parseFloat(settings2 ? settings2.value("previewDelay") : "2");
+    return (Number.isFinite(v) ? Math.min(5, Math.max(1, v)) : 2) * 1e3;
+  }
+  function pickerOptions() {
+    return {
+      hideRanked: !!settings2 && settings2.value("rankedInPanel") === RANKED_HIDE,
+      tagsFor: isPluginEnabled("cardTags") ? (id) => tagObjectsForCard(id).map((t) => t.name) : null
+    };
+  }
+  function headerButton(label, title) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "wz-tl-btn";
+    b.textContent = label;
+    b.title = title;
+    return b;
+  }
+  function getTierListPad() {
+    if (!mounted || !mounted.pad) return null;
+    if (mounted.win.root.classList.contains("wz-tl-under-modal")) return null;
+    return mounted.pad;
+  }
+  function toggleTierListFillScreen() {
+    if (mounted) mounted.win.setMaximised(!mounted.win.isMaximised());
+  }
+  function toggleTierList() {
+    if (!isPluginEnabled("tierList")) return;
+    if (mounted) hideTierList();
+    else showTierList();
+  }
+  function showTierList() {
+    if (mounted || blockedHere()) return;
+    injectTierListStyle();
+    const controller = new AbortController();
+    const { signal } = controller;
+    const win = buildWindow({
+      signal,
+      getPreferredTile: preferredTile,
+      onTitleChange: (value) => setTitle(value)
+    });
+    const listsBtn = headerButton("Lists \u25BE", "Switch, add, copy or delete tier lists");
+    win.title.after(listsBtn);
+    const undoBtn = headerButton("\u21B6", "Undo");
+    const resetBtn = headerButton("Reset", "Clear every tier back to S\u2013D (click twice)");
+    const pickerBtn = headerButton("Items", "Show or hide the item panel");
+    const maxBtn = headerButton("\u25A1", "Fill the screen");
+    const closeBtn = headerButton("\xD7", "Close");
+    win.buttons.append(undoBtn, resetBtn, pickerBtn, maxBtn, closeBtn);
+    const tiers = createTiersView({ body: win.body, signal });
+    const picker = createPicker({ body: win.body, signal, getOptions: pickerOptions });
+    function syncHeader() {
+      const list = getActiveList();
+      if (document.activeElement !== win.title) win.title.value = list.title;
+      undoBtn.disabled = !canUndo();
+      pickerBtn.classList.toggle("wz-tl-active", win.isPickerOpen());
+      maxBtn.textContent = win.isMaximised() ? "\u2750" : "\u25A1";
+      maxBtn.title = win.isMaximised() ? "Restore the window size" : "Fill the screen";
+    }
+    function renderAll() {
+      tiers.render();
+      picker.render();
+      syncHeader();
+    }
+    undoBtn.addEventListener("click", () => undo(), { signal });
+    let listsMenu = null;
+    function closeListsMenu() {
+      if (listsMenu) listsMenu.remove();
+      listsMenu = null;
+      listsBtn.classList.remove("wz-tl-active");
+    }
+    function openListsMenu() {
+      closeListsMenu();
+      const menu3 = document.createElement("div");
+      menu3.className = "wz-tl-menu";
+      getLists().forEach((l) => {
+        const row2 = document.createElement("button");
+        row2.type = "button";
+        row2.className = "wz-tl-menu-item" + (l.active ? " wz-tl-active" : "");
+        row2.dataset.listId = l.id;
+        const name = document.createElement("span");
+        name.textContent = l.title;
+        const count = document.createElement("span");
+        count.className = "wz-tl-menu-count";
+        count.textContent = String(l.count);
+        row2.append(name, count);
+        row2.addEventListener("click", () => {
+          setActiveList(l.id);
+          closeListsMenu();
+        });
+        menu3.appendChild(row2);
+      });
+      const actions = document.createElement("div");
+      actions.className = "wz-tl-menu-actions";
+      const act = (label, title, fn) => {
+        const b = headerButton(label, title);
+        b.addEventListener("click", fn);
+        actions.appendChild(b);
+        return b;
+      };
+      act("+ New", "Start a new, empty tier list", () => {
+        createList();
+        closeListsMenu();
+      });
+      act("Copy", "Make a copy of this list", () => {
+        duplicateList();
+        closeListsMenu();
+      });
+      const del = act("Delete", "Delete this list (click twice; \u21B6 brings it back)", () => {
+        if (!del.classList.contains("wz-tl-danger")) {
+          del.classList.add("wz-tl-danger");
+          del.textContent = "Sure?";
+          return;
+        }
+        deleteActiveList();
+        closeListsMenu();
+      });
+      act("Share\u2026", "Get a code for this list to send to someone", () => {
+        closeListsMenu();
+        shareList();
+      });
+      act("Import\u2026", "Add a list from a code someone sent you", () => {
+        closeListsMenu();
+        importListDialog();
+      });
+      menu3.appendChild(actions);
+      win.root.appendChild(menu3);
+      const r = listsBtn.getBoundingClientRect();
+      const rr = win.root.getBoundingClientRect();
+      menu3.style.left = Math.max(4, r.left - rr.left) + "px";
+      menu3.style.top = r.bottom - rr.top + 4 + "px";
+      listsMenu = menu3;
+      listsBtn.classList.add("wz-tl-active");
+    }
+    listsBtn.addEventListener("click", () => listsMenu ? closeListsMenu() : openListsMenu(), { signal });
+    document.addEventListener("pointerdown", (e) => {
+      if (listsMenu && !listsMenu.contains(e.target) && e.target !== listsBtn) closeListsMenu();
+    }, { signal, capture: true });
+    async function shareList() {
+      const data2 = exportActiveList();
+      const code = await encodeCode("TIER", data2);
+      const safe = (data2.title || "tier-list").replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, " ").trim().slice(0, 60) || "tier-list";
+      showExportDialog({
+        title: "Share Tier List",
+        intro: `Send this code to share "${data2.title}". They can add it with Lists \u25BE \u2192 Import\u2026`,
+        code,
+        fileName: `${safe}.txt`
+      });
+    }
+    function importListDialog() {
+      showImportDialog({
+        title: "Import Tier List",
+        intro: "Paste a tier list code. It's added as a new list; your own lists aren't changed.",
+        actionLabel: "Import",
+        onSubmit: async (text) => {
+          const data2 = await decodeCode(text, "TIER");
+          importList(data2);
+          ensureArtifacts();
+        }
+      });
+    }
+    let artifactsTried = false;
+    function ensureArtifacts() {
+      if (artifactsTried || hasArtifacts() || !listUsesKind("artifact")) return;
+      artifactsTried = true;
+      loadArtifacts().then((ok) => {
+        if (ok) renderAll();
+      });
+    }
+    let menuBackdrop = null;
+    const syncLayer = () => {
+      if (!menuBackdrop) {
+        menuBackdrop = document.querySelector(".menu-backdrop");
+        if (menuBackdrop) layerWatch.observe(menuBackdrop, { attributes: true, attributeFilter: ["style"] });
+      }
+      const dialogOpen = document.body.classList.contains("modal-open") || !!document.querySelector(".bootstrap-dialog.in, .modal.in");
+      const menuOpen = !!menuBackdrop && menuBackdrop.style.display === "block";
+      win.root.classList.toggle("wz-tl-under-modal", dialogOpen || menuOpen);
+    };
+    const layerWatch = new MutationObserver(syncLayer);
+    layerWatch.observe(document.body, { attributes: true, attributeFilter: ["class"], childList: true });
+    syncLayer();
+    signal.addEventListener("abort", () => layerWatch.disconnect());
+    win.root.addEventListener("dblclick", (e) => {
+      const tile = e.target.closest(".wz-tl-tile.wz-tl-text");
+      if (!tile || e.target.closest("input, .wz-tl-tile-del")) return;
+      const textId = tile.dataset.key.slice(5);
+      const current = getTextLabel(textId);
+      if (current === null) return;
+      const label = tile.querySelector(".wz-tl-tile-name");
+      const input = document.createElement("input");
+      input.type = "text";
+      input.maxLength = MAX_TEXT;
+      input.value = current;
+      label.textContent = "";
+      label.appendChild(input);
+      input.focus();
+      input.select();
+      let done = false;
+      const commit = (save2) => {
+        if (done) return;
+        done = true;
+        if (save2 && input.value.trim() && input.value.trim() !== current) renameText(textId, input.value);
+        else renderAll();
+      };
+      input.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter") commit(true);
+        if (ev.key === "Escape") commit(false);
+      });
+      input.addEventListener("blur", () => commit(true));
+    }, { signal });
+    let resetArmed = null;
+    resetBtn.addEventListener("click", () => {
+      if (resetArmed) {
+        clearTimeout(resetArmed);
+        resetArmed = null;
+        resetBtn.textContent = "Reset";
+        resetBtn.classList.remove("wz-tl-danger");
+        tiers.closeEditor();
+        resetList();
+        return;
+      }
+      resetBtn.textContent = "Sure?";
+      resetBtn.classList.add("wz-tl-danger");
+      resetArmed = setTimeout(() => {
+        resetArmed = null;
+        resetBtn.textContent = "Reset";
+        resetBtn.classList.remove("wz-tl-danger");
+      }, 3e3);
+    }, { signal });
+    pickerBtn.addEventListener("click", () => {
+      const open = !win.isPickerOpen();
+      win.setPickerOpen(open);
+      picker.setOpen(open);
+      syncHeader();
+      if (open) picker.focusSearch();
+    }, { signal });
+    picker.setOpen(win.isPickerOpen());
+    maxBtn.addEventListener("click", () => win.setMaximised(!win.isMaximised()), { signal });
+    win.onMaximiseChange(syncHeader);
+    closeBtn.addEventListener("click", () => hideTierList(), { signal });
+    ["keydown", "keyup", "keypress"].forEach((type) => {
+      win.root.addEventListener(type, (e) => {
+        if (e.target.closest("input, select, textarea")) e.stopPropagation();
+      }, { signal });
+    });
+    let preview = null;
+    const drag = attachDrag({
+      root: win.root,
+      signal,
+      pageItemKey,
+      buildGhost: (key2) => buildTile(key2),
+      onDragStart: () => {
+        if (preview) preview.hide();
+        tiers.closeEditor();
+        closeListsMenu();
+      },
+      onDrop: ({ key: key2, from, target }) => {
+        if (target.type === "tier") {
+          placeItem(key2, target.tierId, target.index);
+        } else if ((target.type === "picker" || target.type === "outside") && from.type === "tier") {
+          removeItem(key2);
+        }
+      }
+    });
+    preview = attachPreview({ root: win.root, signal, isDragging: drag.isDragging, getDelayMs: previewDelayMs });
+    const unsubscribe = subscribe(() => {
+      renderAll();
+      ensureArtifacts();
+    });
+    signal.addEventListener("abort", unsubscribe);
+    window.addEventListener("beforeunload", () => flushSave(), { signal });
+    document.body.appendChild(win.root);
+    renderAll();
+    ensureArtifacts();
+    const pad2 = createPad({
+      root: win.root,
+      tiers,
+      picker,
+      preview,
+      closeListsMenu,
+      isListsMenuOpen: () => !!listsMenu,
+      hide: () => hideTierList()
+    });
+    pad2.start();
+    mounted = { controller, win, picker, pad: pad2 };
+    applyLook();
+  }
+  function hideTierList() {
+    if (!mounted) return;
+    if (mounted.pad) mounted.pad.clearDrawing();
+    flushSave();
+    mounted.controller.abort();
+    mounted.win.root.remove();
+    mounted = null;
+  }
+  function initTierList(plugin) {
+    settings2 = createFeatureSettings(plugin, "tierlist", {
+      tab: "Tier List",
+      visible: () => isPluginEnabled("tierList")
+    });
+    settings2.add("cardSize", {
+      name: "Card Size",
+      note: "How big cards get in a large window. They shrink in a small one.",
+      type: "select",
+      options: Object.keys(CARD_SIZES),
+      default: "Medium",
+      onChange: () => {
+        if (mounted) mounted.win.refreshTileSize();
+      }
+    });
+    settings2.add("opacity", {
+      name: "Window Opacity",
+      note: "See-through when the mouse is elsewhere; solid while you use it.",
+      type: "select",
+      options: OPACITIES,
+      default: "100%",
+      onChange: () => applyLook()
+    });
+    settings2.add("showNames", {
+      name: "Show Names on Tiles",
+      note: "Turn off for art-only tiles. Text items always show their words.",
+      type: "boolean",
+      default: true,
+      onChange: () => applyLook()
+    });
+    settings2.add("previewDelay", {
+      name: "Card Preview Delay (seconds)",
+      note: "How long to rest the mouse on a card before its full preview shows.",
+      type: "select",
+      options: PREVIEW_DELAYS,
+      default: "2"
+    });
+    settings2.add("rankedInPanel", {
+      name: "Ranked Items in the Item Panel",
+      note: "Grey out items already in a tier, or hide them from the panel.",
+      type: "select",
+      options: [RANKED_SHOW, RANKED_HIDE],
+      default: RANKED_SHOW,
+      onChange: () => {
+        if (mounted) mounted.picker.render();
+      }
+    });
+    settings2.add("pageDrag", {
+      name: "Drag Cards In From Crafting/Decks",
+      note: "Hold and drag a card on those pages into the open tier list.",
+      type: "boolean",
+      default: true
+    });
+    settings2.add("hideInMatches", {
+      name: "Turn Off During Your Matches",
+      note: "Closes it and ignores the shortcut while you play. Spectating is fine.",
+      type: "boolean",
+      default: false,
+      onChange: () => {
+        if (blockedHere()) hideTierList();
+      }
+    });
+    registerKeybind(plugin, {
+      key: "toggleTierList",
+      name: "Toggle Tier List",
+      defaultCode: "KeyL",
+      packageLabel: "Tier List",
+      onMatch: () => toggleTierList()
+    });
+    if (!isPluginEnabled("tierList")) return;
+    initItemData(plugin);
+  }
+
   // packages/misc/settings.js
   function registerMiscSettings() {
     return {
@@ -7190,7 +11137,7 @@ Version: v${version}`;
   var PEN_COLOR_KEY = "wizascript.misc.notepad.penColor";
   var RECENT_COLORS_KEY = "wizascript.misc.notepad.recentColors";
   var TITLE_KEY = "wizascript.misc.notepad.title";
-  function readJSON(key2, fallback) {
+  function readJSON2(key2, fallback) {
     try {
       const raw = GM_getValue(key2, null);
       return raw ? JSON.parse(raw) : fallback;
@@ -7199,7 +11146,7 @@ Version: v${version}`;
       return fallback;
     }
   }
-  function writeJSON(key2, value) {
+  function writeJSON2(key2, value) {
     try {
       GM_setValue(key2, JSON.stringify(value));
     } catch (e) {
@@ -7207,10 +11154,10 @@ Version: v${version}`;
     }
   }
   function getSavedPosition2() {
-    return readJSON(POSITION_KEY, null);
+    return readJSON2(POSITION_KEY, null);
   }
   function setSavedPosition2(layout2) {
-    writeJSON(POSITION_KEY, layout2);
+    writeJSON2(POSITION_KEY, layout2);
   }
   function clearSavedPosition2() {
     try {
@@ -7219,10 +11166,10 @@ Version: v${version}`;
     }
   }
   function getSavedDrawing() {
-    return readJSON(DRAWING_KEY, null);
+    return readJSON2(DRAWING_KEY, null);
   }
   function setSavedDrawing(drawing) {
-    writeJSON(DRAWING_KEY, drawing);
+    writeJSON2(DRAWING_KEY, drawing);
   }
   function clearSavedDrawing() {
     try {
@@ -7231,10 +11178,10 @@ Version: v${version}`;
     }
   }
   function getSavedPenColor() {
-    return readJSON(PEN_COLOR_KEY, null);
+    return readJSON2(PEN_COLOR_KEY, null);
   }
-  function setSavedPenColor(state) {
-    writeJSON(PEN_COLOR_KEY, state);
+  function setSavedPenColor(state2) {
+    writeJSON2(PEN_COLOR_KEY, state2);
   }
   function clearSavedPenColor() {
     try {
@@ -7243,10 +11190,10 @@ Version: v${version}`;
     }
   }
   function getRecentColors() {
-    return readJSON(RECENT_COLORS_KEY, []);
+    return readJSON2(RECENT_COLORS_KEY, []);
   }
   function setRecentColors(list) {
-    writeJSON(RECENT_COLORS_KEY, list);
+    writeJSON2(RECENT_COLORS_KEY, list);
   }
   function clearRecentColors() {
     try {
@@ -7255,10 +11202,10 @@ Version: v${version}`;
     }
   }
   function getSavedTitle() {
-    return readJSON(TITLE_KEY, null);
+    return readJSON2(TITLE_KEY, null);
   }
   function setSavedTitle(title) {
-    writeJSON(TITLE_KEY, title);
+    writeJSON2(TITLE_KEY, title);
   }
   function clearSavedTitle() {
     try {
@@ -7270,7 +11217,7 @@ Version: v${version}`;
   // packages/misc/notepad/widget.js
   var DEFAULT_RIGHT = 16;
   var DEFAULT_BOTTOM = 16;
-  var DEFAULT_TITLE = "Notepad";
+  var DEFAULT_TITLE2 = "Notepad";
   var TITLE_SAVE_DEBOUNCE_MS = 400;
   function buildNotepadShell(signal) {
     const root = document.createElement("div");
@@ -7290,13 +11237,13 @@ Version: v${version}`;
     titleInput.className = "wizascript-notepad-title-input";
     titleInput.maxLength = 60;
     titleInput.spellcheck = false;
-    titleInput.value = getSavedTitle() || DEFAULT_TITLE;
+    titleInput.value = getSavedTitle() || DEFAULT_TITLE2;
     titleInput.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
     let titleSaveTimer = null;
     titleInput.addEventListener("input", () => {
       clearTimeout(titleSaveTimer);
       titleSaveTimer = setTimeout(() => {
-        setSavedTitle(titleInput.value.trim() || DEFAULT_TITLE);
+        setSavedTitle(titleInput.value.trim() || DEFAULT_TITLE2);
       }, TITLE_SAVE_DEBOUNCE_MS);
     }, { signal });
     const headerButtons = document.createElement("span");
@@ -7323,6 +11270,7 @@ Version: v${version}`;
       root.style.top = e.clientY - offsetY + "px";
       root.style.right = "auto";
       root.style.bottom = "auto";
+      keepOnScreen(root);
     }, { signal });
     document.addEventListener("mouseup", () => {
       if (!dragging) return;
@@ -7436,7 +11384,7 @@ Version: v${version}`;
     cursorIndicator.className = "wizascript-notepad-cursor-indicator";
     let backgroundColor = DEFAULT_BACKGROUND;
     let strokeColor = "rgb(26, 26, 26)";
-    let saveTimer = null;
+    let saveTimer2 = null;
     let lastX = null;
     let lastY = null;
     const layers = [];
@@ -7466,7 +11414,7 @@ Version: v${version}`;
       if (layers.length >= MAX_LAYERS) return false;
       addLayerInternal();
       activeLayerIndex = layers.length;
-      scheduleSave();
+      scheduleSave2();
       notifyLayersChange();
       return true;
     }
@@ -7475,7 +11423,7 @@ Version: v${version}`;
       const removed = layers.pop();
       removed.canvas.remove();
       if (activeLayerIndex > layers.length) activeLayerIndex = layers.length;
-      scheduleSave();
+      scheduleSave2();
       notifyLayersChange();
       return true;
     }
@@ -7507,9 +11455,9 @@ Version: v${version}`;
         backgroundColor
       };
     }
-    function scheduleSave() {
-      clearTimeout(saveTimer);
-      saveTimer = setTimeout(() => {
+    function scheduleSave2() {
+      clearTimeout(saveTimer2);
+      saveTimer2 = setTimeout(() => {
         setSavedDrawing(snapshotState());
       }, SAVE_DEBOUNCE_MS);
     }
@@ -7544,38 +11492,38 @@ Version: v${version}`;
     }
     const initialLoad = loadInitial();
     wrapper.append(interactionCanvas, cursorIndicator);
-    let undoStack = [];
+    let undoStack2 = [];
     let redoStack = [];
     let onHistoryChange = null;
     let restoreGeneration = 0;
     function notifyHistoryChange() {
-      if (onHistoryChange) onHistoryChange(undoStack.length > 0, redoStack.length > 0);
+      if (onHistoryChange) onHistoryChange(undoStack2.length > 0, redoStack.length > 0);
     }
-    async function restoreState(state) {
+    async function restoreState(state2) {
       const myGeneration = ++restoreGeneration;
-      paintBackground(state.backgroundColor);
-      while (layers.length < state.layers.length) addLayerInternal();
-      while (layers.length > state.layers.length) {
+      paintBackground(state2.backgroundColor);
+      while (layers.length < state2.layers.length) addLayerInternal();
+      while (layers.length > state2.layers.length) {
         const removed = layers.pop();
         removed.canvas.remove();
       }
       if (activeLayerIndex > layers.length) activeLayerIndex = layers.length || 1;
       layers.forEach((l) => l.ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT));
-      await Promise.all(layers.map((l, i) => loadLayerContent(l.ctx, state.layers[i])));
+      await Promise.all(layers.map((l, i) => loadLayerContent(l.ctx, state2.layers[i])));
       if (myGeneration !== restoreGeneration) return;
-      scheduleSave();
+      scheduleSave2();
       notifyLayersChange();
     }
     function pushUndoSnapshot() {
-      undoStack.push(snapshotState());
-      if (undoStack.length > MAX_HISTORY) undoStack.shift();
+      undoStack2.push(snapshotState());
+      if (undoStack2.length > MAX_HISTORY) undoStack2.shift();
       redoStack = [];
       notifyHistoryChange();
     }
-    function undo() {
-      if (!undoStack.length) return false;
+    function undo2() {
+      if (!undoStack2.length) return false;
       const current = snapshotState();
-      const previous = undoStack.pop();
+      const previous = undoStack2.pop();
       redoStack.push(current);
       if (redoStack.length > MAX_HISTORY) redoStack.shift();
       restoreState(previous);
@@ -7586,8 +11534,8 @@ Version: v${version}`;
       if (!redoStack.length) return false;
       const current = snapshotState();
       const next = redoStack.pop();
-      undoStack.push(current);
-      if (undoStack.length > MAX_HISTORY) undoStack.shift();
+      undoStack2.push(current);
+      if (undoStack2.length > MAX_HISTORY) undoStack2.shift();
       restoreState(next);
       notifyHistoryChange();
       return true;
@@ -7600,9 +11548,9 @@ Version: v${version}`;
       layers[0].ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
       activeLayerIndex = 1;
       paintBackground(DEFAULT_BACKGROUND);
-      undoStack = [];
+      undoStack2 = [];
       redoStack = [];
-      clearTimeout(saveTimer);
+      clearTimeout(saveTimer2);
       clearSavedDrawing();
       notifyLayersChange();
       notifyHistoryChange();
@@ -7610,13 +11558,13 @@ Version: v${version}`;
     function clear() {
       pushUndoSnapshot();
       activeCtx().clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-      scheduleSave();
+      scheduleSave2();
     }
     function setBackgroundColor(color) {
       if (color === backgroundColor) return;
       pushUndoSnapshot();
       paintBackground(color);
-      scheduleSave();
+      scheduleSave2();
     }
     function strokeTo(x, y, { erase, size }) {
       const ctx = activeCtx();
@@ -7641,21 +11589,21 @@ Version: v${version}`;
     function endStroke() {
       lastX = null;
       lastY = null;
-      scheduleSave();
+      scheduleSave2();
     }
     function fill(x, y) {
       pushUndoSnapshot();
       const ctx = activeCtx();
       const fillRgb = resolveColorToRgb(strokeColor);
       const imageData = ctx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-      const changed = floodFillPixels(imageData.data, CANVAS_WIDTH, CANVAS_HEIGHT, x, y, fillRgb);
-      if (!changed) {
-        undoStack.pop();
+      const changed2 = floodFillPixels(imageData.data, CANVAS_WIDTH, CANVAS_HEIGHT, x, y, fillRgb);
+      if (!changed2) {
+        undoStack2.pop();
         notifyHistoryChange();
         return;
       }
       ctx.putImageData(imageData, 0, 0);
-      scheduleSave();
+      scheduleSave2();
     }
     function downloadAsPng(filename = "notepad-doodle.png") {
       const flattened = document.createElement("canvas");
@@ -7686,7 +11634,7 @@ Version: v${version}`;
       clear,
       fill,
       resetAll,
-      undo,
+      undo: undo2,
       redo,
       setOnHistoryChange: (cb) => {
         onHistoryChange = cb;
@@ -7798,15 +11746,15 @@ Version: v${version}`;
     function currentState() {
       return { hue, saturation, lightness };
     }
-    function setState(nextHue, nextSaturation, nextLightness) {
+    function setState2(nextHue, nextSaturation, nextLightness) {
       hue = nextHue;
       saturation = nextSaturation;
       lightness = nextLightness;
       lightnessSlider.value = String(Math.round(lightness * 100));
       updateIndicatorPosition();
-      notify();
+      notify2();
     }
-    function notify() {
+    function notify2() {
       const color = currentColor();
       preview.style.background = color;
       onChange(color);
@@ -7822,7 +11770,7 @@ Version: v${version}`;
       hue = angle;
       saturation = Math.min(1, dist / WHEEL_RADIUS);
       updateIndicatorPosition();
-      notify();
+      notify2();
     }
     let picking = false;
     wheelCanvas.addEventListener("mousedown", (e) => {
@@ -7837,12 +11785,12 @@ Version: v${version}`;
     }, { signal });
     lightnessSlider.addEventListener("input", () => {
       lightness = Number(lightnessSlider.value) / 100;
-      notify();
+      notify2();
     }, { signal });
     updateIndicatorPosition();
-    notify();
+    notify2();
     container.append(wheelWrapper, lightnessRow, preview);
-    return { element: container, getColor: currentColor, getState: currentState, setState };
+    return { element: container, getColor: currentColor, getState: currentState, setState: setState2 };
   }
 
   // packages/misc/notepad/recent-colors.js
@@ -7860,11 +11808,11 @@ Version: v${version}`;
     const label = document.createElement("div");
     label.className = "wizascript-notepad-side-label";
     label.textContent = "Recent Colors";
-    const row = document.createElement("div");
-    row.className = "wizascript-notepad-recent-colors";
-    wrap.append(label, row);
-    function render(colors) {
-      row.innerHTML = "";
+    const row2 = document.createElement("div");
+    row2.className = "wizascript-notepad-recent-colors";
+    wrap.append(label, row2);
+    function render2(colors) {
+      row2.innerHTML = "";
       colors.forEach((entry) => {
         const swatch = document.createElement("span");
         swatch.className = "wizascript-notepad-recent-swatch";
@@ -7872,22 +11820,22 @@ Version: v${version}`;
         swatch.title = entry.color;
         swatch.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
         swatch.addEventListener("click", () => onSelect(entry), { signal });
-        row.appendChild(swatch);
+        row2.appendChild(swatch);
       });
     }
-    return { element: wrap, render };
+    return { element: wrap, render: render2 };
   }
 
   // packages/misc/notepad/index.js
   var DEFAULT_THICKNESS = 5;
-  var mounted = null;
+  var mounted2 = null;
   function sanitizeFilename(rawTitle) {
     const cleaned = (rawTitle || "").trim().replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, " ").slice(0, 60);
     return cleaned || "notepad-doodle";
   }
   function showNotepad() {
     var _a;
-    if (mounted) return;
+    if (mounted2) return;
     injectStyle2();
     const controller = new AbortController();
     const { signal } = controller;
@@ -8019,6 +11967,7 @@ Version: v${version}`;
     colorColumn.append(colorLabel, picker.element, applyPenBtn, applyBgBtn, recentColorsRow.element);
     body.append(mainColumn, layersColumn, colorColumn);
     document.body.appendChild(root);
+    watchOnScreen(root);
     function selectTool(tool) {
       currentTool = tool;
       drawBox.classList.toggle("active", tool === "draw");
@@ -8087,8 +12036,8 @@ Version: v${version}`;
     redoBtn.addEventListener("click", () => surface.redo(), { signal });
     undoBtn.classList.add("wizascript-notepad-history-btn-disabled");
     redoBtn.classList.add("wizascript-notepad-history-btn-disabled");
-    surface.setOnHistoryChange((canUndo, canRedo) => {
-      undoBtn.classList.toggle("wizascript-notepad-history-btn-disabled", !canUndo);
+    surface.setOnHistoryChange((canUndo2, canRedo) => {
+      undoBtn.classList.toggle("wizascript-notepad-history-btn-disabled", !canUndo2);
       redoBtn.classList.toggle("wizascript-notepad-history-btn-disabled", !canRedo);
     });
     clearBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
@@ -8102,7 +12051,7 @@ Version: v${version}`;
       clearSavedPenColor();
       clearRecentColors();
       recentColorsRow.render([]);
-      titleInput.value = DEFAULT_TITLE;
+      titleInput.value = DEFAULT_TITLE2;
       clearSavedTitle();
     }, { signal });
     saveBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
@@ -8111,24 +12060,24 @@ Version: v${version}`;
     }, { signal });
     closeBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
     closeBtn.addEventListener("click", () => hideNotepad(), { signal });
-    mounted = { root, controller, surface };
+    mounted2 = { root, controller, surface };
   }
   function hideNotepad() {
-    if (!mounted) return;
-    mounted.controller.abort();
-    mounted.root.remove();
-    mounted = null;
+    if (!mounted2) return;
+    mounted2.controller.abort();
+    mounted2.root.remove();
+    mounted2 = null;
   }
   function isNotepadOpen() {
-    return !!mounted;
+    return !!mounted2;
   }
   function undoNotepad() {
-    if (!mounted) return;
-    mounted.surface.undo();
+    if (!mounted2) return;
+    mounted2.surface.undo();
   }
   function redoNotepad() {
-    if (!mounted) return;
-    mounted.surface.redo();
+    if (!mounted2) return;
+    mounted2.surface.redo();
   }
   function forceResetNotepad() {
     hideNotepad();
@@ -8433,154 +12382,6 @@ Version: v${version}`;
   // packages/misc/card-tags/constants.js
   var CARD_LIST_SELECTOR = ".cardsList, .cardSkinList, #loadDeckCards";
 
-  // packages/misc/card-tags/storage.js
-  var DATA_KEY = "wizascript.misc.cardTags.data";
-  var DEFAULT_COLORS = ["#4dabf7", "#51cf66", "#ffa94d", "#ff6b6b", "#cc5de8", "#20c997", "#ffd43b"];
-  function genTagId() {
-    return "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-  }
-  function emptyData() {
-    return { tags: [], cardTags: {} };
-  }
-  function readData() {
-    let raw;
-    try {
-      raw = GM_getValue(DATA_KEY, null);
-    } catch (e) {
-      console.warn("[CardTags] Failed to read storage key", DATA_KEY, e);
-      return emptyData();
-    }
-    if (!raw) return emptyData();
-    let parsed;
-    try {
-      parsed = JSON.parse(raw);
-    } catch (e) {
-      console.warn("[CardTags] Failed to parse stored data, starting fresh.", e);
-      return emptyData();
-    }
-    if (Array.isArray(parsed.tags) && parsed.tags.length && typeof parsed.tags[0] === "string") {
-      const nameToId = {};
-      const upgradedTags = parsed.tags.map((name, i) => {
-        const id = genTagId();
-        nameToId[name] = id;
-        return { id, name, color: DEFAULT_COLORS[i % DEFAULT_COLORS.length] };
-      });
-      const upgradedCardTags = {};
-      Object.keys(parsed.cardTags || {}).forEach((cardId) => {
-        const ids = (parsed.cardTags[cardId] || []).map((name) => nameToId[name]).filter(Boolean);
-        if (ids.length) upgradedCardTags[cardId] = ids;
-      });
-      const upgraded = { tags: upgradedTags, cardTags: upgradedCardTags };
-      writeData(upgraded);
-      return upgraded;
-    }
-    return {
-      tags: Array.isArray(parsed.tags) ? parsed.tags : [],
-      cardTags: parsed.cardTags && typeof parsed.cardTags === "object" ? parsed.cardTags : {}
-    };
-  }
-  function writeData(value) {
-    try {
-      GM_setValue(DATA_KEY, JSON.stringify(value));
-    } catch (e) {
-      console.warn("[CardTags] Failed to write storage key", DATA_KEY, e);
-    }
-  }
-  var data = readData();
-  function allTags() {
-    return data.tags;
-  }
-  function findTag(id) {
-    return data.tags.find((t) => t.id === id) || null;
-  }
-  function createTag(name, color) {
-    const tag = {
-      id: genTagId(),
-      name: name.trim(),
-      color: color || DEFAULT_COLORS[data.tags.length % DEFAULT_COLORS.length]
-    };
-    data.tags.push(tag);
-    writeData(data);
-    return tag;
-  }
-  function updateTag(id, patch) {
-    const tag = findTag(id);
-    if (!tag) return;
-    Object.assign(tag, patch);
-    writeData(data);
-  }
-  function deleteTag(id) {
-    data.tags = data.tags.filter((t) => t.id !== id);
-    Object.keys(data.cardTags).forEach((cardId) => {
-      data.cardTags[cardId] = data.cardTags[cardId].filter((tagId) => tagId !== id);
-      if (!data.cardTags[cardId].length) delete data.cardTags[cardId];
-    });
-    writeData(data);
-  }
-  function tagIdsForCard(cardId) {
-    return data.cardTags[cardId] || [];
-  }
-  function tagObjectsForCard(cardId) {
-    return tagIdsForCard(cardId).map(findTag).filter(Boolean);
-  }
-  function cardHasTag(cardId, tagId) {
-    return tagIdsForCard(cardId).includes(tagId);
-  }
-  function toggleCardTag(cardId, tagId) {
-    const current = data.cardTags[cardId] || [];
-    const has = current.includes(tagId);
-    const next = has ? current.filter((t) => t !== tagId) : [...current, tagId];
-    if (next.length) {
-      data.cardTags[cardId] = next;
-    } else {
-      delete data.cardTags[cardId];
-    }
-    writeData(data);
-  }
-  function taggedCardIds() {
-    return Object.keys(data.cardTags);
-  }
-  function exportTags(tagIds) {
-    const wanted = new Set(tagIds);
-    return {
-      format: 1,
-      tags: data.tags.filter((t) => wanted.has(t.id)).map((t) => ({
-        name: t.name,
-        color: t.color,
-        cards: Object.keys(data.cardTags).filter((cardId) => data.cardTags[cardId].includes(t.id))
-      }))
-    };
-  }
-  function importTags(shared) {
-    if (!shared || shared.format !== 1 || !Array.isArray(shared.tags)) {
-      throw new Error("That code isn't a Card Tags code this version understands.");
-    }
-    const summary = { created: [], merged: [], cardsTagged: 0 };
-    shared.tags.forEach((st) => {
-      const name = String(st && st.name || "").trim();
-      if (!name) return;
-      let tag = data.tags.find((t) => t.name.toLowerCase() === name.toLowerCase());
-      if (tag) {
-        summary.merged.push(tag.name);
-      } else {
-        const color = /^#[0-9a-f]{3,8}$/i.test(st.color || "") ? st.color : DEFAULT_COLORS[data.tags.length % DEFAULT_COLORS.length];
-        tag = { id: genTagId(), name, color };
-        data.tags.push(tag);
-        summary.created.push(name);
-      }
-      (Array.isArray(st.cards) ? st.cards : []).forEach((rawId) => {
-        const cardId = String(rawId);
-        if (!/^[\w-]{1,32}$/.test(cardId)) return;
-        const current = data.cardTags[cardId] || [];
-        if (current.includes(tag.id)) return;
-        data.cardTags[cardId] = [...current, tag.id];
-        summary.cardsTagged++;
-      });
-    });
-    writeData(data);
-    return summary;
-  }
-
   // packages/misc/card-tags/indicators.js
   var INDICATOR_ATTR = "data-wiza-tag-dot";
   var rarityAnchorWarned = false;
@@ -8616,26 +12417,26 @@ Version: v${version}`;
       holder.style.transform = "translate(0, -50%)";
     }
   }
-  function decorateCorner(el2, tags) {
-    const existing = el2.querySelector(":scope > [" + INDICATOR_ATTR + '="corner"]');
-    if (getComputedStyle(el2).position === "static") el2.style.position = "relative";
+  function decorateCorner(el3, tags) {
+    const existing = el3.querySelector(":scope > [" + INDICATOR_ATTR + '="corner"]');
+    if (getComputedStyle(el3).position === "static") el3.style.position = "relative";
     const holder = existing || document.createElement("div");
     if (!existing) {
       holder.setAttribute(INDICATOR_ATTR, "corner");
       Object.assign(holder.style, { position: "absolute", top: "2px", right: "2px", zIndex: "50", display: "flex", gap: "2px", pointerEvents: "none" });
-      el2.appendChild(holder);
+      el3.appendChild(holder);
     }
     fillDots(holder, tags.slice(0, 4));
   }
-  function decorateOneCardElement(el2, tags) {
-    const leftExisting = el2.querySelector(":scope > [" + INDICATOR_ATTR + '="left"]');
-    const rightExisting = el2.querySelector(":scope > [" + INDICATOR_ATTR + '="right"]');
-    const cornerExisting = el2.querySelector(":scope > [" + INDICATOR_ATTR + '="corner"]');
+  function decorateOneCardElement(el3, tags) {
+    const leftExisting = el3.querySelector(":scope > [" + INDICATOR_ATTR + '="left"]');
+    const rightExisting = el3.querySelector(":scope > [" + INDICATOR_ATTR + '="right"]');
+    const cornerExisting = el3.querySelector(":scope > [" + INDICATOR_ATTR + '="corner"]');
     if (!tags.length) {
       [leftExisting, rightExisting, cornerExisting].forEach((h) => h && h.remove());
       return;
     }
-    const anchor = findRarityAnchor(el2);
+    const anchor = findRarityAnchor(el3);
     if (!anchor) {
       if (!rarityAnchorWarned) {
         rarityAnchorWarned = true;
@@ -8643,29 +12444,29 @@ Version: v${version}`;
       }
       if (leftExisting) leftExisting.remove();
       if (rightExisting) rightExisting.remove();
-      decorateCorner(el2, tags);
+      decorateCorner(el3, tags);
       return;
     }
     if (cornerExisting) cornerExisting.remove();
-    if (getComputedStyle(el2).position === "static") el2.style.position = "relative";
+    if (getComputedStyle(el3).position === "static") el3.style.position = "relative";
     const leftTags = tags.slice(0, 2);
     const rightTags = tags.slice(2, 4);
     const leftHolder = leftExisting || makeFlankHolder("left");
     const rightHolder = rightExisting || makeFlankHolder("right");
-    if (!leftExisting) el2.appendChild(leftHolder);
-    if (!rightExisting) el2.appendChild(rightHolder);
+    if (!leftExisting) el3.appendChild(leftHolder);
+    if (!rightExisting) el3.appendChild(rightHolder);
     fillDots(leftHolder, leftTags);
     fillDots(rightHolder, rightTags);
     leftHolder.style.display = leftTags.length ? "flex" : "none";
     rightHolder.style.display = rightTags.length ? "flex" : "none";
-    positionFlank(el2, anchor, leftHolder, "left");
-    positionFlank(el2, anchor, rightHolder, "right");
+    positionFlank(el3, anchor, leftHolder, "left");
+    positionFlank(el3, anchor, rightHolder, "right");
   }
   function decorateCard(cardId) {
     const els = Array.from(document.getElementsByClassName("card-" + cardId));
     if (!els.length) return;
     const tags = tagObjectsForCard(cardId);
-    els.forEach((el2) => decorateOneCardElement(el2, tags));
+    els.forEach((el3) => decorateOneCardElement(el3, tags));
   }
   function decorateAllCards() {
     taggedCardIds().forEach(decorateCard);
@@ -8711,8 +12512,8 @@ Version: v${version}`;
     const list = document.createElement("div");
     list.style.cssText = "max-height:260px;overflow-y:auto;";
     const boxes = tags.map((tag) => {
-      const row = document.createElement("label");
-      row.style.cssText = "display:flex;align-items:center;gap:8px;padding:4px 0;font-weight:normal;cursor:pointer;";
+      const row2 = document.createElement("label");
+      row2.style.cssText = "display:flex;align-items:center;gap:8px;padding:4px 0;font-weight:normal;cursor:pointer;";
       const box = document.createElement("input");
       box.type = "checkbox";
       box.checked = true;
@@ -8721,8 +12522,8 @@ Version: v${version}`;
       const text = document.createElement("span");
       const n = countCards(tag.id);
       text.textContent = `${tag.name} (${n} card${n === 1 ? "" : "s"})`;
-      row.append(box, dot, text);
-      list.appendChild(row);
+      row2.append(box, dot, text);
+      list.appendChild(row2);
       return { tag, box };
     });
     wrapper.appendChild(list);
@@ -8812,11 +12613,11 @@ Version: v${version}`;
     openMenuEl = null;
     maybeRefreshSearch();
   }
-  function openTagMenu(card, cards, x, y) {
+  function openTagMenu(card, cards2, x, y) {
     closeTagMenu();
-    const menu = document.createElement("div");
-    menu.className = "wiza-tag-menu";
-    Object.assign(menu.style, {
+    const menu3 = document.createElement("div");
+    menu3.className = "wiza-tag-menu";
+    Object.assign(menu3.style, {
       position: "fixed",
       left: x + "px",
       top: y + "px",
@@ -8846,12 +12647,12 @@ Version: v${version}`;
       outline: "none",
       fontSize: "13px"
     });
-    menu.appendChild(filterInput);
+    menu3.appendChild(filterInput);
     const rowsWrap = document.createElement("div");
     Object.assign(rowsWrap.style, { maxHeight: "220px", overflowY: "auto" });
     function makeRow({ label, onClick, active, secondary, swatch }) {
-      const row = document.createElement("div");
-      Object.assign(row.style, {
+      const row2 = document.createElement("div");
+      Object.assign(row2.style, {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -8861,11 +12662,11 @@ Version: v${version}`;
         background: active ? "rgba(120,170,255,0.18)" : "transparent",
         borderBottom: "1px solid rgba(255,255,255,0.08)"
       });
-      row.addEventListener("mouseenter", () => {
-        if (!active) row.style.background = "rgba(255,255,255,0.08)";
+      row2.addEventListener("mouseenter", () => {
+        if (!active) row2.style.background = "rgba(255,255,255,0.08)";
       });
-      row.addEventListener("mouseleave", () => {
-        row.style.background = active ? "rgba(120,170,255,0.18)" : "transparent";
+      row2.addEventListener("mouseleave", () => {
+        row2.style.background = active ? "rgba(120,170,255,0.18)" : "transparent";
       });
       const left = document.createElement("span");
       left.style.cssText = "display:flex;align-items:center;gap:8px;overflow:hidden;flex:1;";
@@ -8878,7 +12679,7 @@ Version: v${version}`;
       text.textContent = (active ? "\u2713 " : "") + label;
       text.style.cssText = "overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
       left.appendChild(text);
-      row.appendChild(left);
+      row2.appendChild(left);
       if (secondary) {
         const secBtn = document.createElement("span");
         secBtn.textContent = secondary.label;
@@ -8888,13 +12689,13 @@ Version: v${version}`;
           ev.stopPropagation();
           secondary.onClick();
         });
-        row.appendChild(secBtn);
+        row2.appendChild(secBtn);
       }
-      row.addEventListener("click", (ev) => {
+      row2.addEventListener("click", (ev) => {
         ev.stopPropagation();
         onClick();
       });
-      return row;
+      return row2;
     }
     function renderRows(filterTerm) {
       rowsWrap.innerHTML = "";
@@ -8920,40 +12721,40 @@ Version: v${version}`;
           secondary: {
             label: "\u{1F441}",
             title: 'See cards tagged "' + tag.name + '"',
-            onClick: () => showCardsForTag(tag, cards)
+            onClick: () => showCardsForTag(tag, cards2)
           }
         }));
       });
     }
     renderRows("");
-    menu.appendChild(rowsWrap);
+    menu3.appendChild(rowsWrap);
     filterInput.addEventListener("input", () => renderRows(filterInput.value));
     const divider = document.createElement("div");
     divider.style.cssText = "height:1px;background:rgba(255,255,255,0.15);";
-    menu.appendChild(divider);
+    menu3.appendChild(divider);
     const newTagRow = makeRow({ label: "+ New Tag", onClick: () => {
       closeTagMenu();
-      promptNewTag(card, cards, x, y);
+      promptNewTag(card, cards2, x, y);
     } });
     newTagRow.style.color = "#8f8";
-    menu.appendChild(newTagRow);
+    menu3.appendChild(newTagRow);
     const manageRow = makeRow({ label: "Manage Tags\u2026", onClick: () => {
       closeTagMenu();
       openManageTagsDialog();
     } });
     manageRow.style.color = "#9ab";
-    menu.appendChild(manageRow);
-    menu.addEventListener("click", (ev) => ev.stopPropagation());
-    document.body.appendChild(menu);
-    openMenuEl = menu;
-    const rect = menu.getBoundingClientRect();
-    if (rect.right > window.innerWidth) menu.style.left = Math.max(0, window.innerWidth - rect.width - 8) + "px";
-    if (rect.bottom > window.innerHeight) menu.style.top = Math.max(0, window.innerHeight - rect.height - 8) + "px";
+    menu3.appendChild(manageRow);
+    menu3.addEventListener("click", (ev) => ev.stopPropagation());
+    document.body.appendChild(menu3);
+    openMenuEl = menu3;
+    const rect = menu3.getBoundingClientRect();
+    if (rect.right > window.innerWidth) menu3.style.left = Math.max(0, window.innerWidth - rect.width - 8) + "px";
+    if (rect.bottom > window.innerHeight) menu3.style.top = Math.max(0, window.innerHeight - rect.height - 8) + "px";
     filterInput.focus();
     const openedAt = performance.now();
     function outsideCloser(e) {
       if (performance.now() - openedAt < 200) return;
-      if (menu.contains(e.target)) return;
+      if (menu3.contains(e.target)) return;
       closeTagMenu();
     }
     outsideClick = outsideCloser;
@@ -8961,7 +12762,7 @@ Version: v${version}`;
     document.addEventListener("click", outsideClick);
     document.addEventListener("contextmenu", outsideContext);
   }
-  function promptNewTag(card, cards, reopenX, reopenY) {
+  function promptNewTag(card, cards2, reopenX, reopenY) {
     const pageWindow2 = getPageWindow();
     const BootstrapDialog2 = pageWindow2.BootstrapDialog;
     if (typeof BootstrapDialog2 === "undefined" || typeof BootstrapDialog2.show !== "function") {
@@ -8997,7 +12798,7 @@ Version: v${version}`;
             toggleCardTag(card.id, tag.id);
             decorateCard(card.id);
             d.close();
-            openTagMenu(card, cards, reopenX, reopenY);
+            openTagMenu(card, cards2, reopenX, reopenY);
           }
         }
       ]
@@ -9013,7 +12814,7 @@ Version: v${version}`;
     }
     const wrapper = document.createElement("div");
     wrapper.style.cssText = "min-width:280px;max-height:320px;overflow-y:auto;";
-    function renderList2() {
+    function renderList3() {
       wrapper.innerHTML = "";
       if (!allTags().length) {
         const empty = document.createElement("div");
@@ -9023,8 +12824,8 @@ Version: v${version}`;
         return;
       }
       allTags().forEach((tag) => {
-        const row = document.createElement("div");
-        row.style.cssText = "display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08);";
+        const row2 = document.createElement("div");
+        row2.style.cssText = "display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08);";
         const colorInput = document.createElement("input");
         colorInput.type = "color";
         colorInput.value = tag.color || DEFAULT_COLORS[0];
@@ -9033,7 +12834,7 @@ Version: v${version}`;
           updateTag(tag.id, { color: colorInput.value });
           decorateAllCards();
         });
-        row.appendChild(colorInput);
+        row2.appendChild(colorInput);
         const nameInput = document.createElement("input");
         nameInput.type = "text";
         nameInput.value = tag.name;
@@ -9045,7 +12846,7 @@ Version: v${version}`;
           else nameInput.value = tag.name;
           decorateAllCards();
         });
-        row.appendChild(nameInput);
+        row2.appendChild(nameInput);
         const delBtn = document.createElement("div");
         delBtn.textContent = "-";
         delBtn.title = "Double-click to delete (removes from every tagged card)";
@@ -9060,13 +12861,13 @@ Version: v${version}`;
           if (e.detail !== 2) return;
           deleteTag(tag.id);
           decorateAllCards();
-          renderList2();
+          renderList3();
         });
-        row.appendChild(delBtn);
-        wrapper.appendChild(row);
+        row2.appendChild(delBtn);
+        wrapper.appendChild(row2);
       });
     }
-    renderList2();
+    renderList3();
     BootstrapDialog2.show({
       title: "Manage Tags",
       message: wrapper,
@@ -9075,7 +12876,7 @@ Version: v${version}`;
         { label: "Share\u2026", action: () => openShareTagsDialog() },
         { label: "Import\u2026", action: () => openImportTagsDialog(() => {
           decorateAllCards();
-          renderList2();
+          renderList3();
         }) },
         { label: "Close", action: (d) => {
           d.close();
@@ -9084,10 +12885,10 @@ Version: v${version}`;
       ]
     });
   }
-  function showCardsForTag(tag, cards) {
+  function showCardsForTag(tag, cards2) {
     const pageWindow2 = getPageWindow();
     const BootstrapDialog2 = pageWindow2.BootstrapDialog;
-    const matches = cards.filter((c) => c && c.id != null && cardHasTag(c.id, tag.id));
+    const matches = cards2.filter((c) => c && c.id != null && cardHasTag(c.id, tag.id));
     const listText = matches.length ? matches.map((c) => c.name).join(", ") : '(nothing tagged "' + tag.name + '" yet)';
     if (typeof BootstrapDialog2 === "undefined" || typeof BootstrapDialog2.show !== "function") {
       alert('Cards tagged "' + tag.name + '": ' + listText);
@@ -9105,20 +12906,20 @@ Version: v${version}`;
   }
 
   // packages/misc/card-tags/right-click.js
-  function getCardById2(cards, id) {
-    return cards.find((c) => c && String(c.id) === String(id)) || null;
+  function getCardById2(cards2, id) {
+    return cards2.find((c) => c && String(c.id) === String(id)) || null;
   }
-  function wireRightClick(cards) {
+  function wireRightClick(cards2) {
     document.addEventListener("contextmenu", function(e) {
       const container = e.target.closest(CARD_LIST_SELECTOR);
       if (!container) return;
       if (e.defaultPrevented) return;
       const cardEl = e.target.closest(".card");
-      const card = cardEl && cardEl.id ? getCardById2(cards, cardEl.id) : null;
+      const card = cardEl && cardEl.id ? getCardById2(cards2, cardEl.id) : null;
       if (!card) return;
       e.preventDefault();
       e.stopImmediatePropagation();
-      openTagMenu(card, cards, e.clientX, e.clientY);
+      openTagMenu(card, cards2, e.clientX, e.clientY);
     });
   }
 
@@ -9147,9 +12948,9 @@ Version: v${version}`;
     return matchesPage(["/Crafting", "/Decks"]);
   }
   function waitForCards(callback, attempt = 0) {
-    const cards = getAllCards();
-    if (cards.length) {
-      callback(cards);
+    const cards2 = getAllCards();
+    if (cards2.length) {
+      callback(cards2);
       return;
     }
     if (attempt > 80) {
@@ -9162,9 +12963,9 @@ Version: v${version}`;
     if (!enableCardTagsSetting.value()) return;
     if (!isCardTagsPage()) return;
     setMenuLogger(logger3);
-    waitForCards((cards) => {
+    waitForCards((cards2) => {
       wireSearchFilter(plugin, logger3);
-      wireRightClick(cards);
+      wireRightClick(cards2);
       initIndicators(logger3);
       decorateAllCards();
     });
@@ -9172,12 +12973,12 @@ Version: v${version}`;
 
   // packages/misc/index.js
   function initMisc(plugin) {
-    const settings2 = registerMiscSettings(plugin);
-    initCardTags(plugin, settings2.enableCardTags);
+    const settings4 = registerMiscSettings(plugin);
+    initCardTags(plugin, settings4.enableCardTags);
     let shownThisPage = null;
     function syncNotepadVisibility() {
-      const wanted = shownThisPage !== null ? shownThisPage : settings2.notepadOpenOnLoad.value();
-      if (settings2.enableNotepad.value() && wanted) {
+      const wanted = shownThisPage !== null ? shownThisPage : settings4.notepadOpenOnLoad.value();
+      if (settings4.enableNotepad.value() && wanted) {
         showNotepad();
       } else {
         hideNotepad();
@@ -9222,818 +13023,1842 @@ Version: v${version}`;
       packageLabel: "Notepad",
       onMatch: () => redoNotepad()
     });
-    return settings2;
+    return settings4;
   }
 
-  // packages/controller/storage.js
-  var GM_PREFIX3 = "wizascript.controller.";
-  function csGet(key2, fallback) {
-    try {
-      const v = GM_getValue(GM_PREFIX3 + key2, null);
-      return v === null || v === void 0 ? fallback : v;
-    } catch (e) {
-      console.warn("[Wizascript Controller] GM_getValue failed, falling back to default:", e);
-      return fallback;
-    }
-  }
-  function csSet(key2, value) {
-    try {
-      GM_setValue(GM_PREFIX3 + key2, value);
-    } catch (e) {
-      console.warn("[Wizascript Controller] GM_setValue failed, binding will not persist:", e);
-    }
-  }
-  function csDelete(key2) {
-    try {
-      GM_deleteValue(GM_PREFIX3 + key2);
-    } catch (e) {
-      console.warn("[Wizascript Controller] GM_deleteValue failed:", e);
-    }
-  }
-  var PRESET_COUNT = 3;
-  var DEFAULT_PRESET_NAME_PREFIX = "Preset ";
-  function getActivePreset() {
-    const raw = csGet("activePreset", "1");
-    const n = parseInt(raw, 10);
-    return Number.isNaN(n) || n < 1 || n > PRESET_COUNT ? 1 : n;
-  }
-  function setActivePreset(n) {
-    csSet("activePreset", String(n));
-  }
-  function getPresetName(n) {
-    return csGet("presetName." + n, DEFAULT_PRESET_NAME_PREFIX + n);
-  }
-  function setPresetName(n, name) {
-    const trimmed = (name || "").trim();
-    csSet("presetName." + n, trimmed === "" ? DEFAULT_PRESET_NAME_PREFIX + n : trimmed);
-  }
-  function presetKey(rawKey) {
-    return "preset" + getActivePreset() + "." + rawKey;
-  }
-  function getHudPosition() {
-    const raw = csGet("debugHudPosition", null);
-    if (!raw) return null;
-    try {
-      const pos = JSON.parse(raw);
-      if (pos && typeof pos.left === "number" && typeof pos.top === "number") return pos;
-    } catch (e) {
-      console.warn("[Wizascript Controller] stored debug HUD position was invalid JSON, ignoring:", e);
-    }
-    return null;
-  }
-  function setHudPosition(left, top) {
-    csSet("debugHudPosition", JSON.stringify({ left, top }));
-  }
-  function getCursorSensitivity() {
-    const raw = csGet("cursorSensitivity", null);
-    if (raw === null) return 0;
-    const n = parseFloat(raw);
-    return Number.isNaN(n) ? 0 : Math.max(-1, Math.min(1, n));
-  }
-  function setCursorSensitivity(v) {
-    csSet("cursorSensitivity", String(Math.max(-1, Math.min(1, v))));
-  }
-  function migrateFlatBindingsToPresetOne(controllerActionKeys, hardwareShortcutKeys) {
-    if (csGet("migratedToPresetsV056", null) !== null) return;
-    const migrate = (rawKey) => {
-      const oldVal = csGet(rawKey, null);
-      if (oldVal === null) return;
-      const newKey = "preset1." + rawKey;
-      if (csGet(newKey, null) !== null) return;
-      csSet(newKey, oldVal);
-    };
-    migrate("keybinds.__primary");
-    controllerActionKeys.forEach((key2) => migrate("keybinds." + key2));
-    hardwareShortcutKeys.forEach((key2) => migrate("shortcuts." + key2));
-    csSet("migratedToPresetsV056", "true");
-    console.log("[Wizascript Controller] migrated any pre-preset-system bindings into Preset 1.");
-  }
-  function resetPresetBindings(presetN, controllerActionKeys, hardwareShortcutKeys) {
-    const prefix = "preset" + presetN + ".";
-    csDelete(prefix + "keybinds.__primary");
-    csDelete(prefix + "keybinds.__channelGuide");
-    controllerActionKeys.forEach((key2) => csDelete(prefix + "keybinds." + key2));
-    hardwareShortcutKeys.forEach((key2) => csDelete(prefix + "shortcuts." + key2));
-    console.log("[Wizascript Controller] reset preset " + presetN + "'s keybinds/shortcuts to their defaults.");
+  // packages/misc/wishlist/styles.js
+  var STYLE_ID2 = "wizascript-wishlist-style";
+  var CSS3 = `
+.wz-wl-menu { position: fixed; z-index: 2147483000; min-width: 170px; max-width: 280px; background: #000; color: #fff;
+  border: 1px solid #fff; font-size: 14px; user-select: none; box-shadow: 0 2px 8px rgba(0,0,0,.6); margin: 0; padding: 0; }
+.wz-wl-menu header { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-bottom: 1px solid #555; }
+.wz-wl-menu header img { width: 32px; height: 32px; object-fit: contain; flex: none; }
+.wz-wl-menu header img.wz-wl-wide { width: 64px; object-fit: cover; }
+.wz-wl-menu header small { display: block; color: #aaa; font-size: 11px; }
+.wz-wl-menu li { list-style: none; padding: 4px 10px; cursor: pointer; }
+.wz-wl-menu li:hover { background: #333; }
+.wz-wl-menu li.wz-wl-on { color: #ff6; }
+.wz-wl-menu li.wz-wl-off { color: #888; cursor: default; }
+.wz-wl-menu li.wz-wl-off:hover { background: transparent; }
+
+.wz-wl-shop-pin { outline: 3px solid #ff6 !important; outline-offset: 2px; border-radius: 4px; }
+.wz-wl-shop-star { position: absolute; margin: -6px 0 0 -6px; color: #ff6; font-size: 18px; line-height: 1;
+  text-shadow: 0 0 3px #000; pointer-events: none; z-index: 1; }
+.wz-wl-shop-target { animation: wz-wl-pulse 1s ease-in-out 3; }
+@keyframes wz-wl-pulse { 50% { outline-color: #fff; outline-offset: 6px; } }
+
+.wz-wl-toast-row { display: flex; align-items: center; gap: 6px; margin: 3px 0; text-align: left; }
+.wz-wl-toast-row img { height: 28px; width: 28px; object-fit: contain; flex: none; }
+.wz-wl-toast-row img.wz-wl-wide { width: 56px; object-fit: cover; }
+
+.wz-wl-list { flex-basis: 100%; margin-top: 4px; }
+.wz-wl-list-empty { color: #aaa; font-style: italic; padding: 4px 0; white-space: normal; }
+.wz-wl-row { display: flex; align-items: center; gap: 8px; padding: 3px 4px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.wz-wl-row img { height: 32px; width: 32px; object-fit: contain; flex: none; }
+.wz-wl-row img.wz-wl-wide { width: 64px; object-fit: cover; }
+.wz-wl-row-text { flex: 1; min-width: 0; line-height: 1.2; }
+.wz-wl-row-text small { display: block; color: #aaa; }
+.wz-wl-row button { flex: none; background: #300; color: #fff; border: 1px solid #a55; border-radius: 3px;
+  padding: 0 8px; line-height: 20px; cursor: pointer; }
+.wz-wl-row button:hover, .wz-wl-row button:focus { background: #622; }
+.wz-wl-status { flex-basis: 100%; color: #ccc; margin-top: 4px; white-space: normal; }
+`;
+  function injectWishlistStyle() {
+    if (document.getElementById(STYLE_ID2)) return;
+    const style = document.createElement("style");
+    style.id = STYLE_ID2;
+    style.textContent = CSS3;
+    (document.head || document.documentElement).appendChild(style);
   }
 
-  // packages/controller/settings.js
-  var CONTROLLER_ACTIONS = [
-    { key: "previousChannel", name: "Previous Channel", packageLabel: "UC TV", context: "channelSwitch", defaultButton: 14, dispatch: { code: "ArrowLeft", key: "ArrowLeft" } },
-    { key: "nextChannel", name: "Next Channel", packageLabel: "UC TV", context: "channelSwitch", defaultButton: 15, dispatch: { code: "ArrowRight", key: "ArrowRight" } },
-    { key: "toggleNotepad", name: "Toggle Notepad", packageLabel: "Notepad", context: "always", defaultButton: 3, dispatch: { code: "KeyO", key: "o" } },
-    { key: "resetNotepad", name: "Reset Notepad", packageLabel: "Notepad", context: "always", defaultButton: 2, dispatch: { code: "KeyN", key: "n" } },
-    { key: "undoNotepad", name: "Undo Drawing", packageLabel: "Notepad", context: "default", defaultButton: 13, dispatch: { code: "KeyZ", key: "z" } },
-    { key: "redoNotepad", name: "Redo Drawing", packageLabel: "Notepad", context: "default", defaultButton: 12, dispatch: { code: "KeyY", key: "y" } },
-    { key: "moveEntryUp", name: "Move Entry Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
-    { key: "moveEntryDown", name: "Move Entry Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
-    // Shortened from "Move Balance Section Up/Down" - the "- Primary +
-    // <button>" suffix registerControllerSettings() appends below already
-    // pushed the combined row name wide enough to force a horizontal
-    // scrollbar in the settings dialog. "Section" alone is unambiguous
-    // here (Patch Maker only has one thing called a "section"), matching
-    // "Entry"/"Card" already being bare nouns in the two actions above.
-    { key: "moveSectionUp", name: "Move Section Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
-    { key: "moveSectionDown", name: "Move Section Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
-    { key: "moveCardUp", name: "Move Card Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 12, dispatch: { code: "ArrowUp", key: "ArrowUp" } },
-    { key: "moveCardDown", name: "Move Card Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 13, dispatch: { code: "ArrowDown", key: "ArrowDown" } },
-    // Relays Patch Maker's own real "Cycle Category Up/Down" keybind
-    // (packages/patch-maker/overlay.js - Comma/Period by default,
-    // scope:'scoped'/selector:'.uc-li-text', same registry Move Entry/
-    // Section/Card Up/Down above already relay into successfully) exactly
-    // the same way those do: dispatch the real e.code Wizascript's own
-    // registry is listening for while Primary is synthetically held, and
-    // let that registry's own document.activeElement/selector check
-    // decide whether it actually applies. defaultButton is D-pad Left/
-    // Right (14/15) rather than Up/Down (12/13, already claimed by Move
-    // Entry/Section/Card in this same 'patchMaker' context) specifically
-    // to avoid a same-frame double-fire - Up/Down and Left/Right dispatch
-    // different e.codes, so sharing a button between two 'patchMaker'
-    // actions would relay BOTH every time it's pressed. Left/Right is
-    // free here: previousChannel/nextChannel above claim the same two
-    // buttons, but only under 'channelSwitch' context, which is mutually
-    // exclusive with 'patchMaker' by construction (see the `applies`
-    // check in index.js's relay). This is very likely the actual
-    // technical snag from the earlier, abandoned attempt at this exact
-    // feature - reusing Up/Down here would produce confusing dual
-    // behavior (moving the entry AND cycling its category on the same
-    // press) that could easily read as "wiring it was a pain," even
-    // though the underlying relay mechanism itself works correctly in
-    // isolation (proven by Move Entry/Section/Card already using it).
-    { key: "cycleCategoryUp", name: "Cycle Category Up", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 14, dispatch: { code: "Comma", key: "," } },
-    { key: "cycleCategoryDown", name: "Cycle Category Down", packageLabel: "Patch Maker", context: "patchMaker", defaultButton: 15, dispatch: { code: "Period", key: "." } }
-  ];
-  var CONTROLLER_ACTIONS_BY_KEY = {};
-  CONTROLLER_ACTIONS.forEach((a) => {
-    CONTROLLER_ACTIONS_BY_KEY[a.key] = a;
-  });
-  var HARDWARE_SHORTCUT_ACTIONS = [
-    { key: "openSettings", name: "Open Settings" },
-    { key: "yourDustpile", name: "Check Your Dustpile" },
-    { key: "opponentDustpile", name: "Check Opponent's Dustpile" },
-    { key: "endTurn", name: "End Turn" },
-    { key: "openWizascriptSettings", name: "Open Wizascript Settings" },
-    { key: "concede", name: "Concede" },
-    { key: "goHome", name: "Go to Home Page" },
-    // Key kept as-is (stored bindings use it); shown as Card Tracker since 1.5.0.
-    { key: "openDeckTrackerPresets", name: "Open Card Tracker Presets", pluginId: "cardTracker" }
-  ];
-  var HARDWARE_SHORTCUT_DEFAULTS = {
-    openSettings: 9,
-    yourDustpile: 10,
-    opponentDustpile: 11,
-    endTurn: 17,
-    openWizascriptSettings: 7,
-    concede: 8,
-    goHome: 16,
-    openDeckTrackerPresets: 6
+  // packages/misc/wishlist/detect.js
+  var TYPE_INFO = {
+    avatar: { folder: "avatars", label: "Avatar" },
+    emote: { folder: "emotes", label: "Emote" },
+    "profile-skin": { folder: "profiles", label: "Profile Skin" }
   };
-  var HARDWARE_SHORTCUT_ACTIONS_BY_KEY = {};
-  HARDWARE_SHORTCUT_ACTIONS.forEach((a) => {
-    HARDWARE_SHORTCUT_ACTIONS_BY_KEY[a.key] = a;
-  });
-  var DEFAULT_PRIMARY_BUTTON = 4;
-  function encodeBoundInput(value) {
-    if (value === null || value === void 0) return "unbound";
-    if (typeof value === "number") return String(value);
-    if (value && value.type === "key") return "kb:" + value.code;
-    return "unbound";
+  var FOLDERS = Object.entries(TYPE_INFO).map(([type, info]) => [info.folder, type]);
+  var SKIP_FILES = /^(YourBubble|EnemyBubble)\./i;
+  function nameFromFile(file) {
+    return file.replace(/\.[a-z0-9]+$/i, "").replace(/_/g, " ");
   }
-  function decodeBoundInput(raw, defaultValue) {
-    if (raw === "unbound") return null;
-    if (typeof raw === "string" && raw.indexOf("kb:") === 0) return { type: "key", code: raw.slice(3) };
-    const n = parseInt(raw, 10);
-    return Number.isNaN(n) ? defaultValue : n;
+  function imageUrl(type, file) {
+    const info = TYPE_INFO[type];
+    return info ? `/images/${info.folder}/${encodeURIComponent(file)}` : "";
   }
-  function getControllerPrimaryButton() {
-    return decodeBoundInput(csGet(presetKey("keybinds.__primary"), String(DEFAULT_PRIMARY_BUTTON)), DEFAULT_PRIMARY_BUTTON);
-  }
-  function setControllerPrimaryButton(value) {
-    csSet(presetKey("keybinds.__primary"), encodeBoundInput(value));
-  }
-  function getChannelGuideButton() {
-    return decodeBoundInput(csGet(presetKey("keybinds.__channelGuide"), "unbound"), null);
-  }
-  function setChannelGuideButton(value) {
-    csSet(presetKey("keybinds.__channelGuide"), encodeBoundInput(value));
-  }
-  function getBoundButton(actionKey) {
-    const action = CONTROLLER_ACTIONS_BY_KEY[actionKey];
-    return decodeBoundInput(csGet(presetKey("keybinds." + actionKey), String(action.defaultButton)), action.defaultButton);
-  }
-  function setBoundButton(actionKey, value) {
-    csSet(presetKey("keybinds." + actionKey), encodeBoundInput(value));
-  }
-  function getBoundShortcutButton(actionKey) {
-    const defaultButton = HARDWARE_SHORTCUT_DEFAULTS[actionKey];
-    return decodeBoundInput(csGet(presetKey("shortcuts." + actionKey), String(defaultButton)), defaultButton);
-  }
-  function setBoundShortcutButton(actionKey, value) {
-    csSet(presetKey("shortcuts." + actionKey), encodeBoundInput(value));
-  }
-  var controllerEnabledSetting = null;
-  function isControllerSupportEnabled() {
-    if (!controllerEnabledSetting || typeof controllerEnabledSetting.value !== "function") return true;
+  function fromSrc(src) {
+    if (!src) return null;
+    const hit = FOLDERS.find(([folder]) => src.includes(`images/${folder}/`));
+    if (!hit) return null;
+    let file = src.split("/").pop().split(/[?#]/)[0];
     try {
-      const v = controllerEnabledSetting.value();
-      return v === void 0 || v === null ? true : !!v;
+      file = decodeURIComponent(file);
     } catch (e) {
-      return true;
     }
+    if (!file || SKIP_FILES.test(file)) return null;
+    const type = hit[1];
+    return { key: `${type}:${file}`, type, file, name: nameFromFile(file) };
   }
-  var debugTextEnabledSetting = null;
-  var debugTextCheckedLive = null;
-  function observeDebugTextCheckbox(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    debugTextCheckedLive = !!el2.checked;
-    el2.addEventListener("change", () => {
-      debugTextCheckedLive = !!el2.checked;
-    });
+  function srcOf(el3) {
+    if (!(el3 instanceof Element)) return "";
+    if (el3.tagName === "IMG") return el3.getAttribute("src") || "";
+    const bg = getComputedStyle(el3).backgroundImage || "";
+    const m = bg.match(/url\(["']?([^"')]+)/);
+    return m ? m[1] : "";
   }
-  function isDebugTextEnabled() {
-    if (debugTextCheckedLive !== null) return debugTextCheckedLive;
-    if (!debugTextEnabledSetting || typeof debugTextEnabledSetting.value !== "function") return false;
+  function detectElement(el3) {
+    return fromSrc(srcOf(el3));
+  }
+  function findCosmetic(target) {
+    if (!(target instanceof Element)) return null;
+    let found = null;
+    const profile = target.closest("table.profile");
+    if (profile) found = detectElement(profile);
+    for (let n = target, i = 0; !found && n && i < 5; n = n.parentElement, i++) {
+      found = detectElement(n);
+    }
+    if (!found) return null;
+    const box = target.closest(".col-sm-1, tr");
+    const form = box && box.querySelector("form.cosmetic-purchase[data-name]");
+    const boxImg = box && box.querySelector("img");
+    const boxItem = boxImg ? fromSrc(boxImg.getAttribute("src")) : null;
+    if (form && boxItem && boxItem.key === found.key) {
+      found.name = form.getAttribute("data-name") || found.name;
+    }
+    return found;
+  }
+  function isFreeEmote(file) {
     try {
-      return !!debugTextEnabledSetting.value();
+      const list = getPageWindow().chatEmotes;
+      if (!Array.isArray(list)) return false;
+      const e = list.find((x) => x && `${x.image}.png` === file);
+      return !!(e && Number(e.ucpCost) === 0);
     } catch (e) {
       return false;
     }
   }
-  var HIGHLIGHT_COLOR_PRESETS = [
-    ["Light Blue (default)", "#3ea6ff"],
-    ["Yellow", "#ffff00"],
-    // JUSTICE
-    ["Red", "red"],
-    // DETERMINATION
-    ["Green", "#00c000"],
-    // KINDNESS
-    ["Orange", "#fca500"],
-    // BRAVERY
-    ["Blue", "#0064ff"],
-    // INTEGRITY
-    ["Cyan", "#41fcff"],
-    // PATIENCE
-    ["Magenta", "#d535d9"]
-    // PERSEVERANCE
-  ];
-  var DEFAULT_HIGHLIGHT_COLOR = HIGHLIGHT_COLOR_PRESETS[0][1];
-  var highlightColorSetting = null;
-  var highlightColorLive = null;
-  function observeHighlightColorSelect(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    highlightColorLive = el2.value || null;
-    el2.addEventListener("change", () => {
-      highlightColorLive = el2.value || null;
-    });
-  }
-  function getHighlightColor() {
-    if (highlightColorLive) return highlightColorLive;
-    if (!highlightColorSetting || typeof highlightColorSetting.value !== "function") return DEFAULT_HIGHLIGHT_COLOR;
+
+  // packages/misc/wishlist/storage.js
+  var ITEMS_KEY = "wizascript.wishlist.items";
+  var STATE_KEY2 = "wizascript.wishlist.state";
+  var listeners2 = /* @__PURE__ */ new Set();
+  function read(key2, fallback) {
     try {
-      return highlightColorSetting.value() || DEFAULT_HIGHLIGHT_COLOR;
+      const raw = GM_getValue(key2, null);
+      if (!raw) return fallback;
+      const v = typeof raw === "string" ? JSON.parse(raw) : raw;
+      return v && typeof v === "object" ? v : fallback;
     } catch (e) {
-      return DEFAULT_HIGHLIGHT_COLOR;
+      return fallback;
     }
   }
-  var controllerCaptureActive = false;
-  function isControllerCaptureActive() {
-    return controllerCaptureActive;
+  function write(key2, value) {
+    GM_setValue(key2, JSON.stringify(value));
   }
-  var boundInputRefreshers = [];
-  function enhanceControllerInfoRow(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    el2.readOnly = true;
-    el2.tabIndex = -1;
-    el2.style.display = "none";
-  }
-  function enhanceControllerCaptureInput(el2, readBound, writeBound) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    el2.readOnly = true;
-    Object.assign(el2.style, {
-      cursor: "pointer",
-      backgroundColor: "black",
-      color: "white",
-      border: "1px solid #b4b4b4",
-      borderRadius: "3px",
-      textAlign: "center"
+  function emit() {
+    listeners2.forEach((fn) => {
+      try {
+        fn();
+      } catch (e) {
+      }
     });
-    function refreshDisplay() {
-      el2.value = bindingToDisplay(readBound());
-    }
-    refreshDisplay();
-    boundInputRefreshers.push(refreshDisplay);
-    el2.addEventListener("focus", () => {
-      el2.style.border = "1px solid #40E0D0";
-      el2.style.boxShadow = "0 0 4px #40E0D0";
-      el2.value = "Press a button or key...";
-      controllerCaptureActive = true;
-      let cancelled = false;
-      let ignoreUntilReleased = /* @__PURE__ */ new Set();
-      const gp0 = getMergedGamepad();
-      if (gp0) gp0.buttons.forEach((b, i) => {
-        if (b && b.pressed) ignoreUntilReleased.add(i);
-      });
-      function captureFrame() {
-        if (cancelled) return;
-        const gp = getMergedGamepad();
-        if (gp) {
-          gp.buttons.forEach((b, i) => {
-            if (!b) return;
-            if (!b.pressed) {
-              ignoreUntilReleased.delete(i);
-              return;
-            }
-            if (ignoreUntilReleased.has(i)) return;
-            finishCapture(i);
-          });
-        }
-        if (!cancelled) requestAnimationFrame(captureFrame);
-      }
-      function finishCapture(value) {
-        if (cancelled) return;
-        cancelled = true;
-        writeBound(value);
-        cleanup();
-        el2.blur();
-      }
-      function onKeydown(e) {
-        if (cancelled) return;
-        if (e.key === "Escape") {
-          e.preventDefault();
-          cancelled = true;
-          writeBound(null);
-          cleanup();
-          el2.blur();
-          return;
-        }
-        if (e.key === "Shift" || e.key === "Control" || e.key === "Alt" || e.key === "Meta") return;
-        const gpNow = getMergedGamepad();
-        if (gpNow && gpNow.buttons.some((b) => b && b.pressed)) return;
+  }
+  function getItems() {
+    return read(ITEMS_KEY, {});
+  }
+  function getItemList() {
+    return Object.entries(getItems()).map(([key2, v]) => ({ key: key2, ...v })).sort((a, b) => (a.added || 0) - (b.added || 0));
+  }
+  function hasItems() {
+    return Object.keys(getItems()).length > 0;
+  }
+  function isPinned(key2) {
+    return !!getItems()[key2];
+  }
+  function addItem({ key: key2, type, file, name }) {
+    const items = getItems();
+    if (items[key2]) return;
+    items[key2] = { type, file, name, added: Date.now() };
+    write(ITEMS_KEY, items);
+    emit();
+  }
+  function removeItem2(key2) {
+    const items = getItems();
+    if (!items[key2]) return;
+    delete items[key2];
+    write(ITEMS_KEY, items);
+    emit();
+  }
+  function updateItems(fn) {
+    const items = getItems();
+    fn(items);
+    write(ITEMS_KEY, items);
+    emit();
+  }
+  function onItemsChange(fn) {
+    listeners2.add(fn);
+    return () => listeners2.delete(fn);
+  }
+  function getState() {
+    return read(STATE_KEY2, {});
+  }
+  function setState(patch) {
+    write(STATE_KEY2, { ...getState(), ...patch });
+  }
+
+  // packages/misc/wishlist/menu.js
+  var menu = null;
+  var wired = false;
+  function isWishlistMenuOpen() {
+    return !!(menu && menu.isConnected);
+  }
+  function closeWishlistMenu() {
+    const was = isWishlistMenuOpen();
+    if (menu) menu.remove();
+    menu = null;
+    return was;
+  }
+  function thumb(item) {
+    const img = document.createElement("img");
+    img.src = imageUrl(item.type, item.file);
+    img.alt = "";
+    if (item.type === "profile-skin") img.className = "wz-wl-wide";
+    return img;
+  }
+  function openMenu(item, x, y) {
+    closeWishlistMenu();
+    const pinned = isPinned(item.key);
+    const free = item.type === "emote" && isFreeEmote(item.file);
+    menu = document.createElement("ul");
+    menu.className = "wz-wl-menu";
+    const head = document.createElement("header");
+    const text = document.createElement("div");
+    text.append(item.name);
+    const sub = document.createElement("small");
+    sub.textContent = TYPE_INFO[item.type].label;
+    text.append(sub);
+    head.append(thumb(item), text);
+    const li = document.createElement("li");
+    if (free && !pinned) {
+      li.textContent = "Free for everyone - can't be pinned";
+      li.className = "wz-wl-off";
+    } else {
+      li.textContent = pinned ? "\u2605 Remove from Wishlist" : "\u2606 Add to Wishlist";
+      if (pinned) li.className = "wz-wl-on";
+      li.addEventListener("click", (e) => {
         e.preventDefault();
-        finishCapture({ type: "key", code: e.code });
-      }
-      function cleanup() {
-        document.removeEventListener("keydown", onKeydown, true);
-      }
-      document.addEventListener("keydown", onKeydown, true);
-      requestAnimationFrame(captureFrame);
-      el2.addEventListener("blur", function onBlur() {
-        cancelled = true;
-        controllerCaptureActive = false;
-        el2.style.border = "1px solid #b4b4b4";
-        el2.style.boxShadow = "none";
-        cleanup();
-        refreshDisplay();
-        scheduleControllerConflictRefresh();
-        el2.removeEventListener("blur", onBlur);
+        e.stopPropagation();
+        if (isPinned(item.key)) removeItem2(item.key);
+        else addItem(item);
+        closeWishlistMenu();
       });
-    });
+    }
+    menu.append(head, li);
+    document.body.appendChild(menu);
+    const r = menu.getBoundingClientRect();
+    menu.style.left = Math.max(4, Math.min(x, window.innerWidth - r.width - 4)) + "px";
+    menu.style.top = Math.max(4, Math.min(y, window.innerHeight - r.height - 4)) + "px";
   }
-  var presetMenuState = null;
-  function getPresetMenuState() {
-    return presetMenuState;
-  }
-  function enhancePresetSelector(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    el2.readOnly = true;
-    el2.tabIndex = 0;
-    Object.assign(el2.style, {
-      cursor: "pointer",
-      backgroundColor: "black",
-      color: "white",
-      border: "1px solid #b4b4b4",
-      borderRadius: "3px",
-      textAlign: "center"
-    });
-    function refreshDisplay() {
-      el2.value = getPresetName(getActivePreset());
-    }
-    refreshDisplay();
-    boundInputRefreshers.push(refreshDisplay);
-    let menuEl = null;
-    function onOutsideClick(e) {
-      if (menuEl && !menuEl.contains(e.target) && e.target !== el2) closeMenu();
-    }
-    function onEscape(e) {
-      if (e.key === "Escape") closeMenu();
-    }
-    function closeMenu() {
-      if (!menuEl) return;
-      menuEl.remove();
-      menuEl = null;
-      presetMenuState = null;
-      document.removeEventListener("mousedown", onOutsideClick, true);
-      document.removeEventListener("keydown", onEscape, true);
-    }
-    function openMenu() {
-      if (menuEl) {
-        closeMenu();
+  function wireWishlistMenu() {
+    if (wired) return;
+    wired = true;
+    document.addEventListener("contextmenu", (e) => {
+      if (menu && menu.contains(e.target)) {
+        e.preventDefault();
         return;
       }
-      const rect = el2.getBoundingClientRect();
-      menuEl = document.createElement("div");
-      Object.assign(menuEl.style, {
-        position: "fixed",
-        left: rect.left + "px",
-        top: rect.bottom + 2 + "px",
-        width: Math.max(rect.width, 140) + "px",
-        background: "#111",
-        border: "1px solid #40E0D0",
-        borderRadius: "3px",
-        zIndex: 2147483647,
-        overflow: "hidden",
-        fontFamily: "inherit"
-      });
-      const rowEls = [];
-      for (let n = 1; n <= PRESET_COUNT; n++) {
-        const isActive = n === getActivePreset();
-        const row = document.createElement("div");
-        row.textContent = getPresetName(n) + (isActive ? "  \u2713" : "");
-        Object.assign(row.style, {
-          padding: "6px 10px",
-          cursor: "pointer",
-          color: "white",
-          background: isActive ? "#333" : "transparent"
-        });
-        row.addEventListener("mouseenter", () => {
-          row.style.background = "#40E0D0";
-          row.style.color = "black";
-        });
-        row.addEventListener("mouseleave", () => {
-          row.style.background = isActive ? "#333" : "transparent";
-          row.style.color = "white";
-        });
-        row.addEventListener("click", () => {
-          setActivePreset(n);
-          closeMenu();
-          boundInputRefreshers.forEach((fn) => fn());
-          if (isDebugTextEnabled()) console.log("[Wizascript Controller] switched to preset", n, "(" + getPresetName(n) + ")");
-        });
-        menuEl.appendChild(row);
-        rowEls.push(row);
+      const item = findCosmetic(e.target);
+      if (!item) return;
+      e.preventDefault();
+      e.stopPropagation();
+      openMenu(item, e.clientX, e.clientY);
+    }, true);
+    document.addEventListener("mousedown", (e) => {
+      if (menu && e.button === 0 && !menu.contains(e.target)) closeWishlistMenu();
+    }, true);
+    let swallowEscUp = false;
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && closeWishlistMenu()) {
+        e.stopPropagation();
+        swallowEscUp = true;
       }
-      document.body.appendChild(menuEl);
-      document.addEventListener("mousedown", onOutsideClick, true);
-      document.addEventListener("keydown", onEscape, true);
-      presetMenuState = { rows: rowEls, activeIndex: Math.max(0, getActivePreset() - 1), close: closeMenu };
-    }
-    el2.addEventListener("click", openMenu);
+    }, true);
+    document.addEventListener("keyup", (e) => {
+      if (e.key === "Escape" && swallowEscUp) {
+        swallowEscUp = false;
+        e.stopPropagation();
+      }
+    }, true);
   }
-  function enhancePresetNameInput(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    el2.readOnly = false;
-    Object.assign(el2.style, {
-      backgroundColor: "black",
-      color: "white",
-      border: "1px solid #b4b4b4",
-      borderRadius: "3px",
-      textAlign: "center"
+
+  // packages/misc/wishlist/shop.js
+  var SECTIONS = { "cosmetics-daily": "Daily", "cosmetics-new": "New", "cosmetics-sales": "Sale" };
+  function i18nKey(el3) {
+    return (el3.getAttribute("data-i18n") || "").replace(/^\[[a-z]+\]/i, "");
+  }
+  function parseTimer(text) {
+    const t = String(text == null ? "" : text).trim();
+    if (/^\d+$/.test(t)) return Number(t);
+    const parts = t.split(":").map((p) => Number(p));
+    if (!parts.length || parts.some((p) => !Number.isFinite(p))) return null;
+    const [s = 0, m = 0, h = 0, d = 0] = parts.reverse();
+    return d * 86400 + h * 3600 + m * 60 + s;
+  }
+  function parseShop(doc) {
+    const heads = [...doc.querySelectorAll("span[data-i18n]")].filter((s) => SECTIONS[i18nKey(s)]);
+    if (!heads.length) throw new Error(`not the Cosmetics Shop (page title: "${doc.title || "none"}")`);
+    const timers = { Daily: null, New: null, Sale: null };
+    heads.forEach((h) => {
+      const t = h.parentElement && h.parentElement.querySelector(".cosmetics-timer");
+      timers[SECTIONS[i18nKey(h)]] = t ? parseTimer(t.textContent) : null;
     });
-    function refreshDisplay() {
-      if (document.activeElement !== el2) el2.value = getPresetName(getActivePreset());
+    const items = [];
+    const seen2 = /* @__PURE__ */ new Set();
+    doc.querySelectorAll("img").forEach((img) => {
+      const found = fromSrc(img.getAttribute("src"));
+      if (!found) return;
+      let section = null;
+      heads.forEach((h) => {
+        if (h.compareDocumentPosition(img) & 4) section = SECTIONS[i18nKey(h)];
+      });
+      if (!section) return;
+      const box = img.closest(".col-sm-1") || img.closest("tr") || img.parentElement;
+      const form = box.querySelector("form.cosmetic-purchase");
+      const sale = (box.textContent.match(/\(-\s*(\d+)\s*%\)/) || [])[1];
+      const owned = [...box.querySelectorAll("[data-i18n]")].some((n) => i18nKey(n) === "cardskins-shop-owned");
+      const id = `${section}|${found.key}`;
+      if (seen2.has(id)) return;
+      seen2.add(id);
+      items.push({
+        ...found,
+        name: form && form.getAttribute("data-name") || found.name,
+        section,
+        cost: form ? Number(form.getAttribute("data-cost")) : null,
+        sale: sale ? Number(sale) : 0,
+        owned,
+        img
+      });
+    });
+    return { items, timers };
+  }
+  async function fetchShop() {
+    const res = await fetch("/CosmeticsShop", { credentials: "same-origin", cache: "no-store" });
+    if (!res.ok) throw new Error(`the shop answered with HTTP ${res.status}`);
+    const html = await res.text();
+    return parseShop(new DOMParser().parseFromString(html, "text/html"));
+  }
+
+  // packages/misc/wishlist/check.js
+  var FREQ_REFRESH = "After each shop refresh";
+  var FREQ_4H = "Every 4 hours";
+  var FREQ_12H = "Every 12 hours";
+  var FREQ_VISIT = "Only when I visit the shop";
+  var FREQUENCIES = [FREQ_REFRESH, FREQ_4H, FREQ_12H, FREQ_VISIT];
+  var REMIND_ONCE = "Once per shop refresh";
+  var REMIND_ALWAYS = "Every page load";
+  var REMINDS = [REMIND_ONCE, REMIND_ALWAYS];
+  var HOUR = 60 * 60 * 1e3;
+  var INTERVALS = { [FREQ_4H]: 4 * HOUR, [FREQ_12H]: 12 * HOUR };
+  var MIN_GAP = 2 * 60 * 1e3;
+  var RETRY_AFTER_FAIL = HOUR;
+  var LOCK_MS = 30 * 1e3;
+  var SAME_REFRESH = 5 * 60 * 1e3;
+  var AFTER_REFRESH = 60 * 1e3;
+  var esc2 = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  function noBackgroundHere() {
+    return matchesPage(["/Game", { prefix: "/Spectate" }]);
+  }
+  function isDue(freq, now = Date.now(), state2 = getState()) {
+    if (freq === FREQ_VISIT || !hasItems()) return false;
+    if (state2.checkingUntil && state2.checkingUntil > now) return false;
+    if (state2.retryAt && state2.retryAt > now) return false;
+    if (!state2.lastCheckAt) return true;
+    if (now - state2.lastCheckAt < MIN_GAP) return false;
+    if (!state2.nextDailyAt && !state2.nextWeeklyAt) return true;
+    if (state2.nextDailyAt && now >= state2.nextDailyAt) return true;
+    if (state2.nextWeeklyAt && now >= state2.nextWeeklyAt) return true;
+    const interval = INTERVALS[freq];
+    return !!(interval && now - state2.lastCheckAt >= interval);
+  }
+  function nextAt(prev, seconds, now) {
+    if (seconds == null) return null;
+    const at = now + seconds * 1e3 + AFTER_REFRESH;
+    return prev && Math.abs(prev - at) < SAME_REFRESH ? prev : at;
+  }
+  function applyShop(shop, now = Date.now()) {
+    const state2 = getState();
+    const nextDailyAt = nextAt(state2.nextDailyAt, shop.timers.Daily, now);
+    const weeklySecs = [shop.timers.New, shop.timers.Sale].filter((s) => s != null);
+    const nextWeeklyAt = nextAt(state2.nextWeeklyAt, weeklySecs.length ? Math.min(...weeklySecs) : null, now);
+    setState({ lastCheckAt: now, nextDailyAt, nextWeeklyAt, retryAt: 0, checkingUntil: 0 });
+    const removed = [];
+    const matches = [];
+    const pins = getItems();
+    if (shop.items.some((i) => pins[i.key])) {
+      updateItems((items) => {
+        shop.items.forEach((i) => {
+          const pin = items[i.key];
+          if (!pin) return;
+          if (i.owned) {
+            removed.push(pin.name || i.name);
+            delete items[i.key];
+            return;
+          }
+          if (i.name) pin.name = i.name;
+          pin.lastSeen = { section: i.section, cost: i.cost, sale: i.sale, at: now };
+          matches.push({ ...i, name: pin.name });
+        });
+      });
     }
-    refreshDisplay();
-    boundInputRefreshers.push(refreshDisplay);
-    function commit() {
-      setPresetName(getActivePreset(), el2.value);
-      boundInputRefreshers.forEach((fn) => fn());
-    }
-    el2.addEventListener("blur", commit);
-    el2.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") el2.blur();
+    const cycle = (section) => section === "Daily" ? `D${nextDailyAt}` : `W${nextWeeklyAt}`;
+    return { matches, removed, cycle };
+  }
+  function rowsHtml(matches) {
+    return matches.map((m) => {
+      const wide = m.type === "profile-skin" ? ' class="wz-wl-wide"' : "";
+      const price = m.cost != null ? `${m.cost} UCP${m.sale ? ` (-${m.sale}%)` : ""}` : "";
+      return `<div class="wz-wl-toast-row"><img src="${esc2(imageUrl(m.type, m.file))}"${wide} alt=""><span><b>${esc2(m.name)}</b> <small>${TYPE_INFO[m.type].label}</small><br><small>${m.section === "Sale" ? "On sale" : m.section}${price ? ` \xB7 ${esc2(price)}` : ""}</small></span></div>`;
+    }).join("");
+  }
+  function goToShop(key2) {
+    location.href = "/CosmeticsShop" + (key2 ? `#wz=${encodeURIComponent(key2)}` : "");
+  }
+  function toast(plugin, opts) {
+    if (!plugin || typeof plugin.toast !== "function") return null;
+    return plugin.toast({ className: "dismissable", ...opts });
+  }
+  function showMatchesToast(plugin, matches) {
+    const n = matches.length;
+    return toast(plugin, {
+      title: `${n} wishlist item${n === 1 ? "" : "s"} in the Cosmetics Shop!`,
+      text: rowsHtml(matches),
+      buttons: [{ text: "Take me there!", className: "dismiss", onclick: () => goToShop(matches[0].key) }]
     });
   }
-  function enhanceResetButton(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    el2.readOnly = true;
-    el2.tabIndex = 0;
-    Object.assign(el2.style, {
-      cursor: "pointer",
-      backgroundColor: "black",
-      color: "white",
-      border: "1px solid #b4b4b4",
-      borderRadius: "3px",
-      textAlign: "center"
-    });
-    function refreshDisplay() {
-      el2.value = "Double Click to Reset";
-    }
-    refreshDisplay();
-    boundInputRefreshers.push(refreshDisplay);
-    el2.addEventListener("dblclick", () => {
-      resetPresetBindings(getActivePreset(), CONTROLLER_ACTIONS.map((a) => a.key), HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key));
-      boundInputRefreshers.forEach((fn) => fn());
-      el2.value = "\u2705 Reset to Defaults";
-      setTimeout(refreshDisplay, 1500);
+  function showRemovedToast(plugin, names) {
+    if (!names.length) return null;
+    return toast(plugin, {
+      title: "Cosmetic Wishlist",
+      text: `Removed from your wishlist (you own ${names.length === 1 ? "it" : "them"} now): ${names.map(esc2).join(", ")}`
     });
   }
-  function enhanceDetectControllerButton(el2) {
-    el2.setAttribute("data-wc-enhanced", "true");
-    el2.readOnly = true;
-    el2.tabIndex = 0;
-    Object.assign(el2.style, {
-      cursor: "pointer",
-      backgroundColor: "black",
-      color: "white",
-      border: "1px solid #b4b4b4",
-      borderRadius: "3px",
-      textAlign: "center"
-    });
-    function refreshDisplay() {
-      el2.value = isHidConnected() ? "\u2705 Controller Detected (WebHID)" : "\u{1F3AE} Click to Detect Controller (WebHID)";
+  function formatIn(ms) {
+    if (!(ms > 0)) return "soon";
+    const mins = Math.round(ms / 6e4);
+    const d = Math.floor(mins / 1440), h = Math.floor(mins % 1440 / 60), m = mins % 60;
+    return [d ? `${d}d` : "", h ? `${h}h` : "", !d && m ? `${m}m` : ""].filter(Boolean).join(" ") || "under a minute";
+  }
+  async function backgroundCheck(plugin, { freq, remind }) {
+    if (noBackgroundHere() || !isDue(freq)) return null;
+    const now = Date.now();
+    setState({ checkingUntil: now + LOCK_MS });
+    let shop;
+    try {
+      shop = await fetchShop();
+    } catch (e) {
+      setState({ checkingUntil: 0, retryAt: Date.now() + RETRY_AFTER_FAIL });
+      return { error: e };
     }
-    refreshDisplay();
-    boundInputRefreshers.push(refreshDisplay);
-    el2.addEventListener("click", async () => {
-      if (isHidConnected()) return;
-      el2.value = "Check your browser's device picker\u2026";
+    const result = applyShop(shop, Date.now());
+    showRemovedToast(plugin, result.removed);
+    const state2 = getState();
+    const notified = { ...state2.notified || {} };
+    const fresh = remind === REMIND_ALWAYS ? result.matches : result.matches.filter((m) => notified[m.key] !== result.cycle(m.section));
+    result.matches.forEach((m) => {
+      notified[m.key] = result.cycle(m.section);
+    });
+    const pins = getItems();
+    Object.keys(notified).forEach((k) => {
+      if (!pins[k]) delete notified[k];
+    });
+    setState({ notified });
+    if (fresh.length) showMatchesToast(plugin, fresh);
+    return { ...result, shown: fresh };
+  }
+  async function manualCheck(plugin) {
+    let shop;
+    try {
+      shop = await fetchShop();
+    } catch (e) {
+      toast(plugin, { title: "Cosmetic Wishlist", text: `Couldn't read the Cosmetics Shop: ${esc2(e.message)}` });
+      return { error: e };
+    }
+    const result = applyShop(shop, Date.now());
+    showRemovedToast(plugin, result.removed);
+    const notified = { ...getState().notified || {} };
+    result.matches.forEach((m) => {
+      notified[m.key] = result.cycle(m.section);
+    });
+    setState({ notified });
+    if (result.matches.length) {
+      showMatchesToast(plugin, result.matches);
+    } else {
+      const state2 = getState();
+      toast(plugin, {
+        title: "Cosmetic Wishlist",
+        text: `Nothing from your wishlist is in the Cosmetics Shop right now.` + (state2.nextDailyAt ? `<br><small>Next daily refresh in ${formatIn(state2.nextDailyAt - Date.now())}.</small>` : "")
+      });
+    }
+    return result;
+  }
+  function readLiveShop(plugin) {
+    let shop;
+    try {
+      shop = parseShop(document);
+    } catch (e) {
+      return null;
+    }
+    const result = applyShop(shop, Date.now());
+    showRemovedToast(plugin, result.removed);
+    const notified = { ...getState().notified || {} };
+    result.matches.forEach((m) => {
+      notified[m.key] = result.cycle(m.section);
+    });
+    setState({ notified });
+    return { shop, ...result };
+  }
+
+  // packages/misc/wishlist/index.js
+  var TAB2 = "Cosmetic Wishlist";
+  var BACKGROUND_DELAY_MS = 3e3;
+  var settings3 = null;
+  var pluginRef = null;
+  function setting3(key2, fallback) {
+    try {
+      return settings3 ? settings3.value(key2) : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+  function whenText(at) {
+    if (!at) return "";
+    const d = new Date(at);
+    return d.toLocaleDateString(void 0, { month: "short", day: "numeric" });
+  }
+  function lastSeenText(pin) {
+    const s = pin.lastSeen;
+    if (!s) return "Not seen in the shop yet";
+    const where = s.section === "Sale" ? "on sale" : `in ${s.section}`;
+    return `Last seen ${where}, ${whenText(s.at)}${s.cost != null ? ` \xB7 ${s.cost} UCP` : ""}`;
+  }
+  function renderList2(box, label) {
+    const pins = getItemList();
+    if (label) label.textContent = `Your Wishlist (${pins.length})`;
+    box.textContent = "";
+    if (!pins.length) {
+      const empty = document.createElement("div");
+      empty.className = "wz-wl-list-empty";
+      empty.textContent = "Nothing pinned yet. Right-click an avatar, emote or profile skin anywhere on the site and choose Add to Wishlist.";
+      box.appendChild(empty);
+      return;
+    }
+    pins.forEach((pin) => {
+      const row2 = document.createElement("div");
+      row2.className = "wz-wl-row";
+      const img = document.createElement("img");
+      img.src = imageUrl(pin.type, pin.file);
+      img.alt = "";
+      if (pin.type === "profile-skin") img.className = "wz-wl-wide";
+      const text = document.createElement("div");
+      text.className = "wz-wl-row-text";
+      text.append(pin.name || pin.file);
+      const sub = document.createElement("small");
+      sub.textContent = `${(TYPE_INFO[pin.type] || {}).label || pin.type} \xB7 ${lastSeenText(pin)}`;
+      text.appendChild(sub);
+      const del = document.createElement("button");
+      del.type = "button";
+      del.textContent = "\xD7";
+      del.title = "Remove from your wishlist";
+      del.setAttribute("aria-label", `Remove ${pin.name || pin.file}`);
+      del.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        removeItem2(pin.key);
+      });
+      row2.append(img, text, del);
+      box.appendChild(row2);
+    });
+  }
+  function registerTabWidgets() {
+    registerSettingWidget("wishlist.list", (el3) => {
+      el3.readOnly = true;
+      el3.tabIndex = -1;
+      el3.style.display = "none";
+      const row2 = el3.closest(".flex-start");
+      if (!row2) return;
+      const label = row2.querySelector("label");
+      if (label) label.style.fontWeight = "bold";
+      const box = document.createElement("div");
+      box.className = "wz-wl-list";
+      row2.appendChild(box);
+      renderList2(box, label);
+      const off = onItemsChange(() => {
+        if (!box.isConnected) {
+          off();
+          return;
+        }
+        renderList2(box, label);
+      });
+    });
+    let checking = false;
+    registerSettingWidget("wishlist.checkNow", (el3) => {
+      asButton("Check Shop Now", async (input) => {
+        if (checking) return;
+        checking = true;
+        input.value = "Checking\u2026";
+        const row2 = input.closest(".flex-start");
+        let status = row2 && row2.querySelector(".wz-wl-status");
+        if (row2 && !status) {
+          status = document.createElement("div");
+          status.className = "wz-wl-status";
+          row2.appendChild(status);
+        }
+        const result = await manualCheck(pluginRef);
+        checking = false;
+        input.value = "Check Shop Now";
+        if (!status) return;
+        if (result.error) {
+          status.textContent = `Couldn't read the shop: ${result.error.message}`;
+        } else if (result.matches.length) {
+          status.textContent = `In the shop now: ${result.matches.map((m) => m.name).join(", ")}. Close Settings to see the message with Take me there!`;
+        } else {
+          const next = getState().nextDailyAt;
+          status.textContent = "Nothing from your wishlist is in the shop right now." + (next ? ` Next daily refresh in ${formatIn(next - Date.now())}.` : "");
+        }
+      })(el3);
+    });
+  }
+  function decorateShop(shop) {
+    document.querySelectorAll(".wz-wl-shop-star").forEach((n) => n.remove());
+    document.querySelectorAll(".wz-wl-shop-pin").forEach((n) => n.classList.remove("wz-wl-shop-pin"));
+    const pins = getItems();
+    shop.items.forEach((i) => {
+      if (!pins[i.key] || !i.img || !i.img.isConnected) return;
+      i.img.classList.add("wz-wl-shop-pin");
+      const star = document.createElement("span");
+      star.className = "wz-wl-shop-star";
+      star.textContent = "\u2605";
+      star.title = "On your wishlist";
+      i.img.parentElement.insertBefore(star, i.img);
+    });
+  }
+  function initShopPage() {
+    const result = readLiveShop(pluginRef);
+    if (!result) return;
+    const shop = result.shop;
+    decorateShop(shop);
+    const want = (location.hash.match(/wz=([^&]+)/) || [])[1];
+    if (want) {
+      let key2 = want;
       try {
-        await connectWebHidController();
-      } finally {
-        refreshDisplay();
+        key2 = decodeURIComponent(want);
+      } catch (e) {
       }
+      const hit = shop.items.find((i) => i.key === key2);
+      if (hit && hit.img) {
+        hit.img.scrollIntoView({ block: "center", behavior: "smooth" });
+        hit.img.classList.add("wz-wl-shop-target");
+      }
+    }
+    onItemsChange(() => decorateShop(shop));
+  }
+  function initWishlist(plugin) {
+    pluginRef = plugin;
+    settings3 = createFeatureSettings(plugin, "wishlist", {
+      tab: TAB2,
+      visible: () => isPluginEnabled("wishlist")
     });
-  }
-  var CONFLICT_CLASS = "wizascript-controller-warning";
-  var BUILT_IN_BUTTON_USES = {
-    0: "clicks / selects",
-    1: "goes back / cancels",
-    3: "right-clicks",
-    12: "navigates up",
-    13: "navigates down",
-    14: "navigates left",
-    15: "navigates right",
-    5: "opens UnderScript's menu (and switches tabs in Settings)"
-  };
-  var GUIDE_BUTTONS = /* @__PURE__ */ new Set([0, 12, 13, 14, 15]);
-  function sameInput(a, b) {
-    if (a === null || a === void 0 || b === null || b === void 0) return false;
-    if (typeof a === "number" || typeof b === "number") return a === b;
-    return a.type === "key" && b.type === "key" && a.code === b.code;
-  }
-  function contextsOverlap(a, b) {
-    if (a === "always" || b === "always") return true;
-    const outside = (c) => c === "channelSwitch" || c === "default";
-    if (outside(a) && outside(b)) return true;
-    return a === "patchMaker" && b === "patchMaker";
-  }
-  function computeControllerConflicts() {
-    const out = /* @__PURE__ */ new Map();
-    const add = (key2, msg) => {
-      if (!out.has(key2)) out.set(key2, []);
-      out.get(key2).push(msg);
+    settings3.add("list", {
+      name: "Your Wishlist",
+      type: "text",
+      default: ""
+    });
+    settings3.add("checkNow", {
+      name: "Check the Shop",
+      note: "Read the Cosmetics Shop now and show what's on your wishlist.",
+      type: "text",
+      default: "Check Shop Now"
+    });
+    settings3.add("frequency", {
+      name: "Shop Check Frequency",
+      note: "The shop only changes when it refreshes; that's checked by default.",
+      type: "select",
+      options: FREQUENCIES,
+      default: FREQ_REFRESH
+    });
+    settings3.add("remind", {
+      name: "Remind Me",
+      note: "Show a match once per shop refresh, or on every page load.",
+      type: "select",
+      options: REMINDS,
+      default: REMIND_ONCE
+    });
+    registerTabWidgets();
+    if (!isPluginEnabled("wishlist")) return;
+    injectWishlistStyle();
+    wireWishlistMenu();
+    const start = () => {
+      if (matchesPage("/CosmeticsShop")) {
+        initShopPage();
+        return;
+      }
+      setTimeout(() => {
+        backgroundCheck(plugin, {
+          freq: setting3("frequency", FREQ_REFRESH),
+          remind: setting3("remind", REMIND_ONCE)
+        }).catch(() => {
+        });
+      }, BACKGROUND_DELAY_MS);
     };
-    const primary2 = getControllerPrimaryButton();
-    const guide = isPluginEnabled("ucTv") ? getChannelGuideButton() : null;
-    const combos = CONTROLLER_ACTIONS.filter((a) => {
-      const id = pluginIdForLabel(a.packageLabel);
-      return !id || isPluginEnabled(id);
-    }).map((a) => ({ a, input: getBoundButton(a.key), code: getBoundKeybindCode(a.key, a.dispatch.code) })).filter((c) => c.input !== null);
-    const shortcuts = HARDWARE_SHORTCUT_ACTIONS.filter((a) => !a.pluginId || isPluginEnabled(a.pluginId)).map((a) => ({ a, row: "shortcut_" + a.key, input: getBoundShortcutButton(a.key) })).filter((c) => c.input !== null);
-    const comboName = (a) => `${a.name} (Primary + ${bindingToDisplay(getBoundButton(a.key))})`;
-    if (primary2 !== null && typeof primary2 === "number" && BUILT_IN_BUTTON_USES[primary2]) {
-      add("controllerPrimary", `This button also ${BUILT_IN_BUTTON_USES[primary2]}, which stops working while it's your Primary.`);
-    }
-    if (guide !== null) {
-      if (sameInput(guide, primary2)) {
-        add("channelGuide", "Same button as Controller Primary.");
-        add("controllerPrimary", "Same button as Channel Guide.");
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true });
+    else start();
+  }
+
+  // packages/misc/card-history/data.js
+  var BASE = "https://raw.githubusercontent.com/theWiza2341/Wizascript/card-history/card-history/";
+  var memo = /* @__PURE__ */ new Map();
+  function getJson(url) {
+    return new Promise((resolve2, reject) => {
+      const fail = (msg) => reject(new Error(msg));
+      if (typeof GM_xmlhttpRequest === "function") {
+        GM_xmlhttpRequest({
+          method: "GET",
+          url,
+          headers: { "Cache-Control": "no-cache" },
+          onload(res) {
+            if (res.status === 404) return resolve2(null);
+            if (res.status !== 200) return fail(`HTTP ${res.status}`);
+            try {
+              resolve2(JSON.parse(res.responseText));
+            } catch (e) {
+              fail("bad JSON");
+            }
+          },
+          onerror: () => fail("network error"),
+          ontimeout: () => fail("timed out"),
+          timeout: 2e4
+        });
+        return;
       }
-      if (typeof guide === "number" && GUIDE_BUTTONS.has(guide)) {
-        add("channelGuide", "The channel guide uses the d-pad and " + bindingToDisplay(0) + " to pick a channel, so this button would clash with it.");
-      }
-    }
-    shortcuts.forEach(({ a, row, input }, i) => {
-      if (sameInput(input, primary2)) {
-        add(row, "Same button as Controller Primary - pressing Primary will also do this.");
-        add("controllerPrimary", `Same button as ${a.name} - pressing Primary will also do that.`);
-      }
-      if (sameInput(input, guide)) {
-        add(row, "Same button as Channel Guide - both will happen.");
-        add("channelGuide", `Same button as ${a.name} - both will happen.`);
-      }
-      shortcuts.forEach(({ a: other, input: otherInput }, j) => {
-        if (i !== j && sameInput(input, otherInput)) add(row, `Same button as ${other.name} - both will happen.`);
-      });
-      if (typeof input === "number" && BUILT_IN_BUTTON_USES[input]) {
-        add(row, `This button also ${BUILT_IN_BUTTON_USES[input]}, so pressing it will do both.`);
-      }
-      combos.forEach(({ a: combo, input: comboInput }) => {
-        if (!sameInput(input, comboInput)) return;
-        add(row, `Also used by ${comboName(combo)} - that combo will trigger this too.`);
-        add(combo.key, `This button is also ${a.name} (In-Game Inputs), which will trigger too.`);
-      });
+      fetch(url).then((r) => r.status === 404 ? null : r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))).then(resolve2, reject);
     });
-    combos.forEach(({ a, input, code }, i) => {
-      if (sameInput(input, primary2)) add(a.key, "Same button as Controller Primary, so this combo can't be pressed.");
-      if (sameInput(input, guide)) add(a.key, "Same button as Channel Guide - both will happen.");
-      combos.forEach(({ a: other, input: otherInput, code: otherCode }, j) => {
-        if (i === j || !sameInput(input, otherInput) || code === otherCode) return;
-        if (!contextsOverlap(a.context, other.context)) return;
-        add(a.key, `Same button as ${other.name} - both will happen.`);
+  }
+  function cached(path) {
+    if (!memo.has(path)) {
+      const p = getJson(BASE + path).catch((e) => {
+        memo.delete(path);
+        throw e;
       });
+      memo.set(path, p);
+    }
+    return memo.get(path);
+  }
+  var slug = (name) => String(name || "").toLowerCase().replace(/&amp;/g, "&").replace(/[^a-z0-9]/g, "") || "unnamed";
+  var getIndex = () => cached("data/index.json");
+  var getCardData = (id) => cached(`data/cards/${id}.json`);
+  var getArtifactData = (name) => cached(`data/artifacts/${slug(name)}.json`);
+  var getRules = () => cached("rules.json").catch(() => null);
+  var getReports = () => cached("reports.json");
+  var spriteUrl = (file) => `${BASE}assets/sprites/${encodeURIComponent(file)}.png`;
+
+  // packages/misc/card-history/game.js
+  var W = () => getPageWindow();
+  var cardFile = null;
+  var artifactList = null;
+  var page$ = () => W().$;
+  var hasI18n = () => {
+    const $2 = page$();
+    return !!($2 && $2.i18n);
+  };
+  function allCards() {
+    const w = W();
+    if (Array.isArray(w.allCards) && w.allCards.length) return w.allCards;
+    if (cardFile && cardFile.length) return cardFile;
+    try {
+      const ls = JSON.parse(w.localStorage.getItem("allCards") || "[]");
+      if (Array.isArray(ls) && ls.length) return ls;
+    } catch (e) {
+    }
+    return [];
+  }
+  async function ensureCards() {
+    if (allCards().length) return;
+    const cfg = W().cardsClientConfig;
+    if (!cfg || !cfg.url) return;
+    try {
+      const d = await (await fetch(cfg.url, { credentials: "same-origin" })).json();
+      const list = Array.isArray(d) ? d : d && (d.cards || d.allCards) || [];
+      cardFile = typeof list === "string" ? JSON.parse(list) : list;
+    } catch (e) {
+    }
+  }
+  function findCard(q) {
+    const list = allCards();
+    const s = String(q);
+    if (/^\d+$/.test(s)) return list.find((c) => String(c.id) === s || String(c.fixedId) === s) || null;
+    const n = norm(s);
+    return list.find((c) => norm(c.name) === n) || null;
+  }
+  async function artifacts2() {
+    if (artifactList) return artifactList;
+    try {
+      const data2 = await (await fetch("/DecksConfig", { credentials: "same-origin" })).json();
+      const raw = data2 && data2.allArtifacts;
+      artifactList = (typeof raw === "string" ? JSON.parse(raw) : raw) || [];
+    } catch (e) {
+      artifactList = [];
+    }
+    return artifactList;
+  }
+  var norm = (s) => String(s || "").toLowerCase().replace(/&amp;/g, "&").replace(/[^a-z0-9]/g, "");
+  function tr(key2, ...args) {
+    try {
+      const v = page$().i18n(key2, ...args);
+      if (!v || v === key2) return "";
+      const d = document.createElement("div");
+      d.innerHTML = v;
+      return d.textContent.trim();
+    } catch (e) {
+      return "";
+    }
+  }
+  var INTERNAL_KEY = /\b(?:kw|rarity|tribe|soul|enchant|status)-([a-z0-9]+(?:-[a-z0-9]+)*)\b/g;
+  var unkey = (html) => String(html).replace(/(^|>)([^<]*)/g, (m, gt, text) => gt + text.replace(INTERNAL_KEY, (k, id) => id.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())));
+  function trHtml(key2) {
+    try {
+      const v = page$().i18n(key2);
+      return v && v !== key2 ? unkey(v) : "";
+    } catch (e) {
+      return "";
+    }
+  }
+  var escHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  function prettyCode(raw) {
+    const s = String(raw || "");
+    const ov = s.match(/override=([^|}]+)/);
+    if (ov) return ov[1];
+    const m = s.match(/^[A-Z_]+:([^|}]+)/);
+    return m ? m[1].toLowerCase().replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : s;
+  }
+  function render(code, fallback) {
+    try {
+      const v = page$().i18n(code);
+      if (!v || v === code || /^\s*[a-z]+(?:-[a-z0-9]+)+\s*$/.test(v)) return escHtml(prettyCode(fallback));
+      return unkey(v);
+    } catch (e) {
+      return escHtml(prettyCode(fallback));
+    }
+  }
+  function knownKeys(prefix) {
+    try {
+      const i = page$().i18n();
+      const store = i.messageStore;
+      const msgs = Object.assign({}, store.messages.en || {}, store.messages[i.locale] || {});
+      return Object.keys(msgs).filter((k) => k.startsWith(prefix) && !/-desc$/.test(k)).map((k) => k.slice(prefix.length));
+    } catch (e) {
+      return [];
+    }
+  }
+  function appendCard(card) {
+    const fn = W().appendCard;
+    if (typeof fn !== "function") return null;
+    try {
+      const r = fn(card, null);
+      return r && (r[0] || r) || null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function gameFontSize(div, maxHeight) {
+    try {
+      const w = W();
+      if (typeof w.getResizedFontSize === "function" && w.$) {
+        div.style.fontSize = "";
+        div.style.fontSize = `${w.getResizedFontSize(w.$(div), maxHeight)}px`;
+      }
+    } catch (e) {
+    }
+  }
+  function dialogApi() {
+    const w = W();
+    return w.BootstrapDialog && w.BootstrapDialog.show ? { BD: w.BootstrapDialog, $: w.$ } : null;
+  }
+
+  // packages/misc/card-history/format.js
+  var DEFAULTS = {
+    keywords: ["determination", "charge", "haste", "armor", "disarmed", "candy", "support", "transparency", "invulnerable", "taunt", "dodge", "shock", "loop", "bullseye", "wanted", "darkspawn", "magic", "dust", "turn-start", "turn-end", "fatigue", "turbo", "paralyze", "silence", "synergy", "delay", "generated", "need", "program", "erase", "switch", "catch", "mold-spore", "flowery-power"],
+    tribes: ["tem", "dog", "amalgamate", "g-follower", "lost-soul", "frog", "mold", "snail", "bomb", "plant", "royal-guard", "all-monster-tribes", "chaos-weapon", "piece", "arachnid", "royal-invention", "plug", "thrashing-part", "bargain", "dance", "giga-attack", "round", "pack", "spider", "turbo"],
+    souls: ["determination", "patience", "bravery", "integrity", "perseverance", "kindness", "justice"],
+    enchantments: ["the-flame"],
+    // Keywords that were renamed or removed: [old word, today's keyword or null (= underlined)].
+    legacyKeywords: [["Battlecry", "magic"], ["Deathrattle", "dust"], ["Can't Attack", "disarmed"], ["Can't attack", "disarmed"], ["Burn", "erase"], ["burn", "erase"], ["End of turn", "turn-end"], ["Start of turn", "turn-start"], ["Thorns", null], ["Ranged", null], ["Future", null]],
+    // Only with a colon after them - otherwise they're ordinary words.
+    legacyWithColon: [["Enter", "magic"], ["Death", "dust"]],
+    // Card / artifact names never linked: too generic ("Heal 2 HP", "Draw a card").
+    notLinks: ["Heal", "Draw", "Hand", "Board", "Deck", "Dustpile", "Health", "Power", "Save"],
+    // Phrases left as plain text before anything else (old card names that look like other things).
+    plainPhrases: ["\\bG\\.?\\s?Blasters?\\b"]
+  };
+  var RARITY_WORDS = ["BASE", "COMMON", "RARE", "EPIC", "LEGENDARY", "DETERMINATION", "TOKEN", "MYTHIC"];
+  var STAT_WORDS = {
+    ATK: "{{ATK}}",
+    HP: "{{HP}}",
+    DMG: "{{DMG}}",
+    G: "{{GOLD}}",
+    KR: "{{KR}}",
+    COST: '<span class="cost-color">COST</span>',
+    DT: "{{RARITY:DETERMINATION|override=DT}}",
+    MONSTER: "{{SOUL:MONSTER}}"
+  };
+  var COLOUR_WORDS = [[/(^|\s)(cost)(?=\s|$|\.(?:\s|$))/g, "cost-color"]];
+  var uniq = (a) => [...new Set(a)];
+  var escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  var fmt = null;
+  async function formatter() {
+    if (fmt) return fmt;
+    await ensureCards();
+    const remote2 = await getRules();
+    const R = Object.assign({}, DEFAULTS, remote2 && typeof remote2 === "object" ? remote2 : {});
+    const notLinks = new Set(R.notLinks || []);
+    const cs = /* @__PURE__ */ new Map();
+    const links = /* @__PURE__ */ new Set();
+    const cap = /* @__PURE__ */ new Map();
+    const add = (name, code) => {
+      if (name && name.length >= 2 && !cap.has(name.toLowerCase())) cap.set(name.toLowerCase(), code);
+    };
+    const addExact = (name, code) => {
+      if (!name || name.length < 2 || cs.has(name) || cap.has(name.toLowerCase()) || notLinks.has(name)) return;
+      cs.set(name, code);
+      links.add(name);
+    };
+    const colonCodes = /* @__PURE__ */ new Map();
+    if (hasI18n()) {
+      const kwCode = (id, override) => `{{KW:${id.toUpperCase().replace(/-/g, "_")}${override ? `|override=${override}` : ""}}}`;
+      (R.keywords || []).forEach((id) => add(tr(`kw-${id}`), kwCode(id)));
+      (R.legacyKeywords || []).forEach(([word, modern]) => {
+        const own = word.toLowerCase().replace(/'/g, "").replace(/ /g, "-");
+        if (cap.has(word.toLowerCase())) return;
+        const code = tr(`kw-${own}`) ? kwCode(own, word) : modern && tr(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`;
+        add(word, code);
+      });
+      uniq([...R.enchantments || [], ...knownKeys("enchant-")]).forEach((id) => {
+        const code = id.toUpperCase().replace(/-/g, "_");
+        const one = tr(`enchant-${id}`, 1);
+        add(tr(`enchant-${id}`, 2), `{{ENCHANT:${code}|2}}`);
+        add(one, `{{ENCHANT:${code}|1}}`);
+        if (!one) {
+          const words = id.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
+          add(words, `{{ENCHANT:${code}|1|override=${words}}}`);
+          add(`${words}s`, `{{ENCHANT:${code}|2|override=${words}s}}`);
+        }
+      });
+      (R.tribes || []).forEach((id) => {
+        const code = id.toUpperCase().replace(/-/g, "_");
+        add(tr(`tribe-${id}`, 2), `{{TRIBE:${code}|2}}`);
+        add(tr(`tribe-${id}`, 1), `{{TRIBE:${code}|1}}`);
+      });
+      (R.souls || []).forEach((id) => add(tr(`soul-${id}`), `{{SOUL:${id.toUpperCase()}}}`));
+      (R.legacyWithColon || []).forEach(([word, modern]) => colonCodes.set(word, tr(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`));
+      (await artifacts2()).forEach((a) => {
+        if (a && a.id != null) addExact(tr(`artifact-name-${a.id}`) || a.name, `{{ARTIFACT:${a.id}}}`);
+      });
+      allCards().forEach((c) => {
+        const id = c.fixedId || c.id;
+        const name = tr(`card-name-${id}`, 1) || c.name;
+        if (notLinks.has(name)) return;
+        addExact(name, `{{CARD:${id}|1}}`);
+        addExact(tr(`card-name-${id}`, 2), `{{CARD:${id}|2}}`);
+        if (!/s$/i.test(name)) addExact(`${name}s`, `{{CARD:${id}|2}}`);
+      });
+    }
+    const capPattern = (w) => [...w].map((ch, i) => {
+      const lo = ch.toLowerCase();
+      const up = ch.toUpperCase();
+      if (i === 0) return escRe(up);
+      return lo !== up ? `[${escRe(lo)}${escRe(up)}]` : escRe(ch);
+    }).join("");
+    const capNames = [...cap.keys()].sort((a, b) => b.length - a.length).map(capPattern);
+    const capRe = capNames.length ? new RegExp(`(^|[^\\p{L}\\p{N}_'])(${capNames.join("|")})(?![\\p{L}\\p{N}_])`, "gu") : null;
+    RARITY_WORDS.forEach((w) => {
+      if (!cs.has(w)) cs.set(w, `{{RARITY:${w}}}`);
+    });
+    Object.entries(STAT_WORDS).forEach(([w, code]) => cs.set(w, code));
+    const csNames = [...cs.keys()].sort((a, b) => b.length - a.length).map(escRe);
+    const csRe = new RegExp(`(^|[^\\p{L}\\p{N}_'])(${csNames.join("|")})(?![\\p{L}\\p{N}_])`, "gu");
+    const statRe = /(^|[^\d/])([+-]?\d+)\/([+-]?\d+)(?:\/([+-]?\d+))?(?![\d/])/g;
+    const plain2 = (R.plainPhrases || []).map((p) => {
+      try {
+        return new RegExp(p, "g");
+      } catch (e) {
+        return null;
+      }
+    }).filter(Boolean);
+    fmt = { cs, cap, csRe, capRe, statRe, colonCodes, links, plain: plain2 };
+    return fmt;
+  }
+  var atSentenceStart = (before) => /(^|[.!?:]|\u0002)\s*$/.test(before);
+  function formatText(text, f) {
+    if (!hasI18n()) return escHtml(text);
+    const tokens = [];
+    const hold = (code, raw) => `${tokens.push({ code, raw }) - 1}`;
+    let work = String(text).replace(/^[\s.,;:!?\-–—]+/, "");
+    f.plain.forEach((re) => {
+      work = work.replace(re, (m) => hold(`<span>${escHtml(m)}</span>`, m));
+    });
+    work = work.replace(/\{\{[^{}]+\}\}/g, (m) => hold(m, m.replace(/^\{\{|\}\}$/g, "")));
+    work = work.replace(f.statRe, (m, pre, a, b, c) => pre + hold(c !== void 0 ? `{{STATS:${a}|${b}|${c}}}` : `{{STATS:${a}|${b}}}`, m.slice(pre.length)));
+    f.colonCodes.forEach((code, word) => {
+      work = work.replace(new RegExp(`(^|[^\\p{L}])(${escRe(word)})(?=\\s*:)`, "gu"), (m, pre, w) => pre + hold(code, w));
+    });
+    work = work.replace(f.csRe, (m, pre, word, offset, whole) => {
+      if (f.links.has(word) && !/\s/.test(word) && atSentenceStart(whole.slice(0, offset + pre.length))) return m;
+      return pre + hold(f.cs.get(word), word);
+    });
+    if (f.capRe) work = work.replace(f.capRe, (m, pre, word) => pre + hold(f.cap.get(word.toLowerCase()), word));
+    return work.split(/(\u0001\d+\u0002)/).map((part) => {
+      const m = part.match(/^\u0001(\d+)\u0002$/);
+      if (m) {
+        const t = tokens[+m[1]];
+        return t.code.startsWith("<") ? t.code : render(t.code, t.raw);
+      }
+      let html = escHtml(part);
+      COLOUR_WORDS.forEach(([re, cls]) => {
+        html = html.replace(re, `$1<span class="${cls}">$2</span>`);
+      });
+      return html;
+    }).join("");
+  }
+
+  // packages/misc/card-history/report-codes.js
+  var HEAD = `${HEADER}CH`;
+  var encLabel = (label) => label === "today" ? "now" : String(label).replace(/^</, "-").replace(/[^A-Za-z0-9.?-]/g, "");
+  var decLabel = (label) => label === "now" ? "today" : label.replace(/^-/, "<");
+  var token = (r) => `${r.kind === "a" ? `A${r.id}` : r.id}@${encLabel(r.label)}`;
+  function buildDate(builtAt) {
+    const m = String(builtAt || "").match(/^\d{2}(\d{2})-(\d{2})-(\d{2})/);
+    return m ? m[1] + m[2] + m[3] : "000000";
+  }
+  function encodeLines(reports) {
+    const byDate = /* @__PURE__ */ new Map();
+    reports.forEach((r) => {
+      const d = buildDate(r.built);
+      if (!byDate.has(d)) byDate.set(d, []);
+      byDate.get(d).push(r);
+    });
+    const out = [];
+    byDate.forEach((list, d) => {
+      let cur = { line: `${HEAD} ${d}`, reports: [] };
+      list.forEach((r) => {
+        const t = token(r);
+        if (cur.reports.length && cur.line.length + 1 + t.length > MAX_MESSAGE) {
+          out.push(cur);
+          cur = { line: `${HEAD} ${d}`, reports: [] };
+        }
+        cur.line += ` ${t}`;
+        cur.reports.push(r);
+      });
+      out.push(cur);
     });
     return out;
   }
-  function refreshControllerConflictWarnings() {
-    const prefix = "underscript.plugin.Wizascript.controller.";
-    if (!document.querySelector(`[id^="${prefix}"]`)) return;
-    const conflicts = computeControllerConflicts();
-    const rowKeys = ["controllerPrimary", "channelGuide"].concat(CONTROLLER_ACTIONS.map((a) => a.key)).concat(HARDWARE_SHORTCUT_ACTIONS.map((a) => "shortcut_" + a.key));
-    rowKeys.forEach((key2) => {
-      const input = document.getElementById(prefix + key2);
-      const row = input && input.closest(".flex-start");
-      if (!row) return;
-      const messages = conflicts.get(key2) || [];
-      let warn = row.querySelector(`:scope > .${CONFLICT_CLASS}`);
-      if (!messages.length) {
-        if (warn) warn.remove();
+  var CODE_RE = /#WZ1 CH (\d{6})((?: (?:A[a-z0-9]+|\d+)@[A-Za-z0-9.?-]+)+)/g;
+  function parseCodes(text) {
+    const out = [];
+    String(text || "").replace(CODE_RE, (line, date, rest) => {
+      const items = rest.trim().split(" ").map((t) => {
+        const at = t.lastIndexOf("@");
+        const who = t.slice(0, at);
+        const label = decLabel(t.slice(at + 1));
+        const kind = who[0] === "A" ? "a" : "c";
+        const id = kind === "a" ? who.slice(1) : who;
+        return { key: `${kind}:${id}:${label}`, kind, id, label };
+      });
+      out.push({ line, date, items });
+      return line;
+    });
+    return out;
+  }
+  var hasCode = (text) => {
+    CODE_RE.lastIndex = 0;
+    return CODE_RE.test(String(text || ""));
+  };
+
+  // packages/misc/card-history/reports.js
+  var STORE = "wizascript.cardHistory.reports";
+  function load() {
+    try {
+      const v = JSON.parse(GM_getValue(STORE, "[]"));
+      return Array.isArray(v) ? v : [];
+    } catch (e) {
+      return [];
+    }
+  }
+  function save(list) {
+    GM_setValue(STORE, JSON.stringify(list));
+    changed();
+  }
+  var listeners3 = /* @__PURE__ */ new Set();
+  var onReportsChanged = (fn) => {
+    listeners3.add(fn);
+    return () => listeners3.delete(fn);
+  };
+  function changed() {
+    listeners3.forEach((fn) => {
+      try {
+        fn();
+      } catch (e) {
+      }
+    });
+  }
+  var reportKey = (t) => `${t.kind}:${t.id}:${t.label}`;
+  var isReported = (t) => load().some((r) => r.key === reportKey(t));
+  var unsentCount = () => load().filter((r) => !r.sent).length;
+  function toggleReport(t) {
+    const key2 = reportKey(t);
+    const list = load();
+    const i = list.findIndex((r) => r.key === key2);
+    if (i >= 0) list.splice(i, 1);
+    else list.push({ key: key2, kind: t.kind, id: String(t.id), name: t.name, label: t.label, shown: String(t.shown || "").slice(0, 140), built: t.built || "", at: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) });
+    save(list);
+    return i < 0;
+  }
+  function removeReport(key2) {
+    save(load().filter((r) => r.key !== key2));
+  }
+  var remote = null;
+  async function remoteReports() {
+    if (remote) return remote;
+    const data2 = await getReports().catch(() => null);
+    remote = data2 && data2.items || {};
+    return remote;
+  }
+  var remoteCount = (t) => remote && remote[reportKey(t)] ? remote[reportKey(t)].n || 1 : 0;
+  function tagNode(node, target) {
+    node.dataset.wzChReport = JSON.stringify(target);
+    node.classList.add("wz-ch-reportable");
+    paintNode(node);
+  }
+  function paintNode(node) {
+    let t;
+    try {
+      t = JSON.parse(node.dataset.wzChReport);
+    } catch (e) {
+      return;
+    }
+    let badge = node.querySelector(":scope > .wz-ch-badge, :scope .wz-ch-badge");
+    const mine = isReported(t);
+    const others = remoteCount(t);
+    if (!mine && !others) {
+      if (badge) badge.remove();
+      return;
+    }
+    if (!badge) {
+      badge = document.createElement("div");
+      badge.className = "wz-ch-badge";
+      (node.querySelector(".wz-ch-badge-spot") || node).appendChild(badge);
+    }
+    badge.textContent = mine ? "\u2691" : "\u26A0";
+    badge.classList.toggle("wz-ch-badge-mine", mine);
+    const lines = [];
+    if (others) lines.push(`Reported as inaccurate by ${others} player${others === 1 ? "" : "s"}. Being checked.`);
+    if (mine) lines.push("You reported this. Right-click to undo; send it from My Reports.");
+    badge.title = lines.join("\n");
+  }
+  function repaintAll(root) {
+    root.querySelectorAll(".wz-ch-reportable").forEach(paintNode);
+  }
+  var menu2 = null;
+  var isReportMenuOpen = () => !!(menu2 && menu2.isConnected);
+  function pressReportMenu() {
+    const li = menu2 && menu2.querySelector("li:not(.wz-ch-menu-off)");
+    if (li) li.click();
+  }
+  function closeReportMenu() {
+    const was = !!(menu2 && menu2.isConnected);
+    if (menu2) menu2.remove();
+    menu2 = null;
+    return was;
+  }
+  function openMenu2(node, x, y) {
+    closeReportMenu();
+    const t = JSON.parse(node.dataset.wzChReport);
+    const mine = isReported(t);
+    menu2 = document.createElement("ul");
+    menu2.className = "wz-ch-menu";
+    const head = document.createElement("header");
+    head.textContent = `${t.name} - ${t.label === "today" ? "today" : t.label}`;
+    const li = document.createElement("li");
+    li.textContent = mine ? "\u2691 Undo my report" : "\u2691 Report as Bugged/Inaccurate";
+    li.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleReport(t);
+      closeReportMenu();
+    });
+    menu2.append(head, li);
+    const others = remoteCount(t);
+    if (others) {
+      const note = document.createElement("li");
+      note.className = "wz-ch-menu-off";
+      note.textContent = `\u26A0 Already reported by ${others}`;
+      menu2.appendChild(note);
+    }
+    document.body.appendChild(menu2);
+    const r = menu2.getBoundingClientRect();
+    menu2.style.left = `${Math.max(4, Math.min(x, window.innerWidth - r.width - 4))}px`;
+    menu2.style.top = `${Math.max(4, Math.min(y, window.innerHeight - r.height - 4))}px`;
+  }
+  var wired2 = false;
+  function wireReportMenu() {
+    if (wired2) return;
+    wired2 = true;
+    document.addEventListener("contextmenu", (e) => {
+      if (menu2 && menu2.contains(e.target)) {
+        e.preventDefault();
         return;
       }
-      const text = messages.map((m) => "\u26A0 " + m).join("\n");
-      if (!warn) {
-        warn = document.createElement("div");
-        warn.className = `setting-description ${CONFLICT_CLASS}`;
-        Object.assign(warn.style, { color: "#ffb347", opacity: "1", whiteSpace: "pre-line" });
-        row.appendChild(warn);
+      const node = e.target.closest && e.target.closest(".wz-ch-reportable");
+      if (!node) return;
+      e.preventDefault();
+      e.stopPropagation();
+      openMenu2(node, e.clientX, e.clientY);
+    }, true);
+    document.addEventListener("mousedown", (e) => {
+      if (menu2 && e.button === 0 && !menu2.contains(e.target)) closeReportMenu();
+    }, true);
+    let swallowEscUp = false;
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && closeReportMenu()) {
+        e.stopPropagation();
+        swallowEscUp = true;
       }
-      if (warn.textContent !== text) warn.textContent = text;
+    }, true);
+    document.addEventListener("keyup", (e) => {
+      if (e.key === "Escape" && swallowEscUp) {
+        swallowEscUp = false;
+        e.stopPropagation();
+      }
+    }, true);
+  }
+  async function copy(text, box) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch (e) {
+    }
+    try {
+      box.focus();
+      box.select();
+      return document.execCommand("copy");
+    } catch (e) {
+      return false;
+    }
+  }
+  var el2 = (tag, cls, text) => {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== void 0) e.textContent = text;
+    return e;
+  };
+  var button = (label, cls, fn) => {
+    const b = el2("button", `btn ${cls}`, label);
+    b.type = "button";
+    b.addEventListener("click", fn);
+    return b;
+  };
+  function markSent(keys) {
+    save(load().map((r) => keys.has(r.key) ? { ...r, sent: true } : r));
+  }
+  async function openMyReports() {
+    const api = dialogApi();
+    if (!api) return;
+    const wrap = el2("div", "wz-ch-myreports");
+    const chat = canOpenVoid();
+    const render2 = () => {
+      const list = load().sort((a, b) => (a.sent ? 1 : 0) - (b.sent ? 1 : 0));
+      wrap.replaceChildren();
+      if (!list.length) {
+        const p = el2("p");
+        p.innerHTML = "No reports yet. Right-click a version that looks wrong and choose <b>Report as Bugged/Inaccurate</b>.";
+        wrap.append(p);
+        return;
+      }
+      const table = el2("table", "wz-ch-myreports-list");
+      list.forEach((r) => {
+        const tr2 = el2("tr");
+        tr2.innerHTML = `<td>${escHtml(r.name)}</td><td>${escHtml(r.label)}</td><td class="wz-ch-dim">${r.sent ? "sent" : "not sent"}</td><td></td>`;
+        tr2.lastChild.appendChild(button("\xD7", "btn-xs btn-default", () => {
+          removeReport(r.key);
+          render2();
+        }));
+        table.appendChild(tr2);
+      });
+      const unsent = list.filter((r) => !r.sent);
+      const toSend = unsent.length ? unsent : list;
+      const intro = el2("p");
+      intro.innerHTML = chat ? `${unsent.length ? "" : "Everything's been sent. "}<b>Send</b> opens the chat with ${toSend.length === 1 ? "your report" : "a report line"} typed in: press <b>Enter</b> to send it. ${encodeLines(toSend).length > 1 ? "Send one line, then come back for the next." : ""}` : "Open this on a page with chat (like Home) to send your reports.";
+      const lines = el2("div", "wz-ch-codelines");
+      const status = el2("div", "wz-ch-dim");
+      const encoded = encodeLines(toSend);
+      encoded.forEach(({ line, reports }) => {
+        const keys = new Set(reports.map((r) => r.key));
+        const row2 = el2("div", "wz-ch-codeline");
+        const code = el2("input", "wz-ch-code");
+        code.readOnly = true;
+        code.value = line;
+        code.addEventListener("focus", () => code.select());
+        row2.appendChild(code);
+        if (chat) {
+          row2.appendChild(button("Send", "btn-primary btn-sm", () => {
+            markSent(keys);
+            openVoid(line);
+          }));
+        }
+        row2.appendChild(button("Copy", "btn-default btn-sm", async () => {
+          const ok = await copy(line, code);
+          markSent(keys);
+          status.textContent = ok ? "Copied." : "Select the line and copy it.";
+        }));
+        lines.appendChild(row2);
+      });
+      wrap.append(intro, table, lines, status);
+    };
+    render2();
+    api.BD.show({
+      title: "My Card History Reports",
+      message: api.$(wrap),
+      buttons: [{ label: "Close", action: (d) => d.close() }]
     });
   }
-  var controllerConflictRefreshQueued = false;
-  function scheduleControllerConflictRefresh() {
-    if (controllerConflictRefreshQueued) return;
-    controllerConflictRefreshQueued = true;
-    setTimeout(() => {
-      controllerConflictRefreshQueued = false;
-      refreshControllerConflictWarnings();
-    }, 0);
+
+  // packages/misc/card-history/cards-view.js
+  var PER_ROW = 4;
+  function versionLabel(v) {
+    if (!v) return { text: "?", title: "Version not recorded" };
+    const before = v.label.match(/^Before\s+(Alpha|Beta)\s*([\d.]+)/i);
+    if (before) return { text: `<${/alpha/i.test(before[1]) ? "A" : ""}${before[2]}`, title: `${v.label} (from the wiki's Previous Versions page)` };
+    if (/^Pre-?Alpha$/i.test(v.label)) return { text: "PA", title: "Pre-Alpha (from the Miraheze wiki)" };
+    const when = v.date ? ` (${v.date})` : "";
+    const a = v.label.match(/^Alpha\s*([\d.]+)/i);
+    if (a) return { text: `A${a[1]}`, uncertain: !!v.guessed, title: `${v.guessed ? "Probably " : ""}${v.label}${when}` };
+    const m = v.label.match(/^Beta\s*([\d.]+)/i);
+    return { text: m ? m[1] : v.label, uncertain: !!v.guessed, title: `${v.guessed ? "Probably " : ""}${v.label}${when}` };
   }
-  boundInputRefreshers.push(scheduleControllerConflictRefresh);
-  var controllerObserverStarted = false;
-  function startControllerKeybindObserver(idPrefix) {
-    if (controllerObserverStarted) return;
-    controllerObserverStarted = true;
-    let everFoundOne = false;
-    const observer2 = new MutationObserver(() => {
-      const matches = document.querySelectorAll(`input[id^="${idPrefix}"]:not([data-wc-enhanced]), select[id^="${idPrefix}"]:not([data-wc-enhanced])`);
-      if (matches.length) scheduleControllerConflictRefresh();
-      matches.forEach((el2) => {
-        everFoundOne = true;
-        const bindingKey = el2.id.slice(idPrefix.length);
-        if (bindingKey.startsWith("__info_")) {
-          enhanceControllerInfoRow(el2);
-          return;
-        }
-        if (bindingKey === "detectController") {
-          enhanceDetectControllerButton(el2);
-          return;
-        }
-        if (bindingKey === "presetSelector") {
-          enhancePresetSelector(el2);
-          return;
-        }
-        if (bindingKey === "presetName") {
-          enhancePresetNameInput(el2);
-          return;
-        }
-        if (bindingKey === "resetPreset") {
-          enhanceResetButton(el2);
-          return;
-        }
-        if (bindingKey === "controllerPrimary") {
-          enhanceControllerCaptureInput(el2, () => getControllerPrimaryButton(), (v) => setControllerPrimaryButton(v));
-          return;
-        }
-        if (bindingKey === "channelGuide") {
-          enhanceControllerCaptureInput(el2, () => getChannelGuideButton(), (v) => setChannelGuideButton(v));
-          return;
-        }
-        if (CONTROLLER_ACTIONS_BY_KEY[bindingKey]) {
-          enhanceControllerCaptureInput(el2, () => getBoundButton(bindingKey), (v) => setBoundButton(bindingKey, v));
-          return;
-        }
-        if (bindingKey.startsWith("shortcut_")) {
-          const shortcutKey = bindingKey.slice("shortcut_".length);
-          if (HARDWARE_SHORTCUT_ACTIONS_BY_KEY[shortcutKey]) {
-            enhanceControllerCaptureInput(el2, () => getBoundShortcutButton(shortcutKey), (v) => setBoundShortcutButton(shortcutKey, v));
-            return;
-          }
-        }
-        if (bindingKey === "debugTextEnabled") {
-          observeDebugTextCheckbox(el2);
-          return;
-        }
-        if (bindingKey === "highlightColor") {
-          observeHighlightColorSelect(el2);
-          return;
-        }
-        el2.setAttribute("data-wc-enhanced", "true");
-      });
-    });
-    observer2.observe(document.body, { childList: true, subtree: true });
-    setTimeout(() => {
-      if (!everFoundOne) {
-        console.warn('[Wizascript Controller] never found any "Keybinds - Controller" <input> elements to enhance after 15s - either the category never rendered, or the assumed id pattern (' + idPrefix + "<key>) is wrong.");
-      }
-    }, 15e3);
+  function fitText(desc, html) {
+    const inner = document.createElement("div");
+    inner.innerHTML = html;
+    desc.textContent = "";
+    desc.appendChild(inner);
+    gameFontSize(inner, 81);
   }
-  function registerControllerSettings(plugin, controllerEnabledSettingIn) {
-    migrateFlatBindingsToPresetOne(
-      CONTROLLER_ACTIONS.map((a) => a.key),
-      HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key)
-    );
-    controllerEnabledSetting = controllerEnabledSettingIn;
-    const settings2 = createFeatureSettings(plugin, "controller", {
-      tab: "Controller Support",
-      visible: () => isPluginEnabled("controller"),
-      categories: true
-    });
-    const SETUP = "Setup";
-    const GENERAL = "General";
-    const IN_GAME = "In-Game Inputs";
-    const hiddenUnless = (pluginId) => () => pluginId ? !isPluginEnabled(pluginId) : false;
-    settings2.add("detectController", {
-      name: "Detect Controller",
-      note: "Click if your controller isn't responding.",
-      type: "text",
-      default: "Click to Detect Controller (WebHID)",
-      category: SETUP
-    });
-    settings2.add("presetSelector", {
-      name: "Settings Preset",
-      note: "Click to switch presets.",
-      type: "text",
-      default: getPresetName(getActivePreset()),
-      category: SETUP
-    });
-    settings2.add("presetName", {
-      name: "Preset Name",
-      note: "Renames whichever preset is currently selected above.",
-      type: "text",
-      default: getPresetName(getActivePreset()),
-      category: SETUP
-    });
-    settings2.add("resetPreset", {
-      name: "Restore Settings to Default",
-      note: "Double Click to reset selected preset settings",
-      type: "text",
-      default: "Double Click to Reset",
-      category: SETUP
-    });
-    debugTextEnabledSetting = settings2.add("debugTextEnabled", {
-      name: "Enable Debug Text",
-      type: "boolean",
-      default: false,
-      category: GENERAL
-    });
-    highlightColorSetting = settings2.add("highlightColor", {
-      name: "Selection Outline Color",
-      type: "select",
-      data: HIGHLIGHT_COLOR_PRESETS,
-      default: DEFAULT_HIGHLIGHT_COLOR,
-      category: GENERAL
-    });
-    settings2.add("controllerPrimary", {
-      name: "Controller Primary",
-      note: "Click to remap. Hold for combos below, same as Wizascript's own Primary Key.",
-      type: "text",
-      default: buttonToDisplay(DEFAULT_PRIMARY_BUTTON),
-      category: GENERAL
-    });
-    settings2.add("__info_openSettings", { name: "Double Tap Primary \u2192 Open Wizascript Settings", type: "text", default: "", category: GENERAL });
-    const seenLabels = /* @__PURE__ */ new Set();
-    CONTROLLER_ACTIONS.forEach((action) => {
-      if (!seenLabels.has(action.packageLabel)) {
-        seenLabels.add(action.packageLabel);
-        if (action.packageLabel === "UC TV") {
-          settings2.add("channelGuide", {
-            name: "Channel Guide (hold)",
-            type: "text",
-            default: buttonToDisplay(null),
-            category: "UC TV",
-            hidden: hiddenUnless("ucTv")
-          });
-        }
+  function setQuantity(el3, label, note) {
+    let q = el3.querySelector(".cardQuantity");
+    if (!q) {
+      q = document.createElement("div");
+      q.className = "cardQuantity";
+      el3.appendChild(q);
+    }
+    q.textContent = label.text + (note || label.uncertain ? " *" : "");
+    q.title = label.title + (note ? `
+${note}` : "");
+  }
+  function tidy(el3) {
+    [...el3.classList].filter((c) => /^col-/.test(c)).forEach((c) => el3.classList.remove(c));
+    el3.classList.remove("pointer");
+    el3.removeAttribute("id");
+    el3.style.margin = "0";
+    el3.style.float = "none";
+  }
+  function plainCard(card) {
+    const ext = card.extension === "DELTARUNE" ? "DELTARUNE" : card.extension === "UTY" ? "UTY" : "BASE";
+    const el3 = document.createElement("div");
+    el3.className = `card ${card.typeCard === 0 ? "monster" : "spell"} undertale-frame standard-skin`;
+    const part = (cls, text) => {
+      const d = document.createElement("div");
+      d.className = cls;
+      if (text !== void 0) d.textContent = text;
+      el3.appendChild(d);
+      return d;
+    };
+    part("cardFrame");
+    part("cardBackground");
+    part("cardHeader");
+    part("cardName").appendChild(document.createElement("div")).textContent = card.name;
+    part("cardCost", String(card.cost));
+    part("cardStatus");
+    part("cardTribes");
+    part("cardImage").style.background = `url("images/cards/${card.image}.png") no-repeat transparent`;
+    part("cardDesc").appendChild(document.createElement("div"));
+    part("cardFooter");
+    if (card.typeCard === 0) {
+      part("cardATK", String(card.attack));
+      part("cardHP", String(card.hp));
+    }
+    part("cardRarity").style.background = `url("images/rarity/${ext}_${card.rarity}.png") no-repeat transparent`;
+    part("cardQuantity");
+    return el3;
+  }
+  var makeCard = (card) => appendCard(card) || plainCard(card);
+  function drawVersion(base, ver, f, currentDescHtml) {
+    const card = JSON.parse(JSON.stringify(base));
+    const isMonster = card.typeCard === 0;
+    if (ver.cost != null) {
+      card.cost = ver.cost;
+      card.originalCost = ver.cost;
+    }
+    if (isMonster) {
+      if (ver.atk != null) {
+        card.attack = ver.atk;
+        card.originalAttack = ver.atk;
       }
-      settings2.add(action.key, {
-        name: action.name + " - Primary + <btn>",
-        type: "text",
-        default: buttonToDisplay(action.defaultButton),
-        category: action.packageLabel,
-        hidden: hiddenUnless(pluginIdForLabel(action.packageLabel))
+      if (ver.hp != null) {
+        card.hp = ver.hp;
+        card.maxHp = ver.hp;
+        card.originalHp = ver.hp;
+      }
+    }
+    if (ver.rarity && ver.rarity !== "GENERATED") card.rarity = ver.rarity;
+    card.tribes = Array.isArray(ver.tribes) ? ver.tribes : [];
+    card.statuses = Array.isArray(ver.statuses) ? ver.statuses.map((x) => ({ statusType: "POSITIVE", statusBehavior: x.displayCounter ? "STACKABLE" : "UNIQUE", ...x })) : [];
+    if (ver.soul !== void 0) card.soul = ver.soul;
+    const el3 = makeCard(card);
+    tidy(el3);
+    const art = el3.querySelector(".cardImage");
+    if (ver.sprite && art) art.style.backgroundImage = `url("${spriteUrl(ver.sprite)}")`;
+    const usedToday = ver.image && allCards().some((c) => c.image === ver.image);
+    if (!ver.sprite && ver.image && ver.image !== base.image && !usedToday && art) {
+      const probe = new Image();
+      probe.onload = () => {
+        art.style.backgroundImage = `url("images/cards/${ver.image}.png")`;
+      };
+      probe.src = `images/cards/${ver.image}.png`;
+    }
+    const nameEl = el3.querySelector(".cardName");
+    if (nameEl) {
+      const nd = nameEl.firstElementChild || nameEl;
+      if (nd.textContent !== ver.name) {
+        nd.textContent = ver.name;
+        if (nd !== nameEl) gameFontSize(nd, 25);
+      }
+    }
+    const costEl = el3.querySelector(".cardCost");
+    if (costEl && ver.cost != null) costEl.textContent = ver.cost;
+    if (isMonster) {
+      el3.querySelectorAll('[class*="ATK" i], [class*="attack" i]').forEach((n) => {
+        if (ver.atk != null && !n.children.length) n.textContent = ver.atk;
       });
-    });
-    HARDWARE_SHORTCUT_ACTIONS.forEach((action) => {
-      settings2.add("shortcut_" + action.key, {
-        name: action.name,
-        type: "text",
-        default: buttonToDisplay(HARDWARE_SHORTCUT_DEFAULTS[action.key]),
-        category: IN_GAME,
-        hidden: hiddenUnless(action.pluginId)
+      el3.querySelectorAll('[class*="cardHP" i], [class*="health" i]').forEach((n) => {
+        if (ver.hp != null && !n.children.length) n.textContent = ver.hp;
       });
+    }
+    const desc = el3.querySelector(".cardDesc");
+    if (desc) {
+      if (ver.sameAsToday && !ver.legacy && currentDescHtml !== null) desc.innerHTML = currentDescHtml;
+      else if (ver.textKnown && !ver.truncated && ver.text) fitText(desc, formatText(ver.text, f));
+      else fitText(desc, "?");
+    }
+    setQuantity(el3, versionLabel(ver.version), ver.note);
+    return el3;
+  }
+  var plain = (t) => String(t || "").replace(/\{\{[A-Z_]+:([^}]*)\}\}/g, "$1").replace(/\{\{([A-Z_]+)\}\}/g, "$1").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+  function seen(card, ver) {
+    var _a, _b, _c, _d;
+    const stats = card.typeCard === 0 ? `${(_a = ver.cost) != null ? _a : "?"}/${(_b = ver.atk) != null ? _b : "?"}/${(_c = ver.hp) != null ? _c : "?"}` : `${(_d = ver.cost) != null ? _d : "?"}`;
+    return `${stats} ${ver.rarity || ""} ${ver.name}: ${ver.textKnown && !ver.truncated ? plain(ver.text) : "?"}`.replace(/\s+/g, " ");
+  }
+  var n0 = (x) => x === null || x === void 0 ? void 0 : x;
+  function cardHistoryView(base, data2, f, index) {
+    const nowEl = makeCard(JSON.parse(JSON.stringify(base)));
+    tidy(nowEl);
+    const nowDesc = nowEl.querySelector(".cardDesc");
+    const currentDescHtml = nowDesc ? nowDesc.innerHTML : null;
+    const versions = (data2 && data2.versions ? data2.versions : []).slice();
+    const lastV = versions[versions.length - 1];
+    const sameAsNow = lastV && lastV.name === base.name && n0(lastV.cost) === n0(base.cost) && (base.typeCard !== 0 || n0(lastV.atk) === n0(base.attack) && n0(lastV.hp) === n0(base.hp));
+    if (sameAsNow) {
+      versions.pop();
+      setQuantity(nowEl, versionLabel(lastV.version), lastV.note);
+    } else if (data2 && data2.newestMiraheze) {
+      setQuantity(nowEl, versionLabel(data2.newestMiraheze), "Today's version - its last change, from the Miraheze wiki.");
+    } else {
+      const newest = index && index.newestVersion;
+      setQuantity(nowEl, versionLabel(newest ? { ...newest, guessed: true } : null), "Today's version - when it last changed isn't recorded.");
+    }
+    const grid = document.createElement("div");
+    grid.className = "cardsPreview no-hover wz-ch-grid";
+    grid.style.cssText = `display:grid;grid-template-columns:repeat(${PER_ROW},max-content);gap:38px 8px;justify-content:center;padding-bottom:28px;`;
+    const built = index && index.builtAt || "";
+    versions.forEach((v) => {
+      const el3 = drawVersion(base, v, f, currentDescHtml);
+      tagNode(el3, { kind: "c", id: base.id, name: base.name, label: versionLabel(v.version).text, shown: seen(base, v), built });
+      grid.appendChild(el3);
     });
-    startControllerKeybindObserver("underscript.plugin.Wizascript.controller.");
+    tagNode(nowEl, { kind: "c", id: base.id, name: base.name, label: "today", shown: seen(base, { ...base, atk: base.attack, textKnown: false }), built });
+    grid.appendChild(nowEl);
+    const node = document.createElement("div");
+    node.appendChild(grid);
+    const foot = document.createElement("div");
+    foot.className = "wz-ch-foot";
+    const src = ["Undercards Wiki (Version History"];
+    if (data2 && data2.pvTitle) src[0] += `, ${data2.pvTitle.replace(/_/g, " ")}`;
+    src[0] += ")";
+    if (data2 && data2.miraheze) src.push("The Undercards Wiki (Miraheze)");
+    if (data2 && data2.trackerStart) src.push(`feildmaster's Card-Tracker (game data since ${data2.trackerStart})`);
+    src.push("Undercards patch notes");
+    const lines = [`Sources: ${src.join("; ")}.`];
+    if (!data2) lines.unshift("No recorded history for this card yet.");
+    else if (!data2.firstFrom && !(versions[0] && versions[0].version && versions[0].version.source === "miraheze")) lines.push("Its first version isn't recorded; earlier stats are worked out backwards.");
+    lines.push("* = not certain, or has a note - hover the version number. Looks wrong? Right-click it to report it.");
+    foot.textContent = lines.join(" ");
+    node.appendChild(foot);
+    const fit = () => {
+      const avail = node.clientWidth;
+      const need = grid.scrollWidth;
+      grid.style.zoom = need > avail && avail > 0 ? String(Math.max(0.5, avail / need)) : "";
+    };
+    const wikiUrl = `https://undercards.fandom.com/wiki/${data2 && data2.pvTitle ? data2.pvTitle : `${base.name.replace(/ /g, "_")}/Previous_Versions`}`;
+    return { node, fit, wikiUrl };
+  }
+
+  // packages/misc/card-history/artifacts-view.js
+  var RARITIES = ["COMMON", "LEGENDARY", "TOKEN"];
+  var asRarity = (x) => {
+    const s = String(x || "").toUpperCase();
+    if (/LEGEND/.test(s)) return "LEGENDARY";
+    if (/TOKEN|GENERAT/.test(s)) return "TOKEN";
+    if (/COMMON|BASE/.test(s)) return "COMMON";
+    return void 0;
+  };
+  function todayArtifactRarity(a) {
+    if (!a) return void 0;
+    if (a.unavailable === true) return "TOKEN";
+    if (a.legendary === true) return "LEGENDARY";
+    if (a.legendary === false) return "COMMON";
+    return asRarity(a.rarity);
+  }
+  function findArtifact(list, q) {
+    const s = String(q);
+    if (/^\d+$/.test(s)) return list.find((a) => String(a.id) === s) || null;
+    const n = norm(s);
+    return list.find((a) => norm(a.name) === n || norm(tr(`artifact-name-${a.id}`)) === n) || list.find((a) => norm(a.image) === n) || null;
+  }
+  function row(ver, rarity, f, todayName, todayHtml, target) {
+    const tr2 = document.createElement("tr");
+    const v = document.createElement("td");
+    v.className = "wz-ch-art-ver wz-ch-badge-spot";
+    const label = versionLabel(ver.version);
+    v.textContent = label.text + (ver.note || label.uncertain ? " *" : "");
+    v.title = label.title + (ver.note ? `
+${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
+    const r = document.createElement("td");
+    r.className = "wz-ch-art-rar";
+    r.innerHTML = RARITIES.includes(rarity) ? render(`{{RARITY:${rarity}}}`, rarity) : "?";
+    const t = document.createElement("td");
+    t.className = "wz-ch-art-txt";
+    const oldName = ver.name && norm(ver.name) !== norm(todayName) ? `<span class="wz-ch-art-oldname">(${escHtml(ver.name)})</span>` : "";
+    const body = todayHtml !== void 0 ? todayHtml : ver.textKnown && ver.text ? formatText(ver.text, f) : "?";
+    t.innerHTML = `<div class="cardDesc wz-ch-art-desc"><div>${oldName}${body}</div></div>`;
+    tr2.append(v, r, t);
+    if (target) {
+      const d = document.createElement("div");
+      d.innerHTML = body;
+      tagNode(tr2, { ...target, label: todayHtml !== void 0 ? "today" : label.text, shown: `${rarity || "?"}: ${ver.name && norm(ver.name) !== norm(todayName) ? `(${ver.name}) ` : ""}${d.textContent.replace(/\s+/g, " ").trim()}`.slice(0, 140) });
+    }
+    return tr2;
+  }
+  function artifactHistoryView(a, data2, f, index) {
+    const todayName = tr(`artifact-name-${a.id}`, 1) || a.name;
+    const todayHtml = trHtml(`artifact-${a.id}`) || (a.description ? formatText(a.description, f) : "?");
+    const today = todayArtifactRarity(a);
+    const versions = (data2 && data2.versions ? data2.versions : []).map((v) => ({ ...v }));
+    let r = today;
+    for (let i = versions.length - 1; i >= 0; i--) {
+      const v = versions[i];
+      const stated = asRarity(v.rarity);
+      const from = asRarity(v.rarityFrom);
+      v.shownRarity = today ? from ? stated : r : stated || r;
+      r = from || v.shownRarity;
+    }
+    const shown = (html) => {
+      const d = document.createElement("div");
+      d.innerHTML = html;
+      return d.textContent.toLowerCase().replace(/[^a-z0-9/+]+/g, "");
+    };
+    const last = versions[versions.length - 1];
+    const plainToday = todayHtml && todayHtml !== "?" ? shown(todayHtml) : "";
+    let todayVer;
+    if (last && last.textKnown && last.text && plainToday && shown(formatText(last.text, f)) === plainToday) {
+      versions.pop();
+      todayVer = { ...last, name: todayName };
+    } else {
+      const lk = last && last.version && last.version.key;
+      const newer = (data2 && data2.mirahezeVersions || []).filter((mv) => !lk || mv.key[0] > lk[0] || mv.key[0] === lk[0] && mv.key[1] > lk[1]).sort((x, y) => y.key[0] - x.key[0] || y.key[1] - x.key[1])[0];
+      const newest = index && index.newestVersion;
+      todayVer = {
+        version: newer || (newest ? { ...newest, guessed: true } : null),
+        name: todayName,
+        note: newer ? null : "Today's version - when it last changed isn't recorded."
+      };
+    }
+    const node = document.createElement("div");
+    const head = document.createElement("div");
+    head.className = "wz-ch-art-head";
+    head.innerHTML = `${a.image ? `<img src="images/artifacts/${escHtml(a.image)}.png" alt="">` : ""}<span class="wz-ch-art-title">${escHtml(todayName)}</span>`;
+    const table = document.createElement("table");
+    table.className = "wz-ch-art-list";
+    const target = { kind: "a", id: slug(a.name), name: todayName, built: index && index.builtAt || "" };
+    versions.forEach((v) => table.appendChild(row(v, v.shownRarity, f, todayName, void 0, target)));
+    table.appendChild(row(todayVer, today || last && last.shownRarity, f, todayName, todayHtml, target));
+    node.append(head, table);
+    const foot = document.createElement("div");
+    foot.className = "wz-ch-foot";
+    foot.textContent = `${data2 ? "" : "No recorded history for this artifact yet. "}Sources: Undercards Wiki (Version History)${data2 && data2.miraheze ? "; The Undercards Wiki (Miraheze)" : ""}; Undercards patch notes. Oldest first, today's last. * = not certain, or has a note - hover the version number. Looks wrong? Right-click the row to report it.`;
+    node.appendChild(foot);
+    return { node, wikiUrl: `https://undercards.fandom.com/wiki/${a.name.replace(/ /g, "_")}` };
+  }
+
+  // packages/misc/card-history/shell.js
+  var reportsLabel = () => {
+    const n = unsentCount();
+    return n ? `My Reports (${n})` : "My Reports";
+  };
+  function openShell(title, wikiUrl) {
+    const box = document.createElement("div");
+    box.className = "wz-ch-loading";
+    box.innerHTML = '<div class="wz-ch-loading-title">Loading...</div><div class="wz-ch-step"></div>';
+    const state2 = { url: wikiUrl, shown: false, onShown: null };
+    const api = dialogApi();
+    let off = null;
+    if (api) {
+      api.BD.show({
+        title,
+        size: api.BD.SIZE_WIDE,
+        message: api.$(box),
+        onshown: () => {
+          state2.shown = true;
+          if (state2.onShown) state2.onShown();
+        },
+        onhidden: () => {
+          if (off) off();
+          closeReportMenu();
+        },
+        buttons: [
+          { id: "wz-ch-myreports-btn", label: reportsLabel(), action: () => openMyReports() },
+          { label: "Open on the wiki", action: () => window.open(state2.url, "_blank", "noopener") },
+          { label: "Close", cssClass: "btn-primary", action: (d) => d.close() }
+        ]
+      });
+    } else {
+      document.body.appendChild(box);
+      state2.shown = true;
+    }
+    off = onReportsChanged(() => {
+      repaintAll(box);
+      const b = document.getElementById("wz-ch-myreports-btn");
+      if (b) b.textContent = reportsLabel();
+    });
+    return {
+      step(text) {
+        const el3 = box.querySelector(".wz-ch-step");
+        if (el3) el3.textContent = text;
+      },
+      fill(node, fit, url) {
+        if (url) state2.url = url;
+        box.className = "";
+        box.replaceChildren(node);
+        if (!fit) return;
+        const run = () => {
+          fit();
+          if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+          setTimeout(fit, 400);
+        };
+        if (state2.shown) run();
+        else state2.onShown = run;
+      },
+      fail(err) {
+        const t = box.querySelector(".wz-ch-loading-title");
+        if (t) t.textContent = "Couldn't load the history.";
+        this.step(String(err && err.message ? err.message : err));
+      }
+    };
+  }
+
+  // packages/misc/card-history/styles.js
+  var STYLE_ID3 = "wizascript-card-history-style";
+  var CSS4 = `
+.wz-ch-loading { min-height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+.wz-ch-loading-title { font-size: 20px; }
+.wz-ch-step { font-size: 13px; opacity: .75; }
+.wz-ch-foot { clear: both; margin-top: 10px; font-size: 12px; opacity: .85; }
+
+.wz-ch-art-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.wz-ch-art-head img { max-height: 48px; image-rendering: pixelated; }
+.wz-ch-art-title { font-size: 18px; }
+.wz-ch-art-list { width: 100%; border-collapse: collapse; }
+.wz-ch-art-list td { border: 2px solid #fff; padding: 6px 10px; vertical-align: middle; background: #000; color: #fff; }
+.wz-ch-art-list td.wz-ch-art-ver { width: 90px; text-align: center; font-size: 18px; white-space: nowrap; cursor: default; }
+.wz-ch-art-list td.wz-ch-art-rar { width: 120px; text-align: center; white-space: nowrap; }
+.wz-ch-art-list td.wz-ch-art-txt { font-size: 14px; line-height: 1.35; text-align: left; }
+/* Reports: badge on a version, its right-click menu, the My Reports dialog. */
+.wz-ch-reportable { position: relative; }
+.wz-ch-badge { position: absolute; top: 32px; left: 6px; z-index: 6; width: 24px; height: 24px; line-height: 22px; text-align: center;
+  font-size: 15px; border-radius: 50%; background: #000; color: #f5c542; border: 2px solid #f5c542; cursor: help; }
+.wz-ch-badge.wz-ch-badge-mine { color: #ff6b6b; border-color: #ff6b6b; }
+.wz-ch-art-list td.wz-ch-art-ver { position: relative; }
+.wz-ch-art-list td.wz-ch-art-ver .wz-ch-badge { top: 2px; left: auto; right: 2px; width: 20px; height: 20px; line-height: 18px; font-size: 12px; }
+.wz-ch-menu { position: fixed; z-index: 2000; list-style: none; margin: 0; padding: 4px 0; min-width: 220px; background: #000; color: #fff;
+  border: 2px solid #fff; font-size: 14px; }
+.wz-ch-menu header { padding: 4px 10px 6px; border-bottom: 1px solid #555; opacity: .85; }
+.wz-ch-menu li { padding: 6px 10px; cursor: pointer; }
+.wz-ch-menu li:hover { background: #333; }
+.wz-ch-menu li.wz-ch-menu-off { cursor: default; opacity: .7; }
+.wz-ch-menu li.wz-ch-menu-off:hover { background: none; }
+.wz-ch-myreports-list { width: 100%; margin: 6px 0 10px; }
+.wz-ch-myreports-list td { padding: 3px 6px; border-bottom: 1px solid #444; }
+.wz-ch-myreports-opt { display: block; font-weight: normal; margin: 4px 0 8px; }
+.wz-ch-myreports-btns { display: flex; gap: 8px; margin-bottom: 8px; }
+.wz-ch-myreports-code { width: 100%; height: 70px; font-family: monospace; font-size: 11px; background: #111; color: #ddd; }
+.wz-ch-codelines { margin: 8px 0; }
+.wz-ch-codeline { display: flex; gap: 6px; margin-bottom: 4px; }
+.wz-ch-codeline .wz-ch-code { flex: 1; font-family: monospace; font-size: 12px; background: #111; color: #ddd; border: 1px solid #555; padding: 2px 6px; }
+.wz-ch-chatcode { opacity: .75; font-style: italic; cursor: pointer; }
+.wz-ch-chatcode.wz-ch-chatcode-open { font-style: normal; font-family: monospace; cursor: text; word-break: break-all; }
+.wz-ch-dim { opacity: .7; font-size: 12px; }
+.wz-ch-art-oldname { opacity: .75; margin-right: 6px; }
+/* A .cardDesc (for the game's card-text colours) laid out as plain text. */
+.wz-ch-art-list .cardDesc.wz-ch-art-desc { position: static !important; width: auto !important; height: auto !important; top: auto !important;
+  left: auto !important; margin: 0 !important; padding: 0 !important; display: block !important; text-align: left !important;
+  font-size: 14px !important; line-height: 1.35; }
+.wz-ch-art-list .cardDesc.wz-ch-art-desc > div { font-size: 14px !important; }
+`;
+  function injectCardHistoryStyle() {
+    if (document.getElementById(STYLE_ID3)) return;
+    const st = document.createElement("style");
+    st.id = STYLE_ID3;
+    st.textContent = CSS4;
+    (document.head || document.documentElement).appendChild(st);
+  }
+
+  // packages/misc/card-history/chat-codes.js
+  function compact(root) {
+    const scan2 = (el3) => {
+      const walker = document.createTreeWalker(el3, NodeFilter.SHOW_TEXT);
+      const hits = [];
+      for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        if (n.parentElement && n.parentElement.closest(".wz-ch-chatcode")) continue;
+        if (hasCode(n.nodeValue)) hits.push(n);
+      }
+      hits.forEach((n) => {
+        const count = parseCodes(n.nodeValue).reduce((k, f) => k + f.items.length, 0);
+        const span = document.createElement("span");
+        span.className = "wz-ch-chatcode";
+        span.textContent = `\u2691 Card History report (${count})`;
+        span.title = n.nodeValue.trim();
+        span.dataset.code = n.nodeValue;
+        span.addEventListener("click", () => {
+          span.textContent = span.dataset.code;
+          span.classList.add("wz-ch-chatcode-open");
+        });
+        n.replaceWith(span);
+      });
+    };
+    if (root.closest && root.closest(".chat-messages")) scan2(root);
+    else if (root.querySelectorAll) root.querySelectorAll(".chat-messages").forEach(scan2);
+  }
+  var wired3 = false;
+  function initChatCodes() {
+    if (wired3) return;
+    wired3 = true;
+    const start = () => {
+      compact(document.body);
+      new MutationObserver((muts) => {
+        muts.forEach((mu) => mu.addedNodes.forEach((n) => {
+          if (n.nodeType !== 1) return;
+          if (n.closest(".chat-messages") || n.querySelector(".chat-messages")) compact(n);
+        }));
+      }).observe(document.body, { childList: true, subtree: true });
+    };
+    if (document.body) start();
+    else document.addEventListener("DOMContentLoaded", start);
+  }
+
+  // packages/misc/card-history/index.js
+  var CARD_PAGES2 = ["/Crafting", "/Decks"];
+  var ARTIFACT_PAGES = ["/Artifacts"];
+  var warn = (...a) => {
+    if (debugLoggingSetting.value()) console.warn("[Wizascript Card History]", ...a);
+  };
+  var busy = false;
+  async function openCard(id) {
+    const base = findCard(id);
+    if (!base) return;
+    const shell = openShell(`Previous Versions - ${base.name}`, `https://undercards.fandom.com/wiki/${base.name.replace(/ /g, "_")}/Previous_Versions`);
+    try {
+      shell.step("Reading the card's history...");
+      const [data2, index, f] = await Promise.all([getCardData(base.id), getIndex().catch(() => null), formatter(), remoteReports()]);
+      const view = cardHistoryView(base, data2, f, index);
+      shell.fill(view.node, view.fit, view.wikiUrl);
+    } catch (e) {
+      warn(e);
+      shell.fail(e);
+    }
+  }
+  async function openArtifact(image) {
+    const list = await artifacts2();
+    const a = findArtifact(list, image);
+    if (!a) return;
+    const shell = openShell(`Artifact History - ${a.name}`, `https://undercards.fandom.com/wiki/${a.name.replace(/ /g, "_")}`);
+    try {
+      shell.step("Reading the artifact's history...");
+      const [data2, index, f] = await Promise.all([getArtifactData(a.name), getIndex().catch(() => null), formatter(), remoteReports()]);
+      const view = artifactHistoryView(a, data2, f, index);
+      shell.fill(view.node, null, view.wikiUrl);
+    } catch (e) {
+      warn(e);
+      shell.fail(e);
+    }
+  }
+  function cardUnder(e) {
+    if (e.button !== 1 || !matchesPage(CARD_PAGES2) || !e.target.closest) return null;
+    const el3 = e.target.closest(".card");
+    if (!el3 || !el3.id || el3.closest(".modal")) return null;
+    return findCard(el3.id) ? el3.id : null;
+  }
+  function artifactUnder(e) {
+    if (e.button !== 1 || !matchesPage(ARTIFACT_PAGES) || !e.target.closest || e.target.closest(".modal")) return null;
+    let el3 = e.target;
+    for (let i = 0; i < 4 && el3; i++, el3 = el3.parentElement) {
+      const img = el3.matches && el3.matches('img[src*="artifacts/"]') ? el3 : el3.querySelector && el3.querySelector('img[src*="artifacts/"]');
+      if (img) {
+        const m = img.getAttribute("src").match(/artifacts\/([^/?#]+)\.png/i);
+        if (m) return decodeURIComponent(m[1]);
+      }
+    }
+    return null;
+  }
+  function initCardHistory(plugin) {
+    if (!isPluginEnabled("cardHistory")) return;
+    injectCardHistoryStyle();
+    initChatCodes();
+    if (!matchesPage([...CARD_PAGES2, ...ARTIFACT_PAGES])) return;
+    wireReportMenu();
+    document.addEventListener("mousedown", (e) => {
+      if (cardUnder(e) || artifactUnder(e)) e.preventDefault();
+    }, true);
+    document.addEventListener("auxclick", async (e) => {
+      const id = cardUnder(e);
+      const image = id ? null : artifactUnder(e);
+      if (!id && !image) return;
+      e.preventDefault();
+      if (busy) return;
+      busy = true;
+      try {
+        if (id) await openCard(id);
+        else await openArtifact(image);
+      } finally {
+        busy = false;
+      }
+    }, true);
   }
 
   // packages/controller/index.js
@@ -10285,11 +15110,11 @@ Version: v${version}`;
     function buildGrid(rows) {
       oskGrid.innerHTML = "";
       oskRowEls = [];
-      rows.forEach((row) => {
+      rows.forEach((row2) => {
         const rowEl = document.createElement("div");
         Object.assign(rowEl.style, { display: "flex", justifyContent: "center", marginBottom: "5px" });
         const keyEls = [];
-        row.forEach((label) => {
+        row2.forEach((label) => {
           const keyEl = document.createElement("div");
           keyEl.textContent = displayLabel(label, oskShift);
           const wide = label === "\u2423";
@@ -10376,9 +15201,9 @@ Version: v${version}`;
       selectEl.appendChild(hint);
     }
     function updateSelectHighlight() {
-      selectRowEls.forEach((el2, i) => {
+      selectRowEls.forEach((el3, i) => {
         const active = i === selectIndex;
-        el2.style.boxShadow = active ? "inset 0 0 0 999px rgba(255,255,255,0.18)" : "none";
+        el3.style.boxShadow = active ? "inset 0 0 0 999px rgba(255,255,255,0.18)" : "none";
       });
     }
     function mount() {
@@ -10404,7 +15229,7 @@ Version: v${version}`;
       for (const sel of def.containerSelectors) {
         const container = document.querySelector(sel);
         if (!container) continue;
-        const items = Array.from(container.querySelectorAll(def.itemSelector)).filter((el2) => el2.offsetParent !== null);
+        const items = Array.from(container.querySelectorAll(def.itemSelector)).filter((el3) => el3.offsetParent !== null);
         if (items.length) {
           if (isDebugTextEnabled()) console.log(`[Wizascript Controller] group "${def.name}" found via "${sel}": ${items.length} items`);
           return { name: def.name, container, items };
@@ -10442,20 +15267,20 @@ Version: v${version}`;
       if (!host) return [];
       let els = Array.from(host.querySelectorAll(".card"));
       if (!els.length) els = Array.from(host.children);
-      return els.filter((el2) => el2.offsetParent !== null);
+      return els.filter((el3) => el3.offsetParent !== null);
     }
     function queryBoardMonsterCards() {
       const slots = Array.from(document.querySelectorAll(".droppableMonster.slot, .droppableMonster"));
-      const cards = slots.map((s) => s.querySelector(".card")).filter((c) => c && c.offsetParent !== null);
-      if (!cards.length) return [];
-      const rows = buildRowGrid(cards);
+      const cards2 = slots.map((s) => s.querySelector(".card")).filter((c) => c && c.offsetParent !== null);
+      if (!cards2.length) return [];
+      const rows = buildRowGrid(cards2);
       if (!rows.length) return [];
       let bestRow = rows[0], bestTop = -Infinity;
-      for (const row of rows) {
-        const avgTop = row.reduce((sum, el2) => sum + el2.getBoundingClientRect().top, 0) / row.length;
+      for (const row2 of rows) {
+        const avgTop = row2.reduce((sum, el3) => sum + el3.getBoundingClientRect().top, 0) / row2.length;
         if (avgTop > bestTop) {
           bestTop = avgTop;
-          bestRow = row;
+          bestRow = row2;
         }
       }
       return bestRow;
@@ -10463,19 +15288,19 @@ Version: v${version}`;
     function elArraysEqual(a, b) {
       if (a.length !== b.length) return false;
       const setA = new Set(a);
-      for (const el2 of b) if (!setA.has(el2)) return false;
+      for (const el3 of b) if (!setA.has(el3)) return false;
       return true;
     }
     function buildRowGrid(els, rowTolerance = 28) {
-      const withRect = els.map((el2) => ({ el: el2, r: el2.getBoundingClientRect() })).sort((a, b) => a.r.top - b.r.top);
+      const withRect = els.map((el3) => ({ el: el3, r: el3.getBoundingClientRect() })).sort((a, b) => a.r.top - b.r.top);
       const rows = [];
       for (const item of withRect) {
-        let row = rows.find((r) => Math.abs(r.top - item.r.top) <= rowTolerance);
-        if (!row) {
-          row = { top: item.r.top, items: [] };
-          rows.push(row);
+        let row2 = rows.find((r) => Math.abs(r.top - item.r.top) <= rowTolerance);
+        if (!row2) {
+          row2 = { top: item.r.top, items: [] };
+          rows.push(row2);
         }
-        row.items.push(item);
+        row2.items.push(item);
       }
       rows.forEach((r) => r.items.sort((a, b) => a.r.left - b.r.left));
       return rows.map((r) => r.items.map((i) => i.el));
@@ -10524,7 +15349,7 @@ Version: v${version}`;
     let fieldNeedsReanchor = false;
     let fieldSubmenu = null;
     let lastKnownActiveCategoryIdx = -1;
-    const MODAL_ITEM_SELECTOR = 'button, input:not([type="hidden"]):not(.tabButton), select, a[href], .card, li[role="button"], .tabLabel';
+    const MODAL_ITEM_SELECTOR = 'button, input:not([type="hidden"]):not(.tabButton), select, a[href], .card, li[role="button"], .tabLabel, .wz-ch-reportable';
     function queryModalRoot() {
       const visibleDialogs = Array.from(document.querySelectorAll(".bootstrap-dialog")).filter((d) => getComputedStyle(d).display !== "none");
       const dialog = visibleDialogs[visibleDialogs.length - 1] || null;
@@ -10532,36 +15357,36 @@ Version: v${version}`;
         const tabbedRoot = dialog.querySelector(".tabbedView.left");
         return tabbedRoot ? { root: dialog, kind: "tabbed", tabbedRoot } : { root: dialog, kind: "plain" };
       }
-      const menu = document.querySelector(".menu-backdrop");
-      if (menu && getComputedStyle(menu).display !== "none") return { root: menu, kind: "menu" };
+      const menu3 = document.querySelector(".menu-backdrop");
+      if (menu3 && getComputedStyle(menu3).display !== "none") return { root: menu3, kind: "menu" };
       return null;
     }
     function queryModalItems(root) {
-      return Array.from(root.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el2) => el2.offsetParent !== null);
+      return Array.from(root.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el3) => el3.offsetParent !== null);
     }
     function queryScrollableListItems(root) {
       const scrollable = findScrollableDescendant(root);
       if (!scrollable) return [];
       const items = [];
-      Array.from(scrollable.children).forEach((row) => {
-        if (row.tagName !== "DIV") return;
-        Array.from(row.children).filter((c) => c.tagName === "SPAN").forEach((s) => items.push(s));
+      Array.from(scrollable.children).forEach((row2) => {
+        if (row2.tagName !== "DIV") return;
+        Array.from(row2.children).filter((c) => c.tagName === "SPAN").forEach((s) => items.push(s));
       });
-      return items.filter((el2) => el2.offsetParent !== null);
+      return items.filter((el3) => el3.offsetParent !== null);
     }
     function sidebarLabels(view) {
       const out = [];
-      Array.from(view.children).forEach((el2) => {
-        if (el2.classList.contains("tabLabel")) out.push(el2);
-        else if (el2.classList.contains("tabContent") && el2.classList.contains("nested")) {
-          const inner = el2.querySelector(":scope > .tabbedView");
+      Array.from(view.children).forEach((el3) => {
+        if (el3.classList.contains("tabLabel")) out.push(el3);
+        else if (el3.classList.contains("tabContent") && el3.classList.contains("nested")) {
+          const inner = el3.querySelector(":scope > .tabbedView");
           if (inner) out.push(...sidebarLabels(inner));
         }
       });
       return out;
     }
     function queryCategoryItems(tabbedRoot) {
-      return sidebarLabels(tabbedRoot).filter((el2) => el2.offsetParent !== null).sort((a, b) => {
+      return sidebarLabels(tabbedRoot).filter((el3) => el3.offsetParent !== null).sort((a, b) => {
         const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
         if (Math.abs(ra.top - rb.top) > 2) return ra.top - rb.top;
         return ra.left - rb.left;
@@ -10587,14 +15412,14 @@ Version: v${version}`;
       return null;
     }
     function queryFieldRows(root) {
-      const flexRows = Array.from(root.querySelectorAll(".flex-start")).filter((row) => row.offsetParent !== null).map((row) => Array.from(row.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el2) => el2.offsetParent !== null)).filter((items) => items.length);
+      const flexRows = Array.from(root.querySelectorAll(".flex-start")).filter((row2) => row2.offsetParent !== null).map((row2) => Array.from(row2.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el3) => el3.offsetParent !== null)).filter((items) => items.length);
       const labelRows = /* @__PURE__ */ new Map();
-      Array.from(root.querySelectorAll(".tabLabel")).filter((el2) => el2.offsetParent !== null && !(el2.classList.contains("wizascript-tab-arrow") && el2.classList.contains("disabled"))).forEach((el2) => {
-        const key2 = el2.parentElement;
+      Array.from(root.querySelectorAll(".tabLabel")).filter((el3) => el3.offsetParent !== null && !(el3.classList.contains("wizascript-tab-arrow") && el3.classList.contains("disabled"))).forEach((el3) => {
+        const key2 = el3.parentElement;
         if (!labelRows.has(key2)) labelRows.set(key2, []);
-        labelRows.get(key2).push(el2);
+        labelRows.get(key2).push(el3);
       });
-      const bareLabels = Array.from(labelRows.values()).map((row) => row.sort((a, b) => {
+      const bareLabels = Array.from(labelRows.values()).map((row2) => row2.sort((a, b) => {
         const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
         if (Math.abs(ra.top - rb.top) > 2) return ra.top - rb.top;
         return ra.left - rb.left;
@@ -10637,10 +15462,10 @@ Version: v${version}`;
       return labels.length > 1 ? labels : null;
     }
     function cycleSettingsTab(dir, tabbedRoot) {
-      const row = modalPane === "fields" ? pluginTabRow(queryActiveTabContent(tabbedRoot)) : null;
-      if (row) {
-        const cur2 = Math.max(0, row.findIndex(isTabLabelChecked));
-        const target2 = row[(cur2 + dir + row.length) % row.length];
+      const row2 = modalPane === "fields" ? pluginTabRow(queryActiveTabContent(tabbedRoot)) : null;
+      if (row2) {
+        const cur2 = Math.max(0, row2.findIndex(isTabLabelChecked));
+        const target2 = row2[(cur2 + dir + row2.length) % row2.length];
         triggerElementClick(target2);
         if (isDebugTextEnabled()) console.log("[Wizascript Controller] settings: tab", dir > 0 ? "next" : "previous", "->", target2.textContent);
         return target2;
@@ -10662,9 +15487,9 @@ Version: v${version}`;
       if (isDebugTextEnabled()) console.log("[Wizascript Controller] settings: category", dir > 0 ? "next" : "previous", "->", target.textContent);
       return null;
     }
-    function selectedColInTabRow(row) {
-      if (!row || !row.length || !row.every((el2) => el2.classList && el2.classList.contains("tabLabel"))) return -1;
-      return row.findIndex(isTabLabelChecked);
+    function selectedColInTabRow(row2) {
+      if (!row2 || !row2.length || !row2.every((el3) => el3.classList && el3.classList.contains("tabLabel"))) return -1;
+      return row2.findIndex(isTabLabelChecked);
     }
     function findModalDismissButton(root) {
       const byAttr = root.querySelector('[data-dismiss="modal"], .close');
@@ -10708,21 +15533,21 @@ Version: v${version}`;
         return handItems[handIndex] || null;
       }
       if (activeSubmenu) return activeSubmenu.items[activeSubmenu.index] || null;
-      const state = chromeStates[chromeIndex];
-      if (!state || state.type !== "group") return null;
-      const g = state.group;
+      const state2 = chromeStates[chromeIndex];
+      if (!state2 || state2.type !== "group") return null;
+      const g = state2.group;
       const idx = itemIndexByGroupName[g.name] || 0;
       return g.items[idx] || null;
     }
-    function setHighlight(el2) {
-      if (!el2) return;
-      el2.style.outline = `${getHighlightThickness()}px solid ${getHighlightColor()}`;
-      el2.style.outlineOffset = "2px";
+    function setHighlight(el3) {
+      if (!el3) return;
+      el3.style.outline = `${getHighlightThickness()}px solid ${getHighlightColor()}`;
+      el3.style.outlineOffset = "2px";
     }
-    function clearHighlight(el2) {
-      if (!el2) return;
-      el2.style.outline = "";
-      el2.style.outlineOffset = "";
+    function clearHighlight(el3) {
+      if (!el3) return;
+      el3.style.outline = "";
+      el3.style.outlineOffset = "";
     }
     function refreshHighlight() {
       if (navInputMethod !== "dpad") {
@@ -10732,30 +15557,30 @@ Version: v${version}`;
         }
         return;
       }
-      const el2 = currentFocusedEl();
-      if (el2 === currentHighlightedEl) return;
+      const el3 = currentFocusedEl();
+      if (el3 === currentHighlightedEl) return;
       if (currentHighlightedEl) clearHighlight(currentHighlightedEl);
-      if (el2) setHighlight(el2);
-      currentHighlightedEl = el2;
+      if (el3) setHighlight(el3);
+      currentHighlightedEl = el3;
     }
-    function isTextInput(el2) {
-      if (!el2) return false;
-      if (el2.readOnly) return false;
-      if (el2.tagName === "TEXTAREA") return true;
-      if (el2.tagName === "INPUT") {
-        const type = (el2.type || "text").toLowerCase();
+    function isTextInput(el3) {
+      if (!el3) return false;
+      if (el3.readOnly) return false;
+      if (el3.tagName === "TEXTAREA") return true;
+      if (el3.tagName === "INPUT") {
+        const type = (el3.type || "text").toLowerCase();
         return ["text", "search", "email", "url", "tel", "password", "number"].includes(type);
       }
-      return !!el2.isContentEditable;
+      return !!el3.isContentEditable;
     }
-    function isSlider(el2) {
-      return !!el2 && el2.tagName === "INPUT" && (el2.type || "").toLowerCase() === "range";
+    function isSlider(el3) {
+      return !!el3 && el3.tagName === "INPUT" && (el3.type || "").toLowerCase() === "range";
     }
-    function isNativeSelect(el2) {
-      return !!el2 && el2.tagName === "SELECT";
+    function isNativeSelect(el3) {
+      return !!el3 && el3.tagName === "SELECT";
     }
-    function placeCaretAtPoint(el2, cx, cy) {
-      if (!el2 || !el2.isContentEditable) return;
+    function placeCaretAtPoint(el3, cx, cy) {
+      if (!el3 || !el3.isContentEditable) return;
       let range = null;
       if (document.caretRangeFromPoint) {
         range = document.caretRangeFromPoint(cx, cy);
@@ -10767,19 +15592,19 @@ Version: v${version}`;
           range.collapse(true);
         }
       }
-      if (range && el2.contains(range.startContainer)) {
+      if (range && el3.contains(range.startContainer)) {
         const sel = pageWindow2.getSelection();
         sel.removeAllRanges();
         sel.addRange(range);
-        if (isDebugTextEnabled()) console.log("[Wizascript Controller] caret repositioned in", el2, "at", cx, cy);
+        if (isDebugTextEnabled()) console.log("[Wizascript Controller] caret repositioned in", el3, "at", cx, cy);
       }
     }
-    function firstTextNode(el2) {
-      const walker = document.createTreeWalker(el2, NodeFilter.SHOW_TEXT);
+    function firstTextNode(el3) {
+      const walker = document.createTreeWalker(el3, NodeFilter.SHOW_TEXT);
       return walker.nextNode();
     }
-    function lastTextNode(el2) {
-      const walker = document.createTreeWalker(el2, NodeFilter.SHOW_TEXT);
+    function lastTextNode(el3) {
+      const walker = document.createTreeWalker(el3, NodeFilter.SHOW_TEXT);
       let last = null, node;
       while (node = walker.nextNode()) last = node;
       return last;
@@ -10825,12 +15650,12 @@ Version: v${version}`;
     let activeRows = KEY_PAGES.letters;
     buildGrid(activeRows);
     function renderOskLabels() {
-      activeRows.forEach((row, r) => row.forEach((label, c) => {
+      activeRows.forEach((row2, r) => row2.forEach((label, c) => {
         oskRowEls[r][c].textContent = displayLabel(label, oskShift);
       }));
     }
     function updateOskHighlight() {
-      activeRows.forEach((row, r) => row.forEach((label, c) => {
+      activeRows.forEach((row2, r) => row2.forEach((label, c) => {
         const active = r === oskRow && c === oskCol;
         oskRowEls[r][c].style.border = active ? "2px solid #0f0" : "2px solid transparent";
         oskRowEls[r][c].style.background = active ? "#0a4d0a" : "#232326";
@@ -10861,21 +15686,21 @@ Version: v${version}`;
       oskTarget = null;
       if (isDebugTextEnabled()) console.log("[Wizascript Controller] OSK closed");
     }
-    function dispatchEnterKey(el2) {
-      el2.focus();
-      const scope = el2.closest("form") || el2.closest(".chat-box") || el2.parentElement;
+    function dispatchEnterKey(el3) {
+      el3.focus();
+      const scope = el3.closest("form") || el3.closest(".chat-box") || el3.parentElement;
       const submitEl = scope && scope.querySelector('input[type="submit"]');
       if (submitEl) {
         submitEl.click();
         return;
       }
       const opts = { bubbles: true, cancelable: true, key: "Enter", code: "Enter", keyCode: 13, which: 13, view: pageWindow2 };
-      el2.dispatchEvent(new KeyboardEvent("keydown", opts));
-      el2.dispatchEvent(new KeyboardEvent("keypress", opts));
-      el2.dispatchEvent(new KeyboardEvent("keyup", opts));
+      el3.dispatchEvent(new KeyboardEvent("keydown", opts));
+      el3.dispatchEvent(new KeyboardEvent("keypress", opts));
+      el3.dispatchEvent(new KeyboardEvent("keyup", opts));
     }
     let scrollMirrorEl = null;
-    function measureTextWidth(el2, text) {
+    function measureTextWidth(el3, text) {
       if (!scrollMirrorEl) {
         scrollMirrorEl = document.createElement("span");
         Object.assign(scrollMirrorEl.style, {
@@ -10887,43 +15712,43 @@ Version: v${version}`;
         });
         document.body.appendChild(scrollMirrorEl);
       }
-      const cs = getComputedStyle(el2);
+      const cs = getComputedStyle(el3);
       scrollMirrorEl.style.font = cs.font;
       scrollMirrorEl.style.letterSpacing = cs.letterSpacing;
       scrollMirrorEl.style.textTransform = cs.textTransform;
       scrollMirrorEl.textContent = text;
       return scrollMirrorEl.getBoundingClientRect().width;
     }
-    function scrollFieldToCaret(el2) {
-      if (!el2 || el2.isContentEditable) return;
-      if (typeof el2.selectionEnd !== "number") return;
-      const pos = el2.selectionEnd;
-      const caretX = measureTextWidth(el2, el2.value.slice(0, pos));
-      const visibleWidth = el2.clientWidth;
+    function scrollFieldToCaret(el3) {
+      if (!el3 || el3.isContentEditable) return;
+      if (typeof el3.selectionEnd !== "number") return;
+      const pos = el3.selectionEnd;
+      const caretX = measureTextWidth(el3, el3.value.slice(0, pos));
+      const visibleWidth = el3.clientWidth;
       const margin = 12;
-      if (caretX - el2.scrollLeft > visibleWidth - margin) {
-        el2.scrollLeft = caretX - visibleWidth + margin;
-      } else if (caretX - el2.scrollLeft < margin) {
-        el2.scrollLeft = Math.max(0, caretX - margin);
+      if (caretX - el3.scrollLeft > visibleWidth - margin) {
+        el3.scrollLeft = caretX - visibleWidth + margin;
+      } else if (caretX - el3.scrollLeft < margin) {
+        el3.scrollLeft = Math.max(0, caretX - margin);
       }
     }
-    function typeChar(el2, ch) {
-      el2.focus();
+    function typeChar(el3, ch) {
+      el3.focus();
       const info = keyInfo(ch);
       const base = { bubbles: true, cancelable: true, key: ch, code: info.code, keyCode: info.keyCode, which: info.keyCode, view: pageWindow2 };
-      el2.dispatchEvent(new KeyboardEvent("keydown", base));
-      el2.dispatchEvent(new KeyboardEvent("keypress", base));
+      el3.dispatchEvent(new KeyboardEvent("keydown", base));
+      el3.dispatchEvent(new KeyboardEvent("keypress", base));
       document.execCommand("insertText", false, ch);
-      el2.dispatchEvent(new KeyboardEvent("keyup", base));
-      scrollFieldToCaret(el2);
+      el3.dispatchEvent(new KeyboardEvent("keyup", base));
+      scrollFieldToCaret(el3);
     }
-    function typeBackspace(el2) {
-      el2.focus();
+    function typeBackspace(el3) {
+      el3.focus();
       const base = { bubbles: true, cancelable: true, key: "Backspace", code: "Backspace", keyCode: 8, which: 8, view: pageWindow2 };
-      el2.dispatchEvent(new KeyboardEvent("keydown", base));
+      el3.dispatchEvent(new KeyboardEvent("keydown", base));
       document.execCommand("delete");
-      el2.dispatchEvent(new KeyboardEvent("keyup", base));
-      scrollFieldToCaret(el2);
+      el3.dispatchEvent(new KeyboardEvent("keyup", base));
+      scrollFieldToCaret(el3);
     }
     function pressKey(label) {
       if (!oskTarget) return;
@@ -10936,11 +15761,11 @@ Version: v${version}`;
     }
     let sliderTarget = null;
     const nativeValueSetter = Object.getOwnPropertyDescriptor(pageWindow2.HTMLInputElement.prototype, "value").set;
-    function openSlider(el2) {
-      sliderTarget = el2;
-      setHighlight(el2);
+    function openSlider(el3) {
+      sliderTarget = el3;
+      setHighlight(el3);
       cursor.style.display = "none";
-      if (isDebugTextEnabled()) console.log("[Wizascript Controller] slider focused", el2, "value=", el2.value, "min=", el2.min, "max=", el2.max, "step=", el2.step);
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] slider focused", el3, "value=", el3.value, "min=", el3.min, "max=", el3.max, "step=", el3.step);
     }
     function closeSlider() {
       if (sliderTarget) clearHighlight(sliderTarget);
@@ -10948,37 +15773,37 @@ Version: v${version}`;
     }
     function adjustSlider(dir) {
       if (!sliderTarget) return;
-      const el2 = sliderTarget;
-      const step = parseFloat(el2.step) || 1;
-      const min = el2.min !== "" ? parseFloat(el2.min) : -Infinity;
-      const max = el2.max !== "" ? parseFloat(el2.max) : Infinity;
-      let val = parseFloat(el2.value) || 0;
+      const el3 = sliderTarget;
+      const step = parseFloat(el3.step) || 1;
+      const min = el3.min !== "" ? parseFloat(el3.min) : -Infinity;
+      const max = el3.max !== "" ? parseFloat(el3.max) : Infinity;
+      let val = parseFloat(el3.value) || 0;
       val = Math.max(min, Math.min(max, val + dir * step));
-      nativeValueSetter.call(el2, String(val));
-      el2.dispatchEvent(new Event("input", { bubbles: true }));
-      el2.dispatchEvent(new Event("change", { bubbles: true }));
+      nativeValueSetter.call(el3, String(val));
+      el3.dispatchEvent(new Event("input", { bubbles: true }));
+      el3.dispatchEvent(new Event("change", { bubbles: true }));
     }
-    function setSliderValueFromPointer(el2, clientX) {
-      const rect = el2.getBoundingClientRect();
+    function setSliderValueFromPointer(el3, clientX) {
+      const rect = el3.getBoundingClientRect();
       if (!rect.width) return;
-      const min = el2.min !== "" ? parseFloat(el2.min) : 0;
-      const max = el2.max !== "" ? parseFloat(el2.max) : 100;
-      const step = parseFloat(el2.step) || 1;
+      const min = el3.min !== "" ? parseFloat(el3.min) : 0;
+      const max = el3.max !== "" ? parseFloat(el3.max) : 100;
+      const step = parseFloat(el3.step) || 1;
       let frac = (clientX - rect.left) / rect.width;
       frac = Math.max(0, Math.min(1, frac));
       let val = min + frac * (max - min);
       val = Math.round(val / step) * step;
       val = Math.max(min, Math.min(max, val));
-      nativeValueSetter.call(el2, String(val));
-      el2.dispatchEvent(new Event("input", { bubbles: true }));
-      el2.dispatchEvent(new Event("change", { bubbles: true }));
+      nativeValueSetter.call(el3, String(val));
+      el3.dispatchEvent(new Event("input", { bubbles: true }));
+      el3.dispatchEvent(new Event("change", { bubbles: true }));
     }
     let selectTarget = null, selectOptions = [], selectIndex = 0;
-    function openSelectPicker(el2) {
-      selectTarget = el2;
-      selectOptions = Array.from(el2.options);
+    function openSelectPicker(el3) {
+      selectTarget = el3;
+      selectOptions = Array.from(el3.options);
       selectIndex = Math.max(0, selectOptions.findIndex((o) => o.selected));
-      const selCs = getComputedStyle(el2);
+      const selCs = getComputedStyle(el3);
       const selBg = selCs.backgroundColor;
       selectEl.style.background = selBg && selBg !== "rgba(0, 0, 0, 0)" ? selBg : "#000";
       selectEl.style.border = `${selCs.borderTopWidth} ${selCs.borderTopStyle} ${selCs.borderTopColor}`;
@@ -10987,10 +15812,10 @@ Version: v${version}`;
       selectEl.style.fontSize = selCs.fontSize;
       renderSelectOptions();
       selectEl.style.display = "block";
-      positionPanelNear(selectEl, el2);
+      positionPanelNear(selectEl, el3);
       updateSelectHighlight();
       cursor.style.display = "block";
-      if (isDebugTextEnabled()) console.log("[Wizascript Controller] select picker opened", el2, selectOptions.map((o) => o.text));
+      if (isDebugTextEnabled()) console.log("[Wizascript Controller] select picker opened", el3, selectOptions.map((o) => o.text));
     }
     function closeSelectPicker() {
       selectEl.style.display = "none";
@@ -11006,16 +15831,16 @@ Version: v${version}`;
       }
       closeSelectPicker();
     }
-    function activateHighlighted(button) {
-      const el2 = currentFocusedEl();
-      if (!el2) return;
-      const rect = el2.getBoundingClientRect();
+    function activateHighlighted(button2) {
+      const el3 = currentFocusedEl();
+      if (!el3) return;
+      const rect = el3.getBoundingClientRect();
       const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
-      if (isPatchMakerResetButton(el2)) {
-        activatePatchMakerResetButton(el2, cx, cy);
+      if (isPatchMakerResetButton(el3)) {
+        activatePatchMakerResetButton(el3, cx, cy);
         return;
       }
-      dispatchClick(el2, cx, cy, button === 2 ? 2 : 0);
+      dispatchClick(el3, cx, cy, button2 === 2 ? 2 : 0);
       const openPresetMenu = getPresetMenuState();
       if (openPresetMenu) {
         fieldSubmenu = {
@@ -11029,31 +15854,31 @@ Version: v${version}`;
         };
         return;
       }
-      if (isNativeSelect(el2)) {
-        openSelectPicker(el2);
+      if (isNativeSelect(el3)) {
+        openSelectPicker(el3);
         return;
       }
-      if (isSlider(el2)) {
-        openSlider(el2);
+      if (isSlider(el3)) {
+        openSlider(el3);
         return;
       }
-      if (el2.matches && el2.matches(".uc-section-label, .uc-card-item")) {
-        el2.focus();
+      if (el3.matches && el3.matches(".uc-section-label, .uc-card-item")) {
+        el3.focus();
         return;
       }
-      if (el2.readOnly && (el2.tagName === "INPUT" || el2.tagName === "TEXTAREA")) {
-        el2.focus();
+      if (el3.readOnly && (el3.tagName === "INPUT" || el3.tagName === "TEXTAREA")) {
+        el3.focus();
         return;
       }
-      if (isTextInput(el2)) {
-        openOsk(el2);
-        if (el2.isContentEditable) placeCaretAtPoint(el2, cx, cy);
+      if (isTextInput(el3)) {
+        openOsk(el3);
+        if (el3.isContentEditable) placeCaretAtPoint(el3, cx, cy);
         return;
       }
-      if (!activeSubmenu && el2.classList.contains("dropdown-toggle")) {
-        const items = findDropdownMenuNear(el2);
+      if (!activeSubmenu && el3.classList.contains("dropdown-toggle")) {
+        const items = findDropdownMenuNear(el3);
         if (items.length) {
-          activeSubmenu = { toggle: el2, items, index: 0 };
+          activeSubmenu = { toggle: el3, items, index: 0 };
           refreshHighlight();
         }
       }
@@ -11084,6 +15909,11 @@ Version: v${version}`;
     document.addEventListener("keyup", (e) => {
       heldKeyCodes.delete(e.code);
     });
+    function sameBoundInput(a, b) {
+      if (a === null || a === void 0 || b === null || b === void 0) return false;
+      if (typeof a === "number" || typeof b === "number") return a === b;
+      return a.type === "key" && b.type === "key" && a.code === b.code;
+    }
     function isBoundInputDown(value, btnFn) {
       if (value === null || value === void 0) return false;
       if (typeof value === "number") return !!btnFn(value);
@@ -11096,8 +15926,8 @@ Version: v${version}`;
     function currentCursorSpeedMult() {
       return Math.max(0.3, Math.min(3, 1 - cursorSensitivity * 2));
     }
-    function findRealScrollable(el2) {
-      let node = el2;
+    function findRealScrollable(el3) {
+      let node = el3;
       while (node && node !== document.documentElement) {
         const cs = getComputedStyle(node);
         if (/(auto|scroll)/.test(cs.overflowY) && node.scrollHeight > node.clientHeight) return node;
@@ -11125,14 +15955,14 @@ Version: v${version}`;
       }
       return rowEls.length - 1;
     }
-    function fire(el2, type, ctor, clientX, clientY, button, buttons) {
+    function fire(el3, type, ctor, clientX, clientY, button2, buttons) {
       const opts = {
         bubbles: true,
         cancelable: true,
         view: pageWindow2,
         clientX,
         clientY,
-        button: button || 0,
+        button: button2 || 0,
         buttons: buttons || 0
       };
       if (ctor === PointerEvent) {
@@ -11140,47 +15970,60 @@ Version: v${version}`;
         opts.isPrimary = true;
         opts.pointerType = "mouse";
       }
-      el2.dispatchEvent(new ctor(type, opts));
+      el3.dispatchEvent(new ctor(type, opts));
     }
-    function dispatchClick(el2, cx, cy, button) {
-      if (button === 2) {
-        fire(el2, "pointerdown", PointerEvent, cx, cy, 2, 2);
-        fire(el2, "mousedown", MouseEvent, cx, cy, 2, 2);
-        fire(el2, "pointerup", PointerEvent, cx, cy, 2, 0);
-        fire(el2, "mouseup", MouseEvent, cx, cy, 2, 0);
-        fire(el2, "contextmenu", MouseEvent, cx, cy, 2, 0);
+    function middleClickAtCursor() {
+      if (document.getElementById("handCards")) return;
+      const shown = cursor.style.display;
+      cursor.style.display = "none";
+      const el3 = document.elementFromPoint(x, y);
+      cursor.style.display = shown;
+      if (!el3) return;
+      fire(el3, "pointerdown", PointerEvent, x, y, 1, 4);
+      fire(el3, "mousedown", MouseEvent, x, y, 1, 4);
+      fire(el3, "pointerup", PointerEvent, x, y, 1, 0);
+      fire(el3, "mouseup", MouseEvent, x, y, 1, 0);
+      fire(el3, "auxclick", MouseEvent, x, y, 1, 0);
+    }
+    function dispatchClick(el3, cx, cy, button2) {
+      if (button2 === 2) {
+        fire(el3, "pointerdown", PointerEvent, cx, cy, 2, 2);
+        fire(el3, "mousedown", MouseEvent, cx, cy, 2, 2);
+        fire(el3, "pointerup", PointerEvent, cx, cy, 2, 0);
+        fire(el3, "mouseup", MouseEvent, cx, cy, 2, 0);
+        fire(el3, "contextmenu", MouseEvent, cx, cy, 2, 0);
         return;
       }
-      fire(el2, "pointerdown", PointerEvent, cx, cy, 0, 1);
-      fire(el2, "mousedown", MouseEvent, cx, cy, 0, 1);
-      fire(el2, "pointerup", PointerEvent, cx, cy, 0, 0);
-      fire(el2, "mouseup", MouseEvent, cx, cy, 0, 0);
-      fire(el2, "click", MouseEvent, cx, cy, 0, 0);
+      fire(el3, "pointerdown", PointerEvent, cx, cy, 0, 1);
+      fire(el3, "mousedown", MouseEvent, cx, cy, 0, 1);
+      fire(el3, "pointerup", PointerEvent, cx, cy, 0, 0);
+      fire(el3, "mouseup", MouseEvent, cx, cy, 0, 0);
+      fire(el3, "click", MouseEvent, cx, cy, 0, 0);
     }
-    function isPatchMakerResetButton(el2) {
-      return !!el2 && el2.tagName === "BUTTON" && el2.textContent && el2.textContent.trim() === "Reset Data";
+    function isPatchMakerResetButton(el3) {
+      return !!el3 && el3.tagName === "BUTTON" && el3.textContent && el3.textContent.trim() === "Reset Data";
     }
     let lastResetBtnPressTime = 0;
-    function activatePatchMakerResetButton(el2, cx, cy) {
+    function activatePatchMakerResetButton(el3, cx, cy) {
       const now = performance.now();
       const isConfirmPress = now - lastResetBtnPressTime < DOUBLE_TAP_WINDOW_MS2;
       const detail = isConfirmPress ? 2 : 1;
-      fire(el2, "pointerdown", PointerEvent, cx, cy, 0, 1);
-      fire(el2, "mousedown", MouseEvent, cx, cy, 0, 1);
-      fire(el2, "pointerup", PointerEvent, cx, cy, 0, 0);
-      fire(el2, "mouseup", MouseEvent, cx, cy, 0, 0);
-      el2.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: pageWindow2, clientX: cx, clientY: cy, button: 0, buttons: 0, detail }));
+      fire(el3, "pointerdown", PointerEvent, cx, cy, 0, 1);
+      fire(el3, "mousedown", MouseEvent, cx, cy, 0, 1);
+      fire(el3, "pointerup", PointerEvent, cx, cy, 0, 0);
+      fire(el3, "mouseup", MouseEvent, cx, cy, 0, 0);
+      el3.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: pageWindow2, clientX: cx, clientY: cy, button: 0, buttons: 0, detail }));
       lastResetBtnPressTime = isConfirmPress ? 0 : now;
       if (isDebugTextEnabled()) console.log("[Wizascript Controller] Reset Data pressed, detail =", detail, isConfirmPress ? "(confirmed - resetting)" : "(press again to confirm)");
     }
-    function triggerElementClick(el2) {
-      if (!el2) return;
-      const r = el2.getBoundingClientRect();
-      dispatchClick(el2, r.left + r.width / 2, r.top + r.height / 2, 0);
+    function triggerElementClick(el3) {
+      if (!el3) return;
+      const r = el3.getBoundingClientRect();
+      dispatchClick(el3, r.left + r.width / 2, r.top + r.height / 2, 0);
     }
     function triggerConcede() {
-      const menu = document.querySelector(".menu-backdrop");
-      const wasMenuOpen = !!(menu && getComputedStyle(menu).display !== "none");
+      const menu3 = document.querySelector(".menu-backdrop");
+      const wasMenuOpen = !!(menu3 && getComputedStyle(menu3).display !== "none");
       document.dispatchEvent(new KeyboardEvent("keyup", { key: "Escape", code: "Escape", bubbles: true }));
       let attempts2 = 0;
       const MAX_ATTEMPTS = 30;
@@ -11232,13 +16075,13 @@ Version: v${version}`;
       })();
     }
     const drag = { left: null, right: null };
-    function beginPress(side, button) {
+    function beginPress(side, button2) {
       cursor.style.display = "none";
       const hitEl = document.elementFromPoint(x, y);
       cursor.style.display = "block";
       if (!hitEl) return;
       drag[side] = { downEl: hitEl };
-      if (button === 2) {
+      if (button2 === 2) {
         fire(hitEl, "pointerdown", PointerEvent, x, y, 2, 2);
         fire(hitEl, "mousedown", MouseEvent, x, y, 2, 2);
       } else {
@@ -11246,13 +16089,13 @@ Version: v${version}`;
         fire(hitEl, "mousedown", MouseEvent, x, y, 0, 1);
       }
     }
-    function continuePress(side, button) {
+    function continuePress(side, button2) {
       if (!drag[side]) return;
       cursor.style.display = "none";
       const hitEl = document.elementFromPoint(x, y);
       cursor.style.display = "block";
       if (!hitEl) return;
-      if (button === 2) {
+      if (button2 === 2) {
         fire(hitEl, "pointermove", PointerEvent, x, y, 2, 2);
         fire(hitEl, "mousemove", MouseEvent, x, y, 2, 2);
       } else {
@@ -11260,22 +16103,22 @@ Version: v${version}`;
         fire(hitEl, "mousemove", MouseEvent, x, y, 0, 1);
       }
     }
-    function endPress(side, button) {
-      const state = drag[side];
+    function endPress(side, button2) {
+      const state2 = drag[side];
       drag[side] = null;
-      if (!state) return;
+      if (!state2) return;
       cursor.style.display = "none";
       const hitEl = document.elementFromPoint(x, y);
       cursor.style.display = "block";
       if (!hitEl) return;
-      if (button === 2) {
+      if (button2 === 2) {
         fire(hitEl, "pointerup", PointerEvent, x, y, 2, 0);
         fire(hitEl, "mouseup", MouseEvent, x, y, 2, 0);
-        if (hitEl === state.downEl) fire(hitEl, "contextmenu", MouseEvent, x, y, 2, 0);
+        if (hitEl === state2.downEl) fire(hitEl, "contextmenu", MouseEvent, x, y, 2, 0);
       } else {
         fire(hitEl, "pointerup", PointerEvent, x, y, 0, 0);
         fire(hitEl, "mouseup", MouseEvent, x, y, 0, 0);
-        if (hitEl === state.downEl) fire(hitEl, "click", MouseEvent, x, y, 0, 0);
+        if (hitEl === state2.downEl) fire(hitEl, "click", MouseEvent, x, y, 0, 0);
       }
     }
     function collectHoverRules() {
@@ -11302,11 +16145,11 @@ Version: v${version}`;
     }
     const hoverRules = collectHoverRules();
     const hoverStyleMap = /* @__PURE__ */ new Map();
-    function resolveHoverStyle(el2) {
+    function resolveHoverStyle(el3) {
       const finalProps = /* @__PURE__ */ new Map();
       for (const { selector, style } of hoverRules) {
         try {
-          if (!el2.matches(selector)) continue;
+          if (!el3.matches(selector)) continue;
         } catch (e) {
           continue;
         }
@@ -11316,8 +16159,8 @@ Version: v${version}`;
         }
       }
       if (!finalProps.size) return;
-      const originalProps = Array.from(finalProps.keys()).map((prop) => [prop, el2.style.getPropertyValue(prop), el2.style.getPropertyPriority(prop)]);
-      hoverStyleMap.set(el2, {
+      const originalProps = Array.from(finalProps.keys()).map((prop) => [prop, el3.style.getPropertyValue(prop), el3.style.getPropertyPriority(prop)]);
+      hoverStyleMap.set(el3, {
         finalProps: Array.from(finalProps.entries()).map(([p, [v, pr]]) => [p, v, pr]),
         originalProps
       });
@@ -11329,24 +16172,24 @@ Version: v${version}`;
       });
     });
     if (isDebugTextEnabled()) console.log(`[Wizascript Controller] resolved hover styles for ${hoverStyleMap.size} curated element(s)`);
-    function findHoverTarget(el2) {
-      if (!el2) return null;
-      if (hoverStyleMap.has(el2)) return el2;
-      const link = el2.closest && el2.closest("a");
+    function findHoverTarget(el3) {
+      if (!el3) return null;
+      if (hoverStyleMap.has(el3)) return el3;
+      const link = el3.closest && el3.closest("a");
       if (link && hoverStyleMap.has(link)) return link;
       return null;
     }
-    function applyCuratedHover(el2) {
-      const entry = hoverStyleMap.get(el2);
+    function applyCuratedHover(el3) {
+      const entry = hoverStyleMap.get(el3);
       if (!entry) return;
-      for (const [prop, val, pr] of entry.finalProps) el2.style.setProperty(prop, val, pr);
+      for (const [prop, val, pr] of entry.finalProps) el3.style.setProperty(prop, val, pr);
     }
-    function revertCuratedHover(el2) {
-      const entry = hoverStyleMap.get(el2);
+    function revertCuratedHover(el3) {
+      const entry = hoverStyleMap.get(el3);
       if (!entry) return;
       for (const [prop, val, pr] of entry.originalProps) {
-        if (val) el2.style.setProperty(prop, val, pr);
-        else el2.style.removeProperty(prop);
+        if (val) el3.style.setProperty(prop, val, pr);
+        else el3.style.removeProperty(prop);
       }
     }
     let hoverActiveEl = null;
@@ -11357,28 +16200,28 @@ Version: v${version}`;
       hoverActiveEl = target;
     }
     let lastHitEl = null;
-    function updateHover(el2, cx, cy) {
-      if (el2 !== lastHitEl) {
+    function updateHover(el3, cx, cy) {
+      if (el3 !== lastHitEl) {
         if (lastHitEl) {
           fire(lastHitEl, "pointerout", PointerEvent, cx, cy, 0, 0);
           fire(lastHitEl, "mouseout", MouseEvent, cx, cy, 0, 0);
           fire(lastHitEl, "pointerleave", PointerEvent, cx, cy, 0, 0);
           fire(lastHitEl, "mouseleave", MouseEvent, cx, cy, 0, 0);
         }
-        if (el2) {
-          fire(el2, "pointerover", PointerEvent, cx, cy, 0, 0);
-          fire(el2, "mouseover", MouseEvent, cx, cy, 0, 0);
-          fire(el2, "pointerenter", PointerEvent, cx, cy, 0, 0);
-          fire(el2, "mouseenter", MouseEvent, cx, cy, 0, 0);
+        if (el3) {
+          fire(el3, "pointerover", PointerEvent, cx, cy, 0, 0);
+          fire(el3, "mouseover", MouseEvent, cx, cy, 0, 0);
+          fire(el3, "pointerenter", PointerEvent, cx, cy, 0, 0);
+          fire(el3, "mouseenter", MouseEvent, cx, cy, 0, 0);
         }
-        lastHitEl = el2;
+        lastHitEl = el3;
       }
-      if (el2) {
-        fire(el2, "pointermove", PointerEvent, cx, cy, 0, 0);
-        fire(el2, "mousemove", MouseEvent, cx, cy, 0, 0);
+      if (el3) {
+        fire(el3, "pointermove", PointerEvent, cx, cy, 0, 0);
+        fire(el3, "mousemove", MouseEvent, cx, cy, 0, 0);
       }
       const focused = currentFocusedEl();
-      setHoverTarget(findHoverTarget(focused || el2));
+      setHoverTarget(findHoverTarget(focused || el3));
     }
     document.addEventListener("mousemove", (e) => {
       if (!e.isTrusted) return;
@@ -11397,6 +16240,10 @@ Version: v${version}`;
     let btnHeld = {};
     let shortcutBtnHeld = {};
     let shortcutHeldByAction = {};
+    let tlHeld = {};
+    let tlLastRun = 0;
+    let tlDpadSince = { up: 0, down: 0, left: 0, right: 0 };
+    let tlDpadLastRepeat = 0;
     function shortcutJustPressed(btnFn, actionKey) {
       const bound = getBoundShortcutButton(actionKey);
       const isDown = isBoundInputDown(bound, btnFn);
@@ -11503,7 +16350,20 @@ Version: v${version}`;
             }
           }
           if (btn(1) && !shortcutBtnHeld[1] && oskOpen && oskPaused) closeOsk();
-          if (shortcutJustPressed(btn, "openSettings")) {
+          const sameBound = sameBoundInput;
+          const primaryForShortcuts = getControllerPrimaryButton();
+          const primaryHeldForShortcuts = isBoundInputDown(primaryForShortcuts, btn) && !settingsTabsActive;
+          const padForShortcuts = getTierListPad();
+          const padButtons = padForShortcuts ? TIER_LIST_PAD_ACTIONS.map((a) => getBoundTierListButton(a.key)) : [];
+          const shortcutFires = (key2) => {
+            const pressed = shortcutJustPressed(btn, key2);
+            if (!pressed) return false;
+            const bound = getBoundShortcutButton(key2);
+            if (primaryHeldForShortcuts && !sameBound(bound, primaryForShortcuts)) return false;
+            if (padButtons.some((b) => sameBound(b, bound))) return false;
+            return true;
+          };
+          if (shortcutFires("openSettings")) {
             const openModal = queryModalRoot();
             if (openModal && openModal.kind === "tabbed") {
               if (debugTextOn) console.log("[Wizascript Controller] openSettings: Settings already open - closing instead of stacking another copy");
@@ -11514,13 +16374,13 @@ Version: v${version}`;
               triggerElementClick(document.getElementById("btn-config"));
             }
           }
-          if (shortcutJustPressed(btn, "yourDustpile") && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(true)"]'));
-          if (shortcutJustPressed(btn, "opponentDustpile") && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(false)"]'));
-          if (shortcutJustPressed(btn, "endTurn")) triggerElementClick(document.getElementById("endTurnBtn"));
-          if (shortcutJustPressed(btn, "openWizascriptSettings") && !oskOpen) openWizascriptSettings();
-          if (shortcutJustPressed(btn, "concede")) triggerConcede();
-          if (shortcutJustPressed(btn, "goHome")) pageWindow2.location.href = "https://undercards.net/";
-          if (shortcutJustPressed(btn, "openDeckTrackerPresets") && !oskOpen) triggerElementClick(document.getElementById("dt-add-tracker-button"));
+          if (shortcutFires("yourDustpile") && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(true)"]'));
+          if (shortcutFires("opponentDustpile") && !oskOpen) triggerElementClick(document.querySelector('.btn-dustpile[onclick*="openDustpile(false)"]'));
+          if (shortcutFires("endTurn")) triggerElementClick(document.getElementById("endTurnBtn"));
+          if (shortcutFires("openWizascriptSettings") && !oskOpen) openWizascriptSettings();
+          if (shortcutFires("concede") && document.getElementById("handCards")) triggerConcede();
+          if (shortcutFires("goHome")) pageWindow2.location.href = "https://undercards.net/";
+          if (shortcutFires("openDeckTrackerPresets") && !oskOpen) triggerElementClick(document.getElementById("dt-add-tracker-button"));
           shortcutBtnHeld = { 1: btn(1), 5: btn(5) };
         }
         if ((!oskOpen || oskPaused) && !isControllerCaptureActive()) {
@@ -11533,7 +16393,9 @@ Version: v${version}`;
           const guideDownForRelay = isBoundInputDown(guideBtnForRelay, btn);
           const controlShouldBeDown = l1Down || guideDownForRelay;
           if (controlShouldBeDown && !keybindRelayHeld.controlDown) {
-            document.dispatchEvent(new KeyboardEvent("keydown", primaryBase));
+            const down2 = new KeyboardEvent("keydown", primaryBase);
+            if (!l1Down) Object.defineProperty(down2, "wizascriptNoDoubleTap", { value: true });
+            document.dispatchEvent(down2);
             keybindRelayHeld.controlDown = true;
           } else if (!controlShouldBeDown && keybindRelayHeld.controlDown) {
             document.dispatchEvent(new KeyboardEvent("keyup", primaryBase));
@@ -11549,16 +16411,24 @@ Version: v${version}`;
             const inPatchMakerFieldForContext = !!(pmFocusForContext && pmFocusForContext.matches && pmFocusForContext.matches(".uc-li-text, .uc-section-label, .uc-card-item"));
             const nextActionHeld = {};
             const codesFiredThisFrame = /* @__PURE__ */ new Set();
+            const tierListOpenForRelay = !!getTierListPad();
+            const tierListComboInputs = tierListOpenForRelay ? CONTROLLER_ACTIONS.filter((a) => a.context === "tierList").map((a) => getBoundButton(a.key)) : [];
+            const comboRunners = { tierListFillScreen: toggleTierListFillScreen, middleClick: middleClickAtCursor };
             CONTROLLER_ACTIONS.forEach((action) => {
               let applies;
-              if (action.context === "always") applies = true;
+              if (action.context === "tierList") applies = tierListOpenForRelay;
+              else if (action.context === "always") applies = true;
               else if (action.context === "channelSwitch") applies = !inPatchMakerFieldForContext;
               else if (action.context === "patchMaker") applies = inPatchMakerFieldForContext;
               else applies = !inPatchMakerFieldForContext;
+              if (applies && action.context !== "tierList" && tierListComboInputs.some((b) => sameBoundInput(b, getBoundButton(action.key)))) applies = false;
               const boundInput = applies ? getBoundButton(action.key) : null;
               const isDown = isBoundInputDown(boundInput, btn);
               nextActionHeld[action.key] = isDown;
-              if (isDown && !keybindRelayHeld.actions[action.key]) {
+              if (isDown && !keybindRelayHeld.actions[action.key] && action.run) {
+                const runner = comboRunners[action.run];
+                if (runner) runner();
+              } else if (isDown && !keybindRelayHeld.actions[action.key]) {
                 const liveCode = getBoundKeybindCode(action.key, action.dispatch.code);
                 if (!codesFiredThisFrame.has(liveCode)) {
                   codesFiredThisFrame.add(liveCode);
@@ -11587,18 +16457,18 @@ R1: resume typing   ${btnLabel(1)}: close` : ""}`;
               hud.textContent = `UC TV Guide loading\u2026
 release ${bindingToDisplay(guideBtn)} to cancel`;
             } else {
-              const playerSpans = Array.from(guideEl.querySelectorAll("span")).filter((el2) => el2.style.cursor === "pointer");
+              const playerSpans = Array.from(guideEl.querySelectorAll("span")).filter((el3) => el3.style.cursor === "pointer");
               const matches = [];
               const rows = [];
               const rowIndex = /* @__PURE__ */ new Map();
-              playerSpans.forEach((el2) => {
-                const row = el2.parentElement;
-                if (!rowIndex.has(row)) {
-                  rowIndex.set(row, matches.length);
+              playerSpans.forEach((el3) => {
+                const row2 = el3.parentElement;
+                if (!rowIndex.has(row2)) {
+                  rowIndex.set(row2, matches.length);
                   matches.push([]);
-                  rows.push(row);
+                  rows.push(row2);
                 }
-                matches[rowIndex.get(row)].push(el2);
+                matches[rowIndex.get(row2)].push(el3);
               });
               if (!matches.length) {
                 guideMatchIndex = -1;
@@ -11709,7 +16579,7 @@ match ${guideMatchIndex + 1}/${matches.length}${playersInMatch.length > 1 ? `   
                 }
               }
           }
-          const row = activeRows[oskRow];
+          const row2 = activeRows[oskRow];
           if (up && !dpadHeld.up) {
             oskRow = Math.max(0, oskRow - 1);
             oskCol = Math.min(oskCol, activeRows[oskRow].length - 1);
@@ -11721,11 +16591,11 @@ match ${guideMatchIndex + 1}/${matches.length}${playersInMatch.length > 1 ? `   
             updateOskHighlight();
           }
           if (left && !dpadHeld.left) {
-            oskCol = (oskCol - 1 + row.length) % row.length;
+            oskCol = (oskCol - 1 + row2.length) % row2.length;
             updateOskHighlight();
           }
           if (right && !dpadHeld.right) {
-            oskCol = (oskCol + 1) % row.length;
+            oskCol = (oskCol + 1) % row2.length;
             updateOskHighlight();
           }
           dpadHeld = { up, down, left, right };
@@ -11761,7 +16631,7 @@ match ${guideMatchIndex + 1}/${matches.length}${playersInMatch.length > 1 ? `   
           if (btn(1) && !btnHeld[1]) closeOsk();
           btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3), 4: btn(4), 6: btn(6), 7: btn(7), 10: btn(10), 11: btn(11) };
           hud.textContent = `on-screen keyboard [${oskPage}]
-row ${oskRow + 1}/${activeRows.length} col ${oskCol + 1}/${row.length}${oskShift ? " [SHIFT]" : ""}`;
+row ${oskRow + 1}/${activeRows.length} col ${oskCol + 1}/${row2.length}${oskShift ? " [SHIFT]" : ""}`;
           return;
         }
         if (selectTarget) {
@@ -11865,7 +16735,7 @@ left/right = fine-tune   ${btnLabel(0)} hold = drag   ${btnLabel(1)} = done`;
           cursor.style.left = x + "px";
           cursor.style.top = y + "px";
           cursor.style.display = cursorRestingDisplay();
-          const mulliganCards = Array.from(mulliganHost.querySelectorAll(":scope > .card")).filter((el2) => el2.offsetParent !== null);
+          const mulliganCards = Array.from(mulliganHost.querySelectorAll(":scope > .card")).filter((el3) => el3.offsetParent !== null);
           const confirmBtn = document.querySelector(".bootstrap-dialog-footer-buttons .btn-primary") || document.querySelector(".modal-footer .btn-primary");
           const mulliganItems = confirmBtn ? [...mulliganCards, confirmBtn] : mulliganCards;
           if (!mulliganItems.length) {
@@ -11911,10 +16781,10 @@ left/right = fine-tune   ${btnLabel(0)} hold = drag   ${btnLabel(1)} = done`;
             updateHover(mulliganGrid[mulliganRow][mulliganCol], x, y);
           }
           if (btn(0) && !btnHeld[0]) {
-            const el2 = mulliganGrid[mulliganRow][mulliganCol];
-            const r = el2.getBoundingClientRect();
-            dispatchClick(el2, r.left + r.width / 2, r.top + r.height / 2, 0);
-            if (isDebugTextEnabled()) console.log("[Wizascript Controller] mulligan item clicked", el2);
+            const el3 = mulliganGrid[mulliganRow][mulliganCol];
+            const r = el3.getBoundingClientRect();
+            dispatchClick(el3, r.left + r.width / 2, r.top + r.height / 2, 0);
+            if (isDebugTextEnabled()) console.log("[Wizascript Controller] mulligan item clicked", el3);
           }
           btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
           const focusedIsConfirm = mulliganGrid[mulliganRow][mulliganCol] === confirmBtn;
@@ -12002,8 +16872,8 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
               findPrev:
                 for (let r = 0; r < fieldGrid.length; r++) {
                   for (let c = 0; c < fieldGrid[r].length; c++) {
-                    const el2 = fieldGrid[r][c];
-                    if (el2 === prevEl || prevArrowDir && el2.classList.contains("wizascript-tab-arrow") && el2.dataset.dir === prevArrowDir) {
+                    const el3 = fieldGrid[r][c];
+                    if (el3 === prevEl || prevArrowDir && el3.classList.contains("wizascript-tab-arrow") && el3.dataset.dir === prevArrowDir) {
                       fieldRow = r;
                       fieldCol = c;
                       break findPrev;
@@ -12024,8 +16894,8 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
               }
               if (isDebugTextEnabled()) {
                 const path = [];
-                for (let el2 = activeContent; el2 && el2 !== tabbedRoot; el2 = el2.parentElement) {
-                  if (el2.classList.contains("tabContent") && el2.previousElementSibling) path.unshift(el2.previousElementSibling.textContent.trim());
+                for (let el3 = activeContent; el3 && el3 !== tabbedRoot; el3 = el3.parentElement) {
+                  if (el3.classList.contains("tabContent") && el3.previousElementSibling) path.unshift(el3.previousElementSibling.textContent.trim());
                 }
                 console.log(
                   "[Wizascript Controller] settings: categories =",
@@ -12034,7 +16904,7 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
                   path.join(" > ") || "(none found)",
                   "| field rows =",
                   fieldGrid.length,
-                  fieldGrid.map((row) => row.length),
+                  fieldGrid.map((row2) => row2.length),
                   "| selected =",
                   `${fieldRow},${fieldCol}`
                 );
@@ -12179,7 +17049,7 @@ ${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   \u2190/${btnLabel(1)} ba
             return;
           }
           if (!modalGrid || !elArraysEqual(gridFlat(modalGrid), modalItems)) {
-            modalGrid = kind === "menu" ? modalItems.map((el2) => [el2]) : buildRowGrid(modalItems);
+            modalGrid = kind === "menu" ? modalItems.map((el3) => [el3]) : buildRowGrid(modalItems);
             modalRow = 0;
             modalCol = 0;
           }
@@ -12213,6 +17083,14 @@ ${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   \u2190/${btnLabel(1)} ba
           }
           dpadHeld = { up, down, left, right };
           refreshHighlight();
+          if (isReportMenuOpen()) {
+            if (btn(0) && !btnHeld[0]) pressReportMenu();
+            if (btn(1) && !btnHeld[1]) closeReportMenu();
+            btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+            hud.textContent = `report menu
+${btnLabel(0)} report / undo   ${btnLabel(1)} close`;
+            return;
+          }
           if (btn(0) && !btnHeld[0]) activateHighlighted(0);
           if (btn(3) && !btnHeld[3]) activateHighlighted(2);
           if (btn(1) && !btnHeld[1] && !isControllerCaptureActive()) {
@@ -12229,6 +17107,75 @@ ${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   \u2190/${btnLabel(1)} ba
 row ${modalRow + 1}/${modalGrid.length}, col ${modalCol + 1}/${modalGrid[modalRow].length}
 ${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   ${btnLabel(1)} close`;
           return;
+        }
+        const tlPad = getTierListPad();
+        if (tlPad) {
+          const tlNow = performance.now();
+          const tlResync = tlNow - tlLastRun > 120;
+          tlLastRun = tlNow;
+          const tlDown = {};
+          TIER_LIST_PAD_ACTIONS.forEach((a) => {
+            tlDown[a.key] = isBoundInputDown(getBoundTierListButton(a.key), btn);
+          });
+          if (tlResync) {
+            tlHeld = { ...tlDown };
+            dpadHeld = { up, down, left, right };
+            tlPad.setShown(true);
+          }
+          if (lx || ly || ry) tlPad.setShown(false);
+          const dpadEdge = up && !dpadHeld.up || down && !dpadHeld.down || left && !dpadHeld.left || right && !dpadHeld.right;
+          let tlClaimed = false;
+          if (!tlPad.isShown() && dpadEdge && !lx && !ly) {
+            tlPad.setShown(true);
+            tlClaimed = true;
+          } else if (tlPad.isShown()) {
+            tlClaimed = true;
+            const REPEAT_DELAY = 380, REPEAT_EVERY = 110;
+            [["up", up], ["down", down], ["left", left], ["right", right]].forEach(([dir, isDown]) => {
+              if (!isDown) {
+                tlDpadSince[dir] = 0;
+                return;
+              }
+              if (!dpadHeld[dir]) {
+                tlDpadSince[dir] = tlNow;
+                tlPad.nav(dir);
+                return;
+              }
+              if (!tlDpadSince[dir]) {
+                tlDpadSince[dir] = tlNow;
+                return;
+              }
+              if (tlNow - tlDpadSince[dir] > REPEAT_DELAY && tlNow - tlDpadLastRepeat > REPEAT_EVERY) {
+                tlDpadLastRepeat = tlNow;
+                tlPad.nav(dir);
+              }
+            });
+            const edge = (key2) => tlDown[key2] && !tlHeld[key2];
+            if (edge("tlSelect")) {
+              const result = tlPad.press();
+              if (result && result.osk) {
+                dispatchClick(result.osk, x, y, 0);
+                openOsk(result.osk);
+              }
+            }
+            if (edge("tlBack")) tlPad.back();
+            if (edge("tlQuickSend")) tlPad.quickSend();
+            if (edge("tlJump")) tlPad.jump();
+            const stillOpen = getTierListPad();
+            if (stillOpen) stillOpen.draw(getHighlightColor());
+          }
+          tlHeld = tlDown;
+          if (tlClaimed) {
+            dpadHeld = { up, down, left, right };
+            btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
+            const label = (key2) => bindingToDisplay(getBoundTierListButton(key2));
+            const state3 = tlPad.state();
+            hud.textContent = state3 === "send" ? `tier list: send to tier
+d-pad pick   ${label("tlSelect")} send   ${label("tlBack")} cancel` : state3 === "holding" ? `tier list: holding an item
+d-pad move   ${label("tlSelect")} place   ${label("tlJump")} jump   ${label("tlBack")} cancel` : `tier list
+d-pad move   ${label("tlSelect")} pick up / press   ${label("tlQuickSend")} send   ${label("tlJump")} jump   ${label("tlBack")} back`;
+            return;
+          }
         }
         const handHost = document.getElementById("handCards");
         if (!handHost && matchPhase !== "hand") {
@@ -12286,8 +17233,8 @@ ${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   ${btnLabel(1)} close`;
               dpadHeld = { up, down, left, right };
               refreshHighlight();
               const targetSlot = placingGrid[placingRow][placingCol];
-              const tr = targetSlot.getBoundingClientRect();
-              const tcx = tr.left + tr.width / 2, tcy = tr.top + tr.height / 2;
+              const tr2 = targetSlot.getBoundingClientRect();
+              const tcx = tr2.left + tr2.width / 2, tcy = tr2.top + tr2.height / 2;
               fire(targetSlot, "pointermove", PointerEvent, tcx, tcy, 0, 1);
               fire(targetSlot, "mousemove", MouseEvent, tcx, tcy, 0, 1);
               if (btn(0) && !btnHeld[0]) {
@@ -12354,10 +17301,10 @@ ${btnLabel(0)} drop here   ${btnLabel(1)} cancel`;
             }
             if (btn(0) && !btnHeld[0]) {
               if (navInputMethod === "dpad") {
-                const el2 = resolveGrid[resolveRow][resolveCol];
-                const r = el2.getBoundingClientRect();
-                dispatchClick(el2, r.left + r.width / 2, r.top + r.height / 2, 0);
-                if (isDebugTextEnabled()) console.log("[Wizascript Controller] resolve target confirmed (d-pad)", el2);
+                const el3 = resolveGrid[resolveRow][resolveCol];
+                const r = el3.getBoundingClientRect();
+                dispatchClick(el3, r.left + r.width / 2, r.top + r.height / 2, 0);
+                if (isDebugTextEnabled()) console.log("[Wizascript Controller] resolve target confirmed (d-pad)", el3);
               } else {
                 cursor.style.display = "none";
                 const hitEl2 = document.elementFromPoint(x, y);
@@ -12465,6 +17412,7 @@ ${btnLabel(0)} select attacker   \u2193/${btnLabel(1)} hand`;
             } else if (!btn(3) && drag.right) {
               endPress("right", 2);
             }
+            if (btn(1) && !btnHeld[1]) closeWishlistMenu();
             btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
             cursor.style.display = "none";
             const hoverEl = document.elementFromPoint(x, y);
@@ -12494,7 +17442,7 @@ ${btnLabel(0)} select attacker   \u2193/${btnLabel(1)} hand`;
             refreshHighlight();
           }
         }
-        const state = chromeStates[chromeIndex];
+        const state2 = chromeStates[chromeIndex];
         if (activeSubmenu) {
           if (up && !dpadHeld.up) {
             activeSubmenu.index = (activeSubmenu.index - 1 + activeSubmenu.items.length) % activeSubmenu.items.length;
@@ -12505,7 +17453,7 @@ ${btnLabel(0)} select attacker   \u2193/${btnLabel(1)} hand`;
             refreshHighlight();
           }
           dpadText = `submenu (${activeSubmenu.index + 1}/${activeSubmenu.items.length})`;
-        } else if (state && state.type === "group") {
+        } else if (state2 && state2.type === "group") {
           if (up && !dpadHeld.up) {
             chromeIndex = Math.max(0, chromeIndex - 1);
             refreshHighlight();
@@ -12514,7 +17462,7 @@ ${btnLabel(0)} select attacker   \u2193/${btnLabel(1)} hand`;
             chromeIndex = Math.min(chromeStates.length - 1, chromeIndex + 1);
             refreshHighlight();
           }
-          const g = state.group;
+          const g = state2.group;
           if (left && !dpadHeld.left) {
             itemIndexByGroupName[g.name] = ((itemIndexByGroupName[g.name] || 0) - 1 + g.items.length) % g.items.length;
             refreshHighlight();
@@ -12609,7 +17557,7 @@ ${btnLabel(0)} select attacker   \u2193/${btnLabel(1)} hand`;
         } else if (!btn(3) && drag.right) {
           endPress("right", 2);
         }
-        if (btn(1) && !btnHeld[1]) closeSubmenu();
+        if (btn(1) && !btnHeld[1] && !closeWishlistMenu()) closeSubmenu();
         btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
         cursor.style.display = "none";
         const hitEl = document.elementFromPoint(x, y);
@@ -12640,7 +17588,10 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     initTrueHubBridge(plugin);
     initDeckTracker(plugin);
     initUcTv(plugin);
+    initTierList(plugin);
     const miscSettings = initMisc(plugin);
+    initWishlist(plugin);
+    initCardHistory(plugin);
     initKeybinds(plugin);
     initController(plugin, miscSettings.enableController);
     registerPluginGuides(plugin);

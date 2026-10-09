@@ -235,9 +235,16 @@ function bindGlobalListeners() {
       // since a "tap" here just means "Primary went down again soon
       // after it last went down." Resets after firing so a 3rd rapid
       // tap starts a fresh pair rather than re-triggering immediately.
+      // Controller Support's Channel Guide button also presses Primary
+      // (it reuses UC TV's hold-Primary guide), but tapping it twice must
+      // not open Settings - those presses are marked and don't count.
       const now = Date.now();
-      tapCount = (now - lastTapTime <= DOUBLE_TAP_WINDOW_MS) ? tapCount + 1 : 1;
-      lastTapTime = now;
+      if (e.wizascriptNoDoubleTap) {
+        tapCount = 0;
+      } else {
+        tapCount = (now - lastTapTime <= DOUBLE_TAP_WINDOW_MS) ? tapCount + 1 : 1;
+        lastTapTime = now;
+      }
       if (tapCount === 2) {
         tapCount = 0;
         registry.forEach((b) => {

@@ -58,7 +58,7 @@ export async function decodeCode(text, kind) {
   const m = /^WZ-([A-Z]+)-(\d+)\.(.+)$/.exec(clean);
   if (!m) throw new Error("That doesn't look like a Wizascript code.");
   if (m[1] !== kind) {
-    const names = { BACKUP: "a settings backup", TAGS: "a Card Tags code" };
+    const names = { BACKUP: "a settings backup", TAGS: "a Card Tags code", TIER: "a tier list code" };
     throw new Error(`That's ${names[m[1]] || `a "${m[1]}" code`}, not ${names[kind] || kind}.`);
   }
   let bytes;

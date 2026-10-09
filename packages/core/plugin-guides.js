@@ -23,6 +23,7 @@ import { createFeatureSettings } from "./settings.js";
 import { registerSettingWidget } from "./setting-widgets.js";
 import { describeKeybind, getPrimaryKeyDisplay } from "./keybinds.js";
 import { bindingToDisplay } from "../controller/gamepad.js";
+import { getBoundButton, getBoundTierListButton } from "../controller/settings.js";
 import { getPageWindow } from "./page-window.js";
 
 function esc(s) {
@@ -35,6 +36,8 @@ function key(bindingKey, defaultCode) {
 }
 const primary = () => `<b>${esc(getPrimaryKeyDisplay())}</b>`;
 const pad = (i) => `<b>${esc(bindingToDisplay(i))}</b>`;
+// A player's current controller binding (button or key).
+const ctl = (binding) => `<b>${esc(bindingToDisplay(binding))}</b>`;
 
 // tab: the plugin's settings tab, or null if it has none.
 const GUIDES = {
@@ -113,6 +116,45 @@ const GUIDES = {
       'Tagged cards show coloured dots. Type a tag\'s name into the search bar to show only cards with that tag.',
       '<b>Manage Tags…</b> (in the right-click menu) renames, recolours and deletes tags, and can <b>Share…</b> / <b>Import…</b> tags with friends.'
     ]
+  },
+  wishlist: {
+    tab: "Cosmetic Wishlist",
+    pages: "every page (the shop is checked in the background)",
+    summary: "Pin avatars, emotes and profile skins you want, and get a message when the Cosmetics Shop has them.",
+    points: () => [
+      '<b>Right-click</b> an avatar, emote or profile skin (in chat, in matches, or in the Cosmetics Shop) and choose <b>Add to Wishlist</b>. Right-click it again to remove it, or use <b>×</b> on this tab.',
+      'When something you pinned is in the shop, a message pops up with <b>Take me there!</b>. Things you buy leave the list by themselves.',
+      'The shop is checked after each refresh (see <b>Shop Check Frequency</b>), never during a match. <b>Check Shop Now</b> checks straight away.',
+      "Free cosmetics (0 UCP) can't be pinned - everyone already has them."
+    ].concat(isPluginEnabled("controller") ? [
+      `Controller: point the cursor at it, press ${pad(3)} to right-click, then ${pad(0)} on the menu. ${pad(1)} closes it.`
+    ] : [])
+  },
+  cardHistory: {
+    tab: null,
+    pages: "the Crafting, Decks and Artifacts pages",
+    summary: "See every earlier version of a card or artifact.",
+    points: () => [
+      '<b>Middle-click</b> a card (Crafting, Decks) or an artifact (Artifacts) to open its history, oldest first.',
+      'The number under each version is the patch it came from. <b>*</b> means not certain or has a note: rest the mouse on it.',
+      '<b>?</b> means that part isn\'t recorded anywhere. History comes from both Undercards wikis, the patch notes and feildmaster\'s Card-Tracker.',
+      'Looks wrong? <b>Right-click</b> that version and report it (⚑). <b>My Reports</b> → <b>Send</b> opens the chat with it typed in: press Enter. <b>⚠</b> = already reported.'
+    ].concat(isPluginEnabled("controller") ? [
+      `Controller: point the cursor at it and press Primary + ${ctl(getBoundButton("middleClick"))} (Middle Click). ${pad(3)} right-clicks to report.`
+    ] : [])
+  },
+  tierList: {
+    tab: "Tier List",
+    pages: "every page, including matches",
+    summary: "Rank cards, souls and artifacts in your own tier lists.",
+    points: () => [
+      `${key("toggleTierList", "KeyL")} shows/hides the window. Drag its title bar to move it, its edges to resize it; <b>□</b> fills the screen.`,
+      'Pick <b>Cards</b>, <b>Souls</b>, <b>Artifacts</b> or <b>Text</b> in the bottom panel, then drag items into a tier. With Card Tags on, the card search also finds your tags. On Crafting/Decks you can drag cards straight from the page.',
+      'Click a tier\'s label (or <b>⚙</b>) to edit it. Drag an item back to the panel to unrank it. Rest the mouse on a card to see it in full.',
+      '<b>Lists ▾</b> switches or adds lists, and <b>Share…</b> / <b>Import…</b> swaps them with friends as codes. Saves automatically; <b>↶</b> undoes.'
+    ].concat(isPluginEnabled("controller") ? [
+      `Controller: Primary + ${ctl(getBoundButton("toggleTierList"))} opens it. The d-pad moves around; ${ctl(getBoundTierListButton("tlSelect"))} picks up / places, ${ctl(getBoundTierListButton("tlQuickSend"))} sends to a tier, ${ctl(getBoundTierListButton("tlJump"))} jumps between tiers and items, ${ctl(getBoundTierListButton("tlBack"))} cancels. Primary + ${ctl(getBoundButton("tierListFillScreen"))} fills the screen.`
+    ] : [])
   }
 };
 

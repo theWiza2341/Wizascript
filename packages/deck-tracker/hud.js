@@ -14,6 +14,10 @@ import {
   createCustomPreset, getSavedPosition, setSavedPosition, clearSavedPosition,
   markRetained, unmarkRetained, getHudBehavior
 } from "./registry.js";
+import { keepOnScreen, watchOnScreen } from "../core/on-screen.js";
+
+// Tracker × buttons sit 8px outside the widget's corner.
+const TRACKER_SCREEN_MARGIN = 8;
 
 const CARD_IMAGE_BASE = "https://undercards.net/images/cards/";
 const SPRITE_RATIO = "160 / 90";
@@ -165,6 +169,7 @@ function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode
 
     widget.append(listBody, resizeHandle);
     $('body').append(widget);
+    watchOnScreen(widget[0], TRACKER_SCREEN_MARGIN);
 
     function applySizeList(newWidth) {
       width = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, newWidth));
@@ -252,6 +257,7 @@ function buildWidget({ id, name, sprite, initialCount, initialLabel, isLabelMode
     widget.append(nameLine, countEl, resizeHandle);
   }
   $('body').append(widget);
+  watchOnScreen(widget[0], TRACKER_SCREEN_MARGIN);
 
   if (star) star.on('mousedown', e => e.stopPropagation());
   closeBtn.on('mousedown', e => e.stopPropagation());
@@ -317,6 +323,8 @@ function bindInteractions(parts, { onLeftClick, onRightClick, onMiddleClick, id,
     if (Math.abs(e.clientX - startX) > 4 || Math.abs(e.clientY - startY) > 4) dragMoved = true;
     if (dragMoved) {
       widget.css({ left: (e.clientX - offsetX) + 'px', top: (e.clientY - offsetY) + 'px', right: 'auto', bottom: 'auto' });
+      // Keep the whole tracker (and its × just outside the corner) on screen.
+      keepOnScreen(widget[0], TRACKER_SCREEN_MARGIN);
     }
   });
 
@@ -354,6 +362,7 @@ function bindInteractions(parts, { onLeftClick, onRightClick, onMiddleClick, id,
   $(document).on('mousemove' + ns + '-resize', function (e) {
     if (!resizing) return;
     applySize(resizeStartWidth + (e.clientX - resizeStartX));
+    keepOnScreen(widget[0], TRACKER_SCREEN_MARGIN);
   });
 
   $(document).on('mouseup' + ns + '-resize', function () {

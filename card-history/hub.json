@@ -4,6 +4,6 @@
   "branch": "main",
   "tag": "WZ",
   "minPlayers": 1,
-  "confirmed": [],
+  "confirmed": ["c:502:101.0"],
   "ignored": []
 }

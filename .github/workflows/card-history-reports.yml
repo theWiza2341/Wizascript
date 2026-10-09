@@ -1,1 +1,56 @@
-j
+# Pulls Card History's reports from the UC Report Hub (players send them from
+# Wizascript into Undercards' room 0; the hub's bot files them under
+# reports/WZ/) and writes card-history/reports.json (the ⚠ marks players see)
+# and card-history/reports.md (the catalogue) on the `card-history` branch.
+# Settings: card-history/hub.json on that branch. No secrets needed: the hub
+# is public.
+#
+# Keep the same file on main (the schedule only runs from there) and on
+# card-history (so editing hub.json there re-runs it straight away).
+name: Card History reports
+
+on:
+  schedule:
+    - cron: "47 */6 * * *" # every 6 hours, 30 minutes after the hub's runs
+  workflow_dispatch:
+  push:
+    branches: [card-history]
+    paths:
+      - "card-history/hub.json"
+      - "card-history/build/reports.js"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: card-history-reports
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: card-history
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Pull reports
+        run: node card-history/build/reports.js
+
+      - name: Save
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add card-history/reports.json card-history/reports.md 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -q -m "Card History reports [auto]"
+            git pull -q --rebase origin card-history
+            git push -q
+          fi

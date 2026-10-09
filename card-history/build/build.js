@@ -92,7 +92,7 @@ async function main() {
       index.cards[card.id] = data.versions.length;
     } catch (e) {
       failed++;
-      log(`card ${card.id} ${card.name}: FAILED ${e.stack.split('\n').slice(0, 2).join(' ')}`);
+      log(`card ${card.id} ${card.name}: FAILED ${e.stack.split('\n').slice(0, 5).join(' ')}`);
     }
   }
   if (ONLY) return;

@@ -144,5 +144,9 @@
   ],
   "plainPhrases": [
     "\\bG\\.?\\s?Blasters?\\b"
-  ]
+  ],
+  "reports": {
+    "_help": "Where My Reports tells players to paste their report codes (plain text, no links).",
+    "channel": "Undercards chat or the Discord"
+  }
 }

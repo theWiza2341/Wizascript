@@ -223,13 +223,22 @@ var CH = (function () {
       const num = label.match(/Beta\s*([\d.]+)/i);
       return { label, date: '', season: num ? parseInt(num[1], 10) : null };
     };
+    // "Before <the next dated bullet>", e.g. "Before Beta 1.6".
+    const beforeNext = (line) => {
+      const next = lines.slice(lines.indexOf(line) + 1).map((l) => l.match(/^\*\s*((?:Alpha|Beta)\s*[\d.]+)\s*:/i)).find(Boolean);
+      if (!next) return { label: 'Before records', date: '', season: null, before: true };
+      const v = toVersion(next[1]);
+      return { label: `Before ${v.label}`, date: '', season: v.season, before: true };
+    };
     for (const line of lines) {
       const m = line.match(/^\*\s*([^:]+?):\s*New card:\s*(.+?)\.\s+(.*)$/i);
-      if (m) return { version: toVersion(m[1]), name: clean(m[2]), ...parseCreation(clean(m[3])) };
+      // "*?: New card: ..." = release version unknown (Miraheze or the walk may date it).
+      if (m) return { version: /\b(?:Alpha|Beta)\s*\d/i.test(m[1]) ? toVersion(m[1]) : beforeNext(line), name: clean(m[2]), ...parseCreation(clean(m[3])) };
     }
     for (const line of lines) {
       const m = line.match(/^\*\s*([^:]+?):\s*(.*)$/);
-      if (!m) continue;
+      // Only "<version>: ..." bullets. Not "Magic: ..." under Abilities, or "?: Updated sprite."
+      if (!m || !/\b(?:Alpha|Beta)\s*\d/i.test(m[1])) continue;
       const body = clean(m[2]);
       if (/(?:>|->)\s*\d/.test(body)) break; // already a change, not a description
       if (/\bCOST\s*:?\s*\d+|\bEFFECT\s*:/i.test(body)) return { version: toVersion(m[1]), name: null, ...parseCreation(body) };
@@ -622,7 +631,8 @@ var CH = (function () {
     const n = Number(p[0] + '.' + (p.slice(1).join('') || '0'));
     return [/alpha/i.test(m[1]) ? 1 : 2, /^Before/i.test(l) ? n - 0.0001 : n];
   }
-  const keyCmp = (a, b) => (a[0] - b[0]) || (a[1] - b[1]);
+  // A version with no readable number sorts last instead of crashing the build.
+  const keyCmp = (a, b) => { a = a || [9, 0]; b = b || [9, 0]; return (a[0] - b[0]) || (a[1] - b[1]); };
 
   // Changes described in one row -> { cost:[a,b], atk, hp, rarity:[a,b], text, renamedFrom, intro }.
   function mhChanges(row) {

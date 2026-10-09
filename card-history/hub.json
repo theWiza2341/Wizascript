@@ -1,6 +1,6 @@
 {
   "_help": "Where Card History's reports come from, and which become a ⚠ for players. repo: the UC Report Hub repo (owner/name). minPlayers: different players needed for a ⚠. confirmed: keys that always get a ⚠. ignored: keys that never do (fixed, or not a bug). Keys look like c:161:28.0 (card id, version), c:161:today, a:powerband:108.0 - see reports.md. Read by build/reports.js; the next 'Card History reports' run applies changes.",
-  "repo": "",
+  "repo": "theWiza2341/uc-report-hub",
   "branch": "main",
   "tag": "WZ",
   "minPlayers": 2,

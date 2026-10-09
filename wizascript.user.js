@@ -225,6 +225,13 @@
       key: "wishlist.enabled",
       // The one Miscellaneous plugin with a tab of its own (its list of pins).
       note: "Pin avatars, emotes and profile skins; hear when the shop has them."
+    },
+    {
+      id: "cardHistory",
+      category: "Miscellaneous",
+      name: "Card History",
+      key: "cardHistory.enabled",
+      note: "Middle-click a card or artifact to see its earlier versions."
     }
   ];
   var LS_PREFIX = "underscript.plugin.Wizascript.";
@@ -238,8 +245,8 @@
     const enabled = forceEnabled !== void 0 ? forceEnabled : isPluginEnabled(pluginId);
     (SUB_SETTINGS[pluginId] || []).forEach((key2) => {
       const el2 = document.getElementById(LS_PREFIX + key2);
-      const row = el2 && el2.closest(".flex-start");
-      if (row) row.style.display = enabled ? "" : "none";
+      const row2 = el2 && el2.closest(".flex-start");
+      if (row2) row2.style.display = enabled ? "" : "none";
     });
   }
   function injectSubSettingStyle() {
@@ -277,8 +284,8 @@
     });
     Object.entries(SUB_SETTINGS).forEach(([pluginId, keys]) => {
       keys.forEach((key2) => registerSettingWidget(key2, (el2) => {
-        const row = el2.closest(".flex-start");
-        if (row) row.classList.add("wizascript-subsetting");
+        const row2 = el2.closest(".flex-start");
+        if (row2) row2.classList.add("wizascript-subsetting");
         applySubSettingVisibility(pluginId);
       }));
     });
@@ -698,22 +705,22 @@
     const conflicts = computeKeybindConflicts();
     bindingDefaults.forEach((_, key2) => {
       const input = document.getElementById(ID_PREFIX2 + key2);
-      const row = input && input.closest(".flex-start");
-      if (!row) return;
+      const row2 = input && input.closest(".flex-start");
+      if (!row2) return;
       const messages = conflicts.get(key2) || [];
-      let warn = row.querySelector(`:scope > .${WARNING_CLASS}`);
+      let warn2 = row2.querySelector(`:scope > .${WARNING_CLASS}`);
       const text = messages.map((m) => `\u26A0 ${m}`).join("\n");
       if (!messages.length) {
-        if (warn) warn.remove();
+        if (warn2) warn2.remove();
         return;
       }
-      if (!warn) {
-        warn = document.createElement("div");
-        warn.className = `setting-description ${WARNING_CLASS}`;
-        Object.assign(warn.style, { color: "#ffb347", opacity: "1", whiteSpace: "pre-line" });
-        row.appendChild(warn);
+      if (!warn2) {
+        warn2 = document.createElement("div");
+        warn2.className = `setting-description ${WARNING_CLASS}`;
+        Object.assign(warn2.style, { color: "#ffb347", opacity: "1", whiteSpace: "pre-line" });
+        row2.appendChild(warn2);
       }
-      if (warn.textContent !== text) warn.textContent = text;
+      if (warn2.textContent !== text) warn2.textContent = text;
     });
   }
   var conflictRefreshQueued = false;
@@ -766,6 +773,13 @@ Pin the avatars, emotes and profile skins you want, and Wizascript tells you whe
 - The shop is checked once after each daily and weekly refresh, in the background, never during a match. You can change how often, or check only when you visit the shop yourself.
 - Things you buy leave your wishlist by themselves. Free cosmetics can't be pinned, since everyone already has them.
 - Its own tab lists everything you've pinned, with when it was last in the shop, a **\xD7** to remove each one, and **Check Shop Now**.
+
+### New: Card History
+See how any card or artifact used to look. Turn it on in the **Miscellaneous** list.
+- On **Crafting** or **Decks**, **middle-click** a card to see every earlier version of it, drawn as real cards: old cost, stats, rarity, text, tribes and powers, with the version number in the corner. Today's card is last.
+- On **Artifacts**, middle-click an artifact to see its versions as a list, with rarity and text.
+- A **\\*** marks anything that isn't certain or has a note. Hover the version number to read it.
+- The histories come from the Undercards wikis, the official patch notes and feildmaster's Card-Tracker, and update by themselves after each patch, with no Wizascript update needed.
 
 ### Fixes
 - Controller Support: the default Concede button ("\u2212") no longer briefly opens UnderScript's menu outside a match.
@@ -1072,7 +1086,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     wrapper.appendChild(file);
     const status = el("div", {}, { marginTop: "4px", minHeight: "1.2em" });
     wrapper.appendChild(status);
-    let busy = false;
+    let busy2 = false;
     BootstrapDialog2.show({
       title,
       message: wrapper,
@@ -1082,8 +1096,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
           label: actionLabel,
           cssClass: "btn-primary",
           action: async (d) => {
-            if (busy) return;
-            busy = true;
+            if (busy2) return;
+            busy2 = true;
             status.style.color = "";
             status.textContent = "Reading code\u2026";
             try {
@@ -1093,7 +1107,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
               status.style.color = "#f66";
               status.textContent = e && e.message ? e.message : String(e);
             } finally {
-              busy = false;
+              busy2 = false;
             }
           }
         },
@@ -1431,8 +1445,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     const lv = dataView.getUint16(5, true);
     const rh = dataView.getUint16(7, true);
     const rv = dataView.getUint16(9, true);
-    const norm = (v) => Math.max(-1, Math.min(1, (v - 32768) / 32768));
-    hidState.axes = [norm(lh), norm(lv), norm(rh), norm(rv)];
+    const norm2 = (v) => Math.max(-1, Math.min(1, (v - 32768) / 32768));
+    hidState.axes = [norm2(lh), norm2(lv), norm2(rh), norm2(rv)];
     hidState.hat = hat;
     hidState.raw1 = raw1;
     hidState.raw2 = raw2;
@@ -2072,30 +2086,30 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       const rowEls = [];
       for (let n = 1; n <= PRESET_COUNT; n++) {
         const isActive = n === getActivePreset();
-        const row = document.createElement("div");
-        row.textContent = getPresetName(n) + (isActive ? "  \u2713" : "");
-        Object.assign(row.style, {
+        const row2 = document.createElement("div");
+        row2.textContent = getPresetName(n) + (isActive ? "  \u2713" : "");
+        Object.assign(row2.style, {
           padding: "6px 10px",
           cursor: "pointer",
           color: "white",
           background: isActive ? "#333" : "transparent"
         });
-        row.addEventListener("mouseenter", () => {
-          row.style.background = "#40E0D0";
-          row.style.color = "black";
+        row2.addEventListener("mouseenter", () => {
+          row2.style.background = "#40E0D0";
+          row2.style.color = "black";
         });
-        row.addEventListener("mouseleave", () => {
-          row.style.background = isActive ? "#333" : "transparent";
-          row.style.color = "white";
+        row2.addEventListener("mouseleave", () => {
+          row2.style.background = isActive ? "#333" : "transparent";
+          row2.style.color = "white";
         });
-        row.addEventListener("click", () => {
+        row2.addEventListener("click", () => {
           setActivePreset(n);
           closeMenu();
           boundInputRefreshers.forEach((fn) => fn());
           if (isDebugTextEnabled()) console.log("[Wizascript Controller] switched to preset", n, "(" + getPresetName(n) + ")");
         });
-        menuEl.appendChild(row);
-        rowEls.push(row);
+        menuEl.appendChild(row2);
+        rowEls.push(row2);
       }
       document.body.appendChild(menuEl);
       document.addEventListener("mousedown", onOutsideClick, true);
@@ -2228,34 +2242,34 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         add("channelGuide", "The channel guide uses the d-pad and " + bindingToDisplay(0) + " to pick a channel, so this button would clash with it.");
       }
     }
-    shortcuts.forEach(({ a, row, input }, i) => {
+    shortcuts.forEach(({ a, row: row2, input }, i) => {
       if (sameInput(input, primary2)) {
-        add(row, "Same button as Controller Primary - pressing Primary will also do this.");
+        add(row2, "Same button as Controller Primary - pressing Primary will also do this.");
         add("controllerPrimary", `Same button as ${a.name} - pressing Primary will also do that.`);
       }
       if (sameInput(input, guide)) {
-        add(row, "Same button as Channel Guide - both will happen.");
+        add(row2, "Same button as Channel Guide - both will happen.");
         add("channelGuide", `Same button as ${a.name} - both will happen.`);
       }
       shortcuts.forEach(({ a: other, input: otherInput }, j) => {
-        if (i !== j && sameInput(input, otherInput)) add(row, `Same button as ${other.name} - both will happen.`);
+        if (i !== j && sameInput(input, otherInput)) add(row2, `Same button as ${other.name} - both will happen.`);
       });
       if (typeof input === "number" && BUILT_IN_BUTTON_USES[input]) {
-        add(row, `This button also ${BUILT_IN_BUTTON_USES[input]}, so pressing it will do both.`);
+        add(row2, `This button also ${BUILT_IN_BUTTON_USES[input]}, so pressing it will do both.`);
       }
     });
     const padControls = isPluginEnabled("tierList") ? TIER_LIST_PAD_ACTIONS.map((a) => ({ a, row: "tierlistPad_" + a.key, input: getBoundTierListButton(a.key) })).filter((c) => c.input !== null) : [];
-    padControls.forEach(({ a, row, input }, i) => {
+    padControls.forEach(({ a, row: row2, input }, i) => {
       padControls.forEach(({ a: other, input: otherInput }, j) => {
-        if (i !== j && sameInput(input, otherInput)) add(row, `Same button as ${other.name} - only one of them will work.`);
+        if (i !== j && sameInput(input, otherInput)) add(row2, `Same button as ${other.name} - only one of them will work.`);
       });
-      if (typeof input === "number" && input >= 12 && input <= 15) add(row, "The d-pad moves around the tier list, so this button can't do this too.");
-      if (sameInput(input, primary2)) add(row, "Same button as Controller Primary, so this can't be pressed.");
-      if (sameInput(input, guide)) add(row, "Same button as Channel Guide - both will happen.");
-      if (input === 5) add(row, "This button also opens UnderScript's menu, which would cover the tier list.");
+      if (typeof input === "number" && input >= 12 && input <= 15) add(row2, "The d-pad moves around the tier list, so this button can't do this too.");
+      if (sameInput(input, primary2)) add(row2, "Same button as Controller Primary, so this can't be pressed.");
+      if (sameInput(input, guide)) add(row2, "Same button as Channel Guide - both will happen.");
+      if (input === 5) add(row2, "This button also opens UnderScript's menu, which would cover the tier list.");
       shortcuts.forEach(({ a: sc, row: scRow, input: scInput }) => {
         if (!sameInput(input, scInput)) return;
-        add(row, `Also ${sc.name} (In-Game Inputs) - while the tier list is open, this wins.`);
+        add(row2, `Also ${sc.name} (In-Game Inputs) - while the tier list is open, this wins.`);
         add(scRow, `Also the Tier List's ${a.name} - while the tier list is open, that wins.`);
       });
     });
@@ -2277,22 +2291,22 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     const rowKeys = ["controllerPrimary", "channelGuide"].concat(CONTROLLER_ACTIONS.map((a) => a.key)).concat(HARDWARE_SHORTCUT_ACTIONS.map((a) => "shortcut_" + a.key)).concat(TIER_LIST_PAD_ACTIONS.map((a) => "tierlistPad_" + a.key));
     rowKeys.forEach((key2) => {
       const input = document.getElementById(prefix + key2);
-      const row = input && input.closest(".flex-start");
-      if (!row) return;
+      const row2 = input && input.closest(".flex-start");
+      if (!row2) return;
       const messages = conflicts.get(key2) || [];
-      let warn = row.querySelector(`:scope > .${CONFLICT_CLASS}`);
+      let warn2 = row2.querySelector(`:scope > .${CONFLICT_CLASS}`);
       if (!messages.length) {
-        if (warn) warn.remove();
+        if (warn2) warn2.remove();
         return;
       }
       const text = messages.map((m) => "\u26A0 " + m).join("\n");
-      if (!warn) {
-        warn = document.createElement("div");
-        warn.className = `setting-description ${CONFLICT_CLASS}`;
-        Object.assign(warn.style, { color: "#ffb347", opacity: "1", whiteSpace: "pre-line" });
-        row.appendChild(warn);
+      if (!warn2) {
+        warn2 = document.createElement("div");
+        warn2.className = `setting-description ${CONFLICT_CLASS}`;
+        Object.assign(warn2.style, { color: "#ffb347", opacity: "1", whiteSpace: "pre-line" });
+        row2.appendChild(warn2);
       }
-      if (warn.textContent !== text) warn.textContent = text;
+      if (warn2.textContent !== text) warn2.textContent = text;
     });
   }
   var controllerConflictRefreshQueued = false;
@@ -2589,6 +2603,16 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         `Controller: point the cursor at it, press ${pad(3)} to right-click, then ${pad(0)} on the menu. ${pad(1)} closes it.`
       ] : [])
     },
+    cardHistory: {
+      tab: null,
+      pages: "the Crafting, Decks and Artifacts pages",
+      summary: "See every earlier version of a card or artifact.",
+      points: () => [
+        "<b>Middle-click</b> a card (Crafting, Decks) or an artifact (Artifacts) to open its history, oldest first.",
+        "The number under each version is the patch it came from. <b>*</b> means not certain or has a note: rest the mouse on it.",
+        "<b>?</b> means that part isn't recorded anywhere. History comes from both Undercards wikis, the patch notes and feildmaster's Card-Tracker."
+      ]
+    },
     tierList: {
       tab: "Tier List",
       pages: "every page, including matches",
@@ -2642,23 +2666,23 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
           el2.readOnly = true;
           el2.tabIndex = -1;
           el2.style.display = "none";
-          const row = el2.closest(".flex-start");
-          if (!row) return;
-          const label = row.querySelector("label");
+          const row2 = el2.closest(".flex-start");
+          if (!row2) return;
+          const label = row2.querySelector("label");
           if (label) label.style.fontWeight = "bold";
           const box = document.createElement("div");
           box.className = "wizascript-guide";
           box.style.cssText = BOX_STYLE;
           box.innerHTML = guideHtml(id);
-          row.appendChild(box);
+          row2.appendChild(box);
         });
       }
       const toggle = PLUGINS.find((p) => p.id === id);
       if (!toggle) return;
       registerSettingWidget(toggle.key, (el2) => {
-        const row = el2.closest(".flex-start");
-        const label = row && row.querySelector("label");
-        if (!label || row.querySelector(".wizascript-guide-link")) return;
+        const row2 = el2.closest(".flex-start");
+        const label = row2 && row2.querySelector("label");
+        if (!label || row2.querySelector(".wizascript-guide-link")) return;
         const link = document.createElement("a");
         link.href = "#";
         link.className = "wizascript-guide-link";
@@ -5276,13 +5300,13 @@ Version: v${version}`;
         artifactContainer.innerHTML = "";
         try {
           const decoded = decodeDeck(deck.deckCode);
-          const artifacts2 = ((decoded == null ? void 0 : decoded.artifactIds) || []).map((id) => getArtifactById(id)).filter(Boolean);
-          artifacts2.forEach((artifact, index) => {
+          const artifacts3 = ((decoded == null ? void 0 : decoded.artifactIds) || []).map((id) => getArtifactById(id)).filter(Boolean);
+          artifacts3.forEach((artifact, index) => {
             const img = document.createElement("img");
             img.src = `images/artifacts/${artifact.image}.png`;
             img.title = artifact.name;
             artifactContainer.appendChild(img);
-            if (index < artifacts2.length - 1) artifactContainer.append(" ");
+            if (index < artifacts3.length - 1) artifactContainer.append(" ");
           });
         } catch (err) {
           logger4.error("card", "Artifact decode failed", err, deck);
@@ -5408,8 +5432,8 @@ Version: v${version}`;
         }
         cardDropdown.style.display = "grid";
         matches.forEach((card) => {
-          const row = document.createElement("div");
-          Object.assign(row.style, {
+          const row2 = document.createElement("div");
+          Object.assign(row2.style, {
             display: "flex",
             alignItems: "center",
             gap: "5px",
@@ -5478,9 +5502,9 @@ Version: v${version}`;
           };
           btnGroup.appendChild(btnInclude);
           btnGroup.appendChild(btnExclude);
-          row.appendChild(nameSpan);
-          row.appendChild(btnGroup);
-          cardDropdown.appendChild(row);
+          row2.appendChild(nameSpan);
+          row2.appendChild(btnGroup);
+          cardDropdown.appendChild(row2);
         });
       });
       document.addEventListener("click", (e) => {
@@ -6227,7 +6251,7 @@ Version: v${version}`;
           return;
         }
         items.forEach((item, idx) => {
-          const row = $("<div>").css({
+          const row2 = $("<div>").css({
             fontSize: "12px",
             padding: "3px 6px",
             background: "rgba(255,255,255,0.06)",
@@ -6236,19 +6260,19 @@ Version: v${version}`;
             justifyContent: "space-between",
             alignItems: "center"
           }).attr("title", "Right-click to remove this card");
-          row.append(
+          row2.append(
             $("<span>").css({ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }).text(item.name),
             $("<span>").css({ fontSize: "10px", color: "#777", flexShrink: 0, marginLeft: "6px" }).text(idx === 0 ? firstItemLabel : `+${idx}`)
           );
-          row.on("mouseenter", () => row.css("background", "rgba(255,255,255,0.12)"));
-          row.on("mouseleave", () => row.css("background", "rgba(255,255,255,0.06)"));
-          row.on("mousedown", (e) => e.stopPropagation());
-          row.on("contextmenu", (e) => {
+          row2.on("mouseenter", () => row2.css("background", "rgba(255,255,255,0.12)"));
+          row2.on("mouseleave", () => row2.css("background", "rgba(255,255,255,0.06)"));
+          row2.on("mousedown", (e) => e.stopPropagation());
+          row2.on("contextmenu", (e) => {
             e.preventDefault();
             e.stopPropagation();
             onRemoveListItem == null ? void 0 : onRemoveListItem(item);
           });
-          listBody.append(row);
+          listBody.append(row2);
         });
       }, applySizeList = function(newWidth) {
         width = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, newWidth));
@@ -6640,7 +6664,7 @@ Version: v${version}`;
   </svg>`;
   }
   function buildPresetRow(preset, onAdd, onCloseWidget, onDelete) {
-    const row = $("<div>").css({
+    const row2 = $("<div>").css({
       display: "flex",
       alignItems: "center",
       gap: "10px",
@@ -6709,7 +6733,7 @@ Version: v${version}`;
       active = !active;
       renderStar();
     });
-    row.append(heart, info, starBtn);
+    row2.append(heart, info, starBtn);
     if (preset.custom) {
       const trashBtn = $("<span>").css({
         width: "20px",
@@ -6722,11 +6746,11 @@ Version: v${version}`;
         e.stopPropagation();
         if (e.detail !== 2) return;
         onDelete(preset.id);
-        row.remove();
+        row2.remove();
       });
-      row.append(trashBtn);
+      row2.append(trashBtn);
     }
-    return row;
+    return row2;
   }
   function renderList(container, term, onAdd, onCloseWidget, onDelete) {
     container.empty();
@@ -6744,7 +6768,7 @@ Version: v${version}`;
     filtered.sort((a, b) => b.favorited - a.favorited).forEach((p) => container.append(buildPresetRow(p, onAdd, onCloseWidget, onDelete)));
   }
   function buildCustomRow(onCreateAdHoc) {
-    const row = $("<div>").css({
+    const row2 = $("<div>").css({
       display: "flex",
       alignItems: "center",
       gap: "10px",
@@ -6778,8 +6802,8 @@ Version: v${version}`;
       e.stopPropagation();
       onCreateAdHoc();
     });
-    row.append(info, addBtn);
-    return row;
+    row2.append(info, addBtn);
+    return row2;
   }
   function openHelpDialog() {
     const content = $("<div>").css({ fontSize: "13px", lineHeight: "1.5" });
@@ -6871,7 +6895,7 @@ Version: v${version}`;
     return getAllCards().filter((c) => c.name && c.image && c.name.toLowerCase().includes(t)).slice(0, 20);
   }
   function buildSpriteResultRow(card, onPick) {
-    const row = $("<div>").css({
+    const row2 = $("<div>").css({
       display: "flex",
       alignItems: "center",
       gap: "8px",
@@ -6892,9 +6916,9 @@ Version: v${version}`;
     }).on("error", function() {
       $(this).replaceWith($("<div>").css({ width: "28px", aspectRatio: SPRITE_RATIO2, background: "#333", flexShrink: 0 }));
     });
-    row.append(thumb2, $("<span>").text(card.name));
-    row.on("click", () => onPick(card));
-    return row;
+    row2.append(thumb2, $("<span>").text(card.name));
+    row2.on("click", () => onPick(card));
+    return row2;
   }
   function openCustomTrackerBuilder({ onCreate }) {
     let selectedCard = null;
@@ -7520,14 +7544,14 @@ Version: v${version}`;
 
   // packages/uc-tv/game-list.js
   var ONCLICK_RE = /Spectate\?gameId=(\d+)&playerId=(\d+)/;
-  function readMode(row) {
-    const cell = row.querySelector("td.home-match-time");
+  function readMode(row2) {
+    const cell = row2.querySelector("td.home-match-time");
     if (!cell) return null;
     const extra = Array.from(cell.classList).find((c) => c !== "home-match-time");
     return extra || null;
   }
-  function readTimeText(row) {
-    const cell = row.querySelector("td.home-match-time");
+  function readTimeText(row2) {
+    const cell = row2.querySelector("td.home-match-time");
     return cell ? cell.textContent.trim() : null;
   }
   function parseElapsedSeconds(timeText) {
@@ -7582,31 +7606,31 @@ Version: v${version}`;
       rank: readDivision(cell)
     };
   }
-  function parseRow(row) {
-    const cells = Array.from(row.querySelectorAll("td.spectate-player"));
+  function parseRow(row2) {
+    const cells = Array.from(row2.querySelectorAll("td.spectate-player"));
     const players = cells.map(readPlayerCell).filter(Boolean);
     if (!players.length) return null;
-    const mode = readMode(row);
+    const mode = readMode(row2);
     const preferred = players.find((p) => p.level !== null) || players[0];
     return {
       gameId: players[0].gameId,
       playerId: preferred.playerId,
       mode,
-      time: readTimeText(row),
+      time: readTimeText(row2),
       levels: players.map((p) => p.level),
       // e.g. [580, null] for a CPU match
       ranks: players.map((p) => p.rank)
       // e.g. ["EMERALD_III", null]
     };
   }
-  function parseRowFull(row) {
-    const cells = Array.from(row.querySelectorAll("td.spectate-player"));
+  function parseRowFull(row2) {
+    const cells = Array.from(row2.querySelectorAll("td.spectate-player"));
     const players = cells.map(readPlayerCellFull).filter(Boolean);
     if (!players.length) return null;
     return {
       gameId: players[0].gameId,
-      mode: readMode(row),
-      time: readTimeText(row),
+      mode: readMode(row2),
+      time: readTimeText(row2),
       players
     };
   }
@@ -7981,8 +8005,8 @@ Version: v${version}`;
     overlay.appendChild(header);
     list.forEach((entry) => {
       const isCurrent = entry.gameId === currentGameId;
-      const row = document.createElement("div");
-      row.style.cssText = `
+      const row2 = document.createElement("div");
+      row2.style.cssText = `
       display: flex;
       align-items: center;
       gap: 6px;
@@ -7997,7 +8021,7 @@ Version: v${version}`;
           const divider = document.createElement("span");
           divider.textContent = "vs";
           divider.style.cssText = "opacity:0.35; font-size:11px; flex-shrink:0;";
-          row.appendChild(divider);
+          row2.appendChild(divider);
         }
         const playerEl = document.createElement("span");
         playerEl.style.cssText = `
@@ -8039,13 +8063,13 @@ Version: v${version}`;
           logDebug(`[guide] Jumping to gameId=${entry.gameId}, playerId=${p.playerId}.`);
           jumpTo(plugin, entry.gameId, p.playerId);
         });
-        row.appendChild(playerEl);
+        row2.appendChild(playerEl);
       });
       const timeEl = document.createElement("span");
       timeEl.textContent = entry.time || "";
       timeEl.style.cssText = "color:#7dffb0; font-size:12px; flex-shrink:0; margin-left:4px;";
-      row.appendChild(timeEl);
-      overlay.appendChild(row);
+      row2.appendChild(timeEl);
+      overlay.appendChild(row2);
     });
     const legend = document.createElement("div");
     legend.style.cssText = `
@@ -9038,8 +9062,8 @@ Version: v${version}`;
     return el2.textContent.trim();
   }
   function cardName(card) {
-    const cached = nameCache.get(card.id);
-    if (cached) return cached;
+    const cached2 = nameCache.get(card.id);
+    if (cached2) return cached2;
     let name = "";
     try {
       const $2 = getPageWindow().$;
@@ -9105,8 +9129,8 @@ Version: v${version}`;
   }
   function loadArtifacts() {
     if (artifactLoad) return artifactLoad;
-    const cached = readArtifactCache();
-    if (cached && setArtifacts(cached.list) && Date.now() - cached.time < ARTIFACT_CACHE_MS) {
+    const cached2 = readArtifactCache();
+    if (cached2 && setArtifacts(cached2.list) && Date.now() - cached2.time < ARTIFACT_CACHE_MS) {
       artifactLoad = Promise.resolve(true);
       return artifactLoad;
     }
@@ -9459,8 +9483,8 @@ Version: v${version}`;
         return b;
       };
       const reopen = () => {
-        const row = container.querySelector(`.wz-tl-row[data-tier-id="${tierId}"]`);
-        if (row) openEditor(tierId, row);
+        const row2 = container.querySelector(`.wz-tl-row[data-tier-id="${tierId}"]`);
+        if (row2) openEditor(tierId, row2);
         else closeEditor();
       };
       btn("\u25B2 Move up", () => moveTier(tierId, -1), { disabled: index === 0 });
@@ -9484,20 +9508,20 @@ Version: v${version}`;
       name.focus();
       name.select();
     }
-    function render() {
+    function render2() {
       const list = getActiveList();
       const scroll = container.scrollTop;
       container.innerHTML = "";
       list.tiers.forEach((tier) => {
-        const row = document.createElement("div");
-        row.className = "wz-tl-row";
-        row.dataset.tierId = tier.id;
+        const row2 = document.createElement("div");
+        row2.className = "wz-tl-row";
+        row2.dataset.tierId = tier.id;
         const label = document.createElement("div");
         label.className = "wz-tl-row-label";
         label.style.background = tier.color;
         label.textContent = tier.label;
         label.title = "Click to edit this tier";
-        label.addEventListener("click", () => openEditor(tier.id, row));
+        label.addEventListener("click", () => openEditor(tier.id, row2));
         const items = document.createElement("div");
         items.className = "wz-tl-row-items";
         tier.items.forEach((key2) => items.appendChild(buildTile(key2)));
@@ -9507,7 +9531,7 @@ Version: v${version}`;
         gear.type = "button";
         gear.textContent = "\u2699";
         gear.title = "Edit this tier";
-        gear.addEventListener("click", () => openEditor(tier.id, row));
+        gear.addEventListener("click", () => openEditor(tier.id, row2));
         const up = document.createElement("button");
         up.type = "button";
         up.textContent = "\u25B2";
@@ -9519,8 +9543,8 @@ Version: v${version}`;
         down.title = "Move tier down";
         down.addEventListener("click", () => moveTier(tier.id, 1));
         tools.append(up, gear, down);
-        row.append(label, items, tools);
-        container.appendChild(row);
+        row2.append(label, items, tools);
+        container.appendChild(row2);
       });
       const add = document.createElement("button");
       add.type = "button";
@@ -9537,7 +9561,7 @@ Version: v${version}`;
       if (e.target.closest(".wz-tl-row-label, .wz-tl-row-tools")) return;
       closeEditor();
     }, { signal, capture: true });
-    return { render, closeEditor, element: container };
+    return { render: render2, closeEditor, element: container };
   }
 
   // packages/misc/tier-list/picker.js
@@ -9617,7 +9641,7 @@ Version: v${version}`;
       b.appendChild(img);
       b.addEventListener("click", () => {
         flip(value);
-        render();
+        render2();
       }, { signal });
       toggles2.push({ el: b, isOn: () => isOn2(value) });
       return b;
@@ -9654,10 +9678,10 @@ Version: v${version}`;
       search.value = searchText[type];
       if (type === "artifacts" && !hasArtifacts()) {
         loadArtifacts().then(() => {
-          if (type === "artifacts") render();
+          if (type === "artifacts") render2();
         });
       }
-      render();
+      render2();
       search.focus();
     }
     function syncControls() {
@@ -9744,7 +9768,7 @@ Version: v${version}`;
       hint.textContent = keys.length ? "Drag a text item into a tier. Double-click one to edit it." : all.length ? "All your text items are ranked. Type a label and press Add for a new one." : "Type a label (e.g. an archetype) and press Add to make a text item.";
       showKeys(keys, { deletable: true });
     }
-    function render() {
+    function render2() {
       results.innerHTML = "";
       syncControls();
       if (type === "cards") renderCards();
@@ -9755,7 +9779,7 @@ Version: v${version}`;
     function addTextItem() {
       if (addText(search.value)) {
         search.value = "";
-        render();
+        render2();
       }
     }
     let searchTimer = null;
@@ -9765,7 +9789,7 @@ Version: v${version}`;
         return;
       }
       clearTimeout(searchTimer);
-      searchTimer = setTimeout(render, SEARCH_DELAY_MS);
+      searchTimer = setTimeout(render2, SEARCH_DELAY_MS);
     }, { signal });
     search.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && type === "text") {
@@ -9774,7 +9798,7 @@ Version: v${version}`;
       }
       if (e.key === "Escape" && search.value) {
         search.value = "";
-        render();
+        render2();
       }
     }, { signal });
     clear.addEventListener("click", () => {
@@ -9788,16 +9812,16 @@ Version: v${version}`;
         state2.sets.clear();
         state2.tribes = state2.monster = state2.spell = false;
       }
-      render();
+      render2();
     }, { signal });
     const stopListening = onCardsReady(() => {
-      if (type === "cards") render();
+      if (type === "cards") render2();
     });
     signal.addEventListener("abort", stopListening);
-    render();
+    render2();
     return {
       element: panel,
-      render,
+      render: render2,
       setOpen(open) {
         panel.classList.toggle("wz-tl-hidden", !open);
       },
@@ -9824,8 +9848,8 @@ Version: v${version}`;
     function targetAt(x, y) {
       const el2 = document.elementFromPoint(x, y);
       if (!el2 || !root.contains(el2)) return { type: "outside" };
-      const row = el2.closest(".wz-tl-row");
-      if (row) return { type: "tier", tierId: row.dataset.tierId, rowItems: row.querySelector(".wz-tl-row-items") };
+      const row2 = el2.closest(".wz-tl-row");
+      if (row2) return { type: "tier", tierId: row2.dataset.tierId, rowItems: row2.querySelector(".wz-tl-row-items") };
       if (el2.closest(".wz-tl-picker")) return { type: "picker" };
       return { type: "none" };
     }
@@ -9925,12 +9949,12 @@ Version: v${version}`;
       const tile = e.target.closest(".wz-tl-tile");
       if (!tile || !root.contains(tile) || !tile.dataset.key) return;
       e.preventDefault();
-      const row = tile.closest(".wz-tl-row");
+      const row2 = tile.closest(".wz-tl-row");
       const rect = tile.getBoundingClientRect();
       pending = {
         tile,
         key: tile.dataset.key,
-        from: row ? { type: "tier", tierId: row.dataset.tierId } : { type: "picker" },
+        from: row2 ? { type: "tier", tierId: row2.dataset.tierId } : { type: "picker" },
         startX: e.clientX,
         startY: e.clientY,
         offsetX: e.clientX - rect.left,
@@ -10003,7 +10027,7 @@ Version: v${version}`;
       box.style.left = left + "px";
       box.style.top = top + "px";
     }
-    function render(item) {
+    function render2(item) {
       const el2 = document.createElement("div");
       el2.className = "wz-tl-preview";
       const pageWindow2 = getPageWindow();
@@ -10039,7 +10063,7 @@ Version: v${version}`;
       timer = setTimeout(() => {
         if (pressed || isDragging() || !tile.isConnected || overTile !== tile) return;
         const item = resolveItem(tile.dataset.key);
-        box = render(item);
+        box = render2(item);
         box.dataset.key = tile.dataset.key;
         document.body.appendChild(box);
         position();
@@ -10133,11 +10157,11 @@ Version: v${version}`;
       const title = root.querySelector(".wz-tl-title");
       push(title, "title");
       root.querySelectorAll(".wz-tl-header button").forEach((el2, i) => push(el2, `hb:${i}`));
-      root.querySelectorAll(".wz-tl-row").forEach((row) => {
-        const tierId = row.dataset.tierId;
-        push(row.querySelector(".wz-tl-row-label"), `l:${tierId}`);
-        row.querySelectorAll(".wz-tl-row-items .wz-tl-tile").forEach((t) => push(t, `t:${t.dataset.key}`));
-        if (held) push(row.querySelector(".wz-tl-row-items"), `e:${tierId}`);
+      root.querySelectorAll(".wz-tl-row").forEach((row2) => {
+        const tierId = row2.dataset.tierId;
+        push(row2.querySelector(".wz-tl-row-label"), `l:${tierId}`);
+        row2.querySelectorAll(".wz-tl-row-items .wz-tl-tile").forEach((t) => push(t, `t:${t.dataset.key}`));
+        if (held) push(row2.querySelector(".wz-tl-row-items"), `e:${tierId}`);
       });
       push(root.querySelector(".wz-tl-add-row"), "add");
       const panel = root.querySelector(".wz-tl-picker");
@@ -10192,8 +10216,8 @@ Version: v${version}`;
         before = it.el;
         if (it.el.dataset.key === held.key) return;
       } else if (it.id.startsWith("e:") || it.id.startsWith("l:")) {
-        const row = it.el.closest(".wz-tl-row");
-        rowItems = row && row.querySelector(".wz-tl-row-items");
+        const row2 = it.el.closest(".wz-tl-row");
+        rowItems = row2 && row2.querySelector(".wz-tl-row-items");
       }
       if (!rowItems) return;
       marker = document.createElement("div");
@@ -10403,10 +10427,10 @@ Version: v${version}`;
       }
       root.appendChild(menu2);
       const rr = root.getBoundingClientRect();
-      const tr = (it ? it.el : root).getBoundingClientRect();
-      let left = tr.right - rr.left + 6;
-      if (left + menu2.offsetWidth > rr.width - 4) left = Math.max(4, tr.left - rr.left - menu2.offsetWidth - 6);
-      let top = tr.top - rr.top;
+      const tr2 = (it ? it.el : root).getBoundingClientRect();
+      let left = tr2.right - rr.left + 6;
+      if (left + menu2.offsetWidth > rr.width - 4) left = Math.max(4, tr2.left - rr.left - menu2.offsetWidth - 6);
+      let top = tr2.top - rr.top;
       if (top + menu2.offsetHeight > rr.height - 4) top = Math.max(4, rr.height - menu2.offsetHeight - 4);
       menu2.style.left = left + "px";
       menu2.style.top = Math.max(4, top) + "px";
@@ -10724,21 +10748,21 @@ Version: v${version}`;
       const menu2 = document.createElement("div");
       menu2.className = "wz-tl-menu";
       getLists().forEach((l) => {
-        const row = document.createElement("button");
-        row.type = "button";
-        row.className = "wz-tl-menu-item" + (l.active ? " wz-tl-active" : "");
-        row.dataset.listId = l.id;
+        const row2 = document.createElement("button");
+        row2.type = "button";
+        row2.className = "wz-tl-menu-item" + (l.active ? " wz-tl-active" : "");
+        row2.dataset.listId = l.id;
         const name = document.createElement("span");
         name.textContent = l.title;
         const count = document.createElement("span");
         count.className = "wz-tl-menu-count";
         count.textContent = String(l.count);
-        row.append(name, count);
-        row.addEventListener("click", () => {
+        row2.append(name, count);
+        row2.addEventListener("click", () => {
           setActiveList(l.id);
           closeListsMenu();
         });
-        menu2.appendChild(row);
+        menu2.appendChild(row2);
       });
       const actions = document.createElement("div");
       actions.className = "wz-tl-menu-actions";
@@ -11704,11 +11728,11 @@ Version: v${version}`;
     const label = document.createElement("div");
     label.className = "wizascript-notepad-side-label";
     label.textContent = "Recent Colors";
-    const row = document.createElement("div");
-    row.className = "wizascript-notepad-recent-colors";
-    wrap.append(label, row);
-    function render(colors) {
-      row.innerHTML = "";
+    const row2 = document.createElement("div");
+    row2.className = "wizascript-notepad-recent-colors";
+    wrap.append(label, row2);
+    function render2(colors) {
+      row2.innerHTML = "";
       colors.forEach((entry) => {
         const swatch = document.createElement("span");
         swatch.className = "wizascript-notepad-recent-swatch";
@@ -11716,10 +11740,10 @@ Version: v${version}`;
         swatch.title = entry.color;
         swatch.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
         swatch.addEventListener("click", () => onSelect(entry), { signal });
-        row.appendChild(swatch);
+        row2.appendChild(swatch);
       });
     }
-    return { element: wrap, render };
+    return { element: wrap, render: render2 };
   }
 
   // packages/misc/notepad/index.js
@@ -12408,8 +12432,8 @@ Version: v${version}`;
     const list = document.createElement("div");
     list.style.cssText = "max-height:260px;overflow-y:auto;";
     const boxes = tags.map((tag) => {
-      const row = document.createElement("label");
-      row.style.cssText = "display:flex;align-items:center;gap:8px;padding:4px 0;font-weight:normal;cursor:pointer;";
+      const row2 = document.createElement("label");
+      row2.style.cssText = "display:flex;align-items:center;gap:8px;padding:4px 0;font-weight:normal;cursor:pointer;";
       const box = document.createElement("input");
       box.type = "checkbox";
       box.checked = true;
@@ -12418,8 +12442,8 @@ Version: v${version}`;
       const text = document.createElement("span");
       const n = countCards(tag.id);
       text.textContent = `${tag.name} (${n} card${n === 1 ? "" : "s"})`;
-      row.append(box, dot, text);
-      list.appendChild(row);
+      row2.append(box, dot, text);
+      list.appendChild(row2);
       return { tag, box };
     });
     wrapper.appendChild(list);
@@ -12547,8 +12571,8 @@ Version: v${version}`;
     const rowsWrap = document.createElement("div");
     Object.assign(rowsWrap.style, { maxHeight: "220px", overflowY: "auto" });
     function makeRow({ label, onClick, active, secondary, swatch }) {
-      const row = document.createElement("div");
-      Object.assign(row.style, {
+      const row2 = document.createElement("div");
+      Object.assign(row2.style, {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -12558,11 +12582,11 @@ Version: v${version}`;
         background: active ? "rgba(120,170,255,0.18)" : "transparent",
         borderBottom: "1px solid rgba(255,255,255,0.08)"
       });
-      row.addEventListener("mouseenter", () => {
-        if (!active) row.style.background = "rgba(255,255,255,0.08)";
+      row2.addEventListener("mouseenter", () => {
+        if (!active) row2.style.background = "rgba(255,255,255,0.08)";
       });
-      row.addEventListener("mouseleave", () => {
-        row.style.background = active ? "rgba(120,170,255,0.18)" : "transparent";
+      row2.addEventListener("mouseleave", () => {
+        row2.style.background = active ? "rgba(120,170,255,0.18)" : "transparent";
       });
       const left = document.createElement("span");
       left.style.cssText = "display:flex;align-items:center;gap:8px;overflow:hidden;flex:1;";
@@ -12575,7 +12599,7 @@ Version: v${version}`;
       text.textContent = (active ? "\u2713 " : "") + label;
       text.style.cssText = "overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
       left.appendChild(text);
-      row.appendChild(left);
+      row2.appendChild(left);
       if (secondary) {
         const secBtn = document.createElement("span");
         secBtn.textContent = secondary.label;
@@ -12585,13 +12609,13 @@ Version: v${version}`;
           ev.stopPropagation();
           secondary.onClick();
         });
-        row.appendChild(secBtn);
+        row2.appendChild(secBtn);
       }
-      row.addEventListener("click", (ev) => {
+      row2.addEventListener("click", (ev) => {
         ev.stopPropagation();
         onClick();
       });
-      return row;
+      return row2;
     }
     function renderRows(filterTerm) {
       rowsWrap.innerHTML = "";
@@ -12720,8 +12744,8 @@ Version: v${version}`;
         return;
       }
       allTags().forEach((tag) => {
-        const row = document.createElement("div");
-        row.style.cssText = "display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08);";
+        const row2 = document.createElement("div");
+        row2.style.cssText = "display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.08);";
         const colorInput = document.createElement("input");
         colorInput.type = "color";
         colorInput.value = tag.color || DEFAULT_COLORS[0];
@@ -12730,7 +12754,7 @@ Version: v${version}`;
           updateTag(tag.id, { color: colorInput.value });
           decorateAllCards();
         });
-        row.appendChild(colorInput);
+        row2.appendChild(colorInput);
         const nameInput = document.createElement("input");
         nameInput.type = "text";
         nameInput.value = tag.name;
@@ -12742,7 +12766,7 @@ Version: v${version}`;
           else nameInput.value = tag.name;
           decorateAllCards();
         });
-        row.appendChild(nameInput);
+        row2.appendChild(nameInput);
         const delBtn = document.createElement("div");
         delBtn.textContent = "-";
         delBtn.title = "Double-click to delete (removes from every tagged card)";
@@ -12759,8 +12783,8 @@ Version: v${version}`;
           decorateAllCards();
           renderList3();
         });
-        row.appendChild(delBtn);
-        wrapper.appendChild(row);
+        row2.appendChild(delBtn);
+        wrapper.appendChild(row2);
       });
     }
     renderList3();
@@ -13449,8 +13473,8 @@ Version: v${version}`;
       return;
     }
     pins.forEach((pin) => {
-      const row = document.createElement("div");
-      row.className = "wz-wl-row";
+      const row2 = document.createElement("div");
+      row2.className = "wz-wl-row";
       const img = document.createElement("img");
       img.src = imageUrl(pin.type, pin.file);
       img.alt = "";
@@ -13471,8 +13495,8 @@ Version: v${version}`;
         e.stopPropagation();
         removeItem2(pin.key);
       });
-      row.append(img, text, del);
-      box.appendChild(row);
+      row2.append(img, text, del);
+      box.appendChild(row2);
     });
   }
   function registerTabWidgets() {
@@ -13480,13 +13504,13 @@ Version: v${version}`;
       el2.readOnly = true;
       el2.tabIndex = -1;
       el2.style.display = "none";
-      const row = el2.closest(".flex-start");
-      if (!row) return;
-      const label = row.querySelector("label");
+      const row2 = el2.closest(".flex-start");
+      if (!row2) return;
+      const label = row2.querySelector("label");
       if (label) label.style.fontWeight = "bold";
       const box = document.createElement("div");
       box.className = "wz-wl-list";
-      row.appendChild(box);
+      row2.appendChild(box);
       renderList2(box, label);
       const off = onItemsChange(() => {
         if (!box.isConnected) {
@@ -13502,12 +13526,12 @@ Version: v${version}`;
         if (checking) return;
         checking = true;
         input.value = "Checking\u2026";
-        const row = input.closest(".flex-start");
-        let status = row && row.querySelector(".wz-wl-status");
-        if (row && !status) {
+        const row2 = input.closest(".flex-start");
+        let status = row2 && row2.querySelector(".wz-wl-status");
+        if (row2 && !status) {
           status = document.createElement("div");
           status.className = "wz-wl-status";
-          row.appendChild(status);
+          row2.appendChild(status);
         }
         const result = await manualCheck(pluginRef);
         checking = false;
@@ -13608,6 +13632,747 @@ Version: v${version}`;
     };
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true });
     else start();
+  }
+
+  // packages/misc/card-history/data.js
+  var BASE = "https://raw.githubusercontent.com/theWiza2341/Wizascript/card-history/card-history/";
+  var memo = /* @__PURE__ */ new Map();
+  function getJson(url) {
+    return new Promise((resolve2, reject) => {
+      const fail = (msg) => reject(new Error(msg));
+      if (typeof GM_xmlhttpRequest === "function") {
+        GM_xmlhttpRequest({
+          method: "GET",
+          url,
+          headers: { "Cache-Control": "no-cache" },
+          onload(res) {
+            if (res.status === 404) return resolve2(null);
+            if (res.status !== 200) return fail(`HTTP ${res.status}`);
+            try {
+              resolve2(JSON.parse(res.responseText));
+            } catch (e) {
+              fail("bad JSON");
+            }
+          },
+          onerror: () => fail("network error"),
+          ontimeout: () => fail("timed out"),
+          timeout: 2e4
+        });
+        return;
+      }
+      fetch(url).then((r) => r.status === 404 ? null : r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))).then(resolve2, reject);
+    });
+  }
+  function cached(path) {
+    if (!memo.has(path)) {
+      const p = getJson(BASE + path).catch((e) => {
+        memo.delete(path);
+        throw e;
+      });
+      memo.set(path, p);
+    }
+    return memo.get(path);
+  }
+  var slug = (name) => String(name || "").toLowerCase().replace(/&amp;/g, "&").replace(/[^a-z0-9]/g, "") || "unnamed";
+  var getIndex = () => cached("data/index.json");
+  var getCardData = (id) => cached(`data/cards/${id}.json`);
+  var getArtifactData = (name) => cached(`data/artifacts/${slug(name)}.json`);
+  var getRules = () => cached("rules.json").catch(() => null);
+  var spriteUrl = (file) => `${BASE}assets/sprites/${encodeURIComponent(file)}.png`;
+
+  // packages/misc/card-history/game.js
+  var W = () => getPageWindow();
+  var cardFile = null;
+  var artifactList = null;
+  var page$ = () => W().$;
+  var hasI18n = () => {
+    const $2 = page$();
+    return !!($2 && $2.i18n);
+  };
+  function allCards() {
+    const w = W();
+    if (Array.isArray(w.allCards) && w.allCards.length) return w.allCards;
+    if (cardFile && cardFile.length) return cardFile;
+    try {
+      const ls = JSON.parse(w.localStorage.getItem("allCards") || "[]");
+      if (Array.isArray(ls) && ls.length) return ls;
+    } catch (e) {
+    }
+    return [];
+  }
+  async function ensureCards() {
+    if (allCards().length) return;
+    const cfg = W().cardsClientConfig;
+    if (!cfg || !cfg.url) return;
+    try {
+      const d = await (await fetch(cfg.url, { credentials: "same-origin" })).json();
+      const list = Array.isArray(d) ? d : d && (d.cards || d.allCards) || [];
+      cardFile = typeof list === "string" ? JSON.parse(list) : list;
+    } catch (e) {
+    }
+  }
+  function findCard(q) {
+    const list = allCards();
+    const s = String(q);
+    if (/^\d+$/.test(s)) return list.find((c) => String(c.id) === s || String(c.fixedId) === s) || null;
+    const n = norm(s);
+    return list.find((c) => norm(c.name) === n) || null;
+  }
+  async function artifacts2() {
+    if (artifactList) return artifactList;
+    try {
+      const data2 = await (await fetch("/DecksConfig", { credentials: "same-origin" })).json();
+      const raw = data2 && data2.allArtifacts;
+      artifactList = (typeof raw === "string" ? JSON.parse(raw) : raw) || [];
+    } catch (e) {
+      artifactList = [];
+    }
+    return artifactList;
+  }
+  var norm = (s) => String(s || "").toLowerCase().replace(/&amp;/g, "&").replace(/[^a-z0-9]/g, "");
+  function tr(key2, ...args) {
+    try {
+      const v = page$().i18n(key2, ...args);
+      if (!v || v === key2) return "";
+      const d = document.createElement("div");
+      d.innerHTML = v;
+      return d.textContent.trim();
+    } catch (e) {
+      return "";
+    }
+  }
+  var INTERNAL_KEY = /\b(?:kw|rarity|tribe|soul|enchant|status)-([a-z0-9]+(?:-[a-z0-9]+)*)\b/g;
+  var unkey = (html) => String(html).replace(/(^|>)([^<]*)/g, (m, gt, text) => gt + text.replace(INTERNAL_KEY, (k, id) => id.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())));
+  function trHtml(key2) {
+    try {
+      const v = page$().i18n(key2);
+      return v && v !== key2 ? unkey(v) : "";
+    } catch (e) {
+      return "";
+    }
+  }
+  var escHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  function prettyCode(raw) {
+    const s = String(raw || "");
+    const ov = s.match(/override=([^|}]+)/);
+    if (ov) return ov[1];
+    const m = s.match(/^[A-Z_]+:([^|}]+)/);
+    return m ? m[1].toLowerCase().replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : s;
+  }
+  function render(code, fallback) {
+    try {
+      const v = page$().i18n(code);
+      if (!v || v === code || /^\s*[a-z]+(?:-[a-z0-9]+)+\s*$/.test(v)) return escHtml(prettyCode(fallback));
+      return unkey(v);
+    } catch (e) {
+      return escHtml(prettyCode(fallback));
+    }
+  }
+  function knownKeys(prefix) {
+    try {
+      const i = page$().i18n();
+      const store = i.messageStore;
+      const msgs = Object.assign({}, store.messages.en || {}, store.messages[i.locale] || {});
+      return Object.keys(msgs).filter((k) => k.startsWith(prefix) && !/-desc$/.test(k)).map((k) => k.slice(prefix.length));
+    } catch (e) {
+      return [];
+    }
+  }
+  function appendCard(card) {
+    const fn = W().appendCard;
+    if (typeof fn !== "function") return null;
+    try {
+      const r = fn(card, null);
+      return r && (r[0] || r) || null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function gameFontSize(div, maxHeight) {
+    try {
+      const w = W();
+      if (typeof w.getResizedFontSize === "function" && w.$) {
+        div.style.fontSize = "";
+        div.style.fontSize = `${w.getResizedFontSize(w.$(div), maxHeight)}px`;
+      }
+    } catch (e) {
+    }
+  }
+  function dialogApi() {
+    const w = W();
+    return w.BootstrapDialog && w.BootstrapDialog.show ? { BD: w.BootstrapDialog, $: w.$ } : null;
+  }
+
+  // packages/misc/card-history/format.js
+  var DEFAULTS = {
+    keywords: ["determination", "charge", "haste", "armor", "disarmed", "candy", "support", "transparency", "invulnerable", "taunt", "dodge", "shock", "loop", "bullseye", "wanted", "darkspawn", "magic", "dust", "turn-start", "turn-end", "fatigue", "turbo", "paralyze", "silence", "synergy", "delay", "generated", "need", "program", "erase", "switch", "catch", "mold-spore", "flowery-power"],
+    tribes: ["tem", "dog", "amalgamate", "g-follower", "lost-soul", "frog", "mold", "snail", "bomb", "plant", "royal-guard", "all-monster-tribes", "chaos-weapon", "piece", "arachnid", "royal-invention", "plug", "thrashing-part", "bargain", "dance", "giga-attack", "round", "pack", "spider", "turbo"],
+    souls: ["determination", "patience", "bravery", "integrity", "perseverance", "kindness", "justice"],
+    enchantments: ["the-flame"],
+    // Keywords that were renamed or removed: [old word, today's keyword or null (= underlined)].
+    legacyKeywords: [["Battlecry", "magic"], ["Deathrattle", "dust"], ["Can't Attack", "disarmed"], ["Can't attack", "disarmed"], ["Burn", "erase"], ["burn", "erase"], ["End of turn", "turn-end"], ["Start of turn", "turn-start"], ["Thorns", null], ["Ranged", null], ["Future", null]],
+    // Only with a colon after them - otherwise they're ordinary words.
+    legacyWithColon: [["Enter", "magic"], ["Death", "dust"]],
+    // Card / artifact names never linked: too generic ("Heal 2 HP", "Draw a card").
+    notLinks: ["Heal", "Draw", "Hand", "Board", "Deck", "Dustpile", "Health", "Power", "Save"],
+    // Phrases left as plain text before anything else (old card names that look like other things).
+    plainPhrases: ["\\bG\\.?\\s?Blasters?\\b"]
+  };
+  var RARITY_WORDS = ["BASE", "COMMON", "RARE", "EPIC", "LEGENDARY", "DETERMINATION", "TOKEN", "MYTHIC"];
+  var STAT_WORDS = {
+    ATK: "{{ATK}}",
+    HP: "{{HP}}",
+    DMG: "{{DMG}}",
+    G: "{{GOLD}}",
+    KR: "{{KR}}",
+    COST: '<span class="cost-color">COST</span>',
+    DT: "{{RARITY:DETERMINATION|override=DT}}",
+    MONSTER: "{{SOUL:MONSTER}}"
+  };
+  var COLOUR_WORDS = [[/(^|\s)(cost)(?=\s|$|\.(?:\s|$))/g, "cost-color"]];
+  var uniq = (a) => [...new Set(a)];
+  var escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  var fmt = null;
+  async function formatter() {
+    if (fmt) return fmt;
+    await ensureCards();
+    const remote = await getRules();
+    const R = Object.assign({}, DEFAULTS, remote && typeof remote === "object" ? remote : {});
+    const notLinks = new Set(R.notLinks || []);
+    const cs = /* @__PURE__ */ new Map();
+    const links = /* @__PURE__ */ new Set();
+    const cap = /* @__PURE__ */ new Map();
+    const add = (name, code) => {
+      if (name && name.length >= 2 && !cap.has(name.toLowerCase())) cap.set(name.toLowerCase(), code);
+    };
+    const addExact = (name, code) => {
+      if (!name || name.length < 2 || cs.has(name) || cap.has(name.toLowerCase()) || notLinks.has(name)) return;
+      cs.set(name, code);
+      links.add(name);
+    };
+    const colonCodes = /* @__PURE__ */ new Map();
+    if (hasI18n()) {
+      const kwCode = (id, override) => `{{KW:${id.toUpperCase().replace(/-/g, "_")}${override ? `|override=${override}` : ""}}}`;
+      (R.keywords || []).forEach((id) => add(tr(`kw-${id}`), kwCode(id)));
+      (R.legacyKeywords || []).forEach(([word, modern]) => {
+        const own = word.toLowerCase().replace(/'/g, "").replace(/ /g, "-");
+        if (cap.has(word.toLowerCase())) return;
+        const code = tr(`kw-${own}`) ? kwCode(own, word) : modern && tr(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`;
+        add(word, code);
+      });
+      uniq([...R.enchantments || [], ...knownKeys("enchant-")]).forEach((id) => {
+        const code = id.toUpperCase().replace(/-/g, "_");
+        const one = tr(`enchant-${id}`, 1);
+        add(tr(`enchant-${id}`, 2), `{{ENCHANT:${code}|2}}`);
+        add(one, `{{ENCHANT:${code}|1}}`);
+        if (!one) {
+          const words = id.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
+          add(words, `{{ENCHANT:${code}|1|override=${words}}}`);
+          add(`${words}s`, `{{ENCHANT:${code}|2|override=${words}s}}`);
+        }
+      });
+      (R.tribes || []).forEach((id) => {
+        const code = id.toUpperCase().replace(/-/g, "_");
+        add(tr(`tribe-${id}`, 2), `{{TRIBE:${code}|2}}`);
+        add(tr(`tribe-${id}`, 1), `{{TRIBE:${code}|1}}`);
+      });
+      (R.souls || []).forEach((id) => add(tr(`soul-${id}`), `{{SOUL:${id.toUpperCase()}}}`));
+      (R.legacyWithColon || []).forEach(([word, modern]) => colonCodes.set(word, tr(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`));
+      (await artifacts2()).forEach((a) => {
+        if (a && a.id != null) addExact(tr(`artifact-name-${a.id}`) || a.name, `{{ARTIFACT:${a.id}}}`);
+      });
+      allCards().forEach((c) => {
+        const id = c.fixedId || c.id;
+        const name = tr(`card-name-${id}`, 1) || c.name;
+        if (notLinks.has(name)) return;
+        addExact(name, `{{CARD:${id}|1}}`);
+        addExact(tr(`card-name-${id}`, 2), `{{CARD:${id}|2}}`);
+        if (!/s$/i.test(name)) addExact(`${name}s`, `{{CARD:${id}|2}}`);
+      });
+    }
+    const capPattern = (w) => [...w].map((ch, i) => {
+      const lo = ch.toLowerCase();
+      const up = ch.toUpperCase();
+      if (i === 0) return escRe(up);
+      return lo !== up ? `[${escRe(lo)}${escRe(up)}]` : escRe(ch);
+    }).join("");
+    const capNames = [...cap.keys()].sort((a, b) => b.length - a.length).map(capPattern);
+    const capRe = capNames.length ? new RegExp(`(^|[^\\p{L}\\p{N}_'])(${capNames.join("|")})(?![\\p{L}\\p{N}_])`, "gu") : null;
+    RARITY_WORDS.forEach((w) => {
+      if (!cs.has(w)) cs.set(w, `{{RARITY:${w}}}`);
+    });
+    Object.entries(STAT_WORDS).forEach(([w, code]) => cs.set(w, code));
+    const csNames = [...cs.keys()].sort((a, b) => b.length - a.length).map(escRe);
+    const csRe = new RegExp(`(^|[^\\p{L}\\p{N}_'])(${csNames.join("|")})(?![\\p{L}\\p{N}_])`, "gu");
+    const statRe = /(^|[^\d/])([+-]?\d+)\/([+-]?\d+)(?:\/([+-]?\d+))?(?![\d/])/g;
+    const plain = (R.plainPhrases || []).map((p) => {
+      try {
+        return new RegExp(p, "g");
+      } catch (e) {
+        return null;
+      }
+    }).filter(Boolean);
+    fmt = { cs, cap, csRe, capRe, statRe, colonCodes, links, plain };
+    return fmt;
+  }
+  var atSentenceStart = (before) => /(^|[.!?:]|\u0002)\s*$/.test(before);
+  function formatText(text, f) {
+    if (!hasI18n()) return escHtml(text);
+    const tokens = [];
+    const hold = (code, raw) => `${tokens.push({ code, raw }) - 1}`;
+    let work = String(text).replace(/^[\s.,;:!?\-–—]+/, "");
+    f.plain.forEach((re) => {
+      work = work.replace(re, (m) => hold(`<span>${escHtml(m)}</span>`, m));
+    });
+    work = work.replace(/\{\{[^{}]+\}\}/g, (m) => hold(m, m.replace(/^\{\{|\}\}$/g, "")));
+    work = work.replace(f.statRe, (m, pre, a, b, c) => pre + hold(c !== void 0 ? `{{STATS:${a}|${b}|${c}}}` : `{{STATS:${a}|${b}}}`, m.slice(pre.length)));
+    f.colonCodes.forEach((code, word) => {
+      work = work.replace(new RegExp(`(^|[^\\p{L}])(${escRe(word)})(?=\\s*:)`, "gu"), (m, pre, w) => pre + hold(code, w));
+    });
+    work = work.replace(f.csRe, (m, pre, word, offset, whole) => {
+      if (f.links.has(word) && !/\s/.test(word) && atSentenceStart(whole.slice(0, offset + pre.length))) return m;
+      return pre + hold(f.cs.get(word), word);
+    });
+    if (f.capRe) work = work.replace(f.capRe, (m, pre, word) => pre + hold(f.cap.get(word.toLowerCase()), word));
+    return work.split(/(\u0001\d+\u0002)/).map((part) => {
+      const m = part.match(/^\u0001(\d+)\u0002$/);
+      if (m) {
+        const t = tokens[+m[1]];
+        return t.code.startsWith("<") ? t.code : render(t.code, t.raw);
+      }
+      let html = escHtml(part);
+      COLOUR_WORDS.forEach(([re, cls]) => {
+        html = html.replace(re, `$1<span class="${cls}">$2</span>`);
+      });
+      return html;
+    }).join("");
+  }
+
+  // packages/misc/card-history/cards-view.js
+  var PER_ROW = 4;
+  function versionLabel(v) {
+    if (!v) return { text: "?", title: "Version not recorded" };
+    const before = v.label.match(/^Before\s+(Alpha|Beta)\s*([\d.]+)/i);
+    if (before) return { text: `<${/alpha/i.test(before[1]) ? "A" : ""}${before[2]}`, title: `${v.label} (from the wiki's Previous Versions page)` };
+    if (/^Pre-?Alpha$/i.test(v.label)) return { text: "PA", title: "Pre-Alpha (from the Miraheze wiki)" };
+    const when = v.date ? ` (${v.date})` : "";
+    const a = v.label.match(/^Alpha\s*([\d.]+)/i);
+    if (a) return { text: `A${a[1]}`, uncertain: !!v.guessed, title: `${v.guessed ? "Probably " : ""}${v.label}${when}` };
+    const m = v.label.match(/^Beta\s*([\d.]+)/i);
+    return { text: m ? m[1] : v.label, uncertain: !!v.guessed, title: `${v.guessed ? "Probably " : ""}${v.label}${when}` };
+  }
+  function fitText(desc, html) {
+    const inner = document.createElement("div");
+    inner.innerHTML = html;
+    desc.textContent = "";
+    desc.appendChild(inner);
+    gameFontSize(inner, 81);
+  }
+  function setQuantity(el2, label, note) {
+    let q = el2.querySelector(".cardQuantity");
+    if (!q) {
+      q = document.createElement("div");
+      q.className = "cardQuantity";
+      el2.appendChild(q);
+    }
+    q.textContent = label.text + (note || label.uncertain ? " *" : "");
+    q.title = label.title + (note ? `
+${note}` : "");
+  }
+  function tidy(el2) {
+    [...el2.classList].filter((c) => /^col-/.test(c)).forEach((c) => el2.classList.remove(c));
+    el2.classList.remove("pointer");
+    el2.removeAttribute("id");
+    el2.style.margin = "0";
+    el2.style.float = "none";
+  }
+  function plainCard(card) {
+    const ext = card.extension === "DELTARUNE" ? "DELTARUNE" : card.extension === "UTY" ? "UTY" : "BASE";
+    const el2 = document.createElement("div");
+    el2.className = `card ${card.typeCard === 0 ? "monster" : "spell"} undertale-frame standard-skin`;
+    const part = (cls, text) => {
+      const d = document.createElement("div");
+      d.className = cls;
+      if (text !== void 0) d.textContent = text;
+      el2.appendChild(d);
+      return d;
+    };
+    part("cardFrame");
+    part("cardBackground");
+    part("cardHeader");
+    part("cardName").appendChild(document.createElement("div")).textContent = card.name;
+    part("cardCost", String(card.cost));
+    part("cardStatus");
+    part("cardTribes");
+    part("cardImage").style.background = `url("images/cards/${card.image}.png") no-repeat transparent`;
+    part("cardDesc").appendChild(document.createElement("div"));
+    part("cardFooter");
+    if (card.typeCard === 0) {
+      part("cardATK", String(card.attack));
+      part("cardHP", String(card.hp));
+    }
+    part("cardRarity").style.background = `url("images/rarity/${ext}_${card.rarity}.png") no-repeat transparent`;
+    part("cardQuantity");
+    return el2;
+  }
+  var makeCard = (card) => appendCard(card) || plainCard(card);
+  function drawVersion(base, ver, f, currentDescHtml) {
+    const card = JSON.parse(JSON.stringify(base));
+    const isMonster = card.typeCard === 0;
+    if (ver.cost != null) {
+      card.cost = ver.cost;
+      card.originalCost = ver.cost;
+    }
+    if (isMonster) {
+      if (ver.atk != null) {
+        card.attack = ver.atk;
+        card.originalAttack = ver.atk;
+      }
+      if (ver.hp != null) {
+        card.hp = ver.hp;
+        card.maxHp = ver.hp;
+        card.originalHp = ver.hp;
+      }
+    }
+    if (ver.rarity && ver.rarity !== "GENERATED") card.rarity = ver.rarity;
+    card.tribes = Array.isArray(ver.tribes) ? ver.tribes : [];
+    card.statuses = Array.isArray(ver.statuses) ? ver.statuses.map((x) => ({ statusType: "POSITIVE", statusBehavior: x.displayCounter ? "STACKABLE" : "UNIQUE", ...x })) : [];
+    if (ver.soul !== void 0) card.soul = ver.soul;
+    const el2 = makeCard(card);
+    tidy(el2);
+    const art = el2.querySelector(".cardImage");
+    if (ver.sprite && art) art.style.backgroundImage = `url("${spriteUrl(ver.sprite)}")`;
+    const usedToday = ver.image && allCards().some((c) => c.image === ver.image);
+    if (!ver.sprite && ver.image && ver.image !== base.image && !usedToday && art) {
+      const probe = new Image();
+      probe.onload = () => {
+        art.style.backgroundImage = `url("images/cards/${ver.image}.png")`;
+      };
+      probe.src = `images/cards/${ver.image}.png`;
+    }
+    const nameEl = el2.querySelector(".cardName");
+    if (nameEl) {
+      const nd = nameEl.firstElementChild || nameEl;
+      if (nd.textContent !== ver.name) {
+        nd.textContent = ver.name;
+        if (nd !== nameEl) gameFontSize(nd, 25);
+      }
+    }
+    const costEl = el2.querySelector(".cardCost");
+    if (costEl && ver.cost != null) costEl.textContent = ver.cost;
+    if (isMonster) {
+      el2.querySelectorAll('[class*="ATK" i], [class*="attack" i]').forEach((n) => {
+        if (ver.atk != null && !n.children.length) n.textContent = ver.atk;
+      });
+      el2.querySelectorAll('[class*="cardHP" i], [class*="health" i]').forEach((n) => {
+        if (ver.hp != null && !n.children.length) n.textContent = ver.hp;
+      });
+    }
+    const desc = el2.querySelector(".cardDesc");
+    if (desc) {
+      if (ver.sameAsToday && !ver.legacy && currentDescHtml !== null) desc.innerHTML = currentDescHtml;
+      else if (ver.textKnown && !ver.truncated && ver.text) fitText(desc, formatText(ver.text, f));
+      else fitText(desc, "?");
+    }
+    setQuantity(el2, versionLabel(ver.version), ver.note);
+    return el2;
+  }
+  var n0 = (x) => x === null || x === void 0 ? void 0 : x;
+  function cardHistoryView(base, data2, f, index) {
+    const nowEl = makeCard(JSON.parse(JSON.stringify(base)));
+    tidy(nowEl);
+    const nowDesc = nowEl.querySelector(".cardDesc");
+    const currentDescHtml = nowDesc ? nowDesc.innerHTML : null;
+    const versions = (data2 && data2.versions ? data2.versions : []).slice();
+    const lastV = versions[versions.length - 1];
+    const sameAsNow = lastV && lastV.name === base.name && n0(lastV.cost) === n0(base.cost) && (base.typeCard !== 0 || n0(lastV.atk) === n0(base.attack) && n0(lastV.hp) === n0(base.hp));
+    if (sameAsNow) {
+      versions.pop();
+      setQuantity(nowEl, versionLabel(lastV.version), lastV.note);
+    } else if (data2 && data2.newestMiraheze) {
+      setQuantity(nowEl, versionLabel(data2.newestMiraheze), "Today's version - its last change, from the Miraheze wiki.");
+    } else {
+      const newest = index && index.newestVersion;
+      setQuantity(nowEl, versionLabel(newest ? { ...newest, guessed: true } : null), "Today's version - when it last changed isn't recorded.");
+    }
+    const grid = document.createElement("div");
+    grid.className = "cardsPreview no-hover wz-ch-grid";
+    grid.style.cssText = `display:grid;grid-template-columns:repeat(${PER_ROW},max-content);gap:38px 8px;justify-content:center;padding-bottom:28px;`;
+    versions.forEach((v) => grid.appendChild(drawVersion(base, v, f, currentDescHtml)));
+    grid.appendChild(nowEl);
+    const node = document.createElement("div");
+    node.appendChild(grid);
+    const foot = document.createElement("div");
+    foot.className = "wz-ch-foot";
+    const src = ["Undercards Wiki (Version History"];
+    if (data2 && data2.pvTitle) src[0] += `, ${data2.pvTitle.replace(/_/g, " ")}`;
+    src[0] += ")";
+    if (data2 && data2.miraheze) src.push("The Undercards Wiki (Miraheze)");
+    if (data2 && data2.trackerStart) src.push(`feildmaster's Card-Tracker (game data since ${data2.trackerStart})`);
+    src.push("Undercards patch notes");
+    const lines = [`Sources: ${src.join("; ")}.`];
+    if (!data2) lines.unshift("No recorded history for this card yet.");
+    else if (!data2.firstFrom && !(versions[0] && versions[0].version && versions[0].version.source === "miraheze")) lines.push("Its first version isn't recorded; earlier stats are worked out backwards.");
+    lines.push("* = not certain, or has a note - hover the version number.");
+    foot.textContent = lines.join(" ");
+    node.appendChild(foot);
+    const fit = () => {
+      const avail = node.clientWidth;
+      const need = grid.scrollWidth;
+      grid.style.zoom = need > avail && avail > 0 ? String(Math.max(0.5, avail / need)) : "";
+    };
+    const wikiUrl = `https://undercards.fandom.com/wiki/${data2 && data2.pvTitle ? data2.pvTitle : `${base.name.replace(/ /g, "_")}/Previous_Versions`}`;
+    return { node, fit, wikiUrl };
+  }
+
+  // packages/misc/card-history/artifacts-view.js
+  var RARITIES = ["COMMON", "LEGENDARY", "TOKEN"];
+  var asRarity = (x) => {
+    const s = String(x || "").toUpperCase();
+    if (/LEGEND/.test(s)) return "LEGENDARY";
+    if (/TOKEN|GENERAT/.test(s)) return "TOKEN";
+    if (/COMMON|BASE/.test(s)) return "COMMON";
+    return void 0;
+  };
+  function todayArtifactRarity(a) {
+    if (!a) return void 0;
+    if (a.unavailable === true) return "TOKEN";
+    if (a.legendary === true) return "LEGENDARY";
+    if (a.legendary === false) return "COMMON";
+    return asRarity(a.rarity);
+  }
+  function findArtifact(list, q) {
+    const s = String(q);
+    if (/^\d+$/.test(s)) return list.find((a) => String(a.id) === s) || null;
+    const n = norm(s);
+    return list.find((a) => norm(a.name) === n || norm(tr(`artifact-name-${a.id}`)) === n) || list.find((a) => norm(a.image) === n) || null;
+  }
+  function row(ver, rarity, f, todayName, todayHtml) {
+    const tr2 = document.createElement("tr");
+    const v = document.createElement("td");
+    v.className = "wz-ch-art-ver";
+    const label = versionLabel(ver.version);
+    v.textContent = label.text + (ver.note || label.uncertain ? " *" : "");
+    v.title = label.title + (ver.note ? `
+${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
+    const r = document.createElement("td");
+    r.className = "wz-ch-art-rar";
+    r.innerHTML = RARITIES.includes(rarity) ? render(`{{RARITY:${rarity}}}`, rarity) : "?";
+    const t = document.createElement("td");
+    t.className = "wz-ch-art-txt";
+    const oldName = ver.name && norm(ver.name) !== norm(todayName) ? `<span class="wz-ch-art-oldname">(${escHtml(ver.name)})</span>` : "";
+    const body = todayHtml !== void 0 ? todayHtml : ver.textKnown && ver.text ? formatText(ver.text, f) : "?";
+    t.innerHTML = `<div class="cardDesc wz-ch-art-desc"><div>${oldName}${body}</div></div>`;
+    tr2.append(v, r, t);
+    return tr2;
+  }
+  function artifactHistoryView(a, data2, f, index) {
+    const todayName = tr(`artifact-name-${a.id}`, 1) || a.name;
+    const todayHtml = trHtml(`artifact-${a.id}`) || (a.description ? formatText(a.description, f) : "?");
+    const today = todayArtifactRarity(a);
+    const versions = (data2 && data2.versions ? data2.versions : []).map((v) => ({ ...v }));
+    let r = today;
+    for (let i = versions.length - 1; i >= 0; i--) {
+      const v = versions[i];
+      const stated = asRarity(v.rarity);
+      const from = asRarity(v.rarityFrom);
+      v.shownRarity = today ? from ? stated : r : stated || r;
+      r = from || v.shownRarity;
+    }
+    const shown = (html) => {
+      const d = document.createElement("div");
+      d.innerHTML = html;
+      return d.textContent.toLowerCase().replace(/[^a-z0-9/+]+/g, "");
+    };
+    const last = versions[versions.length - 1];
+    const plainToday = todayHtml && todayHtml !== "?" ? shown(todayHtml) : "";
+    let todayVer;
+    if (last && last.textKnown && last.text && plainToday && shown(formatText(last.text, f)) === plainToday) {
+      versions.pop();
+      todayVer = { ...last, name: todayName };
+    } else {
+      const lk = last && last.version && last.version.key;
+      const newer = (data2 && data2.mirahezeVersions || []).filter((mv) => !lk || mv.key[0] > lk[0] || mv.key[0] === lk[0] && mv.key[1] > lk[1]).sort((x, y) => y.key[0] - x.key[0] || y.key[1] - x.key[1])[0];
+      const newest = index && index.newestVersion;
+      todayVer = {
+        version: newer || (newest ? { ...newest, guessed: true } : null),
+        name: todayName,
+        note: newer ? null : "Today's version - when it last changed isn't recorded."
+      };
+    }
+    const node = document.createElement("div");
+    const head = document.createElement("div");
+    head.className = "wz-ch-art-head";
+    head.innerHTML = `${a.image ? `<img src="images/artifacts/${escHtml(a.image)}.png" alt="">` : ""}<span class="wz-ch-art-title">${escHtml(todayName)}</span>`;
+    const table = document.createElement("table");
+    table.className = "wz-ch-art-list";
+    versions.forEach((v) => table.appendChild(row(v, v.shownRarity, f, todayName)));
+    table.appendChild(row(todayVer, today || last && last.shownRarity, f, todayName, todayHtml));
+    node.append(head, table);
+    const foot = document.createElement("div");
+    foot.className = "wz-ch-foot";
+    foot.textContent = `${data2 ? "" : "No recorded history for this artifact yet. "}Sources: Undercards Wiki (Version History)${data2 && data2.miraheze ? "; The Undercards Wiki (Miraheze)" : ""}; Undercards patch notes. Oldest first, today's last. * = not certain, or has a note - hover the version number.`;
+    node.appendChild(foot);
+    return { node, wikiUrl: `https://undercards.fandom.com/wiki/${a.name.replace(/ /g, "_")}` };
+  }
+
+  // packages/misc/card-history/shell.js
+  function openShell(title, wikiUrl) {
+    const box = document.createElement("div");
+    box.className = "wz-ch-loading";
+    box.innerHTML = '<div class="wz-ch-loading-title">Loading...</div><div class="wz-ch-step"></div>';
+    const state2 = { url: wikiUrl, shown: false, onShown: null };
+    const api = dialogApi();
+    if (api) {
+      api.BD.show({
+        title,
+        size: api.BD.SIZE_WIDE,
+        message: api.$(box),
+        onshown: () => {
+          state2.shown = true;
+          if (state2.onShown) state2.onShown();
+        },
+        buttons: [
+          { label: "Open on the wiki", action: () => window.open(state2.url, "_blank", "noopener") },
+          { label: "Close", cssClass: "btn-primary", action: (d) => d.close() }
+        ]
+      });
+    } else {
+      document.body.appendChild(box);
+      state2.shown = true;
+    }
+    return {
+      step(text) {
+        const el2 = box.querySelector(".wz-ch-step");
+        if (el2) el2.textContent = text;
+      },
+      fill(node, fit, url) {
+        if (url) state2.url = url;
+        box.className = "";
+        box.replaceChildren(node);
+        if (!fit) return;
+        const run = () => {
+          fit();
+          if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+          setTimeout(fit, 400);
+        };
+        if (state2.shown) run();
+        else state2.onShown = run;
+      },
+      fail(err) {
+        const t = box.querySelector(".wz-ch-loading-title");
+        if (t) t.textContent = "Couldn't load the history.";
+        this.step(String(err && err.message ? err.message : err));
+      }
+    };
+  }
+
+  // packages/misc/card-history/styles.js
+  var STYLE_ID3 = "wizascript-card-history-style";
+  var CSS4 = `
+.wz-ch-loading { min-height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+.wz-ch-loading-title { font-size: 20px; }
+.wz-ch-step { font-size: 13px; opacity: .75; }
+.wz-ch-foot { clear: both; margin-top: 10px; font-size: 12px; opacity: .85; }
+
+.wz-ch-art-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.wz-ch-art-head img { max-height: 48px; image-rendering: pixelated; }
+.wz-ch-art-title { font-size: 18px; }
+.wz-ch-art-list { width: 100%; border-collapse: collapse; }
+.wz-ch-art-list td { border: 2px solid #fff; padding: 6px 10px; vertical-align: middle; background: #000; color: #fff; }
+.wz-ch-art-list td.wz-ch-art-ver { width: 90px; text-align: center; font-size: 18px; white-space: nowrap; cursor: default; }
+.wz-ch-art-list td.wz-ch-art-rar { width: 120px; text-align: center; white-space: nowrap; }
+.wz-ch-art-list td.wz-ch-art-txt { font-size: 14px; line-height: 1.35; text-align: left; }
+.wz-ch-art-oldname { opacity: .75; margin-right: 6px; }
+/* A .cardDesc (for the game's card-text colours) laid out as plain text. */
+.wz-ch-art-list .cardDesc.wz-ch-art-desc { position: static !important; width: auto !important; height: auto !important; top: auto !important;
+  left: auto !important; margin: 0 !important; padding: 0 !important; display: block !important; text-align: left !important;
+  font-size: 14px !important; line-height: 1.35; }
+.wz-ch-art-list .cardDesc.wz-ch-art-desc > div { font-size: 14px !important; }
+`;
+  function injectCardHistoryStyle() {
+    if (document.getElementById(STYLE_ID3)) return;
+    const st = document.createElement("style");
+    st.id = STYLE_ID3;
+    st.textContent = CSS4;
+    (document.head || document.documentElement).appendChild(st);
+  }
+
+  // packages/misc/card-history/index.js
+  var CARD_PAGES2 = ["/Crafting", "/Decks"];
+  var ARTIFACT_PAGES = ["/Artifacts"];
+  var warn = (...a) => {
+    if (debugLoggingSetting.value()) console.warn("[Wizascript Card History]", ...a);
+  };
+  var busy = false;
+  async function openCard(id) {
+    const base = findCard(id);
+    if (!base) return;
+    const shell = openShell(`Previous Versions - ${base.name}`, `https://undercards.fandom.com/wiki/${base.name.replace(/ /g, "_")}/Previous_Versions`);
+    try {
+      shell.step("Reading the card's history...");
+      const [data2, index, f] = await Promise.all([getCardData(base.id), getIndex().catch(() => null), formatter()]);
+      const view = cardHistoryView(base, data2, f, index);
+      shell.fill(view.node, view.fit, view.wikiUrl);
+    } catch (e) {
+      warn(e);
+      shell.fail(e);
+    }
+  }
+  async function openArtifact(image) {
+    const list = await artifacts2();
+    const a = findArtifact(list, image);
+    if (!a) return;
+    const shell = openShell(`Artifact History - ${a.name}`, `https://undercards.fandom.com/wiki/${a.name.replace(/ /g, "_")}`);
+    try {
+      shell.step("Reading the artifact's history...");
+      const [data2, index, f] = await Promise.all([getArtifactData(a.name), getIndex().catch(() => null), formatter()]);
+      const view = artifactHistoryView(a, data2, f, index);
+      shell.fill(view.node, null, view.wikiUrl);
+    } catch (e) {
+      warn(e);
+      shell.fail(e);
+    }
+  }
+  function cardUnder(e) {
+    if (e.button !== 1 || !matchesPage(CARD_PAGES2) || !e.target.closest) return null;
+    const el2 = e.target.closest(".card");
+    if (!el2 || !el2.id || el2.closest(".modal")) return null;
+    return findCard(el2.id) ? el2.id : null;
+  }
+  function artifactUnder(e) {
+    if (e.button !== 1 || !matchesPage(ARTIFACT_PAGES) || !e.target.closest || e.target.closest(".modal")) return null;
+    let el2 = e.target;
+    for (let i = 0; i < 4 && el2; i++, el2 = el2.parentElement) {
+      const img = el2.matches && el2.matches('img[src*="artifacts/"]') ? el2 : el2.querySelector && el2.querySelector('img[src*="artifacts/"]');
+      if (img) {
+        const m = img.getAttribute("src").match(/artifacts\/([^/?#]+)\.png/i);
+        if (m) return decodeURIComponent(m[1]);
+      }
+    }
+    return null;
+  }
+  function initCardHistory() {
+    if (!isPluginEnabled("cardHistory")) return;
+    if (!matchesPage([...CARD_PAGES2, ...ARTIFACT_PAGES])) return;
+    injectCardHistoryStyle();
+    document.addEventListener("mousedown", (e) => {
+      if (cardUnder(e) || artifactUnder(e)) e.preventDefault();
+    }, true);
+    document.addEventListener("auxclick", async (e) => {
+      const id = cardUnder(e);
+      const image = id ? null : artifactUnder(e);
+      if (!id && !image) return;
+      e.preventDefault();
+      if (busy) return;
+      busy = true;
+      try {
+        if (id) await openCard(id);
+        else await openArtifact(image);
+      } finally {
+        busy = false;
+      }
+    }, true);
   }
 
   // packages/controller/index.js
@@ -13859,11 +14624,11 @@ Version: v${version}`;
     function buildGrid(rows) {
       oskGrid.innerHTML = "";
       oskRowEls = [];
-      rows.forEach((row) => {
+      rows.forEach((row2) => {
         const rowEl = document.createElement("div");
         Object.assign(rowEl.style, { display: "flex", justifyContent: "center", marginBottom: "5px" });
         const keyEls = [];
-        row.forEach((label) => {
+        row2.forEach((label) => {
           const keyEl = document.createElement("div");
           keyEl.textContent = displayLabel(label, oskShift);
           const wide = label === "\u2423";
@@ -14025,11 +14790,11 @@ Version: v${version}`;
       const rows = buildRowGrid(cards2);
       if (!rows.length) return [];
       let bestRow = rows[0], bestTop = -Infinity;
-      for (const row of rows) {
-        const avgTop = row.reduce((sum, el2) => sum + el2.getBoundingClientRect().top, 0) / row.length;
+      for (const row2 of rows) {
+        const avgTop = row2.reduce((sum, el2) => sum + el2.getBoundingClientRect().top, 0) / row2.length;
         if (avgTop > bestTop) {
           bestTop = avgTop;
-          bestRow = row;
+          bestRow = row2;
         }
       }
       return bestRow;
@@ -14044,12 +14809,12 @@ Version: v${version}`;
       const withRect = els.map((el2) => ({ el: el2, r: el2.getBoundingClientRect() })).sort((a, b) => a.r.top - b.r.top);
       const rows = [];
       for (const item of withRect) {
-        let row = rows.find((r) => Math.abs(r.top - item.r.top) <= rowTolerance);
-        if (!row) {
-          row = { top: item.r.top, items: [] };
-          rows.push(row);
+        let row2 = rows.find((r) => Math.abs(r.top - item.r.top) <= rowTolerance);
+        if (!row2) {
+          row2 = { top: item.r.top, items: [] };
+          rows.push(row2);
         }
-        row.items.push(item);
+        row2.items.push(item);
       }
       rows.forEach((r) => r.items.sort((a, b) => a.r.left - b.r.left));
       return rows.map((r) => r.items.map((i) => i.el));
@@ -14117,9 +14882,9 @@ Version: v${version}`;
       const scrollable = findScrollableDescendant(root);
       if (!scrollable) return [];
       const items = [];
-      Array.from(scrollable.children).forEach((row) => {
-        if (row.tagName !== "DIV") return;
-        Array.from(row.children).filter((c) => c.tagName === "SPAN").forEach((s) => items.push(s));
+      Array.from(scrollable.children).forEach((row2) => {
+        if (row2.tagName !== "DIV") return;
+        Array.from(row2.children).filter((c) => c.tagName === "SPAN").forEach((s) => items.push(s));
       });
       return items.filter((el2) => el2.offsetParent !== null);
     }
@@ -14161,14 +14926,14 @@ Version: v${version}`;
       return null;
     }
     function queryFieldRows(root) {
-      const flexRows = Array.from(root.querySelectorAll(".flex-start")).filter((row) => row.offsetParent !== null).map((row) => Array.from(row.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el2) => el2.offsetParent !== null)).filter((items) => items.length);
+      const flexRows = Array.from(root.querySelectorAll(".flex-start")).filter((row2) => row2.offsetParent !== null).map((row2) => Array.from(row2.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el2) => el2.offsetParent !== null)).filter((items) => items.length);
       const labelRows = /* @__PURE__ */ new Map();
       Array.from(root.querySelectorAll(".tabLabel")).filter((el2) => el2.offsetParent !== null && !(el2.classList.contains("wizascript-tab-arrow") && el2.classList.contains("disabled"))).forEach((el2) => {
         const key2 = el2.parentElement;
         if (!labelRows.has(key2)) labelRows.set(key2, []);
         labelRows.get(key2).push(el2);
       });
-      const bareLabels = Array.from(labelRows.values()).map((row) => row.sort((a, b) => {
+      const bareLabels = Array.from(labelRows.values()).map((row2) => row2.sort((a, b) => {
         const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
         if (Math.abs(ra.top - rb.top) > 2) return ra.top - rb.top;
         return ra.left - rb.left;
@@ -14211,10 +14976,10 @@ Version: v${version}`;
       return labels.length > 1 ? labels : null;
     }
     function cycleSettingsTab(dir, tabbedRoot) {
-      const row = modalPane === "fields" ? pluginTabRow(queryActiveTabContent(tabbedRoot)) : null;
-      if (row) {
-        const cur2 = Math.max(0, row.findIndex(isTabLabelChecked));
-        const target2 = row[(cur2 + dir + row.length) % row.length];
+      const row2 = modalPane === "fields" ? pluginTabRow(queryActiveTabContent(tabbedRoot)) : null;
+      if (row2) {
+        const cur2 = Math.max(0, row2.findIndex(isTabLabelChecked));
+        const target2 = row2[(cur2 + dir + row2.length) % row2.length];
         triggerElementClick(target2);
         if (isDebugTextEnabled()) console.log("[Wizascript Controller] settings: tab", dir > 0 ? "next" : "previous", "->", target2.textContent);
         return target2;
@@ -14236,9 +15001,9 @@ Version: v${version}`;
       if (isDebugTextEnabled()) console.log("[Wizascript Controller] settings: category", dir > 0 ? "next" : "previous", "->", target.textContent);
       return null;
     }
-    function selectedColInTabRow(row) {
-      if (!row || !row.length || !row.every((el2) => el2.classList && el2.classList.contains("tabLabel"))) return -1;
-      return row.findIndex(isTabLabelChecked);
+    function selectedColInTabRow(row2) {
+      if (!row2 || !row2.length || !row2.every((el2) => el2.classList && el2.classList.contains("tabLabel"))) return -1;
+      return row2.findIndex(isTabLabelChecked);
     }
     function findModalDismissButton(root) {
       const byAttr = root.querySelector('[data-dismiss="modal"], .close');
@@ -14399,12 +15164,12 @@ Version: v${version}`;
     let activeRows = KEY_PAGES.letters;
     buildGrid(activeRows);
     function renderOskLabels() {
-      activeRows.forEach((row, r) => row.forEach((label, c) => {
+      activeRows.forEach((row2, r) => row2.forEach((label, c) => {
         oskRowEls[r][c].textContent = displayLabel(label, oskShift);
       }));
     }
     function updateOskHighlight() {
-      activeRows.forEach((row, r) => row.forEach((label, c) => {
+      activeRows.forEach((row2, r) => row2.forEach((label, c) => {
         const active = r === oskRow && c === oskCol;
         oskRowEls[r][c].style.border = active ? "2px solid #0f0" : "2px solid transparent";
         oskRowEls[r][c].style.background = active ? "#0a4d0a" : "#232326";
@@ -15198,13 +15963,13 @@ release ${bindingToDisplay(guideBtn)} to cancel`;
               const rows = [];
               const rowIndex = /* @__PURE__ */ new Map();
               playerSpans.forEach((el2) => {
-                const row = el2.parentElement;
-                if (!rowIndex.has(row)) {
-                  rowIndex.set(row, matches.length);
+                const row2 = el2.parentElement;
+                if (!rowIndex.has(row2)) {
+                  rowIndex.set(row2, matches.length);
                   matches.push([]);
-                  rows.push(row);
+                  rows.push(row2);
                 }
-                matches[rowIndex.get(row)].push(el2);
+                matches[rowIndex.get(row2)].push(el2);
               });
               if (!matches.length) {
                 guideMatchIndex = -1;
@@ -15315,7 +16080,7 @@ match ${guideMatchIndex + 1}/${matches.length}${playersInMatch.length > 1 ? `   
                 }
               }
           }
-          const row = activeRows[oskRow];
+          const row2 = activeRows[oskRow];
           if (up && !dpadHeld.up) {
             oskRow = Math.max(0, oskRow - 1);
             oskCol = Math.min(oskCol, activeRows[oskRow].length - 1);
@@ -15327,11 +16092,11 @@ match ${guideMatchIndex + 1}/${matches.length}${playersInMatch.length > 1 ? `   
             updateOskHighlight();
           }
           if (left && !dpadHeld.left) {
-            oskCol = (oskCol - 1 + row.length) % row.length;
+            oskCol = (oskCol - 1 + row2.length) % row2.length;
             updateOskHighlight();
           }
           if (right && !dpadHeld.right) {
-            oskCol = (oskCol + 1) % row.length;
+            oskCol = (oskCol + 1) % row2.length;
             updateOskHighlight();
           }
           dpadHeld = { up, down, left, right };
@@ -15367,7 +16132,7 @@ match ${guideMatchIndex + 1}/${matches.length}${playersInMatch.length > 1 ? `   
           if (btn(1) && !btnHeld[1]) closeOsk();
           btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3), 4: btn(4), 6: btn(6), 7: btn(7), 10: btn(10), 11: btn(11) };
           hud.textContent = `on-screen keyboard [${oskPage}]
-row ${oskRow + 1}/${activeRows.length} col ${oskCol + 1}/${row.length}${oskShift ? " [SHIFT]" : ""}`;
+row ${oskRow + 1}/${activeRows.length} col ${oskCol + 1}/${row2.length}${oskShift ? " [SHIFT]" : ""}`;
           return;
         }
         if (selectTarget) {
@@ -15640,7 +16405,7 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
                   path.join(" > ") || "(none found)",
                   "| field rows =",
                   fieldGrid.length,
-                  fieldGrid.map((row) => row.length),
+                  fieldGrid.map((row2) => row2.length),
                   "| selected =",
                   `${fieldRow},${fieldCol}`
                 );
@@ -15961,8 +16726,8 @@ d-pad move   ${label("tlSelect")} pick up / press   ${label("tlQuickSend")} send
               dpadHeld = { up, down, left, right };
               refreshHighlight();
               const targetSlot = placingGrid[placingRow][placingCol];
-              const tr = targetSlot.getBoundingClientRect();
-              const tcx = tr.left + tr.width / 2, tcy = tr.top + tr.height / 2;
+              const tr2 = targetSlot.getBoundingClientRect();
+              const tcx = tr2.left + tr2.width / 2, tcy = tr2.top + tr2.height / 2;
               fire(targetSlot, "pointermove", PointerEvent, tcx, tcy, 0, 1);
               fire(targetSlot, "mousemove", MouseEvent, tcx, tcy, 0, 1);
               if (btn(0) && !btnHeld[0]) {
@@ -16319,6 +17084,7 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     initTierList(plugin);
     const miscSettings = initMisc(plugin);
     initWishlist(plugin);
+    initCardHistory(plugin);
     initKeybinds(plugin);
     initController(plugin, miscSettings.enableController);
     registerPluginGuides(plugin);

@@ -92,6 +92,13 @@ export const PLUGINS = [
     key: "wishlist.enabled",
     // The one Miscellaneous plugin with a tab of its own (its list of pins).
     note: "Pin avatars, emotes and profile skins; hear when the shop has them."
+  },
+  {
+    id: "cardHistory",
+    category: "Miscellaneous",
+    name: "Card History",
+    key: "cardHistory.enabled",
+    note: "Middle-click a card or artifact to see its earlier versions."
   }
 ];
 

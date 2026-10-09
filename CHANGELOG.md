@@ -24,6 +24,13 @@ Pin the avatars, emotes and profile skins you want, and Wizascript tells you whe
 - Things you buy leave your wishlist by themselves. Free cosmetics can't be pinned, since everyone already has them.
 - Its own tab lists everything you've pinned, with when it was last in the shop, a **×** to remove each one, and **Check Shop Now**.
 
+### New: Card History
+See how any card or artifact used to look. Turn it on in the **Miscellaneous** list.
+- On **Crafting** or **Decks**, **middle-click** a card to see every earlier version of it, drawn as real cards: old cost, stats, rarity, text, tribes and powers, with the version number in the corner. Today's card is last.
+- On **Artifacts**, middle-click an artifact to see its versions as a list, with rarity and text.
+- A **\*** marks anything that isn't certain or has a note. Hover the version number to read it.
+- The histories come from the Undercards wikis, the official patch notes and feildmaster's Card-Tracker, and update by themselves after each patch, with no Wizascript update needed.
+
 ### Fixes
 - Controller Support: the default Concede button ("−") no longer briefly opens UnderScript's menu outside a match.
 - Controller Support: double-tapping the Channel Guide button no longer opens Wizascript Settings (only double-tapping Primary does).

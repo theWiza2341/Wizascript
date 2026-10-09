@@ -130,6 +130,16 @@ const GUIDES = {
       `Controller: point the cursor at it, press ${pad(3)} to right-click, then ${pad(0)} on the menu. ${pad(1)} closes it.`
     ] : [])
   },
+  cardHistory: {
+    tab: null,
+    pages: "the Crafting, Decks and Artifacts pages",
+    summary: "See every earlier version of a card or artifact.",
+    points: () => [
+      '<b>Middle-click</b> a card (Crafting, Decks) or an artifact (Artifacts) to open its history, oldest first.',
+      'The number under each version is the patch it came from. <b>*</b> means not certain or has a note: rest the mouse on it.',
+      '<b>?</b> means that part isn\'t recorded anywhere. History comes from both Undercards wikis, the patch notes and feildmaster\'s Card-Tracker.'
+    ]
+  },
   tierList: {
     tab: "Tier List",
     pages: "every page, including matches",

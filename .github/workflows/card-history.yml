@@ -60,5 +60,6 @@ jobs:
             echo "Nothing changed."
           else
             git commit -m "Card History data [auto]" -q
+            git pull -q --rebase origin card-history
             git push -q
           fi

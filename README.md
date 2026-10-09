@@ -2,7 +2,7 @@
 
 Wizascript is an all-in-one UnderScript plugin suite for [Undercards](https://undercards.net) — a single Tampermonkey userscript that combines several previously-separate plugins into one download, one plugin registration, and one settings tab.
 
-**Current version:** 1.5.0 (see [CHANGELOG.md](CHANGELOG.md))
+**Current version:** 1.6.0 (see [CHANGELOG.md](CHANGELOG.md))
 **Repository:** [theWiza2341/Wizascript](https://github.com/theWiza2341/Wizascript) (public)
 
 ## Compliance note
@@ -14,7 +14,7 @@ Wizascript's feature set is intentionally scoped to comply with UC moderation gu
 All of Wizascript's settings live under UnderScript's settings menu, in **Plugins → Wizascript**:
 
 - **General** tab: the **Plugins** and **Miscellaneous** lists, one on/off switch per feature (hover each for a short description), plus the version number, a **Changelog** button, **Back up / Restore settings** (all your Wizascript settings and saved data as one code or file, for moving to another browser or after a reinstall), and a single **Debug logging** switch for the whole suite. New installs start with every plugin switched off. Turning a plugin on or off takes effect after a page refresh.
-- **One tab per enabled plugin**, holding only that plugin's settings, with a short **How to use** guide at the bottom (pages it works on, what it does, its inputs). The **?** next to each plugin in the lists opens the same guide, including for Notepad and Card Tags, which have no tab of their own. (Cosmetic Wishlist is the one Miscellaneous plugin with a tab: its list of pinned cosmetics.) Plugins that are switched off don't show a tab at all.
+- **One tab per enabled plugin**, holding only that plugin's settings, with a short **How to use** guide at the bottom (pages it works on, what it does, its inputs). The **?** next to each plugin in the lists opens the same guide, including for Notepad, Card Tags and Card History, which have no tab of their own. (Cosmetic Wishlist is the one Miscellaneous plugin with a tab: its list of pinned cosmetics.) Plugins that are switched off don't show a tab at all.
 - **Keybinds** tab: appears once you enable a plugin with keyboard shortcuts (Patch Maker, UC TV, Tier List Maker, Notepad), with a General section plus one section per plugin you have on. A warning appears under any shortcut that clashes with another one, with your Primary key, or with UnderScript's Space-to-end-turn hotkey.
 - **Controller Support** tab: appears when Controller Support is enabled, split into Setup, General, one section per plugin you have on, and In-Game Inputs. Like the Keybinds tab, it warns under any binding that clashes with another.
 - If more tabs are open than fit in one row, they're split into pages, and **◀ ▶** arrows pinned to the right end of the row flip between pages.
@@ -50,7 +50,7 @@ Pin the avatars, emotes and profile skins you'd like (right-click one in chat, i
 A small freeform drawing canvas, entirely disconnected from match data. Draw, erase, or flood-fill with the pen color, on up to 6 independent layers (start with one, add more from the toolbar up to the limit, remove from the top down). Undo/redo covers the last several actions across every layer (in-memory only, not saved between sessions). An HSL color wheel handles both pen and paper colors, with a row of your most recently used pen colors for quickly switching back and forth. Clear resets the drawing, paper color, pen color, recent colors, and title back to defaults (but leaves the notepad's position alone), same scope as the "Reset Notepad" keybind, just without the position reset, and without closing and reopening the window to do it. The notepad's name is editable in place and doubles as the filename when saving a doodle as a PNG. Position, drawing (all layers), colors, and name all persist between sessions. Enable it from the Miscellaneous list. "Open Notepad on Page Load" (shown under it once enabled) decides whether it opens by itself; the Toggle Notepad shortcut opens/closes it for the current page.
 
 ### Card History
-Middle-click a card on Crafting or Decks to see every earlier version of it, drawn with the game's own card renderer (cost, stats, rarity, text, tribes and powers per version), or middle-click an artifact on the Artifacts page for a list of its versions with rarity and text. Uncertain versions are marked with a \* (hover for why). The histories are built by a GitHub Action from the Undercards wikis (Fandom's Version History and Previous Versions pages, and the Miraheze wiki), the official patch notes (transcribed from Beta 12.0 onwards) and feildmaster's Card-Tracker, and are stored on the `card-history` branch (see `card-history/README.md` there). Wizascript reads them on demand, so corrections reach players without an update. Players can right-click a version that looks wrong to report it. **My Reports** turns their reports into short chat lines (`#WZ1 CH <data date> <id>@<version> ...`, at most 250 characters), and **Send** opens Undercards' room 0 with a line typed in; the player presses Enter. The UC Report Hub (a separate repo) reads room 0 from feildmaster's chat-log Discord and files every `#WZ1` message; the "Card History reports" Action pulls them into `card-history/reports.json` (a ⚠ once 2+ players report a version) and `card-history/reports.md` (the catalogue) on the data branch. With Controller Support, Primary + ✕ ("Middle Click") opens a history and △ reports a version. Read-only, never touches a match. Enable it from the Miscellaneous list.
+Middle-click a card on Crafting or Decks to see every earlier version of it, drawn with the game's own card renderer (cost, stats, rarity, text, tribes and powers per version), or middle-click an artifact on the Artifacts page for a list of its versions with rarity and text. Uncertain versions are marked with a \* (hover for why). The histories are built by a GitHub Action from the Undercards wikis (Fandom's Version History and Previous Versions pages, and the Miraheze wiki), the official patch notes (transcribed from Beta 12.0 onwards) and feildmaster's Card-Tracker, and are stored on the `card-history` branch (see `card-history/README.md` there). Wizascript reads them on demand, so corrections reach players without an update. Players can right-click a version that looks wrong to report it. **My Reports** turns their reports into short chat lines (`#WZ1 CH <data date> <id>@<version> ...`, at most 250 characters), and **Send** opens Undercards' room 0 with a line typed in; the player presses Enter. The UC Report Hub (a separate repo) reads room 0 from feildmaster's chat-log Discord and files every `#WZ1` message; the "Card History reports" Action pulls them into `card-history/reports.json` (a ⚠ once enough different players report a version; the number is set in `card-history/hub.json`) and `card-history/reports.md` (the catalogue) on the data branch. With Controller Support, Primary + ✕ ("Middle Click") opens a history and △ reports a version. Read-only, never touches a match. Enable it from the Miscellaneous list.
 
 ### Report a Bug
 The General tab's **Report a Bug** button opens room 0 with `#WZ1 v<version>: <describe the bug here>` typed in, prompt selected, so players type over it and press Enter. The UC Report Hub collects it, and written reports appear in `card-history/reports.md` on the data branch. The script never sends a message itself.
@@ -76,21 +76,25 @@ A small Node.js bot that scrapes deck codes and metadata from a Discord server a
 
 ```
 packages/
-  core/            shared bootstrap, Plugins list + migration, about/changelog, how-to guides, backup/restore + share codes, debug switch, settings wrapper, page-window access, page matching, keybind registry
+  core/            shared bootstrap, Plugins list + migration, about/changelog/Report a Bug, how-to guides, backup/restore + share codes, debug switch, settings wrapper, page-window access, page matching, keybind registry, UC Report Hub helper
   patch-maker/
   uc-tv/           spectator-mode channel switching + guide overlay
   true-hub-bridge/
   deck-tracker/    Card Tracker (folder and storage keys keep the old name)
   controller/      full gamepad navigation + remappable controller keybinds (see Controller Support above)
-  misc/            Notepad, Card Tags and Cosmetic Wishlist (plus Tier List Maker's files)
+  misc/            Notepad, Card Tags, Cosmetic Wishlist and Card History (plus Tier List Maker's files)
     notepad/       freeform drawing canvas (see Notepad above)
     card-tags/     custom card flair tags (see Card Tags above)
     wishlist/      Cosmetic Wishlist (see above)
+    card-history/  Card History: the history window, reports and chat codes (see above)
     tier-list/     Tier List Maker (a full plugin; its files live here because it began as a Misc feature)
 bot/               deck-scraping bot + decks.json
+.github/workflows/ Build Wizascript, the True Hub deck syncs, Card History data (rebuilds the histories) and Card History reports (pulls reports from the UC Report Hub)
 assets/logo.png    logo shown in the General tab's Wizascript section (square PNG, 192x192 recommended; embedded into the script at build time)
 manifest.js        wires each package's init function together (also flushes the keybind registry once every package has registered its own settings)
 CHANGELOG.md        release notes, bundled into the script for the in-game Changelog button
 build.js            esbuild bundler + userscript header (version comes from package.json)
 wizascript.user.js  the built, installable script
 ```
+
+Card History's data lives on its own long-lived branch, **`card-history`** (build scripts, patch notes, sprites and the generated histories; see `card-history/README.md` there). It is never merged into `main`: Wizascript reads it straight from that branch.

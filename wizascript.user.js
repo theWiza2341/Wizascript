@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.6.0
+// @version      1.6.1
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -24,7 +24,7 @@
   }
 
   // packages/core/version.js
-  var SUITE_VERSION = "1.6.0";
+  var SUITE_VERSION = "1.6.1";
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
@@ -644,7 +644,7 @@
     const pluginHidden = () => pluginId ? !isPluginEnabled(pluginId) : false;
     if (onMatch) {
       settings.add(key2, {
-        name: `${name} - Primary + <key>`,
+        name: `${name} - Primary + &lt;key&gt;`,
         type: "text",
         default: defaultCode,
         // Each plugin's shortcuts get their own category on the tab.
@@ -751,6 +751,14 @@
   var CHANGELOG_default = `# Changelog
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
+
+## 1.6.1
+
+### Fixes
+- **UnderScript 0.65 support:** UnderScript now pages plugin tabs with its own \u25C0 \u25B6 arrows, so Wizascript no longer adds a second set on top. The first tab is still called **General**. On older UnderScript versions, Wizascript's own arrows are used as before.
+- **Controller Support:** L1/R1 and the d-pad work with UnderScript 0.65's tab arrows too.
+- Shortcut names on the Keybinds and Controller Support tabs show their full text again (\`Primary + <key>\`, \`Primary + <btn>\`), instead of ending in "Primary +".
+- Wizascript's pop-up buttons use UnderScript 0.65's new button format, and still work on older versions.
 
 ## 1.6.0
 
@@ -1099,6 +1107,11 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     BootstrapDialog2.show({ title, message: wrapper, buttons: [{ label: "OK", cssClass: "btn-primary", action: (d) => d.close() }] });
   }
 
+  // packages/core/toast.js
+  function toastClick(fn) {
+    return { onClick: fn, onclick: fn };
+  }
+
   // packages/core/about.js
   var LAST_SEEN_KEY = "wizascript.lastSeenVersion";
   var CATEGORY = "Wizascript";
@@ -1198,11 +1211,11 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     const toast2 = isFresh ? {
       title: "Welcome to Wizascript!",
       text: "Wizascript's features start switched off. Turn on the ones you want in the Plugins list.",
-      buttons: [{ text: "Open Wizascript settings", className: "dismiss", onclick: () => plugin.settings().open() }]
+      buttons: [{ text: "Open Wizascript settings", className: "dismiss", ...toastClick(() => plugin.settings().open()) }]
     } : {
       title: `Wizascript updated to v${SUITE_VERSION}`,
       text: "See what's new in this version.",
-      buttons: [{ text: "View changelog", className: "dismiss", onclick: () => openChangelog() }]
+      buttons: [{ text: "View changelog", className: "dismiss", ...toastClick(() => openChangelog()) }]
     };
     plugin.toast({
       ...toast2,
@@ -2550,7 +2563,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         }
       }
       settings4.add(action.key, {
-        name: action.name + " - Primary + <btn>",
+        name: action.name + " - Primary + &lt;btn&gt;",
         type: "text",
         default: buttonToDisplay(action.defaultButton),
         category: action.packageLabel,
@@ -2944,7 +2957,26 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     watch(found.view);
     layout(found.view, { revealActive: true });
   }
+  function hasNativeTabs(plugin) {
+    var _a;
+    try {
+      if (typeof plugin.settings().name !== "function") return false;
+      const semver = (_a = getPageWindow().underscript) == null ? void 0 : _a.semver;
+      if (!semver) return true;
+      const check = typeof semver.meets === "function" ? semver.meets : semver.isOlder;
+      return typeof check === "function" ? check("0.65.0") : true;
+    } catch (e) {
+      return false;
+    }
+  }
   function initTabBar(plugin) {
+    if (hasNativeTabs(plugin)) {
+      try {
+        plugin.settings().name(MAIN_TAB_LABEL);
+        return;
+      } catch (e) {
+      }
+    }
     injectStyle();
     plugin.events.on("Settings:open", () => setTimeout(apply, 0));
     document.addEventListener("change", (e) => {
@@ -13432,7 +13464,7 @@ Version: v${version}`;
     return toast(plugin, {
       title: `${n} wishlist item${n === 1 ? "" : "s"} in the Cosmetics Shop!`,
       text: rowsHtml(matches),
-      buttons: [{ text: "Take me there!", className: "dismiss", onclick: () => goToShop(matches[0].key) }]
+      buttons: [{ text: "Take me there!", className: "dismiss", ...toastClick(() => goToShop(matches[0].key)) }]
     });
   }
   function showRemovedToast(plugin, names) {
@@ -14862,6 +14894,9 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
   }
 
   // packages/controller/index.js
+  function isTabArrow(el3) {
+    return !!(el3 && el3.classList && (el3.classList.contains("wizascript-tab-arrow") || el3.classList.contains("tabArrow")));
+  }
   function initController(plugin, controllerEnabledSetting2) {
     const pageWindow2 = getPageWindow();
     const DEFAULT_HIGHLIGHT_THICKNESS = 4;
@@ -15414,7 +15449,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     function queryFieldRows(root) {
       const flexRows = Array.from(root.querySelectorAll(".flex-start")).filter((row2) => row2.offsetParent !== null).map((row2) => Array.from(row2.querySelectorAll(MODAL_ITEM_SELECTOR)).filter((el3) => el3.offsetParent !== null)).filter((items) => items.length);
       const labelRows = /* @__PURE__ */ new Map();
-      Array.from(root.querySelectorAll(".tabLabel")).filter((el3) => el3.offsetParent !== null && !(el3.classList.contains("wizascript-tab-arrow") && el3.classList.contains("disabled"))).forEach((el3) => {
+      Array.from(root.querySelectorAll(".tabLabel")).filter((el3) => el3.offsetParent !== null && !(isTabArrow(el3) && el3.classList.contains("disabled"))).forEach((el3) => {
         const key2 = el3.parentElement;
         if (!labelRows.has(key2)) labelRows.set(key2, []);
         labelRows.get(key2).push(el3);
@@ -15458,7 +15493,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     function pluginTabRow(content) {
       const view = content && content.querySelector(".tabbedView:not(.single)");
       if (!view) return null;
-      const labels = Array.from(view.querySelectorAll(":scope > .tabLabel")).filter((l) => !l.classList.contains("wizascript-tab-arrow"));
+      const labels = Array.from(view.querySelectorAll(":scope > .tabLabel")).filter((l) => !isTabArrow(l));
       return labels.length > 1 ? labels : null;
     }
     function cycleSettingsTab(dir, tabbedRoot) {
@@ -16864,7 +16899,7 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
             const liveFieldsFlat = liveFieldRows.flat();
             if (!fieldGrid || !elArraysEqual(gridFlat(fieldGrid), liveFieldsFlat)) {
               const prevEl = fieldGrid && (fieldGrid[fieldRow] || [])[fieldCol];
-              const prevArrowDir = prevEl && prevEl.classList && prevEl.classList.contains("wizascript-tab-arrow") ? prevEl.dataset.dir : null;
+              const prevArrowDir = prevEl && prevEl.classList && isTabArrow(prevEl) ? prevEl.dataset.dir : null;
               fieldGrid = liveFieldRows;
               fieldRow = 0;
               fieldCol = 0;
@@ -16873,7 +16908,7 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
                 for (let r = 0; r < fieldGrid.length; r++) {
                   for (let c = 0; c < fieldGrid[r].length; c++) {
                     const el3 = fieldGrid[r][c];
-                    if (el3 === prevEl || prevArrowDir && el3.classList.contains("wizascript-tab-arrow") && el3.dataset.dir === prevArrowDir) {
+                    if (el3 === prevEl || prevArrowDir && isTabArrow(el3) && el3.dataset.dir === prevArrowDir) {
                       fieldRow = r;
                       fieldCol = c;
                       break findPrev;
@@ -16884,7 +16919,7 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
                 findArrow:
                   for (let r = 0; r < fieldGrid.length; r++) {
                     for (let c = 0; c < fieldGrid[r].length; c++) {
-                      if (fieldGrid[r][c].classList.contains("wizascript-tab-arrow")) {
+                      if (isTabArrow(fieldGrid[r][c])) {
                         fieldRow = r;
                         fieldCol = c;
                         break findArrow;

@@ -57,6 +57,13 @@ import { getPageWindow } from '../core/page-window.js';
 // remappable action key the way this one is.
 import { getBoundKeybindCode } from '../core/keybinds.js';
 
+// A ◀/▶ paging arrow in a settings tab row: Wizascript's own (core/
+// tab-bar.js, UnderScript 0.64) or UnderScript's native one (0.65+).
+// They're tab-styled labels, so they must never count as tabs.
+function isTabArrow(el) {
+  return !!(el && el.classList && (el.classList.contains('wizascript-tab-arrow') || el.classList.contains('tabArrow')));
+}
+
 export function initController(plugin, controllerEnabledSetting) {
   // Tampermonkey sandbox gotcha: this build grants GM_getValue/GM_setValue,
   // which pulls the whole script into Tampermonkey's sandboxed JS realm. In
@@ -749,7 +756,7 @@ export function initController(plugin, controllerEnabledSetting) {
     Array.from(root.querySelectorAll('.tabLabel'))
       // A greyed-out ◀/▶ (first/last page of Wizascript's tab row) does
       // nothing, so it isn't a d-pad stop.
-      .filter((el) => el.offsetParent !== null && !(el.classList.contains('wizascript-tab-arrow') && el.classList.contains('disabled')))
+      .filter((el) => el.offsetParent !== null && !(isTabArrow(el) && el.classList.contains('disabled')))
       .forEach((el) => {
         const key = el.parentElement;
         if (!labelRows.has(key)) labelRows.set(key, []);
@@ -807,7 +814,7 @@ export function initController(plugin, controllerEnabledSetting) {
     const view = content && content.querySelector('.tabbedView:not(.single)');
     if (!view) return null;
     const labels = Array.from(view.querySelectorAll(':scope > .tabLabel'))
-      .filter((l) => !l.classList.contains('wizascript-tab-arrow'));
+      .filter((l) => !isTabArrow(l));
     return labels.length > 1 ? labels : null;
   }
   // Returns the label switched to (or null).
@@ -2798,7 +2805,7 @@ export function initController(plugin, controllerEnabledSetting) {
             // swaps the visible tabs (Wizascript's tab-bar.js recreates
             // the arrows, so an arrow is matched by direction instead).
             const prevEl = fieldGrid && (fieldGrid[fieldRow] || [])[fieldCol];
-            const prevArrowDir = prevEl && prevEl.classList && prevEl.classList.contains('wizascript-tab-arrow') ? prevEl.dataset.dir : null;
+            const prevArrowDir = prevEl && prevEl.classList && isTabArrow(prevEl) ? prevEl.dataset.dir : null;
             fieldGrid = liveFieldRows;
             fieldRow = 0; fieldCol = 0;
             fieldNeedsReanchor = false;
@@ -2806,7 +2813,7 @@ export function initController(plugin, controllerEnabledSetting) {
             for (let r = 0; r < fieldGrid.length; r++) {
               for (let c = 0; c < fieldGrid[r].length; c++) {
                 const el = fieldGrid[r][c];
-                if (el === prevEl || (prevArrowDir && el.classList.contains('wizascript-tab-arrow') && el.dataset.dir === prevArrowDir)) {
+                if (el === prevEl || (prevArrowDir && isTabArrow(el) && el.dataset.dir === prevArrowDir)) {
                   fieldRow = r; fieldCol = c;
                   break findPrev;
                 }
@@ -2818,7 +2825,7 @@ export function initController(plugin, controllerEnabledSetting) {
               findArrow:
               for (let r = 0; r < fieldGrid.length; r++) {
                 for (let c = 0; c < fieldGrid[r].length; c++) {
-                  if (fieldGrid[r][c].classList.contains('wizascript-tab-arrow')) { fieldRow = r; fieldCol = c; break findArrow; }
+                  if (isTabArrow(fieldGrid[r][c])) { fieldRow = r; fieldCol = c; break findArrow; }
                 }
               }
             }

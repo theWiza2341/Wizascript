@@ -1012,7 +1012,7 @@ export function registerControllerSettings(plugin, controllerEnabledSettingIn) {
     // which is part of why they were never as wide as these to begin
     // with.
     settings.add(action.key, {
-      name: action.name + ' - Primary + <btn>',
+      name: action.name + ' - Primary + &lt;btn&gt;',
       type: 'text',
       default: buttonToDisplay(action.defaultButton),
       category: action.packageLabel,

@@ -458,7 +458,7 @@ function registerKeybindNow(plugin, config) {
   if (onMatch) {
     // packageLabel is the category, so it isn't repeated in each name.
     settings.add(key, {
-      name: `${name} - Primary + <key>`,
+      name: `${name} - Primary + &lt;key&gt;`,
       type: 'text',
       default: defaultCode,
       // Each plugin's shortcuts get their own category on the tab.

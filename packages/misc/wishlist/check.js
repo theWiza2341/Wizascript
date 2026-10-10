@@ -18,6 +18,7 @@ import { getItems, updateItems, getState, setState, hasItems } from "./storage.j
 import { fetchShop, parseShop } from "./shop.js";
 import { imageUrl, TYPE_INFO } from "./detect.js";
 import { matchesPage } from "../../core/page-match.js";
+import { toastClick } from "../../core/toast.js";
 
 export const FREQ_REFRESH = "After each shop refresh";
 export const FREQ_4H = "Every 4 hours";
@@ -121,7 +122,7 @@ export function showMatchesToast(plugin, matches) {
   return toast(plugin, {
     title: `${n} wishlist item${n === 1 ? "" : "s"} in the Cosmetics Shop!`,
     text: rowsHtml(matches),
-    buttons: [{ text: "Take me there!", className: "dismiss", onclick: () => goToShop(matches[0].key) }]
+    buttons: [{ text: "Take me there!", className: "dismiss", ...toastClick(() => goToShop(matches[0].key)) }]
   });
 }
 

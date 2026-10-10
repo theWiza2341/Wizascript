@@ -24,6 +24,8 @@
 //   real width once the player clicks Plugins -> Wizascript.
 // - A different tab being selected (to keep it on screen).
 
+import { getPageWindow } from "./page-window.js";
+
 const MAIN_TAB_LABEL = "General";
 // Any setting that only ever lives on the main tab - used to find it.
 const MAIN_TAB_MARKER_ID = "underscript.plugin.Wizascript.about.version";
@@ -218,7 +220,33 @@ function apply() {
   layout(found.view, { revealActive: true });
 }
 
+// UnderScript 0.65+ pages plugin tabs itself (with its own ◀ ▶, an idea
+// taken from this file) and can rename the main tab through
+// settings().name(). Running our tab bar on top of it showed two sets of
+// arrows, so on 0.65+ this file does nothing but the rename.
+// semver.meets/isOlder(v) are true when the installed UnderScript is v or
+// newer (meets only exists from 0.65).
+export function hasNativeTabs(plugin) {
+  try {
+    if (typeof plugin.settings().name !== "function") return false;
+    const semver = getPageWindow().underscript?.semver;
+    if (!semver) return true; // has the API, so it's 0.65+
+    const check = typeof semver.meets === "function" ? semver.meets : semver.isOlder;
+    return typeof check === "function" ? check("0.65.0") : true;
+  } catch (e) {
+    return false;
+  }
+}
+
 export function initTabBar(plugin) {
+  if (hasNativeTabs(plugin)) {
+    try {
+      plugin.settings().name(MAIN_TAB_LABEL);
+      return;
+    } catch (e) {
+      // fall through to the old DOM tab bar
+    }
+  }
   injectStyle();
   // UnderScript emits this after the settings dialog is shown.
   plugin.events.on("Settings:open", () => setTimeout(apply, 0));

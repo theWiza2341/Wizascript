@@ -19,6 +19,7 @@ import { getPageWindow } from "./page-window.js";
 import { registerSettingWidget, asButton, asInfo } from "./setting-widgets.js";
 import { HEADER, canOpenVoid, openVoid } from "./uc-report.js";
 import { showInfoDialog } from "./share-code.js";
+import { toastClick } from "./toast.js";
 
 const LAST_SEEN_KEY = "wizascript.lastSeenVersion";
 const CATEGORY = "Wizascript";
@@ -135,12 +136,12 @@ export function showWhatsNew(plugin, installState) {
     ? {
       title: "Welcome to Wizascript!",
       text: "Wizascript's features start switched off. Turn on the ones you want in the Plugins list.",
-      buttons: [{ text: "Open Wizascript settings", className: "dismiss", onclick: () => plugin.settings().open() }]
+      buttons: [{ text: "Open Wizascript settings", className: "dismiss", ...toastClick(() => plugin.settings().open()) }]
     }
     : {
       title: `Wizascript updated to v${SUITE_VERSION}`,
       text: "See what's new in this version.",
-      buttons: [{ text: "View changelog", className: "dismiss", onclick: () => openChangelog() }]
+      buttons: [{ text: "View changelog", className: "dismiss", ...toastClick(() => openChangelog()) }]
     };
 
   plugin.toast({

@@ -125,7 +125,7 @@ const GUIDES = {
       '<b>Right-click</b> an avatar, emote or profile skin (in chat, in matches, or in the Cosmetics Shop) and choose <b>Add to Wishlist</b>. Right-click it again to remove it, or use <b>×</b> on this tab.',
       'When something you pinned is in the shop, a message pops up with <b>Take me there!</b>. Things you buy leave the list by themselves.',
       'The shop is checked after each refresh (see <b>Shop Check Frequency</b>), never during a match. <b>Check Shop Now</b> checks straight away.',
-      "Free cosmetics (0 UCP) can't be pinned - everyone already has them."
+      "Free cosmetics (0 UCP emotes, Common avatars) and ones you own can't be pinned."
     ].concat(isPluginEnabled("controller") ? [
       `Controller: point the cursor at it, press ${pad(3)} to right-click, then ${pad(0)} on the menu. ${pad(1)} closes it.`
     ] : [])

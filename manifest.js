@@ -34,7 +34,7 @@ import { initController } from "./packages/controller/index.js";
 
 // 1.5.0 settings layout (see packages/core/plugins.js):
 //   General tab     - "Plugins" + "Miscellaneous" lists (one on/off per feature) + "Wizascript" (version, changelog)
-//                     (UnderScript names it "Wizascript"; core/tab-bar.js relabels it and adds paging arrows)
+//                     (UnderScript names it "Wizascript"; core/tab-bar.js renames it; on UnderScript 0.64 it also adds paging arrows, 0.65+ has its own)
 //   one tab per ENABLED plugin, in the order registered below
 //   Keybinds tab    - only while a keybind-using plugin is enabled
 //   Controller tab  - only while Controller Support is enabled

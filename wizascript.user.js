@@ -644,7 +644,7 @@
     const pluginHidden = () => pluginId ? !isPluginEnabled(pluginId) : false;
     if (onMatch) {
       settings.add(key2, {
-        name: `${name} - Primary + &lt;key&gt;`,
+        name: `${name} - Primary + <key>`,
         type: "text",
         default: defaultCode,
         // Each plugin's shortcuts get their own category on the tab.
@@ -757,7 +757,8 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
 ### Fixes
 - **UnderScript 0.65 support:** UnderScript now pages plugin tabs with its own \u25C0 \u25B6 arrows, so Wizascript no longer adds a second set on top. The first tab is still called **General**. On older UnderScript versions, Wizascript's own arrows are used as before.
 - **Controller Support:** L1/R1 and the d-pad work with UnderScript 0.65's tab arrows too.
-- Shortcut names on the Keybinds and Controller Support tabs show their full text again (\`Primary + <key>\`, \`Primary + <btn>\`), instead of ending in "Primary +".
+- **Cosmetic Wishlist:** Common avatars can no longer be pinned, since everyone already has them (free emotes were already blocked).
+- **Cosmetic Wishlist:** things you already own can't be pinned either. Right-clicking one shows **Already Owned** instead of Add to Wishlist. Wizascript knows you own something once the Cosmetics Shop has shown it as owned, and always knows your own avatar and profile skin in your matches.
 - Wizascript's pop-up buttons use UnderScript 0.65's new button format, and still work on older versions.
 
 ## 1.6.0
@@ -2563,7 +2564,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         }
       }
       settings4.add(action.key, {
-        name: action.name + " - Primary + &lt;btn&gt;",
+        name: action.name + " - Primary + <btn>",
         type: "text",
         default: buttonToDisplay(action.defaultButton),
         category: action.packageLabel,
@@ -2688,7 +2689,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         "<b>Right-click</b> an avatar, emote or profile skin (in chat, in matches, or in the Cosmetics Shop) and choose <b>Add to Wishlist</b>. Right-click it again to remove it, or use <b>\xD7</b> on this tab.",
         "When something you pinned is in the shop, a message pops up with <b>Take me there!</b>. Things you buy leave the list by themselves.",
         "The shop is checked after each refresh (see <b>Shop Check Frequency</b>), never during a match. <b>Check Shop Now</b> checks straight away.",
-        "Free cosmetics (0 UCP) can't be pinned - everyone already has them."
+        "Free cosmetics (0 UCP emotes, Common avatars) and ones you own can't be pinned."
       ].concat(isPluginEnabled("controller") ? [
         `Controller: point the cursor at it, press ${pad(3)} to right-click, then ${pad(0)} on the menu. ${pad(1)} closes it.`
       ] : [])
@@ -13144,12 +13145,19 @@ Version: v${version}`;
   function findCosmetic(target) {
     if (!(target instanceof Element)) return null;
     let found = null;
+    let el3 = null;
     const profile = target.closest("table.profile");
-    if (profile) found = detectElement(profile);
+    if (profile) {
+      found = detectElement(profile);
+      el3 = profile;
+    }
     for (let n = target, i = 0; !found && n && i < 5; n = n.parentElement, i++) {
       found = detectElement(n);
+      el3 = n;
     }
     if (!found) return null;
+    found.rarity = rarityOf(el3);
+    found.own = isOwnEquipped(found, el3);
     const box = target.closest(".col-sm-1, tr");
     const form = box && box.querySelector("form.cosmetic-purchase[data-name]");
     const boxImg = box && box.querySelector("img");
@@ -13158,6 +13166,27 @@ Version: v${version}`;
       found.name = form.getAttribute("data-name") || found.name;
     }
     return found;
+  }
+  var RARITIES = ["COMMON", "BASE", "RARE", "EPIC", "LEGENDARY", "DETERMINATION", "MYTHIC", "TOKEN"];
+  function rarityOf(el3) {
+    if (!(el3 instanceof Element) || el3.tagName !== "IMG") return null;
+    return RARITIES.find((r) => el3.classList.contains(r)) || null;
+  }
+  function isOwnEquipped(item, el3) {
+    if (!(el3 instanceof Element) || location.pathname.startsWith("/Spectate")) return false;
+    if (item.type === "avatar") return el3.id === "yourAvatar";
+    if (item.type === "profile-skin") {
+      try {
+        const selfId = getPageWindow().selfId;
+        return selfId != null && el3.id === `user${selfId}`;
+      } catch (e) {
+        return false;
+      }
+    }
+    return false;
+  }
+  function isFreeAvatar(item) {
+    return item.type === "avatar" && (item.rarity === "COMMON" || item.rarity === "BASE");
   }
   function isFreeEmote(file) {
     try {
@@ -13173,6 +13202,7 @@ Version: v${version}`;
   // packages/misc/wishlist/storage.js
   var ITEMS_KEY = "wizascript.wishlist.items";
   var STATE_KEY2 = "wizascript.wishlist.state";
+  var OWNED_KEY = "wizascript.wishlist.owned";
   var listeners2 = /* @__PURE__ */ new Set();
   function read(key2, fallback) {
     try {
@@ -13203,6 +13233,23 @@ Version: v${version}`;
   }
   function hasItems() {
     return Object.keys(getItems()).length > 0;
+  }
+  function isKnownOwned(key2) {
+    return !!read(OWNED_KEY, {})[key2];
+  }
+  function recordOwnership(shopItems, now = Date.now()) {
+    const owned = read(OWNED_KEY, {});
+    let changed2 = false;
+    shopItems.forEach((i) => {
+      if (i.owned && !owned[i.key]) {
+        owned[i.key] = now;
+        changed2 = true;
+      } else if (!i.owned && owned[i.key]) {
+        delete owned[i.key];
+        changed2 = true;
+      }
+    });
+    if (changed2) write(OWNED_KEY, owned);
   }
   function isPinned(key2) {
     return !!getItems()[key2];
@@ -13260,7 +13307,8 @@ Version: v${version}`;
   function openMenu(item, x, y) {
     closeWishlistMenu();
     const pinned = isPinned(item.key);
-    const free = item.type === "emote" && isFreeEmote(item.file);
+    const free = item.type === "emote" && isFreeEmote(item.file) || isFreeAvatar(item);
+    const owned = !free && (item.own || isKnownOwned(item.key));
     menu = document.createElement("ul");
     menu.className = "wz-wl-menu";
     const head = document.createElement("header");
@@ -13271,8 +13319,8 @@ Version: v${version}`;
     text.append(sub);
     head.append(thumb(item), text);
     const li = document.createElement("li");
-    if (free && !pinned) {
-      li.textContent = "Free for everyone - can't be pinned";
+    if ((free || owned) && !pinned) {
+      li.textContent = free ? "Free for everyone - can't be pinned" : "Already Owned";
       li.className = "wz-wl-off";
     } else {
       li.textContent = pinned ? "\u2605 Remove from Wishlist" : "\u2606 Add to Wishlist";
@@ -13423,6 +13471,7 @@ Version: v${version}`;
     const weeklySecs = [shop.timers.New, shop.timers.Sale].filter((s) => s != null);
     const nextWeeklyAt = nextAt(state2.nextWeeklyAt, weeklySecs.length ? Math.min(...weeklySecs) : null, now);
     setState({ lastCheckAt: now, nextDailyAt, nextWeeklyAt, retryAt: 0, checkingUntil: 0 });
+    recordOwnership(shop.items, now);
     const removed = [];
     const matches = [];
     const pins = getItems();
@@ -14553,7 +14602,7 @@ ${note}` : "");
   }
 
   // packages/misc/card-history/artifacts-view.js
-  var RARITIES = ["COMMON", "LEGENDARY", "TOKEN"];
+  var RARITIES2 = ["COMMON", "LEGENDARY", "TOKEN"];
   var asRarity = (x) => {
     const s = String(x || "").toUpperCase();
     if (/LEGEND/.test(s)) return "LEGENDARY";
@@ -14584,7 +14633,7 @@ ${note}` : "");
 ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     const r = document.createElement("td");
     r.className = "wz-ch-art-rar";
-    r.innerHTML = RARITIES.includes(rarity) ? render(`{{RARITY:${rarity}}}`, rarity) : "?";
+    r.innerHTML = RARITIES2.includes(rarity) ? render(`{{RARITY:${rarity}}}`, rarity) : "?";
     const t = document.createElement("td");
     t.className = "wz-ch-art-txt";
     const oldName = ver.name && norm(ver.name) !== norm(todayName) ? `<span class="wz-ch-art-oldname">(${escHtml(ver.name)})</span>` : "";

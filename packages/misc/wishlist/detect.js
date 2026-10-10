@@ -61,12 +61,16 @@ export function detectElement(el) {
 export function findCosmetic(target) {
   if (!(target instanceof Element)) return null;
   let found = null;
+  let el = null;
   const profile = target.closest("table.profile");
-  if (profile) found = detectElement(profile);
+  if (profile) { found = detectElement(profile); el = profile; }
   for (let n = target, i = 0; !found && n && i < 5; n = n.parentElement, i++) {
     found = detectElement(n);
+    el = n;
   }
   if (!found) return null;
+  found.rarity = rarityOf(el);
+  found.own = isOwnEquipped(found, el);
   // On the shop page, use the shop's own name (it keeps apostrophes etc.
   // that file names drop).
   const box = target.closest(".col-sm-1, tr");
@@ -77,6 +81,36 @@ export function findCosmetic(target) {
     found.name = form.getAttribute("data-name") || found.name;
   }
   return found;
+}
+
+const RARITIES = ["COMMON", "BASE", "RARE", "EPIC", "LEGENDARY", "DETERMINATION", "MYTHIC", "TOKEN"];
+
+// An avatar's rarity is a class on its image (img.avatar.RARE), or null.
+function rarityOf(el) {
+  if (!(el instanceof Element) || el.tagName !== "IMG") return null;
+  return RARITIES.find((r) => el.classList.contains(r)) || null;
+}
+
+// The player's own avatar or profile skin in their own match is one they
+// own. (Spectating, "your" side is the player being watched.)
+function isOwnEquipped(item, el) {
+  if (!(el instanceof Element) || location.pathname.startsWith("/Spectate")) return false;
+  if (item.type === "avatar") return el.id === "yourAvatar";
+  if (item.type === "profile-skin") {
+    try {
+      const selfId = getPageWindow().selfId;
+      return selfId != null && el.id === `user${selfId}`;
+    } catch (e) {
+      return false;
+    }
+  }
+  return false;
+}
+
+// Common (and Base) avatars are given to every account; the shop only
+// sells Rare and up.
+export function isFreeAvatar(item) {
+  return item.type === "avatar" && (item.rarity === "COMMON" || item.rarity === "BASE");
 }
 
 // Free emotes (0 UCP) are given to every account, so they never appear in

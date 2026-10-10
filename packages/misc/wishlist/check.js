@@ -14,7 +14,7 @@
 // the rest get "last seen" info, and pins that are for sale are reported
 // - by default once per shop refresh ("Remind Me").
 
-import { getItems, updateItems, getState, setState, hasItems } from "./storage.js";
+import { getItems, updateItems, getState, setState, hasItems, recordOwnership } from "./storage.js";
 import { fetchShop, parseShop } from "./shop.js";
 import { imageUrl, TYPE_INFO } from "./detect.js";
 import { matchesPage } from "../../core/page-match.js";
@@ -74,6 +74,7 @@ export function applyShop(shop, now = Date.now()) {
   const weeklySecs = [shop.timers.New, shop.timers.Sale].filter((s) => s != null);
   const nextWeeklyAt = nextAt(state.nextWeeklyAt, weeklySecs.length ? Math.min(...weeklySecs) : null, now);
   setState({ lastCheckAt: now, nextDailyAt, nextWeeklyAt, retryAt: 0, checkingUntil: 0 });
+  recordOwnership(shop.items, now);
 
   const removed = [];
   const matches = [];

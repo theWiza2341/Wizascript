@@ -7,7 +7,8 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
 ### Fixes
 - **UnderScript 0.65 support:** UnderScript now pages plugin tabs with its own ◀ ▶ arrows, so Wizascript no longer adds a second set on top. The first tab is still called **General**. On older UnderScript versions, Wizascript's own arrows are used as before.
 - **Controller Support:** L1/R1 and the d-pad work with UnderScript 0.65's tab arrows too.
-- Shortcut names on the Keybinds and Controller Support tabs show their full text again (`Primary + <key>`, `Primary + <btn>`), instead of ending in "Primary +".
+- **Cosmetic Wishlist:** Common avatars can no longer be pinned, since everyone already has them (free emotes were already blocked).
+- **Cosmetic Wishlist:** things you already own can't be pinned either. Right-clicking one shows **Already Owned** instead of Add to Wishlist. Wizascript knows you own something once the Cosmetics Shop has shown it as owned, and always knows your own avatar and profile skin in your matches.
 - Wizascript's pop-up buttons use UnderScript 0.65's new button format, and still work on older versions.
 
 ## 1.6.0

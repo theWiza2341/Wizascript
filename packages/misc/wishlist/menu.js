@@ -13,8 +13,8 @@
 //   contextmenu at the cursor, so it opens this menu; its click button
 //   presses the menu item, and its back button closes it (closeWishlistMenu).
 
-import { findCosmetic, isFreeEmote, imageUrl, TYPE_INFO } from "./detect.js";
-import { isPinned, addItem, removeItem } from "./storage.js";
+import { findCosmetic, isFreeEmote, isFreeAvatar, imageUrl, TYPE_INFO } from "./detect.js";
+import { isPinned, isKnownOwned, addItem, removeItem } from "./storage.js";
 
 let menu = null;
 let wired = false;
@@ -42,7 +42,8 @@ function thumb(item) {
 function openMenu(item, x, y) {
   closeWishlistMenu();
   const pinned = isPinned(item.key);
-  const free = item.type === "emote" && isFreeEmote(item.file);
+  const free = (item.type === "emote" && isFreeEmote(item.file)) || isFreeAvatar(item);
+  const owned = !free && (item.own || isKnownOwned(item.key));
 
   menu = document.createElement("ul");
   menu.className = "wz-wl-menu";
@@ -55,8 +56,9 @@ function openMenu(item, x, y) {
   head.append(thumb(item), text);
 
   const li = document.createElement("li");
-  if (free && !pinned) {
-    li.textContent = "Free for everyone - can't be pinned";
+  // A pin made before this check existed can still be removed.
+  if ((free || owned) && !pinned) {
+    li.textContent = free ? "Free for everyone - can't be pinned" : "Already Owned";
     li.className = "wz-wl-off";
   } else {
     li.textContent = pinned ? "★ Remove from Wishlist" : "☆ Add to Wishlist";

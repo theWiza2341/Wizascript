@@ -16,4 +16,5 @@ Card-Tracker: 25736 snapshots of 938 cards, 938 cards today (commit 1da0511)
 Fandom Previous Versions: 534 pages (534 read live, 0 from cache), 315 exist
 Cards: 938 written, 0 failed
 Former card names: 64 (for linking old text)
-Artifacts: 101 written (101 names in the wikis)
+Artifacts: 100 written (100 names in the wikis)
+Former artifact names: 13 (for linking old text)

@@ -21,6 +21,7 @@ const sources = require('./sources.js');
 const { readPatchNotes, applyPatchNotes, applyErrata } = require('./patch-notes.js');
 const { buildCard, wantedPages } = require('./cards.js');
 const { artifactNames, buildArtifact, slug } = require('./artifacts.js');
+const { formerNames } = require('./former-names.js');
 
 const ROOT = path.resolve(__dirname, '..');
 const arg = (name, fallback) => { const i = process.argv.indexOf(`--${name}`); return i > 0 && process.argv[i + 1] && !process.argv[i + 1].startsWith('--') ? process.argv[i + 1] : fallback; };
@@ -84,12 +85,14 @@ async function main() {
     versionHistory: vhSrc.live ? 'live' : 'cached', mirahezeRows: rows.length, cardTracker: tracker.head, patchNoteVersions: notes.length
   } };
   let failed = 0;
+  const built = []; // { id, name, versions } for the former-names list
   for (const card of selected) {
     try {
       const data = buildCard(card, ctx);
       if (ONLY) { console.log(JSON.stringify(data, null, 1)); continue; }
       writeJson(path.join(OUT, 'cards', `${card.id}.json`), data);
       index.cards[card.id] = data.versions.length;
+      built.push({ id: card.id, name: card.name, versions: data.versions });
     } catch (e) {
       failed++;
       log(`card ${card.id} ${card.name}: FAILED ${e.stack.split('\n').slice(0, 5).join(' ')}`);
@@ -97,6 +100,8 @@ async function main() {
   }
   if (ONLY) return;
   log(`Cards: ${Object.keys(index.cards).length} written, ${failed} failed`);
+  index.formerNames = formerNames(built);
+  log(`Former card names: ${index.formerNames.length} (for linking old text)`);
 
   // ---- artifacts ----
   const artNames = artifactNames(vh, rows);

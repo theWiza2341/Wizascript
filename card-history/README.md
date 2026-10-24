@@ -21,7 +21,7 @@ Wizascript reads these files on demand, so anything changed here reaches players
 | `hub.json` | Where reports come from, and which get a ⚠ (see Reports below). | You. |
 | `reports.json`, `reports.md` | Reported versions (⚠ for players) and the catalogue of reports and bug reports. | The reports workflow. |
 | `cache/` | Last good copies of the wiki pages, used when a wiki can't be reached. | The Action. |
-| `data/` | The built histories. `index.json` has the build time and newest version, and `build-log.txt` says what the build did. | The Action. Don't edit by hand. |
+| `data/` | The built histories. `index.json` has the build time, the newest version and `formerNames` (each old card name, the card it belonged to and when it was in use, so old text links the right card), and `build-log.txt` says what the build did. | The Action. Don't edit by hand. |
 
 ## How a history is built
 

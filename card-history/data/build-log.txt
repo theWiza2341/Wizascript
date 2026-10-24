@@ -12,7 +12,8 @@ Patch notes: 159 versions read, 9 corrections/additions to Version History
   Beta 71.1 Shovels x999: added from the patch notes (Season71.1_a.txt)
   errata: removed Generous Gifts from Beta 105.0
 Miraheze unreachable (HTTP 403), using the cached copy (2961 rows)
-Card-Tracker: 23853 snapshots of 931 cards, 931 cards today (commit 96bc601)
-Fandom Previous Versions: 529 pages (529 read live, 0 from cache), 315 exist
-Cards: 931 written, 0 failed
+Card-Tracker: 25736 snapshots of 938 cards, 938 cards today (commit 1da0511)
+Fandom Previous Versions: 534 pages (534 read live, 0 from cache), 315 exist
+Cards: 938 written, 0 failed
+Former card names: 64 (for linking old text)
 Artifacts: 101 written (101 names in the wikis)

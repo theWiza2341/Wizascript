@@ -21,7 +21,7 @@ const sources = require('./sources.js');
 const { readPatchNotes, applyPatchNotes, applyErrata } = require('./patch-notes.js');
 const { buildCard, wantedPages } = require('./cards.js');
 const { artifactNames, buildArtifact, slug } = require('./artifacts.js');
-const { formerNames } = require('./former-names.js');
+const { formerNames, formerArtifactNames } = require('./former-names.js');
 
 const ROOT = path.resolve(__dirname, '..');
 const arg = (name, fallback) => { const i = process.argv.indexOf(`--${name}`); return i > 0 && process.argv[i + 1] && !process.argv[i + 1].startsWith('--') ? process.argv[i + 1] : fallback; };
@@ -105,6 +105,7 @@ async function main() {
 
   // ---- artifacts ----
   const artNames = artifactNames(vh, rows);
+  const builtArtifacts = []; // { name, versions } for the former-names list
   let artCount = 0;
   artNames.forEach((name) => {
     try {
@@ -112,12 +113,15 @@ async function main() {
       if (!data) return;
       writeJson(path.join(OUT, 'artifacts', `${slug(name)}.json`), data);
       index.artifacts[slug(name)] = data.versions.length;
+      builtArtifacts.push({ name: data.name || name, versions: data.versions });
       artCount++;
     } catch (e) {
       log(`artifact ${name}: FAILED ${e.message}`);
     }
   });
   log(`Artifacts: ${artCount} written (${artNames.length} names in the wikis)`);
+  index.formerArtifactNames = formerArtifactNames(builtArtifacts);
+  log(`Former artifact names: ${index.formerArtifactNames.length} (for linking old text)`);
 
   index.seconds = Math.round((Date.now() - started) / 1000);
   writeJson(path.join(OUT, 'index.json'), index);

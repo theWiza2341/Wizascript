@@ -816,11 +816,21 @@ var CH = (function () {
 
   function splitArtifactEntry(text) {
     const t = String(text).trim();
+    // Renamed and changed in one line, without the usual "--":
+    //   "Will -> Ambition. Effect update: ..." (Beta 51.1)
+    //   "GIGA Batteries > Imminent Showdown EFFECT UPDATE: ..." (Beta 107.0)
+    // Read them as "Old > New -- rest".
+    const rx = t.match(/^([A-Z][^<>:.]*?)\s*->\s*([A-Z][^<>:.]*?)\.\s+(\S.*)$/)
+      || t.match(/^([A-Z][^<>:.\-]*?)\s*(?:->|>)\s*([A-Z][^<>:.\-]*?)\s+(EFFECT(?:\s+UPDATE)?\s*:.*)$/i);
+    if (rx && !/--/.test(t)) return splitArtifactEntry(`${rx[1].trim()} > ${rx[2].trim()} -- ${rx[3]}`);
     let m = t.match(/^(.+?)\s*--\s*(.*)$/) || t.match(/^(.+?)\s+-\s+(.*)$/)
       || t.match(/^(.+?\s*\([A-Za-z ]+\))\s*:\s*(.*)$/) // "Dealmaker (Legendary): text"
       || t.match(/^([A-Z][\w' ]{1,30}):\s+(.*)$/); // "Worn Dagger: text", "Reinforcement: RARITY ..."
     if (!m || (/->/.test(m[1]) && !/--/.test(t))) {
       const r = t.match(/^([^<>:]+?)\s*->\s*([^<>:]+?)\.?$/);
+      // "Experience -> Is no longer free." / "Power -> Is now free (...)" (Beta 39.0)
+      // are price changes, not renames.
+      if (r && /^(?:is|are|was|now|no longer)\b/i.test(r[2].trim())) return null;
       return r ? { name: r[1].trim(), renamedTo: r[2].trim(), body: '' } : null;
     }
     let name = m[1].trim();

@@ -33,4 +33,37 @@ function formerNames(cards) {
   return out.sort((a, b) => a.name.localeCompare(b.name) || a.id - b.id);
 }
 
-module.exports = { formerNames };
+// The same for artifacts: { name, current, from, until }, where `current` is
+// the artifact's name today (artifacts have no game id in the wiki data; the
+// plugin matches `current` to the game's artifact list). Example: Outbreak was
+// renamed Dark Fountain in Beta 66.1, and Soulless Kris's old text, which the
+// game stores as {{ARTIFACT:34}}, should read "Outbreak" at those versions.
+function formerArtifactNames(artifacts) {
+  const out = [];
+  artifacts.forEach(({ name: today, versions }) => {
+    let run = null;
+    // Skipped: case/spacing-only differences (Save / SAVE) and names that
+    // were renamed in the patch that introduced them (no era to speak of).
+    // Wiki lines that only look like renames ("Experience > Is no longer
+    // free", the card Mine > Explosion listed under "Artifact names") can get
+    // in; the plugin ignores any entry whose `current` isn't a real artifact.
+    const flat = (s) => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+    const same = (a, b) => Array.isArray(a) && Array.isArray(b) && a[0] === b[0] && a[1] === b[1];
+    const close = (until) => {
+      if (run && flat(run.name) !== flat(today) && !same(run.from, until)) out.push({ name: run.name, current: today, from: run.from, until });
+      run = null;
+    };
+    (versions || []).forEach((v) => {
+      const key = v && v.version && v.version.key;
+      const name = v && typeof v.name === 'string' ? v.name.trim() : '';
+      if (!Array.isArray(key) || !name) return;
+      if (run && run.name === name) return;
+      close(key);
+      run = { name, from: key };
+    });
+    close(null);
+  });
+  return out.sort((a, b) => a.name.localeCompare(b.name) || a.current.localeCompare(b.current));
+}
+
+module.exports = { formerNames, formerArtifactNames };

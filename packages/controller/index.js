@@ -30,7 +30,8 @@
 import {
   getMergedGamepad, btnLabel, buttonToDisplay, bindingToDisplay,
   pressIndicator, setDebugLoggingEnabled,
-  logRawGamepadStateIfChanged, logMergedInputEdges
+  logRawGamepadStateIfChanged, logMergedInputEdges,
+  startGamepadWatchers,
 } from './gamepad.js';
 import {
   registerControllerSettings, isControllerSupportEnabled, isControllerCaptureActive,
@@ -44,6 +45,7 @@ import { getTierListPad, toggleTierListFillScreen } from '../misc/tier-list/inde
 import { closeWishlistMenu } from '../misc/wishlist/menu.js';
 import { isReportMenuOpen, pressReportMenu, closeReportMenu } from '../misc/card-history/reports.js';
 import { getHudPosition, setHudPosition, getCursorSensitivity, setCursorSensitivity } from './storage.js';
+import { isPluginEnabled } from '../core/plugins.js';
 import { getPageWindow } from '../core/page-window.js';
 // Read-only accessor for a real Wizascript keybind's CURRENT e.code,
 // bypassing that binding's own hardcoded default - see the
@@ -75,6 +77,18 @@ export function initController(plugin, controllerEnabledSetting) {
   // resolved once via getPageWindow() (packages/core/page-window.js), which
   // returns unsafeWindow when present and falls back to window otherwise.
   const pageWindow = getPageWindow();
+
+  // 1.6.2: while Controller Support is off, only register its settings
+  // (so it can be turned back on - that needs a refresh anyway) and add
+  // nothing to the page: no elements, no per-frame loop, no gamepad or
+  // WebHID checks. Before 1.6.2 all of that ran on every page even with
+  // the plugin off, which is more page activity than a switched-off
+  // plugin should cause.
+  if (!isPluginEnabled('controller')) {
+    registerControllerSettings(plugin, controllerEnabledSetting);
+    return;
+  }
+  startGamepadWatchers();
 
   // Highlight color now comes from the live "Selection Outline Color"
   // setting (settings.js's getHighlightColor(), soul-color presets) - see

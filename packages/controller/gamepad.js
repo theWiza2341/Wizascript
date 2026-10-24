@@ -281,7 +281,7 @@ export async function connectWebHidController() {
 // Permission granted via requestDevice() persists - no fresh user gesture
 // needed on later page loads, navigator.hid.getDevices() just returns
 // whatever was already authorized.
-(async function tryAutoReconnectWebHid() {
+async function tryAutoReconnectWebHid() {
   if (!navigator.hid) return;
   try {
     const devices = await navigator.hid.getDevices();
@@ -290,7 +290,7 @@ export async function connectWebHidController() {
   } catch (e) {
     if (debugLoggingEnabled) console.log('[Wizascript Controller] WebHID auto-reconnect check failed:', e);
   }
-})();
+}
 
 // ---------- merged gamepad read ----------
 // navigator.getGamepads() returns one slot per gamepad the browser has
@@ -388,17 +388,9 @@ export function getMergedGamepad() {
   return { buttons, axes, _mergedFrom: pads.map((p) => p.id) };
 }
 
-pageWindow.addEventListener('gamepadconnected', (e) => {
-  if (!debugLoggingEnabled) return;
-  console.log('[Wizascript Controller] gamepadconnected:', {
-    index: e.gamepad.index, id: e.gamepad.id, mapping: e.gamepad.mapping,
-    buttons: e.gamepad.buttons.length, axes: e.gamepad.axes.length
-  });
-});
-pageWindow.addEventListener('gamepaddisconnected', (e) => {
-  if (!debugLoggingEnabled) return;
-  console.log('[Wizascript Controller] gamepaddisconnected:', { index: e.gamepad.index, id: e.gamepad.id });
-});
+// gamepadconnected / gamepaddisconnected logging and the WebHID
+// auto-reconnect: started by startGamepadWatchers() (bottom of this
+// file), which initController() only calls while Controller Support is on.
 
 // ---------- diagnostics ----------
 // Raw per-pad dump, throttled to only log when the snapshot actually
@@ -453,4 +445,24 @@ export function logMergedInputEdges(gp, usingControllerNow, anyStickNow) {
     lastAnyStickState = !!anyStickNow;
     if (lastAnyStickState) showPressIndicator('🕹 Stick moved');
   }
+}
+
+// 1.6.2: everything that used to run as soon as this module loaded, on
+// every page, even with Controller Support off.
+let watchersStarted = false;
+export function startGamepadWatchers() {
+  if (watchersStarted) return;
+  watchersStarted = true;
+  pageWindow.addEventListener('gamepadconnected', (e) => {
+    if (!debugLoggingEnabled) return;
+    console.log('[Wizascript Controller] gamepadconnected:', {
+      index: e.gamepad.index, id: e.gamepad.id, mapping: e.gamepad.mapping,
+      buttons: e.gamepad.buttons.length, axes: e.gamepad.axes.length
+    });
+  });
+  pageWindow.addEventListener('gamepaddisconnected', (e) => {
+    if (!debugLoggingEnabled) return;
+    console.log('[Wizascript Controller] gamepaddisconnected:', { index: e.gamepad.index, id: e.gamepad.id });
+  });
+  tryAutoReconnectWebHid();
 }

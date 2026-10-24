@@ -54,7 +54,7 @@ function row(ver, rarity, f, todayName, todayHtml, target) {
   const t = document.createElement("td");
   t.className = "wz-ch-art-txt";
   const oldName = ver.name && norm(ver.name) !== norm(todayName) ? `<span class="wz-ch-art-oldname">(${escHtml(ver.name)})</span>` : "";
-  const body = todayHtml !== undefined ? todayHtml : ver.textKnown && ver.text ? formatText(ver.text, f) : "?";
+  const body = todayHtml !== undefined ? todayHtml : ver.textKnown && ver.text ? formatText(ver.text, f, ver.version && ver.version.key) : "?";
   // Inside a .cardDesc so the game's card-text colours and keyword styles apply.
   t.innerHTML = `<div class="cardDesc wz-ch-art-desc"><div>${oldName}${body}</div></div>`;
   tr2.append(v, r, t);

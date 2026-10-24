@@ -26,7 +26,7 @@ import { matchesPage } from "../../core/page-match.js";
 import { debugLoggingSetting } from "../../core/debug.js";
 import { getArtifactData, getCardData, getIndex } from "./data.js";
 import { artifacts, findCard } from "./game.js";
-import { formatter } from "./format.js";
+import { formatter, useFormerNames } from "./format.js";
 import { cardHistoryView } from "./cards-view.js";
 import { artifactHistoryView, findArtifact } from "./artifacts-view.js";
 import { openShell } from "./shell.js";
@@ -47,6 +47,7 @@ async function openCard(id) {
   try {
     shell.step("Reading the card's history...");
     const [data, index, f] = await Promise.all([getCardData(base.id), getIndex().catch(() => null), formatter(), remoteReports()]);
+    useFormerNames(f, index);
     const view = cardHistoryView(base, data, f, index);
     shell.fill(view.node, view.fit, view.wikiUrl);
   } catch (e) {
@@ -63,6 +64,7 @@ async function openArtifact(image) {
   try {
     shell.step("Reading the artifact's history...");
     const [data, index, f] = await Promise.all([getArtifactData(a.name), getIndex().catch(() => null), formatter(), remoteReports()]);
+    useFormerNames(f, index);
     const view = artifactHistoryView(a, data, f, index);
     shell.fill(view.node, null, view.wikiUrl);
   } catch (e) {

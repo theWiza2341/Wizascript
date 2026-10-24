@@ -205,11 +205,21 @@ var CH = (function () {
     let parent = null; // the undated bullet a ** sub-bullet continues
     let earliest = null; // { pre, label }
     let rarity;
+    let oneLineText = false;
     for (let i = start + 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (/^=+[^=]+=+$/.test(line)) break; // next section
       const head = line.match(/^(ATK|HP|Cost|Abilities|Ability|Effects?)\s*:\s*(.*)$/i);
-      if (head) { field = head[1].toLowerCase().replace(/^effects$/, 'effect'); parent = null; continue; }
+      if (head) {
+        field = head[1].toLowerCase().replace(/^effects$/, 'effect'); parent = null;
+        // "Cost: 7" / "Ability: Magic: Give all ally monsters +1/+1." on the
+        // heading line itself: one value for every version (Grillby).
+        // Only for the ability: one-line numbers can be stale (Space Cooler's
+        // "Cost: 3"; the game had 6).
+        const same = clean(head[2] || '').trim();
+        if (same && first[field] === undefined && /^(abilities|ability|effect)$/.test(field)) { first[field] = same; oneLineText = true; }
+        continue;
+      }
       const rar = line.match(/^Rarity\s*:.*?\(([A-Za-z]+)\)/i) || line.match(/^Rarity\s*:\s*([A-Za-z]+)\s*$/i);
       if (rar) { rarity = rar[1].toUpperCase(); field = null; continue; }
       const b = line.match(/^(\*+)\s*(.*?)\s*\(\s*(Pre|Post)?\s*((?:Alpha|Beta)\s*[\d.]+)[^)]*\)\s*$/i);
@@ -227,6 +237,7 @@ var CH = (function () {
       if (!earliest || less(era, earliest)) earliest = era;
     }
     if (!Object.keys(first).length) return null;
+    if (!earliest) return null; // no dated bullets: nothing to place it by
     const num = (v) => (v !== undefined && /^\d+$/.test(v) ? Number(v) : undefined);
     const label = earliest ? (earliest.pre ? `Before ${earliest.label}` : earliest.label) : 'Before records';
     const season = earliest && /Beta/i.test(earliest.label) ? parseInt(earliest.label.replace(/\D*([\d]+).*/, '$1'), 10) : null;
@@ -234,7 +245,10 @@ var CH = (function () {
     return {
       version: { label, date: '', season, before: !!(earliest && earliest.pre) },
       name: null, cost: num(first.cost), atk: num(first.atk), hp: num(first.hp), rarity,
-      ...(text !== undefined ? { text } : {})
+      ...(text !== undefined ? { text } : {}),
+      // The page's current wording, given for every version: Miraheze's
+      // release text (if any) is closer to the original.
+      ...(text !== undefined && oneLineText ? { textWeak: true } : {})
     };
   }
 
@@ -303,7 +317,7 @@ var CH = (function () {
       version: first ? first.version : null,
       name: firstName,
       cost: base.cost, atk: base.atk, hp: base.hp, rarity: base.rarity,
-      text, textKnown: text !== null, original: true,
+      text, textKnown: text !== null, original: true, textWeak: !!(first && first.textWeak && text === first.text),
       textFrom: text !== null && text !== CURRENT_TEXT && first && first.version.date ? ymd(first.version.date) : '0000-00-00'
     });
     let state = { name: firstName, cost: base.cost, atk: base.atk, hp: base.hp, rarity: base.rarity, text, textKnown: text !== null, textFrom: out[0].textFrom };
@@ -316,7 +330,12 @@ var CH = (function () {
         else { next.text = changes.text; next.textKnown = true; next.textFrom = ymd(version.date); }
       }
       if (changes.renamedFrom) note = (note ? note + ' ' : '') + `Renamed from ${changes.renamedFrom}.`;
-      out.push({ version, ...next, note });
+      // The stats this entry itself changes (the others are reconstructed and
+      // can be off where the wiki missed a change).
+      const changed = ['cost', 'atk', 'hp'].filter((k) => changes[k]);
+      const changedFrom = {};
+      changed.forEach((k) => { changedFrom[k] = changes[k][0]; });
+      out.push({ version, ...next, note, changed, changedFrom });
       state = next;
     });
     // Does replaying the history land on today's card?
@@ -346,6 +365,11 @@ var CH = (function () {
   Object.assign(POWER_BY_KEY, { cantattack: 'Disarmed', karmicretribution: 'KR', flowerypower: 'FloweryPower', moldspore: 'MoldSpore' });
   const powerKeyOf = (word) => POWER_BY_KEY[String(word).toLowerCase().replace(/[^a-z]/g, '')];
   const power = (name, n) => ({ name, counter: POWER_COUNTED.has(name) ? (n || 1) : 1, displayCounter: POWER_COUNTED.has(name) });
+  // Armor stacked until Beta 53 ("Armor (2)"); its number is shown only then.
+  const stackedArmor = (n, show) => ({ name: 'Armor', counter: n || 1, displayCounter: !!show });
+  // Effect keywords that have their own icon: "Shock: ...", "Support: ...".
+  // The card shows the icon whatever comes before them in the text.
+  const TRIGGER_POWERS = ['Shock', 'Support', 'Bullseye'];
   const byName = (a, b) => POWER_NAMES.indexOf(a.name) - POWER_NAMES.indexOf(b.name);
 
   // A Card-Tracker snapshot's powers. Since 2025-09 the data has a
@@ -363,6 +387,8 @@ var CH = (function () {
       if (!name || k === 'statuses') return;
       if (v === true) out.push(power(name, 1));
       else if (typeof v === 'number' && v > 0 && POWER_COUNTED.has(name)) out.push(power(name, v));
+      // Armor used to stack: the early data has "armor: 2" (Gerson's "Armor (2)").
+      else if (typeof v === 'number' && v > 0 && name === 'Armor') out.push(stackedArmor(v, v > 1));
     });
     return out.sort(byName);
   }
@@ -393,9 +419,28 @@ var CH = (function () {
       const m = seg.match(/^([A-Z][A-Za-z' ]*?)\s*(?:\((\d+)\)|(\d+))?$/);
       const name = m && powerKeyOf(m[1]);
       if (!name) break;
-      if (!out.some((p) => p.name === name)) out.push(power(name, Number(m[2] || m[3]) || 1));
+      const n = Number(m[2] || m[3]) || 1;
+      if (!out.some((p) => p.name === name)) out.push(name === 'Armor' ? stackedArmor(n, !!(m[2] || m[3])) : power(name, n));
     }
+    // "Shock: ...", "Support: ..." anywhere as a trigger: the icon. Triggers
+    // can be listed together for one effect: "Magic and Bullseye:",
+    // "Magic, Shock, Support, and Dust:".
+    const listRe = /(?:^|[.;:]\s*|\n)\s*((?:[A-Z][A-Za-z' ]*?\s*(?:,\s*(?:and\s+)?|\s+and\s+))*[A-Z][A-Za-z' ]*?)\s*:/g;
+    for (let m = listRe.exec(t); m; m = listRe.exec(t)) {
+      m[1].split(/\s*,\s*|\s+and\s+/).map((w) => w.replace(/^and\s+/, '').trim()).forEach((w) => {
+        if (TRIGGER_POWERS.includes(w) && !out.some((p) => p.name === w)) out.push(power(w, 1));
+      });
+      listRe.lastIndex = m.index + m[0].length - 1; // the ':' can start the next list
+    }
+    // "Program (2): ..." is a trigger with a count (Call of the Grave): the icon with its number.
+    const prog = t.match(/(?:^|[.;:]\s*|\n|\band\s+)Program\s*\((\d+)\)\s*:/);
+    if (prog && !out.some((p) => p.name === 'Program')) out.push(power('Program', Number(prog[1])));
     return out.sort(byName);
+  }
+  // Armor's stacked number as the text gives it ("Armor (2)", "{{KW:ARMOR}} (1)").
+  function armorFromText(text) {
+    const m = String(text || '').match(/(?:\{\{KW:ARMOR[^}]*\}\}|\bArmor)\s*\((\d+)\)/);
+    return m ? Number(m[1]) : null;
   }
   const powerKey = (list) => (list || []).map((p) => p.name + (p.displayCounter ? `(${p.counter})` : '')).join(',');
 
@@ -427,6 +472,11 @@ var CH = (function () {
       else if (v.text === CURRENT_TEXT) p = last;
       else if (v.textKnown) p = innatePowers(v.text);
       else p = last;
+      if (p && v.textKnown && v.text !== CURRENT_TEXT) {
+        // Stacked Armor written in the text shows its number (Gerson 52.0 "Armor (1)").
+        const n = armorFromText(v.text);
+        if (n) p = p.map((x) => (x.name === 'Armor' ? stackedArmor(n, true) : x));
+      }
       if (p) last = p;
       return { ...v, statuses: p };
     });
@@ -439,25 +489,40 @@ var CH = (function () {
   // Keep only snapshots where something that matters changed. An empty
   // description means "not captured" (the bot's text download stopped
   // working in Nov 2021), never "the card has no text".
+  // Patches whose notes announce a general rewording of card text (Beta 92.0:
+  // "Added community requested wording changes ... ironing out inconsistencies").
+  const WORDING_PASSES = new Set(['Beta 92.0']);
+  // {{RARITY:GENERATED}} and {{RARITY:TOKEN}} are the same word renamed.
+  const sameRarityWords = (t) => String(t || '').replace(/\{\{RARITY:GENERATED/g, '{{RARITY:TOKEN');
   function compactTracker(snaps) {
     const out = [];
+    let lastSeen = null; // the previous raw snapshot's date (any)
+    let lastText = null; // the previous raw snapshot that recorded this card's text
     snaps.forEach((s) => {
+      const seenBefore = lastSeen;
+      const textBefore = lastText;
+      lastSeen = s.date;
+      if (s.state && s.state.description) lastText = s.date;
       const st = {};
       TRACKED.forEach((k) => { st[k] = s.state[k] === null ? undefined : s.state[k]; });
       // Fields added to the game's data later (tribes: null -> []) aren't changes.
       if (!Array.isArray(st.tribes)) st.tribes = [];
+      else st.tribes = st.tribes.slice().sort(); // the same tribes in another order aren't a change
+      // The Generated rarity was renamed Token (late 2020, every card at once):
+      // not a change to the card.
+      if (st.rarity) st.rarity = rarityOf(st.rarity);
       st.statuses = powersOf(s.state); // one shape for old and new data
       const image = s.state.image; // carried along, but a file rename alone isn't a new version
       const prev = out[out.length - 1];
       if (prev) {
         const a = { ...prev.state, description: undefined, image: undefined };
         const b = { ...st, description: undefined, image: undefined };
-        const textChanged = st.description && prev.knownText !== st.description;
+        const textChanged = st.description && sameRarityWords(prev.knownText) !== sameRarityWords(st.description);
         if (same(a, b) && !textChanged) return;
       }
       const textOnly = !!prev && same({ ...prev.state, description: undefined, image: undefined }, { ...st, description: undefined, image: undefined });
       st.image = image;
-      out.push({ date: s.date, subject: s.subject, state: st, powerFields: powerFieldsOf(s.state), textOnly, knownText: st.description || (prev && prev.knownText) || '' });
+      out.push({ date: s.date, subject: s.subject, state: st, powerFields: powerFieldsOf(s.state), textOnly, knownText: st.description || (prev && prev.knownText) || '', seenBefore, textBefore });
     });
     return out;
   }
@@ -525,11 +590,30 @@ var CH = (function () {
     // wiki version is matched to one snapshot only.
     let prevLow = prevWhen;
     const usedWiki = new Set();
-    const windowOf = (t) => post.filter((v) => !usedWiki.has(v) && dated(v) > prevLow && dated(v) <= t.when);
+    // A patch can be dated a day after the snapshot that already shows it
+    // (52.1 is dated 2020-11-16; the 2020-11-15 capture has its changes).
+    const dayAfter = (d) => { const x = new Date(`${d}T00:00:00Z`); x.setUTCDate(x.getUTCDate() + 1); return x.toISOString().slice(0, 10); };
+    // Only when the snapshot really shows it: same stats, and its captured text
+    // (if any) isn't still the previous version's.
+    const ownKeys = (v) => (Array.isArray(v.changed) ? v.changed : ['cost', 'atk', 'hp']);
+    const shows = (t, v) => {
+      const sv = (k) => (k === 'atk' ? t.state.attack : t.state[k]);
+      if (!ownKeys(v).every((k) => v[k] == null || v[k] === sv(k))) return false;
+      // Its own stat change is there (Spider Reporter 52.1: HP back to 3): enough.
+      const last = out[out.length - 1];
+      if (Array.isArray(v.changed) && v.changed.length && last && v.changed.some((k) => last[k] !== sv(k))) return true;
+      return !t.state.description || !out.length || !v.textKnown || v.text === CURRENT_TEXT
+        || similar(v.text, t.state.description) >= similar(last.text, t.state.description);
+    };
+    // (An entry dated at the previous window's very start that no snapshot
+    // claimed yet stays open: "season 43" still has Overheat's old cost; 43.0's
+    // cut first shows in "season 46".)
+    const windowOf = (t) => post.filter((v) => !usedWiki.has(v) && dated(v) >= prevLow
+      && (dated(v) <= t.when || (dated(v) <= dayAfter(t.when) && shows(t, v))));
     // A wiki version whose text was SET at that version (an effect update or a
     // release), not carried over from an earlier one.
     const textSetHere = (v) => v.textKnown && v.text !== CURRENT_TEXT && dated(v) && v.textFrom === dated(v);
-    const words = (x) => new Set(String(x || '').replace(/\{\{[A-Z_]+:([^|}]+)[^}]*\}\}/g, ' $1 ').toLowerCase().split(/[^a-z0-9+/-]+/).filter(Boolean));
+    const words = (x) => new Set(String(x || '').replace(/\{\{STATS:([^}]*)\}\}/gi, (m, v) => ` ${v.split('|').join('/')} `).replace(/\{\{[A-Z_]+:([^|}]+)[^}]*\}\}/g, ' $1 ').toLowerCase().split(/[^a-z0-9+/-]+/).filter(Boolean));
     const similar = (a, b) => { const A = words(a); const B = words(b); if (!A.size || !B.size) return 0; let n = 0; A.forEach((w) => { if (B.has(w)) n++; }); return n / (A.size + B.size - n); };
     tracker.forEach((t, idx) => {
       // Text-only change: only a real change if the earlier text was the
@@ -548,6 +632,7 @@ var CH = (function () {
         return;
       }
       const inWindow = windowOf(t);
+      const fullWindow = inWindow.slice(); // before entries this snapshot doesn't show are set aside
       const preText = out.length ? out[out.length - 1].text : null;
       // The capture repeats the text from before this window although the wiki
       // lists an effect update in it: a stale capture (see below).
@@ -558,7 +643,7 @@ var CH = (function () {
       // out). Pick the update whose text matches the capture best (and whose
       // stats match), and leave the later ones for the next snapshot.
       const st = t.state;
-      const statsOk = (w) => ['cost', 'atk', 'hp'].every((k) => w[k] === undefined || w[k] === null || w[k] === (k === 'atk' ? st.attack : st[k]));
+      const statsOk = (w) => ownKeys(w).every((k) => w[k] === undefined || w[k] === null || w[k] === (k === 'atk' ? st.attack : st[k]));
       // The latest wiki change whose stats are the snapshot's (later ones in the
       // window may not have happened yet when it was taken).
       const prevV = out[out.length - 1];
@@ -566,13 +651,43 @@ var CH = (function () {
       let pick = inWindow.length - 1;
       let okAt = -1;
       for (let i = inWindow.length - 1; i >= 0; i--) if (statsOk(inWindow[i])) { okAt = i; break; }
-      if (okAt >= 0) pick = okAt;
-      else {
+      if (okAt >= 0) {
+        pick = okAt;
+        // A later entry changes a stat the snapshot shows changed, but to a
+        // different number (Moldmega 68.1 says COST 9 > 12; the game went to
+        // 10): the snapshot shows that later entry; the wiki's number is off.
+        const explained = new Set(inWindow.slice(0, okAt + 1).flatMap((w) => ownKeys(w)));
+        const moved = ['cost', 'atk', 'hp'].filter((k) => !explained.has(k) && prevV && (prevV[k] ?? null) !== ((k === 'atk' ? st.attack : st[k]) ?? null));
+        for (let j = inWindow.length - 1; j > okAt; j--) {
+          if (Array.isArray(inWindow[j].changed) && inWindow[j].changed.some((k) => moved.includes(k))) { pick = j; break; }
+        }
+      } else {
         // None of the wiki's changes here match the snapshot. If its stats didn't
         // change either, it doesn't show them yet (Same Fate: "season 43" still
         // has cost 8, 43.1's cut to 7 first shows in "season 46") - leave them
         // for a later snapshot.
         if (sameAsPrev && !inWindow.some(textSetHere)) inWindow.length = 0;
+        else if (prevV) {
+          // The snapshot changed other stats (not listed anywhere) but none of
+          // the ones these entries change: they haven't happened yet (Smolder
+          // Cake: "season 43" has an unlisted 6/4/6; 43.0's ATK 4 > 3 first
+          // shows in "season 46"). An entry whose stat did move, just to another
+          // number than the wiki says (Big Bomb 62.0), still counts.
+          const movedNow = ['cost', 'atk', 'hp'].filter((k) => (prevV[k] ?? null) !== ((k === 'atk' ? st.attack : st[k]) ?? null));
+          let last = -1;
+          // (Closest of all the entries here too: Ponman Statue's "season 46"
+          // has 46.0's wording, and 46.1's only shows in "season 48".)
+          const bestText = t.state.description ? Math.max(0, ...inWindow.filter(textSetHere).map((w) => similar(w.text, t.state.description))) : 0;
+          const textShown = (w) => textSetHere(w) && (!t.state.description || ((!preText
+            || similar(w.text, t.state.description) > similar(preText, t.state.description)) && similar(w.text, t.state.description) >= bestText));
+          // (Still at the entry's own starting number = not yet: Smolder Cake's
+          // "season 43" ATK 4 is 43.0's "ATK 4 > 3" before it happened.)
+          const snapVal = (k) => (k === 'atk' ? st.attack : st[k]);
+          const statShown = (w) => w.changed.some((k) => movedNow.includes(k) && !(w.changedFrom && w.changedFrom[k] === snapVal(k)));
+          inWindow.forEach((w, i) => { if (!Array.isArray(w.changed) || statShown(w) || textShown(w)) last = i; });
+          if (last < 0) inWindow.length = 0;
+          else { inWindow.length = last + 1; pick = last; }
+        }
       }
       // Same for text: the snapshot's stats are unchanged and its text is
       // still the previous version's (closer to it than to any update here) -
@@ -588,8 +703,13 @@ var CH = (function () {
       pick = Math.min(pick, inWindow.length - 1);
       if (t.state.description && pick > 0 && !staleCapture) {
         let best = -1; let bestScore = 0;
+        // The snapshot already shows a stat change made by a later entry
+        // (Coffin "season 49.5" has 49.1's cost 5): it can't be an earlier one.
+        const showsChange = (w) => Array.isArray(w.changed) && w.changed.some((k) => w[k] != null && w[k] === (k === 'atk' ? st.attack : st[k]) && (!prevV || w[k] !== prevV[k]));
+        let floor = 0;
+        inWindow.forEach((w, i) => { if (i <= pick && showsChange(w)) floor = i; });
         inWindow.forEach((w, i) => {
-          if (!w.textKnown || w.text === CURRENT_TEXT || !statsOk(w)) return;
+          if (i < floor || !w.textKnown || w.text === CURRENT_TEXT || !statsOk(w)) return;
           const sc = similar(w.text, t.state.description);
           if (sc > bestScore) { best = i; bestScore = sc; }
         });
@@ -605,25 +725,68 @@ var CH = (function () {
       const folded = [];
       inWindow.slice(0, pick).forEach((w) => {
         const shown = out[out.length - 1];
-        if (textSetHere(w) && (!shown || plainText(w.text) !== plainText(shown.text))) out.push({ ...w, source: 'wiki' });
-        else folded.push(w);
+        // Its stats: the shown version's, plus what this entry itself changes.
+        const withOwn = (base) => { const x = {}; ['cost', 'atk', 'hp'].forEach((k) => { x[k] = ownKeys(w).includes(k) && w[k] != null ? w[k] : (base ? base[k] : w[k]); }); return x; };
+        if (textSetHere(w) && (!shown || plainText(w.text) !== plainText(shown.text))) out.push({ ...w, ...withOwn(shown), source: 'wiki' });
+        else if (shown && /^Effect change described as/.test(w.note || '')) {
+          // Only described ("Same, but now works on monsters summoned directly"):
+          // its own version, with the text it had and the description as a note.
+          const { note: _n, ...rest } = shown;
+          out.push({ ...rest, version: w.version, ...withOwn(shown), note: w.note, source: 'wiki' });
+        }
+        else if (shown && ownKeys(w).some((k) => w[k] != null && w[k] !== shown[k])) {
+          // A stat change the tracker saw together with a later update keeps
+          // its own version too (Final Froggit: 36.0 ATK 6 > 5, then 36.1's
+          // effect update), with the text it still had.
+          const { note: _n, ...rest } = shown;
+          out.push({ ...rest, version: w.version, ...withOwn(shown), rarity: w.rarity || shown.rarity, source: 'wiki' });
+        } else folded.push(w);
       });
       let version;
       let note = null;
       if (wikiHere) {
         version = wikiHere.version;
-        if (folded.length) note = `Also includes ${folded.map((v) => v.version.label).join(', ')} (the tracker saw them together).`;
+        if (/^Effect change described as/.test(wikiHere.note || '')) note = wikiHere.note;
+        if (folded.length) note = (note ? `${note} ` : '') + `Also includes ${folded.map((v) => v.version.label).join(', ')} (the tracker saw them together).`;
       } else {
         // No patch dated inside the window (two snapshots on the same day, or a
         // mid-season change): assume the EARLIEST patch it could be - the one in
         // effect when the tracker saw it. Easier to correct later than a date range.
         // (A season snapshot is dated at the season's last patch; its season
         // starts at t.low, so the earliest it could be is the season's first.)
-        const anyVh = vhAsc.filter((v) => ymd(v.date) > prevWhen && ymd(v.date) <= (t.low || t.when)).pop()
+        let anyVh = vhAsc.filter((v) => ymd(v.date) > prevWhen && ymd(v.date) <= (t.low || t.when)).pop()
           || vhAsc.filter((v) => ymd(v.date) > prevWhen && ymd(v.date) <= t.when).pop()
           || vhAsc.filter((v) => ymd(v.date) <= t.when).pop();
+        // Entries in this window the snapshot doesn't show yet come after it
+        // (Smolder Cake's unlisted 6/4/6 is before 43.0's ATK 4 > 3): the patch before them.
+        const waiting = fullWindow.filter((w) => !usedWiki.has(w)).map((w) => versionKey(w.version)).filter(Boolean).sort(keyCmp)[0];
+        if (anyVh && waiting && !sameAsPrev && keyCmp(versionKey(anyVh), waiting) >= 0) {
+          anyVh = vhAsc.filter((v) => { const k = versionKey(v); return k && keyCmp(k, waiting) < 0 && ymd(v.date) > prevWhen; }).pop()
+            || vhAsc.filter((v) => { const k = versionKey(v); return k && keyCmp(k, waiting) < 0; }).pop();
+        }
         version = anyVh ? { ...anyVh, guessed: true } : { label: t.when, date: t.when, season: null, guessed: true };
-        note = `Not listed in Version History for this card; assumed ${anyVh ? anyVh.label : 'its release'} (the earliest it could be - seen by ${t.when}).`;
+        note = `Not listed in Version History for this card; assumed ${anyVh ? anyVh.label : 'its release'} (in effect when the tracker saw it, ${t.when}).`;
+        if (anyVh && waiting && !sameAsPrev && keyCmp(versionKey(anyVh), waiting) < 0 && fullWindow.some((w) => !usedWiki.has(w))) {
+          const next = fullWindow.filter((w) => !usedWiki.has(w)).sort((a, b) => keyCmp(versionKey(a.version), versionKey(b.version)))[0];
+          note = `Not listed in Version History for this card; assumed ${anyVh.label} (the tracker saw it on ${t.when}, before ${next.version.label}'s change, which starts from these numbers).`;
+        }
+        // How far back it could go: the last time the tracker saw the old
+        // card (its old text, for a text-only change - the tracker didn't
+        // record text from late 2021 to mid 2024, nor from mid 2024 to late 2026).
+        const textOnlyChange = prevV && ['cost', 'atk', 'hp'].every((k) => (prevV[k] ?? null) === ((k === 'atk' ? st.attack : st[k]) ?? null));
+        const isSeason = /season\s+\d/i.test(t.subject || '');
+        const since = isSeason ? null : (textOnlyChange ? t.textBefore : t.seenBefore);
+        // ...and after the version shown before it.
+        const lastShownKey = out.length ? versionKey(out[out.length - 1].version) : null;
+        const after = (v) => { const k = versionKey(v); return !lastShownKey || !k || (k[0] - lastShownKey[0] || k[1] - lastShownKey[1]) > 0; };
+        const range = since ? vhAsc.filter((v) => ymd(v.date) > since && ymd(v.date) <= t.when && after(v)) : [];
+        const wording = textOnlyChange ? range.filter((v) => WORDING_PASSES.has(v.label)).pop() : null;
+        if (wording) {
+          version = { ...wording, guessed: true };
+          note = `Not listed in Version History for this card; probably ${wording.label}'s wording update ("Added community requested wording changes") - the tracker saw the new wording on ${t.when}, and last saw the old one on ${since}.`;
+        } else if (range.length > 1 && anyVh) {
+          note = `Not listed in Version History for this card; changed between ${range[0].label} and ${range[range.length - 1].label} (the tracker last saw the old card on ${since}, the new one on ${t.when}); shown at ${anyVh.label}.`;
+        }
       }
       // Text: the tracker's own capture, else the wiki's text at that point.
       // Text: the tracker's own capture; else whichever is more recent, the
@@ -701,10 +864,31 @@ var CH = (function () {
     const sameCard = (a, b) => a.name === b.name && a.cost === b.cost && (a.atk ?? null) === (b.atk ?? null) && (a.hp ?? null) === (b.hp ?? null)
       && (a.rarity || '') === (b.rarity || '')
       && (!a.powersKnown || !b.powersKnown || powerKey(a.statuses) === powerKey(b.statuses))
-      && (!a.textKnown || !b.textKnown || a.text === CURRENT_TEXT || b.text === CURRENT_TEXT || plainText(a.text) === plainText(b.text));
+      && (!a.textKnown || !b.textKnown || a.text === CURRENT_TEXT || b.text === CURRENT_TEXT || plainText(a.text) === plainText(b.text)
+        // a Previous Versions page's one-line wording vs the game's own: the same text
+        || (a.textWeak && !a.gameText && b.gameText) || (b.textWeak && !b.gameText && a.gameText));
+    const sameLabel = (a, b) => a.version && b.version && a.version.label === b.version.label && !a.version.before && !b.version.before;
+    const sameStats = (a, b) => a.cost === b.cost && (a.atk ?? null) === (b.atk ?? null) && (a.hp ?? null) === (b.hp ?? null);
     list.forEach((v) => {
       const prev = out[out.length - 1];
-      if (prev && sameCard(prev, v)) {
+      // The same patch twice with the same stats (a release from Miraheze in
+      // wiki wording, then the tracker's capture in the game's own; or a rename
+      // and an effect update listed as two lines): one version - the later one,
+      // which has the whole state of that patch.
+      if (prev && sameLabel(prev, v) && sameStats(prev, v)) {
+        const keep = { ...v };
+        if (!keep.textKnown && prev.textKnown) { keep.text = prev.text; keep.textKnown = true; keep.gameText = prev.gameText; }
+        if (keep.version.guessed && !prev.version.guessed) keep.version = prev.version;
+        const labelNote = /^(Not listed in Version History|Also includes|Patch number from the Miraheze|Release version from the Miraheze|First version from the Miraheze)/;
+        const notes = [prev.note, v.note].flatMap((n) => String(n || '').split(/(?<=\.)\s+(?=[A-Z])/)).filter((x) => x && (!labelNote.test(x) || keep.version.guessed));
+        keep.note = [...new Set(notes)].join(' ') || null;
+        out[out.length - 1] = keep;
+        return;
+      }
+      // A change the wiki only describes ("Same, but can no longer trigger
+      // fatigue") is a real change even though the text can't be updated: keep it.
+      const described = (x) => /^Effect change described as/.test(x.note || '');
+      if (prev && sameCard(prev, v) && !described(v)) {
         const keep = prev.version ? prev : v; // prefer a dated one
         const other = keep === prev ? v : prev;
         if (other.textKnown && (!keep.textKnown || (other.gameText && !keep.gameText))) { keep.text = other.text; keep.textKnown = true; keep.gameText = other.gameText; }
@@ -792,7 +976,8 @@ var CH = (function () {
       c.artifact = /\bartifact\b/.test(first);
       c.monster = /\bmonster\b/.test(first);
       const rest = t.split('\n').slice(1).join(' ').trim();
-      c.text = rest || (/with no effect/.test(first) ? '' : undefined);
+      // "monster with no effect": written "N/A" like the wikis (the plugin draws it blank).
+      c.text = rest || (/\bno effect\b/.test(first) ? 'N/A' : undefined);
       ch.intro = c;
       return ch;
     }
@@ -832,7 +1017,7 @@ var CH = (function () {
     const STATS = ['cost', 'atk', 'hp'];
     const has = (x) => x !== null && x !== undefined;
     const statsOnly = (p) => !p.ch.intro && !p.ch.text && !p.ch.renamedFrom
-      && !p.ch.summary.replace(/(?:Changed (?:cost|ATK|HP) from \d+ to \d+|(?:Changed statline|Statline changed) from [\d/]+ to [\d/]+)\.?/gi, '').trim();
+      && !p.ch.summary.replace(/(?:Changed (?:cost|ATK|HP) from \d+ to \d+|(?:Changed statline|Statline changed) from [\d/]+ to [\d/]+|Rarity changed from .+? to [^.]+)\.?/gi, '').trim();
     const inRange = (p, lo, hi) => (!lo || keyCmp(p.ver.key, lo) > 0) && (!hi || keyCmp(p.ver.key, hi) < 0);
     const hiOf = (v) => (v.version && v.version.guessed ? [versionKey(v.version)[0], Math.floor(versionKey(v.version)[1]) + 1] : null);
     const lastKey = (i) => { for (let j = i; j >= 0; j--) { const k = versionKey(out[j].version); if (k) return k; } return null; };
@@ -862,10 +1047,12 @@ var CH = (function () {
       if (hit) relabel(i, hit, why);
     }
 
-    // 2) Stat changes only Miraheze has, slotted in where they fit.
-    for (const p of parsed) {
+    // 2) Stat changes only Miraheze has, slotted in where they fit (again
+    // after the introduction is in, for changes older than every other version).
+    const slotMirahezeOnly = () => { for (const p of parsed) {
       if (used.has(p) || !statsOnly(p)) continue;
-      const keys = STATS.filter((k) => p.ch[k]);
+      // (Rarity too: Froggit and Moldsmal became Base in 30.)
+      const keys = [...STATS, 'rarity'].filter((k) => p.ch[k]);
       if (!keys.length) continue;
       // Position: after the last version older than p.
       let i = -1;
@@ -880,15 +1067,29 @@ var CH = (function () {
       if (nk && nk[0] === p.ver.key[0] && Math.floor(nk[1]) === Math.floor(p.ver.key[1])
         && keys.every((k) => next[k] === p.ch[k][1])) { used.add(p); continue; }
       if (!keys.every((k) => has(prev[k]) && prev[k] === p.ch[k][0])) continue;
+      // The game still had the old numbers when the tracker started, after
+      // this patch: Miraheze filed it under the wrong patch (Catti's "31"
+      // statline change is Version History's 45.0; the tracker shows 7/4/6 in seasons 35-43).
+      const tfirst = opts && opts.trackerFirst;
+      if (tfirst && tfirst.key && keyCmp(p.ver.key, tfirst.key) < 0
+        && keys.some((k) => tfirst.state[k] === p.ch[k][0] && tfirst.state[k] !== p.ch[k][1])) { used.add(p); continue; }
       const add = { ...prev, version: { ...p.ver }, original: false, source: 'miraheze', note: `Only recorded on the Miraheze wiki: ${p.ch.summary}` };
       keys.forEach((k) => { add[k] = p.ch[k][1]; });
       out.splice(i + 1, 0, add);
       used.add(p);
       log.push(`added ${p.ver.label}: ${p.ch.summary}`);
-    }
+    } };
+    slotMirahezeOnly();
 
     // 3) The introduction.
     const intro = parsed.find((p) => p.ch.intro && !p.ch.intro.artifact);
+    // A Previous Versions page's one-line ability (its current wording) carried
+    // from the first version: Miraheze's release text replaces it everywhere it
+    // was carried, up to the first real text change.
+    const replaceWeak = (f, text) => {
+      if (!f.textWeak || f.gameText) return;
+      for (let j = 1; j < out.length && out[j].text === f.text && !out[j].gameText; j++) out[j] = { ...out[j], text };
+    };
     if (intro) {
       const c = intro.ch.intro;
       const f = out[0];
@@ -918,10 +1119,11 @@ var CH = (function () {
       } else if (keyCmp(intro.ver.key, fk) < 0 && f.version.before && same(f)) {
         // A Previous Versions "Before x" first version with the same stats: Miraheze knows its release (and its text).
         out[0] = { ...f, version: { ...intro.ver }, note: [f.note, 'Release version from the Miraheze wiki.'].filter(Boolean).join(' ') };
-        if (c.text !== undefined && (!f.textKnown || f.text === CURRENT_TEXT)) { out[0].text = c.text; out[0].textKnown = true; out[0].gameText = undefined; }
+        if (c.text !== undefined && (!f.textKnown || f.text === CURRENT_TEXT || (f.textWeak && !f.gameText))) { replaceWeak(f, c.text); out[0].text = c.text; out[0].textKnown = true; out[0].gameText = undefined; }
         log.push(`first version ${f.version.label} -> ${intro.ver.label} (introduced)`);
-      } else if (keyCmp(intro.ver.key, fk) === 0 && same(f) && c.text !== undefined && (!f.textKnown || f.text === CURRENT_TEXT)) {
+      } else if (keyCmp(intro.ver.key, fk) === 0 && same(f) && c.text !== undefined && (!f.textKnown || f.text === CURRENT_TEXT || (f.textWeak && !f.gameText))) {
         // Same release patch, text unknown (Noelle, Beta 30.0): Miraheze's release text.
+        replaceWeak(f, c.text);
         out[0] = { ...f, text: c.text, textKnown: true, gameText: undefined };
         log.push(`${f.version.label}: release text from the Miraheze wiki`);
       } else if (keyCmp(intro.ver.key, fk) < 0) {
@@ -929,6 +1131,8 @@ var CH = (function () {
         log.push(`added ${intro.ver.label}: introduced as ${c.cost}${has(c.atk) ? `/${c.atk}/${c.hp}` : ' cost'}`);
       }
     }
+
+    slotMirahezeOnly();
 
     // 4) Effect text: from Miraheze at the same number, or carried over stat-only changes.
     for (let i = 0; i < out.length; i++) {
@@ -1152,6 +1356,6 @@ var CH = (function () {
     return /^[a-z]/.test(t) && t.split(/\s+/).length < 6;
   }
 
-  return { mhRenames, artifactRarity, splitArtifactEntry, artifactEvents, buildArtifactVersions, looksTruncated, isLegacy, powersOf, innatePowers, assignPowers, powerKey, mhText, mhVersion, mhChanges, applyMiraheze, versionKey, parseStatsSection, trackerFirst, ymd, finalizeVersions, plainText, mergeTracker, compactTracker, CURRENT_TEXT, parseVersionHistory, parsePreviousVersions, cardEvents, buildVersions, splitEntry, parseChanges, parseCreation, clean, norm };
+  return { mhRenames, artifactRarity, splitArtifactEntry, artifactEvents, buildArtifactVersions, looksTruncated, isLegacy, powersOf, innatePowers, assignPowers, powerKey, mhText, mhVersion, mhChanges, applyMiraheze, versionKey, parseStatsSection, trackerFirst, snapshotDate, ymd, finalizeVersions, plainText, mergeTracker, compactTracker, CURRENT_TEXT, parseVersionHistory, parsePreviousVersions, cardEvents, buildVersions, splitEntry, parseChanges, parseCreation, clean, norm };
 })();
 if (typeof module !== 'undefined') module.exports = CH;

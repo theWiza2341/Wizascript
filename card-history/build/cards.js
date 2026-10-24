@@ -62,6 +62,30 @@ function buildCard(card, ctx) {
   let wikiAll = built.versions;
   if (tf) {
     const today = CH.cardEvents(ctx.vh, card.name);
+    // Names the game used that Version History never renames (Receptionist 1
+    // became Fish Receptionist in 122.0, a rename only Miraheze lists): its
+    // entries under the older name still label the tracker's versions. Each
+    // name's entries are taken from the dates the tracker saw that name.
+    const covered = new Set([card.name, today.oldestName, ...today.events.map((e) => e.name)].map(CH.norm));
+    const compact = CH.compactTracker(snaps);
+    const eras = [];
+    compact.forEach((t) => {
+      const when = CH.snapshotDate(t, ctx.vh);
+      const last = eras[eras.length - 1];
+      if (!last || last.name !== t.state.name) eras.push({ name: t.state.name, from: last ? last.seenUntil : tf.when, seenUntil: when, until: when });
+      else last.seenUntil = when;
+    });
+    eras.forEach((e, i) => { e.until = eras[i + 1] ? eras[i + 1].until : null; });
+    const haveLabel = new Set(today.events.map((e) => e.version.label));
+    eras.filter((e) => e.name && !covered.has(CH.norm(e.name))).forEach((e) => {
+      const inEra = ctx.vh.filter((v) => v.date && CH.ymd(v.date) >= e.from && (!e.until || CH.ymd(v.date) <= e.until));
+      CH.cardEvents(inEra, e.name).events.forEach((ev) => {
+        if (haveLabel.has(ev.version.label)) return;
+        haveLabel.add(ev.version.label);
+        today.events.push(ev);
+      });
+    });
+    today.events.sort((a, b) => { const ka = CH.versionKey(a.version) || [0, 0]; const kb = CH.versionKey(b.version) || [0, 0]; return (kb[0] - ka[0]) || (kb[1] - ka[1]); });
     // Released on the day the tracker first saw it (Wheelvil, Beta 81.0): the
     // walk above stops before that day, so take the release line from here.
     const useCreation = !first && today.creation && today.creation.version && today.creation.version.date && CH.ymd(today.creation.version.date) >= tf.when;
@@ -75,7 +99,13 @@ function buildCard(card, ctx) {
   const names = [...new Set([card.name, walkName, r.oldestName, ...versions.map((v) => v.name)])]
     .filter((n) => n && (n === card.name || !ctx.otherCardNames(card.id).has(n)));
   const rows = names.flatMap((n) => ctx.mhBySubject.get(n) || []);
-  const mh = CH.applyMiraheze(versions, rows, { introName: r.oldestName });
+  // The card as the tracker first saw it, and the patch in effect then.
+  let trackerFirst = null;
+  if (tf) {
+    const inEffect = ctx.vh.filter((v) => v.date && CH.ymd(v.date) <= tf.when)[0]; // vh is newest first
+    trackerFirst = { key: inEffect ? CH.versionKey(inEffect) : null, state: { cost: tf.state.cost, atk: tf.state.attack, hp: tf.state.hp } };
+  }
+  const mh = CH.applyMiraheze(versions, rows, { introName: r.oldestName, trackerFirst });
   if (mh.log.length) versions = mh.versions;
   versions = CH.finalizeVersions(versions);
   versions = CH.assignPowers(versions, card.statuses);

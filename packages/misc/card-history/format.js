@@ -221,8 +221,11 @@ export function formatText(text, f, verKey) {
   // Card and artifact codes show the name they had at this version (eraName).
   work = work.replace(/\{\{[^{}]+\}\}/g, (m) => hold(m, m.replace(/^\{\{|\}\}$/g, ""), eraName(m, f, verKey)));
   work = work.replace(f.statRe, (m, pre, a, b, c) => pre + hold(c !== undefined ? `{{STATS:${a}|${b}|${c}}}` : `{{STATS:${a}|${b}}}`, m.slice(pre.length)));
+  // Also inside a list of triggers sharing one effect: "Enter and Death:",
+  // "Enter, Shock, and Death:" (the "and"s and commas stay plain).
+  const listTail = "(?:(?:\\s*,\\s*(?:and\\s+)?|\\s+and\\s+)\\p{Lu}[\\p{L}' ]*?)*";
   f.colonCodes.forEach((code, word) => {
-    work = work.replace(new RegExp(`(^|[^\\p{L}])(${escRe(word)})(?=\\s*:)`, "gu"), (m, pre, w) => pre + hold(code, w));
+    work = work.replace(new RegExp(`(^|[^\\p{L}])(${escRe(word)})(?=${listTail}\\s*:)`, "gu"), (m, pre, w) => pre + hold(code, w));
   });
   if (f.former && f.former.re) {
     work = work.replace(f.former.re, (m, pre, word, offset, whole) => {

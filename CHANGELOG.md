@@ -10,6 +10,7 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
 ### Fixes
 - **Notepad:** using undo or redo after erasing no longer wipes the whole drawing. Before, the drawing on that layer was lost for good, because the blank result was saved.
 - **Card History:** old versions now show cards and artifacts by the names they had at the time, and link to the right one even if it has been renamed since. For example, Soulless Kris's first versions say "Outbreak" instead of "Dark Fountain", and "Blue Flower" in old text links to Blue Rose (its name today) instead of the newer card Blue.
+- **Card History:** versions of a card with no effect now show an empty text box, like the game, instead of "N/A". Old keyword lists like "Enter and Death:" now style both keywords.
 
 ## 1.6.1
 

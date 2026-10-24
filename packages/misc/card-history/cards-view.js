@@ -9,6 +9,9 @@ import { formatText } from "./format.js";
 import { spriteUrl } from "./data.js";
 import { tagNode } from "./reports.js";
 
+// The wikis write a card with no effect as "N/A" or "No effect.": drawn blank, like the game.
+const NO_EFFECT = /^\s*(?:N\/?A|None|No effect)\.?\s*$/i;
+
 const PER_ROW = 4;
 
 // "43.0", "38.1", "A2.7", "PA", "<1.3".
@@ -109,6 +112,7 @@ function drawVersion(base, ver, f, currentDescHtml) {
   const desc = el.querySelector(".cardDesc");
   if (desc) {
     if (ver.sameAsToday && !ver.legacy && currentDescHtml !== null) desc.innerHTML = currentDescHtml; // the game's own text
+    else if (ver.textKnown && !ver.truncated && NO_EFFECT.test(ver.text || "")) desc.textContent = ""; // a vanilla card ("N/A", "No effect.")
     else if (ver.textKnown && !ver.truncated && ver.text) fitText(desc, formatText(ver.text, f, ver.version && ver.version.key));
     else fitText(desc, "?"); // not recorded (or too early to assume today's text)
   }

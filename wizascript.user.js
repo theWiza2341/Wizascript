@@ -760,6 +760,7 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
 ### Fixes
 - **Notepad:** using undo or redo after erasing no longer wipes the whole drawing. Before, the drawing on that layer was lost for good, because the blank result was saved.
 - **Card History:** old versions now show cards and artifacts by the names they had at the time, and link to the right one even if it has been renamed since. For example, Soulless Kris's first versions say "Outbreak" instead of "Dark Fountain", and "Blue Flower" in old text links to Blue Rose (its name today) instead of the newer card Blue.
+- **Card History:** versions of a card with no effect now show an empty text box, like the game, instead of "N/A". Old keyword lists like "Enter and Death:" now style both keywords.
 
 ## 1.6.1
 
@@ -14183,8 +14184,9 @@ Version: v${version}`;
     });
     work = work.replace(/\{\{[^{}]+\}\}/g, (m) => hold(m, m.replace(/^\{\{|\}\}$/g, ""), eraName(m, f, verKey)));
     work = work.replace(f.statRe, (m, pre, a, b, c) => pre + hold(c !== void 0 ? `{{STATS:${a}|${b}|${c}}}` : `{{STATS:${a}|${b}}}`, m.slice(pre.length)));
+    const listTail = "(?:(?:\\s*,\\s*(?:and\\s+)?|\\s+and\\s+)\\p{Lu}[\\p{L}' ]*?)*";
     f.colonCodes.forEach((code, word) => {
-      work = work.replace(new RegExp(`(^|[^\\p{L}])(${escRe(word)})(?=\\s*:)`, "gu"), (m, pre, w) => pre + hold(code, w));
+      work = work.replace(new RegExp(`(^|[^\\p{L}])(${escRe(word)})(?=${listTail}\\s*:)`, "gu"), (m, pre, w) => pre + hold(code, w));
     });
     if (f.former && f.former.re) {
       work = work.replace(f.former.re, (m, pre, word, offset, whole) => {
@@ -14522,6 +14524,7 @@ Version: v${version}`;
   }
 
   // packages/misc/card-history/cards-view.js
+  var NO_EFFECT = /^\s*(?:N\/?A|None|No effect)\.?\s*$/i;
   var PER_ROW = 4;
   function versionLabel(v) {
     if (!v) return { text: "?", title: "Version not recorded" };
@@ -14644,6 +14647,7 @@ ${note}` : "");
     const desc = el3.querySelector(".cardDesc");
     if (desc) {
       if (ver.sameAsToday && !ver.legacy && currentDescHtml !== null) desc.innerHTML = currentDescHtml;
+      else if (ver.textKnown && !ver.truncated && NO_EFFECT.test(ver.text || "")) desc.textContent = "";
       else if (ver.textKnown && !ver.truncated && ver.text) fitText(desc, formatText(ver.text, f, ver.version && ver.version.key));
       else fitText(desc, "?");
     }

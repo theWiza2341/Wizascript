@@ -9,7 +9,7 @@
 // (no Wizascript update needed); the lists below are the defaults.
 
 import { getRules } from "./data.js";
-import { allCards, artifacts, ensureCards, escHtml, hasI18n, knownKeys, render, tr } from "./game.js";
+import { allCards, artifacts, ensureCards, escHtml, hasI18n, knownKeys, norm, render, tr } from "./game.js";
 
 const DEFAULTS = {
   keywords: ["determination", "charge", "haste", "armor", "disarmed", "candy", "support", "transparency", "invulnerable", "taunt", "dodge", "shock", "loop", "bullseye", "wanted", "darkspawn", "magic", "dust", "turn-start", "turn-end", "fatigue", "turbo", "paralyze", "silence", "synergy", "delay", "generated", "need", "program", "erase", "switch", "catch", "mold-spore", "flowery-power"],
@@ -56,6 +56,8 @@ export async function formatter() {
     links.add(name);
   };
   const colonCodes = new Map();
+  const artIds = new Map(); // artifact name (norm) -> game id, for former artifact names
+  const codeNames = new Map(); // "c:<id>" / "a:<id>" -> the names the game prints for that code today
   if (hasI18n()) {
     const kwCode = (id, override) => `{{KW:${id.toUpperCase().replace(/-/g, "_")}${override ? `|override=${override}` : ""}}}`;
     (R.keywords || []).forEach((id) => add(tr(`kw-${id}`), kwCode(id)));
@@ -85,7 +87,13 @@ export async function formatter() {
     });
     (R.souls || []).forEach((id) => add(tr(`soul-${id}`), `{{SOUL:${id.toUpperCase()}}}`));
     (R.legacyWithColon || []).forEach(([word, modern]) => colonCodes.set(word, tr(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`));
-    (await artifacts()).forEach((a) => { if (a && a.id != null) addExact(tr(`artifact-name-${a.id}`) || a.name, `{{ARTIFACT:${a.id}}}`); });
+    (await artifacts()).forEach((a) => {
+      if (!a || a.id == null) return;
+      const name = tr(`artifact-name-${a.id}`) || a.name;
+      addExact(name, `{{ARTIFACT:${a.id}}}`);
+      [name, a.name].forEach((n) => { if (n) artIds.set(norm(n), a.id); });
+      codeNames.set(`a:${a.id}`, uniq([name, a.name].filter(Boolean)));
+    });
     allCards().forEach((c) => {
       const id = c.fixedId || c.id;
       const name = tr(`card-name-${id}`, 1) || c.name;
@@ -93,6 +101,7 @@ export async function formatter() {
       addExact(name, `{{CARD:${id}|1}}`);
       addExact(tr(`card-name-${id}`, 2), `{{CARD:${id}|2}}`);
       if (!/s$/i.test(name)) addExact(`${name}s`, `{{CARD:${id}|2}}`);
+      codeNames.set(`c:${id}`, uniq([tr(`card-name-${id}`, 2), `${name}s`, name, c.name].filter(Boolean)));
     });
   }
   const capPattern = (w) => [...w].map((ch, i) => {
@@ -112,43 +121,83 @@ export async function formatter() {
   // Matches a current name (longest first) starting exactly at a position, so a
   // former name never cuts into a longer name that's still in use.
   const csStartRe = new RegExp(`^(?:${csNames.join("|")})(?![\\p{L}\\p{N}_])`, "u");
-  fmt = { cs, cap, csRe, capRe, statRe, colonCodes, links, plain, notLinks, csStartRe, former: null };
+  fmt = { cs, cap, csRe, capRe, statRe, colonCodes, links, plain, notLinks, csStartRe, artIds, codeNames, former: null };
   return fmt;
 }
 
 // Version keys are [era, number] (e.g. [2, 44] = Beta 44.0).
 const keyCmp = (a, b) => (a[0] - b[0]) || (a[1] - b[1]);
+const inEra = (k) => (x) => keyCmp(x.from, k) <= 0 && (!x.until || keyCmp(k, x.until) < 0);
 
-// Old card names (index.json `formerNames`, built on the card-history branch):
-// { name, id, from, until } - the name was in use for versions from <= key < until.
-// Old text says "Summon a Blue Flower"; without this, the longest name in use
-// today that matched was the newer card "Blue", not Blue Rose (ex-Blue Flower).
-// Names were sometimes reused (Acceleration, Clover, Rage, Faded Memory), so an
-// entry only applies to text from its own era.
+// Old names, from the card-history branch's index.json:
+//   formerNames:         { name, id, from, until }       (cards, by game id)
+//   formerArtifactNames: { name, current, from, until }  (artifacts, by today's name)
+// The name was in use for versions from <= key < until. Two things use them:
+// - Plain wiki text: "Summon a Blue Flower" links Blue Rose (ex-Blue Flower)
+//   instead of the newer card "Blue", and still reads "Blue Flower".
+// - The game's own codes in old text: {{ARTIFACT:34}} prints today's name
+//   (Dark Fountain), but at Beta 50.0 Soulless Kris said "Outbreak".
+// Names were sometimes reused (Acceleration, Clover, Rage, Faded Memory, Will),
+// so an entry only applies to text from its own era.
 export function useFormerNames(f, index) {
-  if (!f || f.former || !index || !Array.isArray(index.formerNames)) return;
-  const byName = new Map();
-  const add = (word, entry) => { if (!byName.has(word)) byName.set(word, []); byName.get(word).push(entry); };
-  index.formerNames.forEach((e) => {
-    if (!e || typeof e.name !== "string" || e.name.length < 2 || e.id == null || !Array.isArray(e.from)) return;
+  if (!f || f.former || !index) return;
+  const cards = Array.isArray(index.formerNames) ? index.formerNames : [];
+  const arts = Array.isArray(index.formerArtifactNames) ? index.formerArtifactNames : [];
+  if (!cards.length && !arts.length) return;
+  const byName = new Map(); // word in plain text -> [{ ident, code, from, until }]
+  const byCode = new Map(); // "c:<id>" / "a:<id>" -> [{ name, from, until }]
+  const push = (map, key, entry) => { if (!map.has(key)) map.set(key, []); map.get(key).push(entry); };
+  const ok = (e) => e && typeof e.name === "string" && e.name.length >= 2 && Array.isArray(e.from);
+  const era = (e) => ({ from: e.from, until: Array.isArray(e.until) ? e.until : null });
+  cards.forEach((e) => {
+    if (!ok(e) || e.id == null) return;
+    push(byCode, `c:${e.id}`, { name: e.name, ...era(e) });
     if (f.notLinks.has(e.name)) return;
-    const entry = { id: e.id, from: e.from, until: Array.isArray(e.until) ? e.until : null };
-    add(e.name, { ...entry, plural: false });
-    if (!/s$/i.test(e.name)) add(`${e.name}s`, { ...entry, plural: true });
+    push(byName, e.name, { ident: `c:${e.id}`, code: `{{CARD:${e.id}|1}}`, ...era(e) });
+    if (!/s$/i.test(e.name)) push(byName, `${e.name}s`, { ident: `c:${e.id}`, code: `{{CARD:${e.id}|2}}`, ...era(e) });
   });
-  if (!byName.size) return;
+  arts.forEach((e) => {
+    // `current` must be a real artifact today (the wiki has a few lines that only look like renames).
+    const id = ok(e) && typeof e.current === "string" ? f.artIds.get(norm(e.current)) : undefined;
+    if (id == null) return;
+    push(byCode, `a:${id}`, { name: e.name, ...era(e) });
+    if (!f.notLinks.has(e.name)) push(byName, e.name, { ident: `a:${id}`, code: `{{ARTIFACT:${id}}}`, ...era(e) });
+  });
   const names = [...byName.keys()].sort((a, b) => b.length - a.length).map(escRe);
-  f.former = { byName, re: new RegExp(`(^|[^\\p{L}\\p{N}_'])(${names.join("|")})(?![\\p{L}\\p{N}_])`, "gu") };
+  const re = names.length ? new RegExp(`(^|[^\\p{L}\\p{N}_'])(${names.join("|")})(?![\\p{L}\\p{N}_])`, "gu") : null;
+  f.former = { byName, byCode, re };
 }
 
-// The game's HTML for a code, showing `text` instead of the name it would print
-// (a former-name link points at today's card but keeps the old wording).
-function withShownText(html, text) {
+// A game code in old text -> the name it had at that version, if it was renamed since.
+function eraName(code, f, verKey) {
+  if (!f.former || !Array.isArray(verKey)) return undefined;
+  const c = code.match(/^\{\{(CARD|ARTIFACT):(\d+)(?:\|(\d+))?/);
+  if (!c) return undefined;
+  const key = `${c[1] === "CARD" ? "c" : "a"}:${c[2]}`;
+  const e = (f.former.byCode.get(key) || []).find(inEra(verKey));
+  if (!e) return undefined;
+  const plural = c[1] === "CARD" && c[3] === "2" && !/s$/i.test(e.name);
+  return { text: plural ? `${e.name}s` : e.name, swap: f.codeNames.get(key) || [] };
+}
+
+// The game's HTML for a code, showing another name than the one it prints.
+// `shown` is either the exact text to show (a matched former name), or
+// { text, swap }: replace whichever of today's names (`swap`) appears, keeping
+// any words around it; if none does, show `text` alone.
+function withShownText(html, shown) {
   const d = document.createElement("div");
   d.innerHTML = html;
   const nodes = [];
   const walk = document.createTreeWalker(d, NodeFilter.SHOW_TEXT);
   while (walk.nextNode()) if (walk.currentNode.nodeValue.trim()) nodes.push(walk.currentNode);
+  const text = typeof shown === "string" ? shown : shown.text;
+  if (typeof shown === "object") {
+    const swap = shown.swap.slice().sort((a, b) => b.length - a.length);
+    for (const n of nodes) {
+      const s = swap.find((x) => n.nodeValue.includes(x));
+      if (s) { n.nodeValue = n.nodeValue.replace(s, text); return d.innerHTML; }
+    }
+  }
   if (!nodes.length) return escHtml(text);
   nodes[0].nodeValue = text;
   nodes.slice(1).forEach((n) => { n.nodeValue = ""; });
@@ -169,24 +218,25 @@ export function formatText(text, f, verKey) {
   let work = String(text).replace(/^[\s.,;:!?\-–—]+/, "");
   f.plain.forEach((re) => { work = work.replace(re, (m) => hold(`<span>${escHtml(m)}</span>`, m)); });
   // The game's own codes stay as they are; plain words around them are still formatted.
-  work = work.replace(/\{\{[^{}]+\}\}/g, (m) => hold(m, m.replace(/^\{\{|\}\}$/g, "")));
+  // Card and artifact codes show the name they had at this version (eraName).
+  work = work.replace(/\{\{[^{}]+\}\}/g, (m) => hold(m, m.replace(/^\{\{|\}\}$/g, ""), eraName(m, f, verKey)));
   work = work.replace(f.statRe, (m, pre, a, b, c) => pre + hold(c !== undefined ? `{{STATS:${a}|${b}|${c}}}` : `{{STATS:${a}|${b}}}`, m.slice(pre.length)));
   f.colonCodes.forEach((code, word) => {
     work = work.replace(new RegExp(`(^|[^\\p{L}])(${escRe(word)})(?=\\s*:)`, "gu"), (m, pre, w) => pre + hold(code, w));
   });
-  if (f.former) {
+  if (f.former && f.former.re) {
     work = work.replace(f.former.re, (m, pre, word, offset, whole) => {
       const at = offset + pre.length;
       const all = f.former.byName.get(word) || [];
-      let e = Array.isArray(verKey) ? all.find((x) => keyCmp(x.from, verKey) <= 0 && (!x.until || keyCmp(verKey, x.until) < 0)) : null;
+      let e = Array.isArray(verKey) ? all.find(inEra(verKey)) : null;
       // Outside its era (the wiki sometimes keeps an old name a patch longer):
-      // still link a multi-word name no card uses today and only one card ever had.
-      if (!e && /\s/.test(word) && !f.cs.has(word) && new Set(all.map((x) => x.id)).size === 1) e = all[0];
+      // still link a multi-word name nothing uses today and only one card or artifact ever had.
+      if (!e && /\s/.test(word) && !f.cs.has(word) && new Set(all.map((x) => x.ident)).size === 1) e = all[0];
       if (!e) return m;
       const longer = whole.slice(at).match(f.csStartRe);
       if (longer && longer[0].length > word.length) return m;
       if (!/\s/.test(word) && atSentenceStart(whole.slice(0, at))) return m;
-      return pre + hold(`{{CARD:${e.id}|${e.plural ? 2 : 1}}}`, word, word);
+      return pre + hold(e.code, word, word);
     });
   }
   work = work.replace(f.csRe, (m, pre, word, offset, whole) => {

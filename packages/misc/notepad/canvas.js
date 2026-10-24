@@ -194,7 +194,15 @@ export function createDrawingSurface() {
       }
       const img = new Image();
       img.onload = () => {
+        // Always draw the saved image normally. An eraser stroke leaves
+        // the layer's context in "destination-out" mode, and drawing an
+        // image in that mode ERASES instead: before 1.6.2, undo (and
+        // redo) after erasing blanked the whole layer, and the blank
+        // result was then auto-saved.
+        ctx.save();
+        ctx.globalCompositeOperation = "source-over";
         ctx.drawImage(img, 0, 0);
+        ctx.restore();
         resolve();
       };
       img.onerror = () => {
@@ -360,6 +368,9 @@ export function createDrawingSurface() {
   function endStroke() {
     lastX = null;
     lastY = null;
+    // Leave the layer in normal drawing mode after an eraser stroke, so
+    // nothing else drawn into it later is affected (see loadLayerContent).
+    activeCtx().globalCompositeOperation = "source-over";
     scheduleSave();
   }
 

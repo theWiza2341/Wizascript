@@ -109,18 +109,62 @@ export async function formatter() {
   const csRe = new RegExp(`(^|[^\\p{L}\\p{N}_'])(${csNames.join("|")})(?![\\p{L}\\p{N}_])`, "gu");
   const statRe = /(^|[^\d/])([+-]?\d+)\/([+-]?\d+)(?:\/([+-]?\d+))?(?![\d/])/g;
   const plain = (R.plainPhrases || []).map((p) => { try { return new RegExp(p, "g"); } catch (e) { return null; } }).filter(Boolean);
-  fmt = { cs, cap, csRe, capRe, statRe, colonCodes, links, plain };
+  // Matches a current name (longest first) starting exactly at a position, so a
+  // former name never cuts into a longer name that's still in use.
+  const csStartRe = new RegExp(`^(?:${csNames.join("|")})(?![\\p{L}\\p{N}_])`, "u");
+  fmt = { cs, cap, csRe, capRe, statRe, colonCodes, links, plain, notLinks, csStartRe, former: null };
   return fmt;
+}
+
+// Version keys are [era, number] (e.g. [2, 44] = Beta 44.0).
+const keyCmp = (a, b) => (a[0] - b[0]) || (a[1] - b[1]);
+
+// Old card names (index.json `formerNames`, built on the card-history branch):
+// { name, id, from, until } - the name was in use for versions from <= key < until.
+// Old text says "Summon a Blue Flower"; without this, the longest name in use
+// today that matched was the newer card "Blue", not Blue Rose (ex-Blue Flower).
+// Names were sometimes reused (Acceleration, Clover, Rage, Faded Memory), so an
+// entry only applies to text from its own era.
+export function useFormerNames(f, index) {
+  if (!f || f.former || !index || !Array.isArray(index.formerNames)) return;
+  const byName = new Map();
+  const add = (word, entry) => { if (!byName.has(word)) byName.set(word, []); byName.get(word).push(entry); };
+  index.formerNames.forEach((e) => {
+    if (!e || typeof e.name !== "string" || e.name.length < 2 || e.id == null || !Array.isArray(e.from)) return;
+    if (f.notLinks.has(e.name)) return;
+    const entry = { id: e.id, from: e.from, until: Array.isArray(e.until) ? e.until : null };
+    add(e.name, { ...entry, plural: false });
+    if (!/s$/i.test(e.name)) add(`${e.name}s`, { ...entry, plural: true });
+  });
+  if (!byName.size) return;
+  const names = [...byName.keys()].sort((a, b) => b.length - a.length).map(escRe);
+  f.former = { byName, re: new RegExp(`(^|[^\\p{L}\\p{N}_'])(${names.join("|")})(?![\\p{L}\\p{N}_])`, "gu") };
+}
+
+// The game's HTML for a code, showing `text` instead of the name it would print
+// (a former-name link points at today's card but keeps the old wording).
+function withShownText(html, text) {
+  const d = document.createElement("div");
+  d.innerHTML = html;
+  const nodes = [];
+  const walk = document.createTreeWalker(d, NodeFilter.SHOW_TEXT);
+  while (walk.nextNode()) if (walk.currentNode.nodeValue.trim()) nodes.push(walk.currentNode);
+  if (!nodes.length) return escHtml(text);
+  nodes[0].nodeValue = text;
+  nodes.slice(1).forEach((n) => { n.nodeValue = ""; });
+  return d.innerHTML;
 }
 
 // Text before this point ends a sentence (or a "Keyword:"), so a single-word
 // name here is an ordinary word ("Draw a card."), not a card or artifact.
 const atSentenceStart = (before) => /(^|[.!?:]|\u0002)\s*$/.test(before);
 
-export function formatText(text, f) {
+// `verKey`: the version the text belongs to ([era, number]), for former names.
+// Without it (today's text), only the out-of-era rule below can link one.
+export function formatText(text, f, verKey) {
   if (!hasI18n()) return escHtml(text);
   const tokens = [];
-  const hold = (code, raw) => `\u0001${tokens.push({ code, raw }) - 1}\u0002`;
+  const hold = (code, raw, shown) => `\u0001${tokens.push({ code, raw, shown }) - 1}\u0002`;
   // Old wiki text sometimes starts with ". " or ", " - a card text never does.
   let work = String(text).replace(/^[\s.,;:!?\-–—]+/, "");
   f.plain.forEach((re) => { work = work.replace(re, (m) => hold(`<span>${escHtml(m)}</span>`, m)); });
@@ -130,6 +174,21 @@ export function formatText(text, f) {
   f.colonCodes.forEach((code, word) => {
     work = work.replace(new RegExp(`(^|[^\\p{L}])(${escRe(word)})(?=\\s*:)`, "gu"), (m, pre, w) => pre + hold(code, w));
   });
+  if (f.former) {
+    work = work.replace(f.former.re, (m, pre, word, offset, whole) => {
+      const at = offset + pre.length;
+      const all = f.former.byName.get(word) || [];
+      let e = Array.isArray(verKey) ? all.find((x) => keyCmp(x.from, verKey) <= 0 && (!x.until || keyCmp(verKey, x.until) < 0)) : null;
+      // Outside its era (the wiki sometimes keeps an old name a patch longer):
+      // still link a multi-word name no card uses today and only one card ever had.
+      if (!e && /\s/.test(word) && !f.cs.has(word) && new Set(all.map((x) => x.id)).size === 1) e = all[0];
+      if (!e) return m;
+      const longer = whole.slice(at).match(f.csStartRe);
+      if (longer && longer[0].length > word.length) return m;
+      if (!/\s/.test(word) && atSentenceStart(whole.slice(0, at))) return m;
+      return pre + hold(`{{CARD:${e.id}|${e.plural ? 2 : 1}}}`, word, word);
+    });
+  }
   work = work.replace(f.csRe, (m, pre, word, offset, whole) => {
     if (f.links.has(word) && !/\s/.test(word) && atSentenceStart(whole.slice(0, offset + pre.length))) return m;
     return pre + hold(f.cs.get(word), word);
@@ -139,7 +198,8 @@ export function formatText(text, f) {
     const m = part.match(/^\u0001(\d+)\u0002$/);
     if (m) {
       const t = tokens[+m[1]];
-      return t.code.startsWith("<") ? t.code : render(t.code, t.raw);
+      if (t.code.startsWith("<")) return t.code;
+      return t.shown ? withShownText(render(t.code, t.raw), t.shown) : render(t.code, t.raw);
     }
     let html = escHtml(part);
     COLOUR_WORDS.forEach(([re, cls]) => { html = html.replace(re, `$1<span class="${cls}">$2</span>`); });

@@ -109,7 +109,7 @@ function drawVersion(base, ver, f, currentDescHtml) {
   const desc = el.querySelector(".cardDesc");
   if (desc) {
     if (ver.sameAsToday && !ver.legacy && currentDescHtml !== null) desc.innerHTML = currentDescHtml; // the game's own text
-    else if (ver.textKnown && !ver.truncated && ver.text) fitText(desc, formatText(ver.text, f));
+    else if (ver.textKnown && !ver.truncated && ver.text) fitText(desc, formatText(ver.text, f, ver.version && ver.version.key));
     else fitText(desc, "?"); // not recorded (or too early to assume today's text)
   }
   setQuantity(el, versionLabel(ver.version), ver.note);

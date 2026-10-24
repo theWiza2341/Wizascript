@@ -757,6 +757,10 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
 ### Improvements
 - **Controller Support:** while it's switched off, it no longer adds anything to the page or keeps running in the background. Before, its cursor and other parts were still loaded on every page even when turned off.
 
+### Fixes
+- **Notepad:** using undo or redo after erasing no longer wipes the whole drawing. Before, the drawing on that layer was lost for good, because the blank result was saved.
+- **Card History:** names in old card text now link to the right card even if it has been renamed since. For example, "Blue Flower" in old text links to Blue Rose (its name today) instead of the newer card Blue, and still reads "Blue Flower".
+
 ## 1.6.1
 
 ### Fixes
@@ -11513,7 +11517,10 @@ Version: v${version}`;
         }
         const img = new Image();
         img.onload = () => {
+          ctx.save();
+          ctx.globalCompositeOperation = "source-over";
           ctx.drawImage(img, 0, 0);
+          ctx.restore();
           resolve2();
         };
         img.onerror = () => {
@@ -11633,6 +11640,7 @@ Version: v${version}`;
     function endStroke() {
       lastX = null;
       lastY = null;
+      activeCtx().globalCompositeOperation = "source-over";
       scheduleSave2();
     }
     function fill(x, y) {
@@ -14085,14 +14093,47 @@ Version: v${version}`;
         return null;
       }
     }).filter(Boolean);
-    fmt = { cs, cap, csRe, capRe, statRe, colonCodes, links, plain: plain2 };
+    const csStartRe = new RegExp(`^(?:${csNames.join("|")})(?![\\p{L}\\p{N}_])`, "u");
+    fmt = { cs, cap, csRe, capRe, statRe, colonCodes, links, plain: plain2, notLinks, csStartRe, former: null };
     return fmt;
   }
+  var keyCmp = (a, b) => a[0] - b[0] || a[1] - b[1];
+  function useFormerNames(f, index) {
+    if (!f || f.former || !index || !Array.isArray(index.formerNames)) return;
+    const byName = /* @__PURE__ */ new Map();
+    const add = (word, entry) => {
+      if (!byName.has(word)) byName.set(word, []);
+      byName.get(word).push(entry);
+    };
+    index.formerNames.forEach((e) => {
+      if (!e || typeof e.name !== "string" || e.name.length < 2 || e.id == null || !Array.isArray(e.from)) return;
+      if (f.notLinks.has(e.name)) return;
+      const entry = { id: e.id, from: e.from, until: Array.isArray(e.until) ? e.until : null };
+      add(e.name, { ...entry, plural: false });
+      if (!/s$/i.test(e.name)) add(`${e.name}s`, { ...entry, plural: true });
+    });
+    if (!byName.size) return;
+    const names = [...byName.keys()].sort((a, b) => b.length - a.length).map(escRe);
+    f.former = { byName, re: new RegExp(`(^|[^\\p{L}\\p{N}_'])(${names.join("|")})(?![\\p{L}\\p{N}_])`, "gu") };
+  }
+  function withShownText(html, text) {
+    const d = document.createElement("div");
+    d.innerHTML = html;
+    const nodes = [];
+    const walk = document.createTreeWalker(d, NodeFilter.SHOW_TEXT);
+    while (walk.nextNode()) if (walk.currentNode.nodeValue.trim()) nodes.push(walk.currentNode);
+    if (!nodes.length) return escHtml(text);
+    nodes[0].nodeValue = text;
+    nodes.slice(1).forEach((n) => {
+      n.nodeValue = "";
+    });
+    return d.innerHTML;
+  }
   var atSentenceStart = (before) => /(^|[.!?:]|\u0002)\s*$/.test(before);
-  function formatText(text, f) {
+  function formatText(text, f, verKey) {
     if (!hasI18n()) return escHtml(text);
     const tokens = [];
-    const hold = (code, raw) => `${tokens.push({ code, raw }) - 1}`;
+    const hold = (code, raw, shown) => `${tokens.push({ code, raw, shown }) - 1}`;
     let work = String(text).replace(/^[\s.,;:!?\-–—]+/, "");
     f.plain.forEach((re) => {
       work = work.replace(re, (m) => hold(`<span>${escHtml(m)}</span>`, m));
@@ -14102,6 +14143,19 @@ Version: v${version}`;
     f.colonCodes.forEach((code, word) => {
       work = work.replace(new RegExp(`(^|[^\\p{L}])(${escRe(word)})(?=\\s*:)`, "gu"), (m, pre, w) => pre + hold(code, w));
     });
+    if (f.former) {
+      work = work.replace(f.former.re, (m, pre, word, offset, whole) => {
+        const at = offset + pre.length;
+        const all = f.former.byName.get(word) || [];
+        let e = Array.isArray(verKey) ? all.find((x) => keyCmp(x.from, verKey) <= 0 && (!x.until || keyCmp(verKey, x.until) < 0)) : null;
+        if (!e && /\s/.test(word) && !f.cs.has(word) && new Set(all.map((x) => x.id)).size === 1) e = all[0];
+        if (!e) return m;
+        const longer = whole.slice(at).match(f.csStartRe);
+        if (longer && longer[0].length > word.length) return m;
+        if (!/\s/.test(word) && atSentenceStart(whole.slice(0, at))) return m;
+        return pre + hold(`{{CARD:${e.id}|${e.plural ? 2 : 1}}}`, word, word);
+      });
+    }
     work = work.replace(f.csRe, (m, pre, word, offset, whole) => {
       if (f.links.has(word) && !/\s/.test(word) && atSentenceStart(whole.slice(0, offset + pre.length))) return m;
       return pre + hold(f.cs.get(word), word);
@@ -14111,7 +14165,8 @@ Version: v${version}`;
       const m = part.match(/^\u0001(\d+)\u0002$/);
       if (m) {
         const t = tokens[+m[1]];
-        return t.code.startsWith("<") ? t.code : render(t.code, t.raw);
+        if (t.code.startsWith("<")) return t.code;
+        return t.shown ? withShownText(render(t.code, t.raw), t.shown) : render(t.code, t.raw);
       }
       let html = escHtml(part);
       COLOUR_WORDS.forEach(([re, cls]) => {
@@ -14546,7 +14601,7 @@ ${note}` : "");
     const desc = el3.querySelector(".cardDesc");
     if (desc) {
       if (ver.sameAsToday && !ver.legacy && currentDescHtml !== null) desc.innerHTML = currentDescHtml;
-      else if (ver.textKnown && !ver.truncated && ver.text) fitText(desc, formatText(ver.text, f));
+      else if (ver.textKnown && !ver.truncated && ver.text) fitText(desc, formatText(ver.text, f, ver.version && ver.version.key));
       else fitText(desc, "?");
     }
     setQuantity(el3, versionLabel(ver.version), ver.note);
@@ -14648,7 +14703,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     const t = document.createElement("td");
     t.className = "wz-ch-art-txt";
     const oldName = ver.name && norm(ver.name) !== norm(todayName) ? `<span class="wz-ch-art-oldname">(${escHtml(ver.name)})</span>` : "";
-    const body = todayHtml !== void 0 ? todayHtml : ver.textKnown && ver.text ? formatText(ver.text, f) : "?";
+    const body = todayHtml !== void 0 ? todayHtml : ver.textKnown && ver.text ? formatText(ver.text, f, ver.version && ver.version.key) : "?";
     t.innerHTML = `<div class="cardDesc wz-ch-art-desc"><div>${oldName}${body}</div></div>`;
     tr2.append(v, r, t);
     if (target) {
@@ -14888,6 +14943,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     try {
       shell.step("Reading the card's history...");
       const [data2, index, f] = await Promise.all([getCardData(base.id), getIndex().catch(() => null), formatter(), remoteReports()]);
+      useFormerNames(f, index);
       const view = cardHistoryView(base, data2, f, index);
       shell.fill(view.node, view.fit, view.wikiUrl);
     } catch (e) {
@@ -14903,6 +14959,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     try {
       shell.step("Reading the artifact's history...");
       const [data2, index, f] = await Promise.all([getArtifactData(a.name), getIndex().catch(() => null), formatter(), remoteReports()]);
+      useFormerNames(f, index);
       const view = artifactHistoryView(a, data2, f, index);
       shell.fill(view.node, null, view.wikiUrl);
     } catch (e) {

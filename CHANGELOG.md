@@ -7,6 +7,10 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
 ### Improvements
 - **Controller Support:** while it's switched off, it no longer adds anything to the page or keeps running in the background. Before, its cursor and other parts were still loaded on every page even when turned off.
 
+### Fixes
+- **Notepad:** using undo or redo after erasing no longer wipes the whole drawing. Before, the drawing on that layer was lost for good, because the blank result was saved.
+- **Card History:** names in old card text now link to the right card even if it has been renamed since. For example, "Blue Flower" in old text links to Blue Rose (its name today) instead of the newer card Blue, and still reads "Blue Flower".
+
 ## 1.6.1
 
 ### Fixes

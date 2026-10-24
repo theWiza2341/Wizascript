@@ -9,9 +9,7 @@
 // @grant none, unsandboxed) sets `window.underscript` on the real page
 // window instead. Reading bare `window.underscript` here would silently
 // and permanently return undefined, with no error, ever. getPageWindow()
-// resolves to unsafeWindow specifically to avoid that. (1.6.2 asks for
-// @sandbox raw, which normally puts us in the page itself; the guard
-// stays for when a userscript manager doesn't honour that.)
+// resolves to unsafeWindow specifically to avoid that.
 
 import { getPageWindow } from "./page-window.js";
 import { SUITE_VERSION } from "./version.js";
@@ -46,11 +44,7 @@ function tryBootstrap() {
   suitePlugin = pageWindow.underscript.plugin(SUITE_NAME, SUITE_VERSION);
   suitePlugin.updater(DOWNLOAD_URL); // single-arg form, per UnderScript author
 
-  // Which context Tampermonkey ran us in (1.6.2 asks for the page via
-  // @sandbox raw). "page" = same as UnderScript/Galascript; "sandbox" =
-  // Tampermonkey ignored the request. Also handy in bug reports.
-  const context = typeof unsafeWindow === "undefined" || unsafeWindow === window ? "page" : "sandbox";
-  console.log(`[Wizascript] Registered with UnderScript (v${SUITE_VERSION}, ${context} context).`);
+  console.log(`[Wizascript] Registered with UnderScript (v${SUITE_VERSION}).`);
 
   readyCallbacks.forEach(cb => cb(suitePlugin));
   readyCallbacks.length = 0;

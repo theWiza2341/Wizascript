@@ -15,7 +15,6 @@
 // @grant        GM_listValues
 // @grant        GM_xmlhttpRequest
 // @connect      raw.githubusercontent.com
-// @sandbox      raw
 // ==/UserScript==
 
 (() => {
@@ -50,8 +49,7 @@
     }
     suitePlugin = pageWindow2.underscript.plugin(SUITE_NAME, SUITE_VERSION);
     suitePlugin.updater(DOWNLOAD_URL);
-    const context = typeof unsafeWindow === "undefined" || unsafeWindow === window ? "page" : "sandbox";
-    console.log(`[Wizascript] Registered with UnderScript (v${SUITE_VERSION}, ${context} context).`);
+    console.log(`[Wizascript] Registered with UnderScript (v${SUITE_VERSION}).`);
     readyCallbacks.forEach((cb) => cb(suitePlugin));
     readyCallbacks.length = 0;
   }
@@ -758,7 +756,6 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
 
 ### Improvements
 - **Controller Support:** while it's switched off, it no longer adds anything to the page or keeps running in the background. Before, its cursor and other parts were still loaded on every page even when turned off.
-- Wizascript now runs directly in the page, the same way UnderScript and other plugins do, instead of in Tampermonkey's separate sandbox. Your settings and saved data stay where they are.
 
 ## 1.6.1
 

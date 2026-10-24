@@ -4,9 +4,6 @@ const path = require("path");
 const pkg = require("./package.json");
 
 // Version comes from package.json - the only place a release needs editing.
-// @sandbox raw (1.6.2): asks Tampermonkey to run Wizascript in the page
-// itself, like UnderScript, Galascript and PrettyCards, instead of its
-// separate sandbox, while the GM_* storage functions keep working.
 const HEADER = `// ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
@@ -24,7 +21,6 @@ const HEADER = `// ==UserScript==
 // @grant        GM_listValues
 // @grant        GM_xmlhttpRequest
 // @connect      raw.githubusercontent.com
-// @sandbox      raw
 // ==/UserScript==
 
 `;

@@ -78,7 +78,11 @@ var CH = (function () {
     m = text.match(/^(.+?)\s+-\s+((?:COST|ATK|HP|EFFECT|RARITY|TRIBE|SOUL|UTY|UT|DR|BASE|COMMON|RARE|EPIC|LEGENDARY|DETERMINATION|DT|TOKEN)\b.*)$/);
     if (m) return { names: [m[1].trim()], body: m[2] };
     m = text.match(/^(.+?)[.:]\s+((?:COST|ATK|HP|EFFECT|Effect|Cost|Atk|Hp|New effect|RARITY)\b.*)$/);
-    if (m) return { names: [m[1].trim()], body: m[2] };
+    if (m) {
+      // "New Cut Flowey > Clover. COST 10 > 9. ..." (Beta 94.0): a rename with a period, not "--".
+      const r = m[1].trim().match(/^(.+?)\s+(?:>|->)\s+(.+)$/);
+      return { names: r ? [r[1].trim(), r[2].trim()] : [m[1].trim()], body: m[2] };
+    }
     // Rename-only lines: "Scissor Dancer -> Sheary", "Green Flower -> Green Clover (is now UT rarity)",
     // "Clover (Deltarune) > Renamed to "Clover Hydra"."
     m = text.match(/^(.+?)\s+>\s+Renamed to\s+"([^"]+)"\.?$/i);
@@ -120,6 +124,9 @@ var CH = (function () {
     body = headOf(body);
     let m = body.match(new RegExp(`\\b(UTY|UT|DR)?\\s*(${RAR})\\b`));
     if (m) { c.rarity = rarityOf(m[2]); if (m[1]) c.set = m[1]; }
+    // "UT COMMON. TRIBE: Arachnids; GENERATED." (Spider Donut, Beta 46.0): a
+    // generated card is a token whatever colour it's listed under.
+    if (/\b(GENERATED|TOKEN)\b/.test(body)) c.rarity = 'TOKEN';
     m = body.match(/\bCOST\s*:?\s*(\d+)/i); if (m) c.cost = Number(m[1]);
     m = body.match(/\bATK\s*:?\s*(\d+)/i); if (m) c.atk = Number(m[1]);
     m = body.match(/\bHP\s*:?\s*(\d+)/i); if (m) c.hp = Number(m[1]);
@@ -127,6 +134,16 @@ var CH = (function () {
     // "its effect deals..." must not be taken as the start of the card text).
     m = full.match(/\bEFFECT\s*:\s*(.*)$/i) || full.match(/\bEFFECT\b(?!\s+UPDATE)\s*(.*)$/);
     c.text = m ? m[1].trim() : ''; // no EFFECT = no card text
+    if (!m) {
+      // No "EFFECT:" label (Ice Shock, Beta 69.0: "DR EPIC Spell. SOUL: Patience.
+      // COST 3. Deal 1 DMG to a monster..."): the text is whatever follows the
+      // leading set / rarity / soul / stat tokens.
+      const lead = new RegExp(`^\\s*(?:(?:UTY|UT|DR)\\s+)?(?:(?:${RAR})(?:\\s+(?:Spell|Monster|Card))?|SOUL\\s*:?\\s*[A-Za-z]+|Soul\\s+[A-Z]|(?:COST|ATK|HP)\\s*:?\\s*\\d+)\\s*[.;,]?`, 'i');
+      let rest = full;
+      for (let x = rest.match(lead); x && x[0].trim(); x = rest.match(lead)) rest = rest.slice(x[0].length);
+      rest = rest.trim();
+      if (rest !== full.trim() && /^[A-Z]/.test(rest) && rest.split(/\s+/).length >= 3) c.text = rest;
+    }
     m = body.match(/\bSOUL\s*:?\s*([A-Za-z]+)/i); if (m) c.soul = m[1];
     return c;
   }
@@ -178,27 +195,32 @@ var CH = (function () {
     String(wikitext).split('\n').forEach((l) => {
       const t = l.trim();
       const prev = lines[lines.length - 1];
-      if (t && prev !== undefined && /^\*/.test(prev.trim()) && !/^[*=]/.test(t) && !/^(ATK|HP|Cost|Abilities|Ability|Effect|Rarity)\s*:/i.test(t)) lines[lines.length - 1] = `${prev.trim()} ${t}`;
+      if (t && prev !== undefined && /^\*/.test(prev.trim()) && !/^[*=]/.test(t) && !/^(ATK|HP|Cost|Abilities|Ability|Effects?|Rarity)\s*:/i.test(t)) lines[lines.length - 1] = `${prev.trim()} ${t}`;
       else lines.push(l);
     });
     const start = lines.findIndex((l) => /^=+\s*Stats\s*=+\s*$/i.test(l.trim()));
     if (start < 0) return null;
     const first = {};
     let field = null;
+    let parent = null; // the undated bullet a ** sub-bullet continues
     let earliest = null; // { pre, label }
     let rarity;
     for (let i = start + 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (/^=+[^=]+=+$/.test(line)) break; // next section
-      const head = line.match(/^(ATK|HP|Cost|Abilities|Ability|Effect)\s*:\s*(.*)$/i);
-      if (head) { field = head[1].toLowerCase(); continue; }
+      const head = line.match(/^(ATK|HP|Cost|Abilities|Ability|Effects?)\s*:\s*(.*)$/i);
+      if (head) { field = head[1].toLowerCase().replace(/^effects$/, 'effect'); parent = null; continue; }
       const rar = line.match(/^Rarity\s*:.*?\(([A-Za-z]+)\)/i) || line.match(/^Rarity\s*:\s*([A-Za-z]+)\s*$/i);
       if (rar) { rarity = rar[1].toUpperCase(); field = null; continue; }
-      const b = line.match(/^\*+\s*(.*?)\s*\(\s*(Pre|Post)?\s*((?:Alpha|Beta)\s*[\d.]+)[^)]*\)\s*$/i);
-      if (!b || !field || first[field] !== undefined) continue;
-      const value = clean(b[1]);
+      const b = line.match(/^(\*+)\s*(.*?)\s*\(\s*(Pre|Post)?\s*((?:Alpha|Beta)\s*[\d.]+)[^)]*\)\s*$/i);
+      // An undated "* Support: Give Ranged..." holds the start of the text its
+      // dated "** Dust: ... (Post Beta 30.0)" sub-bullets continue (Ralsei).
+      if (!b) { const u = line.match(/^\*\s+(.+)$/); if (u && field) parent = clean(u[1]).replace(/\.{3}$|…$/, '').trim(); continue; }
+      if (!field || first[field] !== undefined) continue;
+      const own = clean(b[2]);
+      const value = b[1].length > 1 && parent && /^(abilities|ability|effect)$/.test(field) ? `${parent} ${own}` : own;
       first[field] = value;
-      const era = { pre: /pre/i.test(b[2] || ''), label: b[3].replace(/\s+/g, ' ') };
+      const era = { pre: /pre/i.test(b[3] || ''), label: b[4].replace(/\s+/g, ' ') };
       // Keep the EARLIEST era across all the lists (Alpha < Beta, then by number).
       const key = (e) => { const m = e.label.match(/(Alpha|Beta)\s*([\d.]+)/i); const p = m[2].split('.').map(Number); return [/alpha/i.test(m[1]) ? 0 : 1, p[0] || 0, p[1] || 0, p[2] || 0]; };
       const less = (x, y) => { const a = key(x), c = key(y); for (let k = 0; k < 4; k++) if (a[k] !== c[k]) return a[k] < c[k]; return x.pre && !y.pre; };
@@ -442,13 +464,29 @@ var CH = (function () {
 
   // When a snapshot really happened: the back-filled "season N" commits are
   // dated 2020-10-17 but stand for the start of season N.
+  // Checked 2026-10-24: the "season 36" snapshot already has every Beta 36.1
+  // change (8 of 8 cards), so a season snapshot is dated at the season's last
+  // patch, not its first.
   function snapshotDate(snap, vh) {
-    const m = String(snap.subject || '').match(/season\s+(\d+)\s*$/i);
+    const m = String(snap.subject || '').match(/season\s+(\d+)(?:\.\d+)?\s*$/i); // also "season 49.5"
     if (m) {
-      const v = vh.find((x) => new RegExp(`^Beta\\s*${m[1]}\\.0$`, 'i').test(x.label));
-      if (v && v.date) return ymd(v.date);
+      const v = vh.find((x) => x.date && new RegExp(`^Beta\\s*${m[1]}(?:\\.\\d+)?$`, 'i').test(x.label)); // newest first
+      if (v) return ymd(v.date);
     }
     return snap.date;
+  }
+  // The earliest a back-filled season snapshot can show: the season's first
+  // patch. They aren't consistent - "season 36" shows 36.1's stats, "season 43"
+  // shows the state before 43.1, "season 51" shows 51.0 - so each one covers
+  // its whole season, and the wiki's changes are matched to the snapshot whose
+  // stats and text show them.
+  function snapshotLow(snap, vh) {
+    const m = String(snap.subject || '').match(/season\s+(\d+)(?:\.\d+)?\s*$/i);
+    if (m) {
+      const all = vh.filter((x) => x.date && new RegExp(`^Beta\\s*${m[1]}(?:\\.\\d+)?$`, 'i').test(x.label));
+      if (all.length) return ymd(all[all.length - 1].date);
+    }
+    return null;
   }
 
   // Wiki-built versions (oldest first, from buildVersions) + tracker
@@ -458,7 +496,11 @@ var CH = (function () {
   // version (in that window) that lists the card, and text comes from the
   // tracker when it captured it, otherwise from the wiki.
   function mergeTracker(wikiVersions, snaps, vh) {
-    const tracker = compactTracker(snaps).map((s) => ({ ...s, when: snapshotDate(s, vh) }));
+    const tracker = compactTracker(snaps).map((s) => {
+      const when = snapshotDate(s, vh);
+      const low = snapshotLow(s, vh);
+      return { ...s, when, low: low && low < when ? low : when };
+    });
     if (!tracker.length) return { versions: wikiVersions, trackerStart: null };
     const t0 = tracker[0].when;
     // Before the tracker starts, tribes and built-in statuses (Taunt, Loop...)
@@ -478,30 +520,107 @@ var CH = (function () {
     let prevWhen = pre.length && dated(pre[pre.length - 1]) ? dated(pre[pre.length - 1]) : '0000-00-00';
     let lastGame = null; // { text, when } - the tracker's latest text capture
     let lastFromGame = false; // was the previous shown version's text the game's own?
+    // Windows: (prevLow, when]. A season snapshot's window starts at the
+    // previous snapshot's earliest possible date, so windows can overlap; each
+    // wiki version is matched to one snapshot only.
+    let prevLow = prevWhen;
+    const usedWiki = new Set();
+    const windowOf = (t) => post.filter((v) => !usedWiki.has(v) && dated(v) > prevLow && dated(v) <= t.when);
+    // A wiki version whose text was SET at that version (an effect update or a
+    // release), not carried over from an earlier one.
+    const textSetHere = (v) => v.textKnown && v.text !== CURRENT_TEXT && dated(v) && v.textFrom === dated(v);
+    const words = (x) => new Set(String(x || '').replace(/\{\{[A-Z_]+:([^|}]+)[^}]*\}\}/g, ' $1 ').toLowerCase().split(/[^a-z0-9+/-]+/).filter(Boolean));
+    const similar = (a, b) => { const A = words(a); const B = words(b); if (!A.size || !B.size) return 0; let n = 0; A.forEach((w) => { if (B.has(w)) n++; }); return n / (A.size + B.size - n); };
     tracker.forEach((t, idx) => {
       // Text-only change: only a real change if the earlier text was the
       // game's own too. Otherwise the tracker just captured, word for word,
       // the text the previous version already had - upgrade that one.
-      if (t.textOnly && t.state.description && !lastFromGame && out.length) {
+      // ...unless the wiki lists an effect update in between (Dog Slots: the
+      // first capture in 2024 has Beta 84.0's text, not the 80.0 release text).
+      const lastText = out.length ? out[out.length - 1].text : null;
+      const wikiTextChange = windowOf(t).some((v) => textSetHere(v) && plainText(v.text) !== plainText(lastText));
+      if (t.textOnly && t.state.description && !lastFromGame && out.length && !wikiTextChange) {
         const lastV = out[out.length - 1];
         lastV.text = t.state.description; lastV.textKnown = true; lastV.gameText = true;
         lastGame = { text: t.state.description, when: t.when };
         lastFromGame = true;
-        prevWhen = t.when;
+        prevWhen = t.when; prevLow = t.low;
         return;
       }
-      const inWindow = post.filter((v) => dated(v) > prevWhen && dated(v) <= t.when);
-      const wikiHere = inWindow[inWindow.length - 1];
+      const inWindow = windowOf(t);
+      const preText = out.length ? out[out.length - 1].text : null;
+      // The capture repeats the text from before this window although the wiki
+      // lists an effect update in it: a stale capture (see below).
+      const staleCapture = !!(t.state.description && preText && plainText(t.state.description) === plainText(preText)
+        && inWindow.some((w) => textSetHere(w) && plainText(w.text) !== plainText(preText)));
+      // Several wiki updates in one window: the snapshot may show an earlier one
+      // (the back-filled "season 51" snapshot has 51.0's text, though 51.1 was
+      // out). Pick the update whose text matches the capture best (and whose
+      // stats match), and leave the later ones for the next snapshot.
+      const st = t.state;
+      const statsOk = (w) => ['cost', 'atk', 'hp'].every((k) => w[k] === undefined || w[k] === null || w[k] === (k === 'atk' ? st.attack : st[k]));
+      // The latest wiki change whose stats are the snapshot's (later ones in the
+      // window may not have happened yet when it was taken).
+      const prevV = out[out.length - 1];
+      const sameAsPrev = !!prevV && ['cost', 'atk', 'hp'].every((k) => (prevV[k] ?? null) === ((k === 'atk' ? st.attack : st[k]) ?? null));
+      let pick = inWindow.length - 1;
+      let okAt = -1;
+      for (let i = inWindow.length - 1; i >= 0; i--) if (statsOk(inWindow[i])) { okAt = i; break; }
+      if (okAt >= 0) pick = okAt;
+      else {
+        // None of the wiki's changes here match the snapshot. If its stats didn't
+        // change either, it doesn't show them yet (Same Fate: "season 43" still
+        // has cost 8, 43.1's cut to 7 first shows in "season 46") - leave them
+        // for a later snapshot.
+        if (sameAsPrev && !inWindow.some(textSetHere)) inWindow.length = 0;
+      }
+      // Same for text: the snapshot's stats are unchanged and its text is
+      // still the previous version's (closer to it than to any update here) -
+      // it was taken before the update (Business Snail: "season 51" still has
+      // the 50.0 text; 51.1's update first shows in the 2020-10-18 capture).
+      // Only for the back-filled season snapshots, against wiki-worded text
+      // (game wording vs game wording scores higher whatever the content).
+      if (sameAsPrev && t.low !== t.when && !prevV.gameText && t.state.description && preText && inWindow.length) {
+        const toPrev = similar(preText, t.state.description);
+        const updates = inWindow.filter((w) => textSetHere(w) && plainText(w.text) !== plainText(preText));
+        if (updates.length && updates.every((w) => similar(w.text, t.state.description) + 0.1 < toPrev)) inWindow.length = 0;
+      }
+      pick = Math.min(pick, inWindow.length - 1);
+      if (t.state.description && pick > 0 && !staleCapture) {
+        let best = -1; let bestScore = 0;
+        inWindow.forEach((w, i) => {
+          if (!w.textKnown || w.text === CURRENT_TEXT || !statsOk(w)) return;
+          const sc = similar(w.text, t.state.description);
+          if (sc > bestScore) { best = i; bestScore = sc; }
+        });
+        const last = inWindow[pick];
+        const lastScore = last.textKnown && last.text !== CURRENT_TEXT ? similar(last.text, t.state.description) : 0;
+        if (best >= 0 && best < pick && bestScore >= 0.4 && bestScore > lastScore + 0.02) pick = best;
+      }
+      inWindow.length = pick + 1;
+      inWindow.forEach((w) => usedWiki.add(w));
+      const wikiHere = inWindow[pick];
+      // An earlier effect update in the same window keeps its own version
+      // (Chest: 36.0 "Earn 2 G", then 36.1 "Draw 2 cards"), with the wiki's stats.
+      const folded = [];
+      inWindow.slice(0, pick).forEach((w) => {
+        const shown = out[out.length - 1];
+        if (textSetHere(w) && (!shown || plainText(w.text) !== plainText(shown.text))) out.push({ ...w, source: 'wiki' });
+        else folded.push(w);
+      });
       let version;
       let note = null;
       if (wikiHere) {
         version = wikiHere.version;
-        if (inWindow.length > 1) note = `Also includes ${inWindow.slice(0, -1).map((v) => v.version.label).join(', ')} (the tracker saw them together).`;
+        if (folded.length) note = `Also includes ${folded.map((v) => v.version.label).join(', ')} (the tracker saw them together).`;
       } else {
         // No patch dated inside the window (two snapshots on the same day, or a
         // mid-season change): assume the EARLIEST patch it could be - the one in
         // effect when the tracker saw it. Easier to correct later than a date range.
-        const anyVh = vhAsc.filter((v) => ymd(v.date) > prevWhen && ymd(v.date) <= t.when).pop()
+        // (A season snapshot is dated at the season's last patch; its season
+        // starts at t.low, so the earliest it could be is the season's first.)
+        const anyVh = vhAsc.filter((v) => ymd(v.date) > prevWhen && ymd(v.date) <= (t.low || t.when)).pop()
+          || vhAsc.filter((v) => ymd(v.date) > prevWhen && ymd(v.date) <= t.when).pop()
           || vhAsc.filter((v) => ymd(v.date) <= t.when).pop();
         version = anyVh ? { ...anyVh, guessed: true } : { label: t.when, date: t.when, season: null, guessed: true };
         note = `Not listed in Version History for this card; assumed ${anyVh ? anyVh.label : 'its release'} (the earliest it could be - seen by ${t.when}).`;
@@ -511,7 +630,16 @@ var CH = (function () {
       // tracker's last capture or the wiki's last effect update.
       let text = null;
       let game = false;
-      if (t.state.description) {
+      // A stale capture: the snapshot repeats the previous version's text while
+      // the wiki lists an effect update in this window. The back-filled season
+      // snapshots have the season's last stats but older text (Microwave,
+      // Aaron's Secret: "season 36" has 36.1's cost but the 36.0 text) - use
+      // the wiki's update; the next capture brings the game's own wording.
+      const wikiNew = inWindow.filter((w) => textSetHere(w) && plainText(w.text) !== plainText(preText)).pop();
+      const stale = staleCapture && !!wikiNew;
+      if (stale) {
+        text = wikiNew.text; game = false;
+      } else if (t.state.description) {
         text = t.state.description; game = true;
         lastGame = { text, when: t.when };
       } else {
@@ -540,7 +668,7 @@ var CH = (function () {
         out.push(v);
       }
       lastFromGame = !!(out[out.length - 1] && out[out.length - 1].gameText);
-      prevWhen = t.when;
+      prevWhen = t.when; prevLow = t.low;
     });
     return { versions: out, trackerStart: t0 };
   }
@@ -563,6 +691,13 @@ var CH = (function () {
   //  - an undated "Original" is dropped - the oldest dated version starts the list.
   function finalizeVersions(list) {
     const out = [];
+    // An old spelling ("Brainshift", "Undyne's spears") takes the one used
+    // next (also done in applyMiraheze, which only runs when Miraheze adds something).
+    list = list.slice();
+    for (let i = list.length - 2; i >= 0; i--) {
+      const a = list[i]; const b = list[i + 1];
+      if (a.name && b.name && a.name !== b.name && norm(a.name) === norm(b.name)) list[i] = { ...a, name: b.name };
+    }
     const sameCard = (a, b) => a.name === b.name && a.cost === b.cost && (a.atk ?? null) === (b.atk ?? null) && (a.hp ?? null) === (b.hp ?? null)
       && (a.rarity || '') === (b.rarity || '')
       && (!a.powersKnown || !b.powersKnown || powerKey(a.statuses) === powerKey(b.statuses))
@@ -575,7 +710,12 @@ var CH = (function () {
         if (other.textKnown && (!keep.textKnown || (other.gameText && !keep.gameText))) { keep.text = other.text; keep.textKnown = true; keep.gameText = other.gameText; }
         if (keep.tribes === undefined) keep.tribes = other.tribes;
         if (keep.statuses === undefined || (other.powersKnown && !keep.powersKnown)) { keep.statuses = other.statuses; keep.powerFields = other.powerFields; keep.powersKnown = !!(keep.powersKnown || other.powersKnown); }
-        if (other.note && other.note !== keep.note) keep.note = keep.note ? `${keep.note} ${other.note}` : other.note;
+        // Notes about the dropped version's own number ("Not listed in Version
+        // History; assumed Beta 43.0", "Also includes ...") don't describe the
+        // kept one, which has its own number.
+        const labelNote = /^(Not listed in Version History|Also includes|Patch number from the Miraheze|Release version from the Miraheze|First version from the Miraheze)/;
+        const carry = (other.note || '').split(/(?<=\.)\s+(?=[A-Z])/).filter((x) => x && !labelNote.test(x)).join(' ');
+        if (carry && carry !== keep.note && !(keep.note || '').includes(carry)) keep.note = keep.note ? `${keep.note} ${carry}` : carry;
         out[out.length - 1] = keep;
         return;
       }
@@ -735,6 +875,10 @@ var CH = (function () {
       const next = out[i + 1];
       const nk = next && versionKey(next.version);
       if (nk && keyCmp(nk, p.ver.key) === 0) { used.add(p); continue; } // already there
+      // Miraheze files x.1 changes under x.0 (Gerson's 36.1 cost cut is its "36"):
+      // the next version, in the same season, already makes this change.
+      if (nk && nk[0] === p.ver.key[0] && Math.floor(nk[1]) === Math.floor(p.ver.key[1])
+        && keys.every((k) => next[k] === p.ch[k][1])) { used.add(p); continue; }
       if (!keys.every((k) => has(prev[k]) && prev[k] === p.ch[k][0])) continue;
       const add = { ...prev, version: { ...p.ver }, original: false, source: 'miraheze', note: `Only recorded on the Miraheze wiki: ${p.ch.summary}` };
       keys.forEach((k) => { add[k] = p.ch[k][1]; });
@@ -772,9 +916,14 @@ var CH = (function () {
           log.push(`added ${intro.ver.label}: introduced as ${c.cost}${has(c.atk) ? `/${c.atk}/${c.hp}` : ' cost'} (the wiki's Version History implies different first stats)`);
         }
       } else if (keyCmp(intro.ver.key, fk) < 0 && f.version.before && same(f)) {
-        // A Previous Versions "Before x" first version with the same stats: Miraheze knows its release.
+        // A Previous Versions "Before x" first version with the same stats: Miraheze knows its release (and its text).
         out[0] = { ...f, version: { ...intro.ver }, note: [f.note, 'Release version from the Miraheze wiki.'].filter(Boolean).join(' ') };
+        if (c.text !== undefined && (!f.textKnown || f.text === CURRENT_TEXT)) { out[0].text = c.text; out[0].textKnown = true; out[0].gameText = undefined; }
         log.push(`first version ${f.version.label} -> ${intro.ver.label} (introduced)`);
+      } else if (keyCmp(intro.ver.key, fk) === 0 && same(f) && c.text !== undefined && (!f.textKnown || f.text === CURRENT_TEXT)) {
+        // Same release patch, text unknown (Noelle, Beta 30.0): Miraheze's release text.
+        out[0] = { ...f, text: c.text, textKnown: true, gameText: undefined };
+        log.push(`${f.version.label}: release text from the Miraheze wiki`);
       } else if (keyCmp(intro.ver.key, fk) < 0) {
         out.unshift(introCard()); // identical to the next one? finalizeVersions keeps this older number
         log.push(`added ${intro.ver.label}: introduced as ${c.cost}${has(c.atk) ? `/${c.atk}/${c.hp}` : ' cost'}`);
@@ -787,8 +936,8 @@ var CH = (function () {
       // "Same text as today" is only an assumption, so it can be replaced too.
       if ((v.textKnown && v.text !== CURRENT_TEXT) || !v.version || i === out.length - 1) continue;
       const k = versionKey(v.version);
-      const p = k && parsed.find((x) => x.ch.text && keyCmp(x.ver.key, k) === 0);
-      if (p) { out[i] = { ...v, text: p.ch.text, textKnown: true }; log.push(`${v.version.label}: text from the Miraheze wiki`); continue; }
+      const p = k && parsed.find((x) => (x.ch.text || (x.ch.intro && x.ch.intro.text)) && keyCmp(x.ver.key, k) === 0);
+      if (p) { out[i] = { ...v, text: p.ch.text || p.ch.intro.text, textKnown: true }; log.push(`${v.version.label}: text from the Miraheze wiki`); continue; }
       const prev = out[i - 1];
       const lo = prev && versionKey(prev.version);
       if (!prev || !prev.textKnown || prev.text === CURRENT_TEXT || !lo || !k) continue;

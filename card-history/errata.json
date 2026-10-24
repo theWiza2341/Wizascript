@@ -6,6 +6,14 @@
       "name": "Generous Gifts",
       "action": "remove",
       "why": "Version History pasted Flowey's text under Generous Gifts."
+    },
+    {
+      "version": "Beta 95.0",
+      "name": "Clover",
+      "action": "replace",
+      "why": "Clover was New Cut Flowey renamed in Beta 94.0 (same game card, id 808; Miraheze: 'Replaced with Clover' at 94.0). In 95.0 it moved to the Undertale Yellow set, and Version History and the patch notes list it again as a new card, which made its history start at 95.0.",
+      "section": "Balancing (Monsters)",
+      "text": "Clover -- Moved to the Undertale Yellow set (UTY)."
     }
   ]
 }

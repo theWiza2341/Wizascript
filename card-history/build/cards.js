@@ -47,6 +47,12 @@ function buildCard(card, ctx) {
       if (!text) continue;
       pvTitle = title;
       const f = CH.parsePreviousVersions(text);
+      // Test of Will's page starts at Beta 19.0 (it only covers Test of Will, not
+      // Heal Delivery before it): a "first version" newer than events the walk
+      // found isn't the card's first version.
+      const fk = f && f.version && !f.version.before ? CH.versionKey(f.version) : null;
+      const older = fk && r.events.some((e) => { const k = CH.versionKey(e.version); return k && (k[0] - fk[0] || k[1] - fk[1]) < 0; });
+      if (older) { pvTitle = title; continue; }
       if (f) { first = f; if (!first.name) first.name = r.oldestName; source = `Previous Versions (${title.replace(/_/g, ' ')})`; break; }
     }
   }
@@ -56,7 +62,10 @@ function buildCard(card, ctx) {
   let wikiAll = built.versions;
   if (tf) {
     const today = CH.cardEvents(ctx.vh, card.name);
-    const todayBuilt = CH.buildVersions(current, today.events, null);
+    // Released on the day the tracker first saw it (Wheelvil, Beta 81.0): the
+    // walk above stops before that day, so take the release line from here.
+    const useCreation = !first && today.creation && today.creation.version && today.creation.version.date && CH.ymd(today.creation.version.date) >= tf.when;
+    const todayBuilt = CH.buildVersions(current, today.events, useCreation ? today.creation : null);
     wikiAll = built.versions.concat(todayBuilt.versions.filter((v) => v.version && v.version.date && CH.ymd(v.version.date) >= tf.when));
   }
   const merged = CH.mergeTracker(wikiAll, snaps, ctx.vh);

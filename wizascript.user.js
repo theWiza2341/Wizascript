@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.6.1
+// @version      1.6.2
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -15,6 +15,7 @@
 // @grant        GM_listValues
 // @grant        GM_xmlhttpRequest
 // @connect      raw.githubusercontent.com
+// @sandbox      raw
 // ==/UserScript==
 
 (() => {
@@ -24,7 +25,7 @@
   }
 
   // packages/core/version.js
-  var SUITE_VERSION = "1.6.1";
+  var SUITE_VERSION = "1.6.2";
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
@@ -49,7 +50,8 @@
     }
     suitePlugin = pageWindow2.underscript.plugin(SUITE_NAME, SUITE_VERSION);
     suitePlugin.updater(DOWNLOAD_URL);
-    console.log(`[Wizascript] Registered with UnderScript (v${SUITE_VERSION}).`);
+    const context = typeof unsafeWindow === "undefined" || unsafeWindow === window ? "page" : "sandbox";
+    console.log(`[Wizascript] Registered with UnderScript (v${SUITE_VERSION}, ${context} context).`);
     readyCallbacks.forEach((cb) => cb(suitePlugin));
     readyCallbacks.length = 0;
   }
@@ -751,6 +753,12 @@
   var CHANGELOG_default = `# Changelog
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
+
+## 1.6.2
+
+### Improvements
+- **Controller Support:** while it's switched off, it no longer adds anything to the page or keeps running in the background. Before, its cursor and other parts were still loaded on every page even when turned off.
+- Wizascript now runs directly in the page, the same way UnderScript and other plugins do, instead of in Tampermonkey's separate sandbox. Your settings and saved data stay where they are.
 
 ## 1.6.1
 
@@ -1587,7 +1595,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID requestDevice failed:", e);
     }
   }
-  (async function tryAutoReconnectWebHid() {
+  async function tryAutoReconnectWebHid() {
     if (!navigator.hid) return;
     try {
       const devices = await navigator.hid.getDevices();
@@ -1596,7 +1604,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     } catch (e) {
       if (debugLoggingEnabled) console.log("[Wizascript Controller] WebHID auto-reconnect check failed:", e);
     }
-  })();
+  }
   function getMergedGamepad() {
     let rawPads = Array.from(navigator.getGamepads()).filter((p) => p);
     if (hidDevice) {
@@ -1661,20 +1669,6 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     }
     return { buttons, axes, _mergedFrom: pads.map((p) => p.id) };
   }
-  pageWindow.addEventListener("gamepadconnected", (e) => {
-    if (!debugLoggingEnabled) return;
-    console.log("[Wizascript Controller] gamepadconnected:", {
-      index: e.gamepad.index,
-      id: e.gamepad.id,
-      mapping: e.gamepad.mapping,
-      buttons: e.gamepad.buttons.length,
-      axes: e.gamepad.axes.length
-    });
-  });
-  pageWindow.addEventListener("gamepaddisconnected", (e) => {
-    if (!debugLoggingEnabled) return;
-    console.log("[Wizascript Controller] gamepaddisconnected:", { index: e.gamepad.index, id: e.gamepad.id });
-  });
   var lastLoggedRawSnapshot = /* @__PURE__ */ new Map();
   function rawSnapshotsEqual(a, b) {
     if (!a || !b) return false;
@@ -1719,6 +1713,26 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       lastAnyStickState = !!anyStickNow;
       if (lastAnyStickState) showPressIndicator("\u{1F579} Stick moved");
     }
+  }
+  var watchersStarted = false;
+  function startGamepadWatchers() {
+    if (watchersStarted) return;
+    watchersStarted = true;
+    pageWindow.addEventListener("gamepadconnected", (e) => {
+      if (!debugLoggingEnabled) return;
+      console.log("[Wizascript Controller] gamepadconnected:", {
+        index: e.gamepad.index,
+        id: e.gamepad.id,
+        mapping: e.gamepad.mapping,
+        buttons: e.gamepad.buttons.length,
+        axes: e.gamepad.axes.length
+      });
+    });
+    pageWindow.addEventListener("gamepaddisconnected", (e) => {
+      if (!debugLoggingEnabled) return;
+      console.log("[Wizascript Controller] gamepaddisconnected:", { index: e.gamepad.index, id: e.gamepad.id });
+    });
+    tryAutoReconnectWebHid();
   }
 
   // packages/controller/storage.js
@@ -14948,6 +14962,11 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
   }
   function initController(plugin, controllerEnabledSetting2) {
     const pageWindow2 = getPageWindow();
+    if (!isPluginEnabled("controller")) {
+      registerControllerSettings(plugin, controllerEnabledSetting2);
+      return;
+    }
+    startGamepadWatchers();
     const DEFAULT_HIGHLIGHT_THICKNESS = 4;
     function getHighlightThickness() {
       return DEFAULT_HIGHLIGHT_THICKNESS;

@@ -38,6 +38,11 @@ const primary = () => `<b>${esc(getPrimaryKeyDisplay())}</b>`;
 const pad = (i) => `<b>${esc(bindingToDisplay(i))}</b>`;
 // A player's current controller binding (button or key).
 const ctl = (binding) => `<b>${esc(bindingToDisplay(binding))}</b>`;
+// A boolean setting's current value, straight from UnderScript's storage.
+function settingOn(key, fallback) {
+  const v = localStorage.getItem(`underscript.plugin.Wizascript.${key}`);
+  return v === null ? fallback : v === "1" || v === "true";
+}
 
 // tab: the plugin's settings tab, or null if it has none.
 const GUIDES = {
@@ -166,7 +171,9 @@ const GUIDES = {
       'Pick <b>feildmaster\'s Template Editor</b> or <b>UC Editor</b> in its title bar. Both are their authors\' own sites; <b>↗</b> opens the one you\'re using in a new tab.',
       'Cards you make here are saved separately from the editor\'s own site. Use the editor\'s download/upload to move them across.',
       'If feildmaster\'s editor stays black, turn on the <b>hotfix</b> (on the Card Maker tab, or the note that appears in the window).'
-    ]
+    ].concat(settingOn("cardMaker.gallery", true) ? [
+      '<b>Gallery</b> (title bar): <b>Read from this editor</b> lists the cards you\'ve made; tick the ones to add, link them into sets, and preview your request. (The gallery isn\'t live yet, so nothing is sent.)'
+    ] : [])
   }
 };
 

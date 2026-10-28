@@ -13,6 +13,7 @@ const HEADER = `// ==UserScript==
 // @match        https://undercards.net/*
 // @match        https://*.undercards.net/*
 // @match        https://undercard.feildmaster.com/*
+// @match        https://sernon158.github.io/uc-editor/*
 // @icon         https://i.imgur.com/FOIUHej.png
 // @updateURL    https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @downloadURL  https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
@@ -26,10 +27,10 @@ const HEADER = `// ==UserScript==
 
 `;
 
-// feildmaster's Template Editor (Card Maker, 1.7.0): only the small part
-// in packages/card-maker/frame.js runs there, and only while the editor is
-// shown inside the Card Maker. The rest of Wizascript never runs on it.
-const EDITOR_HOST = "undercard.feildmaster.com";
+// The two card editors (Card Maker, 1.7.0): only the small part in
+// packages/card-maker/frame.js runs there, and only while an editor is
+// shown inside the Card Maker. The rest of Wizascript never runs on them.
+const ON_EDITOR = 'location.hostname === "undercard.feildmaster.com" || (location.hostname === "sernon158.github.io" && location.pathname.startsWith("/uc-editor"))';
 
 async function bundle(options) {
   const result = await esbuild.build({
@@ -72,7 +73,7 @@ async function build() {
   });
 
   const main = result.outputFiles[0].text;
-  const bundled = `if (location.hostname === ${JSON.stringify(EDITOR_HOST)}) {\n${frame}} else {\n${main}}\n`;
+  const bundled = `if (${ON_EDITOR}) {\n${frame}} else {\n${main}}\n`;
   const outPath = path.join(__dirname, "wizascript.user.js");
   const header = HEADER;
   fs.writeFileSync(outPath, header + bundled, "utf-8");

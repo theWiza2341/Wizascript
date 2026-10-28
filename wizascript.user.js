@@ -7,6 +7,7 @@
 // @match        https://undercards.net/*
 // @match        https://*.undercards.net/*
 // @match        https://undercard.feildmaster.com/*
+// @match        https://sernon158.github.io/uc-editor/*
 // @icon         https://i.imgur.com/FOIUHej.png
 // @updateURL    https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @downloadURL  https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
@@ -18,7 +19,7 @@
 // @connect      raw.githubusercontent.com
 // ==/UserScript==
 
-if (location.hostname === "undercard.feildmaster.com") {
+if (location.hostname === "undercard.feildmaster.com" || (location.hostname === "sernon158.github.io" && location.pathname.startsWith("/uc-editor"))) {
 (() => {
   // packages/card-maker/storage.js
   var HOTFIX_KEY = "wizascript.cardMaker.hotfix";
@@ -39,11 +40,186 @@ if (location.hostname === "undercard.feildmaster.com") {
   var EDITOR_LABELS = Object.values(EDITORS).map((e) => e.label);
   var FRAME_MESSAGE = "wizascript-card-maker";
 
+  // packages/card-maker/gallery/reader.js
+  var page = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+  function blobToDataUrl(blob) {
+    return new Promise((ok) => {
+      const r = new FileReader();
+      r.onload = () => ok(r.result);
+      r.onerror = () => ok(null);
+      r.readAsDataURL(blob);
+    });
+  }
+  async function toDataUrl(src) {
+    if (!src) return null;
+    if (typeof src !== "string") return blobToDataUrl(src);
+    if (src.startsWith("data:")) return src;
+    try {
+      const res = await fetch(new URL(src, location.href));
+      return res.ok ? blobToDataUrl(await res.blob()) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  var cssUrl = (v) => (/url\(["']?([^"')]+)["']?\)/.exec(v || "") || [])[1] || (v && v !== "none" ? v : null);
+  var rarityName = (u) => (/([A-Z]+_[A-Z]+)\.png/i.exec(u || "") || [])[1] || null;
+  async function readUcEditor() {
+    try {
+      if (typeof page.updateAutosave === "function") page.updateAutosave();
+    } catch (e) {
+    }
+    let save = [];
+    try {
+      save = JSON.parse(localStorage.getItem("autosave") || "[]");
+    } catch (e) {
+      save = [];
+    }
+    if (!Array.isArray(save)) save = [save];
+    const groups = [];
+    for (const g of save) {
+      if (!g) continue;
+      const parts = [];
+      for (const a of g.artifacts || []) {
+        parts.push({ type: "Artifact", name: a.name || "", desc: a.desc || "", rarity: a.rarity || null, image: await toDataUrl(a.image) });
+      }
+      for (const c of g.cards || []) {
+        const type = { 0: "Monster", 1: "Spell", 99: "Enchantment" }[c.cardType];
+        if (!type) continue;
+        const r = cssUrl(c.rarity);
+        parts.push({
+          type,
+          name: c.name || "",
+          desc: c.desc || "",
+          cost: type === "Monster" ? (c.stats || [])[0] : type === "Spell" ? c.stats : null,
+          atk: type === "Monster" ? (c.stats || [])[1] : null,
+          hp: type === "Monster" ? (c.stats || [])[2] : null,
+          soul: c.spellSoul || null,
+          rarity: c.isRarityCustom ? null : rarityName(r),
+          rarityIcon: c.isRarityCustom ? await toDataUrl(r) : null,
+          tribes: await Promise.all((c.tribes || []).map(async (t) => ({ name: t.name || null, icon: await toDataUrl(t.src) }))),
+          imageType: c.imageType || "standard",
+          image: await toDataUrl(cssUrl(c.image))
+        });
+      }
+      groups.push({ name: g.name || "Group", parts });
+    }
+    return groups;
+  }
+  function idbImage(id) {
+    return new Promise((ok) => {
+      let req;
+      try {
+        req = indexedDB.open("undercards", 1);
+      } catch (e) {
+        return ok(null);
+      }
+      req.onupgradeneeded = (e) => e.target.result.createObjectStore("images", { keyPath: "id" });
+      req.onerror = () => ok(null);
+      req.onsuccess = (e) => {
+        const db = e.target.result;
+        try {
+          const get = db.transaction("images").objectStore("images").get(id);
+          get.onsuccess = () => {
+            ok(get.result || null);
+            db.close();
+          };
+          get.onerror = () => {
+            ok(null);
+            db.close();
+          };
+        } catch (err) {
+          ok(null);
+        }
+      };
+    });
+  }
+  async function readFeildmaster() {
+    let avatars = {};
+    try {
+      avatars = await (await fetch("/resources/data/avatars.json")).json();
+    } catch (e) {
+      avatars = {};
+    }
+    const isId = (v) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v || "");
+    const image = async (id) => {
+      if (!id) return null;
+      if (/^https?:/.test(id)) return toDataUrl(id);
+      if (avatars[id]) return toDataUrl(`/resources/images/avatars/${avatars[id]}.png`);
+      const rec = await idbImage(id);
+      return rec ? toDataUrl(rec.file || rec.src) : null;
+    };
+    const el = (id) => {
+      try {
+        return JSON.parse(localStorage.getItem("data:el:" + id));
+      } catch (e) {
+        return null;
+      }
+    };
+    const toPart = async (e) => {
+      var _a, _b, _c;
+      if (!e) return null;
+      const base = { name: e.name || "", desc: e.description || "", image: await image(e.image) };
+      if (e.type === "text") return { type: "Artifact", ...base, rarity: e.rarity || "COMMON" };
+      if (e.type !== "card") return null;
+      const spell = e.health === void 0 || e.health === null;
+      return {
+        type: spell ? "Spell" : "Monster",
+        ...base,
+        cost: (_a = e.cost) != null ? _a : 0,
+        atk: spell ? null : (_b = e.attack) != null ? _b : 0,
+        hp: spell ? null : (_c = e.health) != null ? _c : 0,
+        soul: e.soul || null,
+        rarity: isId(e.rarity) ? null : e.rarity || "COMMON",
+        rarityIcon: isId(e.rarity) ? await image(e.rarity) : null,
+        tribes: await Promise.all((e.tribes || []).filter((t) => t && t !== "none").map(async (t) => ({
+          name: isId(t) ? null : t,
+          icon: isId(t) ? await image(t) : await toDataUrl(`/resources/tribes/${String(t).toUpperCase().replace(/ /g, "_")}.png`)
+        }))),
+        imageType: "standard"
+      };
+    };
+    let ids = [];
+    try {
+      ids = JSON.parse(localStorage.getItem("app:groups") || "[]");
+    } catch (e) {
+      ids = [];
+    }
+    const groups = [];
+    const seen = /* @__PURE__ */ new Set();
+    for (const gid of ids) {
+      const g = el(gid);
+      if (!g) continue;
+      const parts = [];
+      for (const cid of g.content || []) {
+        seen.add(cid);
+        const p = await toPart(el(cid));
+        if (p) parts.push(p);
+      }
+      groups.push({ name: g.name || "Group", parts });
+    }
+    const loose = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || !k.startsWith("data:el:")) continue;
+      const id = k.slice(8);
+      const e = el(id);
+      if (!seen.has(id) && e && e.type !== "group") {
+        const p = await toPart(e);
+        if (p) loose.push(p);
+      }
+    }
+    if (loose.length) groups.push({ name: "Not in a group", parts: loose });
+    return groups;
+  }
+  function readEditorCards(source) {
+    return source === "feildmaster" ? readFeildmaster() : readUcEditor();
+  }
+
   // packages/card-maker/frame.js
   var TOAST_FILE = "/resources/vendor/simpletoast.core.js";
   var FRAME_CHECK = "if (window !== window.top) return;";
   var GIVE_UP_MS = 15e3;
-  var page = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+  var page2 = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
   var sleep = (ms) => new Promise((ok) => setTimeout(ok, ms));
   var drawn = () => !!document.querySelector(".element");
   var started = () => !document.getElementById("loading");
@@ -58,23 +234,13 @@ if (location.hostname === "undercard.feildmaster.com") {
       const src = await (await fetch(location.origin + TOAST_FILE, { cache: "no-store" })).text();
       if (!src.includes(FRAME_CHECK)) return false;
       runInPage(src.replace(FRAME_CHECK, ""));
-      return typeof page.SimpleToast === "function";
+      return typeof page2.SimpleToast === "function";
     } catch (e) {
       console.warn("[Wizascript Card Maker] hotfix couldn't load SimpleToast", e);
       return false;
     }
   }
-  function runInsideEditor() {
-    if (window === window.top) return;
-    const from = location.ancestorOrigins && location.ancestorOrigins[0] || document.referrer || "";
-    let parentOrigin;
-    try {
-      parentOrigin = new URL(from).origin;
-    } catch (e) {
-      return;
-    }
-    if (!/^https:\/\/([a-z0-9-]+\.)*undercards\.net$/.test(parentOrigin)) return;
-    const report = (status, extra = {}) => window.parent.postMessage({ tag: FRAME_MESSAGE, status, ...extra }, parentOrigin);
+  function watchFeildmaster(report) {
     const hotfix = (() => {
       try {
         return GM_getValue(HOTFIX_KEY, "") === "1";
@@ -84,26 +250,53 @@ if (location.hostname === "undercard.feildmaster.com") {
     })();
     (async () => {
       let hotfixed = false;
-      if (hotfix && typeof page.SimpleToast !== "function") hotfixed = await installToast();
+      if (hotfix && typeof page2.SimpleToast !== "function") hotfixed = await installToast();
       const t0 = Date.now();
       let restarted = false;
       while (Date.now() - t0 < GIVE_UP_MS) {
-        if (drawn()) return report("ok", { hotfixed });
+        if (drawn()) return report({ status: "ok", hotfixed });
         if (started()) {
           await sleep(1500);
-          if (drawn()) return report("ok", { hotfixed });
+          if (drawn()) return report({ status: "ok", hotfixed });
           if (hotfixed && !restarted) {
             restarted = true;
             runInPage('import("/resources/modules/UndercardEditor.js").then((m) => m.default.init());');
             await sleep(1500);
             continue;
           }
-          return report("broken", { hotfixed, toast: typeof page.SimpleToast === "function" });
+          return report({ status: "broken", hotfixed, toast: typeof page2.SimpleToast === "function" });
         }
         await sleep(250);
       }
-      report("broken", { hotfixed, toast: typeof page.SimpleToast === "function" });
+      report({ status: "broken", hotfixed, toast: typeof page2.SimpleToast === "function" });
     })();
+  }
+  function runInsideEditor() {
+    if (window === window.top) return;
+    const source = location.hostname === "undercard.feildmaster.com" ? "feildmaster" : location.hostname === "sernon158.github.io" && location.pathname.startsWith("/uc-editor") ? "sernon" : null;
+    if (!source) return;
+    const from = location.ancestorOrigins && location.ancestorOrigins[0] || document.referrer || "";
+    let parentOrigin;
+    try {
+      parentOrigin = new URL(from).origin;
+    } catch (e) {
+      return;
+    }
+    if (!/^https:\/\/([a-z0-9-]+\.)*undercards\.net$/.test(parentOrigin)) return;
+    const report = (data) => window.parent.postMessage({ tag: FRAME_MESSAGE, ...data }, parentOrigin);
+    window.addEventListener("message", async (e) => {
+      if (e.source !== window.parent || e.origin !== parentOrigin) return;
+      if (!e.data || e.data.tag !== FRAME_MESSAGE || e.data.type !== "read") return;
+      let groups = [];
+      try {
+        groups = await readEditorCards(source);
+      } catch (err) {
+        console.warn("[Wizascript Card Gallery] couldn't read the editor", err);
+      }
+      report({ type: "cards", source, groups });
+    });
+    if (source === "feildmaster") watchFeildmaster(report);
+    else report({ status: "ok" });
   }
 
   // card-maker-frame.js
@@ -863,6 +1056,12 @@ Make your own custom cards without leaving Undercards, and keep chatting while y
 - It shows one of the community card editors: **feildmaster's Template Editor** (the default) or **UC Editor** by sernon158. Pick one in the window's title bar or on the Card Maker tab. Thanks to both of them for letting Wizascript show their editors.
 - The editors are their authors' own sites, loaded as they are. Cards you make in the Card Maker are saved separately from the same editor opened on its own site. **\u2197** opens the editor's site in a new tab.
 - If feildmaster's editor stays black inside the Card Maker, a note in the window offers a **hotfix** (also on the Card Maker tab). It's a stopgap until his editor is updated.
+
+### New: Card Gallery (preview)
+Share the cards you make. It's part of the Card Maker: press **Gallery** in its title bar.
+- **Read from this editor** lists every group and card you've made in the editor that's open. Tick the ones to add, one by one or a whole group as a set. UC Editor group files (.uceditor) and PNG downloads can be added too.
+- Link parts into sets (A, B, C\u2026), rename them, and preview your request. **Browse** shows how they'll look, with All Time / This Month / This Week and likes and dislikes.
+- The gallery isn't live yet: nothing is sent, and Browse's dates and scores are made up. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
 
 ## 1.6.2
 
@@ -2732,6 +2931,10 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   var primary = () => `<b>${esc(getPrimaryKeyDisplay())}</b>`;
   var pad = (i) => `<b>${esc(bindingToDisplay(i))}</b>`;
   var ctl = (binding) => `<b>${esc(bindingToDisplay(binding))}</b>`;
+  function settingOn(key2, fallback) {
+    const v = localStorage.getItem(`underscript.plugin.Wizascript.${key2}`);
+    return v === null ? fallback : v === "1" || v === "true";
+  }
   var GUIDES = {
     patchMaker: {
       tab: "Patch Maker",
@@ -2858,7 +3061,9 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         "Pick <b>feildmaster's Template Editor</b> or <b>UC Editor</b> in its title bar. Both are their authors' own sites; <b>\u2197</b> opens the one you're using in a new tab.",
         "Cards you make here are saved separately from the editor's own site. Use the editor's download/upload to move them across.",
         "If feildmaster's editor stays black, turn on the <b>hotfix</b> (on the Card Maker tab, or the note that appears in the window)."
-      ]
+      ].concat(settingOn("cardMaker.gallery", true) ? [
+        "<b>Gallery</b> (title bar): <b>Read from this editor</b> lists the cards you've made; tick the ones to add, link them into sets, and preview your request. (The gallery isn't live yet, so nothing is sent.)"
+      ] : [])
     }
   };
   function pluginName(id) {
@@ -8211,18 +8416,18 @@ Version: v${version}`;
   async function showChannelGuide(plugin) {
     if (guideOverlay || guideLoading) return;
     guideLoading = true;
-    let entries;
+    let entries2;
     try {
-      entries = await fetchLiveGamesFull();
+      entries2 = await fetchLiveGamesFull();
     } catch (e) {
       console.warn("[UC TV] [guide] Failed to fetch live games:", e);
       guideLoading = false;
       return;
     }
-    const filtered = entries.filter(
+    const filtered = entries2.filter(
       (entry) => isModeAllowed(entry.mode) && levelsPass(entry.players.map((p) => p.level)) && ranksPass(entry.players.map((p) => p.rank), entry.mode)
     );
-    const list = filtered.length ? filtered : entries;
+    const list = filtered.length ? filtered : entries2;
     const currentGameId = new URLSearchParams(location.search).get("gameId");
     const targetWidth = Math.min(GUIDE_MAX_WIDTH, Math.max(GUIDE_MIN_WIDTH, estimateWidestRowWidth(list) + 55));
     const targetHeight = GUIDE_VISIBLE_ROWS * GUIDE_ROW_HEIGHT_PX + GUIDE_CHROME_HEIGHT_PX;
@@ -9532,10 +9737,10 @@ Version: v${version}`;
     header.append(title, grip, buttons);
     root.append(header, body);
     EDGES.forEach((edge) => {
-      const h = document.createElement("div");
-      h.className = `wz-tl-resize wz-tl-resize-${edge}`;
-      h.dataset.edge = edge;
-      root.appendChild(h);
+      const h2 = document.createElement("div");
+      h2.className = `wz-tl-resize wz-tl-resize-${edge}`;
+      h2.dataset.edge = edge;
+      root.appendChild(h2);
     });
     function persist() {
       saveWindowState({ geometry: ui.geometry, maximised: ui.maximised, pickerOpen: ui.pickerOpen });
@@ -9543,8 +9748,8 @@ Version: v${version}`;
     function updateTileSize() {
       const width = ui.maximised ? viewport2().w : ui.geometry.width;
       const preferred = getPreferredTile();
-      const tile = Math.round(Math.max(MIN_TILE, Math.min(preferred, (width - 120) / 9)));
-      root.style.setProperty("--wz-tl-tile", tile + "px");
+      const tile2 = Math.round(Math.max(MIN_TILE, Math.min(preferred, (width - 120) / 9)));
+      root.style.setProperty("--wz-tl-tile", tile2 + "px");
     }
     function apply2() {
       const g = ui.geometry;
@@ -9646,25 +9851,25 @@ Version: v${version}`;
   // packages/misc/tier-list/tiers-view.js
   function buildTile(key2, { placed = false } = {}) {
     const item = resolveItem(key2);
-    const tile = document.createElement("div");
-    tile.className = "wz-tl-tile";
-    tile.dataset.key = key2;
-    tile.tabIndex = -1;
-    if (item.image) tile.style.backgroundImage = `url("${item.image}")`;
-    else tile.classList.add("wz-tl-noimg");
-    if (item.color) tile.style.setProperty("--wz-tl-rarity", item.color);
-    else if (item.rarity && RARITY_COLORS[item.rarity]) tile.style.setProperty("--wz-tl-rarity", RARITY_COLORS[item.rarity]);
-    if (item.kind === "soul") tile.classList.add("wz-tl-soul");
+    const tile2 = document.createElement("div");
+    tile2.className = "wz-tl-tile";
+    tile2.dataset.key = key2;
+    tile2.tabIndex = -1;
+    if (item.image) tile2.style.backgroundImage = `url("${item.image}")`;
+    else tile2.classList.add("wz-tl-noimg");
+    if (item.color) tile2.style.setProperty("--wz-tl-rarity", item.color);
+    else if (item.rarity && RARITY_COLORS[item.rarity]) tile2.style.setProperty("--wz-tl-rarity", RARITY_COLORS[item.rarity]);
+    if (item.kind === "soul") tile2.classList.add("wz-tl-soul");
     if (item.text) {
-      tile.classList.add("wz-tl-text");
-      tile.title = "Double-click to edit";
+      tile2.classList.add("wz-tl-text");
+      tile2.title = "Double-click to edit";
     }
-    if (placed) tile.classList.add("wz-tl-placed");
+    if (placed) tile2.classList.add("wz-tl-placed");
     const name = document.createElement("div");
     name.className = "wz-tl-tile-name";
     name.textContent = item.label;
-    tile.appendChild(name);
-    return tile;
+    tile2.appendChild(name);
+    return tile2;
   }
   function createTiersView({ body, signal }) {
     const container = document.createElement("div");
@@ -9961,7 +10166,7 @@ Version: v${version}`;
     function showKeys(keys, { deletable = false } = {}) {
       const frag = document.createDocumentFragment();
       keys.forEach((key2) => {
-        const tile = buildTile(key2, { placed: isPlaced(key2) });
+        const tile2 = buildTile(key2, { placed: isPlaced(key2) });
         if (deletable) {
           const del = document.createElement("button");
           del.type = "button";
@@ -9972,9 +10177,9 @@ Version: v${version}`;
             e.stopPropagation();
             deleteText(key2.slice(5));
           });
-          tile.appendChild(del);
+          tile2.appendChild(del);
         }
-        frag.appendChild(tile);
+        frag.appendChild(tile2);
       });
       results.appendChild(frag);
     }
@@ -10136,9 +10341,9 @@ Version: v${version}`;
       }
     }
     function begin(x, y) {
-      const { tile, key: key2, from, offsetX, offsetY } = pending;
+      const { tile: tile2, key: key2, from, offsetX, offsetY } = pending;
       const fromPage = from.type === "page";
-      const ghost = fromPage ? buildGhost(key2) : tile.cloneNode(true);
+      const ghost = fromPage ? buildGhost(key2) : tile2.cloneNode(true);
       ghost.classList.add("wz-tl-ghost");
       ghost.classList.remove("wz-tl-placed");
       const size = getComputedStyle(root).getPropertyValue("--wz-tl-tile");
@@ -10147,7 +10352,7 @@ Version: v${version}`;
         ghost.style.width = size;
         ghost.style.height = `calc(${size} * 0.8)`;
       } else {
-        const rect = tile.getBoundingClientRect();
+        const rect = tile2.getBoundingClientRect();
         ghost.style.width = rect.width + "px";
         ghost.style.height = rect.height + "px";
       }
@@ -10155,19 +10360,19 @@ Version: v${version}`;
       if (root.classList.contains("wz-tl-nonames")) ghost.classList.add("wz-tl-nonames");
       root.classList.add("wz-tl-busy");
       document.body.appendChild(ghost);
-      if (tile) tile.classList.add("wz-tl-dragging");
-      active = { tile, key: key2, from, ghost, offsetX, offsetY, target: null, marker: null };
+      if (tile2) tile2.classList.add("wz-tl-dragging");
+      active = { tile: tile2, key: key2, from, ghost, offsetX, offsetY, target: null, marker: null };
       pending = null;
       if (onDragStart) onDragStart();
       update(x, y);
     }
     function finish(cancelled) {
       if (!active) return;
-      const { key: key2, from, target, tile, ghost } = active;
+      const { key: key2, from, target, tile: tile2, ghost } = active;
       clearHighlights();
       ghost.remove();
       root.classList.remove("wz-tl-busy");
-      if (tile) tile.classList.remove("wz-tl-dragging");
+      if (tile2) tile2.classList.remove("wz-tl-dragging");
       active = null;
       suppressClick = true;
       setTimeout(() => {
@@ -10199,14 +10404,14 @@ Version: v${version}`;
     root.addEventListener("pointerdown", (e) => {
       if (e.button !== 0) return;
       if (e.target.closest(".wz-tl-tile-del, input")) return;
-      const tile = e.target.closest(".wz-tl-tile");
-      if (!tile || !root.contains(tile) || !tile.dataset.key) return;
+      const tile2 = e.target.closest(".wz-tl-tile");
+      if (!tile2 || !root.contains(tile2) || !tile2.dataset.key) return;
       e.preventDefault();
-      const row2 = tile.closest(".wz-tl-row");
-      const rect = tile.getBoundingClientRect();
+      const row2 = tile2.closest(".wz-tl-row");
+      const rect = tile2.getBoundingClientRect();
       pending = {
-        tile,
-        key: tile.dataset.key,
+        tile: tile2,
+        key: tile2.dataset.key,
         from: row2 ? { type: "tier", tierId: row2.dataset.tierId } : { type: "picker" },
         startX: e.clientX,
         startY: e.clientY,
@@ -10310,29 +10515,29 @@ Version: v${version}`;
     function arm() {
       clearTimeout(timer);
       timer = null;
-      const tile = overTile;
-      if (!tile || pressed || isDragging() || box) return;
-      if (tile.classList.contains("wz-tl-text")) return;
+      const tile2 = overTile;
+      if (!tile2 || pressed || isDragging() || box) return;
+      if (tile2.classList.contains("wz-tl-text")) return;
       timer = setTimeout(() => {
-        if (pressed || isDragging() || !tile.isConnected || overTile !== tile) return;
-        const item = resolveItem(tile.dataset.key);
+        if (pressed || isDragging() || !tile2.isConnected || overTile !== tile2) return;
+        const item = resolveItem(tile2.dataset.key);
         box = render2(item);
-        box.dataset.key = tile.dataset.key;
+        box.dataset.key = tile2.dataset.key;
         document.body.appendChild(box);
         position();
       }, getDelayMs());
     }
     root.addEventListener("pointerover", (e) => {
-      const tile = e.target.closest(".wz-tl-tile");
-      if (!tile || !tile.dataset.key || tile === overTile) return;
+      const tile2 = e.target.closest(".wz-tl-tile");
+      if (!tile2 || !tile2.dataset.key || tile2 === overTile) return;
       hide();
-      overTile = tile;
+      overTile = tile2;
       arm();
     }, { signal });
     root.addEventListener("pointerout", (e) => {
-      const tile = e.target.closest(".wz-tl-tile");
-      if (!tile || tile !== overTile) return;
-      if (e.relatedTarget && tile.contains(e.relatedTarget)) return;
+      const tile2 = e.target.closest(".wz-tl-tile");
+      if (!tile2 || tile2 !== overTile) return;
+      if (e.relatedTarget && tile2.contains(e.relatedTarget)) return;
       overTile = null;
       hide();
     }, { signal });
@@ -10351,12 +10556,12 @@ Version: v${version}`;
       else overTile = null;
     }, { signal, capture: true });
     signal.addEventListener("abort", hide);
-    function showNear(tile) {
+    function showNear(tile2) {
       hide();
-      const r = tile.getBoundingClientRect();
+      const r = tile2.getBoundingClientRect();
       lastX = r.right;
       lastY = r.top;
-      overTile = tile;
+      overTile = tile2;
       pressed = false;
       arm();
     }
@@ -11109,12 +11314,12 @@ Version: v${version}`;
     syncLayer();
     signal.addEventListener("abort", () => layerWatch.disconnect());
     win.root.addEventListener("dblclick", (e) => {
-      const tile = e.target.closest(".wz-tl-tile.wz-tl-text");
-      if (!tile || e.target.closest("input, .wz-tl-tile-del")) return;
-      const textId = tile.dataset.key.slice(5);
+      const tile2 = e.target.closest(".wz-tl-tile.wz-tl-text");
+      if (!tile2 || e.target.closest("input, .wz-tl-tile-del")) return;
+      const textId = tile2.dataset.key.slice(5);
       const current = getTextLabel(textId);
       if (current === null) return;
-      const label = tile.querySelector(".wz-tl-tile-name");
+      const label = tile2.querySelector(".wz-tl-tile-name");
       const input = document.createElement("input");
       input.type = "text";
       input.maxLength = MAX_TEXT;
@@ -11387,10 +11592,10 @@ Version: v${version}`;
   var EDGES2 = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
   function viewport3() {
     const w = document.documentElement.clientWidth || window.innerWidth;
-    const h = document.documentElement.clientHeight || window.innerHeight;
+    const h2 = document.documentElement.clientHeight || window.innerHeight;
     const footer = document.querySelector("footer");
     const top = footer ? footer.getBoundingClientRect().top : NaN;
-    return { w, h: top > h / 2 && top < h ? Math.floor(top) : h };
+    return { w, h: top > h2 / 2 && top < h2 ? Math.floor(top) : h2 };
   }
   function headerButton2(action, label, title) {
     const b = document.createElement("button");
@@ -11467,10 +11672,10 @@ Version: v${version}`;
     body.append(loading, note, shield);
     root.append(header, body);
     EDGES2.forEach((edge) => {
-      const h = document.createElement("div");
-      h.className = `wz-cm-resize wz-cm-resize-${edge}`;
-      h.dataset.edge = edge;
-      root.appendChild(h);
+      const h2 = document.createElement("div");
+      h2.className = `wz-cm-resize wz-cm-resize-${edge}`;
+      h2.dataset.edge = edge;
+      root.appendChild(h2);
     });
     const persist = () => saveWindowState2({ geometry: ui.geometry, maximised: ui.maximised, minimised: ui.minimised });
     function apply2() {
@@ -11604,6 +11809,858 @@ Version: v${version}`;
   }
   var FRAME_MESSAGE = "wizascript-card-maker";
 
+  // packages/card-maker/gallery/dom.js
+  function h(tag, props = {}, ...kids) {
+    const el3 = document.createElement(tag);
+    for (const [k, v] of Object.entries(props || {})) {
+      if (v === null || v === void 0 || v === false) continue;
+      if (k === "class") el3.className = v;
+      else if (k === "text") el3.textContent = v;
+      else if (k === "html") el3.innerHTML = v;
+      else if (k === "style" && typeof v === "object") Object.assign(el3.style, v);
+      else if (k.startsWith("on") && typeof v === "function") el3.addEventListener(k.slice(2), v);
+      else if (k in el3 && typeof v !== "string") el3[k] = v;
+      else el3.setAttribute(k, v === true ? "" : String(v));
+    }
+    kids.flat(Infinity).forEach((c) => {
+      if (c !== null && c !== void 0 && c !== false) el3.append(c);
+    });
+    return el3;
+  }
+  var esc2 = (s) => String(s != null ? s : "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  function button(label, onclick, { title, primary: primary2, cls } = {}) {
+    return h("button", { type: "button", class: `wz-cm-btn${primary2 ? " wz-gl-primary" : ""}${cls ? " " + cls : ""}`, title, onclick }, label);
+  }
+
+  // packages/card-maker/gallery/render.js
+  var CARD_W = 176;
+  var CARD_H = 246;
+  var FRAME = (kind) => `/images/frameSkins/Undertale/frame_${kind}.png`;
+  var UCE = "https://sernon158.github.io/uc-editor/";
+  var KEYWORDS = ["Flowery Power", "Turn start", "Turn end", "Magic", "Dust", "Charge", "Haste", "Armor", "Disarmed", "Candy", "Fatigue", "Turbo", "Support", "Paralyze", "Silence", "Transparency", "Invulnerable", "Taunt", "Dodge", "Burn", "Synergy", "Shock", "Delay", "Generated", "Need", "Loop", "Program", "Switch", "Catch", "Bullseye", "Wanted", "Erase", "Darkspawn", "Goal", "Reward", "Quest"];
+  var SPECIAL = { cost: "#00d0ff", ATK: "#f0003c", HP: "#0dd000", DMG: "gold", G: "gold", KR: "#d535d9", KINDNESS: "#00c000", DETERMINATION: "red", DT: "red", PATIENCE: "#41fcff", BRAVERY: "#fca500", INTEGRITY: "#0064ff", PERSEVERANCE: "#d535d9", JUSTICE: "#ffff00", TOKEN: "#00c800", BASE: "gray", COMMON: "#fff", RARE: "#00b8ff", EPIC: "#d535d9", LEGENDARY: "gold" };
+  var kwRe = new RegExp(`(^|[^\\w])(${KEYWORDS.map((k) => k.replace(/ /g, "\\s")).join("|")})(?=[^\\w]|$)`, "g");
+  var spRe = new RegExp(`(^|[^\\w{"#])(${Object.keys(SPECIAL).join("|")})(?![\\w}])`, "g");
+  function formatText(desc) {
+    const t = esc2(desc).replace(/\{\{stats:([^}]*)\}\}/gi, (_, a) => a.split("|").join("/")).replace(/\{\{[^}]*\}\}/g, "").replace(/\[\[([^\]]*)\]\]/g, "$1").replace(/(?<!\\)_([^_]+)_/g, "<u>$1</u>").replace(/\{(#?[\w]+)[;|]([^}]*)\}/g, '<span style="color:$1">$2</span>').replace(/\{([^{}]+)\}/g, '<span style="color:#41fcff">$1</span>').replace(/\\/g, "").replace(/\n/g, "<br>");
+    return t.split(/(<[^>]+>)/).map((seg, i) => i % 2 ? seg : seg.replace(kwRe, "$1<u>$2</u>").replace(spRe, (_, pre, k) => `${pre}<span style="color:${SPECIAL[k]}">${k}</span>`)).join("");
+  }
+  var rarityColor = (r) => SPECIAL[(r || "").split("_").pop()] || "#fff";
+  var soulColor2 = (s) => SPECIAL[s] || (/^#[0-9a-f]{3,8}$/i.test(s || "") ? s : "");
+  var frameImages = null;
+  function checkFrameImages() {
+    if (frameImages !== null) return Promise.resolve(frameImages);
+    return new Promise((ok) => {
+      const i = new Image();
+      i.onload = () => ok(frameImages = true);
+      i.onerror = () => ok(frameImages = false);
+      i.src = FRAME("monster");
+    });
+  }
+  function tile(p) {
+    var _a, _b, _c;
+    if (p.picture && p.type === "Artifact") return h("img", { class: "wz-gl-artpic", src: p.picture, alt: "" });
+    if (p.picture) return h("div", { class: "wz-gl-card wz-gl-pic" }, h("img", { src: p.picture, alt: "" }));
+    if (p.type === "Artifact") {
+      const colour = rarityColor(p.rarity);
+      return h(
+        "div",
+        { class: "wz-gl-artifact", style: { borderColor: colour } },
+        h(
+          "div",
+          { class: "wz-gl-arthead" },
+          h("img", { class: "wz-gl-icon", src: p.art || "", alt: "" }),
+          h("span", { class: "wz-gl-artname", text: p.name || "(no name)", style: { color: colour } })
+        ),
+        h("div", { class: "wz-gl-rarity", text: (p.rarity || "").split("_").pop(), style: { color: colour } }),
+        h("div", { class: "wz-gl-arttext", html: formatText(p.desc) })
+      );
+    }
+    const kind = p.type === "Enchantment" ? "enchant" : p.type.toLowerCase();
+    const name = h("div", { class: "wz-gl-name" }, h("span", { text: p.name || "(no name)", style: { color: p.type === "Spell" ? soulColor2(p.soul) : "" } }));
+    const tribes = h("div", { class: "wz-gl-tribes" }, (p.tribes || []).map((t, i) => h("img", { src: t.icon, title: t.name || "", alt: "", style: { right: i * 17 + "px" } })));
+    let rarity = null;
+    if (p.type !== "Enchantment") {
+      if (p.rarityIcon) rarity = h("img", { class: "wz-gl-rar", src: p.rarityIcon, alt: "" });
+      else if (p.rarity) {
+        rarity = h("img", { class: "wz-gl-rar", src: `/images/rarity/${p.rarity}.png`, alt: "" });
+        rarity.addEventListener("error", () => {
+          rarity.src = `${UCE}images/rarity/${p.rarity}.png`;
+        }, { once: true });
+      }
+    }
+    return h(
+      "div",
+      { class: `wz-gl-card t-${kind}${frameImages ? " framed" : ""}` },
+      h("div", { class: "wz-gl-bg" }),
+      p.art ? h("img", { class: "wz-gl-art", src: p.art, alt: "" }) : null,
+      h("div", { class: "wz-gl-shade" }),
+      h("div", { class: "wz-gl-frame", style: frameImages ? { backgroundImage: `url(${FRAME(kind)})` } : {} }),
+      ["l1", "l2", "l3", "v1", "v2", "v3"].map((c) => h("i", { class: c })),
+      name,
+      h("div", { class: "wz-gl-cost", text: p.type === "Enchantment" ? "" : String((_a = p.cost) != null ? _a : "") }),
+      tribes,
+      h("div", { class: "wz-gl-text" }, h("div", { html: formatText(p.desc) })),
+      p.type === "Monster" ? h("div", { class: "wz-gl-atk", text: String((_b = p.atk) != null ? _b : "") }) : null,
+      rarity,
+      p.type === "Monster" ? h("div", { class: "wz-gl-hp", text: String((_c = p.hp) != null ? _c : "") }) : null
+    );
+  }
+  function fitText(root) {
+    root.querySelectorAll(".wz-gl-name, .wz-gl-text > div, .wz-gl-arttext").forEach((el3) => {
+      const isName = el3.classList.contains("wz-gl-name");
+      const box = el3.parentElement.classList.contains("wz-gl-text") ? el3.parentElement : el3;
+      let size = parseFloat(getComputedStyle(el3).fontSize);
+      const over = () => isName ? el3.scrollWidth > el3.clientWidth + 1 : box.scrollHeight > box.clientHeight + 1 || el3.scrollHeight > box.clientHeight + 1;
+      while (size > 7 && over()) el3.style.fontSize = (size -= 0.5) + "px";
+    });
+  }
+  var TILE_CSS = `
+.wz-gl-card { position: relative; width: ${CARD_W}px; height: ${CARD_H}px; color: #fff; font-size: 12px; line-height: 1.15; text-align: center; overflow: hidden; flex: none; }
+.wz-gl-card > * { position: absolute; }
+.wz-gl-bg { left: 8px; top: 8px; width: 160px; height: 230px; background: #000; }
+.wz-gl-art { left: 8px; top: 36px; width: 160px; height: 90px; image-rendering: pixelated; }
+.t-enchant .wz-gl-art { top: 54px; height: 183px; }
+.wz-gl-shade { left: 8px; top: 54px; width: 160px; height: 183px; background: rgba(0,0,0,.6); display: none; }
+.t-enchant .wz-gl-shade { display: block; }
+.wz-gl-frame { left: 0; top: 0; width: 176px; height: 246px; background-repeat: no-repeat; z-index: 3; }
+.wz-gl-card:not(.framed) .wz-gl-frame { left: 6px; top: 6px; width: 164px; height: 234px; border: 2px solid #fff; }
+.wz-gl-card i { background: #fff; z-index: 3; display: none; }
+.wz-gl-card:not(.framed) i { display: block; }
+.wz-gl-card .l1 { left: 6px; top: 34px; width: 164px; height: 2px; }
+.t-monster .l2, .t-spell .l2 { left: 6px; top: 126px; width: 164px; height: 2px; }
+.t-monster .l3, .t-spell .l3 { left: 6px; top: 210px; width: 164px; height: 2px; }
+.t-monster .v1, .t-spell .v1 { left: 125px; top: 6px; width: 2px; height: 30px; }
+.t-monster .v2 { left: 49px; top: 210px; width: 2px; height: 30px; }
+.t-monster .v3 { left: 125px; top: 210px; width: 2px; height: 30px; }
+.t-enchant .l2 { left: 6px; top: 52px; width: 164px; height: 2px; }
+.wz-gl-name { left: 8px; top: 8px; width: 106px; height: 24px; line-height: 24px; font-size: 14px; padding: 0 5px; white-space: nowrap; overflow: hidden; text-align: left; z-index: 5; }
+.t-enchant .wz-gl-name { width: 150px; }
+.wz-gl-cost { left: 128px; top: 8px; width: 40px; height: 24px; line-height: 24px; font-size: 20px; color: #00d0ff; z-index: 5; }
+.wz-gl-tribes { right: 12px; top: 106px; height: 16px; width: 80px; z-index: 6; }
+.wz-gl-tribes img { position: absolute; top: 0; max-width: 16px; max-height: 16px; }
+.wz-gl-text { left: 8px; top: 130px; width: 160px; height: 78px; display: table; z-index: 5; font-size: 12px; }
+.t-enchant .wz-gl-text { top: 56px; height: 180px; }
+.wz-gl-text > div { display: table-cell; vertical-align: middle; padding: 0 4px; }
+.wz-gl-atk, .wz-gl-hp { top: 213px; width: 40px; height: 24px; line-height: 24px; font-size: 20px; z-index: 5; }
+.wz-gl-atk { left: 8px; color: #f0003c; } .wz-gl-hp { left: 128px; color: #0dd000; }
+.wz-gl-rar { left: 76px; top: 213px; width: 24px; height: 24px; z-index: 5; image-rendering: pixelated; }
+.wz-gl-pic img { left: 0; top: 0; width: 176px; height: 246px; }
+.wz-gl-artpic { display: block; width: 176px; height: auto; }
+.wz-gl-artifact { width: 176px; min-height: 110px; border: 2px solid #fff; background: #000; padding: 6px; color: #fff; font-size: 11px; text-align: left; flex: none; }
+.wz-gl-arthead { display: flex; align-items: center; gap: 6px; }
+.wz-gl-icon { width: 32px; height: 32px; image-rendering: pixelated; border: 1px solid #fff; flex: none; }
+.wz-gl-artname { font-size: 13px; overflow: hidden; }
+.wz-gl-rarity { font-size: 10px; margin: 3px 0; }
+.wz-gl-arttext { max-height: 150px; overflow: hidden; }
+`;
+
+  // packages/card-maker/gallery/parts.js
+  var ART = { Monster: [160, 90], Spell: [160, 90], Enchantment: [160, 183], Artifact: [64, 64] };
+  var ARTIFACT_MAX_W = 704;
+  var UCE2 = "https://sernon158.github.io/uc-editor/";
+  function loadImg(src) {
+    return new Promise((ok, bad) => {
+      const i = new Image();
+      if (/^https?:/.test(src) && !src.startsWith(location.origin)) i.crossOrigin = "anonymous";
+      i.onload = () => ok(i);
+      i.onerror = () => bad(new Error("image failed to load"));
+      i.src = src;
+    });
+  }
+  var readFile = (f, how) => new Promise((ok) => {
+    const r = new FileReader();
+    r.onload = () => ok(r.result);
+    r[how](f);
+  });
+  async function fit(src, w, h2, mode = "cover") {
+    if (!src) return null;
+    const img = await loadImg(src);
+    const iw = img.naturalWidth, ih = img.naturalHeight;
+    const s = mode === "cover" ? Math.max(w / iw, h2 / ih) : Math.min(w / iw, h2 / ih);
+    const dw = iw * s, dh = ih * s;
+    const c = document.createElement("canvas");
+    c.width = w;
+    c.height = h2;
+    const g = c.getContext("2d");
+    const whole = Math.abs(s - Math.round(s)) < 0.01 || Math.abs(1 / s - Math.round(1 / s)) < 0.01;
+    g.imageSmoothingEnabled = !whole;
+    g.imageSmoothingQuality = "high";
+    g.drawImage(img, (w - dw) / 2, (h2 - dh) / 2, dw, dh);
+    return { src: c.toDataURL("image/png"), from: `${iw}x${ih}` };
+  }
+  var rarityKey = (type, r) => !r ? null : type === "Artifact" || r.includes("_") ? r : "BASE_" + r;
+  async function partFromRaw(raw, { source, from, editorGroup }) {
+    var _a, _b, _c;
+    const [w, h2] = ART[raw.type] || ART.Monster;
+    let art = null;
+    let note = "";
+    try {
+      art = await fit(raw.image, w, h2, raw.type === "Artifact" ? "contain" : "cover");
+    } catch (e) {
+      note = "art didn't load";
+    }
+    if (art && raw.type !== "Artifact" && raw.type !== "Enchantment" && raw.imageType && raw.imageType !== "standard") note = `${raw.imageType} art cropped to 160x90`;
+    return {
+      type: raw.type,
+      name: raw.name || "",
+      desc: raw.desc || "",
+      cost: (_a = raw.cost) != null ? _a : null,
+      atk: (_b = raw.atk) != null ? _b : null,
+      hp: (_c = raw.hp) != null ? _c : null,
+      soul: raw.soul || null,
+      rarity: rarityKey(raw.type, raw.rarity),
+      rarityIcon: raw.rarityIcon || null,
+      tribes: (raw.tribes || []).filter((t) => t && t.icon).slice(0, 4),
+      art: art ? art.src : null,
+      artFrom: art ? art.from : "",
+      note,
+      source,
+      from,
+      editorGroup,
+      group: null
+    };
+  }
+  function readUcEditorFile(text) {
+    const json = JSON.parse(new TextDecoder().decode(Uint8Array.from(text.trim().match(/../g).map((b) => parseInt(b, 16)))));
+    const abs = (u) => !u ? null : /^(data|blob|https?):/.test(u) ? u : new URL(u, UCE2).href;
+    const cssUrl = (v) => (/url\(["']?([^"')]+)["']?\)/.exec(v || "") || [])[1] || (v && v !== "none" ? v : null);
+    const rarityName = (u) => (/([A-Z]+_[A-Z]+)\.png/i.exec(u || "") || [])[1] || null;
+    const parts = [];
+    for (const a of json.artifacts || []) parts.push({ type: "Artifact", name: a.name, desc: a.desc || "", rarity: a.rarity || null, image: abs(a.image) });
+    for (const c of json.cards || []) {
+      const type = { 0: "Monster", 1: "Spell", 99: "Enchantment" }[c.cardType];
+      if (!type) continue;
+      const r = cssUrl(c.rarity);
+      parts.push({
+        type,
+        name: c.name,
+        desc: c.desc || "",
+        cost: type === "Monster" ? (c.stats || [])[0] : type === "Spell" ? c.stats : null,
+        atk: type === "Monster" ? (c.stats || [])[1] : null,
+        hp: type === "Monster" ? (c.stats || [])[2] : null,
+        soul: c.spellSoul || null,
+        rarity: c.isRarityCustom ? null : rarityName(r),
+        rarityIcon: c.isRarityCustom ? abs(r) : null,
+        tribes: (c.tribes || []).map((t) => ({ name: t.name || null, icon: abs(t.src) })),
+        imageType: c.imageType || "standard",
+        image: abs(cssUrl(c.image))
+      });
+    }
+    return { name: json.name || "Group", parts };
+  }
+  async function picturesFromPng(dataUrl, { from, editorGroup }) {
+    const r = extractPicture(await loadImg(dataUrl));
+    const single = r.parts.length === 1;
+    const out = [];
+    for (const p of r.parts) {
+      let art = null;
+      if (p.type !== "Artifact") {
+        const [aw, ah] = ART[p.type];
+        const top = p.type === "Enchantment" ? 54 : 36;
+        const c = document.createElement("canvas");
+        c.width = aw;
+        c.height = ah;
+        c.getContext("2d").drawImage(await loadImg(p.src), 8, top, aw, ah, 0, 0, aw, ah);
+        art = c.toDataURL();
+      }
+      out.push({ type: p.type, name: single ? editorGroup : "", picture: p.src, art, artFrom: p.from, note: "picture only", source: "picture", from, editorGroup, group: null });
+    }
+    return out;
+  }
+  function extractPicture(img) {
+    const w = img.naturalWidth, h2 = img.naturalHeight;
+    const c = document.createElement("canvas");
+    c.width = w;
+    c.height = h2;
+    const g = c.getContext("2d");
+    g.drawImage(img, 0, 0);
+    const px = g.getImageData(0, 0, w, h2).data;
+    const counts = /* @__PURE__ */ new Map();
+    for (let i = 0; i < px.length; i += 16) {
+      if (px[i + 3] < 40) continue;
+      const k = px[i] >> 4 << 8 | px[i + 1] >> 4 << 4 | px[i + 2] >> 4;
+      counts.set(k, (counts.get(k) || 0) + 1);
+    }
+    let bgKey = 0, best = -1;
+    for (const [k, n] of counts) if (n > best) {
+      best = n;
+      bgKey = k;
+    }
+    const bg = [(bgKey >> 8 & 15) * 16 + 8, (bgKey >> 4 & 15) * 16 + 8, (bgKey & 15) * 16 + 8];
+    const on = new Uint8Array(w * h2);
+    for (let p = 0, i = 0; p < on.length; p++, i += 4) {
+      if (px[i + 3] >= 40 && Math.abs(px[i] - bg[0]) + Math.abs(px[i + 1] - bg[1]) + Math.abs(px[i + 2] - bg[2]) > 60) on[p] = 1;
+    }
+    const rowHas = (y, x0, x1) => {
+      for (let x = x0; x <= x1; x++) if (on[y * w + x]) return true;
+      return false;
+    };
+    const colHas = (x, y0, y1) => {
+      for (let y = y0; y <= y1; y++) if (on[y * w + x]) return true;
+      return false;
+    };
+    const runs = (from, to, has, gap = 3) => {
+      const out2 = [];
+      let s = -1, empty = 0;
+      for (let i = from; i <= to; i++) {
+        if (has(i)) {
+          if (s < 0) s = i;
+          empty = 0;
+        } else if (s >= 0 && ++empty >= gap) {
+          out2.push([s, i - empty]);
+          s = -1;
+          empty = 0;
+        }
+      }
+      if (s >= 0) out2.push([s, to - empty]);
+      return out2;
+    };
+    const trim = (b) => {
+      let { x0, y0, x1, y1 } = b;
+      while (y0 < y1 && !rowHas(y0, x0, x1)) y0++;
+      while (y1 > y0 && !rowHas(y1, x0, x1)) y1--;
+      while (x0 < x1 && !colHas(x0, y0, y1)) x0++;
+      while (x1 > x0 && !colHas(x1, y0, y1)) x1--;
+      return { x0, y0, x1, y1 };
+    };
+    const dims = (b) => ({ w: b.x1 - b.x0 + 1, h: b.y1 - b.y0 + 1 });
+    const cardShaped = (b) => {
+      const { w: bw, h: bh } = dims(b);
+      const r = bh / bw;
+      return r >= 1.3 && r <= 1.65 && bh >= 120;
+    };
+    const leaves = [];
+    function split(b, depth) {
+      b = trim(b);
+      const { w: bw, h: bh } = dims(b);
+      if (bw * bh < 1200) return;
+      if (depth > 0 && (cardShaped(b) || depth > 4)) return leaves.push(b);
+      const rws = runs(b.y0, b.y1, (y) => rowHas(y, b.x0, b.x1));
+      if (rws.length > 1) return rws.forEach(([a, z]) => split({ ...b, y0: a, y1: z }, depth + 1));
+      const cls = runs(b.x0, b.x1, (x) => colHas(x, b.y0, b.y1));
+      if (cls.length > 1) return cls.forEach(([a, z]) => split({ ...b, x0: a, x1: z }, depth + 1));
+      leaves.push(b);
+    }
+    split({ x0: 0, y0: 0, x1: w - 1, y1: h2 - 1 }, 0);
+    for (let again = true; again; ) {
+      again = false;
+      leaves.sort((a, b) => a.y0 - b.y0 || a.x0 - b.x0);
+      outer: for (let i = 0; i < leaves.length; i++) for (let j = 0; j < leaves.length; j++) {
+        const a = leaves[i], b = leaves[j];
+        if (i === j || b.y0 <= a.y1 || b.y0 - a.y1 > 24 || cardShaped(a) || cardShaped(b)) continue;
+        const ov = Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0);
+        if (ov < 0.85 * Math.max(dims(a).w, dims(b).w)) continue;
+        const m = { x0: Math.min(a.x0, b.x0), y0: a.y0, x1: Math.max(a.x1, b.x1), y1: b.y1 };
+        if (!cardShaped(m)) continue;
+        leaves.splice(Math.max(i, j), 1);
+        leaves.splice(Math.min(i, j), 1, m);
+        again = true;
+        break outer;
+      }
+    }
+    leaves.sort((a, b) => a.y0 - b.y0 || a.x0 - b.x0);
+    const pixel = (x, y) => {
+      const i = (y * w + x) * 4;
+      return [px[i], px[i + 1], px[i + 2], px[i + 3]];
+    };
+    const share = (b, test) => {
+      let n = 0, t = 0;
+      for (let y = b.y0; y <= b.y1; y++) for (let x = b.x0; x <= b.x1; x++) {
+        t++;
+        if (test(pixel(x, y))) n++;
+      }
+      return t ? n / t : 0;
+    };
+    const out = [];
+    leaves.forEach((b, i) => {
+      const { w: bw, h: bh } = dims(b);
+      if (i === 0 && leaves.length > 1 && bw >= 0.8 * w && bh < 90 && !cardShaped(b)) return;
+      let type;
+      if (cardShaped(b)) {
+        const white = ([r, g2, bl, a]) => a > 40 && r + g2 + bl > 600;
+        const top = { y0: b.y0 + Math.round(bh * 0.02), y1: b.y0 + Math.round(bh * 0.08) };
+        let costBox = false;
+        for (let x = b.x0 + Math.round(bw * 0.55); x <= b.x1 - 6 && !costBox; x++) costBox = share({ x0: x, x1: x, ...top }, white) > 0.85;
+        const foot = { x0: b.x0 + 4, x1: b.x0 + Math.round(bw * 0.3), y0: b.y1 - Math.round(bh * 0.14), y1: b.y1 - 3 };
+        const red = share(foot, ([r, g2, bl]) => r > 150 && g2 < 90 && bl < 90);
+        type = !costBox ? "Enchantment" : red > 0.01 ? "Monster" : "Spell";
+      } else type = "Artifact";
+      const k = document.createElement("canvas");
+      const kg = () => {
+        const x = k.getContext("2d");
+        x.imageSmoothingQuality = "high";
+        return x;
+      };
+      if (type === "Artifact") {
+        const scale = Math.min(1, ARTIFACT_MAX_W / bw);
+        k.width = Math.round(bw * scale);
+        k.height = Math.round(bh * scale);
+        kg().drawImage(c, b.x0, b.y0, bw, bh, 0, 0, k.width, k.height);
+      } else {
+        k.width = CARD_W;
+        k.height = CARD_H;
+        kg().drawImage(c, b.x0, b.y0, bw, bh, 6, 6, CARD_W - 12, CARD_H - 12);
+      }
+      out.push({ type, src: k.toDataURL("image/png"), from: `${bw}x${bh}@${b.x0},${b.y0}`, size: `${k.width}x${k.height}` });
+    });
+    return { w, h: h2, bg: bg.join(","), parts: out };
+  }
+
+  // packages/card-maker/gallery/draft.js
+  var KEY2 = "wizascript.cardMaker.gallery";
+  var draft = null;
+  var saveTimer2 = null;
+  function getDraft() {
+    if (draft) return draft;
+    try {
+      const raw = GM_getValue(KEY2, null);
+      draft = raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      draft = null;
+    }
+    if (!draft || !Array.isArray(draft.parts)) draft = { parts: [], groups: [], nextId: 1, votes: {} };
+    draft.groups = draft.groups || [];
+    draft.votes = draft.votes || {};
+    draft.parts.forEach((p) => {
+      p.sel = false;
+    });
+    return draft;
+  }
+  function saveDraft() {
+    clearTimeout(saveTimer2);
+    saveTimer2 = setTimeout(() => {
+      try {
+        const clean = { ...draft, parts: draft.parts.map(({ sel, ...p }) => p) };
+        GM_setValue(KEY2, JSON.stringify(clean));
+      } catch (e) {
+        console.warn("[Card Gallery] Couldn't save the draft", e);
+      }
+    }, 300);
+  }
+  function nextId() {
+    const d = getDraft();
+    return d.nextId++;
+  }
+  function tidySets() {
+    const d = getDraft();
+    for (let i = d.groups.length - 1; i >= 0; i--) {
+      const members = d.parts.filter((p) => p.group === d.groups[i].id);
+      if (members.length < 2) {
+        members.forEach((p) => {
+          p.group = null;
+        });
+        d.groups.splice(i, 1);
+      }
+    }
+  }
+  function makeSet(members, name = "") {
+    const d = getDraft();
+    if (members.length < 2) return null;
+    const used = new Set(d.groups.map((g) => g.letter));
+    let letter = "A";
+    while (used.has(letter)) letter = String.fromCharCode(letter.charCodeAt(0) + 1);
+    const set = { id: nextId(), letter, name };
+    d.groups.push(set);
+    members.forEach((p) => {
+      p.group = set.id;
+      p.sel = false;
+    });
+    tidySets();
+    return set;
+  }
+  function entries() {
+    const d = getDraft();
+    const out = d.groups.map((g) => ({ key: "g" + g.id, kind: "set", label: g.letter, title: g.name, parts: d.parts.filter((p) => p.group === g.id) }));
+    d.parts.filter((p) => !p.group).forEach((p) => out.push({ key: "p" + p.id, kind: "single", title: p.name, parts: [p] }));
+    return out;
+  }
+
+  // packages/card-maker/gallery/panel.js
+  var STYLE_ID3 = "wizascript-cardgallery-style";
+  var TYPES2 = ["Monster", "Spell", "Enchantment", "Artifact"];
+  var COLORS = ["#e6b422", "#4aa3df", "#e05a5a", "#5cc46a", "#b07de0", "#e08a3c", "#3cc8c0", "#d65ca8"];
+  var TYPE_COLOR = { Monster: "#f0003c", Spell: "#41fcff", Enchantment: "#fca500", Artifact: "gold" };
+  var SOURCE_LABEL = { feildmaster: "feildmaster's editor", sernon: "UC Editor", picture: "picture" };
+  var CSS4 = `
+.wz-gl-panel { position: absolute; inset: 0; z-index: 7; overflow: auto; background: #0d0d0d; padding: 10px; display: none; user-select: text; font: 12px Arial, sans-serif; color: #fff; }
+.wz-gl-panel.on { display: block; }
+.wz-gl-toggle.on, .wz-cm-btn.wz-gl-on { background: #4464bd; border-color: #8ea6e8; }
+.wz-cm-btn.wz-gl-primary { background: #2f6b3a; border-color: #6fbf7e; }
+.wz-cm-btn:disabled { opacity: .4; cursor: default; }
+.wz-gl-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+.wz-gl-tabs { border-bottom: 1px solid #444; padding-bottom: 8px; margin-bottom: 10px; }
+.wz-gl-status { opacity: .85; margin-left: 6px; }
+.wz-gl-note { opacity: .7; margin: 0 0 8px; }
+.wz-gl-grow { flex: 1 1 auto; }
+.wz-gl-picker { border: 1px solid #444; background: #151515; padding: 6px 8px; margin: 8px 0; }
+.wz-gl-picker label { cursor: pointer; }
+.wz-gl-pgroup { margin: 5px 0; }
+.wz-gl-pparts { display: flex; flex-wrap: wrap; gap: 2px 14px; margin: 2px 0 0 18px; }
+.wz-gl-pparts .done { opacity: .5; }
+.wz-gl-type { font-size: 10px; text-transform: uppercase; }
+.wz-gl-sets { margin: 4px 0; }
+.wz-gl-set { display: inline-flex; align-items: center; gap: 4px; margin: 2px 8px 2px 0; padding: 2px 6px; border-left: 6px solid; }
+.wz-gl-set input, .wz-gl-part input, .wz-gl-part select { color: #000; font: 11px Arial, sans-serif; height: 22px; padding: 0 3px; }
+.wz-gl-tray { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.wz-gl-part { width: 122px; border: 2px solid #444; padding: 4px; position: relative; background: #111; }
+.wz-gl-part.sel { border-color: #fff; background: #223; }
+.wz-gl-part input, .wz-gl-part select { width: 100%; margin-bottom: 2px; }
+.wz-gl-zoom { zoom: .62; cursor: pointer; margin: 0 auto 4px; }
+.wz-gl-badge { position: absolute; top: -8px; left: -8px; width: 22px; height: 22px; border-radius: 11px; color: #000; font-weight: bold; text-align: center; line-height: 22px; z-index: 9; }
+.wz-gl-x { position: absolute; top: 2px; right: 2px; z-index: 9; min-width: 0 !important; padding: 0 5px !important; height: 18px !important; line-height: 16px !important; }
+.wz-gl-from { display: block; opacity: .55; font-size: 10px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.wz-gl-preview { white-space: pre-wrap; max-height: 260px; overflow: auto; background: #151515; border: 1px solid #444; padding: 6px; margin-top: 10px; }
+.wz-gl-entry { border-top: 1px solid #444; padding: 8px 0; }
+.wz-gl-entry-head { display: flex; gap: 6px; align-items: center; }
+.wz-gl-entry-parts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; align-items: flex-start; }
+.wz-gl-entry-parts > div { zoom: .75; }
+.wz-gl-score { display: inline-block; min-width: 30px; text-align: center; font-weight: bold; }
+${TILE_CSS}
+`;
+  function injectStyle2() {
+    if (document.getElementById(STYLE_ID3)) return;
+    const s = document.createElement("style");
+    s.id = STYLE_ID3;
+    s.textContent = CSS4;
+    (document.head || document.documentElement).appendChild(s);
+  }
+  var setColor = (set) => COLORS[(set.letter.charCodeAt(0) - 65) % COLORS.length];
+  var sameCard = (p, source, group, raw) => p.source === source && p.editorGroup === group && p.name === (raw.name || "") && p.type === raw.type;
+  function buildGalleryPanel({ requestRead, editorLabel }) {
+    injectStyle2();
+    checkFrameImages();
+    const draft2 = getDraft();
+    let tab = draft2.parts.length ? "browse" : "submit";
+    let browseWindow = "all";
+    let read2 = null;
+    let readTimer = null;
+    let preview = "";
+    const status = h("span", { class: "wz-gl-status" });
+    const say = (t) => {
+      status.textContent = t;
+    };
+    const tabs = h("div", { class: "wz-gl-bar wz-gl-tabs" });
+    const content = h("div");
+    const panel = h("div", { class: "wz-gl-panel" }, tabs, content);
+    const fileInput = h("input", { type: "file", accept: ".uceditor,image/png", multiple: true, style: { display: "none" } });
+    panel.appendChild(fileInput);
+    function render2() {
+      tabs.replaceChildren(
+        button("Browse", () => {
+          tab = "browse";
+          render2();
+        }, { cls: tab === "browse" ? "wz-gl-on" : "" }),
+        button("Submit", () => {
+          tab = "submit";
+          render2();
+        }, { cls: tab === "submit" ? "wz-gl-on" : "" }),
+        status
+      );
+      content.replaceChildren(tab === "browse" ? browseView() : submitView());
+      requestAnimationFrame(() => fitText(content));
+    }
+    const changed2 = () => {
+      tidySets();
+      saveDraft();
+      render2();
+    };
+    function submitView() {
+      const sel = draft2.parts.filter((p) => p.sel);
+      const bar = h(
+        "div",
+        { class: "wz-gl-bar" },
+        button("Read from this editor", () => {
+          const problem = requestRead();
+          if (problem) return say(problem);
+          clearTimeout(readTimer);
+          readTimer = setTimeout(() => say("No answer from the editor. Wait for it to finish loading, then try again."), 4e3);
+          say(`Reading ${editorLabel()}\u2026`);
+        }, { primary: true, title: "List the cards you've made in the editor open here" }),
+        button("Add files\u2026", () => fileInput.click(), { title: "A UC Editor group file (.uceditor) or PNG downloads" }),
+        button("Link selected", () => {
+          makeSet(draft2.parts.filter((p) => p.sel));
+          changed2();
+        }, { title: "Make the selected parts one set" }),
+        button("Unlink selected", () => {
+          draft2.parts.filter((p) => p.sel).forEach((p) => {
+            p.group = null;
+            p.sel = false;
+          });
+          changed2();
+        }),
+        h("span", { class: "wz-gl-grow" }),
+        button("Preview request", () => {
+          preview = requestText();
+          render2();
+        }),
+        removeAllButton()
+      );
+      bar.children[2].disabled = sel.length < 2;
+      bar.children[3].disabled = !sel.some((p) => p.group);
+      const note = h("p", { class: "wz-gl-note", text: draft2.parts.length ? "Click parts to select them, then Link selected to make a set. Anything not in a set is submitted on its own." : "Make cards in the editor, then Read from this editor and tick the ones to add. Files work too." });
+      return h("div", {}, bar, note, read2 ? picker() : null, setsRow(), tray(), preview ? h("pre", { class: "wz-gl-preview", text: preview }) : null);
+    }
+    let removeArmed = false;
+    function removeAllButton() {
+      const b = button(removeArmed ? "Click again to remove all" : "Remove all", () => {
+        if (!draft2.parts.length) return;
+        if (!removeArmed) {
+          removeArmed = true;
+          render2();
+          setTimeout(() => {
+            if (removeArmed) {
+              removeArmed = false;
+              render2();
+            }
+          }, 3e3);
+          return;
+        }
+        removeArmed = false;
+        draft2.parts.length = 0;
+        draft2.groups.length = 0;
+        preview = "";
+        changed2();
+      }, { title: "Empty your gallery draft" });
+      b.disabled = !draft2.parts.length;
+      return b;
+    }
+    function picker() {
+      const n = read2.groups.reduce((s, g) => s + g.parts.length, 0);
+      const added = (g, raw) => draft2.parts.some((p) => sameCard(p, read2.source, g.name, raw));
+      const free = (g) => g.parts.filter((raw) => !added(g, raw));
+      const box = h(
+        "div",
+        { class: "wz-gl-picker" },
+        h(
+          "div",
+          { class: "wz-gl-bar" },
+          h("b", { text: `In ${read2.label}: ${n} card${n === 1 ? "" : "s"} in ${read2.groups.length} group${read2.groups.length === 1 ? "" : "s"}` }),
+          button("Add ticked", () => addTicked(false), { primary: true }),
+          button("Add ticked as one set", () => addTicked(true)),
+          h("span", { class: "wz-gl-grow" }),
+          button("Close list", () => {
+            read2 = null;
+            render2();
+          })
+        )
+      );
+      if (!n) box.appendChild(h("p", { class: "wz-gl-note", text: "Nothing saved in this editor yet." }));
+      read2.groups.forEach((g) => {
+        const open = free(g);
+        const all = h("input", {
+          type: "checkbox",
+          checked: open.length > 0 && open.every((r) => r.pick),
+          disabled: !open.length,
+          onchange: (e) => {
+            open.forEach((r) => {
+              r.pick = e.target.checked;
+            });
+            render2();
+          }
+        });
+        box.appendChild(h(
+          "div",
+          { class: "wz-gl-pgroup" },
+          h("label", {}, all, " ", h("b", { text: g.name }), h("small", { text: ` (${g.parts.length})` })),
+          open.length > 1 ? [" ", button("Add this group as a set", () => {
+            read2.groups.forEach((x) => x.parts.forEach((r) => {
+              r.pick = x === g && !added(g, r);
+            }));
+            addTicked(g.name);
+          })] : null,
+          h("div", { class: "wz-gl-pparts" }, g.parts.map((raw) => {
+            const done = added(g, raw);
+            return h(
+              "label",
+              { class: done ? "done" : "" },
+              h("input", { type: "checkbox", checked: !!raw.pick && !done, disabled: done, onchange: (e) => {
+                raw.pick = e.target.checked;
+                render2();
+              } }),
+              " ",
+              h("span", { class: "wz-gl-type", text: raw.type, style: { color: TYPE_COLOR[raw.type] || "#fff" } }),
+              " ",
+              raw.name || "(no name)",
+              done ? h("i", { text: " added" }) : null
+            );
+          }))
+        ));
+      });
+      return box;
+    }
+    async function addTicked(asSet) {
+      const picked = [];
+      read2.groups.forEach((g) => g.parts.forEach((raw) => {
+        if (raw.pick && !draft2.parts.some((p) => sameCard(p, read2.source, g.name, raw))) picked.push({ raw, group: g.name });
+      }));
+      if (!picked.length) return say("Tick some cards first.");
+      say(`Adding ${picked.length}\u2026`);
+      const added = [];
+      for (const { raw, group } of picked) {
+        const part = await partFromRaw(raw, { source: read2.source, from: read2.label, editorGroup: group });
+        part.id = nextId();
+        draft2.parts.push(part);
+        added.push(part);
+      }
+      if (asSet && added.length > 1) makeSet(added, typeof asSet === "string" ? asSet : "");
+      read2.groups.forEach((g) => g.parts.forEach((r) => {
+        r.pick = false;
+      }));
+      say(`Added ${added.length} part${added.length === 1 ? "" : "s"}${asSet && added.length > 1 ? " as a set" : ""}.`);
+      changed2();
+    }
+    function setsRow() {
+      if (!draft2.groups.length) return null;
+      return h("div", { class: "wz-gl-sets" }, draft2.groups.map((set) => h(
+        "span",
+        { class: "wz-gl-set", style: { borderColor: setColor(set) } },
+        h("b", { text: set.letter }),
+        h("input", { type: "text", placeholder: "Set name", maxLength: 40, value: set.name, oninput: (e) => {
+          set.name = e.target.value;
+          saveDraft();
+        } }),
+        `${draft2.parts.filter((p) => p.group === set.id).length} parts`
+      )));
+    }
+    function tray() {
+      return h("div", { class: "wz-gl-tray" }, draft2.parts.map((p) => {
+        const set = draft2.groups.find((g) => g.id === p.group);
+        const zoom = h("div", { class: "wz-gl-zoom", title: "Click to select", onclick: () => {
+          p.sel = !p.sel;
+          render2();
+        } }, tile(p));
+        const name = h("input", { type: "text", placeholder: "Name", maxLength: 40, value: p.name, oninput: (e) => {
+          p.name = e.target.value;
+          saveDraft();
+          if (!p.picture) {
+            zoom.replaceChildren(tile(p));
+            requestAnimationFrame(() => fitText(zoom));
+          }
+        } });
+        const type = p.source === "picture" ? h("select", { onchange: (e) => {
+          p.type = e.target.value;
+          changed2();
+        } }, TYPES2.map((t) => h("option", { selected: t === p.type }, t))) : h("div", { style: { fontSize: "11px" }, text: p.type });
+        return h(
+          "div",
+          { class: `wz-gl-part${p.sel ? " sel" : ""}` },
+          set ? h("span", { class: "wz-gl-badge", text: set.letter, style: { background: setColor(set) } }) : null,
+          button("\xD7", () => {
+            draft2.parts.splice(draft2.parts.indexOf(p), 1);
+            changed2();
+          }, { title: "Remove this part", cls: "wz-gl-x" }),
+          zoom,
+          type,
+          name,
+          h("small", { class: "wz-gl-from", text: `${SOURCE_LABEL[p.source] || p.source} \xB7 ${p.editorGroup}${p.note ? " \xB7 " + p.note : ""}`, title: `${p.from} \xB7 ${p.editorGroup}${p.artFrom ? " \xB7 art from " + p.artFrom : ""}${p.note ? " \xB7 " + p.note : ""}` })
+        );
+      }));
+    }
+    function requestText() {
+      const list = entries();
+      const kb = Math.round(draft2.parts.reduce((s, p) => s + ((p.art || "").length + (p.picture || "").length) * 0.75, 0) / 1024);
+      const lines = [`${list.length} entr${list.length === 1 ? "y" : "ies"}, ${draft2.parts.length} parts, about ${kb} KB of pictures. (Nothing is sent yet.)`, ""];
+      list.forEach((e) => {
+        lines.push(`${e.kind === "set" ? `Set ${e.label}` : "Single"}: ${e.title || "(no name)"}`);
+        e.parts.forEach((p) => lines.push(`   - ${p.type}: ${p.name || "(no name)"}${p.type === "Monster" ? `  ${p.cost}/${p.atk}/${p.hp}` : p.cost !== null && p.cost !== void 0 ? `  cost ${p.cost}` : ""}  [${SOURCE_LABEL[p.source] || p.source}]`));
+      });
+      const missing = draft2.parts.filter((p) => !p.name).length + draft2.groups.filter((g) => !g.name).length;
+      if (missing) lines.push("", `${missing} name(s) still empty.`);
+      return lines.join("\n");
+    }
+    fileInput.addEventListener("change", async () => {
+      const files = [...fileInput.files];
+      fileInput.value = "";
+      for (const f of files) {
+        try {
+          if (/\.uceditor$/i.test(f.name)) {
+            const g = readUcEditorFile(await readFile(f, "readAsText"));
+            const fresh = g.parts.filter((r) => !draft2.parts.some((p) => sameCard(p, "sernon", g.name, r)));
+            read2 = { source: "sernon", label: `${f.name} (UC Editor file)`, groups: [{ name: g.name, parts: g.parts.map((r) => ({ ...r, pick: fresh.includes(r) })) }] };
+            say(fresh.length ? `${f.name}: ${fresh.length} new card(s), ticked. Untick any you don't want, then Add ticked.` : `${f.name}: all ${g.parts.length} card(s) are in your draft already.`);
+          } else {
+            const stem = f.name.replace(/\.[^.]+$/, "").replace(/\s*\(\d+\)$/, "").trim();
+            const pics = await picturesFromPng(await readFile(f, "readAsDataURL"), { from: f.name, editorGroup: stem });
+            pics.forEach((p) => {
+              p.id = nextId();
+              draft2.parts.push(p);
+            });
+            say(`${f.name}: ${pics.length} picture part(s) added. Pictures need their names typed.`);
+          }
+        } catch (e) {
+          say(`Couldn't read ${f.name}.`);
+        }
+      }
+      changed2();
+    });
+    function browseView() {
+      const DAY = 864e5, now = Date.now();
+      const seed = (s) => {
+        let x = 7;
+        for (const c of s) x = x * 31 + c.charCodeAt(0) >>> 0;
+        return x;
+      };
+      const list = entries().map((e) => {
+        const n = seed(e.key + (e.title || ""));
+        return { ...e, posted: now - n % 45 * DAY, base: (n >> 8) % 60 - 10 };
+      }).filter((e) => browseWindow === "all" || now - e.posted < (browseWindow === "month" ? 30 : 7) * DAY);
+      list.forEach((e) => {
+        e.score = e.base + (draft2.votes[e.key] || 0);
+      });
+      list.sort((a, b) => b.score - a.score);
+      const head = h(
+        "div",
+        { class: "wz-gl-bar" },
+        [["all", "All Time"], ["month", "This Month"], ["week", "This Week"]].map(([k, l]) => button(l, () => {
+          browseWindow = k;
+          render2();
+        }, { cls: k === browseWindow ? "wz-gl-on" : "" })),
+        h("span", { class: "wz-gl-note", style: { margin: "0 0 0 6px" }, text: "Preview of your own parts. Dates and scores are made up until the gallery is live." })
+      );
+      const body = list.length ? list.map((e) => {
+        const v = draft2.votes[e.key] || 0;
+        const vote = (dir) => {
+          draft2.votes[e.key] = v === dir ? 0 : dir;
+          saveDraft();
+          render2();
+        };
+        return h(
+          "div",
+          { class: "wz-gl-entry" },
+          h(
+            "div",
+            { class: "wz-gl-entry-head" },
+            h("b", { text: e.title || "(no name)" }),
+            h("small", { style: { opacity: ".7" }, text: `${e.kind === "set" ? `Set \xB7 ${e.parts.length} parts` : e.parts[0].type} \xB7 posted ${Math.round((now - e.posted) / DAY)} days ago` }),
+            h("span", { class: "wz-gl-grow" }),
+            button("\u25B2", () => vote(1), { title: "Like", cls: v === 1 ? "wz-gl-on" : "" }),
+            h("span", { class: "wz-gl-score", text: String(e.score) }),
+            button("\u25BC", () => vote(-1), { title: "Dislike", cls: v === -1 ? "wz-gl-on" : "" })
+          ),
+          h("div", { class: "wz-gl-entry-parts" }, e.parts.map((p) => h("div", {}, tile(p))))
+        );
+      }) : h("p", { class: "wz-gl-note", text: "Nothing here yet. Add parts in Submit." });
+      return h("div", {}, head, body);
+    }
+    return {
+      el: panel,
+      isOpen: () => panel.classList.contains("on"),
+      setOpen(on) {
+        panel.classList.toggle("on", on);
+        if (on) render2();
+      },
+      receiveCards(data2) {
+        clearTimeout(readTimer);
+        read2 = { source: data2.source, label: editorLabel(data2.source), groups: (data2.groups || []).map((g) => ({ name: g.name, parts: (g.parts || []).map((p) => ({ ...p, pick: false })) })) };
+        const n = read2.groups.reduce((s, g) => s + g.parts.length, 0);
+        say(`Found ${n} card${n === 1 ? "" : "s"}. Tick what to add.`);
+        tab = "submit";
+        if (panel.classList.contains("on")) render2();
+      }
+    };
+  }
+
   // assets/pack.png
   var pack_default = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAYAAADE6YVjAAABN2lDQ1BBZG9iZSBSR0IgKDE5OTgpAAAokZWPv0rDUBSHvxtFxaFWCOLgcCdRUGzVwYxJW4ogWKtDkq1JQ5ViEm6uf/oQjm4dXNx9AidHwUHxCXwDxamDQ4QMBYvf9J3fORzOAaNi152GUYbzWKt205Gu58vZF2aYAoBOmKV2q3UAECdxxBjf7wiA10277jTG+38yH6ZKAyNguxtlIYgK0L/SqQYxBMygn2oQD4CpTto1EE9AqZf7G1AKcv8ASsr1fBBfgNlzPR+MOcAMcl8BTB1da4Bakg7UWe9Uy6plWdLuJkEkjweZjs4zuR+HiUoT1dFRF8jvA2AxH2w3HblWtay99X/+PRHX82Vun0cIQCw9F1lBeKEuf1UYO5PrYsdwGQ7vYXpUZLs3cLcBC7dFtlqF8hY8Dn8AwMZP/fNTP8gAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAjAaVRYdFhNTDpjb20uYWRvYmUueG1wAAAAAAA8P3hwYWNrZXQgYmVnaW49Iu+7vyIgaWQ9Ilc1TTBNcENlaGlIenJlU3pOVGN6a2M5ZCI/PiA8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIiB4OnhtcHRrPSJBZG9iZSBYTVAgQ29yZSA3LjEtYzAwMCA3OS43YTdhMjM2LCAyMDIxLzA4LzEyLTAwOjI1OjIwICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIgeG1sbnM6cGhvdG9zaG9wPSJodHRwOi8vbnMuYWRvYmUuY29tL3Bob3Rvc2hvcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iIHhtbG5zOmV4aWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20vZXhpZi8xLjAvIiB4bXA6Q3JlYXRvclRvb2w9IkFkb2JlIFBob3Rvc2hvcCBDQyAyMDE1IChXaW5kb3dzKSIgeG1wOkNyZWF0ZURhdGU9IjIwMjEtMTAtMDdUMTE6MzE6MjcrMDU6MDAiIHhtcDpNb2RpZnlEYXRlPSIyMDI1LTAzLTI4VDE0OjE1OjM2KzA1OjAwIiB4bXA6TWV0YWRhdGFEYXRlPSIyMDI1LTAzLTI4VDE0OjE1OjM2KzA1OjAwIiBkYzpmb3JtYXQ9ImltYWdlL3BuZyIgcGhvdG9zaG9wOkNvbG9yTW9kZT0iMyIgcGhvdG9zaG9wOklDQ1Byb2ZpbGU9IkFkb2JlIFJHQiAoMTk5OCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6YWJlZTRhNzUtZGMyNC1mZjQ4LTg3OGMtYmI2OTkwZjRlYjAzIiB4bXBNTTpEb2N1bWVudElEPSJhZG9iZTpkb2NpZDpwaG90b3Nob3A6ZjNlNjVkODItZmE3MS1jMTRmLTgxOTUtZWM5MGYyYWUxMmZlIiB4bXBNTTpPcmlnaW5hbERvY3VtZW50SUQ9InhtcC5kaWQ6N2VjMjg2YmItMzQzMS0zZDRlLTk5YjgtMzI2NTQwNGJhMzQ1IiB0aWZmOk9yaWVudGF0aW9uPSIxIiB0aWZmOlhSZXNvbHV0aW9uPSI5NjAwMDAvMTAwMDAiIHRpZmY6WVJlc29sdXRpb249Ijk2MDAwMC8xMDAwMCIgdGlmZjpSZXNvbHV0aW9uVW5pdD0iMiIgZXhpZjpDb2xvclNwYWNlPSI2NTUzNSIgZXhpZjpQaXhlbFhEaW1lbnNpb249IjI1IiBleGlmOlBpeGVsWURpbWVuc2lvbj0iMjUiPiA8cGhvdG9zaG9wOkRvY3VtZW50QW5jZXN0b3JzPiA8cmRmOkJhZz4gPHJkZjpsaT5hZG9iZTpkb2NpZDpwaG90b3Nob3A6MzE2ZmY5YTUtMjczZC0xMWVjLTgwM2UtZGUxZWE3MmY0ZmRjPC9yZGY6bGk+IDxyZGY6bGk+YWRvYmU6ZG9jaWQ6cGhvdG9zaG9wOjU3OWI5ODRkLTI3OWQtMTFlYy04MDNlLWRlMWVhNzJmNGZkYzwvcmRmOmxpPiA8L3JkZjpCYWc+IDwvcGhvdG9zaG9wOkRvY3VtZW50QW5jZXN0b3JzPiA8eG1wTU06SGlzdG9yeT4gPHJkZjpTZXE+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJjcmVhdGVkIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOjdlYzI4NmJiLTM0MzEtM2Q0ZS05OWI4LTMyNjU0MDRiYTM0NSIgc3RFdnQ6d2hlbj0iMjAyMS0xMC0wN1QxMTozMToyNyswNTowMCIgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTUgKFdpbmRvd3MpIi8+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJzYXZlZCIgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDo3NjVjYWM0Mi01ZDFkLWQwNDctOGVkMS02YmEwOGI0NWNkNDEiIHN0RXZ0OndoZW49IjIwMjEtMTAtMDdUMjM6MzY6MjIrMDU6MDAiIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIFBob3Rvc2hvcCBDQyAyMDE1IChXaW5kb3dzKSIgc3RFdnQ6Y2hhbmdlZD0iLyIvPiA8cmRmOmxpIHN0RXZ0OmFjdGlvbj0ic2F2ZWQiIHN0RXZ0Omluc3RhbmNlSUQ9InhtcC5paWQ6YWJlZTRhNzUtZGMyNC1mZjQ4LTg3OGMtYmI2OTkwZjRlYjAzIiBzdEV2dDp3aGVuPSIyMDI1LTAzLTI4VDE0OjE1OjM2KzA1OjAwIiBzdEV2dDpzb2Z0d2FyZUFnZW50PSJBZG9iZSBQaG90b3Nob3AgMjIuNSAoV2luZG93cykiIHN0RXZ0OmNoYW5nZWQ9Ii8iLz4gPC9yZGY6U2VxPiA8L3htcE1NOkhpc3Rvcnk+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+D9HYFgAAAPdJREFUSImtlkEOxCAIRWEyl3E59z+ES3sbZjHSAEUKdn5irBp5frUtQETgFQCgMQbJmn4DyxqmLrEyABYHjNoe5A03aq2pNiK67bk4X5GLahHuak7k+jDR7wmtTUQkIgJEBG8D0ABUP88jUtxbJ0pdAD6Fed6ZnHsrS4/bEJzJq+RkU3lIZXu2IVK9Bg0h7tV0AI+uMCt4l/W7s7jCqe1SM/qiP5qfcXKudAXm8SdObOCsgy3IDmALsqMyJPxv/APCgCooDbGBK6D6wTtXm3Uchz/gfOpn95kYpIpIPC4xQycSbBfCz2OMe/uLlEi5WdU2L2OgjfcFH9C1M1inPecAAAAASUVORK5CYII=";
 
@@ -11614,6 +12671,7 @@ Version: v${version}`;
   var settings3 = null;
   var editorSetting = null;
   var hotfixSetting = null;
+  var gallerySetting = null;
   var mounted2 = null;
   var footerButton = null;
   var log = (...a) => {
@@ -11716,6 +12774,34 @@ Version: v${version}`;
       }
     });
     document.body.appendChild(win.root);
+    let gallery = null;
+    if (!gallerySetting || gallerySetting.value()) {
+      gallery = buildGalleryPanel({
+        requestRead: () => {
+          const key2 = currentEditor();
+          const f = mounted2 && mounted2.frames[key2];
+          if (!f) return "Open an editor first.";
+          if (f.status === "loading") return "The editor is still loading.";
+          f.el.contentWindow.postMessage({ tag: FRAME_MESSAGE, type: "read" }, EDITORS[key2].origin);
+          return null;
+        },
+        editorLabel: (key2) => EDITORS[key2 || currentEditor()].label
+      });
+      win.body.appendChild(gallery.el);
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "wz-cm-btn wz-gl-toggle";
+      toggle.textContent = "Gallery";
+      toggle.title = "Card Gallery";
+      toggle.addEventListener("click", () => {
+        const on = !gallery.isOpen();
+        gallery.setOpen(on);
+        toggle.classList.toggle("on", on);
+        toggle.title = on ? "Back to the editor" : "Card Gallery";
+      }, { signal });
+      const header = win.root.querySelector(".wz-cm-header");
+      header.insertBefore(toggle, header.querySelector('[data-action="reload"]'));
+    }
     let menuBackdrop = null;
     const layerWatch = new MutationObserver(() => syncLayer());
     function syncLayer() {
@@ -11732,15 +12818,22 @@ Version: v${version}`;
     document.addEventListener("pointerdown", () => setTimeout(syncLayer, 0), { capture: true, signal });
     signal.addEventListener("abort", () => layerWatch.disconnect());
     window.addEventListener("message", (e) => {
-      const f = mounted2 && mounted2.frames.feildmaster;
-      if (!f || e.source !== f.el.contentWindow || e.origin !== EDITORS.feildmaster.origin) return;
-      if (!e.data || e.data.tag !== FRAME_MESSAGE) return;
+      if (!mounted2 || !e.data || e.data.tag !== FRAME_MESSAGE) return;
+      const key2 = Object.keys(mounted2.frames).find((k) => mounted2.frames[k].el.contentWindow === e.source);
+      if (!key2 || e.origin !== EDITORS[key2].origin) return;
+      const f = mounted2.frames[key2];
+      if (e.data.type === "cards") {
+        log(`${EDITORS[key2].label}: read ${(e.data.groups || []).length} group(s) for the gallery`);
+        if (gallery) gallery.receiveCards({ ...e.data, source: key2 });
+        return;
+      }
+      if (!e.data.status) return;
       clearTimeout(f.noReport);
       f.status = e.data.status;
-      log(`feildmaster's editor: ${e.data.status}${e.data.hotfixed ? " (hotfix applied)" : ""}`);
+      log(`${EDITORS[key2].label}: ${e.data.status}${e.data.hotfixed ? " (hotfix applied)" : ""}`);
       updateNote();
     }, { signal });
-    mounted2 = { controller, win, frames: {}, syncLayer };
+    mounted2 = { controller, win, frames: {}, syncLayer, gallery };
     syncLayer();
   }
   function showEditor(key2) {
@@ -11802,7 +12895,7 @@ Version: v${version}`;
     note.hidden = true;
     if (key2 !== "feildmaster" || !["broken", "silent"].includes(status)) return;
     const text = document.createElement("span");
-    const button2 = (label, fn) => {
+    const button3 = (label, fn) => {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "wz-cm-btn";
@@ -11810,16 +12903,16 @@ Version: v${version}`;
       b.addEventListener("click", fn);
       return b;
     };
-    const site = button2("Open its site \u2197", () => window.open(EDITORS[key2].url, "_blank", "noopener"));
+    const site = button3("Open its site \u2197", () => window.open(EDITORS[key2].url, "_blank", "noopener"));
     if (status === "silent") {
       text.textContent = "If the editor stays black, open it on its own site instead.";
       note.append(text, site);
     } else if (!isHotfixOn()) {
       text.textContent = "Trouble loading? feildmaster's editor can't start inside the Card Maker yet. The hotfix lets it.";
-      note.append(text, button2("Turn on the hotfix", () => setHotfixEverywhere(true)), site);
+      note.append(text, button3("Turn on the hotfix", () => setHotfixEverywhere(true)), site);
     } else {
       text.textContent = "feildmaster's editor still didn't start, even with the hotfix.";
-      note.append(text, site, button2("Turn off the hotfix", () => setHotfixEverywhere(false)));
+      note.append(text, site, button3("Turn off the hotfix", () => setHotfixEverywhere(false)));
     }
     note.hidden = false;
   }
@@ -11881,6 +12974,13 @@ Version: v${version}`;
         setHotfix(!!value);
         if (mounted2 && mounted2.frames.feildmaster) reloadEditor("feildmaster");
       }
+    });
+    gallerySetting = settings3.add("gallery", {
+      name: "Card Gallery",
+      note: "Adds a Gallery button to the Card Maker, to share cards you make.",
+      type: "boolean",
+      default: true,
+      refresh: true
     });
     registerKeybind(plugin, {
       key: "toggleCardMaker",
@@ -12163,7 +13263,7 @@ Version: v${version}`;
     cursorIndicator.className = "wizascript-notepad-cursor-indicator";
     let backgroundColor = DEFAULT_BACKGROUND;
     let strokeColor = "rgb(26, 26, 26)";
-    let saveTimer2 = null;
+    let saveTimer3 = null;
     let lastX = null;
     let lastY = null;
     const layers = [];
@@ -12235,8 +13335,8 @@ Version: v${version}`;
       };
     }
     function scheduleSave2() {
-      clearTimeout(saveTimer2);
-      saveTimer2 = setTimeout(() => {
+      clearTimeout(saveTimer3);
+      saveTimer3 = setTimeout(() => {
         setSavedDrawing(snapshotState());
       }, SAVE_DEBOUNCE_MS);
     }
@@ -12332,7 +13432,7 @@ Version: v${version}`;
       paintBackground(DEFAULT_BACKGROUND);
       undoStack2 = [];
       redoStack = [];
-      clearTimeout(saveTimer2);
+      clearTimeout(saveTimer3);
       clearSavedDrawing();
       notifyLayersChange();
       notifyHistoryChange();
@@ -12442,16 +13542,16 @@ Version: v${version}`;
   var WHEEL_SIZE = 96;
   var WHEEL_RADIUS = WHEEL_SIZE / 2;
   var WHEEL_FIXED_LIGHTNESS = 0.5;
-  function hslToRgbString(h, s, l) {
+  function hslToRgbString(h2, s, l) {
     const c = (1 - Math.abs(2 * l - 1)) * s;
-    const x = c * (1 - Math.abs(h / 60 % 2 - 1));
+    const x = c * (1 - Math.abs(h2 / 60 % 2 - 1));
     const m = l - c / 2;
     let r, g, b;
-    if (h < 60) [r, g, b] = [c, x, 0];
-    else if (h < 120) [r, g, b] = [x, c, 0];
-    else if (h < 180) [r, g, b] = [0, c, x];
-    else if (h < 240) [r, g, b] = [0, x, c];
-    else if (h < 300) [r, g, b] = [x, 0, c];
+    if (h2 < 60) [r, g, b] = [c, x, 0];
+    else if (h2 < 120) [r, g, b] = [x, c, 0];
+    else if (h2 < 180) [r, g, b] = [0, c, x];
+    else if (h2 < 240) [r, g, b] = [0, x, c];
+    else if (h2 < 300) [r, g, b] = [x, 0, c];
     else [r, g, b] = [c, 0, x];
     const R = Math.round((r + m) * 255);
     const G = Math.round((g + m) * 255);
@@ -12619,7 +13719,7 @@ Version: v${version}`;
   function showNotepad() {
     var _a;
     if (mounted3) return;
-    injectStyle2();
+    injectStyle3();
     const controller = new AbortController();
     const { signal } = controller;
     const { root, body, headerButtons, titleInput } = buildNotepadShell(signal);
@@ -12871,7 +13971,7 @@ Version: v${version}`;
     clearSavedTitle();
     console.log("[Wizascript] Notepad forcibly reset - drawing, position, colors, and title cleared.");
   }
-  function injectStyle2() {
+  function injectStyle3() {
     if (document.getElementById("wizascript-notepad-style")) return;
     const style = document.createElement("style");
     style.id = "wizascript-notepad-style";
@@ -13216,7 +14316,7 @@ Version: v${version}`;
     const rightExisting = el3.querySelector(":scope > [" + INDICATOR_ATTR + '="right"]');
     const cornerExisting = el3.querySelector(":scope > [" + INDICATOR_ATTR + '="corner"]');
     if (!tags.length) {
-      [leftExisting, rightExisting, cornerExisting].forEach((h) => h && h.remove());
+      [leftExisting, rightExisting, cornerExisting].forEach((h2) => h2 && h2.remove());
       return;
     }
     const anchor = findRarityAnchor(el3);
@@ -13810,8 +14910,8 @@ Version: v${version}`;
   }
 
   // packages/misc/wishlist/styles.js
-  var STYLE_ID3 = "wizascript-wishlist-style";
-  var CSS4 = `
+  var STYLE_ID4 = "wizascript-wishlist-style";
+  var CSS5 = `
 .wz-wl-menu { position: fixed; z-index: 2147483000; min-width: 170px; max-width: 280px; background: #000; color: #fff;
   border: 1px solid #fff; font-size: 14px; user-select: none; box-shadow: 0 2px 8px rgba(0,0,0,.6); margin: 0; padding: 0; }
 .wz-wl-menu header { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-bottom: 1px solid #555; }
@@ -13847,10 +14947,10 @@ Version: v${version}`;
 .wz-wl-status { flex-basis: 100%; color: #ccc; margin-top: 4px; white-space: normal; }
 `;
   function injectWishlistStyle() {
-    if (document.getElementById(STYLE_ID3)) return;
+    if (document.getElementById(STYLE_ID4)) return;
     const style = document.createElement("style");
-    style.id = STYLE_ID3;
-    style.textContent = CSS4;
+    style.id = STYLE_ID4;
+    style.textContent = CSS5;
     (document.head || document.documentElement).appendChild(style);
   }
 
@@ -14131,16 +15231,16 @@ Version: v${version}`;
     if (/^\d+$/.test(t)) return Number(t);
     const parts = t.split(":").map((p) => Number(p));
     if (!parts.length || parts.some((p) => !Number.isFinite(p))) return null;
-    const [s = 0, m = 0, h = 0, d = 0] = parts.reverse();
-    return d * 86400 + h * 3600 + m * 60 + s;
+    const [s = 0, m = 0, h2 = 0, d = 0] = parts.reverse();
+    return d * 86400 + h2 * 3600 + m * 60 + s;
   }
   function parseShop(doc) {
     const heads = [...doc.querySelectorAll("span[data-i18n]")].filter((s) => SECTIONS[i18nKey(s)]);
     if (!heads.length) throw new Error(`not the Cosmetics Shop (page title: "${doc.title || "none"}")`);
     const timers = { Daily: null, New: null, Sale: null };
-    heads.forEach((h) => {
-      const t = h.parentElement && h.parentElement.querySelector(".cosmetics-timer");
-      timers[SECTIONS[i18nKey(h)]] = t ? parseTimer(t.textContent) : null;
+    heads.forEach((h2) => {
+      const t = h2.parentElement && h2.parentElement.querySelector(".cosmetics-timer");
+      timers[SECTIONS[i18nKey(h2)]] = t ? parseTimer(t.textContent) : null;
     });
     const items = [];
     const seen2 = /* @__PURE__ */ new Set();
@@ -14148,8 +15248,8 @@ Version: v${version}`;
       const found = fromSrc(img.getAttribute("src"));
       if (!found) return;
       let section = null;
-      heads.forEach((h) => {
-        if (h.compareDocumentPosition(img) & 4) section = SECTIONS[i18nKey(h)];
+      heads.forEach((h2) => {
+        if (h2.compareDocumentPosition(img) & 4) section = SECTIONS[i18nKey(h2)];
       });
       if (!section) return;
       const box = img.closest(".col-sm-1") || img.closest("tr") || img.parentElement;
@@ -14194,7 +15294,7 @@ Version: v${version}`;
   var LOCK_MS = 30 * 1e3;
   var SAME_REFRESH = 5 * 60 * 1e3;
   var AFTER_REFRESH = 60 * 1e3;
-  var esc2 = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  var esc3 = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   function noBackgroundHere() {
     return matchesPage(["/Game", { prefix: "/Spectate" }]);
   }
@@ -14248,7 +15348,7 @@ Version: v${version}`;
     return matches.map((m) => {
       const wide = m.type === "profile-skin" ? ' class="wz-wl-wide"' : "";
       const price = m.cost != null ? `${m.cost} UCP${m.sale ? ` (-${m.sale}%)` : ""}` : "";
-      return `<div class="wz-wl-toast-row"><img src="${esc2(imageUrl(m.type, m.file))}"${wide} alt=""><span><b>${esc2(m.name)}</b> <small>${TYPE_INFO[m.type].label}</small><br><small>${m.section === "Sale" ? "On sale" : m.section}${price ? ` \xB7 ${esc2(price)}` : ""}</small></span></div>`;
+      return `<div class="wz-wl-toast-row"><img src="${esc3(imageUrl(m.type, m.file))}"${wide} alt=""><span><b>${esc3(m.name)}</b> <small>${TYPE_INFO[m.type].label}</small><br><small>${m.section === "Sale" ? "On sale" : m.section}${price ? ` \xB7 ${esc3(price)}` : ""}</small></span></div>`;
     }).join("");
   }
   function goToShop(key2) {
@@ -14270,14 +15370,14 @@ Version: v${version}`;
     if (!names.length) return null;
     return toast(plugin, {
       title: "Cosmetic Wishlist",
-      text: `Removed from your wishlist (you own ${names.length === 1 ? "it" : "them"} now): ${names.map(esc2).join(", ")}`
+      text: `Removed from your wishlist (you own ${names.length === 1 ? "it" : "them"} now): ${names.map(esc3).join(", ")}`
     });
   }
   function formatIn(ms) {
     if (!(ms > 0)) return "soon";
     const mins = Math.round(ms / 6e4);
-    const d = Math.floor(mins / 1440), h = Math.floor(mins % 1440 / 60), m = mins % 60;
-    return [d ? `${d}d` : "", h ? `${h}h` : "", !d && m ? `${m}m` : ""].filter(Boolean).join(" ") || "under a minute";
+    const d = Math.floor(mins / 1440), h2 = Math.floor(mins % 1440 / 60), m = mins % 60;
+    return [d ? `${d}d` : "", h2 ? `${h2}h` : "", !d && m ? `${m}m` : ""].filter(Boolean).join(" ") || "under a minute";
   }
   async function backgroundCheck(plugin, { freq, remind }) {
     if (noBackgroundHere() || !isDue(freq)) return null;
@@ -14311,7 +15411,7 @@ Version: v${version}`;
     try {
       shop = await fetchShop();
     } catch (e) {
-      toast(plugin, { title: "Cosmetic Wishlist", text: `Couldn't read the Cosmetics Shop: ${esc2(e.message)}` });
+      toast(plugin, { title: "Cosmetic Wishlist", text: `Couldn't read the Cosmetics Shop: ${esc3(e.message)}` });
       return { error: e };
     }
     const result = applyShop(shop, Date.now());
@@ -14904,7 +16004,7 @@ Version: v${version}`;
     return d.innerHTML;
   }
   var atSentenceStart = (before) => /(^|[.!?:]|\u0002)\s*$/.test(before);
-  function formatText(text, f, verKey) {
+  function formatText2(text, f, verKey) {
     if (!hasI18n()) return escHtml(text);
     const tokens = [];
     const hold = (code, raw, shown) => `${tokens.push({ code, raw, shown }) - 1}`;
@@ -15182,7 +16282,7 @@ Version: v${version}`;
     if (text !== void 0) e.textContent = text;
     return e;
   };
-  var button = (label, cls, fn) => {
+  var button2 = (label, cls, fn) => {
     const b = el2("button", `btn ${cls}`, label);
     b.type = "button";
     b.addEventListener("click", fn);
@@ -15209,7 +16309,7 @@ Version: v${version}`;
       list.forEach((r) => {
         const tr2 = el2("tr");
         tr2.innerHTML = `<td>${escHtml(r.name)}</td><td>${escHtml(r.label)}</td><td class="wz-ch-dim">${r.sent ? "sent" : "not sent"}</td><td></td>`;
-        tr2.lastChild.appendChild(button("\xD7", "btn-xs btn-default", () => {
+        tr2.lastChild.appendChild(button2("\xD7", "btn-xs btn-default", () => {
           removeReport(r.key);
           render2();
         }));
@@ -15231,12 +16331,12 @@ Version: v${version}`;
         code.addEventListener("focus", () => code.select());
         row2.appendChild(code);
         if (chat) {
-          row2.appendChild(button("Send", "btn-primary btn-sm", () => {
+          row2.appendChild(button2("Send", "btn-primary btn-sm", () => {
             markSent(keys);
             openVoid(line);
           }));
         }
-        row2.appendChild(button("Copy", "btn-default btn-sm", async () => {
+        row2.appendChild(button2("Copy", "btn-default btn-sm", async () => {
           const ok = await copy(line, code);
           markSent(keys);
           status.textContent = ok ? "Copied." : "Select the line and copy it.";
@@ -15267,7 +16367,7 @@ Version: v${version}`;
     const m = v.label.match(/^Beta\s*([\d.]+)/i);
     return { text: m ? m[1] : v.label, uncertain: !!v.guessed, title: `${v.guessed ? "Probably " : ""}${v.label}${when}` };
   }
-  function fitText(desc, html) {
+  function fitText2(desc, html) {
     const inner = document.createElement("div");
     inner.innerHTML = html;
     desc.textContent = "";
@@ -15378,8 +16478,8 @@ ${note}` : "");
     if (desc) {
       if (ver.sameAsToday && !ver.legacy && currentDescHtml !== null) desc.innerHTML = currentDescHtml;
       else if (ver.textKnown && !ver.truncated && NO_EFFECT.test(ver.text || "")) desc.textContent = "";
-      else if (ver.textKnown && !ver.truncated && ver.text) fitText(desc, formatText(ver.text, f, ver.version && ver.version.key));
-      else fitText(desc, "?");
+      else if (ver.textKnown && !ver.truncated && ver.text) fitText2(desc, formatText2(ver.text, f, ver.version && ver.version.key));
+      else fitText2(desc, "?");
     }
     setQuantity(el3, versionLabel(ver.version), ver.note);
     return el3;
@@ -15435,13 +16535,13 @@ ${note}` : "");
     lines.push("* = not certain, or has a note - hover the version number. Looks wrong? Right-click it to report it.");
     foot.textContent = lines.join(" ");
     node.appendChild(foot);
-    const fit = () => {
+    const fit2 = () => {
       const avail = node.clientWidth;
       const need = grid.scrollWidth;
       grid.style.zoom = need > avail && avail > 0 ? String(Math.max(0.5, avail / need)) : "";
     };
     const wikiUrl = `https://undercards.fandom.com/wiki/${data2 && data2.pvTitle ? data2.pvTitle : `${base.name.replace(/ /g, "_")}/Previous_Versions`}`;
-    return { node, fit, wikiUrl };
+    return { node, fit: fit2, wikiUrl };
   }
 
   // packages/misc/card-history/artifacts-view.js
@@ -15480,7 +16580,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     const t = document.createElement("td");
     t.className = "wz-ch-art-txt";
     const oldName = ver.name && norm(ver.name) !== norm(todayName) ? `<span class="wz-ch-art-oldname">(${escHtml(ver.name)})</span>` : "";
-    const body = todayHtml !== void 0 ? todayHtml : ver.textKnown && ver.text ? formatText(ver.text, f, ver.version && ver.version.key) : "?";
+    const body = todayHtml !== void 0 ? todayHtml : ver.textKnown && ver.text ? formatText2(ver.text, f, ver.version && ver.version.key) : "?";
     t.innerHTML = `<div class="cardDesc wz-ch-art-desc"><div>${oldName}${body}</div></div>`;
     tr2.append(v, r, t);
     if (target) {
@@ -15492,7 +16592,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
   }
   function artifactHistoryView(a, data2, f, index) {
     const todayName = tr(`artifact-name-${a.id}`, 1) || a.name;
-    const todayHtml = trHtml(`artifact-${a.id}`) || (a.description ? formatText(a.description, f) : "?");
+    const todayHtml = trHtml(`artifact-${a.id}`) || (a.description ? formatText2(a.description, f) : "?");
     const today = todayArtifactRarity(a);
     const versions = (data2 && data2.versions ? data2.versions : []).map((v) => ({ ...v }));
     let r = today;
@@ -15511,7 +16611,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     const last = versions[versions.length - 1];
     const plainToday = todayHtml && todayHtml !== "?" ? shown(todayHtml) : "";
     let todayVer;
-    if (last && last.textKnown && last.text && plainToday && shown(formatText(last.text, f)) === plainToday) {
+    if (last && last.textKnown && last.text && plainToday && shown(formatText2(last.text, f)) === plainToday) {
       versions.pop();
       todayVer = { ...last, name: todayName };
     } else {
@@ -15586,15 +16686,15 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         const el3 = box.querySelector(".wz-ch-step");
         if (el3) el3.textContent = text;
       },
-      fill(node, fit, url) {
+      fill(node, fit2, url) {
         if (url) state2.url = url;
         box.className = "";
         box.replaceChildren(node);
-        if (!fit) return;
+        if (!fit2) return;
         const run = () => {
-          fit();
-          if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
-          setTimeout(fit, 400);
+          fit2();
+          if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit2);
+          setTimeout(fit2, 400);
         };
         if (state2.shown) run();
         else state2.onShown = run;
@@ -15608,8 +16708,8 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
   }
 
   // packages/misc/card-history/styles.js
-  var STYLE_ID4 = "wizascript-card-history-style";
-  var CSS5 = `
+  var STYLE_ID5 = "wizascript-card-history-style";
+  var CSS6 = `
 .wz-ch-loading { min-height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
 .wz-ch-loading-title { font-size: 20px; }
 .wz-ch-step { font-size: 13px; opacity: .75; }
@@ -15656,10 +16756,10 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
 .wz-ch-art-list .cardDesc.wz-ch-art-desc > div { font-size: 14px !important; }
 `;
   function injectCardHistoryStyle() {
-    if (document.getElementById(STYLE_ID4)) return;
+    if (document.getElementById(STYLE_ID5)) return;
     const st = document.createElement("style");
-    st.id = STYLE_ID4;
-    st.textContent = CSS5;
+    st.id = STYLE_ID5;
+    st.textContent = CSS6;
     (document.head || document.documentElement).appendChild(st);
   }
 
@@ -15835,13 +16935,13 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     }
     function positionPanelNear(panel, target) {
       const rect = target.getBoundingClientRect();
-      const w = panel.offsetWidth, h = panel.offsetHeight;
+      const w = panel.offsetWidth, h2 = panel.offsetHeight;
       let left = rect.left;
       let top = rect.bottom + 8;
       if (left + w > pageWindow2.innerWidth - 8) left = pageWindow2.innerWidth - w - 8;
       if (left < 8) left = 8;
-      if (top + h > pageWindow2.innerHeight - 8) {
-        top = rect.top - h - 8;
+      if (top + h2 > pageWindow2.innerHeight - 8) {
+        top = rect.top - h2 - 8;
         if (top < 8) top = 8;
       }
       panel.style.left = left + "px";
@@ -16765,7 +17865,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       }
       closeSelectPicker();
     }
-    function activateHighlighted(button2) {
+    function activateHighlighted(button3) {
       const el3 = currentFocusedEl();
       if (!el3) return;
       const rect = el3.getBoundingClientRect();
@@ -16774,7 +17874,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         activatePatchMakerResetButton(el3, cx, cy);
         return;
       }
-      dispatchClick(el3, cx, cy, button2 === 2 ? 2 : 0);
+      dispatchClick(el3, cx, cy, button3 === 2 ? 2 : 0);
       const openPresetMenu = getPresetMenuState();
       if (openPresetMenu) {
         fieldSubmenu = {
@@ -16889,14 +17989,14 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       }
       return rowEls.length - 1;
     }
-    function fire(el3, type, ctor, clientX, clientY, button2, buttons) {
+    function fire(el3, type, ctor, clientX, clientY, button3, buttons) {
       const opts = {
         bubbles: true,
         cancelable: true,
         view: pageWindow2,
         clientX,
         clientY,
-        button: button2 || 0,
+        button: button3 || 0,
         buttons: buttons || 0
       };
       if (ctor === PointerEvent) {
@@ -16919,8 +18019,8 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       fire(el3, "mouseup", MouseEvent, x, y, 1, 0);
       fire(el3, "auxclick", MouseEvent, x, y, 1, 0);
     }
-    function dispatchClick(el3, cx, cy, button2) {
-      if (button2 === 2) {
+    function dispatchClick(el3, cx, cy, button3) {
+      if (button3 === 2) {
         fire(el3, "pointerdown", PointerEvent, cx, cy, 2, 2);
         fire(el3, "mousedown", MouseEvent, cx, cy, 2, 2);
         fire(el3, "pointerup", PointerEvent, cx, cy, 2, 0);
@@ -17009,13 +18109,13 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       })();
     }
     const drag = { left: null, right: null };
-    function beginPress(side, button2) {
+    function beginPress(side, button3) {
       cursor.style.display = "none";
       const hitEl = document.elementFromPoint(x, y);
       cursor.style.display = "block";
       if (!hitEl) return;
       drag[side] = { downEl: hitEl };
-      if (button2 === 2) {
+      if (button3 === 2) {
         fire(hitEl, "pointerdown", PointerEvent, x, y, 2, 2);
         fire(hitEl, "mousedown", MouseEvent, x, y, 2, 2);
       } else {
@@ -17023,13 +18123,13 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         fire(hitEl, "mousedown", MouseEvent, x, y, 0, 1);
       }
     }
-    function continuePress(side, button2) {
+    function continuePress(side, button3) {
       if (!drag[side]) return;
       cursor.style.display = "none";
       const hitEl = document.elementFromPoint(x, y);
       cursor.style.display = "block";
       if (!hitEl) return;
-      if (button2 === 2) {
+      if (button3 === 2) {
         fire(hitEl, "pointermove", PointerEvent, x, y, 2, 2);
         fire(hitEl, "mousemove", MouseEvent, x, y, 2, 2);
       } else {
@@ -17037,7 +18137,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         fire(hitEl, "mousemove", MouseEvent, x, y, 0, 1);
       }
     }
-    function endPress(side, button2) {
+    function endPress(side, button3) {
       const state2 = drag[side];
       drag[side] = null;
       if (!state2) return;
@@ -17045,7 +18145,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       const hitEl = document.elementFromPoint(x, y);
       cursor.style.display = "block";
       if (!hitEl) return;
-      if (button2 === 2) {
+      if (button3 === 2) {
         fire(hitEl, "pointerup", PointerEvent, x, y, 2, 0);
         fire(hitEl, "mouseup", MouseEvent, x, y, 2, 0);
         if (hitEl === state2.downEl) fire(hitEl, "contextmenu", MouseEvent, x, y, 2, 0);

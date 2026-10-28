@@ -12,6 +12,12 @@ Make your own custom cards without leaving Undercards, and keep chatting while y
 - The editors are their authors' own sites, loaded as they are. Cards you make in the Card Maker are saved separately from the same editor opened on its own site. **↗** opens the editor's site in a new tab.
 - If feildmaster's editor stays black inside the Card Maker, a note in the window offers a **hotfix** (also on the Card Maker tab). It's a stopgap until his editor is updated.
 
+### New: Card Gallery (preview)
+Share the cards you make. It's part of the Card Maker: press **Gallery** in its title bar.
+- **Read from this editor** lists every group and card you've made in the editor that's open. Tick the ones to add, one by one or a whole group as a set. UC Editor group files (.uceditor) and PNG downloads can be added too.
+- Link parts into sets (A, B, C…), rename them, and preview your request. **Browse** shows how they'll look, with All Time / This Month / This Week and likes and dislikes.
+- The gallery isn't live yet: nothing is sent, and Browse's dates and scores are made up. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
+
 ## 1.6.2
 
 ### Improvements

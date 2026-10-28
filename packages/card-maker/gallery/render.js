@@ -125,7 +125,7 @@ export function fitText(root) {
 // otherwise this loads UC Editor's copy of the same font file.
 export const CARD_FONT = `"DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace`;
 export const TILE_CSS = `
-@font-face { font-family: "WZ DTM Mono"; src: url("${UCE}images/fonts/DTM-Mono.otf") format("opentype"); font-display: swap; }
+@font-face { font-family: "WZ DTM Mono"; src: url("/fonts/DTM-Mono.otf") format("opentype"), url("${UCE}images/fonts/DTM-Mono.otf") format("opentype"); font-display: swap; }
 .wz-gl-card, .wz-gl-artifact { font-family: ${CARD_FONT}; }
 .wz-gl-card { position: relative; width: ${CARD_W}px; height: ${CARD_H}px; color: #fff; font-size: 12px; line-height: 1.15; text-align: center; overflow: hidden; flex: none; }
 .wz-gl-card > * { position: absolute; }

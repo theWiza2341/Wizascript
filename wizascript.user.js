@@ -1189,7 +1189,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   function openVoid(message, select) {
     const w = getPageWindow();
     if (!canOpenVoid()) return false;
-    const go = () => {
+    const go2 = () => {
       if (!document.querySelector("#chat-public-0")) w.openRoom(0);
       let tries = 0;
       const fill = () => {
@@ -1207,8 +1207,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       };
       fill();
     };
-    if (closeDialogs()) setTimeout(go, 350);
-    else go();
+    if (closeDialogs()) setTimeout(go2, 350);
+    else go2();
     return true;
   }
 
@@ -3449,18 +3449,18 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       const gallery = section.querySelector(".uc-card-gallery");
       if (!gallery) return null;
       ensureCardAddTile(section);
-      const item = document.createElement("div");
-      item.className = "uc-card-item";
-      item.tabIndex = 0;
-      item.dataset.src = src;
-      item.dataset.name = name;
+      const item2 = document.createElement("div");
+      item2.className = "uc-card-item";
+      item2.tabIndex = 0;
+      item2.dataset.src = src;
+      item2.dataset.name = name;
       const frame = document.createElement("div");
       frame.className = "uc-card-frame";
       const img = document.createElement("img");
       img.src = src;
       img.alt = name;
       frame.appendChild(img);
-      item.appendChild(frame);
+      item2.appendChild(frame);
       const delBtn = document.createElement("button");
       delBtn.className = "uc-card-del";
       delBtn.textContent = "\u2212";
@@ -3468,35 +3468,35 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       delBtn.onclick = (e) => {
         if (isViewerMode2()) return;
         e.stopPropagation();
-        item.remove();
+        item2.remove();
         ensureCardAddTile(section);
         saveState();
       };
-      item.appendChild(delBtn);
+      item2.appendChild(delBtn);
       const addTile = gallery.querySelector(":scope > .uc-card-add-tile");
-      if (addTile) gallery.insertBefore(item, addTile);
-      else gallery.appendChild(item);
+      if (addTile) gallery.insertBefore(item2, addTile);
+      else gallery.appendChild(item2);
       ensureCardAddTile(section);
-      return item;
+      return item2;
     }
-    function moveCardItem(item, dir) {
-      const gallery = item.parentElement;
+    function moveCardItem(item2, dir) {
+      const gallery = item2.parentElement;
       if (!gallery) return;
       const items = [...gallery.querySelectorAll(":scope > .uc-card-item")];
-      const idx = items.indexOf(item);
+      const idx = items.indexOf(item2);
       if (idx < 0 || items.length <= 1) return;
       const newIdx = (idx + dir + items.length) % items.length;
       const target = items[newIdx];
       if (dir < 0) {
-        if (idx === 0) gallery.appendChild(item);
-        else gallery.insertBefore(item, target);
+        if (idx === 0) gallery.appendChild(item2);
+        else gallery.insertBefore(item2, target);
       } else {
-        if (idx === items.length - 1) gallery.insertBefore(item, items[0]);
-        else gallery.insertBefore(item, target.nextElementSibling);
+        if (idx === items.length - 1) gallery.insertBefore(item2, items[0]);
+        else gallery.insertBefore(item2, target.nextElementSibling);
       }
       ensureCardAddTile(gallery.parentElement);
       saveState();
-      setTimeout(() => item.focus(), 0);
+      setTimeout(() => item2.focus(), 0);
     }
     function createSection(container) {
       const p = document.createElement("p");
@@ -3531,9 +3531,9 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       if (!header || !section) return { collapsed: false, cards: [] };
       return {
         collapsed: section.style.display === "none",
-        cards: [...section.querySelectorAll(".uc-card-item")].map((item) => ({
-          src: item.dataset.src || "",
-          name: item.dataset.name || "Card image"
+        cards: [...section.querySelectorAll(".uc-card-item")].map((item2) => ({
+          src: item2.dataset.src || "",
+          name: item2.dataset.name || "Card image"
         })).filter((card) => card.src)
       };
     }
@@ -4898,12 +4898,12 @@ Version: v${version}`;
         ul.style.display = sec.collapsed ? "none" : "";
         if (btn) btn.textContent = sec.collapsed ? "+" : "\u2212";
         ul.innerHTML = "";
-        (sec.items || [{ raw: "[New entry]", category: "other" }]).forEach((item) => {
+        (sec.items || [{ raw: "[New entry]", category: "other" }]).forEach((item2) => {
           const li = createNewLI();
-          li.dataset.raw = item.raw;
+          li.dataset.raw = item2.raw;
           li.classList.remove(...cycleOrder);
-          li.classList.add(item.category || "other");
-          li.querySelector(".uc-li-text").textContent = item.raw;
+          li.classList.add(item2.category || "other");
+          li.querySelector(".uc-li-text").textContent = item2.raw;
           ul.appendChild(li);
         });
         updateDeleteState(ul);
@@ -6710,7 +6710,7 @@ Version: v${version}`;
           }).text("No known cards yet"));
           return;
         }
-        items.forEach((item, idx) => {
+        items.forEach((item2, idx) => {
           const row2 = $("<div>").css({
             fontSize: "12px",
             padding: "3px 6px",
@@ -6721,7 +6721,7 @@ Version: v${version}`;
             alignItems: "center"
           }).attr("title", "Right-click to remove this card");
           row2.append(
-            $("<span>").css({ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }).text(item.name),
+            $("<span>").css({ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }).text(item2.name),
             $("<span>").css({ fontSize: "10px", color: "#777", flexShrink: 0, marginLeft: "6px" }).text(idx === 0 ? firstItemLabel : `+${idx}`)
           );
           row2.on("mouseenter", () => row2.css("background", "rgba(255,255,255,0.12)"));
@@ -6730,7 +6730,7 @@ Version: v${version}`;
           row2.on("contextmenu", (e) => {
             e.preventDefault();
             e.stopPropagation();
-            onRemoveListItem == null ? void 0 : onRemoveListItem(item);
+            onRemoveListItem == null ? void 0 : onRemoveListItem(item2);
           });
           listBody.append(row2);
         });
@@ -6984,7 +6984,7 @@ Version: v${version}`;
       showImage: !(behavior == null ? void 0 : behavior.compact),
       contentMode: (behavior == null ? void 0 : behavior.listMode) ? "list" : null,
       initialListItems: (behavior == null ? void 0 : behavior.getInitialListItems) ? behavior.getInitialListItems() : [],
-      onRemoveListItem: (behavior == null ? void 0 : behavior.onRemoveListItem) ? (item) => behavior.onRemoveListItem(id, item) : null,
+      onRemoveListItem: (behavior == null ? void 0 : behavior.onRemoveListItem) ? (item2) => behavior.onRemoveListItem(id, item2) : null,
       firstItemLabel: (_b = behavior == null ? void 0 : behavior.firstItemLabel) != null ? _b : "next"
     });
     const baselineRect = { left: parts.widget[0].getBoundingClientRect().left, top: parts.widget[0].getBoundingClientRect().top, width: parts.getWidth() };
@@ -8542,14 +8542,14 @@ Version: v${version}`;
     font-size: 11px;
   `;
     LEGEND_MODES.forEach((mode) => {
-      const item = document.createElement("span");
-      item.style.cssText = "display:flex; align-items:center; gap:4px; opacity:0.85;";
+      const item2 = document.createElement("span");
+      item2.style.cssText = "display:flex; align-items:center; gap:4px; opacity:0.85;";
       const swatch = document.createElement("span");
       swatch.style.cssText = `width:9px; height:9px; border-radius:2px; background:${MODE_COLORS[mode]}; flex-shrink:0;`;
       const label = document.createElement("span");
       label.textContent = mode;
-      item.append(swatch, label);
-      legend.appendChild(item);
+      item2.append(swatch, label);
+      legend.appendChild(item2);
     });
     overlay.appendChild(legend);
     overlay.addEventListener("wheel", (e) => {
@@ -9852,24 +9852,24 @@ Version: v${version}`;
 
   // packages/misc/tier-list/tiers-view.js
   function buildTile(key2, { placed = false } = {}) {
-    const item = resolveItem(key2);
+    const item2 = resolveItem(key2);
     const tile2 = document.createElement("div");
     tile2.className = "wz-tl-tile";
     tile2.dataset.key = key2;
     tile2.tabIndex = -1;
-    if (item.image) tile2.style.backgroundImage = `url("${item.image}")`;
+    if (item2.image) tile2.style.backgroundImage = `url("${item2.image}")`;
     else tile2.classList.add("wz-tl-noimg");
-    if (item.color) tile2.style.setProperty("--wz-tl-rarity", item.color);
-    else if (item.rarity && RARITY_COLORS[item.rarity]) tile2.style.setProperty("--wz-tl-rarity", RARITY_COLORS[item.rarity]);
-    if (item.kind === "soul") tile2.classList.add("wz-tl-soul");
-    if (item.text) {
+    if (item2.color) tile2.style.setProperty("--wz-tl-rarity", item2.color);
+    else if (item2.rarity && RARITY_COLORS[item2.rarity]) tile2.style.setProperty("--wz-tl-rarity", RARITY_COLORS[item2.rarity]);
+    if (item2.kind === "soul") tile2.classList.add("wz-tl-soul");
+    if (item2.text) {
       tile2.classList.add("wz-tl-text");
       tile2.title = "Double-click to edit";
     }
     if (placed) tile2.classList.add("wz-tl-placed");
     const name = document.createElement("div");
     name.className = "wz-tl-tile-name";
-    name.textContent = item.label;
+    name.textContent = item2.label;
     tile2.appendChild(name);
     return tile2;
   }
@@ -9925,8 +9925,8 @@ Version: v${version}`;
       custom.title = "Custom colour";
       custom.addEventListener("change", () => recolorTier(tierId, custom.value));
       swatches.appendChild(custom);
-      const grid = document.createElement("div");
-      grid.className = "wz-tl-editor-buttons";
+      const grid2 = document.createElement("div");
+      grid2.className = "wz-tl-editor-buttons";
       const btn = (label, fn, opts = {}) => {
         const b = document.createElement("button");
         b.type = "button";
@@ -9939,7 +9939,7 @@ Version: v${version}`;
           if (opts.close) closeEditor();
           else reopen();
         });
-        grid.appendChild(b);
+        grid2.appendChild(b);
         return b;
       };
       const reopen = () => {
@@ -9956,7 +9956,7 @@ Version: v${version}`;
       del.classList.add("wz-tl-danger");
       btn("Done", () => {
       }, { close: true }).style.gridColumn = "1 / -1";
-      el3.append(name, swatches, grid);
+      el3.append(name, swatches, grid2);
       body.appendChild(el3);
       const bodyRect = body.getBoundingClientRect();
       const aRect = anchor.getBoundingClientRect();
@@ -10487,15 +10487,15 @@ Version: v${version}`;
       box.style.left = left + "px";
       box.style.top = top + "px";
     }
-    function render2(item) {
+    function render2(item2) {
       const el3 = document.createElement("div");
       el3.className = "wz-tl-preview";
       const pageWindow2 = getPageWindow();
       const $2 = pageWindow2.$;
-      if (item.card && typeof pageWindow2.appendCard === "function" && $2) {
+      if (item2.card && typeof pageWindow2.appendCard === "function" && $2) {
         try {
           const holder = $2("<div>");
-          pageWindow2.appendCard(JSON.parse(JSON.stringify(item.card)), holder);
+          pageWindow2.appendCard(JSON.parse(JSON.stringify(item2.card)), holder);
           if (holder.children().length) {
             el3.appendChild(holder[0]);
             return el3;
@@ -10506,9 +10506,9 @@ Version: v${version}`;
       const fallback = document.createElement("div");
       fallback.className = "wz-tl-preview-fallback";
       const pic = document.createElement("div");
-      if (item.image) pic.style.backgroundImage = `url("${item.image}")`;
+      if (item2.image) pic.style.backgroundImage = `url("${item2.image}")`;
       else pic.style.display = "none";
-      fallback.append(pic, item.label);
+      fallback.append(pic, item2.label);
       el3.appendChild(fallback);
       return el3;
     }
@@ -10522,8 +10522,8 @@ Version: v${version}`;
       if (tile2.classList.contains("wz-tl-text")) return;
       timer = setTimeout(() => {
         if (pressed || isDragging() || !tile2.isConnected || overTile !== tile2) return;
-        const item = resolveItem(tile2.dataset.key);
-        box = render2(item);
+        const item2 = resolveItem(tile2.dataset.key);
+        box = render2(item2);
         box.dataset.key = tile2.dataset.key;
         document.body.appendChild(box);
         position();
@@ -10887,10 +10887,10 @@ Version: v${version}`;
       }
       root.appendChild(menu3);
       const rr = root.getBoundingClientRect();
-      const tr2 = (it ? it.el : root).getBoundingClientRect();
-      let left = tr2.right - rr.left + 6;
-      if (left + menu3.offsetWidth > rr.width - 4) left = Math.max(4, tr2.left - rr.left - menu3.offsetWidth - 6);
-      let top = tr2.top - rr.top;
+      const tr3 = (it ? it.el : root).getBoundingClientRect();
+      let left = tr3.right - rr.left + 6;
+      if (left + menu3.offsetWidth > rr.width - 4) left = Math.max(4, tr3.left - rr.left - menu3.offsetWidth - 6);
+      let top = tr3.top - rr.top;
       if (top + menu3.offsetHeight > rr.height - 4) top = Math.max(4, rr.height - menu3.offsetHeight - 4);
       menu3.style.left = left + "px";
       menu3.style.top = Math.max(4, top) + "px";
@@ -11937,7 +11937,7 @@ Version: v${version}`;
   }
   var CARD_FONT = `"DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace`;
   var TILE_CSS = `
-@font-face { font-family: "WZ DTM Mono"; src: url("${UCE}images/fonts/DTM-Mono.otf") format("opentype"); font-display: swap; }
+@font-face { font-family: "WZ DTM Mono"; src: url("/fonts/DTM-Mono.otf") format("opentype"), url("${UCE}images/fonts/DTM-Mono.otf") format("opentype"); font-display: swap; }
 .wz-gl-card, .wz-gl-artifact { font-family: ${CARD_FONT}; }
 .wz-gl-card { position: relative; width: ${CARD_W}px; height: ${CARD_H}px; color: #fff; font-size: 12px; line-height: 1.15; text-align: center; overflow: hidden; flex: none; }
 .wz-gl-card > * { position: absolute; }
@@ -12299,6 +12299,314 @@ Version: v${version}`;
     return out;
   }
 
+  // packages/card-maker/gallery/mock.js
+  var AUTHORS = ["SampleMaker", "PixelSmith", "TestPlayer", "CardFan", "MockAuthor", "DraftWizard", "ExampleUser", "Placeholder"];
+  var SET_NAMES = ["Hotland Heat", "Snowdin Patrol", "Core Meltdown", "Ruins Revival", "Dark World Deals", "Waterfall Echoes", "Royal Lab"];
+  function gameCards() {
+    const w = getPageWindow();
+    if (Array.isArray(w.allCards) && w.allCards.length) return w.allCards;
+    try {
+      const ls = JSON.parse(w.localStorage.getItem("allCards") || "[]");
+      if (Array.isArray(ls)) return ls;
+    } catch (e) {
+    }
+    return [];
+  }
+  function tr(key2) {
+    try {
+      const $2 = getPageWindow().$;
+      const v = $2 && $2.i18n ? $2.i18n(key2) : "";
+      if (!v || v === key2) return "";
+      const d = document.createElement("div");
+      d.innerHTML = String(v).replace(/<br\s*\/?>/gi, "\n");
+      return d.textContent;
+    } catch (e) {
+      return "";
+    }
+  }
+  function toPart(c, i) {
+    const ext = c.extension === "DELTARUNE" ? "DELTARUNE" : c.extension === "UTY" ? "UTY" : "BASE";
+    const monster = c.typeCard === 0;
+    return {
+      id: `mock${i}`,
+      source: "sample",
+      type: monster ? "Monster" : "Spell",
+      name: tr(`card-name-${c.fixedId || c.id}`) || c.name || "",
+      cost: c.cost,
+      atk: monster ? c.attack : void 0,
+      hp: monster ? c.hp : void 0,
+      desc: tr(`card-${c.fixedId || c.id}`) || (c.description ? String(c.description).replace(/<[^>]+>/g, "") : ""),
+      art: c.image ? `/images/cards/${c.image}.png` : "",
+      rarity: c.rarity ? `${ext}_${c.rarity}` : "",
+      tribes: []
+    };
+  }
+  var cache = null;
+  function sampleEntries() {
+    if (cache) return cache;
+    const cards2 = gameCards().filter((c) => c && c.name && c.image && (c.typeCard === 0 || c.typeCard === 1) && c.rarity !== "TOKEN");
+    if (!cards2.length) return cache = [];
+    let seed2 = 12345;
+    const rnd = () => (seed2 = seed2 * 1103515245 + 12345 >>> 0) / 4294967296;
+    const pool = cards2.slice().sort(() => rnd() - 0.5);
+    const out = [];
+    let n = 0;
+    for (let e = 0; e < 36 && n < pool.length; e++) {
+      const isSet = e % 6 === 2;
+      const size = isSet ? 2 + Math.floor(rnd() * 3) : 1;
+      const parts = pool.slice(n, n + size).map((c, k) => toPart(c, n + k));
+      n += size;
+      out.push({
+        key: `sample${e}`,
+        kind: isSet && parts.length > 1 ? "set" : "single",
+        title: isSet ? SET_NAMES[(e / 6 | 0) % SET_NAMES.length] : parts[0].name,
+        parts,
+        author: AUTHORS[Math.floor(rnd() * AUTHORS.length)],
+        days: Math.floor(rnd() * rnd() * 120),
+        base: Math.floor(rnd() * rnd() * 140) - 8,
+        sample: true
+      });
+    }
+    return cache = out;
+  }
+
+  // packages/card-maker/gallery/browse.js
+  var LISTS = [["new", "Newest"], ["week", "This Week"], ["month", "This Month"], ["all", "All Time"]];
+  var LAYOUTS = [["slides", "Slides"], ["tabs", "Tabs"], ["shelves", "Shelves"]];
+  var BROWSE_CSS = `
+.wz-gl-browse { --wz-gl-accent: #ffd84a; }
+.wz-gl-proto { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 4px 6px; margin-bottom: 10px; border: 1px dashed #665; background: #17150c; font-size: 11px; }
+.wz-gl-proto b { color: #ffd84a; margin-right: 4px; }
+.wz-gl-proto label { margin: 0 0 0 10px; font-weight: normal; cursor: pointer; }
+.wz-gl-dt { font-family: "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; }
+.wz-gl-empty { opacity: .7; padding: 20px 0; text-align: center; }
+.wz-gl-note2 { opacity: .55; font-size: 11px; margin-top: 10px; text-align: center; }
+
+/* item + votes */
+.wz-gl-item { position: relative; transition: transform .12s; }
+.wz-gl-item:hover { transform: translateY(-2px); }
+.wz-gl-item.set { border: 2px solid #555; border-radius: 0; background: #0a0a0a; padding: 4px 6px 3px; }
+.wz-gl-item.set:hover { border-color: #fff; }
+.wz-gl-setname { font-family: "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; font-size: 12px; color: var(--wz-gl-accent); letter-spacing: .5px; }
+.wz-gl-votes { gap: 6px; }
+.wz-gl-vote { background: none; border: 0; padding: 0 3px; cursor: pointer; font-size: 13px; line-height: 16px; color: #777; }
+.wz-gl-vote:hover { color: #fff; }
+.wz-gl-vote.up.on { color: #3ee05a; }
+.wz-gl-vote.down.on { color: #ff4d4d; }
+.wz-gl-score { font-family: "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; font-size: 13px; min-width: 28px; }
+.wz-gl-score.pos { color: #b9f5c3; } .wz-gl-score.neg { color: #f5b9b9; }
+.wz-gl-rank { color: var(--wz-gl-accent); font: 12px/16px "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; margin-right: 4px; }
+.wz-gl-mine { position: absolute; top: -9px; right: -9px; z-index: 3; background: #4464bd; border: 2px solid #8ea6e8; color: #fff; font: 10px/14px Arial, sans-serif; padding: 0 4px; }
+
+/* slide-in */
+@keyframes wz-gl-in-r { from { transform: translateX(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes wz-gl-in-l { from { transform: translateX(-60px); opacity: 0; } to { transform: none; opacity: 1; } }
+.wz-gl-in-r { animation: wz-gl-in-r .28s ease-out; }
+.wz-gl-in-l { animation: wz-gl-in-l .28s ease-out; }
+
+/* A: Slides */
+.wz-gl-slides-nav { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 2px 0 4px; }
+.wz-gl-slides-nav .arrow { background: #000; border: 2px solid #fff; color: #fff; width: 30px; height: 30px; font: 16px/24px "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; cursor: pointer; padding: 0; }
+.wz-gl-slides-nav .arrow:hover { color: var(--wz-gl-accent); border-color: var(--wz-gl-accent); }
+.wz-gl-slides-title { min-width: 220px; text-align: center; font-size: 22px; letter-spacing: 1px; }
+.wz-gl-slides-sub { text-align: center; opacity: .6; font-size: 11px; margin-bottom: 4px; }
+.wz-gl-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; }
+.wz-gl-dots button { width: 10px; height: 10px; padding: 0; border: 2px solid #fff; background: transparent; cursor: pointer; }
+.wz-gl-dots button.on { background: var(--wz-gl-accent); border-color: var(--wz-gl-accent); }
+
+/* B: Tabs */
+.wz-gl-seg { position: relative; display: flex; margin: 0 auto 12px; max-width: 560px; border: 2px solid #fff; background: #000; }
+.wz-gl-seg button { flex: 1 1 0; position: relative; z-index: 1; background: none; border: 0; color: #bbb; padding: 6px 0 5px; font-size: 14px; cursor: pointer; }
+.wz-gl-seg button:hover { color: #fff; }
+.wz-gl-seg button.on { color: #000; }
+.wz-gl-seg .pill { position: absolute; top: 0; bottom: 0; width: 25%; background: var(--wz-gl-accent); transition: left .25s ease; }
+
+/* C: Shelves */
+.wz-gl-shelf { margin-bottom: 14px; }
+.wz-gl-shelf-head { display: flex; align-items: baseline; gap: 10px; border-bottom: 2px solid #333; padding-bottom: 3px; margin-bottom: 8px; }
+.wz-gl-shelf-head .t { font-size: 17px; letter-spacing: .5px; }
+.wz-gl-shelf-head .c { opacity: .55; font-size: 11px; }
+.wz-gl-shelf-head .grow { flex: 1; }
+.wz-gl-linkbtn { background: none; border: 0; color: var(--wz-gl-accent); cursor: pointer; padding: 0 2px; font-size: 12px; }
+.wz-gl-linkbtn:hover { text-decoration: underline; }
+.wz-gl-shelf-body { position: relative; }
+.wz-gl-shelf-row { display: flex; gap: 12px; align-items: flex-end; overflow-x: auto; scroll-behavior: smooth; padding: 10px 30px 6px; scrollbar-width: thin; }
+.wz-gl-shelf-row > .wz-gl-item { flex: none; }
+.wz-gl-shelf-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 4; width: 26px; height: 46px; background: rgba(0,0,0,.85); border: 2px solid #fff; color: #fff; cursor: pointer; padding: 0; font-size: 14px; }
+.wz-gl-shelf-arrow.l { left: 0; } .wz-gl-shelf-arrow.r { right: 0; }
+`;
+  function seed(s) {
+    let x = 7;
+    for (const c of s) x = x * 31 + c.charCodeAt(0) >>> 0;
+    return x;
+  }
+  function allEntries(own, { samples, votes, sampleVotes }) {
+    const mine = own.map((e) => {
+      const n = seed(e.key + (e.title || ""));
+      return { ...e, author: "you", mine: true, days: n % 45, base: (n >> 8) % 60 - 10 };
+    });
+    const list = mine.concat(samples ? sampleEntries() : []);
+    list.forEach((e) => {
+      e.vote = (e.sample ? sampleVotes : votes)[e.key] || 0;
+      e.score = e.base + e.vote;
+    });
+    return list;
+  }
+  function listFor(entries2, key2) {
+    if (key2 === "new") return entries2.slice().sort((a, b) => a.days - b.days || b.score - a.score);
+    const max = key2 === "week" ? 7 : key2 === "month" ? 30 : Infinity;
+    return entries2.filter((e) => e.days < max).sort((a, b) => b.score - a.score);
+  }
+  var listCaption = (key2) => ({ new: "Latest posts first", week: "Most liked in the last 7 days", month: "Most liked in the last 30 days", all: "Most liked ever" })[key2];
+  function browseView(ctx) {
+    const { state: state2 } = ctx;
+    const root = h("div", { class: "wz-gl-browse" }, protoBar(ctx));
+    const body = state2.layout === "shelves" ? shelves(ctx) : state2.layout === "tabs" ? tabsView(ctx) : slidesView(ctx);
+    root.appendChild(body);
+    root.appendChild(h("div", { class: "wz-gl-note2", text: state2.samples ? "Sample entries use real cards with made-up authors, dates and scores. Nothing is sent." : "Preview of your own parts. Dates and scores are made up until the gallery is live." }));
+    return root;
+  }
+  function protoBar(ctx) {
+    const { state: state2 } = ctx;
+    return h(
+      "div",
+      { class: "wz-gl-proto" },
+      h("b", { text: "Prototype" }),
+      "Layout:",
+      LAYOUTS.map(([k, l]) => button(l, () => {
+        state2.layout = k;
+        state2.dir = null;
+        state2.shelfOpen = null;
+        ctx.rerender();
+      }, { cls: state2.layout === k ? "wz-gl-on" : "" })),
+      h("label", {}, h("input", { type: "checkbox", checked: state2.samples, onchange: (e) => {
+        state2.samples = e.target.checked;
+        ctx.rerender();
+      } }), " Sample entries")
+    );
+  }
+  function go(ctx, key2) {
+    const { state: state2 } = ctx;
+    if (key2 === state2.list) return;
+    const from = LISTS.findIndex((l) => l[0] === state2.list), to = LISTS.findIndex((l) => l[0] === key2);
+    state2.dir = to > from ? "r" : "l";
+    state2.list = key2;
+    ctx.rerender();
+  }
+  function grid(ctx, list, animate) {
+    const g = h("div", { class: `wz-gl-grid${animate ? " wz-gl-in-" + animate : ""}` });
+    if (!list.length) return h("div", { class: "wz-gl-empty wz-gl-dt", text: "* Nothing here yet." });
+    list.forEach((e, i) => g.appendChild(item(ctx, e, i + 1)));
+    return g;
+  }
+  function item(ctx, e, rank, listKey) {
+    const isSet = e.kind === "set";
+    const vote = (dir) => ctx.vote(e, dir);
+    const showRank = (listKey || ctx.state.list) !== "new";
+    return h(
+      "div",
+      { class: `wz-gl-item${isSet ? " set" : ""}`, "data-key": e.key },
+      e.mine ? h("span", { class: "wz-gl-mine", text: "yours" }) : null,
+      isSet ? h("div", { class: "wz-gl-setname", text: e.title || "(no name)", title: e.title || "" }) : null,
+      h("div", { class: "wz-gl-row" }, e.parts.map((p) => ctx.hoverable(h("div", { class: "wz-gl-zoom" }, tile(p)), p, e))),
+      h(
+        "div",
+        { class: "wz-gl-votes" },
+        rank && showRank ? h("span", { class: "wz-gl-rank", title: "Rank", text: "#" + rank }) : null,
+        h("button", { class: `wz-gl-vote up${e.vote === 1 ? " on" : ""}`, title: "Like", text: "\u25B2", onclick: () => vote(1) }),
+        h("span", { class: `wz-gl-score${e.score > 0 ? " pos" : e.score < 0 ? " neg" : ""}`, text: String(e.score) }),
+        h("button", { class: `wz-gl-vote down${e.vote === -1 ? " on" : ""}`, title: "Dislike", text: "\u25BC", onclick: () => vote(-1) })
+      )
+    );
+  }
+  function slidesView(ctx) {
+    const { state: state2 } = ctx;
+    const i = LISTS.findIndex((l) => l[0] === state2.list);
+    const step = (d) => go(ctx, LISTS[(i + d + LISTS.length) % LISTS.length][0]);
+    const dir = state2.dir;
+    state2.dir = null;
+    return h(
+      "div",
+      {},
+      h(
+        "div",
+        { class: "wz-gl-slides-nav" },
+        h("button", { class: "arrow", title: "Previous list", text: "\u25C0", onclick: () => step(-1) }),
+        h("div", { class: "wz-gl-slides-title wz-gl-dt", text: LISTS[i][1] }),
+        h("button", { class: "arrow", title: "Next list", text: "\u25B6", onclick: () => step(1) })
+      ),
+      h("div", { class: "wz-gl-slides-sub", text: listCaption(state2.list) }),
+      h("div", { class: "wz-gl-dots" }, LISTS.map(([k, l]) => h("button", { class: k === state2.list ? "on" : "", title: l, onclick: () => go(ctx, k) }))),
+      grid(ctx, listFor(ctx.entries, state2.list), dir)
+    );
+  }
+  function tabsView(ctx) {
+    const { state: state2 } = ctx;
+    const i = LISTS.findIndex((l) => l[0] === state2.list);
+    const dir = state2.dir;
+    state2.dir = null;
+    const pill = h("span", { class: "pill", style: { left: (dir ? (i + (dir === "r" ? -1 : 1)) * 25 : i * 25) + "%" } });
+    if (dir) requestAnimationFrame(() => requestAnimationFrame(() => {
+      pill.style.left = i * 25 + "%";
+    }));
+    return h(
+      "div",
+      {},
+      h("div", { class: "wz-gl-seg wz-gl-dt" }, pill, LISTS.map(([k, l]) => h("button", { class: k === state2.list ? "on" : "", text: l, onclick: () => go(ctx, k) }))),
+      grid(ctx, listFor(ctx.entries, state2.list), dir)
+    );
+  }
+  function shelves(ctx) {
+    const { state: state2 } = ctx;
+    if (state2.shelfOpen) {
+      const [k, l] = LISTS.find((x) => x[0] === state2.shelfOpen);
+      const list = listFor(ctx.entries, k);
+      return h(
+        "div",
+        { class: "wz-gl-shelf" },
+        h(
+          "div",
+          { class: "wz-gl-shelf-head" },
+          h("button", { class: "wz-gl-linkbtn", text: "\u2039 All lists", onclick: () => {
+            state2.shelfOpen = null;
+            ctx.rerender();
+          } }),
+          h("span", { class: "t wz-gl-dt", text: l }),
+          h("span", { class: "c", text: `${list.length} \xB7 ${listCaption(k)}` })
+        ),
+        grid(ctx, list, "r")
+      );
+    }
+    return h("div", {}, LISTS.map(([k, l]) => {
+      const list = listFor(ctx.entries, k);
+      const row2 = h("div", { class: "wz-gl-shelf-row" }, list.slice(0, 14).map((e, i) => item(ctx, e, i + 1, k)));
+      if (!list.length) row2.appendChild(h("div", { class: "wz-gl-empty wz-gl-dt", text: "* Nothing here yet." }));
+      const scroll = (d) => row2.scrollBy({ left: d * row2.clientWidth * 0.8 });
+      return h(
+        "div",
+        { class: "wz-gl-shelf" },
+        h(
+          "div",
+          { class: "wz-gl-shelf-head" },
+          h("span", { class: "t wz-gl-dt", text: l }),
+          h("span", { class: "c", text: listCaption(k) }),
+          h("span", { class: "grow" }),
+          list.length ? h("button", { class: "wz-gl-linkbtn", text: `See all ${list.length} \u203A`, onclick: () => {
+            state2.shelfOpen = k;
+            ctx.rerender();
+          } }) : null
+        ),
+        h(
+          "div",
+          { class: "wz-gl-shelf-body" },
+          list.length > 3 ? h("button", { class: "wz-gl-shelf-arrow l", text: "\u25C0", title: "Scroll left", onclick: () => scroll(-1) }) : null,
+          row2,
+          list.length > 3 ? h("button", { class: "wz-gl-shelf-arrow r", text: "\u25B6", title: "Scroll right", onclick: () => scroll(1) }) : null
+        )
+      );
+    }));
+  }
+
   // packages/card-maker/gallery/panel.js
   var STYLE_ID3 = "wizascript-cardgallery-style";
   var TYPES2 = ["Monster", "Spell", "Enchantment", "Artifact"];
@@ -12356,6 +12664,7 @@ Version: v${version}`;
 .wz-gl-hinfo b { font-size: 13px; }
 .wz-gl-hinfo .dim { opacity: .7; }
 ${TILE_CSS}
+${BROWSE_CSS}
 `;
   function injectStyle2() {
     if (document.getElementById(STYLE_ID3)) return;
@@ -12370,7 +12679,9 @@ ${TILE_CSS}
     injectStyle2();
     const draft2 = getDraft();
     let tab = draft2.parts.length ? "browse" : "submit";
-    let browseWindow = "all";
+    const proto = draft2.browseProto || {};
+    const browse = { list: "new", layout: proto.layout || "slides", samples: proto.samples !== false, dir: null, shelfOpen: null };
+    const sampleVotes = {};
     let read2 = null;
     let readTimer = null;
     let preview = "";
@@ -12426,24 +12737,16 @@ ${TILE_CSS}
     }
     let hoverFor = null;
     function showHover(anchor, p, e) {
-      var _a, _b, _c;
       hoverFor = anchor;
-      const set = e && e.kind === "set" ? e : null;
-      const info = h(
+      const info = e ? h(
         "div",
         { class: "wz-gl-hinfo" },
-        h("b", { text: p.name || "(no name)" }),
-        h("br"),
-        h("span", { class: "dim", text: p.type + (p.type === "Monster" ? ` \xB7 ${(_a = p.cost) != null ? _a : "?"} cost, ${(_b = p.atk) != null ? _b : "?"}/${(_c = p.hp) != null ? _c : "?"}` : p.cost !== null && p.cost !== void 0 && p.type !== "Artifact" ? ` \xB7 ${p.cost} cost` : "") }),
-        set ? [h("br"), "Set: ", h("b", { text: set.title || "(no name)" }), h("span", { class: "dim", text: ` (${set.parts.length} parts)` })] : null,
-        h("br"),
         h("span", { class: "dim", text: "By " }),
-        "you",
-        h("span", { class: "dim", text: " (preview)" }),
-        e ? [h("br"), h("span", { class: "dim", text: `Posted ${e.days} day${e.days === 1 ? "" : "s"} ago \xB7 score ${e.score}` })] : null,
+        h("b", { text: e.author || "you" }),
+        e.mine ? h("span", { class: "dim", text: " (not posted yet)" }) : null,
         h("br"),
-        h("span", { class: "dim", text: `From ${SOURCE_LABEL[p.source] || p.source}${p.editorGroup ? " \xB7 " + p.editorGroup : ""}` })
-      );
+        h("span", { class: "dim", text: e.days ? `Posted ${e.days} day${e.days === 1 ? "" : "s"} ago` : "Posted today" })
+      ) : null;
       const card = h("div", { class: "wz-gl-hcard" }, tile(p));
       hover.replaceChildren(card, info);
       hover.classList.add("on");
@@ -12486,7 +12789,7 @@ ${TILE_CSS}
         h("span", { class: "wz-gl-grow" }),
         sizeButtons()
       );
-      content.replaceChildren(tab === "browse" ? browseView() : submitView());
+      content.replaceChildren(tab === "browse" ? browseTab() : submitView());
       applyZoom();
       requestAnimationFrame(refit);
     }
@@ -12727,54 +13030,21 @@ ${TILE_CSS}
       }
       changed2();
     });
-    function browseView() {
-      const DAY = 864e5, now = Date.now();
-      const seed = (s) => {
-        let x = 7;
-        for (const c of s) x = x * 31 + c.charCodeAt(0) >>> 0;
-        return x;
-      };
-      const list = entries().map((e) => {
-        const n = seed(e.key + (e.title || ""));
-        return { ...e, days: n % 45, base: (n >> 8) % 60 - 10 };
-      }).filter((e) => browseWindow === "all" || e.days < (browseWindow === "month" ? 30 : 7));
-      list.forEach((e) => {
-        e.score = e.base + (draft2.votes[e.key] || 0);
+    function browseTab() {
+      draft2.browseProto = { layout: browse.layout, samples: browse.samples };
+      saveDraft();
+      return browseView({
+        state: browse,
+        entries: allEntries(entries(), { samples: browse.samples, votes: draft2.votes, sampleVotes }),
+        hoverable,
+        rerender: render2,
+        vote(e, dir) {
+          const store = e.sample ? sampleVotes : draft2.votes;
+          store[e.key] = (store[e.key] || 0) === dir ? 0 : dir;
+          if (!e.sample) saveDraft();
+          render2();
+        }
       });
-      list.sort((a, b) => b.score - a.score);
-      const head = h(
-        "div",
-        { class: "wz-gl-bar" },
-        [["all", "All Time"], ["month", "This Month"], ["week", "This Week"]].map(([k, l]) => button(l, () => {
-          browseWindow = k;
-          render2();
-        }, { cls: k === browseWindow ? "wz-gl-on" : "" })),
-        h("span", { class: "wz-gl-note", style: { margin: "0 0 0 6px" }, text: "Preview of your own parts. Dates and scores are made up until it's live." })
-      );
-      if (!list.length) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing here yet. Add parts in Submit." }));
-      const grid = h("div", { class: "wz-gl-grid" }, list.map((e) => {
-        const v = draft2.votes[e.key] || 0;
-        const vote = (dir) => {
-          draft2.votes[e.key] = v === dir ? 0 : dir;
-          saveDraft();
-          render2();
-        };
-        const isSet = e.kind === "set";
-        return h(
-          "div",
-          { class: `wz-gl-item${isSet ? " set" : ""}`, "data-key": e.key },
-          isSet ? h("div", { class: "wz-gl-setname", text: e.title || "(no name)", title: e.title || "" }) : null,
-          h("div", { class: "wz-gl-row" }, e.parts.map((p) => hoverable(h("div", { class: "wz-gl-zoom" }, tile(p)), p, e))),
-          h(
-            "div",
-            { class: "wz-gl-votes" },
-            button("\u25B2", () => vote(1), { title: "Like", cls: v === 1 ? "wz-gl-on" : "" }),
-            h("span", { class: "wz-gl-score", text: String(e.score) }),
-            button("\u25BC", () => vote(-1), { title: "Dislike", cls: v === -1 ? "wz-gl-on" : "" })
-          )
-        );
-      }));
-      return h("div", {}, head, grid);
     }
     return {
       el: panel,
@@ -13060,8 +13330,8 @@ ${TILE_CSS}
   }
   function addFooterButton() {
     const friends = document.querySelector("a span.nbFriends");
-    const item = friends && friends.closest("li");
-    if (!item) return false;
+    const item2 = friends && friends.closest("li");
+    if (!item2) return false;
     injectCardMakerStyle();
     footerButton = document.createElement("li");
     footerButton.id = "wz-cardmaker-btn";
@@ -13080,7 +13350,7 @@ ${TILE_CSS}
       toggleCardMaker();
     });
     footerButton.appendChild(a);
-    item.parentNode.insertBefore(footerButton, item);
+    item2.parentNode.insertBefore(footerButton, item2);
     return true;
   }
   function initCardMaker(plugin) {
@@ -15155,10 +15425,10 @@ ${TILE_CSS}
     if (!(el3 instanceof Element) || el3.tagName !== "IMG") return null;
     return RARITIES.find((r) => el3.classList.contains(r)) || null;
   }
-  function isOwnEquipped(item, el3) {
+  function isOwnEquipped(item2, el3) {
     if (!(el3 instanceof Element) || location.pathname.startsWith("/Spectate")) return false;
-    if (item.type === "avatar") return el3.id === "yourAvatar";
-    if (item.type === "profile-skin") {
+    if (item2.type === "avatar") return el3.id === "yourAvatar";
+    if (item2.type === "profile-skin") {
       try {
         const selfId = getPageWindow().selfId;
         return selfId != null && el3.id === `user${selfId}`;
@@ -15168,8 +15438,8 @@ ${TILE_CSS}
     }
     return false;
   }
-  function isFreeAvatar(item) {
-    return item.type === "avatar" && (item.rarity === "COMMON" || item.rarity === "BASE");
+  function isFreeAvatar(item2) {
+    return item2.type === "avatar" && (item2.rarity === "COMMON" || item2.rarity === "BASE");
   }
   function isFreeEmote(file) {
     try {
@@ -15280,27 +15550,27 @@ ${TILE_CSS}
     menu = null;
     return was;
   }
-  function thumb(item) {
+  function thumb(item2) {
     const img = document.createElement("img");
-    img.src = imageUrl(item.type, item.file);
+    img.src = imageUrl(item2.type, item2.file);
     img.alt = "";
-    if (item.type === "profile-skin") img.className = "wz-wl-wide";
+    if (item2.type === "profile-skin") img.className = "wz-wl-wide";
     return img;
   }
-  function openMenu(item, x, y) {
+  function openMenu(item2, x, y) {
     closeWishlistMenu();
-    const pinned = isPinned(item.key);
-    const free = item.type === "emote" && isFreeEmote(item.file) || isFreeAvatar(item);
-    const owned = !free && (item.own || isKnownOwned(item.key));
+    const pinned = isPinned(item2.key);
+    const free = item2.type === "emote" && isFreeEmote(item2.file) || isFreeAvatar(item2);
+    const owned = !free && (item2.own || isKnownOwned(item2.key));
     menu = document.createElement("ul");
     menu.className = "wz-wl-menu";
     const head = document.createElement("header");
     const text = document.createElement("div");
-    text.append(item.name);
+    text.append(item2.name);
     const sub = document.createElement("small");
-    sub.textContent = TYPE_INFO[item.type].label;
+    sub.textContent = TYPE_INFO[item2.type].label;
     text.append(sub);
-    head.append(thumb(item), text);
+    head.append(thumb(item2), text);
     const li = document.createElement("li");
     if ((free || owned) && !pinned) {
       li.textContent = free ? "Free for everyone - can't be pinned" : "Already Owned";
@@ -15311,8 +15581,8 @@ ${TILE_CSS}
       li.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (isPinned(item.key)) removeItem2(item.key);
-        else addItem(item);
+        if (isPinned(item2.key)) removeItem2(item2.key);
+        else addItem(item2);
         closeWishlistMenu();
       });
     }
@@ -15330,11 +15600,11 @@ ${TILE_CSS}
         e.preventDefault();
         return;
       }
-      const item = findCosmetic(e.target);
-      if (!item) return;
+      const item2 = findCosmetic(e.target);
+      if (!item2) return;
       e.preventDefault();
       e.stopPropagation();
-      openMenu(item, e.clientX, e.clientY);
+      openMenu(item2, e.clientX, e.clientY);
     }, true);
     document.addEventListener("mousedown", (e) => {
       if (menu && e.button === 0 && !menu.contains(e.target)) closeWishlistMenu();
@@ -15875,7 +16145,7 @@ ${TILE_CSS}
     return artifactList;
   }
   var norm = (s) => String(s || "").toLowerCase().replace(/&amp;/g, "&").replace(/[^a-z0-9]/g, "");
-  function tr(key2, ...args) {
+  function tr2(key2, ...args) {
     try {
       const v = page$().i18n(key2, ...args);
       if (!v || v === key2) return "";
@@ -16000,17 +16270,17 @@ ${TILE_CSS}
     const codeNames = /* @__PURE__ */ new Map();
     if (hasI18n()) {
       const kwCode = (id, override) => `{{KW:${id.toUpperCase().replace(/-/g, "_")}${override ? `|override=${override}` : ""}}}`;
-      (R.keywords || []).forEach((id) => add(tr(`kw-${id}`), kwCode(id)));
+      (R.keywords || []).forEach((id) => add(tr2(`kw-${id}`), kwCode(id)));
       (R.legacyKeywords || []).forEach(([word, modern]) => {
         const own = word.toLowerCase().replace(/'/g, "").replace(/ /g, "-");
         if (cap.has(word.toLowerCase())) return;
-        const code = tr(`kw-${own}`) ? kwCode(own, word) : modern && tr(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`;
+        const code = tr2(`kw-${own}`) ? kwCode(own, word) : modern && tr2(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`;
         add(word, code);
       });
       uniq([...R.enchantments || [], ...knownKeys("enchant-")]).forEach((id) => {
         const code = id.toUpperCase().replace(/-/g, "_");
-        const one = tr(`enchant-${id}`, 1);
-        add(tr(`enchant-${id}`, 2), `{{ENCHANT:${code}|2}}`);
+        const one = tr2(`enchant-${id}`, 1);
+        add(tr2(`enchant-${id}`, 2), `{{ENCHANT:${code}|2}}`);
         add(one, `{{ENCHANT:${code}|1}}`);
         if (!one) {
           const words = id.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
@@ -16020,14 +16290,14 @@ ${TILE_CSS}
       });
       (R.tribes || []).forEach((id) => {
         const code = id.toUpperCase().replace(/-/g, "_");
-        add(tr(`tribe-${id}`, 2), `{{TRIBE:${code}|2}}`);
-        add(tr(`tribe-${id}`, 1), `{{TRIBE:${code}|1}}`);
+        add(tr2(`tribe-${id}`, 2), `{{TRIBE:${code}|2}}`);
+        add(tr2(`tribe-${id}`, 1), `{{TRIBE:${code}|1}}`);
       });
-      (R.souls || []).forEach((id) => add(tr(`soul-${id}`), `{{SOUL:${id.toUpperCase()}}}`));
-      (R.legacyWithColon || []).forEach(([word, modern]) => colonCodes.set(word, tr(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`));
+      (R.souls || []).forEach((id) => add(tr2(`soul-${id}`), `{{SOUL:${id.toUpperCase()}}}`));
+      (R.legacyWithColon || []).forEach(([word, modern]) => colonCodes.set(word, tr2(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`));
       (await artifacts2()).forEach((a) => {
         if (!a || a.id == null) return;
-        const name = tr(`artifact-name-${a.id}`) || a.name;
+        const name = tr2(`artifact-name-${a.id}`) || a.name;
         addExact(name, `{{ARTIFACT:${a.id}}}`);
         [name, a.name].forEach((n) => {
           if (n) artIds.set(norm(n), a.id);
@@ -16036,12 +16306,12 @@ ${TILE_CSS}
       });
       allCards().forEach((c) => {
         const id = c.fixedId || c.id;
-        const name = tr(`card-name-${id}`, 1) || c.name;
+        const name = tr2(`card-name-${id}`, 1) || c.name;
         if (notLinks.has(name)) return;
         addExact(name, `{{CARD:${id}|1}}`);
-        addExact(tr(`card-name-${id}`, 2), `{{CARD:${id}|2}}`);
+        addExact(tr2(`card-name-${id}`, 2), `{{CARD:${id}|2}}`);
         if (!/s$/i.test(name)) addExact(`${name}s`, `{{CARD:${id}|2}}`);
-        codeNames.set(`c:${id}`, uniq([tr(`card-name-${id}`, 2), `${name}s`, name, c.name].filter(Boolean)));
+        codeNames.set(`c:${id}`, uniq([tr2(`card-name-${id}`, 2), `${name}s`, name, c.name].filter(Boolean)));
       });
     }
     const capPattern = (w) => [...w].map((ch, i) => {
@@ -16440,13 +16710,13 @@ ${TILE_CSS}
       }
       const table = el2("table", "wz-ch-myreports-list");
       list.forEach((r) => {
-        const tr2 = el2("tr");
-        tr2.innerHTML = `<td>${escHtml(r.name)}</td><td>${escHtml(r.label)}</td><td class="wz-ch-dim">${r.sent ? "sent" : "not sent"}</td><td></td>`;
-        tr2.lastChild.appendChild(button2("\xD7", "btn-xs btn-default", () => {
+        const tr3 = el2("tr");
+        tr3.innerHTML = `<td>${escHtml(r.name)}</td><td>${escHtml(r.label)}</td><td class="wz-ch-dim">${r.sent ? "sent" : "not sent"}</td><td></td>`;
+        tr3.lastChild.appendChild(button2("\xD7", "btn-xs btn-default", () => {
           removeReport(r.key);
           render2();
         }));
-        table.appendChild(tr2);
+        table.appendChild(tr3);
       });
       const unsent = list.filter((r) => !r.sent);
       const toSend = unsent.length ? unsent : list;
@@ -16641,19 +16911,19 @@ ${note}` : "");
       const newest = index && index.newestVersion;
       setQuantity(nowEl, versionLabel(newest ? { ...newest, guessed: true } : null), "Today's version - when it last changed isn't recorded.");
     }
-    const grid = document.createElement("div");
-    grid.className = "cardsPreview no-hover wz-ch-grid";
-    grid.style.cssText = `display:grid;grid-template-columns:repeat(${PER_ROW},max-content);gap:38px 8px;justify-content:center;padding-bottom:28px;`;
+    const grid2 = document.createElement("div");
+    grid2.className = "cardsPreview no-hover wz-ch-grid";
+    grid2.style.cssText = `display:grid;grid-template-columns:repeat(${PER_ROW},max-content);gap:38px 8px;justify-content:center;padding-bottom:28px;`;
     const built = index && index.builtAt || "";
     versions.forEach((v) => {
       const el3 = drawVersion(base, v, f, currentDescHtml);
       tagNode(el3, { kind: "c", id: base.id, name: base.name, label: versionLabel(v.version).text, shown: seen(base, v), built });
-      grid.appendChild(el3);
+      grid2.appendChild(el3);
     });
     tagNode(nowEl, { kind: "c", id: base.id, name: base.name, label: "today", shown: seen(base, { ...base, atk: base.attack, textKnown: false }), built });
-    grid.appendChild(nowEl);
+    grid2.appendChild(nowEl);
     const node = document.createElement("div");
-    node.appendChild(grid);
+    node.appendChild(grid2);
     const foot = document.createElement("div");
     foot.className = "wz-ch-foot";
     const src = ["Undercards Wiki (Version History"];
@@ -16670,8 +16940,8 @@ ${note}` : "");
     node.appendChild(foot);
     const fit2 = () => {
       const avail = node.clientWidth;
-      const need = grid.scrollWidth;
-      grid.style.zoom = need > avail && avail > 0 ? String(Math.max(0.5, avail / need)) : "";
+      const need = grid2.scrollWidth;
+      grid2.style.zoom = need > avail && avail > 0 ? String(Math.max(0.5, avail / need)) : "";
     };
     const wikiUrl = `https://undercards.fandom.com/wiki/${data2 && data2.pvTitle ? data2.pvTitle : `${base.name.replace(/ /g, "_")}/Previous_Versions`}`;
     return { node, fit: fit2, wikiUrl };
@@ -16697,10 +16967,10 @@ ${note}` : "");
     const s = String(q);
     if (/^\d+$/.test(s)) return list.find((a) => String(a.id) === s) || null;
     const n = norm(s);
-    return list.find((a) => norm(a.name) === n || norm(tr(`artifact-name-${a.id}`)) === n) || list.find((a) => norm(a.image) === n) || null;
+    return list.find((a) => norm(a.name) === n || norm(tr2(`artifact-name-${a.id}`)) === n) || list.find((a) => norm(a.image) === n) || null;
   }
   function row(ver, rarity, f, todayName, todayHtml, target) {
-    const tr2 = document.createElement("tr");
+    const tr22 = document.createElement("tr");
     const v = document.createElement("td");
     v.className = "wz-ch-art-ver wz-ch-badge-spot";
     const label = versionLabel(ver.version);
@@ -16715,16 +16985,16 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     const oldName = ver.name && norm(ver.name) !== norm(todayName) ? `<span class="wz-ch-art-oldname">(${escHtml(ver.name)})</span>` : "";
     const body = todayHtml !== void 0 ? todayHtml : ver.textKnown && ver.text ? formatText2(ver.text, f, ver.version && ver.version.key) : "?";
     t.innerHTML = `<div class="cardDesc wz-ch-art-desc"><div>${oldName}${body}</div></div>`;
-    tr2.append(v, r, t);
+    tr22.append(v, r, t);
     if (target) {
       const d = document.createElement("div");
       d.innerHTML = body;
-      tagNode(tr2, { ...target, label: todayHtml !== void 0 ? "today" : label.text, shown: `${rarity || "?"}: ${ver.name && norm(ver.name) !== norm(todayName) ? `(${ver.name}) ` : ""}${d.textContent.replace(/\s+/g, " ").trim()}`.slice(0, 140) });
+      tagNode(tr22, { ...target, label: todayHtml !== void 0 ? "today" : label.text, shown: `${rarity || "?"}: ${ver.name && norm(ver.name) !== norm(todayName) ? `(${ver.name}) ` : ""}${d.textContent.replace(/\s+/g, " ").trim()}`.slice(0, 140) });
     }
-    return tr2;
+    return tr22;
   }
   function artifactHistoryView(a, data2, f, index) {
-    const todayName = tr(`artifact-name-${a.id}`, 1) || a.name;
+    const todayName = tr2(`artifact-name-${a.id}`, 1) || a.name;
     const todayHtml = trHtml(`artifact-${a.id}`) || (a.description ? formatText2(a.description, f) : "?");
     const today = todayArtifactRarity(a);
     const versions = (data2 && data2.versions ? data2.versions : []).map((v) => ({ ...v }));
@@ -17461,19 +17731,19 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     function buildRowGrid(els, rowTolerance = 28) {
       const withRect = els.map((el3) => ({ el: el3, r: el3.getBoundingClientRect() })).sort((a, b) => a.r.top - b.r.top);
       const rows = [];
-      for (const item of withRect) {
-        let row2 = rows.find((r) => Math.abs(r.top - item.r.top) <= rowTolerance);
+      for (const item2 of withRect) {
+        let row2 = rows.find((r) => Math.abs(r.top - item2.r.top) <= rowTolerance);
         if (!row2) {
-          row2 = { top: item.r.top, items: [] };
+          row2 = { top: item2.r.top, items: [] };
           rows.push(row2);
         }
-        row2.items.push(item);
+        row2.items.push(item2);
       }
       rows.forEach((r) => r.items.sort((a, b) => a.r.left - b.r.left));
       return rows.map((r) => r.items.map((i) => i.el));
     }
-    function gridFlat(grid) {
-      return grid ? grid.flat() : [];
+    function gridFlat(grid2) {
+      return grid2 ? grid2.flat() : [];
     }
     let placingOrigin = null;
     function beginCardDrag(card) {
@@ -18013,8 +18283,8 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         fieldSubmenu = {
           items: openPresetMenu.rows,
           index: openPresetMenu.activeIndex,
-          onConfirm: (item) => {
-            if (item) triggerElementClick(item);
+          onConfirm: (item2) => {
+            if (item2) triggerElementClick(item2);
           },
           onCancel: () => openPresetMenu.close(),
           isAlive: () => !!getPresetMenuState()
@@ -18333,9 +18603,9 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       });
     }
     [navbarGroup, footbarGroup].filter(Boolean).forEach((g) => {
-      g.container.querySelectorAll("a").forEach((item) => {
-        resolveHoverStyle(item);
-        item.querySelectorAll("img").forEach(resolveHoverStyle);
+      g.container.querySelectorAll("a").forEach((item2) => {
+        resolveHoverStyle(item2);
+        item2.querySelectorAll("img").forEach(resolveHoverStyle);
       });
     });
     if (isDebugTextEnabled()) console.log(`[Wizascript Controller] resolved hover styles for ${hoverStyleMap.size} curated element(s)`);
@@ -19149,8 +19419,8 @@ ${btnLabel(0)}/\u2192 open category   ${btnLabel(1)} close dialog   ${btnLabel(4
               dpadHeld = { up, down, left, right };
               refreshHighlight();
               if (btn(0) && !btnHeld[0]) {
-                const item = fieldSubmenu.items[fieldSubmenu.index];
-                fieldSubmenu.onConfirm(item);
+                const item2 = fieldSubmenu.items[fieldSubmenu.index];
+                fieldSubmenu.onConfirm(item2);
                 fieldSubmenu = null;
               } else if ((btn(1) || left) && !wasLeftOrB1Held) {
                 fieldSubmenu.onCancel();
@@ -19400,8 +19670,8 @@ d-pad move   ${label("tlSelect")} pick up / press   ${label("tlQuickSend")} send
               dpadHeld = { up, down, left, right };
               refreshHighlight();
               const targetSlot = placingGrid[placingRow][placingCol];
-              const tr2 = targetSlot.getBoundingClientRect();
-              const tcx = tr2.left + tr2.width / 2, tcy = tr2.top + tr2.height / 2;
+              const tr3 = targetSlot.getBoundingClientRect();
+              const tcx = tr3.left + tr3.width / 2, tcy = tr3.top + tr3.height / 2;
               fire(targetSlot, "pointermove", PointerEvent, tcx, tcy, 0, 1);
               fire(targetSlot, "mousemove", MouseEvent, tcx, tcy, 0, 1);
               if (btn(0) && !btnHeld[0]) {

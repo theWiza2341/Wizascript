@@ -15,7 +15,7 @@ Make your own custom cards without leaving Undercards, and keep chatting while y
 ### New: Card Gallery (preview)
 Share the cards you make. It's part of the Card Maker: press **Gallery** in its title bar.
 - **Read from this editor** lists every group and card you've made in the editor that's open. Tick the ones to add, one by one or a whole group as a set. UC Editor group files (.uceditor) and PNG downloads can be added too.
-- Link parts into sets (A, B, C…), rename them, and preview your request. **Browse** shows how they'll look, as a compact grid: sets show only their name, likes and dislikes sit under each card or set, and hovering a card shows it bigger with its details. All Time / This Month / This Week.
+- Link parts into sets (A, B, C…), rename them, and preview your request. **Browse** shows how they'll look, in four lists (**Newest**, This Week, This Month, All Time) as a compact grid: sets show only their name, likes and dislikes sit under each card or set, and hovering a card shows it bigger with who posted it and when.
 - **Size** (S / M / L / Fill) zooms the cards. Fill stretches them to the window's width.
 - Cards use the game's DTM-Mono font and card frames.
 - The gallery isn't live yet: nothing is sent, and Browse's dates and scores are made up. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.

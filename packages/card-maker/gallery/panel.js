@@ -19,6 +19,7 @@ import { h, button } from "./dom.js";
 import { tile, fitText, checkFrameImages, TILE_CSS } from "./render.js";
 import { partFromRaw, readUcEditorFile, picturesFromPng, readFile } from "./parts.js";
 import { getDraft, saveDraft, nextId, makeSet, tidySets, entries } from "./draft.js";
+import { browseView, allEntries, BROWSE_CSS } from "./browse.js";
 
 const STYLE_ID = "wizascript-cardgallery-style";
 const TYPES = ["Monster", "Spell", "Enchantment", "Artifact"];
@@ -79,6 +80,7 @@ const CSS = `
 .wz-gl-hinfo b { font-size: 13px; }
 .wz-gl-hinfo .dim { opacity: .7; }
 ${TILE_CSS}
+${BROWSE_CSS}
 `;
 
 function injectStyle() {
@@ -99,7 +101,9 @@ export function buildGalleryPanel({ requestRead, editorLabel }) {
   injectStyle();
   const draft = getDraft();
   let tab = draft.parts.length ? "browse" : "submit";
-  let browseWindow = "all";
+  const proto = draft.browseProto || {};
+  const browse = { list: "new", layout: proto.layout || "slides", samples: proto.samples !== false, dir: null, shelfOpen: null };
+  const sampleVotes = {};
   let read = null; // { source, label, groups: [{ name, parts: [raw + pick] }] }
   let readTimer = null;
   let preview = "";
@@ -148,14 +152,9 @@ export function buildGalleryPanel({ requestRead, editorLabel }) {
   let hoverFor = null;
   function showHover(anchor, p, e) {
     hoverFor = anchor;
-    const set = e && e.kind === "set" ? e : null;
-    const info = h("div", { class: "wz-gl-hinfo" },
-      h("b", { text: p.name || "(no name)" }), h("br"),
-      h("span", { class: "dim", text: p.type + (p.type === "Monster" ? ` · ${p.cost ?? "?"} cost, ${p.atk ?? "?"}/${p.hp ?? "?"}` : p.cost !== null && p.cost !== undefined && p.type !== "Artifact" ? ` · ${p.cost} cost` : "") }),
-      set ? [h("br"), "Set: ", h("b", { text: set.title || "(no name)" }), h("span", { class: "dim", text: ` (${set.parts.length} parts)` })] : null,
-      h("br"), h("span", { class: "dim", text: "By " }), "you", h("span", { class: "dim", text: " (preview)" }),
-      e ? [h("br"), h("span", { class: "dim", text: `Posted ${e.days} day${e.days === 1 ? "" : "s"} ago · score ${e.score}` })] : null,
-      h("br"), h("span", { class: "dim", text: `From ${SOURCE_LABEL[p.source] || p.source}${p.editorGroup ? " · " + p.editorGroup : ""}` }));
+    const info = e ? h("div", { class: "wz-gl-hinfo" },
+      h("span", { class: "dim", text: "By " }), h("b", { text: e.author || "you" }), e.mine ? h("span", { class: "dim", text: " (not posted yet)" }) : null,
+      h("br"), h("span", { class: "dim", text: e.days ? `Posted ${e.days} day${e.days === 1 ? "" : "s"} ago` : "Posted today" })) : null;
     const card = h("div", { class: "wz-gl-hcard" }, tile(p));
     hover.replaceChildren(card, info);
     hover.classList.add("on");
@@ -184,7 +183,7 @@ export function buildGalleryPanel({ requestRead, editorLabel }) {
       button("Browse", () => { tab = "browse"; render(); }, { cls: tab === "browse" ? "wz-gl-on" : "" }),
       button("Submit", () => { tab = "submit"; render(); }, { cls: tab === "submit" ? "wz-gl-on" : "" }),
       status, h("span", { class: "wz-gl-grow" }), sizeButtons());
-    content.replaceChildren(tab === "browse" ? browseView() : submitView());
+    content.replaceChildren(tab === "browse" ? browseTab() : submitView());
     applyZoom();
     requestAnimationFrame(refit);
   }
@@ -348,34 +347,21 @@ export function buildGalleryPanel({ requestRead, editorLabel }) {
   });
 
   // ---- Browse (preview) ----
-  // A compact grid: each single card, or each set's cards in one row with
-  // the set's name above. Votes sit underneath; the rest is in the hover card.
-  function browseView() {
-    const DAY = 864e5, now = Date.now();
-    const seed = (s) => { let x = 7; for (const c of s) x = (x * 31 + c.charCodeAt(0)) >>> 0; return x; };
-    const list = entries().map((e) => {
-      const n = seed(e.key + (e.title || ""));
-      return { ...e, days: n % 45, base: ((n >> 8) % 60) - 10 };
-    }).filter((e) => browseWindow === "all" || e.days < (browseWindow === "month" ? 30 : 7));
-    list.forEach((e) => { e.score = e.base + (draft.votes[e.key] || 0); });
-    list.sort((a, b) => b.score - a.score);
-    const head = h("div", { class: "wz-gl-bar" },
-      [["all", "All Time"], ["month", "This Month"], ["week", "This Week"]].map(([k, l]) => button(l, () => { browseWindow = k; render(); }, { cls: k === browseWindow ? "wz-gl-on" : "" })),
-      h("span", { class: "wz-gl-note", style: { margin: "0 0 0 6px" }, text: "Preview of your own parts. Dates and scores are made up until it's live." }));
-    if (!list.length) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing here yet. Add parts in Submit." }));
-    const grid = h("div", { class: "wz-gl-grid" }, list.map((e) => {
-      const v = draft.votes[e.key] || 0;
-      const vote = (dir) => { draft.votes[e.key] = v === dir ? 0 : dir; saveDraft(); render(); };
-      const isSet = e.kind === "set";
-      return h("div", { class: `wz-gl-item${isSet ? " set" : ""}`, "data-key": e.key },
-        isSet ? h("div", { class: "wz-gl-setname", text: e.title || "(no name)", title: e.title || "" }) : null,
-        h("div", { class: "wz-gl-row" }, e.parts.map((p) => hoverable(h("div", { class: "wz-gl-zoom" }, tile(p)), p, e))),
-        h("div", { class: "wz-gl-votes" },
-          button("▲", () => vote(1), { title: "Like", cls: v === 1 ? "wz-gl-on" : "" }),
-          h("span", { class: "wz-gl-score", text: String(e.score) }),
-          button("▼", () => vote(-1), { title: "Dislike", cls: v === -1 ? "wz-gl-on" : "" })));
-    }));
-    return h("div", {}, head, grid);
+  function browseTab() {
+    draft.browseProto = { layout: browse.layout, samples: browse.samples };
+    saveDraft();
+    return browseView({
+      state: browse,
+      entries: allEntries(entries(), { samples: browse.samples, votes: draft.votes, sampleVotes }),
+      hoverable,
+      rerender: render,
+      vote(e, dir) {
+        const store = e.sample ? sampleVotes : draft.votes;
+        store[e.key] = (store[e.key] || 0) === dir ? 0 : dir;
+        if (!e.sample) saveDraft();
+        render();
+      }
+    });
   }
 
   return {

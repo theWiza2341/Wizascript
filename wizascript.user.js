@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.6.2
+// @version      1.7.0
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
 // @match        https://*.undercards.net/*
+// @match        https://undercard.feildmaster.com/*
 // @icon         https://i.imgur.com/FOIUHej.png
 // @updateURL    https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @downloadURL  https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
@@ -17,6 +18,98 @@
 // @connect      raw.githubusercontent.com
 // ==/UserScript==
 
+if (location.hostname === "undercard.feildmaster.com") {
+(() => {
+  // packages/card-maker/storage.js
+  var HOTFIX_KEY = "wizascript.cardMaker.hotfix";
+
+  // packages/card-maker/editors.js
+  var EDITORS = {
+    feildmaster: {
+      label: "feildmaster's Template Editor",
+      url: "https://undercard.feildmaster.com/",
+      origin: "https://undercard.feildmaster.com"
+    },
+    sernon: {
+      label: "UC Editor (sernon158)",
+      url: "https://sernon158.github.io/uc-editor/",
+      origin: "https://sernon158.github.io"
+    }
+  };
+  var EDITOR_LABELS = Object.values(EDITORS).map((e) => e.label);
+  var FRAME_MESSAGE = "wizascript-card-maker";
+
+  // packages/card-maker/frame.js
+  var TOAST_FILE = "/resources/vendor/simpletoast.core.js";
+  var FRAME_CHECK = "if (window !== window.top) return;";
+  var GIVE_UP_MS = 15e3;
+  var page = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+  var sleep = (ms) => new Promise((ok) => setTimeout(ok, ms));
+  var drawn = () => !!document.querySelector(".element");
+  var started = () => !document.getElementById("loading");
+  function runInPage(code) {
+    const s = document.createElement("script");
+    s.textContent = code;
+    (document.head || document.documentElement).appendChild(s);
+    s.remove();
+  }
+  async function installToast() {
+    try {
+      const src = await (await fetch(location.origin + TOAST_FILE, { cache: "no-store" })).text();
+      if (!src.includes(FRAME_CHECK)) return false;
+      runInPage(src.replace(FRAME_CHECK, ""));
+      return typeof page.SimpleToast === "function";
+    } catch (e) {
+      console.warn("[Wizascript Card Maker] hotfix couldn't load SimpleToast", e);
+      return false;
+    }
+  }
+  function runInsideEditor() {
+    if (window === window.top) return;
+    const from = location.ancestorOrigins && location.ancestorOrigins[0] || document.referrer || "";
+    let parentOrigin;
+    try {
+      parentOrigin = new URL(from).origin;
+    } catch (e) {
+      return;
+    }
+    if (!/^https:\/\/([a-z0-9-]+\.)*undercards\.net$/.test(parentOrigin)) return;
+    const report = (status, extra = {}) => window.parent.postMessage({ tag: FRAME_MESSAGE, status, ...extra }, parentOrigin);
+    const hotfix = (() => {
+      try {
+        return GM_getValue(HOTFIX_KEY, "") === "1";
+      } catch (e) {
+        return false;
+      }
+    })();
+    (async () => {
+      let hotfixed = false;
+      if (hotfix && typeof page.SimpleToast !== "function") hotfixed = await installToast();
+      const t0 = Date.now();
+      let restarted = false;
+      while (Date.now() - t0 < GIVE_UP_MS) {
+        if (drawn()) return report("ok", { hotfixed });
+        if (started()) {
+          await sleep(1500);
+          if (drawn()) return report("ok", { hotfixed });
+          if (hotfixed && !restarted) {
+            restarted = true;
+            runInPage('import("/resources/modules/UndercardEditor.js").then((m) => m.default.init());');
+            await sleep(1500);
+            continue;
+          }
+          return report("broken", { hotfixed, toast: typeof page.SimpleToast === "function" });
+        }
+        await sleep(250);
+      }
+      report("broken", { hotfixed, toast: typeof page.SimpleToast === "function" });
+    })();
+  }
+
+  // card-maker-frame.js
+  runInsideEditor();
+})();
+} else {
 (() => {
   // packages/core/page-window.js
   function getPageWindow() {
@@ -24,7 +117,7 @@
   }
 
   // packages/core/version.js
-  var SUITE_VERSION = "1.6.2";
+  var SUITE_VERSION = "1.7.0";
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
@@ -197,6 +290,14 @@
       usesKeybinds: true
     },
     {
+      id: "cardMaker",
+      category: "Plugins",
+      name: "Card Maker",
+      key: "cardMaker.enabled",
+      note: "Make custom cards in a community card editor without leaving the game.",
+      usesKeybinds: true
+    },
+    {
       id: "controller",
       category: "Plugins",
       name: "Controller Support",
@@ -312,7 +413,8 @@
     "UC TV": "ucTv",
     "Notepad": "notepad",
     "Card Tracker": "cardTracker",
-    "Tier List": "tierList"
+    "Tier List": "tierList",
+    "Card Maker": "cardMaker"
   };
   function pluginIdForLabel(label) {
     return LABEL_TO_PLUGIN[label] || null;
@@ -751,6 +853,15 @@
   var CHANGELOG_default = `# Changelog
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
+
+## 1.7.0
+
+### New: Card Maker
+Make your own custom cards without leaving Undercards, and keep chatting while you do. Turn it on in the **Plugins** list.
+- Click the new **Pack** button in the footer, left of Friends, or press **Primary + K** (Ctrl+K by default), to show or hide the Card Maker window. Move it by its title bar, resize it from any edge, fill the screen with **\u25A1**, or shrink it to its title bar with **_**.
+- It shows one of the community card editors: **feildmaster's Template Editor** (the default) or **UC Editor** by sernon158. Pick one in the window's title bar or on the Card Maker tab. Thanks to both of them for letting Wizascript show their editors.
+- The editors are their authors' own sites, loaded as they are. Cards you make in the Card Maker are saved separately from the same editor opened on its own site. **\u2197** opens the editor's site in a new tab.
+- If feildmaster's editor stays black inside the Card Maker, a note in the window offers a **hotfix** (also on the Card Maker tab). It's a stopgap until his editor is updated.
 
 ## 1.6.2
 
@@ -1285,8 +1396,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       const hit = FEATURE_LABELS.find(([p]) => (GM_PREFIX2 + k).startsWith(GM_PREFIX2 + p));
       if (hit) found.add(hit[1]);
     });
-    const settings4 = Object.keys(backup.ls || {}).length;
-    const parts = [`${settings4} setting${settings4 === 1 ? "" : "s"}`];
+    const settings5 = Object.keys(backup.ls || {}).length;
+    const parts = [`${settings5} setting${settings5 === 1 ? "" : "s"}`];
     if (found.size) parts.push(`saved data for ${Array.from(found).join(", ")}`);
     return parts.join(", plus ");
   }
@@ -2507,7 +2618,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key)
     );
     controllerEnabledSetting = controllerEnabledSettingIn;
-    const settings4 = createFeatureSettings(plugin, "controller", {
+    const settings5 = createFeatureSettings(plugin, "controller", {
       tab: "Controller Support",
       visible: () => isPluginEnabled("controller"),
       categories: true
@@ -2516,61 +2627,61 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     const GENERAL = "General";
     const IN_GAME = "In-Game Inputs";
     const hiddenUnless = (pluginId) => () => pluginId ? !isPluginEnabled(pluginId) : false;
-    settings4.add("detectController", {
+    settings5.add("detectController", {
       name: "Detect Controller",
       note: "Click if your controller isn't responding.",
       type: "text",
       default: "Click to Detect Controller (WebHID)",
       category: SETUP
     });
-    settings4.add("presetSelector", {
+    settings5.add("presetSelector", {
       name: "Settings Preset",
       note: "Click to switch presets.",
       type: "text",
       default: getPresetName(getActivePreset()),
       category: SETUP
     });
-    settings4.add("presetName", {
+    settings5.add("presetName", {
       name: "Preset Name",
       note: "Renames whichever preset is currently selected above.",
       type: "text",
       default: getPresetName(getActivePreset()),
       category: SETUP
     });
-    settings4.add("resetPreset", {
+    settings5.add("resetPreset", {
       name: "Restore Settings to Default",
       note: "Double Click to reset selected preset settings",
       type: "text",
       default: "Double Click to Reset",
       category: SETUP
     });
-    debugTextEnabledSetting = settings4.add("debugTextEnabled", {
+    debugTextEnabledSetting = settings5.add("debugTextEnabled", {
       name: "Enable Debug Text",
       type: "boolean",
       default: false,
       category: GENERAL
     });
-    highlightColorSetting = settings4.add("highlightColor", {
+    highlightColorSetting = settings5.add("highlightColor", {
       name: "Selection Outline Color",
       type: "select",
       data: HIGHLIGHT_COLOR_PRESETS,
       default: DEFAULT_HIGHLIGHT_COLOR,
       category: GENERAL
     });
-    settings4.add("controllerPrimary", {
+    settings5.add("controllerPrimary", {
       name: "Controller Primary",
       note: "Click to remap. Hold for combos below, same as Wizascript's own Primary Key.",
       type: "text",
       default: buttonToDisplay(DEFAULT_PRIMARY_BUTTON),
       category: GENERAL
     });
-    settings4.add("__info_openSettings", { name: "Double Tap Primary \u2192 Open Wizascript Settings", type: "text", default: "", category: GENERAL });
+    settings5.add("__info_openSettings", { name: "Double Tap Primary \u2192 Open Wizascript Settings", type: "text", default: "", category: GENERAL });
     const seenLabels = /* @__PURE__ */ new Set();
     CONTROLLER_ACTIONS.forEach((action) => {
       if (!seenLabels.has(action.packageLabel)) {
         seenLabels.add(action.packageLabel);
         if (action.packageLabel === "UC TV") {
-          settings4.add("channelGuide", {
+          settings5.add("channelGuide", {
             name: "Channel Guide (hold)",
             type: "text",
             default: buttonToDisplay(null),
@@ -2579,7 +2690,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
           });
         }
       }
-      settings4.add(action.key, {
+      settings5.add(action.key, {
         name: action.name + " - Primary + <btn>",
         type: "text",
         default: buttonToDisplay(action.defaultButton),
@@ -2588,7 +2699,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       });
     });
     TIER_LIST_PAD_ACTIONS.forEach((action) => {
-      settings4.add("tierlistPad_" + action.key, {
+      settings5.add("tierlistPad_" + action.key, {
         name: action.name,
         note: "While the tier list is open. The d-pad moves around it.",
         type: "text",
@@ -2598,7 +2709,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       });
     });
     HARDWARE_SHORTCUT_ACTIONS.forEach((action) => {
-      settings4.add("shortcut_" + action.key, {
+      settings5.add("shortcut_" + action.key, {
         name: action.name,
         type: "text",
         default: buttonToDisplay(HARDWARE_SHORTCUT_DEFAULTS[action.key]),
@@ -2735,6 +2846,17 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       ].concat(isPluginEnabled("controller") ? [
         `Controller: Primary + ${ctl(getBoundButton("toggleTierList"))} opens it. The d-pad moves around; ${ctl(getBoundTierListButton("tlSelect"))} picks up / places, ${ctl(getBoundTierListButton("tlQuickSend"))} sends to a tier, ${ctl(getBoundTierListButton("tlJump"))} jumps between tiers and items, ${ctl(getBoundTierListButton("tlBack"))} cancels. Primary + ${ctl(getBoundButton("tierListFillScreen"))} fills the screen.`
       ] : [])
+    },
+    cardMaker: {
+      tab: "Card Maker",
+      pages: "every page",
+      summary: "Make custom cards in a community card editor, next to chat.",
+      points: () => [
+        `The <b>Pack</b> button in the footer (left of Friends) or ${key("toggleCardMaker", "KeyK")} shows/hides it. Drag its title bar to move it, its edges to resize it; <b>\u25A1</b> fills the screen, <b>_</b> shrinks it to its title bar.`,
+        "Pick <b>feildmaster's Template Editor</b> or <b>UC Editor</b> in its title bar. Both are their authors' own sites; <b>\u2197</b> opens the one you're using in a new tab.",
+        "Cards you make here are saved by the editor, separately from its own site. Use the editor's own download/upload to move them across.",
+        "If feildmaster's editor stays black, turn on the <b>hotfix</b> (on the Card Maker tab, or the note that appears in the window)."
+      ]
     }
   };
   function pluginName(id) {
@@ -2761,12 +2883,12 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     Object.entries(GUIDES).forEach(([id, g]) => {
       if (g.tab) {
         const categorised = g.tab === "Controller Support";
-        const settings4 = createFeatureSettings(plugin, "guide", {
+        const settings5 = createFeatureSettings(plugin, "guide", {
           tab: g.tab,
           visible: () => isPluginEnabled(id),
           categories: categorised
         });
-        settings4.add(id, {
+        settings5.add(id, {
           name: `How to use ${pluginName(id)}`,
           type: "text",
           default: "",
@@ -3011,26 +3133,26 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
 
   // packages/patch-maker/settings.js
   function registerPatchMakerSettings(plugin) {
-    const settings4 = createFeatureSettings(plugin, "patchmaker", {
+    const settings5 = createFeatureSettings(plugin, "patchmaker", {
       tab: "Patch Maker",
       visible: () => isPluginEnabled("patchMaker")
     });
     return {
-      settings: settings4,
+      settings: settings5,
       // The on/off switch itself now lives in the Plugins list (core/plugins.js).
       enabled: getPluginToggle("patchMaker"),
       // One suite-wide switch on the General tab since 1.5.0 (core/debug.js).
       debugLogging: debugLoggingSetting,
-      hideControls: settings4.add("hideControls", { name: "Hide Patch Maker controls", type: "boolean", default: false }),
-      cardHovers: settings4.add("enableCardHovers", { name: "Enable card hovers", type: "boolean", default: true }),
-      language: settings4.add("patchLanguage", {
+      hideControls: settings5.add("hideControls", { name: "Hide Patch Maker controls", type: "boolean", default: false }),
+      cardHovers: settings5.add("enableCardHovers", { name: "Enable card hovers", type: "boolean", default: true }),
+      language: settings5.add("patchLanguage", {
         name: "Select Language",
         type: "select",
         options: ["Auto / Default", "English", "French", "Spanish", "Portuguese", "Chinese", "Italian", "Polish", "German", "Russian"],
         default: "Auto / Default",
         onChange: () => location.reload()
       }),
-      openOnLoad: settings4.add("openPatchNotesOnPageLoad", { name: "Auto-Load Patch Maker", type: "boolean", default: false })
+      openOnLoad: settings5.add("openPatchNotesOnPageLoad", { name: "Auto-Load Patch Maker", type: "boolean", default: false })
     };
   }
 
@@ -4847,15 +4969,15 @@ Version: v${version}`;
     return matchesPage("/gameUpdates.jsp");
   }
   function initPatchMaker(plugin) {
-    const settings4 = registerPatchMakerSettings(plugin);
+    const settings5 = registerPatchMakerSettings(plugin);
     const logger4 = createLogger("PatchMaker");
     const originalWarn = logger4.warn.bind(logger4);
     const originalLog = logger4.log.bind(logger4);
     logger4.log = (...args) => {
-      if (settings4.debugLogging.value()) originalLog(...args);
+      if (settings5.debugLogging.value()) originalLog(...args);
     };
     logger4.warn = (...args) => {
-      if (settings4.debugLogging.value()) originalWarn(...args);
+      if (settings5.debugLogging.value()) originalWarn(...args);
     };
     let wordColors = { ...BASE_WORD_COLORS };
     let underlineTokens = [];
@@ -4866,16 +4988,16 @@ Version: v${version}`;
       version: FEATURE_VERSION,
       getWordColors: () => wordColors,
       getUnderlineTokens: () => underlineTokens,
-      getCardHoversEnabled: () => settings4.cardHovers.value(),
+      getCardHoversEnabled: () => settings5.cardHovers.value(),
       getCardNameMap: () => cardNameMap,
-      getHideControlsEnabled: () => settings4.hideControls.value(),
-      getOpenOnLoad: () => settings4.openOnLoad.value()
+      getHideControlsEnabled: () => settings5.hideControls.value(),
+      getOpenOnLoad: () => settings5.openOnLoad.value()
     });
-    settings4.hideControls.on((value) => overlay.setControlsHidden(value));
-    if (!settings4.enabled.value()) return;
+    settings5.hideControls.on((value) => overlay.setControlsHidden(value));
+    if (!settings5.enabled.value()) return;
     if (!isPatchNotesPage()) return;
     async function refreshLocalizedData() {
-      const languageLabel = settings4.language.value();
+      const languageLabel = settings5.language.value();
       const { tokens, localizedColors } = await buildLocalizedFormattingData(languageLabel, BASE_WORD_COLORS);
       underlineTokens = tokens;
       wordColors = { ...BASE_WORD_COLORS, ...localizedColors };
@@ -4889,22 +5011,22 @@ Version: v${version}`;
 
   // packages/true-hub-bridge/settings.js
   function registerTrueHubBridgeSettings(plugin) {
-    const settings4 = createFeatureSettings(plugin, "truehubbridge", {
+    const settings5 = createFeatureSettings(plugin, "truehubbridge", {
       tab: "True Hub Bridge",
       visible: () => isPluginEnabled("trueHub")
     });
     return {
-      settings: settings4,
+      settings: settings5,
       // The on/off switch itself now lives in the Plugins list (core/plugins.js).
       enabled: getPluginToggle("trueHub"),
       // One suite-wide switch on the General tab since 1.5.0 (core/debug.js).
       debugLogging: debugLoggingSetting,
-      autoOpen: settings4.add("autoOpenTrueHub", {
+      autoOpen: settings5.add("autoOpenTrueHub", {
         name: "Auto Open True Hub",
         type: "boolean",
         default: true
       }),
-      scrollPaging: settings4.add("enableScrollPaging", {
+      scrollPaging: settings5.add("enableScrollPaging", {
         name: "Enable Scroll Paging",
         type: "boolean",
         default: true
@@ -5981,22 +6103,22 @@ Version: v${version}`;
     return matchesPage("/Hub");
   }
   function initTrueHubBridge(plugin) {
-    const settings4 = registerTrueHubBridgeSettings(plugin);
-    if (!settings4.enabled.value()) return;
+    const settings5 = registerTrueHubBridgeSettings(plugin);
+    if (!settings5.enabled.value()) return;
     if (!isHubPage()) return;
     const logger4 = createLogger("TrueHubBridge");
     const originalWarn = logger4.warn.bind(logger4);
     const originalLog = logger4.log.bind(logger4);
     logger4.log = (...args) => {
-      if (settings4.debugLogging.value()) originalLog(...args);
+      if (settings5.debugLogging.value()) originalLog(...args);
     };
     logger4.warn = (...args) => {
-      if (settings4.debugLogging.value()) originalWarn(...args);
+      if (settings5.debugLogging.value()) originalWarn(...args);
     };
     const overlay = createTrueHubOverlay({
       logger: logger4,
-      getAutoOpen: () => settings4.autoOpen.value(),
-      getScrollPaging: () => settings4.scrollPaging.value()
+      getAutoOpen: () => settings5.autoOpen.value(),
+      getScrollPaging: () => settings5.scrollPaging.value()
     });
     loadDecks().then((decks) => {
       overlay.setDecks(decks);
@@ -6006,24 +6128,24 @@ Version: v${version}`;
 
   // packages/deck-tracker/settings.js
   function registerDeckTrackerSettings(plugin) {
-    const settings4 = createFeatureSettings(plugin, "decktracker", {
+    const settings5 = createFeatureSettings(plugin, "decktracker", {
       tab: "Card Tracker",
       visible: () => isPluginEnabled("cardTracker")
     });
     const enabled = getPluginToggle("cardTracker");
     const debugLogging = debugLoggingSetting;
-    const retainUnclosedPresets = settings4.add("retainUnclosedPresets", {
+    const retainUnclosedPresets = settings5.add("retainUnclosedPresets", {
       name: "Retain Unclosed Presets Between Matches",
       type: "boolean",
       default: false
     });
-    const allowFavoritedRetainedWhileSpectating = settings4.add("allowFavoritedRetainedWhileSpectating", {
+    const allowFavoritedRetainedWhileSpectating = settings5.add("allowFavoritedRetainedWhileSpectating", {
       name: "Auto-load Presets While Spectating",
       note: "Applies to your own favorited/retained tracker presets specifically.",
       type: "boolean",
       default: false
     });
-    const dimOpacity = settings4.add("dimOpacity", {
+    const dimOpacity = settings5.add("dimOpacity", {
       name: "Tracker Dim Opacity",
       type: "slider",
       default: 0.4,
@@ -6032,7 +6154,7 @@ Version: v${version}`;
       step: 0.05
     });
     return {
-      settings: settings4,
+      settings: settings5,
       enabled,
       debugLogging,
       retainUnclosedPresets,
@@ -7242,19 +7364,19 @@ Version: v${version}`;
     GM_deleteValue(BUTTON_POSITION_KEY);
   }
   function initDeckTracker(plugin) {
-    const settings4 = registerDeckTrackerSettings(plugin);
-    if (!settings4.enabled.value()) return;
+    const settings5 = registerDeckTrackerSettings(plugin);
+    if (!settings5.enabled.value()) return;
     if (!isGamePage()) return;
     const logger4 = createLogger("DeckTracker");
     const originalWarn = logger4.warn.bind(logger4);
     const originalLog = logger4.log.bind(logger4);
     logger4.log = (...args) => {
-      if (settings4.debugLogging.value()) originalLog(...args);
+      if (settings5.debugLogging.value()) originalLog(...args);
     };
     logger4.warn = (...args) => {
-      if (settings4.debugLogging.value()) originalWarn(...args);
+      if (settings5.debugLogging.value()) originalWarn(...args);
     };
-    setRetainEnabledGetter(() => settings4.retainUnclosedPresets.value());
+    setRetainEnabledGetter(() => settings5.retainUnclosedPresets.value());
     registerBuiltInPresets();
     function handleAddPreset(id) {
       spawnPreset(id);
@@ -7374,7 +7496,7 @@ Version: v${version}`;
         const shouldDim = isBlockingModalOpen();
         if (shouldDim !== isDimmed) {
           isDimmed = shouldDim;
-          btn.style.opacity = shouldDim ? String(settings4.dimOpacity.value()) : "1";
+          btn.style.opacity = shouldDim ? String(settings5.dimOpacity.value()) : "1";
           btn.style.pointerEvents = shouldDim ? "none" : "auto";
         }
       }, 250);
@@ -7456,7 +7578,7 @@ Version: v${version}`;
       }
     });
     function restoreFavoritedAndRetained() {
-      if (isSpectating() && !settings4.allowFavoritedRetainedWhileSpectating.value()) return;
+      if (isSpectating() && !settings5.allowFavoritedRetainedWhileSpectating.value()) return;
       const favoritedIds = getFavoritedPresetIds();
       const spawnedFavorites = favoritedIds.filter((id) => spawnPreset(id) !== null);
       if (spawnedFavorites.length) {
@@ -7469,7 +7591,7 @@ Version: v${version}`;
           favoritedIds.filter((id) => !spawnedFavorites.includes(id))
         );
       }
-      if (settings4.retainUnclosedPresets.value()) {
+      if (settings5.retainUnclosedPresets.value()) {
         const retainedIds = getRetainedPresetIds().filter((id) => !favoritedIds.includes(id));
         retainedIds.forEach((id) => spawnPreset(id));
         if (retainedIds.length) {
@@ -7532,18 +7654,18 @@ Version: v${version}`;
     settingsRef = ref;
   }
   function registerUcTvSettings(plugin, divisionTiers) {
-    const settings4 = createFeatureSettings(plugin, "ucTv", {
+    const settings5 = createFeatureSettings(plugin, "ucTv", {
       tab: "UC TV",
       visible: () => isPluginEnabled("ucTv")
     });
     const enabled = getPluginToggle("ucTv");
     const debugLogs = debugLoggingSetting;
-    const autoMode = settings4.add("autoMode", {
+    const autoMode = settings5.add("autoMode", {
       name: "Enable auto-mode when spectating",
       type: "boolean",
       default: false
     });
-    const countdownSeconds = settings4.add("countdownSeconds", {
+    const countdownSeconds = settings5.add("countdownSeconds", {
       name: "Auto-continue delay (seconds)",
       type: "select",
       data: Array.from({ length: 15 }, (_, i) => i + 1).map((n) => [`${n}`, n]),
@@ -7552,11 +7674,11 @@ Version: v${version}`;
     const filterDisabled = () => !filteringEnabled.value();
     const filterDependents = [];
     const addFilter = (key2, config) => {
-      const setting4 = settings4.add(key2, { ...config, disabled: filterDisabled });
+      const setting4 = settings5.add(key2, { ...config, disabled: filterDisabled });
       filterDependents.push(setting4);
       return setting4;
     };
-    const filteringEnabled = settings4.add("filteringEnabled", {
+    const filteringEnabled = settings5.add("filteringEnabled", {
       name: "Enable Match Filtering",
       type: "boolean",
       default: true,
@@ -8291,8 +8413,8 @@ Version: v${version}`;
     return matchesPage({ prefix: "/Spectate" });
   }
   function initUcTv(plugin) {
-    const settings4 = registerUcTvSettings(plugin, DIVISION_TIERS);
-    setSettingsRef(settings4);
+    const settings5 = registerUcTvSettings(plugin, DIVISION_TIERS);
+    setSettingsRef(settings5);
     if (CONFIG.debugLogs) dumpSettingsState();
     window.__ucTVScope = scopeActiveGames;
     window.__ucTVSettings = dumpSettingsState;
@@ -11170,6 +11292,549 @@ Version: v${version}`;
     initItemData(plugin);
   }
 
+  // packages/card-maker/styles.js
+  var STYLE_ID2 = "wizascript-cardmaker-style";
+  var Z_WINDOW2 = 2147482e3;
+  var Z_UNDER = 1e3;
+  var BAR_H = 30;
+  var CSS3 = `
+.wz-cm { position: fixed; z-index: ${Z_WINDOW2}; display: flex; flex-direction: column; box-sizing: border-box;
+  background: #0d0d0d; color: #fff; border: 2px solid #fff; border-radius: 4px; box-shadow: 0 6px 24px rgba(0,0,0,0.7);
+  font: 12px Arial, sans-serif; user-select: none; }
+.wz-cm *, .wz-cm *::before, .wz-cm *::after { box-sizing: border-box; }
+.wz-cm.wz-cm-under-modal { z-index: ${Z_UNDER}; }
+.wz-cm.wz-cm-max { left: 0 !important; top: 0 !important; width: 100vw !important; height: 100vh !important; border-radius: 0; }
+.wz-cm.wz-cm-min { height: ${BAR_H + 4}px !important; }
+.wz-cm.wz-cm-min .wz-cm-body, .wz-cm.wz-cm-min .wz-cm-resize, .wz-cm.wz-cm-max .wz-cm-resize { display: none; }
+.wz-cm-header { flex: none; height: ${BAR_H}px; display: flex; align-items: center; gap: 6px; padding: 0 6px;
+  background: #222; border-bottom: 1px solid #555; cursor: grab; touch-action: none; }
+.wz-cm.wz-cm-max .wz-cm-header { cursor: default; }
+.wz-cm-icon { width: 18px; height: 18px; image-rendering: pixelated; flex: none; }
+.wz-cm-title { font: bold 13px Arial, sans-serif; white-space: nowrap; }
+.wz-cm-grip { flex: 1 1 auto; align-self: stretch; min-width: 16px; }
+.wz-cm-pick { background: #333; color: #fff; border: 1px solid #777; border-radius: 3px; font: 12px Arial, sans-serif; height: 22px; max-width: 210px; min-width: 0; }
+.wz-cm-btn { flex: none; min-width: 24px; height: 22px; padding: 0 6px; border: 1px solid #777; border-radius: 3px;
+  background: #333; color: #fff; font: 13px Arial, sans-serif; line-height: 20px; cursor: pointer; }
+.wz-cm-btn:hover { background: #444; border-color: #aaa; }
+.wz-cm-body { flex: 1 1 auto; min-height: 0; position: relative; background: #111; }
+.wz-cm-body iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #111; }
+.wz-cm-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #aaa; pointer-events: none; }
+.wz-cm-shield { position: absolute; inset: 0; z-index: 5; display: none; }
+.wz-cm.wz-cm-busy .wz-cm-shield { display: block; }
+.wz-cm-note { position: absolute; left: 0; right: 0; top: 0; z-index: 4; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 8px 10px; background: #3a2a00; border-bottom: 1px solid #e0a800; color: #fff; font: 12px Arial, sans-serif; user-select: text; }
+.wz-cm-note[hidden] { display: none; }
+.wz-cm-note span { flex: 1 1 260px; }
+.wz-cm-resize { position: absolute; z-index: 6; touch-action: none; }
+.wz-cm-resize-n, .wz-cm-resize-s { left: 8px; right: 8px; height: 7px; cursor: ns-resize; }
+.wz-cm-resize-n { top: -4px; } .wz-cm-resize-s { bottom: -4px; }
+.wz-cm-resize-e, .wz-cm-resize-w { top: 8px; bottom: 8px; width: 7px; cursor: ew-resize; }
+.wz-cm-resize-e { right: -4px; } .wz-cm-resize-w { left: -4px; }
+.wz-cm-resize-ne, .wz-cm-resize-nw, .wz-cm-resize-se, .wz-cm-resize-sw { width: 14px; height: 14px; }
+.wz-cm-resize-ne { top: -5px; right: -5px; cursor: nesw-resize; } .wz-cm-resize-sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
+.wz-cm-resize-nw { top: -5px; left: -5px; cursor: nwse-resize; } .wz-cm-resize-se { bottom: -5px; right: -5px; cursor: nwse-resize; }
+#wz-cardmaker-btn img { width: 18px; height: 18px; image-rendering: pixelated; vertical-align: -4px; }
+#wz-cardmaker-btn a[aria-pressed="true"] img { filter: drop-shadow(0 0 3px #fff); }
+`;
+  function injectCardMakerStyle() {
+    if (document.getElementById(STYLE_ID2)) return;
+    const style = document.createElement("style");
+    style.id = STYLE_ID2;
+    style.textContent = CSS3;
+    (document.head || document.documentElement).appendChild(style);
+  }
+
+  // packages/card-maker/storage.js
+  var WINDOW_KEY2 = "wizascript.cardMaker.window";
+  var HOTFIX_KEY = "wizascript.cardMaker.hotfix";
+  function loadWindowState2() {
+    try {
+      const raw = GM_getValue(WINDOW_KEY2, null);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function saveWindowState2(state2) {
+    try {
+      GM_setValue(WINDOW_KEY2, JSON.stringify(state2));
+    } catch (e) {
+      console.warn("[Card Maker] Failed to save the window", e);
+    }
+  }
+  function isHotfixOn() {
+    try {
+      return GM_getValue(HOTFIX_KEY, "") === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+  function setHotfix(on) {
+    try {
+      GM_setValue(HOTFIX_KEY, on ? "1" : "");
+    } catch (e) {
+      console.warn("[Card Maker] Failed to save the hotfix setting", e);
+    }
+  }
+
+  // packages/card-maker/window.js
+  var MIN_W2 = 420;
+  var MIN_H2 = 300;
+  var DEFAULT_W2 = 900;
+  var DEFAULT_H2 = 640;
+  var EDGES2 = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
+  function viewport3() {
+    const w = document.documentElement.clientWidth || window.innerWidth;
+    const h = document.documentElement.clientHeight || window.innerHeight;
+    const footer = document.querySelector("footer");
+    const top = footer ? footer.getBoundingClientRect().top : NaN;
+    return { w, h: top > h / 2 && top < h ? Math.floor(top) : h };
+  }
+  function headerButton2(action, label, title) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "wz-cm-btn";
+    b.dataset.action = action;
+    b.textContent = label;
+    b.title = title;
+    return b;
+  }
+  function buildWindow2({ signal, icon, editors, onPick, onAction }) {
+    const saved = loadWindowState2() || {};
+    const ui = { geometry: null, maximised: !!saved.maximised, minimised: !!saved.minimised };
+    const clamp = (g) => {
+      const vp = viewport3();
+      const width = Math.max(Math.min(MIN_W2, vp.w), Math.min(g.width, vp.w));
+      const height = Math.max(Math.min(MIN_H2, vp.h), Math.min(g.height, vp.h));
+      const shown = ui.minimised ? BAR_H + 4 : height;
+      return {
+        width,
+        height,
+        left: Math.max(0, Math.min(g.left, vp.w - width)),
+        top: Math.max(0, Math.min(g.top, vp.h - shown))
+      };
+    };
+    const defaults = () => {
+      const vp = viewport3();
+      const width = Math.min(DEFAULT_W2, vp.w - 16);
+      const height = Math.min(DEFAULT_H2, vp.h - 16);
+      return { left: vp.w - width - 8, top: 8, width, height };
+    };
+    ui.geometry = clamp(saved.geometry || defaults());
+    const root = document.createElement("div");
+    root.className = "wz-cm";
+    const header = document.createElement("div");
+    header.className = "wz-cm-header";
+    header.title = "Drag to move, double-click to fill the screen";
+    const img = document.createElement("img");
+    img.className = "wz-cm-icon";
+    img.src = icon;
+    img.alt = "";
+    const title = document.createElement("span");
+    title.className = "wz-cm-title";
+    title.textContent = "Card Maker";
+    const pick = document.createElement("select");
+    pick.className = "wz-cm-pick";
+    pick.title = "Which card editor to use";
+    Object.entries(editors).forEach(([key2, e]) => {
+      const o = document.createElement("option");
+      o.value = key2;
+      o.textContent = e.label;
+      pick.appendChild(o);
+    });
+    pick.addEventListener("change", () => onPick(pick.value), { signal });
+    const grip = document.createElement("div");
+    grip.className = "wz-cm-grip";
+    const buttons = {
+      reload: headerButton2("reload", "\u21BB", "Reload the editor"),
+      site: headerButton2("site", "\u2197", "Open the editor's own site in a new tab"),
+      min: headerButton2("min", "_", "Shrink to the title bar"),
+      max: headerButton2("max", "\u25A1", "Fill the screen"),
+      close: headerButton2("close", "\xD7", "Close (the editor stays loaded until you refresh)")
+    };
+    header.append(img, title, pick, grip, ...Object.values(buttons));
+    const body = document.createElement("div");
+    body.className = "wz-cm-body";
+    const loading = document.createElement("div");
+    loading.className = "wz-cm-loading";
+    const shield = document.createElement("div");
+    shield.className = "wz-cm-shield";
+    const note = document.createElement("div");
+    note.className = "wz-cm-note";
+    note.hidden = true;
+    body.append(loading, note, shield);
+    root.append(header, body);
+    EDGES2.forEach((edge) => {
+      const h = document.createElement("div");
+      h.className = `wz-cm-resize wz-cm-resize-${edge}`;
+      h.dataset.edge = edge;
+      root.appendChild(h);
+    });
+    const persist = () => saveWindowState2({ geometry: ui.geometry, maximised: ui.maximised, minimised: ui.minimised });
+    function apply2() {
+      const g = ui.geometry;
+      root.style.left = g.left + "px";
+      root.style.top = g.top + "px";
+      root.style.width = g.width + "px";
+      root.style.height = g.height + "px";
+      root.classList.toggle("wz-cm-max", ui.maximised);
+      root.classList.toggle("wz-cm-min", ui.minimised && !ui.maximised);
+      buttons.max.textContent = ui.maximised ? "\u2750" : "\u25A1";
+      buttons.max.title = ui.maximised ? "Back to the window" : "Fill the screen";
+      buttons.min.textContent = ui.minimised ? "\u25AD" : "_";
+      buttons.min.title = ui.minimised ? "Show the editor again" : "Shrink to the title bar";
+    }
+    function setMaximised(value) {
+      ui.maximised = !!value;
+      if (ui.maximised) ui.minimised = false;
+      apply2();
+      persist();
+    }
+    function setMinimised(value) {
+      ui.minimised = !!value;
+      if (ui.minimised) ui.maximised = false;
+      ui.geometry = clamp(ui.geometry);
+      apply2();
+      persist();
+    }
+    function followPointer(onMove, onEnd) {
+      root.classList.add("wz-cm-busy");
+      const move = (ev) => onMove(ev);
+      const end = () => {
+        root.classList.remove("wz-cm-busy");
+        document.removeEventListener("pointermove", move, true);
+        document.removeEventListener("pointerup", end, true);
+        document.removeEventListener("pointercancel", end, true);
+        onEnd();
+      };
+      document.addEventListener("pointermove", move, { capture: true, signal });
+      document.addEventListener("pointerup", end, { capture: true, signal });
+      document.addEventListener("pointercancel", end, { capture: true, signal });
+    }
+    header.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0 || ui.maximised || e.target.closest("button, select")) return;
+      e.preventDefault();
+      const start = { x: e.clientX, y: e.clientY, left: ui.geometry.left, top: ui.geometry.top };
+      header.style.cursor = "grabbing";
+      followPointer((ev) => {
+        ui.geometry = clamp({ ...ui.geometry, left: start.left + ev.clientX - start.x, top: start.top + ev.clientY - start.y });
+        apply2();
+      }, () => {
+        header.style.cursor = "";
+        persist();
+      });
+    }, { signal });
+    header.addEventListener("dblclick", (e) => {
+      if (e.target.closest("button, select")) return;
+      setMaximised(!ui.maximised);
+    }, { signal });
+    root.addEventListener("pointerdown", (e) => {
+      const handle = e.target.closest(".wz-cm-resize");
+      if (!handle || e.button !== 0 || ui.maximised) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const edge = handle.dataset.edge;
+      const start = { x: e.clientX, y: e.clientY, ...ui.geometry };
+      const vp = viewport3();
+      followPointer((ev) => {
+        const dx = ev.clientX - start.x;
+        const dy = ev.clientY - start.y;
+        let { left, top, width, height } = start;
+        if (edge.includes("e")) width = Math.min(start.width + dx, vp.w - start.left);
+        if (edge.includes("s")) height = Math.min(start.height + dy, vp.h - start.top);
+        if (edge.includes("w")) {
+          width = Math.max(MIN_W2, Math.min(start.width - dx, start.left + start.width));
+          left = start.left + start.width - width;
+        }
+        if (edge.includes("n")) {
+          height = Math.max(MIN_H2, Math.min(start.height - dy, start.top + start.height));
+          top = start.top + start.height - height;
+        }
+        ui.geometry = clamp({ left, top, width: Math.max(MIN_W2, width), height: Math.max(MIN_H2, height) });
+        apply2();
+      }, persist);
+    }, { signal });
+    root.addEventListener("click", (e) => {
+      var _a;
+      const action = (_a = e.target.closest("[data-action]")) == null ? void 0 : _a.dataset.action;
+      if (action === "min") setMinimised(!ui.minimised);
+      else if (action === "max") setMaximised(!ui.maximised);
+      else if (action) onAction(action);
+    }, { signal });
+    window.addEventListener("resize", () => {
+      ui.geometry = clamp(ui.geometry);
+      apply2();
+    }, { signal });
+    apply2();
+    return {
+      root,
+      body,
+      loading,
+      note,
+      pick,
+      // Called each time the window is shown: the page may have changed size.
+      refit() {
+        ui.geometry = clamp(ui.geometry);
+        apply2();
+      },
+      isMaximised: () => ui.maximised,
+      setMaximised
+    };
+  }
+
+  // packages/card-maker/editors.js
+  var EDITORS = {
+    feildmaster: {
+      label: "feildmaster's Template Editor",
+      url: "https://undercard.feildmaster.com/",
+      origin: "https://undercard.feildmaster.com"
+    },
+    sernon: {
+      label: "UC Editor (sernon158)",
+      url: "https://sernon158.github.io/uc-editor/",
+      origin: "https://sernon158.github.io"
+    }
+  };
+  var DEFAULT_EDITOR = "feildmaster";
+  var EDITOR_LABELS = Object.values(EDITORS).map((e) => e.label);
+  function editorForLabel(label) {
+    return Object.keys(EDITORS).find((k) => EDITORS[k].label === label) || DEFAULT_EDITOR;
+  }
+  var FRAME_MESSAGE = "wizascript-card-maker";
+
+  // assets/pack.png
+  var pack_default = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAZCAYAAADE6YVjAAABN2lDQ1BBZG9iZSBSR0IgKDE5OTgpAAAokZWPv0rDUBSHvxtFxaFWCOLgcCdRUGzVwYxJW4ogWKtDkq1JQ5ViEm6uf/oQjm4dXNx9AidHwUHxCXwDxamDQ4QMBYvf9J3fORzOAaNi152GUYbzWKt205Gu58vZF2aYAoBOmKV2q3UAECdxxBjf7wiA10277jTG+38yH6ZKAyNguxtlIYgK0L/SqQYxBMygn2oQD4CpTto1EE9AqZf7G1AKcv8ASsr1fBBfgNlzPR+MOcAMcl8BTB1da4Bakg7UWe9Uy6plWdLuJkEkjweZjs4zuR+HiUoT1dFRF8jvA2AxH2w3HblWtay99X/+PRHX82Vun0cIQCw9F1lBeKEuf1UYO5PrYsdwGQ7vYXpUZLs3cLcBC7dFtlqF8hY8Dn8AwMZP/fNTP8gAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAjAaVRYdFhNTDpjb20uYWRvYmUueG1wAAAAAAA8P3hwYWNrZXQgYmVnaW49Iu+7vyIgaWQ9Ilc1TTBNcENlaGlIenJlU3pOVGN6a2M5ZCI/PiA8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIiB4OnhtcHRrPSJBZG9iZSBYTVAgQ29yZSA3LjEtYzAwMCA3OS43YTdhMjM2LCAyMDIxLzA4LzEyLTAwOjI1OjIwICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIgeG1sbnM6cGhvdG9zaG9wPSJodHRwOi8vbnMuYWRvYmUuY29tL3Bob3Rvc2hvcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iIHhtbG5zOmV4aWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20vZXhpZi8xLjAvIiB4bXA6Q3JlYXRvclRvb2w9IkFkb2JlIFBob3Rvc2hvcCBDQyAyMDE1IChXaW5kb3dzKSIgeG1wOkNyZWF0ZURhdGU9IjIwMjEtMTAtMDdUMTE6MzE6MjcrMDU6MDAiIHhtcDpNb2RpZnlEYXRlPSIyMDI1LTAzLTI4VDE0OjE1OjM2KzA1OjAwIiB4bXA6TWV0YWRhdGFEYXRlPSIyMDI1LTAzLTI4VDE0OjE1OjM2KzA1OjAwIiBkYzpmb3JtYXQ9ImltYWdlL3BuZyIgcGhvdG9zaG9wOkNvbG9yTW9kZT0iMyIgcGhvdG9zaG9wOklDQ1Byb2ZpbGU9IkFkb2JlIFJHQiAoMTk5OCkiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6YWJlZTRhNzUtZGMyNC1mZjQ4LTg3OGMtYmI2OTkwZjRlYjAzIiB4bXBNTTpEb2N1bWVudElEPSJhZG9iZTpkb2NpZDpwaG90b3Nob3A6ZjNlNjVkODItZmE3MS1jMTRmLTgxOTUtZWM5MGYyYWUxMmZlIiB4bXBNTTpPcmlnaW5hbERvY3VtZW50SUQ9InhtcC5kaWQ6N2VjMjg2YmItMzQzMS0zZDRlLTk5YjgtMzI2NTQwNGJhMzQ1IiB0aWZmOk9yaWVudGF0aW9uPSIxIiB0aWZmOlhSZXNvbHV0aW9uPSI5NjAwMDAvMTAwMDAiIHRpZmY6WVJlc29sdXRpb249Ijk2MDAwMC8xMDAwMCIgdGlmZjpSZXNvbHV0aW9uVW5pdD0iMiIgZXhpZjpDb2xvclNwYWNlPSI2NTUzNSIgZXhpZjpQaXhlbFhEaW1lbnNpb249IjI1IiBleGlmOlBpeGVsWURpbWVuc2lvbj0iMjUiPiA8cGhvdG9zaG9wOkRvY3VtZW50QW5jZXN0b3JzPiA8cmRmOkJhZz4gPHJkZjpsaT5hZG9iZTpkb2NpZDpwaG90b3Nob3A6MzE2ZmY5YTUtMjczZC0xMWVjLTgwM2UtZGUxZWE3MmY0ZmRjPC9yZGY6bGk+IDxyZGY6bGk+YWRvYmU6ZG9jaWQ6cGhvdG9zaG9wOjU3OWI5ODRkLTI3OWQtMTFlYy04MDNlLWRlMWVhNzJmNGZkYzwvcmRmOmxpPiA8L3JkZjpCYWc+IDwvcGhvdG9zaG9wOkRvY3VtZW50QW5jZXN0b3JzPiA8eG1wTU06SGlzdG9yeT4gPHJkZjpTZXE+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJjcmVhdGVkIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOjdlYzI4NmJiLTM0MzEtM2Q0ZS05OWI4LTMyNjU0MDRiYTM0NSIgc3RFdnQ6d2hlbj0iMjAyMS0xMC0wN1QxMTozMToyNyswNTowMCIgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTUgKFdpbmRvd3MpIi8+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJzYXZlZCIgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDo3NjVjYWM0Mi01ZDFkLWQwNDctOGVkMS02YmEwOGI0NWNkNDEiIHN0RXZ0OndoZW49IjIwMjEtMTAtMDdUMjM6MzY6MjIrMDU6MDAiIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIFBob3Rvc2hvcCBDQyAyMDE1IChXaW5kb3dzKSIgc3RFdnQ6Y2hhbmdlZD0iLyIvPiA8cmRmOmxpIHN0RXZ0OmFjdGlvbj0ic2F2ZWQiIHN0RXZ0Omluc3RhbmNlSUQ9InhtcC5paWQ6YWJlZTRhNzUtZGMyNC1mZjQ4LTg3OGMtYmI2OTkwZjRlYjAzIiBzdEV2dDp3aGVuPSIyMDI1LTAzLTI4VDE0OjE1OjM2KzA1OjAwIiBzdEV2dDpzb2Z0d2FyZUFnZW50PSJBZG9iZSBQaG90b3Nob3AgMjIuNSAoV2luZG93cykiIHN0RXZ0OmNoYW5nZWQ9Ii8iLz4gPC9yZGY6U2VxPiA8L3htcE1NOkhpc3Rvcnk+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+D9HYFgAAAPdJREFUSImtlkEOxCAIRWEyl3E59z+ES3sbZjHSAEUKdn5irBp5frUtQETgFQCgMQbJmn4DyxqmLrEyABYHjNoe5A03aq2pNiK67bk4X5GLahHuak7k+jDR7wmtTUQkIgJEBG8D0ABUP88jUtxbJ0pdAD6Fed6ZnHsrS4/bEJzJq+RkU3lIZXu2IVK9Bg0h7tV0AI+uMCt4l/W7s7jCqe1SM/qiP5qfcXKudAXm8SdObOCsgy3IDmALsqMyJPxv/APCgCooDbGBK6D6wTtXm3Uchz/gfOpn95kYpIpIPC4xQycSbBfCz2OMe/uLlEi5WdU2L2OgjfcFH9C1M1inPecAAAAASUVORK5CYII=";
+
+  // packages/card-maker/index.js
+  var NO_REPORT_MS = 15e3;
+  var settings3 = null;
+  var editorSetting = null;
+  var hotfixSetting = null;
+  var mounted2 = null;
+  var footerButton = null;
+  var log = (...a) => console.log("[Card Maker]", ...a);
+  function currentEditor() {
+    return editorForLabel(editorSetting ? editorSetting.value() : EDITORS[DEFAULT_EDITOR].label);
+  }
+  function isCardMakerOpen() {
+    return !!mounted2 && mounted2.win.root.style.display !== "none";
+  }
+  function toggleCardMaker() {
+    if (!isPluginEnabled("cardMaker")) return;
+    if (isCardMakerOpen()) hideCardMaker();
+    else showCardMaker();
+  }
+  function hideCardMaker() {
+    if (!mounted2) return;
+    mounted2.win.root.style.display = "none";
+    updateFooterButton();
+  }
+  function showCardMaker() {
+    if (!mounted2) mount();
+    mounted2.win.root.style.display = "";
+    mounted2.win.refit();
+    showEditor(currentEditor());
+    mounted2.syncLayer();
+    updateFooterButton();
+  }
+  function mount() {
+    injectCardMakerStyle();
+    const controller = new AbortController();
+    const { signal } = controller;
+    const win = buildWindow2({
+      signal,
+      icon: pack_default,
+      editors: EDITORS,
+      onPick: (key2) => {
+        if (editorSetting && editorSetting.value() !== EDITORS[key2].label) editorSetting.set(EDITORS[key2].label);
+        showEditor(key2);
+      },
+      onAction: (action) => {
+        const key2 = currentEditor();
+        if (action === "close") hideCardMaker();
+        else if (action === "reload") reloadEditor(key2);
+        else if (action === "site") window.open(EDITORS[key2].url, "_blank", "noopener");
+      }
+    });
+    document.body.appendChild(win.root);
+    let menuBackdrop = null;
+    const layerWatch = new MutationObserver(() => syncLayer());
+    function syncLayer() {
+      if (!menuBackdrop) {
+        menuBackdrop = document.querySelector(".menu-backdrop");
+        if (menuBackdrop) layerWatch.observe(menuBackdrop, { attributes: true, attributeFilter: ["style"] });
+      }
+      const dialogOpen = document.body.classList.contains("modal-open") || !!document.querySelector(".bootstrap-dialog.in, .modal.in");
+      const menuOpen = !!menuBackdrop && menuBackdrop.style.display === "block";
+      win.root.classList.toggle("wz-cm-under-modal", dialogOpen || menuOpen);
+    }
+    layerWatch.observe(document.body, { attributes: true, attributeFilter: ["class"], childList: true });
+    signal.addEventListener("abort", () => layerWatch.disconnect());
+    window.addEventListener("message", (e) => {
+      const f = mounted2 && mounted2.frames.feildmaster;
+      if (!f || e.source !== f.el.contentWindow || e.origin !== EDITORS.feildmaster.origin) return;
+      if (!e.data || e.data.tag !== FRAME_MESSAGE) return;
+      clearTimeout(f.noReport);
+      f.status = e.data.status;
+      log(`feildmaster's editor: ${e.data.status}${e.data.hotfixed ? " (hotfix applied)" : ""}`);
+      updateNote();
+    }, { signal });
+    mounted2 = { controller, win, frames: {}, syncLayer };
+  }
+  function showEditor(key2) {
+    const { win, frames } = mounted2;
+    win.pick.value = key2;
+    Object.entries(frames).forEach(([k, f]) => {
+      f.el.style.display = k === key2 ? "" : "none";
+    });
+    if (!frames[key2]) {
+      const el3 = document.createElement("iframe");
+      el3.title = EDITORS[key2].label;
+      el3.allow = "clipboard-read; clipboard-write";
+      frames[key2] = { el: el3, status: "loading", noReport: null };
+      win.body.insertBefore(el3, win.loading);
+      loadEditor(key2);
+    } else {
+      win.loading.style.display = frames[key2].status === "loading" ? "" : "none";
+    }
+    updateNote();
+  }
+  function loadEditor(key2) {
+    const f = mounted2.frames[key2];
+    const { win } = mounted2;
+    const started = performance.now();
+    f.status = "loading";
+    clearTimeout(f.noReport);
+    win.loading.textContent = `Loading ${EDITORS[key2].label}\u2026`;
+    if (currentEditor() === key2) win.loading.style.display = "";
+    f.el.onload = () => {
+      if (f.status === "loading") f.status = key2 === "feildmaster" ? "waiting" : "ok";
+      if (currentEditor() === key2) win.loading.style.display = "none";
+      log(`${EDITORS[key2].label} loaded in ${Math.round(performance.now() - started)} ms`);
+      if (key2 === "feildmaster") {
+        f.noReport = setTimeout(() => {
+          if (f.status === "waiting") {
+            f.status = "silent";
+            updateNote();
+          }
+        }, NO_REPORT_MS);
+      }
+      updateNote();
+    };
+    f.el.src = EDITORS[key2].url;
+  }
+  function reloadEditor(key2) {
+    if (mounted2 && mounted2.frames[key2]) loadEditor(key2);
+    updateNote();
+  }
+  function updateNote() {
+    if (!mounted2) return;
+    const { note } = mounted2.win;
+    const key2 = currentEditor();
+    const f = mounted2.frames[key2];
+    const status = f ? f.status : "";
+    note.replaceChildren();
+    note.hidden = true;
+    if (key2 !== "feildmaster" || !["broken", "silent"].includes(status)) return;
+    const text = document.createElement("span");
+    const button2 = (label, fn) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "wz-cm-btn";
+      b.textContent = label;
+      b.addEventListener("click", fn);
+      return b;
+    };
+    const site = button2("Open its site \u2197", () => window.open(EDITORS[key2].url, "_blank", "noopener"));
+    if (status === "silent") {
+      text.textContent = "If the editor stays black, open it on its own site instead.";
+      note.append(text, site);
+    } else if (!isHotfixOn()) {
+      text.textContent = "Trouble loading? feildmaster's editor can't start inside the Card Maker yet. The hotfix lets it.";
+      note.append(text, button2("Turn on the hotfix", () => setHotfixEverywhere(true)), site);
+    } else {
+      text.textContent = "feildmaster's editor still didn't start, even with the hotfix.";
+      note.append(text, site, button2("Turn off the hotfix", () => setHotfixEverywhere(false)));
+    }
+    note.hidden = false;
+  }
+  function setHotfixEverywhere(on) {
+    setHotfix(on);
+    if (hotfixSetting && hotfixSetting.value() !== on) hotfixSetting.set(on);
+    if (mounted2 && mounted2.frames.feildmaster) reloadEditor("feildmaster");
+  }
+  function updateFooterButton() {
+    if (!footerButton) return;
+    footerButton.querySelector("a").setAttribute("aria-pressed", String(isCardMakerOpen()));
+  }
+  function addFooterButton() {
+    const friends = document.querySelector("a span.nbFriends");
+    const item = friends && friends.closest("li");
+    if (!item) return false;
+    injectCardMakerStyle();
+    footerButton = document.createElement("li");
+    footerButton.id = "wz-cardmaker-btn";
+    const a = document.createElement("a");
+    a.href = "#";
+    a.title = "Card Maker";
+    a.setAttribute("aria-label", "Card Maker");
+    a.setAttribute("role", "button");
+    a.setAttribute("aria-pressed", "false");
+    const img = document.createElement("img");
+    img.src = pack_default;
+    img.alt = "";
+    a.appendChild(img);
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      toggleCardMaker();
+    });
+    footerButton.appendChild(a);
+    item.parentNode.insertBefore(footerButton, item);
+    return true;
+  }
+  function initCardMaker(plugin) {
+    settings3 = createFeatureSettings(plugin, "cardMaker", {
+      tab: "Card Maker",
+      visible: () => isPluginEnabled("cardMaker")
+    });
+    editorSetting = settings3.add("editor", {
+      name: "Card Editor",
+      note: "Which community card editor the Card Maker shows.",
+      type: "select",
+      options: EDITOR_LABELS,
+      default: EDITORS[DEFAULT_EDITOR].label,
+      onChange: () => {
+        if (isCardMakerOpen()) showEditor(currentEditor());
+      }
+    });
+    hotfixSetting = settings3.add("feildHotfix", {
+      name: "Hotfix: feildmaster's Editor",
+      note: "Turn on if his editor stays black in the Card Maker.",
+      type: "boolean",
+      default: false,
+      onChange: (value) => {
+        setHotfix(!!value);
+        if (mounted2 && mounted2.frames.feildmaster) reloadEditor("feildmaster");
+      }
+    });
+    registerKeybind(plugin, {
+      key: "toggleCardMaker",
+      name: "Toggle Card Maker",
+      defaultCode: "KeyK",
+      packageLabel: "Card Maker",
+      onMatch: () => toggleCardMaker()
+    });
+    if (!isPluginEnabled("cardMaker")) return;
+    if (isHotfixOn() !== !!hotfixSetting.value()) setHotfix(!!hotfixSetting.value());
+    if (!addFooterButton()) {
+      const watch2 = new MutationObserver(() => {
+        if (addFooterButton()) watch2.disconnect();
+      });
+      watch2.observe(document.documentElement, { childList: true, subtree: true });
+      setTimeout(() => watch2.disconnect(), 1e4);
+    }
+  }
+
   // packages/misc/settings.js
   function registerMiscSettings() {
     return {
@@ -11881,14 +12546,14 @@ Version: v${version}`;
 
   // packages/misc/notepad/index.js
   var DEFAULT_THICKNESS = 5;
-  var mounted2 = null;
+  var mounted3 = null;
   function sanitizeFilename(rawTitle) {
     const cleaned = (rawTitle || "").trim().replace(/[\\/:*?"<>|]/g, "").replace(/\s+/g, " ").slice(0, 60);
     return cleaned || "notepad-doodle";
   }
   function showNotepad() {
     var _a;
-    if (mounted2) return;
+    if (mounted3) return;
     injectStyle2();
     const controller = new AbortController();
     const { signal } = controller;
@@ -12113,24 +12778,24 @@ Version: v${version}`;
     }, { signal });
     closeBtn.addEventListener("mousedown", (e) => e.stopPropagation(), { signal });
     closeBtn.addEventListener("click", () => hideNotepad(), { signal });
-    mounted2 = { root, controller, surface };
+    mounted3 = { root, controller, surface };
   }
   function hideNotepad() {
-    if (!mounted2) return;
-    mounted2.controller.abort();
-    mounted2.root.remove();
-    mounted2 = null;
+    if (!mounted3) return;
+    mounted3.controller.abort();
+    mounted3.root.remove();
+    mounted3 = null;
   }
   function isNotepadOpen() {
-    return !!mounted2;
+    return !!mounted3;
   }
   function undoNotepad() {
-    if (!mounted2) return;
-    mounted2.surface.undo();
+    if (!mounted3) return;
+    mounted3.surface.undo();
   }
   function redoNotepad() {
-    if (!mounted2) return;
-    mounted2.surface.redo();
+    if (!mounted3) return;
+    mounted3.surface.redo();
   }
   function forceResetNotepad() {
     hideNotepad();
@@ -13026,12 +13691,12 @@ Version: v${version}`;
 
   // packages/misc/index.js
   function initMisc(plugin) {
-    const settings4 = registerMiscSettings(plugin);
-    initCardTags(plugin, settings4.enableCardTags);
+    const settings5 = registerMiscSettings(plugin);
+    initCardTags(plugin, settings5.enableCardTags);
     let shownThisPage = null;
     function syncNotepadVisibility() {
-      const wanted = shownThisPage !== null ? shownThisPage : settings4.notepadOpenOnLoad.value();
-      if (settings4.enableNotepad.value() && wanted) {
+      const wanted = shownThisPage !== null ? shownThisPage : settings5.notepadOpenOnLoad.value();
+      if (settings5.enableNotepad.value() && wanted) {
         showNotepad();
       } else {
         hideNotepad();
@@ -13076,12 +13741,12 @@ Version: v${version}`;
       packageLabel: "Notepad",
       onMatch: () => redoNotepad()
     });
-    return settings4;
+    return settings5;
   }
 
   // packages/misc/wishlist/styles.js
-  var STYLE_ID2 = "wizascript-wishlist-style";
-  var CSS3 = `
+  var STYLE_ID3 = "wizascript-wishlist-style";
+  var CSS4 = `
 .wz-wl-menu { position: fixed; z-index: 2147483000; min-width: 170px; max-width: 280px; background: #000; color: #fff;
   border: 1px solid #fff; font-size: 14px; user-select: none; box-shadow: 0 2px 8px rgba(0,0,0,.6); margin: 0; padding: 0; }
 .wz-wl-menu header { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-bottom: 1px solid #555; }
@@ -13117,10 +13782,10 @@ Version: v${version}`;
 .wz-wl-status { flex-basis: 100%; color: #ccc; margin-top: 4px; white-space: normal; }
 `;
   function injectWishlistStyle() {
-    if (document.getElementById(STYLE_ID2)) return;
+    if (document.getElementById(STYLE_ID3)) return;
     const style = document.createElement("style");
-    style.id = STYLE_ID2;
-    style.textContent = CSS3;
+    style.id = STYLE_ID3;
+    style.textContent = CSS4;
     (document.head || document.documentElement).appendChild(style);
   }
 
@@ -13622,11 +14287,11 @@ Version: v${version}`;
   // packages/misc/wishlist/index.js
   var TAB2 = "Cosmetic Wishlist";
   var BACKGROUND_DELAY_MS = 3e3;
-  var settings3 = null;
+  var settings4 = null;
   var pluginRef = null;
   function setting3(key2, fallback) {
     try {
-      return settings3 ? settings3.value(key2) : fallback;
+      return settings4 ? settings4.value(key2) : fallback;
     } catch (e) {
       return fallback;
     }
@@ -13765,29 +14430,29 @@ Version: v${version}`;
   }
   function initWishlist(plugin) {
     pluginRef = plugin;
-    settings3 = createFeatureSettings(plugin, "wishlist", {
+    settings4 = createFeatureSettings(plugin, "wishlist", {
       tab: TAB2,
       visible: () => isPluginEnabled("wishlist")
     });
-    settings3.add("list", {
+    settings4.add("list", {
       name: "Your Wishlist",
       type: "text",
       default: ""
     });
-    settings3.add("checkNow", {
+    settings4.add("checkNow", {
       name: "Check the Shop",
       note: "Read the Cosmetics Shop now and show what's on your wishlist.",
       type: "text",
       default: "Check Shop Now"
     });
-    settings3.add("frequency", {
+    settings4.add("frequency", {
       name: "Shop Check Frequency",
       note: "The shop only changes when it refreshes; that's checked by default.",
       type: "select",
       options: FREQUENCIES,
       default: FREQ_REFRESH
     });
-    settings3.add("remind", {
+    settings4.add("remind", {
       name: "Remind Me",
       note: "Show a match once per shop refresh, or on every page load.",
       type: "select",
@@ -14878,8 +15543,8 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
   }
 
   // packages/misc/card-history/styles.js
-  var STYLE_ID3 = "wizascript-card-history-style";
-  var CSS4 = `
+  var STYLE_ID4 = "wizascript-card-history-style";
+  var CSS5 = `
 .wz-ch-loading { min-height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
 .wz-ch-loading-title { font-size: 20px; }
 .wz-ch-step { font-size: 13px; opacity: .75; }
@@ -14926,10 +15591,10 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
 .wz-ch-art-list .cardDesc.wz-ch-art-desc > div { font-size: 14px !important; }
 `;
   function injectCardHistoryStyle() {
-    if (document.getElementById(STYLE_ID3)) return;
+    if (document.getElementById(STYLE_ID4)) return;
     const st = document.createElement("style");
-    st.id = STYLE_ID3;
-    st.textContent = CSS4;
+    st.id = STYLE_ID4;
+    st.textContent = CSS5;
     (document.head || document.documentElement).appendChild(st);
   }
 
@@ -15410,9 +16075,9 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         el3.style.boxShadow = active ? "inset 0 0 0 999px rgba(255,255,255,0.18)" : "none";
       });
     }
-    function mount() {
+    function mount2() {
       if (!document.body) {
-        requestAnimationFrame(mount);
+        requestAnimationFrame(mount2);
         return;
       }
       document.body.appendChild(hud);
@@ -15422,7 +16087,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       document.body.appendChild(selectEl);
       document.body.appendChild(cursor);
     }
-    mount();
+    mount2();
     registerControllerSettings(plugin, controllerEnabledSetting2);
     let navInputMethod = "stick";
     const GROUP_DEFS = [
@@ -17793,6 +18458,7 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     initDeckTracker(plugin);
     initUcTv(plugin);
     initTierList(plugin);
+    initCardMaker(plugin);
     const miscSettings = initMisc(plugin);
     initWishlist(plugin);
     initCardHistory(plugin);
@@ -17803,3 +18469,4 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     showWhatsNew(plugin, installState);
   });
 })();
+}

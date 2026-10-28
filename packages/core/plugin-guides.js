@@ -155,6 +155,17 @@ const GUIDES = {
     ].concat(isPluginEnabled("controller") ? [
       `Controller: Primary + ${ctl(getBoundButton("toggleTierList"))} opens it. The d-pad moves around; ${ctl(getBoundTierListButton("tlSelect"))} picks up / places, ${ctl(getBoundTierListButton("tlQuickSend"))} sends to a tier, ${ctl(getBoundTierListButton("tlJump"))} jumps between tiers and items, ${ctl(getBoundTierListButton("tlBack"))} cancels. Primary + ${ctl(getBoundButton("tierListFillScreen"))} fills the screen.`
     ] : [])
+  },
+  cardMaker: {
+    tab: "Card Maker",
+    pages: "every page",
+    summary: "Make custom cards in a community card editor, next to chat.",
+    points: () => [
+      `The <b>Pack</b> button in the footer (left of Friends) or ${key("toggleCardMaker", "KeyK")} shows/hides it. Drag its title bar to move it, its edges to resize it; <b>□</b> fills the screen, <b>_</b> shrinks it to its title bar.`,
+      'Pick <b>feildmaster\'s Template Editor</b> or <b>UC Editor</b> in its title bar. Both are their authors\' own sites; <b>↗</b> opens the one you\'re using in a new tab.',
+      'Cards you make here are saved by the editor, separately from its own site. Use the editor\'s own download/upload to move them across.',
+      'If feildmaster\'s editor stays black, turn on the <b>hotfix</b> (on the Card Maker tab, or the note that appears in the window).'
+    ]
   }
 };
 

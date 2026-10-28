@@ -12,6 +12,7 @@ const HEADER = `// ==UserScript==
 // @author       TheWiza2341
 // @match        https://undercards.net/*
 // @match        https://*.undercards.net/*
+// @match        https://undercard.feildmaster.com/*
 // @icon         https://i.imgur.com/FOIUHej.png
 // @updateURL    https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
 // @downloadURL  https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/wizascript.user.js
@@ -25,7 +26,35 @@ const HEADER = `// ==UserScript==
 
 `;
 
+// feildmaster's Template Editor (Card Maker, 1.7.0): only the small part
+// in packages/card-maker/frame.js runs there, and only while the editor is
+// shown inside the Card Maker. The rest of Wizascript never runs on it.
+const EDITOR_HOST = "undercard.feildmaster.com";
+
+async function bundle(options) {
+  const result = await esbuild.build({
+    bundle: true,
+    format: "iife",
+    target: "es2019",
+    write: false,
+    logLevel: "info",
+    loader: { ".md": "text", ".png": "dataurl" },
+    define: {
+      __WIZASCRIPT_VERSION__: JSON.stringify(pkg.version)
+    },
+    ...options
+  });
+  return result.outputFiles[0].text;
+}
+
 async function build() {
+  const frame = await bundle({
+    stdin: {
+      contents: 'import { runInsideEditor } from "./packages/card-maker/frame.js"; runInsideEditor();',
+      resolveDir: __dirname,
+      sourcefile: "card-maker-frame.js"
+    }
+  });
   const result = await esbuild.build({
     entryPoints: [path.join(__dirname, "manifest.js")],
     bundle: true,
@@ -42,7 +71,8 @@ async function build() {
     }
   });
 
-  const bundled = result.outputFiles[0].text;
+  const main = result.outputFiles[0].text;
+  const bundled = `if (location.hostname === ${JSON.stringify(EDITOR_HOST)}) {\n${frame}} else {\n${main}}\n`;
   const outPath = path.join(__dirname, "wizascript.user.js");
   const header = HEADER;
   fs.writeFileSync(outPath, header + bundled, "utf-8");

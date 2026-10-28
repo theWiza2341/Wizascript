@@ -14,6 +14,7 @@ import { initUcTv } from "./packages/uc-tv/index.js";
 // Tier List Maker is a full plugin with its own tab; its files live in
 // packages/misc/tier-list/ because it started out as a Misc feature.
 import { initTierList } from "./packages/misc/tier-list/index.js";
+import { initCardMaker } from "./packages/card-maker/index.js";
 import { initMisc } from "./packages/misc/index.js";
 import { initWishlist } from "./packages/misc/wishlist/index.js";
 import { initCardHistory } from "./packages/misc/card-history/index.js";
@@ -55,6 +56,7 @@ bootstrap(plugin => {
   initDeckTracker(plugin); // shown to players as "Card Tracker"
   initUcTv(plugin);
   initTierList(plugin);
+  initCardMaker(plugin);
   const miscSettings = initMisc(plugin);
   initWishlist(plugin); // Miscellaneous, but with its own tab
   initCardHistory(plugin); // Miscellaneous, no tab

@@ -64,6 +64,14 @@ export const PLUGINS = [
     usesKeybinds: true
   },
   {
+    id: "cardMaker",
+    category: "Plugins",
+    name: "Card Maker",
+    key: "cardMaker.enabled",
+    note: "Make custom cards in a community card editor without leaving the game.",
+    usesKeybinds: true
+  },
+  {
     id: "controller",
     category: "Plugins",
     name: "Controller Support",
@@ -203,7 +211,8 @@ const LABEL_TO_PLUGIN = {
   "UC TV": "ucTv",
   "Notepad": "notepad",
   "Card Tracker": "cardTracker",
-  "Tier List": "tierList"
+  "Tier List": "tierList",
+  "Card Maker": "cardMaker"
 };
 
 export function pluginIdForLabel(label) {

@@ -55,6 +55,7 @@ let editorSetting = null;
 let hotfixSetting = null;
 let gallerySetting = null;
 let wheelSetting = null;
+let authorSetting = null;
 let mounted = null; // { controller, win, frames, ... } | null - built on each open
 let footerButton = null;
 
@@ -180,7 +181,8 @@ function mount() {
         return null;
       },
       editorLabel: (key) => EDITORS[key || currentEditor()].label,
-      wheelPages: () => !wheelSetting || !!wheelSetting.value()
+      wheelPages: () => !wheelSetting || !!wheelSetting.value(),
+      author: () => String((authorSetting && authorSetting.value()) || "").trim().slice(0, 24)
     });
     win.body.appendChild(gallery.el);
     mountGalleryNav({ win, gallery });
@@ -382,6 +384,13 @@ export function initCardMaker(plugin) {
     type: "boolean",
     default: true,
     refresh: true
+  });
+  authorSetting = settings.add("galleryAuthor", {
+    name: "Card Gallery Username",
+    note: "The name your gallery posts show. Needed to upload.",
+    type: "text",
+    default: "",
+    hidden: () => !!gallerySetting && !gallerySetting.value()
   });
   wheelSetting = settings.add("galleryWheelPages", {
     name: "Gallery: Scroll Wheel Pages",

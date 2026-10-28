@@ -53,7 +53,14 @@ export const BROWSE_CSS = `
 .wz-gl-in-l { animation: wz-gl-in-l .25s ease-out; }
 
 /* list bar */
-.wz-gl-seg { position: relative; display: flex; margin: 0 auto 10px; width: 100%; max-width: 560px; flex: none; border: 2px solid #fff; background: #000; }
+.wz-gl-listbar { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; flex: none; }
+.wz-gl-filters { display: flex; gap: 6px; }
+.wz-gl-filter { display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; background: #000; border: 2px solid #777; color: #bbb; font: 13px ${DT}; cursor: pointer; }
+.wz-gl-filter:hover { border-color: #fff; color: #fff; }
+.wz-gl-filter .box { display: inline-block; width: 12px; height: 12px; border: 2px solid currentColor; font-size: 10px; line-height: 9px; text-align: center; }
+.wz-gl-filter.on { border-color: var(--wz-gl-accent); color: var(--wz-gl-accent); }
+.wz-gl-mine.pending { background: #6b5a14; border-color: #ffd84a; }
+.wz-gl-seg { position: relative; display: flex; margin: 0; width: 100%; max-width: 560px; flex: 1 1 360px; border: 2px solid #fff; background: #000; }
 .wz-gl-seg button { flex: 1 1 0; position: relative; z-index: 1; background: none; border: 0; color: #bbb; padding: 6px 0 5px; font-size: 14px; cursor: pointer; font-family: ${DT}; }
 .wz-gl-seg button:hover { color: #fff; }
 .wz-gl-seg button.on { color: #000; }
@@ -62,15 +69,19 @@ export const BROWSE_CSS = `
 
 const seed = (s) => { let x = 7; for (const c of s) x = (x * 31 + c.charCodeAt(0)) >>> 0; return x; };
 
-// Own draft entries plus (optionally) the samples, with a score each.
-export function allEntries(own, { samples, votes, sampleVotes }) {
-  const mine = own.map((e) => {
-    const n = seed(e.key + (e.title || ""));
-    return { ...e, author: "you", mine: true, days: n % 45, base: ((n >> 8) % 60) - 10 };
-  });
+// The player's uploaded posts plus (optionally) the samples, with a score each.
+export function allEntries(posted, { samples, votes, sampleVotes, author }) {
+  const now = Date.now();
+  const me = (author || "").toLowerCase();
+  const mine = posted.map((e) => ({ ...e, mine: !me || (e.author || "").toLowerCase() === me, days: Math.max(0, Math.floor((now - e.postedAt) / 864e5)), base: 0 }));
   const list = mine.concat(samples ? sampleEntries() : []);
   list.forEach((e) => { e.vote = (e.sample ? sampleVotes : votes)[e.key] || 0; e.score = e.base + e.vote; });
   return list;
+}
+
+// My posts / Liked: narrow any list, separately or together.
+export function filtered(entries, { mineOnly, likedOnly }) {
+  return entries.filter((e) => (!mineOnly || e.mine) && (!likedOnly || e.vote === 1));
 }
 
 export function listFor(entries, key) {
@@ -85,7 +96,7 @@ export function listFor(entries, key) {
 // when the window is resized.
 export function browseView(ctx) {
   const { state } = ctx;
-  const list = listFor(ctx.entries, state.list);
+  const list = listFor(filtered(ctx.entries, state), state.list);
   const dir = state.dir; state.dir = null;
   const area = h("div", { class: "wz-gl-pagearea" });
   const count = h("span", { class: "n" });
@@ -97,7 +108,7 @@ export function browseView(ctx) {
       : "Preview of your own parts. Dates and scores are made up until it's live." }),
     h("span", { class: "grow" }),
     h("div", { class: "wz-gl-pager" }, prev, count, next));
-  const el = h("div", { class: "wz-gl-browse" }, segBar(ctx, dir), area, foot);
+  const el = h("div", { class: "wz-gl-browse" }, h("div", { class: "wz-gl-listbar" }, segBar(ctx, dir), filterButtons(ctx)), area, foot);
 
   const items = list.map((e, i) => item(ctx, e, i + 1, state.list));
   let pages = [[]];
@@ -110,7 +121,7 @@ export function browseView(ctx) {
     const grid = h("div", { class: "wz-gl-grid" });
     area.replaceChildren(grid);
     if (!items.length) {
-      area.replaceChildren(h("div", { class: "wz-gl-empty wz-gl-dt", text: "* Nothing here yet." }));
+      area.replaceChildren(h("div", { class: "wz-gl-empty wz-gl-dt", text: state.mineOnly && !ctx.entries.some((e) => e.mine) ? "* You haven't uploaded anything yet." : state.likedOnly ? "* Nothing you've liked here yet." : "* Nothing here yet." }));
       pages = [[]];
       return show();
     }
@@ -175,6 +186,15 @@ export function browseView(ctx) {
   return { el, layout };
 }
 
+function filterButtons(ctx) {
+  const { state } = ctx;
+  const toggle = (key, label, title) => h("button", { type: "button", class: `wz-gl-filter${state[key] ? " on" : ""}`, title, "aria-pressed": state[key] ? "true" : "false",
+    onclick: () => { state[key] = !state[key]; state.page = 0; ctx.rerender(); } }, h("span", { class: "box", text: state[key] ? "✓" : "" }), label);
+  return h("div", { class: "wz-gl-filters" },
+    toggle("mineOnly", "My posts", "Only what you've uploaded"),
+    toggle("likedOnly", "Liked", "Only what you've liked"));
+}
+
 function segBar(ctx, dir) {
   const { state } = ctx;
   const i = LISTS.findIndex((l) => l[0] === state.list);
@@ -195,7 +215,7 @@ function item(ctx, e, rank, listKey) {
   const isSet = e.kind === "set";
   const vote = (dir) => ctx.vote(e, dir);
   return h("div", { class: `wz-gl-item${isSet ? " set" : ""}`, "data-key": e.key },
-    e.mine ? h("span", { class: "wz-gl-mine", text: "yours" }) : null,
+    e.mine ? h("span", { class: `wz-gl-mine${e.status === "pending" ? " pending" : ""}`, text: e.status === "pending" ? "awaiting approval" : "yours", title: e.status === "pending" ? "Uploaded; shows to everyone once approved" : "" }) : null,
     isSet ? h("div", { class: "wz-gl-setname", text: e.title || "(no name)", title: e.title || "" }) : null,
     h("div", { class: "wz-gl-row" }, e.parts.map((p) => ctx.hoverable(h("div", { class: "wz-gl-zoom" }, tile(p)), p, e))),
     h("div", { class: "wz-gl-votes" },

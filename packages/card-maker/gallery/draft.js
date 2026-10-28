@@ -1,8 +1,9 @@
 // packages/card-maker/gallery/draft.js
 //
 // The player's Card Gallery draft: the parts they've added, the sets
-// they've linked, and (until the gallery is live) their votes on the
-// Browse preview. GM storage "wizascript.cardMaker.gallery", so it
+// they've linked, what they've uploaded ("posted", until the gallery is
+// live these stay here as a preview: nothing is sent), and their votes on
+// the Browse preview. GM storage "wizascript.cardMaker.gallery", so it
 // survives a refresh and is in Back up / Restore. Art is stored as small
 // data: URLs (a card part is roughly 15-30 KB).
 
@@ -22,6 +23,7 @@ export function getDraft() {
   if (!draft || !Array.isArray(draft.parts)) draft = { parts: [], groups: [], nextId: 1, votes: {} };
   draft.groups = draft.groups || [];
   draft.votes = draft.votes || {};
+  draft.posted = draft.posted || [];
   draft.parts.forEach((p) => { p.sel = false; });
   return draft;
 }
@@ -70,6 +72,27 @@ export function makeSet(members, name = "") {
   members.forEach((p) => { p.group = set.id; p.sel = false; });
   tidySets();
   return set;
+}
+
+// Upload: every entry becomes a post (awaiting approval) and leaves the
+// draft. Returns the new posts.
+export function postEntries(author) {
+  const d = getDraft();
+  const now = Date.now();
+  const posts = entries().map((e) => ({
+    key: "post" + nextId(),
+    kind: e.kind,
+    title: e.title || "",
+    parts: e.parts.map(({ sel, group, id, ...p }) => p),
+    author,
+    postedAt: now,
+    status: "pending"
+  }));
+  d.posted.push(...posts);
+  d.parts.length = 0;
+  d.groups.length = 0;
+  saveDraft();
+  return posts;
 }
 
 // What would be submitted: every set, then every part not in a set.

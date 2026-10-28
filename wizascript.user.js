@@ -1060,11 +1060,11 @@ Make your own custom cards without leaving Undercards, and keep chatting while y
 ### New: Card Gallery (preview)
 Share the cards you make. It's part of the Card Maker: use **Browse** and **Submit** in its title bar (**Editor** takes you back).
 - **Read from this editor** lists every group and card you've made in the editor that's open. Tick the ones to add, one by one or a whole group as a set. UC Editor group files (.uceditor) and PNG downloads can be added too.
-- Link parts into sets (A, B, C\u2026) of up to 15 cards, rename them, and preview your request. **Browse** shows how they'll look, in four lists (**Newest**, This Week, This Month, All Time), a page at a time: sets show only their name, likes and dislikes sit under each card or set, and hovering a card shows it bigger with who posted it and when. Turn pages with \u2039 \u203A at the bottom right, or the scroll wheel (**Gallery: Scroll Wheel Pages**).
+- Link parts into sets (A, B, C\u2026) of up to 15 cards and rename them. **Review upload** shows exactly what will be sent; **Upload to Gallery** sends it and confirms what went. Set your **Card Gallery Username** (Card Maker tab) first: it's the author name your posts show. **Browse** shows how they'll look, in four lists (**Newest**, This Week, This Month, All Time), a page at a time, and **My posts** / **Liked** narrow any list: sets show only their name, likes and dislikes sit under each card or set, and hovering a card shows it bigger with who posted it and when. Turn pages with \u2039 \u203A at the bottom right, or the scroll wheel (**Gallery: Scroll Wheel Pages**).
 - **Size** (Small / Medium / Large) zooms the cards. Large stretches them to the window's width.
 - Cards use the game's DTM-Mono font and card frames, and long names and text shrink to fit, the way UC Editor does it (thanks to sernon158).
 - Artifacts take the same space as a card (two cards' width when their text is very long), and enchantments get a plain outer frame.
-- The gallery isn't live yet: nothing is sent, and Browse's dates and scores are made up. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
+- The gallery isn't live yet: nothing is actually sent (uploads stay on your computer, marked awaiting approval), and the sample entries' dates and scores are made up. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
 
 ## 1.6.2
 
@@ -7216,8 +7216,8 @@ Version: v${version}`;
   function renderList(container, term, onAdd, onCloseWidget, onDelete) {
     container.empty();
     const all = getAvailablePresets();
-    const filtered = term ? all.filter((p) => p.name.toLowerCase().includes(term.toLowerCase())) : all;
-    if (!filtered.length) {
+    const filtered2 = term ? all.filter((p) => p.name.toLowerCase().includes(term.toLowerCase())) : all;
+    if (!filtered2.length) {
       container.append($("<div>").text("No presets found.").css({
         padding: "12px",
         color: "#777",
@@ -7226,7 +7226,7 @@ Version: v${version}`;
       }));
       return;
     }
-    filtered.sort((a, b) => b.favorited - a.favorited).forEach((p) => container.append(buildPresetRow(p, onAdd, onCloseWidget, onDelete)));
+    filtered2.sort((a, b) => b.favorited - a.favorited).forEach((p) => container.append(buildPresetRow(p, onAdd, onCloseWidget, onDelete)));
   }
   function buildCustomRow(onCreateAdHoc) {
     const row2 = $("<div>").css({
@@ -8427,10 +8427,10 @@ Version: v${version}`;
       guideLoading = false;
       return;
     }
-    const filtered = entries2.filter(
+    const filtered2 = entries2.filter(
       (entry) => isModeAllowed(entry.mode) && levelsPass(entry.players.map((p) => p.level)) && ranksPass(entry.players.map((p) => p.rank), entry.mode)
     );
-    const list = filtered.length ? filtered : entries2;
+    const list = filtered2.length ? filtered2 : entries2;
     const currentGameId = new URLSearchParams(location.search).get("gameId");
     const targetWidth = Math.min(GUIDE_MAX_WIDTH, Math.max(GUIDE_MIN_WIDTH, estimateWidestRowWidth(list) + 55));
     const targetHeight = GUIDE_VISIBLE_ROWS * GUIDE_ROW_HEIGHT_PX + GUIDE_CHROME_HEIGHT_PX;
@@ -11914,13 +11914,14 @@ Version: v${version}`;
         rarity.addEventListener("error", () => rarity.remove(), { once: true });
       } else if (p.rarity) rarity = rarityImage(p.rarity);
     }
+    const framed = frameImages && kind !== "enchant";
     return h(
       "div",
-      { class: `wz-gl-card t-${kind}${frameImages && kind !== "enchant" ? " framed" : ""}` },
+      { class: `wz-gl-card t-${kind}${framed ? " framed" : ""}` },
       h("div", { class: "wz-gl-bg" }),
       p.art ? h("img", { class: "wz-gl-art", src: p.art, alt: "" }) : null,
       h("div", { class: "wz-gl-shade" }),
-      h("div", { class: "wz-gl-frame", style: frameImages ? { backgroundImage: `url(${FRAME(kind)})` } : {} }),
+      h("div", { class: "wz-gl-frame", style: framed ? { backgroundImage: `url(${FRAME(kind)})` } : {} }),
       ["l1", "l2", "l3", "v1", "v2", "v3"].map((c) => h("i", { class: c })),
       name,
       h("div", { class: "wz-gl-cost", text: p.type === "Enchantment" ? "" : String((_a = p.cost) != null ? _a : "") }),
@@ -12341,6 +12342,7 @@ Version: v${version}`;
     if (!draft || !Array.isArray(draft.parts)) draft = { parts: [], groups: [], nextId: 1, votes: {} };
     draft.groups = draft.groups || [];
     draft.votes = draft.votes || {};
+    draft.posted = draft.posted || [];
     draft.parts.forEach((p) => {
       p.sel = false;
     });
@@ -12388,6 +12390,24 @@ Version: v${version}`;
     });
     tidySets();
     return set;
+  }
+  function postEntries(author) {
+    const d = getDraft();
+    const now = Date.now();
+    const posts = entries().map((e) => ({
+      key: "post" + nextId(),
+      kind: e.kind,
+      title: e.title || "",
+      parts: e.parts.map(({ sel, group, id, ...p }) => p),
+      author,
+      postedAt: now,
+      status: "pending"
+    }));
+    d.posted.push(...posts);
+    d.parts.length = 0;
+    d.groups.length = 0;
+    saveDraft();
+    return posts;
   }
   function entries() {
     const d = getDraft();
@@ -12489,8 +12509,8 @@ Version: v${version}`;
     if (cache) return cache;
     const cards2 = gameCards().filter((c) => c && c.name && c.image && (c.typeCard === 0 || c.typeCard === 1) && c.rarity !== "TOKEN");
     if (!cards2.length && !(artifacts2 && artifacts2.length)) return [];
-    let seed2 = 12345;
-    const rnd = () => (seed2 = seed2 * 1103515245 + 12345 >>> 0) / 4294967296;
+    let seed = 12345;
+    const rnd = () => (seed = seed * 1103515245 + 12345 >>> 0) / 4294967296;
     const pool = cards2.slice().sort(() => rnd() - 0.5);
     const out = [];
     let n = 0;
@@ -12510,7 +12530,10 @@ Version: v${version}`;
         sample: true
       });
     }
-    (artifacts2 || []).slice().sort(() => rnd() - 0.5).slice(0, 8).forEach((a, k) => {
+    const arts = (artifacts2 || []).slice().sort(() => rnd() - 0.5);
+    const evil = arts.findIndex((a) => /^evil\s*plan$/i.test(a.name || "") || /^evil_?plan$/i.test(a.image || ""));
+    if (evil > 0) arts.unshift(arts.splice(evil, 1)[0]);
+    arts.slice(0, 8).forEach((a, k) => {
       const part = artifactPart(a, k);
       out.splice(Math.min(out.length, 3 + k * 5), 0, {
         key: `samplea${k}`,
@@ -12585,28 +12608,32 @@ Version: v${version}`;
 .wz-gl-in-l { animation: wz-gl-in-l .25s ease-out; }
 
 /* list bar */
-.wz-gl-seg { position: relative; display: flex; margin: 0 auto 10px; width: 100%; max-width: 560px; flex: none; border: 2px solid #fff; background: #000; }
+.wz-gl-listbar { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; flex: none; }
+.wz-gl-filters { display: flex; gap: 6px; }
+.wz-gl-filter { display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; background: #000; border: 2px solid #777; color: #bbb; font: 13px ${DT}; cursor: pointer; }
+.wz-gl-filter:hover { border-color: #fff; color: #fff; }
+.wz-gl-filter .box { display: inline-block; width: 12px; height: 12px; border: 2px solid currentColor; font-size: 10px; line-height: 9px; text-align: center; }
+.wz-gl-filter.on { border-color: var(--wz-gl-accent); color: var(--wz-gl-accent); }
+.wz-gl-mine.pending { background: #6b5a14; border-color: #ffd84a; }
+.wz-gl-seg { position: relative; display: flex; margin: 0; width: 100%; max-width: 560px; flex: 1 1 360px; border: 2px solid #fff; background: #000; }
 .wz-gl-seg button { flex: 1 1 0; position: relative; z-index: 1; background: none; border: 0; color: #bbb; padding: 6px 0 5px; font-size: 14px; cursor: pointer; font-family: ${DT}; }
 .wz-gl-seg button:hover { color: #fff; }
 .wz-gl-seg button.on { color: #000; }
 .wz-gl-seg .pill { position: absolute; top: 0; bottom: 0; width: 25%; background: var(--wz-gl-accent); transition: left .25s ease; }
 `;
-  var seed = (s) => {
-    let x = 7;
-    for (const c of s) x = x * 31 + c.charCodeAt(0) >>> 0;
-    return x;
-  };
-  function allEntries(own, { samples, votes, sampleVotes }) {
-    const mine = own.map((e) => {
-      const n = seed(e.key + (e.title || ""));
-      return { ...e, author: "you", mine: true, days: n % 45, base: (n >> 8) % 60 - 10 };
-    });
+  function allEntries(posted, { samples, votes, sampleVotes, author }) {
+    const now = Date.now();
+    const me = (author || "").toLowerCase();
+    const mine = posted.map((e) => ({ ...e, mine: !me || (e.author || "").toLowerCase() === me, days: Math.max(0, Math.floor((now - e.postedAt) / 864e5)), base: 0 }));
     const list = mine.concat(samples ? sampleEntries() : []);
     list.forEach((e) => {
       e.vote = (e.sample ? sampleVotes : votes)[e.key] || 0;
       e.score = e.base + e.vote;
     });
     return list;
+  }
+  function filtered(entries2, { mineOnly, likedOnly }) {
+    return entries2.filter((e) => (!mineOnly || e.mine) && (!likedOnly || e.vote === 1));
   }
   function listFor(entries2, key2) {
     if (key2 === "new") return entries2.slice().sort((a, b) => a.days - b.days || b.score - a.score);
@@ -12615,7 +12642,7 @@ Version: v${version}`;
   }
   function browseView(ctx) {
     const { state: state2 } = ctx;
-    const list = listFor(ctx.entries, state2.list);
+    const list = listFor(filtered(ctx.entries, state2), state2.list);
     const dir = state2.dir;
     state2.dir = null;
     const area = h("div", { class: "wz-gl-pagearea" });
@@ -12629,7 +12656,7 @@ Version: v${version}`;
       h("span", { class: "grow" }),
       h("div", { class: "wz-gl-pager" }, prev, count, next)
     );
-    const el3 = h("div", { class: "wz-gl-browse" }, segBar(ctx, dir), area, foot);
+    const el3 = h("div", { class: "wz-gl-browse" }, h("div", { class: "wz-gl-listbar" }, segBar(ctx, dir), filterButtons(ctx)), area, foot);
     const items = list.map((e, i) => item(ctx, e, i + 1, state2.list));
     let pages = [[]];
     let animate = dir;
@@ -12638,7 +12665,7 @@ Version: v${version}`;
       const grid = h("div", { class: "wz-gl-grid" });
       area.replaceChildren(grid);
       if (!items.length) {
-        area.replaceChildren(h("div", { class: "wz-gl-empty wz-gl-dt", text: "* Nothing here yet." }));
+        area.replaceChildren(h("div", { class: "wz-gl-empty wz-gl-dt", text: state2.mineOnly && !ctx.entries.some((e) => e.mine) ? "* You haven't uploaded anything yet." : state2.likedOnly ? "* Nothing you've liked here yet." : "* Nothing here yet." }));
         pages = [[]];
         return show();
       }
@@ -12708,6 +12735,26 @@ Version: v${version}`;
     }, { passive: false });
     return { el: el3, layout: layout2 };
   }
+  function filterButtons(ctx) {
+    const { state: state2 } = ctx;
+    const toggle = (key2, label, title) => h("button", {
+      type: "button",
+      class: `wz-gl-filter${state2[key2] ? " on" : ""}`,
+      title,
+      "aria-pressed": state2[key2] ? "true" : "false",
+      onclick: () => {
+        state2[key2] = !state2[key2];
+        state2.page = 0;
+        ctx.rerender();
+      }
+    }, h("span", { class: "box", text: state2[key2] ? "\u2713" : "" }), label);
+    return h(
+      "div",
+      { class: "wz-gl-filters" },
+      toggle("mineOnly", "My posts", "Only what you've uploaded"),
+      toggle("likedOnly", "Liked", "Only what you've liked")
+    );
+  }
   function segBar(ctx, dir) {
     const { state: state2 } = ctx;
     const i = LISTS.findIndex((l) => l[0] === state2.list);
@@ -12731,7 +12778,7 @@ Version: v${version}`;
     return h(
       "div",
       { class: `wz-gl-item${isSet ? " set" : ""}`, "data-key": e.key },
-      e.mine ? h("span", { class: "wz-gl-mine", text: "yours" }) : null,
+      e.mine ? h("span", { class: `wz-gl-mine${e.status === "pending" ? " pending" : ""}`, text: e.status === "pending" ? "awaiting approval" : "yours", title: e.status === "pending" ? "Uploaded; shows to everyone once approved" : "" }) : null,
       isSet ? h("div", { class: "wz-gl-setname", text: e.title || "(no name)", title: e.title || "" }) : null,
       h("div", { class: "wz-gl-row" }, e.parts.map((p) => ctx.hoverable(h("div", { class: "wz-gl-zoom" }, tile(p)), p, e))),
       h(
@@ -12793,6 +12840,18 @@ Version: v${version}`;
 .wz-gl-x { position: absolute; top: 2px; right: 2px; z-index: 9; min-width: 0 !important; padding: 0 5px !important; height: 18px !important; line-height: 16px !important; }
 .wz-gl-from { display: block; opacity: .55; font-size: 10px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .wz-gl-preview { white-space: pre-wrap; max-height: 260px; overflow: auto; background: #151515 !important; color: #ddd !important; border: 1px solid #444 !important; border-radius: 3px; padding: 6px; margin-top: 10px; font: 12px monospace; }
+.wz-gl-upload { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; padding: 8px 10px; border: 2px solid #2f6b3a; background: #0f1a11; }
+.wz-gl-upload.open { display: block; }
+.wz-gl-revlist { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; max-height: 360px; overflow: auto; }
+.wz-gl-rev { border: 1px solid #444; background: #111; padding: 4px 6px; }
+.wz-gl-revhead { margin-bottom: 3px; }
+.wz-gl-revcards { display: flex; gap: 3px; --wz-gl-z: .45; }
+.wz-gl-revcards .wz-gl-zoom { margin: 0; cursor: default; }
+.wz-gl-issues { color: #ffb4b4; margin: 4px 0; }
+.wz-gl-revfoot { margin: 6px 0 0; }
+.wz-gl-by { opacity: .8; }
+.wz-gl-done { margin: 8px 0; padding: 8px 10px; border: 2px solid #6fbf7e; background: #102414; }
+.wz-gl-done ul { margin: 4px 0 6px 18px; padding: 0; }
 .wz-gl-grid { display: flex; flex-wrap: wrap; gap: 12px 10px; align-items: flex-end; }
 .wz-gl-item { max-width: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .wz-gl-item.set { padding: 3px 4px 2px; border: 1px solid #444; border-radius: 4px; background: #141414; }
@@ -12820,13 +12879,13 @@ ${BROWSE_CSS}
   }
   var setColor = (set) => COLORS[(set.letter.charCodeAt(0) - 65) % COLORS.length];
   var sameCard = (p, source, group, raw) => p.source === source && p.editorGroup === group && p.name === (raw.name || "") && p.type === raw.type;
-  function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
+  function buildGalleryPanel({ requestRead, editorLabel, wheelPages, author = () => "" }) {
     injectStyle2();
     const draft2 = getDraft();
     let tab = draft2.parts.length ? "browse" : "submit";
     let open = false;
     const proto = draft2.browseProto || {};
-    const browse = { list: "new", page: 0, samples: proto.samples !== false, dir: null };
+    const browse = { list: "new", page: 0, samples: proto.samples !== false, dir: null, mineOnly: false, likedOnly: false };
     const listeners4 = [];
     const notify2 = () => listeners4.forEach((f) => f());
     let browseCtl = null;
@@ -12834,7 +12893,8 @@ ${BROWSE_CSS}
     const sampleVotes = {};
     let read2 = null;
     let readTimer = null;
-    let preview = "";
+    let reviewing = false;
+    let lastUpload = null;
     const status = h("span", { class: "wz-gl-status" });
     const say = (t) => {
       status.textContent = t;
@@ -12901,9 +12961,9 @@ ${BROWSE_CSS}
         { class: "wz-gl-hinfo" },
         h("span", { class: "dim", text: "By " }),
         h("b", { text: e.author || "you" }),
-        e.mine ? h("span", { class: "dim", text: " (not posted yet)" }) : null,
         h("br"),
-        h("span", { class: "dim", text: e.days ? `Posted ${e.days} day${e.days === 1 ? "" : "s"} ago` : "Posted today" })
+        h("span", { class: "dim", text: (e.status === "pending" ? "Uploaded " : "Posted ") + (e.days ? `${e.days} day${e.days === 1 ? "" : "s"} ago` : "today") }),
+        e.status === "pending" ? [h("br"), h("span", { class: "dim", text: "Awaiting approval" })] : null
       ) : null;
       const card = h("div", { class: "wz-gl-hcard" }, tile(p));
       hover.replaceChildren(card, info);
@@ -13006,6 +13066,7 @@ ${BROWSE_CSS}
     const changed2 = () => {
       tidySets();
       saveDraft();
+      lastUpload = null;
       render2();
     };
     function submitView() {
@@ -13033,17 +13094,13 @@ ${BROWSE_CSS}
           changed2();
         }),
         h("span", { class: "wz-gl-grow" }),
-        button("Preview request", () => {
-          preview = requestText();
-          render2();
-        }),
         removeAllButton()
       );
       bar.children[2].disabled = sel.length < 2 || sel.length > SET_CAP;
       if (sel.length > SET_CAP) bar.children[2].title = `Sets can have up to ${SET_CAP} cards`;
       bar.children[3].disabled = !sel.some((p) => p.group);
       const note = h("p", { class: "wz-gl-note", text: draft2.parts.length ? "Click parts to select them, then Link selected to make a set. Anything not in a set is submitted on its own." : "Make cards in the editor, then Read from this editor and tick the ones to add. Files work too." });
-      return h("div", {}, bar, note, read2 ? picker() : null, setsRow(), tray(), preview ? h("pre", { class: "wz-gl-preview", text: preview }) : null);
+      return h("div", {}, bar, note, lastUpload ? uploadedBox() : null, draft2.parts.length ? uploadBox() : null, read2 && !reviewing ? picker() : null, setsRow(), tray());
     }
     let removeArmed = false;
     function removeAllButton() {
@@ -13063,7 +13120,7 @@ ${BROWSE_CSS}
         removeArmed = false;
         draft2.parts.length = 0;
         draft2.groups.length = 0;
-        preview = "";
+        reviewing = false;
         changed2();
       }, { title: "Empty your gallery draft" });
       b.disabled = !draft2.parts.length;
@@ -13208,17 +13265,103 @@ ${BROWSE_CSS}
         );
       }));
     }
-    function requestText() {
+    function problems() {
+      const out = [];
+      if (!author()) out.push("Unable to Submit: Please set a Card Gallery Username first in Wizascript Settings (Card Maker tab).");
+      const unnamed = draft2.parts.filter((p) => !p.name).length;
+      const unnamedSets = draft2.groups.filter((g) => !g.name).length;
+      if (unnamed) out.push(`${unnamed} card${unnamed === 1 ? " has" : "s have"} no name yet.`);
+      if (unnamedSets) out.push(`${unnamedSets} set${unnamedSets === 1 ? " has" : "s have"} no name yet.`);
+      return out;
+    }
+    function uploadBox() {
       const list = entries();
-      const kb = Math.round(draft2.parts.reduce((s, p) => s + ((p.art || "").length + (p.picture || "").length) * 0.75, 0) / 1024);
-      const lines = [`${list.length} entr${list.length === 1 ? "y" : "ies"}, ${draft2.parts.length} parts, about ${kb} KB of pictures. (Nothing is sent yet.)`, ""];
-      list.forEach((e) => {
-        lines.push(`${e.kind === "set" ? `Set ${e.label}` : "Single"}: ${e.title || "(no name)"}`);
-        e.parts.forEach((p) => lines.push(`   - ${p.type}: ${p.name || "(no name)"}${p.type === "Monster" ? `  ${p.cost}/${p.atk}/${p.hp}` : p.cost !== null && p.cost !== void 0 ? `  cost ${p.cost}` : ""}  [${SOURCE_LABEL[p.source] || p.source}]`));
-      });
-      const missing = draft2.parts.filter((p) => !p.name).length + draft2.groups.filter((g) => !g.name).length;
-      if (missing) lines.push("", `${missing} name(s) still empty.`);
-      return lines.join("\n");
+      const nCards = draft2.parts.length;
+      const summary = `${list.length} entr${list.length === 1 ? "y" : "ies"} (${nCards} card${nCards === 1 ? "" : "s"})`;
+      if (!reviewing) {
+        return h(
+          "div",
+          { class: "wz-gl-upload" },
+          h("span", { text: `Ready to upload: ${summary}.` }),
+          h("span", { class: "wz-gl-grow" }),
+          button("Review upload", () => {
+            reviewing = true;
+            render2();
+            panel.scrollTop = 0;
+          }, { primary: true, title: "See exactly what will be sent before uploading" })
+        );
+      }
+      const issues = problems();
+      const rows = list.map((e) => h(
+        "div",
+        { class: "wz-gl-rev" },
+        h(
+          "div",
+          { class: "wz-gl-revhead" },
+          h("b", { text: e.kind === "set" ? `Set ${e.label}: ${e.title || "(no name)"}` : e.title || "(no name)" }),
+          h("small", { text: e.kind === "set" ? ` ${e.parts.length} cards` : ` ${e.parts[0].type}` })
+        ),
+        h("div", { class: "wz-gl-revcards" }, e.parts.map((p) => h("div", { class: "wz-gl-zoom" }, tile(p))))
+      ));
+      const go = button("Upload to Gallery", () => doUpload(), { primary: true, title: issues.length ? issues[0] : "Send these for approval" });
+      go.disabled = issues.length > 0;
+      return h(
+        "div",
+        { class: "wz-gl-upload open" },
+        h(
+          "div",
+          { class: "wz-gl-bar" },
+          h("b", { text: `Upload ${summary}` }),
+          h("span", { class: "wz-gl-grow" }),
+          h("span", { class: "wz-gl-by", text: author() ? `Posting as ${author()}` : "" })
+        ),
+        h("div", { class: "wz-gl-revlist" }, rows),
+        issues.length ? h("div", { class: "wz-gl-issues" }, issues.map((t) => h("div", { text: t }))) : null,
+        h(
+          "div",
+          { class: "wz-gl-bar wz-gl-revfoot" },
+          h("span", { class: "wz-gl-note", style: { margin: 0 }, text: "Each set and single card is sent as its own entry. They show in Browse once approved." }),
+          h("span", { class: "wz-gl-grow" }),
+          button("Back", () => {
+            reviewing = false;
+            render2();
+          }),
+          go
+        )
+      );
+    }
+    function doUpload() {
+      if (problems().length) return render2();
+      const posts = postEntries(author());
+      reviewing = false;
+      read2 = null;
+      lastUpload = { posts };
+      say(`Uploaded ${posts.length} entr${posts.length === 1 ? "y" : "ies"}.`);
+      render2();
+    }
+    function uploadedBox() {
+      const posts = lastUpload.posts;
+      const cards2 = posts.reduce((n, e) => n + e.parts.length, 0);
+      return h(
+        "div",
+        { class: "wz-gl-done" },
+        h("div", {}, h("b", { text: `\u2713 Sent for approval: ${posts.length} entr${posts.length === 1 ? "y" : "ies"} (${cards2} card${cards2 === 1 ? "" : "s"})` })),
+        h("ul", {}, posts.map((e) => h("li", { text: e.kind === "set" ? `${e.title} (set of ${e.parts.length})` : `${e.title} (${e.parts[0].type})` }))),
+        h("div", { class: "wz-gl-note", style: { margin: "0 0 6px" }, text: "Preview: the gallery isn't live yet, so nothing actually left your computer. Your uploads show in Browse under My posts." }),
+        button("See my posts", () => {
+          browse.mineOnly = true;
+          browse.likedOnly = false;
+          browse.list = "new";
+          browse.page = 0;
+          lastUpload = null;
+          setView("browse");
+        }, { primary: true }),
+        " ",
+        button("Dismiss", () => {
+          lastUpload = null;
+          render2();
+        })
+      );
     }
     fileInput.addEventListener("change", async () => {
       const files = [...fileInput.files];
@@ -13251,7 +13394,7 @@ ${BROWSE_CSS}
         samples: browse.samples,
         wheelPages: () => !wheelPages || wheelPages(),
         onPage: hideHover,
-        entries: allEntries(entries(), { samples: browse.samples, votes: draft2.votes, sampleVotes }),
+        entries: allEntries(draft2.posted, { samples: browse.samples, votes: draft2.votes, sampleVotes, author: author() }),
         hoverable,
         rerender: render2,
         vote(e, dir) {
@@ -13333,6 +13476,7 @@ ${BROWSE_CSS}
   var hotfixSetting = null;
   var gallerySetting = null;
   var wheelSetting = null;
+  var authorSetting = null;
   var mounted2 = null;
   var footerButton = null;
   var log = (...a) => {
@@ -13447,7 +13591,8 @@ ${BROWSE_CSS}
           return null;
         },
         editorLabel: (key2) => EDITORS[key2 || currentEditor()].label,
-        wheelPages: () => !wheelSetting || !!wheelSetting.value()
+        wheelPages: () => !wheelSetting || !!wheelSetting.value(),
+        author: () => String(authorSetting && authorSetting.value() || "").trim().slice(0, 24)
       });
       win.body.appendChild(gallery.el);
       mountGalleryNav({ win, gallery });
@@ -13631,6 +13776,13 @@ ${BROWSE_CSS}
       type: "boolean",
       default: true,
       refresh: true
+    });
+    authorSetting = settings3.add("galleryAuthor", {
+      name: "Card Gallery Username",
+      note: "The name your gallery posts show. Needed to upload.",
+      type: "text",
+      default: "",
+      hidden: () => !!gallerySetting && !gallerySetting.value()
     });
     wheelSetting = settings3.add("galleryWheelPages", {
       name: "Gallery: Scroll Wheel Pages",

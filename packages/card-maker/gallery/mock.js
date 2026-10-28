@@ -134,8 +134,12 @@ export function sampleEntries() {
       sample: true
     });
   }
-  // Artifacts: every fifth entry or so, never in a set.
-  (artifacts || []).slice().sort(() => rnd() - 0.5).slice(0, 8).forEach((a, k) => {
+  // Artifacts: every fifth entry or so, never in a set. Evil Plan always
+  // (its text is long enough to need two spaces).
+  const arts = (artifacts || []).slice().sort(() => rnd() - 0.5);
+  const evil = arts.findIndex((a) => /^evil\s*plan$/i.test(a.name || "") || /^evil_?plan$/i.test(a.image || ""));
+  if (evil > 0) arts.unshift(arts.splice(evil, 1)[0]);
+  arts.slice(0, 8).forEach((a, k) => {
     const part = artifactPart(a, k);
     out.splice(Math.min(out.length, 3 + k * 5), 0, {
       key: `samplea${k}`, kind: "single", title: part.name, parts: [part],

@@ -101,11 +101,12 @@ export function tile(p) {
   }
   // Enchantments: the game has no enchantment frame to load, so they get a
   // drawn outer frame only.
-  return h("div", { class: `wz-gl-card t-${kind}${frameImages && kind !== "enchant" ? " framed" : ""}` },
+  const framed = frameImages && kind !== "enchant";
+  return h("div", { class: `wz-gl-card t-${kind}${framed ? " framed" : ""}` },
     h("div", { class: "wz-gl-bg" }),
     p.art ? h("img", { class: "wz-gl-art", src: p.art, alt: "" }) : null,
     h("div", { class: "wz-gl-shade" }),
-    h("div", { class: "wz-gl-frame", style: frameImages ? { backgroundImage: `url(${FRAME(kind)})` } : {} }),
+    h("div", { class: "wz-gl-frame", style: framed ? { backgroundImage: `url(${FRAME(kind)})` } : {} }),
     ["l1", "l2", "l3", "v1", "v2", "v3"].map((c) => h("i", { class: c })),
     name,
     h("div", { class: "wz-gl-cost", text: p.type === "Enchantment" ? "" : String(p.cost ?? "") }),

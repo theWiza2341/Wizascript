@@ -1,24 +1,24 @@
 // packages/card-maker/gallery/panel.js
 //
 // The Card Gallery inside the Card Maker's window: a panel over the
-// editor (which stays loaded underneath), opened by the Gallery button in
-// the title bar. Two tabs:
+// editor (which stays loaded underneath), opened with Browse / Submit in
+// the title bar (nav.js). Two views:
 //   Submit  - Read from this editor (lists every group and card made in
 //             the editor that's open, to tick what to add), or add files
 //             (.uceditor, PNG). Added parts go in a tray: click to select,
-//             link them into sets (A, B, C...), rename, remove, preview
-//             the request.
-//   Browse  - a PREVIEW of how the parts will look in the gallery: a
-//             compact grid (sets as one row of cards with only the set
-//             name), votes underneath, and the details in a hover card.
-//             All Time / This Month / This Week. Until the gallery is live
-//             its dates and scores are made up, and nothing is sent.
-// A size control (S / M / L / Fill) zooms the cards on both tabs.
+//             link them into sets (A, B, C...), rename, remove, then
+//             Review upload -> Upload to Gallery (needs the Card Gallery
+//             Username setting). Uploads leave the draft as posts.
+//   Browse  - the gallery's lists, a page at a time (browse.js), with My
+//             posts / Liked filters. Until the gallery is live it shows your
+//             uploads (awaiting approval) and sample entries, and nothing
+//             is sent anywhere.
+// A size control (Small / Medium / Large) zooms the cards on both views.
 
 import { h, button } from "./dom.js";
 import { tile, fitText, checkFrameImages, whenFontsReady, onFontsChange, TILE_CSS } from "./render.js";
 import { partFromRaw, readUcEditorFile, picturesFromPng, readFile } from "./parts.js";
-import { getDraft, saveDraft, nextId, makeSet, tidySets, entries, SET_CAP } from "./draft.js";
+import { getDraft, saveDraft, nextId, makeSet, tidySets, entries, postEntries, SET_CAP } from "./draft.js";
 import { browseView, allEntries, BROWSE_CSS } from "./browse.js";
 import { loadSampleExtras } from "./mock.js";
 
@@ -73,6 +73,18 @@ const CSS = `
 .wz-gl-x { position: absolute; top: 2px; right: 2px; z-index: 9; min-width: 0 !important; padding: 0 5px !important; height: 18px !important; line-height: 16px !important; }
 .wz-gl-from { display: block; opacity: .55; font-size: 10px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .wz-gl-preview { white-space: pre-wrap; max-height: 260px; overflow: auto; background: #151515 !important; color: #ddd !important; border: 1px solid #444 !important; border-radius: 3px; padding: 6px; margin-top: 10px; font: 12px monospace; }
+.wz-gl-upload { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; padding: 8px 10px; border: 2px solid #2f6b3a; background: #0f1a11; }
+.wz-gl-upload.open { display: block; }
+.wz-gl-revlist { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; max-height: 360px; overflow: auto; }
+.wz-gl-rev { border: 1px solid #444; background: #111; padding: 4px 6px; }
+.wz-gl-revhead { margin-bottom: 3px; }
+.wz-gl-revcards { display: flex; gap: 3px; --wz-gl-z: .45; }
+.wz-gl-revcards .wz-gl-zoom { margin: 0; cursor: default; }
+.wz-gl-issues { color: #ffb4b4; margin: 4px 0; }
+.wz-gl-revfoot { margin: 6px 0 0; }
+.wz-gl-by { opacity: .8; }
+.wz-gl-done { margin: 8px 0; padding: 8px 10px; border: 2px solid #6fbf7e; background: #102414; }
+.wz-gl-done ul { margin: 4px 0 6px 18px; padding: 0; }
 .wz-gl-grid { display: flex; flex-wrap: wrap; gap: 12px 10px; align-items: flex-end; }
 .wz-gl-item { max-width: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .wz-gl-item.set { padding: 3px 4px 2px; border: 1px solid #444; border-radius: 4px; background: #141414; }
@@ -106,13 +118,13 @@ const sameCard = (p, source, group, raw) => p.source === source && p.editorGroup
 // requestRead(): asks the editor in the Card Maker for its cards, or
 // returns a message saying why it can't. The answer comes back through
 // receiveCards().
-export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
+export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, author = () => "" }) {
   injectStyle();
   const draft = getDraft();
   let tab = draft.parts.length ? "browse" : "submit";
   let open = false;
   const proto = draft.browseProto || {};
-  const browse = { list: "new", page: 0, samples: proto.samples !== false, dir: null };
+  const browse = { list: "new", page: 0, samples: proto.samples !== false, dir: null, mineOnly: false, likedOnly: false };
   const listeners = [];
   const notify = () => listeners.forEach((f) => f());
   let browseCtl = null;
@@ -120,7 +132,8 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
   const sampleVotes = {};
   let read = null; // { source, label, groups: [{ name, parts: [raw + pick] }] }
   let readTimer = null;
-  let preview = "";
+  let reviewing = false;   // the Upload step is open
+  let lastUpload = null;   // { posts } after an upload, until the draft changes
 
   const status = h("span", { class: "wz-gl-status" });
   const say = (t) => { status.textContent = t; };
@@ -174,8 +187,9 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
   function showHover(anchor, p, e) {
     hoverFor = anchor;
     const info = e ? h("div", { class: "wz-gl-hinfo" },
-      h("span", { class: "dim", text: "By " }), h("b", { text: e.author || "you" }), e.mine ? h("span", { class: "dim", text: " (not posted yet)" }) : null,
-      h("br"), h("span", { class: "dim", text: e.days ? `Posted ${e.days} day${e.days === 1 ? "" : "s"} ago` : "Posted today" })) : null;
+      h("span", { class: "dim", text: "By " }), h("b", { text: e.author || "you" }),
+      h("br"), h("span", { class: "dim", text: (e.status === "pending" ? "Uploaded " : "Posted ") + (e.days ? `${e.days} day${e.days === 1 ? "" : "s"} ago` : "today") }),
+      e.status === "pending" ? [h("br"), h("span", { class: "dim", text: "Awaiting approval" })] : null) : null;
     const card = h("div", { class: "wz-gl-hcard" }, tile(p));
     hover.replaceChildren(card, info);
     hover.classList.add("on");
@@ -234,7 +248,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
   whenFontsReady().then(() => { if (open) render(); });
   let fontTimer = null;
   onFontsChange(() => { clearTimeout(fontTimer); fontTimer = setTimeout(() => { if (open) render(); }, 50); });
-  const changed = () => { tidySets(); saveDraft(); render(); };
+  const changed = () => { tidySets(); saveDraft(); lastUpload = null; render(); };
 
   // ---- Submit ----
   function submitView() {
@@ -251,7 +265,6 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
       button("Link selected", () => { makeSet(draft.parts.filter((p) => p.sel)); changed(); }, { title: "Make the selected parts one set" }),
       button("Unlink selected", () => { draft.parts.filter((p) => p.sel).forEach((p) => { p.group = null; p.sel = false; }); changed(); }),
       h("span", { class: "wz-gl-grow" }),
-      button("Preview request", () => { preview = requestText(); render(); }),
       removeAllButton());
     bar.children[2].disabled = sel.length < 2 || sel.length > SET_CAP;
     if (sel.length > SET_CAP) bar.children[2].title = `Sets can have up to ${SET_CAP} cards`;
@@ -259,7 +272,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
     const note = h("p", { class: "wz-gl-note", text: draft.parts.length
       ? "Click parts to select them, then Link selected to make a set. Anything not in a set is submitted on its own."
       : "Make cards in the editor, then Read from this editor and tick the ones to add. Files work too." });
-    return h("div", {}, bar, note, read ? picker() : null, setsRow(), tray(), preview ? h("pre", { class: "wz-gl-preview", text: preview }) : null);
+    return h("div", {}, bar, note, lastUpload ? uploadedBox() : null, draft.parts.length ? uploadBox() : null, read && !reviewing ? picker() : null, setsRow(), tray());
   }
 
   // Asks once more on the button itself instead of a browser pop-up.
@@ -269,7 +282,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
       if (!draft.parts.length) return;
       if (!removeArmed) { removeArmed = true; render(); setTimeout(() => { if (removeArmed) { removeArmed = false; render(); } }, 3000); return; }
       removeArmed = false;
-      draft.parts.length = 0; draft.groups.length = 0; preview = ""; changed();
+      draft.parts.length = 0; draft.groups.length = 0; reviewing = false; changed();
     }, { title: "Empty your gallery draft" });
     b.disabled = !draft.parts.length;
     return b;
@@ -356,17 +369,64 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
     }));
   }
 
-  function requestText() {
+  // ---- Upload ----
+  // Step 1: "Review upload" lists exactly what will be sent (each set and
+  // single, with its cards). Step 2: "Upload to Gallery" sends it and the
+  // draft empties; a box says what went.
+  function problems() {
+    const out = [];
+    if (!author()) out.push("Unable to Submit: Please set a Card Gallery Username first in Wizascript Settings (Card Maker tab).");
+    const unnamed = draft.parts.filter((p) => !p.name).length;
+    const unnamedSets = draft.groups.filter((g) => !g.name).length;
+    if (unnamed) out.push(`${unnamed} card${unnamed === 1 ? " has" : "s have"} no name yet.`);
+    if (unnamedSets) out.push(`${unnamedSets} set${unnamedSets === 1 ? " has" : "s have"} no name yet.`);
+    return out;
+  }
+  function uploadBox() {
     const list = entries();
-    const kb = Math.round(draft.parts.reduce((s, p) => s + ((p.art || "").length + (p.picture || "").length) * 0.75, 0) / 1024);
-    const lines = [`${list.length} entr${list.length === 1 ? "y" : "ies"}, ${draft.parts.length} parts, about ${kb} KB of pictures. (Nothing is sent yet.)`, ""];
-    list.forEach((e) => {
-      lines.push(`${e.kind === "set" ? `Set ${e.label}` : "Single"}: ${e.title || "(no name)"}`);
-      e.parts.forEach((p) => lines.push(`   - ${p.type}: ${p.name || "(no name)"}${p.type === "Monster" ? `  ${p.cost}/${p.atk}/${p.hp}` : p.cost !== null && p.cost !== undefined ? `  cost ${p.cost}` : ""}  [${SOURCE_LABEL[p.source] || p.source}]`));
-    });
-    const missing = draft.parts.filter((p) => !p.name).length + draft.groups.filter((g) => !g.name).length;
-    if (missing) lines.push("", `${missing} name(s) still empty.`);
-    return lines.join("\n");
+    const nCards = draft.parts.length;
+    const summary = `${list.length} entr${list.length === 1 ? "y" : "ies"} (${nCards} card${nCards === 1 ? "" : "s"})`;
+    if (!reviewing) {
+      return h("div", { class: "wz-gl-upload" },
+        h("span", { text: `Ready to upload: ${summary}.` }), h("span", { class: "wz-gl-grow" }),
+        button("Review upload", () => { reviewing = true; render(); panel.scrollTop = 0; }, { primary: true, title: "See exactly what will be sent before uploading" }));
+    }
+    const issues = problems();
+    const rows = list.map((e) => h("div", { class: "wz-gl-rev" },
+      h("div", { class: "wz-gl-revhead" },
+        h("b", { text: e.kind === "set" ? `Set ${e.label}: ${e.title || "(no name)"}` : e.title || "(no name)" }),
+        h("small", { text: e.kind === "set" ? ` ${e.parts.length} cards` : ` ${e.parts[0].type}` })),
+      h("div", { class: "wz-gl-revcards" }, e.parts.map((p) => h("div", { class: "wz-gl-zoom" }, tile(p))))));
+    const go = button("Upload to Gallery", () => doUpload(), { primary: true, title: issues.length ? issues[0] : "Send these for approval" });
+    go.disabled = issues.length > 0;
+    return h("div", { class: "wz-gl-upload open" },
+      h("div", { class: "wz-gl-bar" }, h("b", { text: `Upload ${summary}` }), h("span", { class: "wz-gl-grow" }),
+        h("span", { class: "wz-gl-by", text: author() ? `Posting as ${author()}` : "" })),
+      h("div", { class: "wz-gl-revlist" }, rows),
+      issues.length ? h("div", { class: "wz-gl-issues" }, issues.map((t) => h("div", { text: t }))) : null,
+      h("div", { class: "wz-gl-bar wz-gl-revfoot" },
+        h("span", { class: "wz-gl-note", style: { margin: 0 }, text: "Each set and single card is sent as its own entry. They show in Browse once approved." }),
+        h("span", { class: "wz-gl-grow" }),
+        button("Back", () => { reviewing = false; render(); }), go));
+  }
+  function doUpload() {
+    if (problems().length) return render();
+    const posts = postEntries(author());
+    reviewing = false;
+    read = null;
+    lastUpload = { posts };
+    say(`Uploaded ${posts.length} entr${posts.length === 1 ? "y" : "ies"}.`);
+    render();
+  }
+  function uploadedBox() {
+    const posts = lastUpload.posts;
+    const cards = posts.reduce((n, e) => n + e.parts.length, 0);
+    return h("div", { class: "wz-gl-done" },
+      h("div", {}, h("b", { text: `✓ Sent for approval: ${posts.length} entr${posts.length === 1 ? "y" : "ies"} (${cards} card${cards === 1 ? "" : "s"})` })),
+      h("ul", {}, posts.map((e) => h("li", { text: e.kind === "set" ? `${e.title} (set of ${e.parts.length})` : `${e.title} (${e.parts[0].type})` }))),
+      h("div", { class: "wz-gl-note", style: { margin: "0 0 6px" }, text: "Preview: the gallery isn't live yet, so nothing actually left your computer. Your uploads show in Browse under My posts." }),
+      button("See my posts", () => { browse.mineOnly = true; browse.likedOnly = false; browse.list = "new"; browse.page = 0; lastUpload = null; setView("browse"); }, { primary: true }),
+      " ", button("Dismiss", () => { lastUpload = null; render(); }));
   }
 
   fileInput.addEventListener("change", async () => {
@@ -401,7 +461,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
       samples: browse.samples,
       wheelPages: () => !wheelPages || wheelPages(),
       onPage: hideHover,
-      entries: allEntries(entries(), { samples: browse.samples, votes: draft.votes, sampleVotes }),
+      entries: allEntries(draft.posted, { samples: browse.samples, votes: draft.votes, sampleVotes, author: author() }),
       hoverable,
       rerender: render,
       vote(e, dir) {

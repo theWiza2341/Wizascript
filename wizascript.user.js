@@ -1060,7 +1060,9 @@ Make your own custom cards without leaving Undercards, and keep chatting while y
 ### New: Card Gallery (preview)
 Share the cards you make. It's part of the Card Maker: press **Gallery** in its title bar.
 - **Read from this editor** lists every group and card you've made in the editor that's open. Tick the ones to add, one by one or a whole group as a set. UC Editor group files (.uceditor) and PNG downloads can be added too.
-- Link parts into sets (A, B, C\u2026), rename them, and preview your request. **Browse** shows how they'll look, with All Time / This Month / This Week and likes and dislikes.
+- Link parts into sets (A, B, C\u2026), rename them, and preview your request. **Browse** shows how they'll look, as a compact grid: sets show only their name, likes and dislikes sit under each card or set, and hovering a card shows it bigger with its details. All Time / This Month / This Week.
+- **Size** (S / M / L / Fill) zooms the cards. Fill stretches them to the window's width.
+- Cards use the game's DTM-Mono font and card frames.
 - The gallery isn't live yet: nothing is sent, and Browse's dates and scores are made up. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
 
 ## 1.6.2
@@ -11835,8 +11837,10 @@ Version: v${version}`;
   // packages/card-maker/gallery/render.js
   var CARD_W = 176;
   var CARD_H = 246;
-  var FRAME = (kind) => `/images/frameSkins/Undertale/frame_${kind}.png`;
   var UCE = "https://sernon158.github.io/uc-editor/";
+  var ASSET_BASES = ["/images/", `${UCE}images/`];
+  var assetBase = null;
+  var FRAME = (kind) => `${assetBase || ASSET_BASES[0]}frameSkins/Undertale/frame_${kind}.png`;
   var KEYWORDS = ["Flowery Power", "Turn start", "Turn end", "Magic", "Dust", "Charge", "Haste", "Armor", "Disarmed", "Candy", "Fatigue", "Turbo", "Support", "Paralyze", "Silence", "Transparency", "Invulnerable", "Taunt", "Dodge", "Burn", "Synergy", "Shock", "Delay", "Generated", "Need", "Loop", "Program", "Switch", "Catch", "Bullseye", "Wanted", "Erase", "Darkspawn", "Goal", "Reward", "Quest"];
   var SPECIAL = { cost: "#00d0ff", ATK: "#f0003c", HP: "#0dd000", DMG: "gold", G: "gold", KR: "#d535d9", KINDNESS: "#00c000", DETERMINATION: "red", DT: "red", PATIENCE: "#41fcff", BRAVERY: "#fca500", INTEGRITY: "#0064ff", PERSEVERANCE: "#d535d9", JUSTICE: "#ffff00", TOKEN: "#00c800", BASE: "gray", COMMON: "#fff", RARE: "#00b8ff", EPIC: "#d535d9", LEGENDARY: "gold" };
   var kwRe = new RegExp(`(^|[^\\w])(${KEYWORDS.map((k) => k.replace(/ /g, "\\s")).join("|")})(?=[^\\w]|$)`, "g");
@@ -11848,14 +11852,33 @@ Version: v${version}`;
   var rarityColor = (r) => SPECIAL[(r || "").split("_").pop()] || "#fff";
   var soulColor2 = (s) => SPECIAL[s] || (/^#[0-9a-f]{3,8}$/i.test(s || "") ? s : "");
   var frameImages = null;
+  var checking = null;
   function checkFrameImages() {
     if (frameImages !== null) return Promise.resolve(frameImages);
-    return new Promise((ok) => {
-      const i = new Image();
-      i.onload = () => ok(frameImages = true);
-      i.onerror = () => ok(frameImages = false);
-      i.src = FRAME("monster");
+    if (checking) return checking;
+    const tryBase = (i) => new Promise((ok) => {
+      if (i >= ASSET_BASES.length) return ok(false);
+      const img = new Image();
+      img.onload = () => {
+        assetBase = ASSET_BASES[i];
+        ok(true);
+      };
+      img.onerror = () => tryBase(i + 1).then(ok);
+      img.src = `${ASSET_BASES[i]}frameSkins/Undertale/frame_monster.png`;
     });
+    checking = tryBase(0).then((found) => frameImages = found);
+    return checking;
+  }
+  function rarityImage(name) {
+    const tries = [assetBase, ...ASSET_BASES.filter((b) => b !== assetBase)].filter(Boolean).map((b) => `${b}rarity/${name}.png`);
+    const img = h("img", { class: "wz-gl-rar", alt: "" });
+    let n = 0;
+    img.addEventListener("error", () => {
+      if (++n < tries.length) img.src = tries[n];
+      else img.remove();
+    });
+    img.src = tries[0];
+    return img;
   }
   function tile(p) {
     var _a, _b, _c;
@@ -11881,13 +11904,10 @@ Version: v${version}`;
     const tribes = h("div", { class: "wz-gl-tribes" }, (p.tribes || []).map((t, i) => h("img", { src: t.icon, title: t.name || "", alt: "", style: { right: i * 17 + "px" } })));
     let rarity = null;
     if (p.type !== "Enchantment") {
-      if (p.rarityIcon) rarity = h("img", { class: "wz-gl-rar", src: p.rarityIcon, alt: "" });
-      else if (p.rarity) {
-        rarity = h("img", { class: "wz-gl-rar", src: `/images/rarity/${p.rarity}.png`, alt: "" });
-        rarity.addEventListener("error", () => {
-          rarity.src = `${UCE}images/rarity/${p.rarity}.png`;
-        }, { once: true });
-      }
+      if (p.rarityIcon) {
+        rarity = h("img", { class: "wz-gl-rar", src: p.rarityIcon, alt: "" });
+        rarity.addEventListener("error", () => rarity.remove(), { once: true });
+      } else if (p.rarity) rarity = rarityImage(p.rarity);
     }
     return h(
       "div",
@@ -11915,7 +11935,10 @@ Version: v${version}`;
       while (size > 7 && over()) el3.style.fontSize = (size -= 0.5) + "px";
     });
   }
+  var CARD_FONT = `"DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace`;
   var TILE_CSS = `
+@font-face { font-family: "WZ DTM Mono"; src: url("${UCE}images/fonts/DTM-Mono.otf") format("opentype"); font-display: swap; }
+.wz-gl-card, .wz-gl-artifact { font-family: ${CARD_FONT}; }
 .wz-gl-card { position: relative; width: ${CARD_W}px; height: ${CARD_H}px; color: #fff; font-size: 12px; line-height: 1.15; text-align: center; overflow: hidden; flex: none; }
 .wz-gl-card > * { position: absolute; }
 .wz-gl-bg { left: 8px; top: 8px; width: 160px; height: 230px; background: #000; }
@@ -12282,40 +12305,56 @@ Version: v${version}`;
   var COLORS = ["#e6b422", "#4aa3df", "#e05a5a", "#5cc46a", "#b07de0", "#e08a3c", "#3cc8c0", "#d65ca8"];
   var TYPE_COLOR = { Monster: "#f0003c", Spell: "#41fcff", Enchantment: "#fca500", Artifact: "gold" };
   var SOURCE_LABEL = { feildmaster: "feildmaster's editor", sernon: "UC Editor", picture: "picture" };
+  var SIZES = [["small", "S", 0.55, "Small cards"], ["medium", "M", 0.75, "Medium cards"], ["large", "L", 1, "Full-size cards"], ["fill", "Fill", 0, "Zoom cards to fill the width"]];
+  var GAP = 10;
   var CSS4 = `
-.wz-gl-panel { position: absolute; inset: 0; z-index: 7; overflow: auto; background: #0d0d0d; padding: 10px; display: none; user-select: text; font: 12px Arial, sans-serif; color: #fff; }
+.wz-gl-panel { --wz-gl-z: .6; position: absolute; inset: 0; z-index: 7; overflow: auto; background: #0d0d0d; padding: 10px; display: none; user-select: text; font: 12px Arial, sans-serif; color: #fff; }
 .wz-gl-panel.on { display: block; }
 .wz-gl-toggle.on, .wz-cm-btn.wz-gl-on { background: #4464bd; border-color: #8ea6e8; }
 .wz-cm-btn.wz-gl-primary { background: #2f6b3a; border-color: #6fbf7e; }
 .wz-cm-btn:disabled { opacity: .4; cursor: default; }
+.wz-gl-panel input[type="text"], .wz-gl-panel select { color: #fff !important; background: #222 !important; border: 1px solid #666 !important; border-radius: 3px; font: 11px Arial, sans-serif; height: 22px; padding: 0 4px; box-shadow: none; }
+.wz-gl-panel input[type="text"]::placeholder { color: #999; opacity: 1; }
+.wz-gl-panel input[type="text"]:focus, .wz-gl-panel select:focus { border-color: #8ea6e8 !important; outline: none; }
 .wz-gl-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
 .wz-gl-tabs { border-bottom: 1px solid #444; padding-bottom: 8px; margin-bottom: 10px; }
 .wz-gl-status { opacity: .85; margin-left: 6px; }
+.wz-gl-sizes { display: inline-flex; gap: 2px; align-items: center; }
+.wz-gl-sizes .wz-cm-btn { min-width: 0; padding: 0 6px; }
 .wz-gl-note { opacity: .7; margin: 0 0 8px; }
 .wz-gl-grow { flex: 1 1 auto; }
 .wz-gl-picker { border: 1px solid #444; background: #151515; padding: 6px 8px; margin: 8px 0; }
-.wz-gl-picker label { cursor: pointer; }
+.wz-gl-picker label { cursor: pointer; font-weight: normal; }
 .wz-gl-pgroup { margin: 5px 0; }
 .wz-gl-pparts { display: flex; flex-wrap: wrap; gap: 2px 14px; margin: 2px 0 0 18px; }
 .wz-gl-pparts .done { opacity: .5; }
 .wz-gl-type { font-size: 10px; text-transform: uppercase; }
 .wz-gl-sets { margin: 4px 0; }
 .wz-gl-set { display: inline-flex; align-items: center; gap: 4px; margin: 2px 8px 2px 0; padding: 2px 6px; border-left: 6px solid; }
-.wz-gl-set input, .wz-gl-part input, .wz-gl-part select { color: #000; font: 11px Arial, sans-serif; height: 22px; padding: 0 3px; }
 .wz-gl-tray { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-.wz-gl-part { width: 122px; border: 2px solid #444; padding: 4px; position: relative; background: #111; }
+.wz-gl-part { width: calc(176px * var(--wz-gl-z) + 14px); border: 2px solid #444; padding: 4px; position: relative; background: #111; }
 .wz-gl-part.sel { border-color: #fff; background: #223; }
 .wz-gl-part input, .wz-gl-part select { width: 100%; margin-bottom: 2px; }
-.wz-gl-zoom { zoom: .62; cursor: pointer; margin: 0 auto 4px; }
+.wz-gl-zoom { zoom: var(--wz-gl-z); cursor: pointer; margin: 0 auto 4px; width: max-content; }
 .wz-gl-badge { position: absolute; top: -8px; left: -8px; width: 22px; height: 22px; border-radius: 11px; color: #000; font-weight: bold; text-align: center; line-height: 22px; z-index: 9; }
 .wz-gl-x { position: absolute; top: 2px; right: 2px; z-index: 9; min-width: 0 !important; padding: 0 5px !important; height: 18px !important; line-height: 16px !important; }
 .wz-gl-from { display: block; opacity: .55; font-size: 10px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.wz-gl-preview { white-space: pre-wrap; max-height: 260px; overflow: auto; background: #151515; border: 1px solid #444; padding: 6px; margin-top: 10px; }
-.wz-gl-entry { border-top: 1px solid #444; padding: 8px 0; }
-.wz-gl-entry-head { display: flex; gap: 6px; align-items: center; }
-.wz-gl-entry-parts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; align-items: flex-start; }
-.wz-gl-entry-parts > div { zoom: .75; }
-.wz-gl-score { display: inline-block; min-width: 30px; text-align: center; font-weight: bold; }
+.wz-gl-preview { white-space: pre-wrap; max-height: 260px; overflow: auto; background: #151515 !important; color: #ddd !important; border: 1px solid #444 !important; border-radius: 3px; padding: 6px; margin-top: 10px; font: 12px monospace; }
+.wz-gl-grid { display: flex; flex-wrap: wrap; gap: 12px 10px; align-items: flex-end; }
+.wz-gl-item { max-width: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.wz-gl-item.set { padding: 3px 4px 2px; border: 1px solid #444; border-radius: 4px; background: #141414; }
+.wz-gl-setname { font-size: 11px; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.wz-gl-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; align-items: flex-end; }
+.wz-gl-row > .wz-gl-zoom { margin: 0; cursor: default; }
+.wz-gl-votes { display: flex; gap: 4px; align-items: center; }
+.wz-gl-votes .wz-cm-btn { height: 18px; min-width: 20px; padding: 0 4px; font-size: 10px; line-height: 16px; }
+.wz-gl-score { display: inline-block; min-width: 24px; text-align: center; font-weight: bold; }
+.wz-gl-hover { position: fixed; z-index: 50; pointer-events: none; background: #000; border: 2px solid #fff; border-radius: 4px; padding: 6px; display: none; box-shadow: 0 6px 24px rgba(0,0,0,.8); color: #fff; font: 12px Arial, sans-serif; }
+.wz-gl-hover.on { display: block; }
+.wz-gl-hcard { zoom: 1.1; }
+.wz-gl-hinfo { margin-top: 5px; line-height: 1.45; max-width: 200px; }
+.wz-gl-hinfo b { font-size: 13px; }
+.wz-gl-hinfo .dim { opacity: .7; }
 ${TILE_CSS}
 `;
   function injectStyle2() {
@@ -12329,7 +12368,6 @@ ${TILE_CSS}
   var sameCard = (p, source, group, raw) => p.source === source && p.editorGroup === group && p.name === (raw.name || "") && p.type === raw.type;
   function buildGalleryPanel({ requestRead, editorLabel }) {
     injectStyle2();
-    checkFrameImages();
     const draft2 = getDraft();
     let tab = draft2.parts.length ? "browse" : "submit";
     let browseWindow = "all";
@@ -12342,10 +12380,99 @@ ${TILE_CSS}
     };
     const tabs = h("div", { class: "wz-gl-bar wz-gl-tabs" });
     const content = h("div");
-    const panel = h("div", { class: "wz-gl-panel" }, tabs, content);
+    const hover = h("div", { class: "wz-gl-hover" });
+    const panel = h("div", { class: "wz-gl-panel" }, tabs, content, hover);
     const fileInput = h("input", { type: "file", accept: ".uceditor,image/png", multiple: true, style: { display: "none" } });
     panel.appendChild(fileInput);
+    const sizeOf = () => SIZES.find((x) => x[0] === draft2.size) || SIZES[1];
+    function applyZoom() {
+      let z = sizeOf()[2];
+      if (!z) {
+        const w = content.clientWidth || panel.clientWidth - 20;
+        const pad2 = tab === "submit" ? 14 + 4 : 0;
+        const cols = Math.max(1, Math.floor((w + GAP) / (176 + pad2 + GAP)));
+        z = Math.max(0.5, Math.min(2.5, ((w + GAP) / cols - GAP - pad2) / 176));
+      }
+      z = Math.round(z * 100) / 100;
+      if (panel.style.getPropertyValue("--wz-gl-z") === String(z)) return false;
+      panel.style.setProperty("--wz-gl-z", String(z));
+      return true;
+    }
+    let fitTimer = null;
+    new ResizeObserver(() => {
+      if (sizeOf()[2] || !panel.classList.contains("on")) return;
+      if (applyZoom()) {
+        clearTimeout(fitTimer);
+        fitTimer = setTimeout(() => refit(), 120);
+      }
+    }).observe(panel);
+    function sizeButtons() {
+      return h(
+        "span",
+        { class: "wz-gl-sizes", title: "Card size" },
+        h("small", { text: "Size ", style: { opacity: ".7" } }),
+        SIZES.map(([key2, label, , title]) => button(label, () => {
+          draft2.size = key2;
+          saveDraft();
+          render2();
+        }, { title, cls: sizeOf()[0] === key2 ? "wz-gl-on" : "" }))
+      );
+    }
+    function refit() {
+      content.querySelectorAll(".wz-gl-name, .wz-gl-text > div, .wz-gl-arttext").forEach((el3) => {
+        el3.style.fontSize = "";
+      });
+      fitText(content);
+    }
+    let hoverFor = null;
+    function showHover(anchor, p, e) {
+      var _a, _b, _c;
+      hoverFor = anchor;
+      const set = e && e.kind === "set" ? e : null;
+      const info = h(
+        "div",
+        { class: "wz-gl-hinfo" },
+        h("b", { text: p.name || "(no name)" }),
+        h("br"),
+        h("span", { class: "dim", text: p.type + (p.type === "Monster" ? ` \xB7 ${(_a = p.cost) != null ? _a : "?"} cost, ${(_b = p.atk) != null ? _b : "?"}/${(_c = p.hp) != null ? _c : "?"}` : p.cost !== null && p.cost !== void 0 && p.type !== "Artifact" ? ` \xB7 ${p.cost} cost` : "") }),
+        set ? [h("br"), "Set: ", h("b", { text: set.title || "(no name)" }), h("span", { class: "dim", text: ` (${set.parts.length} parts)` })] : null,
+        h("br"),
+        h("span", { class: "dim", text: "By " }),
+        "you",
+        h("span", { class: "dim", text: " (preview)" }),
+        e ? [h("br"), h("span", { class: "dim", text: `Posted ${e.days} day${e.days === 1 ? "" : "s"} ago \xB7 score ${e.score}` })] : null,
+        h("br"),
+        h("span", { class: "dim", text: `From ${SOURCE_LABEL[p.source] || p.source}${p.editorGroup ? " \xB7 " + p.editorGroup : ""}` })
+      );
+      const card = h("div", { class: "wz-gl-hcard" }, tile(p));
+      hover.replaceChildren(card, info);
+      hover.classList.add("on");
+      requestAnimationFrame(() => {
+        if (hoverFor !== anchor) return;
+        fitText(hover);
+        const r = anchor.getBoundingClientRect(), box = panel.getBoundingClientRect(), hr = hover.getBoundingClientRect();
+        let x = r.right + 8;
+        if (x + hr.width > box.right - 4) x = r.left - hr.width - 8;
+        if (x < box.left + 4) x = Math.max(box.left + 4, Math.min(box.right - hr.width - 4, r.left));
+        const y = Math.max(box.top + 4, Math.min(box.bottom - hr.height - 4, r.top + r.height / 2 - hr.height / 2));
+        hover.style.left = x + "px";
+        hover.style.top = y + "px";
+      });
+    }
+    function hideHover() {
+      hoverFor = null;
+      hover.classList.remove("on");
+    }
+    const hoverable = (el3, p, e) => {
+      el3.addEventListener("mouseenter", () => showHover(el3, p, e));
+      el3.addEventListener("mouseleave", () => {
+        if (hoverFor === el3) hideHover();
+      });
+      return el3;
+    };
+    panel.addEventListener("scroll", hideHover, { passive: true });
     function render2() {
+      hideHover();
       tabs.replaceChildren(
         button("Browse", () => {
           tab = "browse";
@@ -12355,11 +12482,17 @@ ${TILE_CSS}
           tab = "submit";
           render2();
         }, { cls: tab === "submit" ? "wz-gl-on" : "" }),
-        status
+        status,
+        h("span", { class: "wz-gl-grow" }),
+        sizeButtons()
       );
       content.replaceChildren(tab === "browse" ? browseView() : submitView());
-      requestAnimationFrame(() => fitText(content));
+      applyZoom();
+      requestAnimationFrame(refit);
     }
+    checkFrameImages().then(() => {
+      if (panel.classList.contains("on")) render2();
+    });
     const changed2 = () => {
       tidySets();
       saveDraft();
@@ -12603,8 +12736,8 @@ ${TILE_CSS}
       };
       const list = entries().map((e) => {
         const n = seed(e.key + (e.title || ""));
-        return { ...e, posted: now - n % 45 * DAY, base: (n >> 8) % 60 - 10 };
-      }).filter((e) => browseWindow === "all" || now - e.posted < (browseWindow === "month" ? 30 : 7) * DAY);
+        return { ...e, days: n % 45, base: (n >> 8) % 60 - 10 };
+      }).filter((e) => browseWindow === "all" || e.days < (browseWindow === "month" ? 30 : 7));
       list.forEach((e) => {
         e.score = e.base + (draft2.votes[e.key] || 0);
       });
@@ -12616,32 +12749,32 @@ ${TILE_CSS}
           browseWindow = k;
           render2();
         }, { cls: k === browseWindow ? "wz-gl-on" : "" })),
-        h("span", { class: "wz-gl-note", style: { margin: "0 0 0 6px" }, text: "Preview of your own parts. Dates and scores are made up until the gallery is live." })
+        h("span", { class: "wz-gl-note", style: { margin: "0 0 0 6px" }, text: "Preview of your own parts. Dates and scores are made up until it's live." })
       );
-      const body = list.length ? list.map((e) => {
+      if (!list.length) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing here yet. Add parts in Submit." }));
+      const grid = h("div", { class: "wz-gl-grid" }, list.map((e) => {
         const v = draft2.votes[e.key] || 0;
         const vote = (dir) => {
           draft2.votes[e.key] = v === dir ? 0 : dir;
           saveDraft();
           render2();
         };
+        const isSet = e.kind === "set";
         return h(
           "div",
-          { class: "wz-gl-entry" },
+          { class: `wz-gl-item${isSet ? " set" : ""}`, "data-key": e.key },
+          isSet ? h("div", { class: "wz-gl-setname", text: e.title || "(no name)", title: e.title || "" }) : null,
+          h("div", { class: "wz-gl-row" }, e.parts.map((p) => hoverable(h("div", { class: "wz-gl-zoom" }, tile(p)), p, e))),
           h(
             "div",
-            { class: "wz-gl-entry-head" },
-            h("b", { text: e.title || "(no name)" }),
-            h("small", { style: { opacity: ".7" }, text: `${e.kind === "set" ? `Set \xB7 ${e.parts.length} parts` : e.parts[0].type} \xB7 posted ${Math.round((now - e.posted) / DAY)} days ago` }),
-            h("span", { class: "wz-gl-grow" }),
+            { class: "wz-gl-votes" },
             button("\u25B2", () => vote(1), { title: "Like", cls: v === 1 ? "wz-gl-on" : "" }),
             h("span", { class: "wz-gl-score", text: String(e.score) }),
             button("\u25BC", () => vote(-1), { title: "Dislike", cls: v === -1 ? "wz-gl-on" : "" })
-          ),
-          h("div", { class: "wz-gl-entry-parts" }, e.parts.map((p) => h("div", {}, tile(p))))
+          )
         );
-      }) : h("p", { class: "wz-gl-note", text: "Nothing here yet. Add parts in Submit." });
-      return h("div", {}, head, body);
+      }));
+      return h("div", {}, head, grid);
     }
     return {
       el: panel,
@@ -15531,11 +15664,11 @@ ${TILE_CSS}
         renderList2(box, label);
       });
     });
-    let checking = false;
+    let checking2 = false;
     registerSettingWidget("wishlist.checkNow", (el3) => {
       asButton("Check Shop Now", async (input) => {
-        if (checking) return;
-        checking = true;
+        if (checking2) return;
+        checking2 = true;
         input.value = "Checking\u2026";
         const row2 = input.closest(".flex-start");
         let status = row2 && row2.querySelector(".wz-wl-status");
@@ -15545,7 +15678,7 @@ ${TILE_CSS}
           row2.appendChild(status);
         }
         const result = await manualCheck(pluginRef);
-        checking = false;
+        checking2 = false;
         input.value = "Check Shop Now";
         if (!status) return;
         if (result.error) {

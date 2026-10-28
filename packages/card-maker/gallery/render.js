@@ -5,8 +5,10 @@
 // cost 128,8; art 8,36 160x90; text 8,128 160x80; ATK / rarity / HP at
 // 8 / 76 / 128, 212). Enchantments: no stats, art 8,54 160x183 under the
 // text. Artifacts: a 176-wide panel with the 64x64 icon shown at 32x32.
-// Frames are the game's own images from undercards.net
-// (/images/frameSkins/Undertale/frame_*.png); without them, CSS lines.
+// Frames, rarity icons and the DTM-Mono font are the game's own: taken from
+// undercards.net when the page has them there, otherwise from UC Editor's
+// copies of the same files (sernon158.github.io/uc-editor/images/...);
+// without either, frames are drawn with CSS lines.
 //
 // Text uses the union of both editors' markup: _x_ underline, {x}
 // highlight, {colour;text}, [[x]], {{stats:a|b|c}}; keywords underlined,
@@ -16,8 +18,11 @@ import { h, esc } from "./dom.js";
 
 export const CARD_W = 176;
 export const CARD_H = 246;
-export const FRAME = (kind) => `/images/frameSkins/Undertale/frame_${kind}.png`;
 const UCE = "https://sernon158.github.io/uc-editor/";
+// Where the game's card images are, in order of preference.
+const ASSET_BASES = ["/images/", `${UCE}images/`];
+let assetBase = null; // set by checkFrameImages()
+export const FRAME = (kind) => `${assetBase || ASSET_BASES[0]}frameSkins/Undertale/frame_${kind}.png`;
 
 const KEYWORDS = ["Flowery Power", "Turn start", "Turn end", "Magic", "Dust", "Charge", "Haste", "Armor", "Disarmed", "Candy", "Fatigue", "Turbo", "Support", "Paralyze", "Silence", "Transparency", "Invulnerable", "Taunt", "Dodge", "Burn", "Synergy", "Shock", "Delay", "Generated", "Need", "Loop", "Program", "Switch", "Catch", "Bullseye", "Wanted", "Erase", "Darkspawn", "Goal", "Reward", "Quest"];
 export const SPECIAL = { cost: "#00d0ff", ATK: "#f0003c", HP: "#0dd000", DMG: "gold", G: "gold", KR: "#d535d9", KINDNESS: "#00c000", DETERMINATION: "red", DT: "red", PATIENCE: "#41fcff", BRAVERY: "#fca500", INTEGRITY: "#0064ff", PERSEVERANCE: "#d535d9", JUSTICE: "#ffff00", TOKEN: "#00c800", BASE: "gray", COMMON: "#fff", RARE: "#00b8ff", EPIC: "#d535d9", LEGENDARY: "gold" };
@@ -43,14 +48,29 @@ export const rarityColor = (r) => SPECIAL[(r || "").split("_").pop()] || "#fff";
 const soulColor = (s) => SPECIAL[s] || (/^#[0-9a-f]{3,8}$/i.test(s || "") ? s : "");
 
 let frameImages = null; // null = not checked yet; true/false after
+let checking = null;
 export function checkFrameImages() {
   if (frameImages !== null) return Promise.resolve(frameImages);
-  return new Promise((ok) => {
-    const i = new Image();
-    i.onload = () => ok((frameImages = true));
-    i.onerror = () => ok((frameImages = false));
-    i.src = FRAME("monster");
+  if (checking) return checking;
+  const tryBase = (i) => new Promise((ok) => {
+    if (i >= ASSET_BASES.length) return ok(false);
+    const img = new Image();
+    img.onload = () => { assetBase = ASSET_BASES[i]; ok(true); };
+    img.onerror = () => tryBase(i + 1).then(ok);
+    img.src = `${ASSET_BASES[i]}frameSkins/Undertale/frame_monster.png`;
   });
+  checking = tryBase(0).then((found) => (frameImages = found));
+  return checking;
+}
+
+// A rarity icon: the game's, then UC Editor's copy, then nothing (no broken image).
+function rarityImage(name) {
+  const tries = [assetBase, ...ASSET_BASES.filter((b) => b !== assetBase)].filter(Boolean).map((b) => `${b}rarity/${name}.png`);
+  const img = h("img", { class: "wz-gl-rar", alt: "" });
+  let n = 0;
+  img.addEventListener("error", () => { if (++n < tries.length) img.src = tries[n]; else img.remove(); });
+  img.src = tries[0];
+  return img;
 }
 
 export function tile(p) {
@@ -70,11 +90,10 @@ export function tile(p) {
   const tribes = h("div", { class: "wz-gl-tribes" }, (p.tribes || []).map((t, i) => h("img", { src: t.icon, title: t.name || "", alt: "", style: { right: i * 17 + "px" } })));
   let rarity = null;
   if (p.type !== "Enchantment") {
-    if (p.rarityIcon) rarity = h("img", { class: "wz-gl-rar", src: p.rarityIcon, alt: "" });
-    else if (p.rarity) {
-      rarity = h("img", { class: "wz-gl-rar", src: `/images/rarity/${p.rarity}.png`, alt: "" });
-      rarity.addEventListener("error", () => { rarity.src = `${UCE}images/rarity/${p.rarity}.png`; }, { once: true });
-    }
+    if (p.rarityIcon) {
+      rarity = h("img", { class: "wz-gl-rar", src: p.rarityIcon, alt: "" });
+      rarity.addEventListener("error", () => rarity.remove(), { once: true });
+    } else if (p.rarity) rarity = rarityImage(p.rarity);
   }
   return h("div", { class: `wz-gl-card t-${kind}${frameImages ? " framed" : ""}` },
     h("div", { class: "wz-gl-bg" }),
@@ -102,7 +121,12 @@ export function fitText(root) {
   });
 }
 
+// The game's card font. "DTM-Mono" if undercards.net already provides it;
+// otherwise this loads UC Editor's copy of the same font file.
+export const CARD_FONT = `"DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace`;
 export const TILE_CSS = `
+@font-face { font-family: "WZ DTM Mono"; src: url("${UCE}images/fonts/DTM-Mono.otf") format("opentype"); font-display: swap; }
+.wz-gl-card, .wz-gl-artifact { font-family: ${CARD_FONT}; }
 .wz-gl-card { position: relative; width: ${CARD_W}px; height: ${CARD_H}px; color: #fff; font-size: 12px; line-height: 1.15; text-align: center; overflow: hidden; flex: none; }
 .wz-gl-card > * { position: absolute; }
 .wz-gl-bg { left: 8px; top: 8px; width: 160px; height: 230px; background: #000; }

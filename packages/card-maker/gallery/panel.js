@@ -8,10 +8,12 @@
 //             (.uceditor, PNG). Added parts go in a tray: click to select,
 //             link them into sets (A, B, C...), rename, remove, preview
 //             the request.
-//   Browse  - a PREVIEW of how the parts will look in the gallery, with
-//             All Time / This Month / This Week and one like or dislike
-//             each. Until the gallery is live its dates and scores are
-//             made up, and nothing is sent anywhere.
+//   Browse  - a PREVIEW of how the parts will look in the gallery: a
+//             compact grid (sets as one row of cards with only the set
+//             name), votes underneath, and the details in a hover card.
+//             All Time / This Month / This Week. Until the gallery is live
+//             its dates and scores are made up, and nothing is sent.
+// A size control (S / M / L / Fill) zooms the cards on both tabs.
 
 import { h, button } from "./dom.js";
 import { tile, fitText, checkFrameImages, TILE_CSS } from "./render.js";
@@ -23,41 +25,59 @@ const TYPES = ["Monster", "Spell", "Enchantment", "Artifact"];
 const COLORS = ["#e6b422", "#4aa3df", "#e05a5a", "#5cc46a", "#b07de0", "#e08a3c", "#3cc8c0", "#d65ca8"];
 const TYPE_COLOR = { Monster: "#f0003c", Spell: "#41fcff", Enchantment: "#fca500", Artifact: "gold" };
 const SOURCE_LABEL = { feildmaster: "feildmaster's editor", sernon: "UC Editor", picture: "picture" };
+// Card sizes. Fill picks how many cards fit at full size, then stretches
+// them so each row reaches the panel's edge.
+const SIZES = [["small", "S", .55, "Small cards"], ["medium", "M", .75, "Medium cards"], ["large", "L", 1, "Full-size cards"], ["fill", "Fill", 0, "Zoom cards to fill the width"]];
+const GAP = 10;
 
 const CSS = `
-.wz-gl-panel { position: absolute; inset: 0; z-index: 7; overflow: auto; background: #0d0d0d; padding: 10px; display: none; user-select: text; font: 12px Arial, sans-serif; color: #fff; }
+.wz-gl-panel { --wz-gl-z: .6; position: absolute; inset: 0; z-index: 7; overflow: auto; background: #0d0d0d; padding: 10px; display: none; user-select: text; font: 12px Arial, sans-serif; color: #fff; }
 .wz-gl-panel.on { display: block; }
 .wz-gl-toggle.on, .wz-cm-btn.wz-gl-on { background: #4464bd; border-color: #8ea6e8; }
 .wz-cm-btn.wz-gl-primary { background: #2f6b3a; border-color: #6fbf7e; }
 .wz-cm-btn:disabled { opacity: .4; cursor: default; }
+.wz-gl-panel input[type="text"], .wz-gl-panel select { color: #fff !important; background: #222 !important; border: 1px solid #666 !important; border-radius: 3px; font: 11px Arial, sans-serif; height: 22px; padding: 0 4px; box-shadow: none; }
+.wz-gl-panel input[type="text"]::placeholder { color: #999; opacity: 1; }
+.wz-gl-panel input[type="text"]:focus, .wz-gl-panel select:focus { border-color: #8ea6e8 !important; outline: none; }
 .wz-gl-bar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
 .wz-gl-tabs { border-bottom: 1px solid #444; padding-bottom: 8px; margin-bottom: 10px; }
 .wz-gl-status { opacity: .85; margin-left: 6px; }
+.wz-gl-sizes { display: inline-flex; gap: 2px; align-items: center; }
+.wz-gl-sizes .wz-cm-btn { min-width: 0; padding: 0 6px; }
 .wz-gl-note { opacity: .7; margin: 0 0 8px; }
 .wz-gl-grow { flex: 1 1 auto; }
 .wz-gl-picker { border: 1px solid #444; background: #151515; padding: 6px 8px; margin: 8px 0; }
-.wz-gl-picker label { cursor: pointer; }
+.wz-gl-picker label { cursor: pointer; font-weight: normal; }
 .wz-gl-pgroup { margin: 5px 0; }
 .wz-gl-pparts { display: flex; flex-wrap: wrap; gap: 2px 14px; margin: 2px 0 0 18px; }
 .wz-gl-pparts .done { opacity: .5; }
 .wz-gl-type { font-size: 10px; text-transform: uppercase; }
 .wz-gl-sets { margin: 4px 0; }
 .wz-gl-set { display: inline-flex; align-items: center; gap: 4px; margin: 2px 8px 2px 0; padding: 2px 6px; border-left: 6px solid; }
-.wz-gl-set input, .wz-gl-part input, .wz-gl-part select { color: #000; font: 11px Arial, sans-serif; height: 22px; padding: 0 3px; }
 .wz-gl-tray { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-.wz-gl-part { width: 122px; border: 2px solid #444; padding: 4px; position: relative; background: #111; }
+.wz-gl-part { width: calc(176px * var(--wz-gl-z) + 14px); border: 2px solid #444; padding: 4px; position: relative; background: #111; }
 .wz-gl-part.sel { border-color: #fff; background: #223; }
 .wz-gl-part input, .wz-gl-part select { width: 100%; margin-bottom: 2px; }
-.wz-gl-zoom { zoom: .62; cursor: pointer; margin: 0 auto 4px; }
+.wz-gl-zoom { zoom: var(--wz-gl-z); cursor: pointer; margin: 0 auto 4px; width: max-content; }
 .wz-gl-badge { position: absolute; top: -8px; left: -8px; width: 22px; height: 22px; border-radius: 11px; color: #000; font-weight: bold; text-align: center; line-height: 22px; z-index: 9; }
 .wz-gl-x { position: absolute; top: 2px; right: 2px; z-index: 9; min-width: 0 !important; padding: 0 5px !important; height: 18px !important; line-height: 16px !important; }
 .wz-gl-from { display: block; opacity: .55; font-size: 10px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.wz-gl-preview { white-space: pre-wrap; max-height: 260px; overflow: auto; background: #151515; border: 1px solid #444; padding: 6px; margin-top: 10px; }
-.wz-gl-entry { border-top: 1px solid #444; padding: 8px 0; }
-.wz-gl-entry-head { display: flex; gap: 6px; align-items: center; }
-.wz-gl-entry-parts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; align-items: flex-start; }
-.wz-gl-entry-parts > div { zoom: .75; }
-.wz-gl-score { display: inline-block; min-width: 30px; text-align: center; font-weight: bold; }
+.wz-gl-preview { white-space: pre-wrap; max-height: 260px; overflow: auto; background: #151515 !important; color: #ddd !important; border: 1px solid #444 !important; border-radius: 3px; padding: 6px; margin-top: 10px; font: 12px monospace; }
+.wz-gl-grid { display: flex; flex-wrap: wrap; gap: 12px 10px; align-items: flex-end; }
+.wz-gl-item { max-width: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.wz-gl-item.set { padding: 3px 4px 2px; border: 1px solid #444; border-radius: 4px; background: #141414; }
+.wz-gl-setname { font-size: 11px; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.wz-gl-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; align-items: flex-end; }
+.wz-gl-row > .wz-gl-zoom { margin: 0; cursor: default; }
+.wz-gl-votes { display: flex; gap: 4px; align-items: center; }
+.wz-gl-votes .wz-cm-btn { height: 18px; min-width: 20px; padding: 0 4px; font-size: 10px; line-height: 16px; }
+.wz-gl-score { display: inline-block; min-width: 24px; text-align: center; font-weight: bold; }
+.wz-gl-hover { position: fixed; z-index: 50; pointer-events: none; background: #000; border: 2px solid #fff; border-radius: 4px; padding: 6px; display: none; box-shadow: 0 6px 24px rgba(0,0,0,.8); color: #fff; font: 12px Arial, sans-serif; }
+.wz-gl-hover.on { display: block; }
+.wz-gl-hcard { zoom: 1.1; }
+.wz-gl-hinfo { margin-top: 5px; line-height: 1.45; max-width: 200px; }
+.wz-gl-hinfo b { font-size: 13px; }
+.wz-gl-hinfo .dim { opacity: .7; }
 ${TILE_CSS}
 `;
 
@@ -77,7 +97,6 @@ const sameCard = (p, source, group, raw) => p.source === source && p.editorGroup
 // receiveCards().
 export function buildGalleryPanel({ requestRead, editorLabel }) {
   injectStyle();
-  checkFrameImages();
   const draft = getDraft();
   let tab = draft.parts.length ? "browse" : "submit";
   let browseWindow = "all";
@@ -89,18 +108,87 @@ export function buildGalleryPanel({ requestRead, editorLabel }) {
   const say = (t) => { status.textContent = t; };
   const tabs = h("div", { class: "wz-gl-bar wz-gl-tabs" });
   const content = h("div");
-  const panel = h("div", { class: "wz-gl-panel" }, tabs, content);
+  const hover = h("div", { class: "wz-gl-hover" });
+  const panel = h("div", { class: "wz-gl-panel" }, tabs, content, hover);
   const fileInput = h("input", { type: "file", accept: ".uceditor,image/png", multiple: true, style: { display: "none" } });
   panel.appendChild(fileInput);
 
+  // ---- Card size ----
+  const sizeOf = () => SIZES.find((x) => x[0] === draft.size) || SIZES[1];
+  function applyZoom() {
+    let z = sizeOf()[2];
+    if (!z) {
+      const w = content.clientWidth || panel.clientWidth - 20;
+      const pad = tab === "submit" ? 14 + 4 : 0; // a tray part's border and padding
+      const cols = Math.max(1, Math.floor((w + GAP) / (176 + pad + GAP)));
+      z = Math.max(.5, Math.min(2.5, ((w + GAP) / cols - GAP - pad) / 176));
+    }
+    z = Math.round(z * 100) / 100;
+    if (panel.style.getPropertyValue("--wz-gl-z") === String(z)) return false;
+    panel.style.setProperty("--wz-gl-z", String(z));
+    return true;
+  }
+  let fitTimer = null;
+  new ResizeObserver(() => {
+    if (sizeOf()[2] || !panel.classList.contains("on")) return;
+    if (applyZoom()) { clearTimeout(fitTimer); fitTimer = setTimeout(() => refit(), 120); }
+  }).observe(panel);
+  function sizeButtons() {
+    return h("span", { class: "wz-gl-sizes", title: "Card size" },
+      h("small", { text: "Size ", style: { opacity: ".7" } }),
+      SIZES.map(([key, label, , title]) => button(label, () => { draft.size = key; saveDraft(); render(); }, { title, cls: sizeOf()[0] === key ? "wz-gl-on" : "" })));
+  }
+  // Names and text shrink to fit at 100%; redo it when the frame art or size changes.
+  function refit() {
+    content.querySelectorAll(".wz-gl-name, .wz-gl-text > div, .wz-gl-arttext").forEach((el) => { el.style.fontSize = ""; });
+    fitText(content);
+  }
+
+  // ---- Hover card: the card bigger, with its details ----
+  let hoverFor = null;
+  function showHover(anchor, p, e) {
+    hoverFor = anchor;
+    const set = e && e.kind === "set" ? e : null;
+    const info = h("div", { class: "wz-gl-hinfo" },
+      h("b", { text: p.name || "(no name)" }), h("br"),
+      h("span", { class: "dim", text: p.type + (p.type === "Monster" ? ` · ${p.cost ?? "?"} cost, ${p.atk ?? "?"}/${p.hp ?? "?"}` : p.cost !== null && p.cost !== undefined && p.type !== "Artifact" ? ` · ${p.cost} cost` : "") }),
+      set ? [h("br"), "Set: ", h("b", { text: set.title || "(no name)" }), h("span", { class: "dim", text: ` (${set.parts.length} parts)` })] : null,
+      h("br"), h("span", { class: "dim", text: "By " }), "you", h("span", { class: "dim", text: " (preview)" }),
+      e ? [h("br"), h("span", { class: "dim", text: `Posted ${e.days} day${e.days === 1 ? "" : "s"} ago · score ${e.score}` })] : null,
+      h("br"), h("span", { class: "dim", text: `From ${SOURCE_LABEL[p.source] || p.source}${p.editorGroup ? " · " + p.editorGroup : ""}` }));
+    const card = h("div", { class: "wz-gl-hcard" }, tile(p));
+    hover.replaceChildren(card, info);
+    hover.classList.add("on");
+    requestAnimationFrame(() => {
+      if (hoverFor !== anchor) return;
+      fitText(hover);
+      const r = anchor.getBoundingClientRect(), box = panel.getBoundingClientRect(), hr = hover.getBoundingClientRect();
+      let x = r.right + 8;
+      if (x + hr.width > box.right - 4) x = r.left - hr.width - 8;
+      if (x < box.left + 4) x = Math.max(box.left + 4, Math.min(box.right - hr.width - 4, r.left));
+      const y = Math.max(box.top + 4, Math.min(box.bottom - hr.height - 4, r.top + r.height / 2 - hr.height / 2));
+      hover.style.left = x + "px"; hover.style.top = y + "px";
+    });
+  }
+  function hideHover() { hoverFor = null; hover.classList.remove("on"); }
+  const hoverable = (el, p, e) => {
+    el.addEventListener("mouseenter", () => showHover(el, p, e));
+    el.addEventListener("mouseleave", () => { if (hoverFor === el) hideHover(); });
+    return el;
+  };
+  panel.addEventListener("scroll", hideHover, { passive: true });
+
   function render() {
+    hideHover();
     tabs.replaceChildren(
       button("Browse", () => { tab = "browse"; render(); }, { cls: tab === "browse" ? "wz-gl-on" : "" }),
       button("Submit", () => { tab = "submit"; render(); }, { cls: tab === "submit" ? "wz-gl-on" : "" }),
-      status);
+      status, h("span", { class: "wz-gl-grow" }), sizeButtons());
     content.replaceChildren(tab === "browse" ? browseView() : submitView());
-    requestAnimationFrame(() => fitText(content));
+    applyZoom();
+    requestAnimationFrame(refit);
   }
+  checkFrameImages().then(() => { if (panel.classList.contains("on")) render(); });
   const changed = () => { tidySets(); saveDraft(); render(); };
 
   // ---- Submit ----
@@ -260,32 +348,34 @@ export function buildGalleryPanel({ requestRead, editorLabel }) {
   });
 
   // ---- Browse (preview) ----
+  // A compact grid: each single card, or each set's cards in one row with
+  // the set's name above. Votes sit underneath; the rest is in the hover card.
   function browseView() {
     const DAY = 864e5, now = Date.now();
     const seed = (s) => { let x = 7; for (const c of s) x = (x * 31 + c.charCodeAt(0)) >>> 0; return x; };
     const list = entries().map((e) => {
       const n = seed(e.key + (e.title || ""));
-      return { ...e, posted: now - (n % 45) * DAY, base: ((n >> 8) % 60) - 10 };
-    }).filter((e) => browseWindow === "all" || now - e.posted < (browseWindow === "month" ? 30 : 7) * DAY);
+      return { ...e, days: n % 45, base: ((n >> 8) % 60) - 10 };
+    }).filter((e) => browseWindow === "all" || e.days < (browseWindow === "month" ? 30 : 7));
     list.forEach((e) => { e.score = e.base + (draft.votes[e.key] || 0); });
     list.sort((a, b) => b.score - a.score);
     const head = h("div", { class: "wz-gl-bar" },
       [["all", "All Time"], ["month", "This Month"], ["week", "This Week"]].map(([k, l]) => button(l, () => { browseWindow = k; render(); }, { cls: k === browseWindow ? "wz-gl-on" : "" })),
-      h("span", { class: "wz-gl-note", style: { margin: "0 0 0 6px" }, text: "Preview of your own parts. Dates and scores are made up until the gallery is live." }));
-    const body = list.length ? list.map((e) => {
+      h("span", { class: "wz-gl-note", style: { margin: "0 0 0 6px" }, text: "Preview of your own parts. Dates and scores are made up until it's live." }));
+    if (!list.length) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing here yet. Add parts in Submit." }));
+    const grid = h("div", { class: "wz-gl-grid" }, list.map((e) => {
       const v = draft.votes[e.key] || 0;
       const vote = (dir) => { draft.votes[e.key] = v === dir ? 0 : dir; saveDraft(); render(); };
-      return h("div", { class: "wz-gl-entry" },
-        h("div", { class: "wz-gl-entry-head" },
-          h("b", { text: e.title || "(no name)" }),
-          h("small", { style: { opacity: ".7" }, text: `${e.kind === "set" ? `Set · ${e.parts.length} parts` : e.parts[0].type} · posted ${Math.round((now - e.posted) / DAY)} days ago` }),
-          h("span", { class: "wz-gl-grow" }),
+      const isSet = e.kind === "set";
+      return h("div", { class: `wz-gl-item${isSet ? " set" : ""}`, "data-key": e.key },
+        isSet ? h("div", { class: "wz-gl-setname", text: e.title || "(no name)", title: e.title || "" }) : null,
+        h("div", { class: "wz-gl-row" }, e.parts.map((p) => hoverable(h("div", { class: "wz-gl-zoom" }, tile(p)), p, e))),
+        h("div", { class: "wz-gl-votes" },
           button("▲", () => vote(1), { title: "Like", cls: v === 1 ? "wz-gl-on" : "" }),
           h("span", { class: "wz-gl-score", text: String(e.score) }),
-          button("▼", () => vote(-1), { title: "Dislike", cls: v === -1 ? "wz-gl-on" : "" })),
-        h("div", { class: "wz-gl-entry-parts" }, e.parts.map((p) => h("div", {}, tile(p)))));
-    }) : h("p", { class: "wz-gl-note", text: "Nothing here yet. Add parts in Submit." });
-    return h("div", {}, head, body);
+          button("▼", () => vote(-1), { title: "Dislike", cls: v === -1 ? "wz-gl-on" : "" })));
+    }));
+    return h("div", {}, head, grid);
   }
 
   return {

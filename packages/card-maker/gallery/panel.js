@@ -19,7 +19,7 @@ import { h, button } from "./dom.js";
 import { tile, fitText, checkFrameImages, whenFontsReady, onFontsChange, TILE_CSS } from "./render.js";
 import { partFromRaw, readUcEditorFile, picturesFromPng, readFile } from "./parts.js";
 import { getDraft, saveDraft, nextId, makeSet, tidySets, entries, markUploaded, pruneUploads, SET_CAP } from "./draft.js";
-import { getMe, linkStart, linkCheck, getIndex, getTotals, uploadEntries, uploadProblems, createVoteQueue, ApiError } from "./api.js";
+import { getMe, linkStart, linkCheck, getIndex, getTotals, uploadEntries, uploadProblems, createVoteQueue, ApiError, reviewPending, reviewPost, reviewDecide, reviewRemove } from "./api.js";
 import { openVoid, canOpenVoid } from "../../core/uc-report.js";
 import { browseView, allEntries, BROWSE_CSS } from "./browse.js";
 import { loadSampleExtras } from "./mock.js";
@@ -85,6 +85,13 @@ const CSS = `
 .wz-gl-link ol { margin: 6px 0; padding-left: 20px; }
 .wz-gl-link li { margin: 4px 0; }
 .wz-gl-line { background: #000 !important; color: #fff !important; border: 1px solid #666; padding: 1px 6px; font: 13px monospace; user-select: all; }
+.wz-gl-revposts { display: flex; flex-direction: column; gap: 12px; }
+.wz-gl-revpost { border: 1px solid #444; background: #111; padding: 8px; }
+.wz-gl-revmeta { margin-bottom: 6px; }
+.wz-gl-revpost .wz-gl-item { align-items: flex-start; display: inline-flex; }
+.wz-gl-revactions { margin: 8px 0 0; }
+.wz-gl-revactions input { flex: 1 1 240px; }
+.wz-gl-hreason { color: #ffb4b4; }
 .wz-gl-done.failed { border-color: #e07a7a; background: #241010; }
 .wz-gl-upload { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; padding: 8px 10px; border: 2px solid #2f6b3a; background: #0f1a11; }
 .wz-gl-upload.open { display: block; }
@@ -131,7 +138,7 @@ const sameCard = (p, source, group, raw) => p.source === source && p.editorGroup
 // requestRead(): asks the editor in the Card Maker for its cards, or
 // returns a message saying why it can't. The answer comes back through
 // receiveCards().
-export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
+export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, reviewerKey = () => "" }) {
   injectStyle();
   const draft = getDraft();
   let tab = draft.parts.length ? "browse" : "submit";
@@ -158,6 +165,81 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
     onError(e) { say(`Your votes couldn't be sent yet (${e.message}). They'll be tried again.`); }
   });
   const author = () => acct.account || "";
+
+  // ---- review (the gallery's reviewer: the Gallery Reviewer Key setting) ----
+  const rev = { list: [], posts: {}, at: 0, loading: false, error: "", busy: {}, reasons: {} };
+  async function refreshReview(force) {
+    const key = reviewerKey();
+    if (!key || rev.loading || (!force && rev.at && Date.now() - rev.at < 30e3)) return;
+    rev.loading = true;
+    try {
+      const r = await reviewPending(key);
+      rev.list = (r && r.posts) || [];
+      rev.error = "";
+      rev.at = Date.now();
+      for (const p of rev.list) {
+        if (!rev.posts[p.id]) rev.posts[p.id] = await reviewPost(key, p.id).catch(() => null);
+      }
+    } catch (e) {
+      rev.error = e.code === "not_admin" ? "The Gallery Reviewer Key doesn't match the server's admin key." : errText(e);
+    } finally {
+      rev.loading = false;
+      notify();
+      if (open && tab === "review") render();
+    }
+  }
+  async function decide(id, approve) {
+    rev.busy[id] = approve ? "Approving…" : "Rejecting…";
+    render();
+    try {
+      await reviewDecide(reviewerKey(), id, approve, rev.reasons[id]);
+      rev.list = rev.list.filter((p) => p.id !== id);
+      delete rev.posts[id];
+      say(approve ? `Approved ${id}. It's in the gallery now.` : `Rejected ${id}.`);
+      if (approve) gal.at = 0; // Browse loads it fresh
+    } catch (e) {
+      say(`Couldn't ${approve ? "approve" : "reject"} ${id}: ${errText(e)}`);
+    }
+    delete rev.busy[id];
+    notify();
+    render();
+  }
+  function reviewView() {
+    if (!reviewerKey()) return h("p", { class: "wz-gl-note", text: "Set the Gallery Reviewer Key (Card Maker tab) to review uploads." });
+    const head = h("div", { class: "wz-gl-bar" },
+      h("b", { text: rev.loading && !rev.at ? "Loading uploads…" : `${rev.list.length} upload${rev.list.length === 1 ? "" : "s"} waiting` }),
+      h("span", { class: "wz-gl-grow" }),
+      button("↻ Refresh", () => refreshReview(true), { title: "Look for new uploads" }));
+    if (rev.error) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: rev.error }));
+    if (!rev.list.length && rev.at) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing to review. New uploads appear here." }));
+    const items = rev.list.map((p) => {
+      const post = rev.posts[p.id];
+      const reason = h("input", { type: "text", placeholder: "Reason (optional, shown to them if rejected)", maxLength: 300, value: rev.reasons[p.id] || "", oninput: (e) => { rev.reasons[p.id] = e.target.value; } });
+      const approveBtn = button(rev.busy[p.id] || "Approve", () => decide(p.id, true), { primary: true, title: "Add it to the gallery (one commit on the gallery branch)" });
+      const rejectBtn = button("Reject", () => decide(p.id, false), { title: "Don't add it; the author sees it as not approved" });
+      approveBtn.disabled = rejectBtn.disabled = !!rev.busy[p.id] || !post;
+      return h("div", { class: "wz-gl-revpost" },
+        h("div", { class: "wz-gl-revmeta" },
+          h("b", { text: p.title || "(no name)" }),
+          h("span", { class: "dim", text: ` ${p.kind === "set" ? `set of ${post ? post.parts.length : "?"}` : post ? post.parts[0].type : ""} · by ` }), h("b", { text: p.author }),
+          h("span", { class: "dim", text: ` · ${new Date(p.postedAt).toLocaleString()} · #${p.id}` })),
+        post ? h("div", { class: `wz-gl-item${p.kind === "set" ? " set" : ""}` },
+          p.kind === "set" ? h("div", { class: "wz-gl-sethead" }, h("div", { class: "wz-gl-setname", text: post.title })) : null,
+          h("div", { class: "wz-gl-row" }, post.parts.map((c) => hoverable(h("div", { class: "wz-gl-zoom" }, tile(c)), c, null))))
+          : h("p", { class: "wz-gl-note", text: "Loading its cards…" }),
+        h("div", { class: "wz-gl-bar wz-gl-revactions" }, approveBtn, rejectBtn, reason));
+    });
+    return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Each upload is shown exactly as it will look in Browse. Approving adds it to the gallery for everyone." }), h("div", { class: "wz-gl-revposts" }, items));
+  }
+  async function removePost(e) {
+    try {
+      await reviewRemove(reviewerKey(), e.id);
+      say(`Removed ${e.id} from the gallery.`);
+      gal.approved = gal.approved.filter((p) => p.id !== e.id);
+      render();
+      refreshGallery(true);
+    } catch (err) { say(`Couldn't remove ${e.id}: ${errText(err)}`); }
+  }
   const currentVotes = () => {
     const cur = { ...acct.votes };
     Object.entries(voteQueue.pending()).forEach(([id, v]) => { if (v) cur[id] = v; else delete cur[id]; });
@@ -310,9 +392,10 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
     const info = e ? h("div", { class: "wz-gl-hinfo" },
       h("span", { class: "dim", text: "By " }), h("b", { text: e.author || "you" }),
       h("br"), h("span", { class: "dim", text: (e.status === "pending" ? "Uploaded " : "Posted ") + (e.days ? `${e.days} day${e.days === 1 ? "" : "s"} ago` : "today") }),
-      e.status === "pending" ? [h("br"), h("span", { class: "dim", text: "Awaiting approval" })] : null) : null;
+      e.status === "pending" ? [h("br"), h("span", { class: "dim", text: "Awaiting approval" })] : null,
+      e.status === "rejected" ? [h("br"), h("span", { class: "wz-gl-hreason", text: e.reason ? `Not approved: ${e.reason}` : "Not approved" })] : null) : null;
     const card = h("div", { class: "wz-gl-hcard" }, tile(p));
-    hover.replaceChildren(card, info);
+    hover.replaceChildren(...[card, info].filter(Boolean));
     hover.classList.add("on");
     requestAnimationFrame(() => {
       if (hoverFor !== anchor) return;
@@ -355,6 +438,9 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
       ctl.layout();
       // Again once the window has settled (a nav style or size just changed).
       requestAnimationFrame(() => { if (browseCtl === ctl) ctl.layout(); });
+    } else if (tab === "review") {
+      content.replaceChildren(reviewView());
+      requestAnimationFrame(refit);
     } else {
       content.replaceChildren(...[linkBox(), submitView()].filter(Boolean));
       requestAnimationFrame(refit);
@@ -367,6 +453,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
       tab = v; open = true; panel.classList.add("on"); render();
       refreshMe();
       if (v === "browse") refreshGallery();
+      if (v === "review") refreshReview(true);
     }
     notify();
   }
@@ -600,7 +687,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
   function browseTab() {
     const own = acct.posts
       .filter((p) => (p.status === "pending" || p.status === "rejected") && draft.uploads[p.id])
-      .map((p) => ({ id: p.id, status: p.status, postedAt: p.postedAt, kind: draft.uploads[p.id].kind, title: draft.uploads[p.id].title, parts: draft.uploads[p.id].parts }));
+      .map((p) => ({ id: p.id, status: p.status, reason: p.reason, postedAt: p.postedAt, kind: draft.uploads[p.id].kind, title: draft.uploads[p.id].title, parts: draft.uploads[p.id].parts }));
     // Just approved, but not in the gallery's index yet: still show its copy.
     acct.posts.filter((p) => p.status === "approved" && draft.uploads[p.id] && !gal.approved.some((a) => a.id === p.id))
       .forEach((p) => own.push({ id: p.id, status: "pending", postedAt: p.postedAt, kind: draft.uploads[p.id].kind, title: draft.uploads[p.id].title, parts: draft.uploads[p.id].parts }));
@@ -615,6 +702,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
       hoverable,
       rerender: render,
       onRefresh: () => { voteQueue.flush(); refreshMe(true); refreshGallery(true); },
+      onRemove: reviewerKey() ? removePost : null,
       vote(e, dir) {
         if (e.sample) { sampleVotes[e.key] = (sampleVotes[e.key] || 0) === dir ? 0 : dir; return render(); }
         if (!acct.account) { say("Link your Undercards account to vote: press Link my account at the top."); return; }
@@ -628,6 +716,10 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
   return {
     el: panel,
     isOpen: () => open,
+    isReviewer: () => !!reviewerKey(),
+    pendingCount: () => (reviewerKey() ? rev.list.length : 0),
+    // The Card Maker opened: the reviewer's count of uploads waiting.
+    opened() { if (reviewerKey()) refreshReview(); },
     setOpen(on) { setView(on ? tab : "editor"); },
     view: () => (open ? tab : "editor"),
     setView,

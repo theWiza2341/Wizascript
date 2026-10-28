@@ -19,7 +19,7 @@ Share the cards you make. It's part of the Card Maker: use **Browse** and **Subm
 - **Size** (Small / Medium / Large) zooms the cards. Large stretches them to the window's width.
 - Cards use the game's DTM-Mono font and card frames, and long names and text shrink to fit, the way UC Editor does it (thanks to sernon158).
 - Artifacts take the same space as a card (two cards' width when their text is very long), and enchantments get a plain outer frame.
-- Uploads are reviewed before they appear: until then they show under **My posts** as awaiting approval. Likes and dislikes are saved as you go; you can change or take back a vote. **↻** (bottom left of Browse) loads the latest posts and votes. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
+- Uploads are reviewed before they appear: until then they show under **My posts** as awaiting approval, and as "not approved" (with the reason, on hover) if they're turned down. Likes and dislikes are saved as you go; you can change or take back a vote. **↻** (bottom left of Browse) loads the latest posts and votes. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
 
 ## 1.6.2
 

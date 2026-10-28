@@ -30,7 +30,8 @@ const CATEGORY = "Wizascript";
 // file could post and vote as this player; a restored install links again.
 const SKIP_GM = new Set(["wizascript.migration.v150", "wizascript.lastSeenVersion", "wizascript.cardMaker.galleryAuth"]);
 // Display-only rows on the Wizascript section itself.
-const SKIP_LS_PREFIXES = ["about.", "backup."];
+// ...and the gallery reviewer's key, for the same reason as galleryAuth.
+const SKIP_LS_PREFIXES = ["about.", "backup.", "cardMaker.galleryReviewerKey"];
 
 function isBackedUpLsKey(key) {
   if (!key.startsWith(LS_PREFIX)) return false;

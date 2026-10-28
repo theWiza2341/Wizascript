@@ -55,6 +55,7 @@ let editorSetting = null;
 let hotfixSetting = null;
 let gallerySetting = null;
 let wheelSetting = null;
+let reviewerSetting = null;
 let mounted = null; // { controller, win, frames, ... } | null - built on each open
 let footerButton = null;
 
@@ -182,10 +183,12 @@ function mount() {
         return null;
       },
       editorLabel: (key) => EDITORS[key || currentEditor()].label,
-      wheelPages: () => !wheelSetting || !!wheelSetting.value()
+      wheelPages: () => !wheelSetting || !!wheelSetting.value(),
+      reviewerKey: () => String((reviewerSetting && reviewerSetting.value()) || "").trim()
     });
     win.body.appendChild(gallery.el);
     mountGalleryNav({ win, gallery });
+    gallery.opened();
   }
 
   // Step behind anything UnderScript opens on top of the page (same as
@@ -384,6 +387,13 @@ export function initCardMaker(plugin) {
     type: "boolean",
     default: true,
     refresh: true
+  });
+  reviewerSetting = settings.add("galleryReviewerKey", {
+    name: "Gallery Reviewer Key",
+    note: "Only for the gallery's reviewer. Adds Review to the Card Maker.",
+    type: "text",
+    default: "",
+    hidden: () => !!gallerySetting && !gallerySetting.value()
   });
   wheelSetting = settings.add("galleryWheelPages", {
     name: "Gallery: Scroll Wheel Pages",

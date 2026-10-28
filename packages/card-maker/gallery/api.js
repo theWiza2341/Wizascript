@@ -25,10 +25,11 @@ export class ApiError extends Error {
   constructor(status, code, message, extra) { super(message); this.status = status; this.code = code; this.extra = extra || {}; }
 }
 
-function request(method, url, { body, auth } = {}) {
+function request(method, url, { body, auth, adminKey } = {}) {
   return new Promise((resolve, reject) => {
     const headers = { "Content-Type": "application/json" };
     if (auth) { headers["X-WZ-Install"] = auth.install; headers["X-WZ-Secret"] = auth.secret; }
+    if (adminKey) headers["X-WZ-Admin"] = adminKey;
     const done = (status, text) => {
       let data = null;
       try { data = text ? JSON.parse(text) : null; } catch (e) { /* not JSON */ }
@@ -95,6 +96,13 @@ export const linkStart = () => authed("POST", "/v1/link/start");
 export const linkCheck = () => authed("POST", "/v1/link/check");
 export const sendVotes = (votes) => authed("POST", "/v1/votes", { votes });
 export const getTotals = () => request("GET", `${WORKER}/v1/totals`);
+
+// ---- the reviewer (the Worker's admin key, from the Gallery Reviewer Key setting) ----
+const admin = (method, path, key, body) => request(method, WORKER + path, { body, adminKey: key });
+export const reviewPending = (key) => admin("GET", "/v1/admin/pending", key);
+export const reviewPost = (key, id) => admin("GET", `/v1/admin/post?id=${encodeURIComponent(id)}`, key);
+export const reviewDecide = (key, id, approve, reason) => admin("POST", "/v1/admin/decide", key, { id, approve: !!approve, reason: reason || "" });
+export const reviewRemove = (key, id) => admin("POST", "/v1/admin/remove", key, { id });
 
 // The approved posts (gallery branch), with art paths made into URLs.
 export async function getIndex() {

@@ -1065,7 +1065,7 @@ Share the cards you make. It's part of the Card Maker: use **Browse** and **Subm
 - **Size** (Small / Medium / Large) zooms the cards. Large stretches them to the window's width.
 - Cards use the game's DTM-Mono font and card frames, and long names and text shrink to fit, the way UC Editor does it (thanks to sernon158).
 - Artifacts take the same space as a card (two cards' width when their text is very long), and enchantments get a plain outer frame.
-- Uploads are reviewed before they appear: until then they show under **My posts** as awaiting approval. Likes and dislikes are saved as you go; you can change or take back a vote. **\u21BB** (bottom left of Browse) loads the latest posts and votes. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
+- Uploads are reviewed before they appear: until then they show under **My posts** as awaiting approval, and as "not approved" (with the reason, on hover) if they're turned down. Likes and dislikes are saved as you go; you can change or take back a vote. **\u21BB** (bottom left of Browse) loads the latest posts and votes. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
 
 ## 1.6.2
 
@@ -1558,7 +1558,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   var KIND = "BACKUP";
   var CATEGORY2 = "Wizascript";
   var SKIP_GM = /* @__PURE__ */ new Set(["wizascript.migration.v150", "wizascript.lastSeenVersion", "wizascript.cardMaker.galleryAuth"]);
-  var SKIP_LS_PREFIXES = ["about.", "backup."];
+  var SKIP_LS_PREFIXES = ["about.", "backup.", "cardMaker.galleryReviewerKey"];
   function isBackedUpLsKey(key2) {
     if (!key2.startsWith(LS_PREFIX2)) return false;
     const rest = key2.slice(LS_PREFIX2.length);
@@ -12443,13 +12443,14 @@ Version: v${version}`;
       this.extra = extra || {};
     }
   };
-  function request(method, url, { body, auth: auth2 } = {}) {
+  function request(method, url, { body, auth: auth2, adminKey } = {}) {
     return new Promise((resolve2, reject) => {
       const headers = { "Content-Type": "application/json" };
       if (auth2) {
         headers["X-WZ-Install"] = auth2.install;
         headers["X-WZ-Secret"] = auth2.secret;
       }
+      if (adminKey) headers["X-WZ-Admin"] = adminKey;
       const done = (status, text) => {
         let data2 = null;
         try {
@@ -12519,6 +12520,11 @@ Version: v${version}`;
   var linkCheck = () => authed("POST", "/v1/link/check");
   var sendVotes = (votes) => authed("POST", "/v1/votes", { votes });
   var getTotals = () => request("GET", `${WORKER}/v1/totals`);
+  var admin = (method, path, key2, body) => request(method, WORKER + path, { body, adminKey: key2 });
+  var reviewPending = (key2) => admin("GET", "/v1/admin/pending", key2);
+  var reviewPost = (key2, id) => admin("GET", `/v1/admin/post?id=${encodeURIComponent(id)}`, key2);
+  var reviewDecide = (key2, id, approve, reason) => admin("POST", "/v1/admin/decide", key2, { id, approve: !!approve, reason: reason || "" });
+  var reviewRemove = (key2, id) => admin("POST", "/v1/admin/remove", key2, { id });
   async function getIndex() {
     const idx = await request("GET", `${GALLERY_RAW}index.json?t=${Math.floor(Date.now() / 6e4)}`);
     const posts = (idx && Array.isArray(idx.posts) ? idx.posts : []).map((p) => ({
@@ -12840,6 +12846,8 @@ Version: v${version}`;
 .wz-gl-filter .box { display: inline-block; width: 12px; height: 12px; border: 2px solid currentColor; font-size: 10px; line-height: 9px; text-align: center; }
 .wz-gl-filter.on { border-color: var(--wz-gl-accent); color: var(--wz-gl-accent); }
 .wz-gl-mine.pending { background: #6b5a14; border-color: #ffd84a; }
+.wz-gl-remove { background: none; border: 1px solid #553; color: #a88; font-size: 10px; line-height: 14px; padding: 0 4px; margin-left: 4px; cursor: pointer; }
+.wz-gl-remove:hover, .wz-gl-remove.armed { border-color: #e07a7a; color: #ffb4b4; }
 .wz-gl-mine.rejected { background: #5a1f1f; border-color: #e07a7a; }
 .wz-gl-mine.sample { background: #333; border-color: #777; }
 .wz-gl-seg { position: relative; display: flex; margin: 0; width: 100%; max-width: 560px; flex: 1 1 360px; border: 2px solid #fff; background: #000; }
@@ -12876,6 +12884,7 @@ Version: v${version}`;
       parts: p.parts,
       author: account,
       status: p.status,
+      reason: p.reason,
       mine: true,
       days: days(p.postedAt),
       vote: 0,
@@ -13031,6 +13040,27 @@ Version: v${version}`;
     };
     return h("div", { class: "wz-gl-seg" }, pill, LISTS.map(([k, l]) => h("button", { type: "button", class: k === state2.list ? "on" : "", text: l, onclick: () => go(k) })));
   }
+  function removeButton(ctx, e) {
+    const b = h("button", { type: "button", class: "wz-gl-remove", title: "Remove from the gallery (reviewer)", text: "\u2715" });
+    let armed = null;
+    b.addEventListener("click", () => {
+      if (!armed) {
+        b.classList.add("armed");
+        b.textContent = "Remove?";
+        armed = setTimeout(() => {
+          armed = null;
+          b.classList.remove("armed");
+          b.textContent = "\u2715";
+        }, 3e3);
+        return;
+      }
+      clearTimeout(armed);
+      b.disabled = true;
+      b.textContent = "\u2026";
+      ctx.onRemove(e);
+    });
+    return b;
+  }
   function item(ctx, e, rank, listKey) {
     const isSet = e.kind === "set";
     const vote = (dir) => ctx.vote(e, dir);
@@ -13055,7 +13085,8 @@ Version: v${version}`;
           h("button", { type: "button", class: `wz-gl-vote up${e.vote === 1 ? " on" : ""}`, title: "Like", text: "\u25B2", onclick: () => vote(1) }),
           h("span", { class: `wz-gl-score${e.score > 0 ? " pos" : e.score < 0 ? " neg" : ""}`, text: String(e.score) }),
           h("button", { type: "button", class: `wz-gl-vote down${e.vote === -1 ? " on" : ""}`, title: "Dislike", text: "\u25BC", onclick: () => vote(-1) })
-        ] : null
+        ] : null,
+        ctx.onRemove && e.status === "approved" ? removeButton(ctx, e) : null
       )
     );
   }
@@ -13118,6 +13149,13 @@ Version: v${version}`;
 .wz-gl-link ol { margin: 6px 0; padding-left: 20px; }
 .wz-gl-link li { margin: 4px 0; }
 .wz-gl-line { background: #000 !important; color: #fff !important; border: 1px solid #666; padding: 1px 6px; font: 13px monospace; user-select: all; }
+.wz-gl-revposts { display: flex; flex-direction: column; gap: 12px; }
+.wz-gl-revpost { border: 1px solid #444; background: #111; padding: 8px; }
+.wz-gl-revmeta { margin-bottom: 6px; }
+.wz-gl-revpost .wz-gl-item { align-items: flex-start; display: inline-flex; }
+.wz-gl-revactions { margin: 8px 0 0; }
+.wz-gl-revactions input { flex: 1 1 240px; }
+.wz-gl-hreason { color: #ffb4b4; }
 .wz-gl-done.failed { border-color: #e07a7a; background: #241010; }
 .wz-gl-upload { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; padding: 8px 10px; border: 2px solid #2f6b3a; background: #0f1a11; }
 .wz-gl-upload.open { display: block; }
@@ -13158,7 +13196,7 @@ ${BROWSE_CSS}
   }
   var setColor = (set) => COLORS[(set.letter.charCodeAt(0) - 65) % COLORS.length];
   var sameCard = (p, source, group, raw) => p.source === source && p.editorGroup === group && p.name === (raw.name || "") && p.type === raw.type;
-  function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
+  function buildGalleryPanel({ requestRead, editorLabel, wheelPages, reviewerKey = () => "" }) {
     injectStyle2();
     const draft2 = getDraft();
     let tab = draft2.parts.length ? "browse" : "submit";
@@ -13190,6 +13228,95 @@ ${BROWSE_CSS}
       }
     });
     const author = () => acct.account || "";
+    const rev = { list: [], posts: {}, at: 0, loading: false, error: "", busy: {}, reasons: {} };
+    async function refreshReview(force) {
+      const key2 = reviewerKey();
+      if (!key2 || rev.loading || !force && rev.at && Date.now() - rev.at < 3e4) return;
+      rev.loading = true;
+      try {
+        const r = await reviewPending(key2);
+        rev.list = r && r.posts || [];
+        rev.error = "";
+        rev.at = Date.now();
+        for (const p of rev.list) {
+          if (!rev.posts[p.id]) rev.posts[p.id] = await reviewPost(key2, p.id).catch(() => null);
+        }
+      } catch (e) {
+        rev.error = e.code === "not_admin" ? "The Gallery Reviewer Key doesn't match the server's admin key." : errText(e);
+      } finally {
+        rev.loading = false;
+        notify2();
+        if (open && tab === "review") render2();
+      }
+    }
+    async function decide(id, approve) {
+      rev.busy[id] = approve ? "Approving\u2026" : "Rejecting\u2026";
+      render2();
+      try {
+        await reviewDecide(reviewerKey(), id, approve, rev.reasons[id]);
+        rev.list = rev.list.filter((p) => p.id !== id);
+        delete rev.posts[id];
+        say(approve ? `Approved ${id}. It's in the gallery now.` : `Rejected ${id}.`);
+        if (approve) gal.at = 0;
+      } catch (e) {
+        say(`Couldn't ${approve ? "approve" : "reject"} ${id}: ${errText(e)}`);
+      }
+      delete rev.busy[id];
+      notify2();
+      render2();
+    }
+    function reviewView() {
+      if (!reviewerKey()) return h("p", { class: "wz-gl-note", text: "Set the Gallery Reviewer Key (Card Maker tab) to review uploads." });
+      const head = h(
+        "div",
+        { class: "wz-gl-bar" },
+        h("b", { text: rev.loading && !rev.at ? "Loading uploads\u2026" : `${rev.list.length} upload${rev.list.length === 1 ? "" : "s"} waiting` }),
+        h("span", { class: "wz-gl-grow" }),
+        button("\u21BB Refresh", () => refreshReview(true), { title: "Look for new uploads" })
+      );
+      if (rev.error) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: rev.error }));
+      if (!rev.list.length && rev.at) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing to review. New uploads appear here." }));
+      const items = rev.list.map((p) => {
+        const post = rev.posts[p.id];
+        const reason = h("input", { type: "text", placeholder: "Reason (optional, shown to them if rejected)", maxLength: 300, value: rev.reasons[p.id] || "", oninput: (e) => {
+          rev.reasons[p.id] = e.target.value;
+        } });
+        const approveBtn = button(rev.busy[p.id] || "Approve", () => decide(p.id, true), { primary: true, title: "Add it to the gallery (one commit on the gallery branch)" });
+        const rejectBtn = button("Reject", () => decide(p.id, false), { title: "Don't add it; the author sees it as not approved" });
+        approveBtn.disabled = rejectBtn.disabled = !!rev.busy[p.id] || !post;
+        return h(
+          "div",
+          { class: "wz-gl-revpost" },
+          h(
+            "div",
+            { class: "wz-gl-revmeta" },
+            h("b", { text: p.title || "(no name)" }),
+            h("span", { class: "dim", text: ` ${p.kind === "set" ? `set of ${post ? post.parts.length : "?"}` : post ? post.parts[0].type : ""} \xB7 by ` }),
+            h("b", { text: p.author }),
+            h("span", { class: "dim", text: ` \xB7 ${new Date(p.postedAt).toLocaleString()} \xB7 #${p.id}` })
+          ),
+          post ? h(
+            "div",
+            { class: `wz-gl-item${p.kind === "set" ? " set" : ""}` },
+            p.kind === "set" ? h("div", { class: "wz-gl-sethead" }, h("div", { class: "wz-gl-setname", text: post.title })) : null,
+            h("div", { class: "wz-gl-row" }, post.parts.map((c) => hoverable(h("div", { class: "wz-gl-zoom" }, tile(c)), c, null)))
+          ) : h("p", { class: "wz-gl-note", text: "Loading its cards\u2026" }),
+          h("div", { class: "wz-gl-bar wz-gl-revactions" }, approveBtn, rejectBtn, reason)
+        );
+      });
+      return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Each upload is shown exactly as it will look in Browse. Approving adds it to the gallery for everyone." }), h("div", { class: "wz-gl-revposts" }, items));
+    }
+    async function removePost(e) {
+      try {
+        await reviewRemove(reviewerKey(), e.id);
+        say(`Removed ${e.id} from the gallery.`);
+        gal.approved = gal.approved.filter((p) => p.id !== e.id);
+        render2();
+        refreshGallery(true);
+      } catch (err) {
+        say(`Couldn't remove ${e.id}: ${errText(err)}`);
+      }
+    }
     const currentVotes = () => {
       const cur = { ...acct.votes };
       Object.entries(voteQueue.pending()).forEach(([id, v]) => {
@@ -13384,10 +13511,11 @@ ${BROWSE_CSS}
         h("b", { text: e.author || "you" }),
         h("br"),
         h("span", { class: "dim", text: (e.status === "pending" ? "Uploaded " : "Posted ") + (e.days ? `${e.days} day${e.days === 1 ? "" : "s"} ago` : "today") }),
-        e.status === "pending" ? [h("br"), h("span", { class: "dim", text: "Awaiting approval" })] : null
+        e.status === "pending" ? [h("br"), h("span", { class: "dim", text: "Awaiting approval" })] : null,
+        e.status === "rejected" ? [h("br"), h("span", { class: "wz-gl-hreason", text: e.reason ? `Not approved: ${e.reason}` : "Not approved" })] : null
       ) : null;
       const card = h("div", { class: "wz-gl-hcard" }, tile(p));
-      hover.replaceChildren(card, info);
+      hover.replaceChildren(...[card, info].filter(Boolean));
       hover.classList.add("on");
       requestAnimationFrame(() => {
         if (hoverFor !== anchor) return;
@@ -13454,6 +13582,9 @@ ${BROWSE_CSS}
         requestAnimationFrame(() => {
           if (browseCtl === ctl2) ctl2.layout();
         });
+      } else if (tab === "review") {
+        content.replaceChildren(reviewView());
+        requestAnimationFrame(refit);
       } else {
         content.replaceChildren(...[linkBox(), submitView()].filter(Boolean));
         requestAnimationFrame(refit);
@@ -13472,6 +13603,7 @@ ${BROWSE_CSS}
         render2();
         refreshMe();
         if (v === "browse") refreshGallery();
+        if (v === "review") refreshReview(true);
       }
       notify2();
     }
@@ -13835,7 +13967,7 @@ ${BROWSE_CSS}
       changed2();
     });
     function browseTab() {
-      const own = acct.posts.filter((p) => (p.status === "pending" || p.status === "rejected") && draft2.uploads[p.id]).map((p) => ({ id: p.id, status: p.status, postedAt: p.postedAt, kind: draft2.uploads[p.id].kind, title: draft2.uploads[p.id].title, parts: draft2.uploads[p.id].parts }));
+      const own = acct.posts.filter((p) => (p.status === "pending" || p.status === "rejected") && draft2.uploads[p.id]).map((p) => ({ id: p.id, status: p.status, reason: p.reason, postedAt: p.postedAt, kind: draft2.uploads[p.id].kind, title: draft2.uploads[p.id].title, parts: draft2.uploads[p.id].parts }));
       acct.posts.filter((p) => p.status === "approved" && draft2.uploads[p.id] && !gal.approved.some((a) => a.id === p.id)).forEach((p) => own.push({ id: p.id, status: "pending", postedAt: p.postedAt, kind: draft2.uploads[p.id].kind, title: draft2.uploads[p.id].title, parts: draft2.uploads[p.id].parts }));
       const list = allEntries({ approved: gal.approved, own, totals: gal.totals, baseVotes: gal.base, current: currentVotes(), account: acct.account, samples: browse.samples, sampleVotes });
       return browseView({
@@ -13852,6 +13984,7 @@ ${BROWSE_CSS}
           refreshMe(true);
           refreshGallery(true);
         },
+        onRemove: reviewerKey() ? removePost : null,
         vote(e, dir) {
           if (e.sample) {
             sampleVotes[e.key] = (sampleVotes[e.key] || 0) === dir ? 0 : dir;
@@ -13870,6 +14003,12 @@ ${BROWSE_CSS}
     return {
       el: panel,
       isOpen: () => open,
+      isReviewer: () => !!reviewerKey(),
+      pendingCount: () => reviewerKey() ? rev.list.length : 0,
+      // The Card Maker opened: the reviewer's count of uploads waiting.
+      opened() {
+        if (reviewerKey()) refreshReview();
+      },
       setOpen(on) {
         setView(on ? tab : "editor");
       },
@@ -13892,16 +14031,18 @@ ${BROWSE_CSS}
   }
 
   // packages/card-maker/gallery/nav.js
-  var VIEWS = [["editor", "Editor", "\u270E"], ["browse", "Browse", "\u25A4"], ["submit", "Submit", "\u2B06"]];
+  var VIEWS = [["editor", "Editor", "\u270E"], ["browse", "Browse", "\u25A4"], ["submit", "Submit", "\u2B06"], ["review", "Review", "\u2713"]];
   var STYLE_ID4 = "wizascript-cardgallery-nav-style";
   var DT2 = `"DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace`;
   var CSS5 = `
 .wz-gn-seg { display: flex; flex: none; height: 24px; margin-left: 6px; border: 2px solid #fff; background: #000; }
-.wz-gn-seg button { display: flex; align-items: center; gap: 5px; background: none; border: 0; border-right: 2px solid #fff; color: #ccc; padding: 0 12px; font: 13px ${DT2}; cursor: pointer; }
-.wz-gn-seg button:last-child { border-right: 0; }
+.wz-gn-seg button { display: flex; align-items: center; gap: 5px; background: none; border: 0; color: #ccc; padding: 0 12px; font: 13px ${DT2}; cursor: pointer; }
+.wz-gn-seg button + button { border-left: 2px solid #fff; }
 .wz-gn-seg button:hover { color: #fff; background: #222; }
 .wz-gn-seg button.on { background: #ffd84a; color: #000; }
 .wz-gn-seg .ic { font-size: 12px; }
+.wz-gn-seg .count { background: #e05a5a; color: #fff; border-radius: 8px; padding: 0 5px; font: 10px/14px Arial, sans-serif; }
+.wz-gn-seg button.on .count { background: #000; color: #ffd84a; }
 `;
   function injectStyle3() {
     if (document.getElementById(STYLE_ID4)) return;
@@ -13915,14 +14056,21 @@ ${BROWSE_CSS}
     const header = win.root.querySelector(".wz-cm-header");
     const seg = h("div", { class: "wz-gn-seg" }, VIEWS.map(([v, label, icon]) => h(
       "button",
-      { type: "button", "data-view": v, title: v === "editor" ? "Back to the editor" : `Card Gallery: ${label}`, onclick: () => gallery.setView(v) },
+      { type: "button", "data-view": v, title: v === "editor" ? "Back to the editor" : v === "review" ? "Uploads waiting for your review" : `Card Gallery: ${label}`, onclick: () => gallery.setView(v) },
       h("span", { class: "ic", text: icon }),
-      h("span", { text: label })
+      h("span", { text: label }),
+      v === "review" ? h("span", { class: "count" }) : null
     )));
     header.insertBefore(seg, header.querySelector(".wz-cm-grip"));
     function sync() {
       const view = gallery.view();
       seg.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.view === view));
+      const review = seg.querySelector('[data-view="review"]');
+      review.style.display = gallery.isReviewer() ? "" : "none";
+      const n = gallery.pendingCount();
+      const count = review.querySelector(".count");
+      count.textContent = n ? String(n) : "";
+      count.style.display = n ? "" : "none";
     }
     gallery.onChange(sync);
     sync();
@@ -13940,6 +14088,7 @@ ${BROWSE_CSS}
   var hotfixSetting = null;
   var gallerySetting = null;
   var wheelSetting = null;
+  var reviewerSetting = null;
   var mounted2 = null;
   var footerButton = null;
   var log = (...a) => {
@@ -14057,10 +14206,12 @@ ${BROWSE_CSS}
           return null;
         },
         editorLabel: (key2) => EDITORS[key2 || currentEditor()].label,
-        wheelPages: () => !wheelSetting || !!wheelSetting.value()
+        wheelPages: () => !wheelSetting || !!wheelSetting.value(),
+        reviewerKey: () => String(reviewerSetting && reviewerSetting.value() || "").trim()
       });
       win.body.appendChild(gallery.el);
       mountGalleryNav({ win, gallery });
+      gallery.opened();
     }
     let menuBackdrop = null;
     const layerWatch = new MutationObserver(() => syncLayer());
@@ -14241,6 +14392,13 @@ ${BROWSE_CSS}
       type: "boolean",
       default: true,
       refresh: true
+    });
+    reviewerSetting = settings3.add("galleryReviewerKey", {
+      name: "Gallery Reviewer Key",
+      note: "Only for the gallery's reviewer. Adds Review to the Card Maker.",
+      type: "text",
+      default: "",
+      hidden: () => !!gallerySetting && !gallerySetting.value()
     });
     wheelSetting = settings3.add("galleryWheelPages", {
       name: "Gallery: Scroll Wheel Pages",

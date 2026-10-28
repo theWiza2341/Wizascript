@@ -65,6 +65,8 @@ export const BROWSE_CSS = `
 .wz-gl-filter .box { display: inline-block; width: 12px; height: 12px; border: 2px solid currentColor; font-size: 10px; line-height: 9px; text-align: center; }
 .wz-gl-filter.on { border-color: var(--wz-gl-accent); color: var(--wz-gl-accent); }
 .wz-gl-mine.pending { background: #6b5a14; border-color: #ffd84a; }
+.wz-gl-remove { background: none; border: 1px solid #553; color: #a88; font-size: 10px; line-height: 14px; padding: 0 4px; margin-left: 4px; cursor: pointer; }
+.wz-gl-remove:hover, .wz-gl-remove.armed { border-color: #e07a7a; color: #ffb4b4; }
 .wz-gl-mine.rejected { background: #5a1f1f; border-color: #e07a7a; }
 .wz-gl-mine.sample { background: #333; border-color: #777; }
 .wz-gl-seg { position: relative; display: flex; margin: 0; width: 100%; max-width: 560px; flex: 1 1 360px; border: 2px solid #fff; background: #000; }
@@ -91,7 +93,7 @@ export function allEntries({ approved, own, totals, baseVotes, current, account,
     return { key: p.id, id: p.id, kind: p.kind, title: p.title, parts: p.parts, author: p.author, status: "approved",
       mine: !!account && p.author === account, days: days(p.approvedAt || p.postedAt), vote, score: t[0] - t[1] - (baseVotes[p.id] || 0) + vote };
   });
-  const waiting = own.map((p) => ({ key: p.id, id: p.id, kind: p.kind, title: p.title, parts: p.parts, author: account, status: p.status,
+  const waiting = own.map((p) => ({ key: p.id, id: p.id, kind: p.kind, title: p.title, parts: p.parts, author: account, status: p.status, reason: p.reason,
     mine: true, days: days(p.postedAt), vote: 0, score: 0 }));
   const list = server.concat(waiting, samples ? sampleEntries() : []);
   list.forEach((e) => { if (e.sample) { e.vote = sampleVotes[e.key] || 0; e.score = e.base + e.vote; } });
@@ -229,6 +231,20 @@ function segBar(ctx, dir) {
   return h("div", { class: "wz-gl-seg" }, pill, LISTS.map(([k, l]) => h("button", { type: "button", class: k === state.list ? "on" : "", text: l, onclick: () => go(k) })));
 }
 
+// The reviewer can take a post down: click once to arm, again within 3 s.
+function removeButton(ctx, e) {
+  const b = h("button", { type: "button", class: "wz-gl-remove", title: "Remove from the gallery (reviewer)", text: "✕" });
+  let armed = null;
+  b.addEventListener("click", () => {
+    if (!armed) { b.classList.add("armed"); b.textContent = "Remove?"; armed = setTimeout(() => { armed = null; b.classList.remove("armed"); b.textContent = "✕"; }, 3000); return; }
+    clearTimeout(armed);
+    b.disabled = true;
+    b.textContent = "…";
+    ctx.onRemove(e);
+  });
+  return b;
+}
+
 function item(ctx, e, rank, listKey) {
   const isSet = e.kind === "set";
   const vote = (dir) => ctx.vote(e, dir);
@@ -252,5 +268,6 @@ function item(ctx, e, rank, listKey) {
         h("button", { type: "button", class: `wz-gl-vote up${e.vote === 1 ? " on" : ""}`, title: "Like", text: "▲", onclick: () => vote(1) }),
         h("span", { class: `wz-gl-score${e.score > 0 ? " pos" : e.score < 0 ? " neg" : ""}`, text: String(e.score) }),
         h("button", { type: "button", class: `wz-gl-vote down${e.vote === -1 ? " on" : ""}`, title: "Dislike", text: "▼", onclick: () => vote(-1) })
-      ] : null));
+      ] : null,
+      ctx.onRemove && e.status === "approved" ? removeButton(ctx, e) : null));
 }

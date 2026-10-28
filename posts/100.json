@@ -1,0 +1,43 @@
+{
+  "id": "100",
+  "kind": "set",
+  "title": "Strange Machine",
+  "author": ":onu4head:",
+  "postedAt": 1793229411384,
+  "parts": [
+    {
+      "type": "Enchantment",
+      "name": "Green Tile",
+      "desc": "After a monster is played here, summon an enemy {Papyrus Statue}, and this effect expires.",
+      "art": "art/100-0.png"
+    },
+    {
+      "type": "Enchantment",
+      "name": "Yellow Tile",
+      "desc": "After a monster is played here, deal 3 DMG to all other ally monsters, and this effect expires.",
+      "art": "art/100-1.png"
+    },
+    {
+      "type": "Enchantment",
+      "name": "Purple Tile",
+      "desc": "After a monster is played here, it is instead summoned for the opponent, and this effect expires.",
+      "art": "art/100-2.png"
+    },
+    {
+      "type": "Enchantment",
+      "name": "Orange Tile",
+      "desc": "After a monster is played here, the enemy draws 3 cards, and this effect expires.",
+      "art": "art/100-3.png"
+    },
+    {
+      "type": "Monster",
+      "name": "Strange Machine",
+      "desc": "This takes 1 less DMG for each enemy slot enchantment. Magic: Enchant enemy slots with a _Green_, _Yellow_, _Purple_, and _Orange Tile_.",
+      "cost": 8,
+      "atk": 4,
+      "hp": 2,
+      "rarity": "BASE_EPIC",
+      "art": "art/100-4.png"
+    }
+  ]
+}

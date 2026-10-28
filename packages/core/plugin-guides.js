@@ -172,7 +172,8 @@ const GUIDES = {
       'Cards you make here are saved separately from the editor\'s own site. Use the editor\'s download/upload to move them across.',
       'If feildmaster\'s editor stays black, turn on the <b>hotfix</b> (on the Card Maker tab, or the note that appears in the window).'
     ].concat(settingOn("cardMaker.gallery", true) ? [
-      '<b>Browse</b> / <b>Submit</b> (title bar) open the Card Gallery. In Submit, <b>Read from this editor</b> lists the cards you\'ve made; tick the ones to add, link them into sets, and preview your request. (The gallery isn\'t live yet, so nothing is sent.)'
+      '<b>Browse</b> / <b>Submit</b> (title bar) open the Card Gallery. First press <b>Link my account</b>: it types a one-time line into void (chat room 0) for you to send, so your posts and votes count as your Undercards account.',
+      'In Submit, <b>Read from this editor</b> lists the cards you\'ve made; tick the ones to add, link them into sets, then <b>Review upload</b> and <b>Upload to Gallery</b>. Uploads show to everyone once approved.'
     ] : [])
   }
 };

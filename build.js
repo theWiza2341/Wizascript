@@ -23,6 +23,7 @@ const HEADER = `// ==UserScript==
 // @grant        GM_listValues
 // @grant        GM_xmlhttpRequest
 // @connect      raw.githubusercontent.com
+// @connect      wizascript-gallery.redstonewiza2341.workers.dev
 // ==/UserScript==
 
 `;

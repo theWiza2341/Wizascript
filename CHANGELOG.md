@@ -12,14 +12,14 @@ Make your own custom cards without leaving Undercards, and keep chatting while y
 - The editors are their authors' own sites, loaded as they are. Cards you make in the Card Maker are saved separately from the same editor opened on its own site. **↗** opens the editor's site in a new tab.
 - If feildmaster's editor stays black inside the Card Maker, a note in the window offers a **hotfix** (also on the Card Maker tab). It's a stopgap until his editor is updated.
 
-### New: Card Gallery (preview)
+### New: Card Gallery
 Share the cards you make. It's part of the Card Maker: use **Browse** and **Submit** in its title bar (**Editor** takes you back).
 - **Read from this editor** lists every group and card you've made in the editor that's open. Tick the ones to add, one by one or a whole group as a set. UC Editor group files (.uceditor) and PNG downloads can be added too.
-- Link parts into sets (A, B, C…) of up to 15 cards and rename them. **Review upload** shows exactly what will be sent; **Upload to Gallery** sends it and confirms what went. Set your **Card Gallery Username** (Card Maker tab) first: it's the author name your posts show. **Browse** shows how they'll look, in four lists (**Newest**, This Week, This Month, All Time), a page at a time, and **My posts** / **Liked** narrow any list: sets show only their name, likes and dislikes sit under each card or set, and hovering a card shows it bigger with who posted it and when. Turn pages with ‹ › at the bottom right, or the scroll wheel (**Gallery: Scroll Wheel Pages**).
+- Link parts into sets (A, B, C…) of up to 15 cards and rename them. **Review upload** shows exactly what will be sent; **Upload to Gallery** sends it and confirms what went. First press **Link my account**: it types a one-time line into void (chat room 0) for you to send, which proves which Undercards account you are. Your posts show that name, and one vote counts per player. **Browse** shows the gallery in four lists (**Newest**, This Week, This Month, All Time), a page at a time, and **My posts** / **Liked** narrow any list: sets show only their name, likes and dislikes sit under each card or set, and hovering a card shows it bigger with who posted it and when. Turn pages with ‹ › at the bottom right, or the scroll wheel (**Gallery: Scroll Wheel Pages**).
 - **Size** (Small / Medium / Large) zooms the cards. Large stretches them to the window's width.
 - Cards use the game's DTM-Mono font and card frames, and long names and text shrink to fit, the way UC Editor does it (thanks to sernon158).
 - Artifacts take the same space as a card (two cards' width when their text is very long), and enchantments get a plain outer frame.
-- The gallery isn't live yet: nothing is actually sent (uploads stay on your computer, marked awaiting approval), and the sample entries' dates and scores are made up. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
+- Uploads are reviewed before they appear: until then they show under **My posts** as awaiting approval. Likes and dislikes are saved as you go; you can change or take back a vote. **↻** (bottom left of Browse) loads the latest posts and votes. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
 
 ## 1.6.2
 

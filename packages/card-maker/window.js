@@ -213,7 +213,7 @@ export function buildWindow({ signal, icon, editors, onPick, onAction }) {
 
   root.addEventListener("click", (e) => {
     const action = e.target.closest("[data-action]")?.dataset.action;
-    if (action === "min") setMinimised(!ui.minimised);
+    if (action === "min") { setMinimised(!ui.minimised); if (ui.minimised) onAction("minimised"); }
     else if (action === "max") setMaximised(!ui.maximised);
     else if (action) onAction(action);
   }, { signal });

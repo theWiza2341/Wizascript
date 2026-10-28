@@ -17,6 +17,7 @@
 // @grant        GM_listValues
 // @grant        GM_xmlhttpRequest
 // @connect      raw.githubusercontent.com
+// @connect      wizascript-gallery.redstonewiza2341.workers.dev
 // ==/UserScript==
 
 if (location.hostname === "undercard.feildmaster.com" || (location.hostname === "sernon158.github.io" && location.pathname.startsWith("/uc-editor"))) {
@@ -1057,14 +1058,14 @@ Make your own custom cards without leaving Undercards, and keep chatting while y
 - The editors are their authors' own sites, loaded as they are. Cards you make in the Card Maker are saved separately from the same editor opened on its own site. **\u2197** opens the editor's site in a new tab.
 - If feildmaster's editor stays black inside the Card Maker, a note in the window offers a **hotfix** (also on the Card Maker tab). It's a stopgap until his editor is updated.
 
-### New: Card Gallery (preview)
+### New: Card Gallery
 Share the cards you make. It's part of the Card Maker: use **Browse** and **Submit** in its title bar (**Editor** takes you back).
 - **Read from this editor** lists every group and card you've made in the editor that's open. Tick the ones to add, one by one or a whole group as a set. UC Editor group files (.uceditor) and PNG downloads can be added too.
-- Link parts into sets (A, B, C\u2026) of up to 15 cards and rename them. **Review upload** shows exactly what will be sent; **Upload to Gallery** sends it and confirms what went. Set your **Card Gallery Username** (Card Maker tab) first: it's the author name your posts show. **Browse** shows how they'll look, in four lists (**Newest**, This Week, This Month, All Time), a page at a time, and **My posts** / **Liked** narrow any list: sets show only their name, likes and dislikes sit under each card or set, and hovering a card shows it bigger with who posted it and when. Turn pages with \u2039 \u203A at the bottom right, or the scroll wheel (**Gallery: Scroll Wheel Pages**).
+- Link parts into sets (A, B, C\u2026) of up to 15 cards and rename them. **Review upload** shows exactly what will be sent; **Upload to Gallery** sends it and confirms what went. First press **Link my account**: it types a one-time line into void (chat room 0) for you to send, which proves which Undercards account you are. Your posts show that name, and one vote counts per player. **Browse** shows the gallery in four lists (**Newest**, This Week, This Month, All Time), a page at a time, and **My posts** / **Liked** narrow any list: sets show only their name, likes and dislikes sit under each card or set, and hovering a card shows it bigger with who posted it and when. Turn pages with \u2039 \u203A at the bottom right, or the scroll wheel (**Gallery: Scroll Wheel Pages**).
 - **Size** (Small / Medium / Large) zooms the cards. Large stretches them to the window's width.
 - Cards use the game's DTM-Mono font and card frames, and long names and text shrink to fit, the way UC Editor does it (thanks to sernon158).
 - Artifacts take the same space as a card (two cards' width when their text is very long), and enchantments get a plain outer frame.
-- The gallery isn't live yet: nothing is actually sent (uploads stay on your computer, marked awaiting approval), and the sample entries' dates and scores are made up. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
+- Uploads are reviewed before they appear: until then they show under **My posts** as awaiting approval. Likes and dislikes are saved as you go; you can change or take back a vote. **\u21BB** (bottom left of Browse) loads the latest posts and votes. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
 
 ## 1.6.2
 
@@ -1556,7 +1557,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   var GM_PREFIX2 = "wizascript.";
   var KIND = "BACKUP";
   var CATEGORY2 = "Wizascript";
-  var SKIP_GM = /* @__PURE__ */ new Set(["wizascript.migration.v150", "wizascript.lastSeenVersion"]);
+  var SKIP_GM = /* @__PURE__ */ new Set(["wizascript.migration.v150", "wizascript.lastSeenVersion", "wizascript.cardMaker.galleryAuth"]);
   var SKIP_LS_PREFIXES = ["about.", "backup."];
   function isBackedUpLsKey(key2) {
     if (!key2.startsWith(LS_PREFIX2)) return false;
@@ -3065,7 +3066,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         "Cards you make here are saved separately from the editor's own site. Use the editor's download/upload to move them across.",
         "If feildmaster's editor stays black, turn on the <b>hotfix</b> (on the Card Maker tab, or the note that appears in the window)."
       ].concat(settingOn("cardMaker.gallery", true) ? [
-        "<b>Browse</b> / <b>Submit</b> (title bar) open the Card Gallery. In Submit, <b>Read from this editor</b> lists the cards you've made; tick the ones to add, link them into sets, and preview your request. (The gallery isn't live yet, so nothing is sent.)"
+        "<b>Browse</b> / <b>Submit</b> (title bar) open the Card Gallery. First press <b>Link my account</b>: it types a one-time line into void (chat room 0) for you to send, so your posts and votes count as your Undercards account.",
+        "In Submit, <b>Read from this editor</b> lists the cards you've made; tick the ones to add, link them into sets, then <b>Review upload</b> and <b>Upload to Gallery</b>. Uploads show to everyone once approved."
       ] : [])
     }
   };
@@ -11767,8 +11769,10 @@ Version: v${version}`;
     root.addEventListener("click", (e) => {
       var _a;
       const action = (_a = e.target.closest("[data-action]")) == null ? void 0 : _a.dataset.action;
-      if (action === "min") setMinimised(!ui.minimised);
-      else if (action === "max") setMaximised(!ui.maximised);
+      if (action === "min") {
+        setMinimised(!ui.minimised);
+        if (ui.minimised) onAction("minimised");
+      } else if (action === "max") setMaximised(!ui.maximised);
       else if (action) onAction(action);
     }, { signal });
     window.addEventListener("resize", () => {
@@ -12339,10 +12343,11 @@ Version: v${version}`;
     } catch (e) {
       draft = null;
     }
-    if (!draft || !Array.isArray(draft.parts)) draft = { parts: [], groups: [], nextId: 1, votes: {} };
+    if (!draft || !Array.isArray(draft.parts)) draft = { parts: [], groups: [], nextId: 1, uploads: {} };
     draft.groups = draft.groups || [];
-    draft.votes = draft.votes || {};
-    draft.posted = draft.posted || [];
+    draft.uploads = draft.uploads || {};
+    delete draft.posted;
+    delete draft.votes;
     draft.parts.forEach((p) => {
       p.sel = false;
     });
@@ -12391,29 +12396,244 @@ Version: v${version}`;
     tidySets();
     return set;
   }
-  function postEntries(author) {
+  function markUploaded(sent) {
     const d = getDraft();
-    const now = Date.now();
-    const posts = entries().map((e) => ({
-      key: "post" + nextId(),
-      kind: e.kind,
-      title: e.title || "",
-      parts: e.parts.map(({ sel, group, id, ...p }) => p),
-      author,
-      postedAt: now,
-      status: "pending"
-    }));
-    d.posted.push(...posts);
-    d.parts.length = 0;
-    d.groups.length = 0;
+    const gone = /* @__PURE__ */ new Set();
+    sent.forEach(({ id, kind, title, local }) => {
+      d.uploads[id] = { kind, title, postedAt: Date.now(), parts: local.parts.map(({ sel, group, id: _, ...p }) => p) };
+      local.parts.forEach((p) => gone.add(p));
+    });
+    d.parts = d.parts.filter((p) => !gone.has(p));
+    tidySets();
     saveDraft();
-    return posts;
+  }
+  function pruneUploads(statusById, inIndex) {
+    const d = getDraft();
+    let changed2 = false;
+    Object.keys(d.uploads).forEach((id) => {
+      const st = statusById[id];
+      const old = Date.now() - d.uploads[id].postedAt > 14 * 864e5;
+      if (st === "approved" && inIndex.has(id) || (st === "rejected" || st === "removed") && old || !st && old) {
+        delete d.uploads[id];
+        changed2 = true;
+      }
+    });
+    if (changed2) saveDraft();
   }
   function entries() {
     const d = getDraft();
     const out = d.groups.map((g) => ({ key: "g" + g.id, kind: "set", label: g.letter, title: g.name, parts: d.parts.filter((p) => p.group === g.id) }));
     d.parts.filter((p) => !p.group).forEach((p) => out.push({ key: "p" + p.id, kind: "single", title: p.name, parts: [p] }));
     return out;
+  }
+
+  // packages/card-maker/gallery/api.js
+  var WORKER = "https://wizascript-gallery.redstonewiza2341.workers.dev";
+  var GALLERY_RAW = "https://raw.githubusercontent.com/theWiza2341/Wizascript/gallery/";
+  var AUTH_KEY = "wizascript.cardMaker.galleryAuth";
+  var UPLOAD_MAX_ENTRIES = 10;
+  var UPLOAD_MAX_PICTURES = 40;
+  var UPLOAD_MAX_BYTES = 1.4 * 1024 * 1024;
+  var PICTURE_MAX_BYTES = 150 * 1024;
+  var ApiError = class extends Error {
+    constructor(status, code, message, extra) {
+      super(message);
+      this.status = status;
+      this.code = code;
+      this.extra = extra || {};
+    }
+  };
+  function request(method, url, { body, auth: auth2 } = {}) {
+    return new Promise((resolve2, reject) => {
+      const headers = { "Content-Type": "application/json" };
+      if (auth2) {
+        headers["X-WZ-Install"] = auth2.install;
+        headers["X-WZ-Secret"] = auth2.secret;
+      }
+      const done = (status, text) => {
+        let data2 = null;
+        try {
+          data2 = text ? JSON.parse(text) : null;
+        } catch (e) {
+        }
+        if (status >= 200 && status < 300) return resolve2(data2);
+        if (status === 404 && !data2) return resolve2(null);
+        reject(new ApiError(status, data2 && data2.error || "http", data2 && data2.message || `The gallery server answered ${status}.`, data2));
+      };
+      if (typeof GM_xmlhttpRequest === "function") {
+        GM_xmlhttpRequest({
+          method,
+          url,
+          headers,
+          data: body ? JSON.stringify(body) : void 0,
+          timeout: 3e4,
+          onload: (r) => done(r.status, r.responseText),
+          onerror: () => reject(new ApiError(0, "network", "Couldn't reach the gallery server.")),
+          ontimeout: () => reject(new ApiError(0, "timeout", "The gallery server took too long to answer."))
+        });
+        return;
+      }
+      fetch(url, { method, headers, body: body ? JSON.stringify(body) : void 0 }).then(async (r) => done(r.status, await r.text()), () => reject(new ApiError(0, "network", "Couldn't reach the gallery server.")));
+    });
+  }
+  function loadAuth() {
+    try {
+      const a = JSON.parse(GM_getValue(AUTH_KEY, "null"));
+      return a && a.install && a.secret ? a : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  var auth = null;
+  var making = null;
+  async function getAuth() {
+    if (auth) return auth;
+    auth = loadAuth();
+    if (auth) return auth;
+    if (!making) {
+      making = request("POST", `${WORKER}/v1/install`).then((a) => {
+        GM_setValue(AUTH_KEY, JSON.stringify({ install: a.install, secret: a.secret }));
+        auth = a;
+        return a;
+      }).finally(() => {
+        making = null;
+      });
+    }
+    return making;
+  }
+  async function authed(method, path, body) {
+    const a = await getAuth();
+    try {
+      return await request(method, WORKER + path, { body, auth: a });
+    } catch (e) {
+      if (e.code === "bad_install" || e.code === "no_install") {
+        GM_deleteValue(AUTH_KEY);
+        auth = null;
+        return request(method, WORKER + path, { body, auth: await getAuth() });
+      }
+      throw e;
+    }
+  }
+  var getMe = () => authed("GET", "/v1/me");
+  var linkStart = () => authed("POST", "/v1/link/start");
+  var linkCheck = () => authed("POST", "/v1/link/check");
+  var sendVotes = (votes) => authed("POST", "/v1/votes", { votes });
+  var getTotals = () => request("GET", `${WORKER}/v1/totals`);
+  async function getIndex() {
+    const idx = await request("GET", `${GALLERY_RAW}index.json?t=${Math.floor(Date.now() / 6e4)}`);
+    const posts = (idx && Array.isArray(idx.posts) ? idx.posts : []).map((p) => ({
+      ...p,
+      parts: (p.parts || []).map((c) => ({
+        ...c,
+        art: c.art ? GALLERY_RAW + c.art : "",
+        picture: c.picture ? GALLERY_RAW + c.picture : void 0,
+        tribes: (c.tribes || []).map((t) => ({ ...t, icon: t.icon ? GALLERY_RAW + t.icon : "" }))
+      }))
+    }));
+    return posts;
+  }
+  var dataBytes = (s) => typeof s === "string" && s.startsWith("data:") ? Math.floor((s.length - s.indexOf(",") - 1) * 3 / 4) : 0;
+  function toUploadPart(p) {
+    const out = { type: p.type, name: p.name, desc: p.desc || "" };
+    ["cost", "atk", "hp"].forEach((k) => {
+      if (Number.isInteger(p[k])) out[k] = p[k];
+    });
+    if (p.rarity) out.rarity = p.rarity;
+    if (p.soul) out.soul = p.soul;
+    if (p.picture) out.picture = p.picture;
+    else if (p.art) out.art = p.art;
+    const tribes = (p.tribes || []).filter((t) => t && typeof t.icon === "string" && t.icon.startsWith("data:image/png"));
+    if (tribes.length) out.tribes = tribes.map((t) => ({ name: t.name || "", icon: t.icon }));
+    return out;
+  }
+  var pictures = (u) => [u.art, u.picture, ...(u.tribes || []).map((t) => t.icon)].filter(Boolean);
+  function uploadProblems(entries2) {
+    const out = [];
+    entries2.forEach((e) => e.parts.forEach((p) => {
+      const u = toUploadPart(p);
+      pictures(u).forEach((pic) => {
+        if (!/^data:image\/png;base64,/.test(pic)) out.push(`${p.name || "A card"}: its art isn't a PNG.`);
+        else if (dataBytes(pic) > PICTURE_MAX_BYTES) out.push(`${p.name || "A card"}: its art is too big (over 150 KB).`);
+      });
+      if (!u.art && !u.picture && p.type !== "Enchantment") out.push(`${p.name || "A card"}: no art.`);
+    }));
+    return [...new Set(out)];
+  }
+  function splitUploads(entries2) {
+    const batches = [];
+    let cur = [], pics = 0, bytes = 0;
+    for (const e of entries2) {
+      const parts = e.parts.map(toUploadPart);
+      const ePics = parts.reduce((n, u) => n + pictures(u).length, 0);
+      const eBytes = parts.reduce((n, u) => n + pictures(u).reduce((m, s) => m + dataBytes(s), 0), 0);
+      if (cur.length && (cur.length >= UPLOAD_MAX_ENTRIES || pics + ePics > UPLOAD_MAX_PICTURES || bytes + eBytes > UPLOAD_MAX_BYTES)) {
+        batches.push(cur);
+        cur = [];
+        pics = 0;
+        bytes = 0;
+      }
+      cur.push({ kind: e.kind, title: e.title || "", parts, local: e });
+      pics += ePics;
+      bytes += eBytes;
+    }
+    if (cur.length) batches.push(cur);
+    return batches;
+  }
+  async function uploadEntries(entries2, onProgress) {
+    const batches = splitUploads(entries2);
+    const sent = [];
+    for (let i = 0; i < batches.length; i++) {
+      if (onProgress) onProgress(i, batches.length);
+      let res;
+      try {
+        res = await authed("POST", "/v1/posts", { entries: batches[i].map(({ local, ...e }) => e) });
+      } catch (e) {
+        e.extra = { ...e.extra || {}, sent };
+        throw e;
+      }
+      res.posts.forEach((p, k) => sent.push({ ...p, local: batches[i][k].local }));
+    }
+    if (onProgress) onProgress(batches.length, batches.length);
+    return sent;
+  }
+  function createVoteQueue({ onSent, onError }) {
+    let queue = {};
+    let timer = null;
+    let sending = null;
+    const flush = async () => {
+      clearTimeout(timer);
+      if (sending) await sending.catch(() => null);
+      const batch = queue;
+      if (!Object.keys(batch).length) return;
+      queue = {};
+      sending = (async () => {
+        const ids = Object.keys(batch);
+        for (let i = 0; i < ids.length; i += 100) {
+          const part = Object.fromEntries(ids.slice(i, i + 100).map((id) => [id, batch[id]]));
+          try {
+            const r = await sendVotes(part);
+            if (onSent) onSent(part, r);
+          } catch (e) {
+            Object.entries(part).forEach(([id, v]) => {
+              if (!(id in queue)) queue[id] = v;
+            });
+            if (onError) onError(e);
+            return;
+          }
+        }
+      })();
+      await sending;
+      sending = null;
+    };
+    return {
+      add(id, v) {
+        queue[id] = v;
+        clearTimeout(timer);
+        timer = setTimeout(flush, 2e3);
+      },
+      flush,
+      pending: () => ({ ...queue })
+    };
   }
 
   // packages/card-maker/gallery/mock.js
@@ -12579,6 +12799,8 @@ Version: v${version}`;
 .wz-gl-foot { display: flex; align-items: center; gap: 8px; padding-top: 6px; border-top: 1px solid #2a2a2a; min-height: 30px; }
 .wz-gl-foot .note { opacity: .5; font-size: 11px; }
 .wz-gl-foot .grow { flex: 1; }
+.wz-gl-refresh { background: #000; border: 2px solid #777; color: #ccc; width: 26px; height: 24px; padding: 0; cursor: pointer; font-size: 14px; line-height: 18px; }
+.wz-gl-refresh:hover { border-color: #fff; color: #fff; }
 .wz-gl-pager { display: flex; align-items: center; gap: 6px; }
 .wz-gl-pager button { background: #000; border: 2px solid #fff; color: #fff; width: 28px; height: 26px; padding: 0; font: 15px/20px ${DT}; cursor: pointer; }
 .wz-gl-pager button:hover:not(:disabled) { color: var(--wz-gl-accent); border-color: var(--wz-gl-accent); }
@@ -12618,20 +12840,53 @@ Version: v${version}`;
 .wz-gl-filter .box { display: inline-block; width: 12px; height: 12px; border: 2px solid currentColor; font-size: 10px; line-height: 9px; text-align: center; }
 .wz-gl-filter.on { border-color: var(--wz-gl-accent); color: var(--wz-gl-accent); }
 .wz-gl-mine.pending { background: #6b5a14; border-color: #ffd84a; }
+.wz-gl-mine.rejected { background: #5a1f1f; border-color: #e07a7a; }
+.wz-gl-mine.sample { background: #333; border-color: #777; }
 .wz-gl-seg { position: relative; display: flex; margin: 0; width: 100%; max-width: 560px; flex: 1 1 360px; border: 2px solid #fff; background: #000; }
 .wz-gl-seg button { flex: 1 1 0; position: relative; z-index: 1; background: none; border: 0; color: #bbb; padding: 6px 0 5px; font-size: 14px; cursor: pointer; font-family: ${DT}; }
 .wz-gl-seg button:hover { color: #fff; }
 .wz-gl-seg button.on { color: #000; }
 .wz-gl-seg .pill { position: absolute; top: 0; bottom: 0; width: 25%; background: var(--wz-gl-accent); transition: left .25s ease; }
 `;
-  function allEntries(posted, { samples, votes, sampleVotes, author }) {
+  function allEntries({ approved, own, totals, baseVotes, current, account, samples, sampleVotes }) {
     const now = Date.now();
-    const me = (author || "").toLowerCase();
-    const mine = posted.map((e) => ({ ...e, mine: !me || (e.author || "").toLowerCase() === me, days: Math.max(0, Math.floor((now - e.postedAt) / 864e5)), base: 0 }));
-    const list = mine.concat(samples ? sampleEntries() : []);
+    const days = (t) => Math.max(0, Math.floor((now - (t || now)) / 864e5));
+    const server = approved.map((p) => {
+      const t = totals[p.id] || [0, 0];
+      const vote = current[p.id] || 0;
+      return {
+        key: p.id,
+        id: p.id,
+        kind: p.kind,
+        title: p.title,
+        parts: p.parts,
+        author: p.author,
+        status: "approved",
+        mine: !!account && p.author === account,
+        days: days(p.approvedAt || p.postedAt),
+        vote,
+        score: t[0] - t[1] - (baseVotes[p.id] || 0) + vote
+      };
+    });
+    const waiting = own.map((p) => ({
+      key: p.id,
+      id: p.id,
+      kind: p.kind,
+      title: p.title,
+      parts: p.parts,
+      author: account,
+      status: p.status,
+      mine: true,
+      days: days(p.postedAt),
+      vote: 0,
+      score: 0
+    }));
+    const list = server.concat(waiting, samples ? sampleEntries() : []);
     list.forEach((e) => {
-      e.vote = (e.sample ? sampleVotes : votes)[e.key] || 0;
-      e.score = e.base + e.vote;
+      if (e.sample) {
+        e.vote = sampleVotes[e.key] || 0;
+        e.score = e.base + e.vote;
+      }
     });
     return list;
   }
@@ -12655,7 +12910,8 @@ Version: v${version}`;
     const foot = h(
       "div",
       { class: "wz-gl-foot" },
-      h("span", { class: "note", text: ctx.samples ? "Sample entries: real cards, made-up authors, dates and scores. Nothing is sent." : "Preview of your own parts. Dates and scores are made up until it's live." }),
+      ctx.onRefresh ? h("button", { type: "button", class: "wz-gl-refresh", title: "Load the latest posts and votes", text: "\u21BB", onclick: () => ctx.onRefresh() }) : null,
+      h("span", { class: "note", text: ctx.note || "" }),
       h("span", { class: "grow" }),
       h("div", { class: "wz-gl-pager" }, prev, count, next)
     );
@@ -12668,7 +12924,7 @@ Version: v${version}`;
       const grid = h("div", { class: "wz-gl-grid" });
       area.replaceChildren(grid);
       if (!items.length) {
-        area.replaceChildren(h("div", { class: "wz-gl-empty wz-gl-dt", text: state2.mineOnly && !ctx.entries.some((e) => e.mine) ? "* You haven't uploaded anything yet." : state2.likedOnly ? "* Nothing you've liked here yet." : "* Nothing here yet." }));
+        area.replaceChildren(h("div", { class: "wz-gl-empty wz-gl-dt", text: ctx.emptyText ? ctx.emptyText : state2.mineOnly && !ctx.entries.some((e) => e.mine) ? "* You haven't uploaded anything yet." : state2.likedOnly ? "* Nothing you've liked here yet." : "* Nothing here yet." }));
         pages = [[]];
         return show();
       }
@@ -12778,8 +13034,13 @@ Version: v${version}`;
   function item(ctx, e, rank, listKey) {
     const isSet = e.kind === "set";
     const vote = (dir) => ctx.vote(e, dir);
-    const pending = e.status === "pending";
-    const tag = e.mine ? h("span", { class: `wz-gl-mine${pending ? " pending" : ""}`, text: pending ? isSet ? "awaiting approval" : "pending" : "yours", title: pending ? "Awaiting approval: shows to everyone once approved" : "Your post" }) : null;
+    const pending = e.status === "pending", rejected = e.status === "rejected";
+    const tag = e.mine || e.sample ? h("span", {
+      class: `wz-gl-mine${pending ? " pending" : rejected ? " rejected" : e.sample ? " sample" : ""}`,
+      text: pending ? isSet ? "awaiting approval" : "pending" : rejected ? "not approved" : e.sample ? "sample" : "yours",
+      title: pending ? "Awaiting approval: shows to everyone once approved" : rejected ? "This upload wasn't approved" : e.sample ? "A sample entry, not a real post" : "Your post"
+    }) : null;
+    const canVote = e.sample || e.status === "approved";
     return h(
       "div",
       { class: `wz-gl-item${isSet ? " set" : ""}`, "data-key": e.key },
@@ -12790,9 +13051,11 @@ Version: v${version}`;
         { class: "wz-gl-votes" },
         listKey !== "new" ? h("span", { class: "wz-gl-rank", title: "Rank", text: "# " + rank }) : null,
         isSet ? null : tag,
-        h("button", { type: "button", class: `wz-gl-vote up${e.vote === 1 ? " on" : ""}`, title: "Like", text: "\u25B2", onclick: () => vote(1) }),
-        h("span", { class: `wz-gl-score${e.score > 0 ? " pos" : e.score < 0 ? " neg" : ""}`, text: String(e.score) }),
-        h("button", { type: "button", class: `wz-gl-vote down${e.vote === -1 ? " on" : ""}`, title: "Dislike", text: "\u25BC", onclick: () => vote(-1) })
+        canVote ? [
+          h("button", { type: "button", class: `wz-gl-vote up${e.vote === 1 ? " on" : ""}`, title: "Like", text: "\u25B2", onclick: () => vote(1) }),
+          h("span", { class: `wz-gl-score${e.score > 0 ? " pos" : e.score < 0 ? " neg" : ""}`, text: String(e.score) }),
+          h("button", { type: "button", class: `wz-gl-vote down${e.vote === -1 ? " on" : ""}`, title: "Dislike", text: "\u25BC", onclick: () => vote(-1) })
+        ] : null
       )
     );
   }
@@ -12809,7 +13072,8 @@ Version: v${version}`;
 .wz-gl-panel { --wz-gl-z: .6; position: absolute; inset: 0; z-index: 7; overflow: auto; background: #0d0d0d; padding: 10px; display: none; user-select: text; font: 12px Arial, sans-serif; color: #fff; }
 .wz-gl-panel.on { display: block; }
 .wz-gl-panel.on.browse { display: flex; flex-direction: column; overflow: hidden; }
-.wz-gl-panel.browse > .wz-gl-content { flex: 1 1 auto; min-height: 0; }
+.wz-gl-panel.browse > .wz-gl-content { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.wz-gl-panel.browse > .wz-gl-content > .wz-gl-browse { flex: 1 1 auto; height: auto; }
 .wz-gl-proto { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 3px 6px; margin-bottom: 8px; border: 1px dashed #665; background: #17150c; font-size: 11px; flex: none; }
 .wz-gl-proto b { color: #ffd84a; margin-right: 4px; }
 .wz-gl-proto label { margin: 0 0 0 10px; font-weight: normal; cursor: pointer; }
@@ -12845,6 +13109,16 @@ Version: v${version}`;
 .wz-gl-x { position: absolute; top: 2px; right: 2px; z-index: 9; min-width: 0 !important; padding: 0 5px !important; height: 18px !important; line-height: 16px !important; }
 .wz-gl-from { display: block; opacity: .55; font-size: 10px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .wz-gl-preview { white-space: pre-wrap; max-height: 260px; overflow: auto; background: #151515 !important; color: #ddd !important; border: 1px solid #444 !important; border-radius: 3px; padding: 6px; margin-top: 10px; font: 12px monospace; }
+.wz-gl-acct { display: inline-flex; align-items: center; gap: 4px; margin-right: 6px; white-space: nowrap; }
+.wz-gl-acct b { color: #ffd84a; }
+.wz-gl-acct-err { color: #ffb4b4; }
+.wz-gl-panel .dim { opacity: .7; }
+.wz-cm-btn.wz-gl-small { height: 18px; line-height: 16px; padding: 0 5px; font-size: 10px; }
+.wz-gl-link { margin: 0 0 10px; padding: 8px 10px; border: 2px solid #ffd84a; background: #17150c; }
+.wz-gl-link ol { margin: 6px 0; padding-left: 20px; }
+.wz-gl-link li { margin: 4px 0; }
+.wz-gl-line { background: #000 !important; color: #fff !important; border: 1px solid #666; padding: 1px 6px; font: 13px monospace; user-select: all; }
+.wz-gl-done.failed { border-color: #e07a7a; background: #241010; }
 .wz-gl-upload { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; padding: 8px 10px; border: 2px solid #2f6b3a; background: #0f1a11; }
 .wz-gl-upload.open { display: block; }
 .wz-gl-revlist { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; max-height: 360px; overflow: auto; }
@@ -12884,13 +13158,13 @@ ${BROWSE_CSS}
   }
   var setColor = (set) => COLORS[(set.letter.charCodeAt(0) - 65) % COLORS.length];
   var sameCard = (p, source, group, raw) => p.source === source && p.editorGroup === group && p.name === (raw.name || "") && p.type === raw.type;
-  function buildGalleryPanel({ requestRead, editorLabel, wheelPages, author = () => "" }) {
+  function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
     injectStyle2();
     const draft2 = getDraft();
     let tab = draft2.parts.length ? "browse" : "submit";
     let open = false;
     const proto = draft2.browseProto || {};
-    const browse = { list: "new", page: 0, samples: proto.samples !== false, dir: null, mineOnly: false, likedOnly: false };
+    const browse = { list: "new", page: 0, samples: proto.samples === true, dir: null, mineOnly: false, likedOnly: false };
     const listeners4 = [];
     const notify2 = () => listeners4.forEach((f) => f());
     let browseCtl = null;
@@ -12900,6 +13174,148 @@ ${BROWSE_CSS}
     let readTimer = null;
     let reviewing = false;
     let lastUpload = null;
+    let uploading = false;
+    const acct = { loaded: false, loading: false, account: null, cooldownUntil: null, votes: {}, posts: [], error: "", at: 0 };
+    let linking = null;
+    const gal = { approved: [], totals: {}, base: {}, at: 0, loading: false, error: "" };
+    const voteQueue = createVoteQueue({
+      onSent(part) {
+        Object.entries(part).forEach(([id, v]) => {
+          if (v) acct.votes[id] = v;
+          else delete acct.votes[id];
+        });
+      },
+      onError(e) {
+        say(`Your votes couldn't be sent yet (${e.message}). They'll be tried again.`);
+      }
+    });
+    const author = () => acct.account || "";
+    const currentVotes = () => {
+      const cur = { ...acct.votes };
+      Object.entries(voteQueue.pending()).forEach(([id, v]) => {
+        if (v) cur[id] = v;
+        else delete cur[id];
+      });
+      return cur;
+    };
+    const errText = (e) => e instanceof ApiError ? e.message : "Something went wrong.";
+    async function refreshMe(force) {
+      if (acct.loading || !force && acct.loaded && Date.now() - acct.at < 3e4) return;
+      acct.loading = true;
+      try {
+        const me = await getMe();
+        Object.assign(acct, { loaded: true, account: me.account || null, cooldownUntil: me.cooldownUntil || null, votes: me.votes || {}, posts: me.posts || [], error: "", at: Date.now() });
+        pruneUploads(Object.fromEntries(acct.posts.map((p) => [p.id, p.status])), new Set(gal.approved.map((p) => p.id)));
+      } catch (e) {
+        acct.error = errText(e);
+      } finally {
+        acct.loading = false;
+        if (open) render2();
+      }
+    }
+    async function refreshGallery(force) {
+      if (gal.loading || !force && gal.at && Date.now() - gal.at < 6e4) return;
+      gal.loading = true;
+      if (open && tab === "browse") render2();
+      try {
+        const [approved, totals] = await Promise.all([getIndex(), getTotals()]);
+        gal.approved = approved;
+        gal.totals = totals && totals.totals || {};
+        gal.base = { ...acct.votes };
+        gal.error = "";
+        gal.at = Date.now();
+      } catch (e) {
+        gal.error = errText(e);
+      } finally {
+        gal.loading = false;
+        if (open) render2();
+      }
+    }
+    async function startLink() {
+      say("Getting a link code\u2026");
+      try {
+        linking = await linkStart();
+        say("");
+      } catch (e) {
+        say(errText(e));
+      }
+      render2();
+    }
+    async function checkLink() {
+      say("Looking for your line in void\u2026");
+      try {
+        const r = await linkCheck();
+        if (r.linked) {
+          linking = null;
+          acct.account = r.account;
+          acct.cooldownUntil = r.cooldownUntil || null;
+          say(`Linked as ${r.account}.`);
+          refreshMe(true);
+          refreshGallery(true);
+        } else say(r.message || "Not seen yet. Send the line in void, then check again.");
+      } catch (e) {
+        if (e.code === "cooldown") say(`This install switched accounts less than 24 hours ago. You can switch again ${new Date(e.extra.cooldownUntil).toLocaleString()}.`);
+        else if (e.code === "code_expired") {
+          linking = null;
+          say("That code expired. Press Link my account again.");
+        } else say(errText(e));
+      }
+      render2();
+    }
+    function accountBox() {
+      if (acct.error && !acct.loaded) {
+        return h("span", { class: "wz-gl-acct" }, h("span", { class: "wz-gl-acct-err", text: "Gallery server unreachable" }), " ", button("Retry", () => {
+          acct.error = "";
+          refreshMe(true);
+        }));
+      }
+      if (!acct.loaded) return h("span", { class: "wz-gl-acct dim", text: "Checking your account\u2026" });
+      if (acct.account) {
+        return h(
+          "span",
+          { class: "wz-gl-acct", title: "Your posts and votes count as this Undercards account" },
+          "Linked as ",
+          h("b", { text: acct.account }),
+          " ",
+          linking ? null : button("Switch", () => startLink(), { title: "Link this install to a different Undercards account (once a day at most)", cls: "wz-gl-small" })
+        );
+      }
+      return h("span", { class: "wz-gl-acct" }, linking ? h("span", { class: "dim", text: "Linking\u2026" }) : button("Link my account", () => startLink(), { primary: true, title: "Prove which Undercards account you are, once, to post and vote" }));
+    }
+    function linkBox() {
+      if (!linking) return null;
+      const mins = Math.max(0, Math.round((linking.expiresAt - Date.now()) / 6e4));
+      const line = h("code", { class: "wz-gl-line", text: linking.line });
+      const sendBtn = button("Open void with it typed in", () => {
+        if (!openVoid(linking.line)) say("This page has no chat. Copy the line and send it in void from another page.");
+      }, { primary: true, title: "Opens chat room 0 with the line filled in. You press Enter." });
+      sendBtn.disabled = !canOpenVoid();
+      return h(
+        "div",
+        { class: "wz-gl-link" },
+        h("b", { text: "Link your Undercards account" }),
+        h(
+          "ol",
+          {},
+          h(
+            "li",
+            {},
+            "Send this line in void (chat room 0) from the account you want to post and vote as: ",
+            line,
+            " ",
+            sendBtn,
+            canOpenVoid() ? null : h("span", { class: "dim", text: " (no chat on this page: send it from another page)" })
+          ),
+          h("li", {}, "Then: ", button("Check link", () => checkLink(), { primary: true }), h("span", { class: "dim", text: ` The code works for ${mins} more minute${mins === 1 ? "" : "s"}.` }))
+        ),
+        acct.account ? h("div", { class: "dim", text: `Switching from ${acct.account}: an install can switch accounts once a day, and accounts that share an install count as one voter.` }) : null,
+        button("Cancel", () => {
+          linking = null;
+          say("");
+          render2();
+        }, { cls: "wz-gl-small" })
+      );
+    }
     const status = h("span", { class: "wz-gl-status" });
     const say = (t) => {
       status.textContent = t;
@@ -13018,6 +13434,7 @@ ${BROWSE_CSS}
       if (!open) return;
       renderProto();
       tabs.replaceChildren(
+        accountBox(),
         status,
         h("span", { class: "wz-gl-grow" }),
         sizeButtons()
@@ -13032,17 +13449,18 @@ ${BROWSE_CSS}
           });
         }
         const ctl2 = browseCtl = browseTab();
-        content.replaceChildren(ctl2.el);
+        content.replaceChildren(...[linkBox(), ctl2.el].filter(Boolean));
         ctl2.layout();
         requestAnimationFrame(() => {
           if (browseCtl === ctl2) ctl2.layout();
         });
       } else {
-        content.replaceChildren(submitView());
+        content.replaceChildren(...[linkBox(), submitView()].filter(Boolean));
         requestAnimationFrame(refit);
       }
     }
     function setView(v) {
+      if (tab === "browse" && v !== "browse") voteQueue.flush();
       if (v === "editor") {
         open = false;
         panel.classList.remove("on");
@@ -13052,6 +13470,8 @@ ${BROWSE_CSS}
         open = true;
         panel.classList.add("on");
         render2();
+        refreshMe();
+        if (v === "browse") refreshGallery();
       }
       notify2();
     }
@@ -13272,12 +13692,13 @@ ${BROWSE_CSS}
     }
     function problems() {
       const out = [];
-      if (!author()) out.push("Unable to Submit: Please set a Card Gallery Username first in Wizascript Settings (Card Maker tab).");
+      if (!acct.loaded) out.push(acct.error ? `Unable to Submit: the gallery server can't be reached (${acct.error})` : "Checking your account\u2026");
+      else if (!author()) out.push("Unable to Submit: link your Undercards account first (Link my account, at the top).");
       const unnamed = draft2.parts.filter((p) => !p.name).length;
       const unnamedSets = draft2.groups.filter((g) => !g.name).length;
       if (unnamed) out.push(`${unnamed} card${unnamed === 1 ? " has" : "s have"} no name yet.`);
       if (unnamedSets) out.push(`${unnamedSets} set${unnamedSets === 1 ? " has" : "s have"} no name yet.`);
-      return out;
+      return out.concat(uploadProblems(entries()));
     }
     function uploadBox() {
       const list = entries();
@@ -13308,8 +13729,8 @@ ${BROWSE_CSS}
         ),
         h("div", { class: "wz-gl-revcards" }, e.parts.map((p) => h("div", { class: "wz-gl-zoom" }, tile(p))))
       ));
-      const go = button("Upload to Gallery", () => doUpload(), { primary: true, title: issues.length ? issues[0] : "Send these for approval" });
-      go.disabled = issues.length > 0;
+      const go = button(uploading ? "Uploading\u2026" : "Upload to Gallery", () => doUpload(), { primary: true, title: issues.length ? issues[0] : "Send these for approval" });
+      go.disabled = issues.length > 0 || uploading;
       return h(
         "div",
         { class: "wz-gl-upload open" },
@@ -13325,7 +13746,7 @@ ${BROWSE_CSS}
         h(
           "div",
           { class: "wz-gl-bar wz-gl-revfoot" },
-          h("span", { class: "wz-gl-note", style: { margin: 0 }, text: "Each set and single card is sent as its own entry. They show in Browse once approved." }),
+          h("span", { class: "wz-gl-note", style: { margin: 0 }, text: "Each set and single card is sent as its own entry, for approval. Approved ones show in Browse for everyone." }),
           h("span", { class: "wz-gl-grow" }),
           button("Back", () => {
             reviewing = false;
@@ -13335,24 +13756,44 @@ ${BROWSE_CSS}
         )
       );
     }
-    function doUpload() {
-      if (problems().length) return render2();
-      const posts = postEntries(author());
-      reviewing = false;
+    async function doUpload() {
+      if (problems().length || uploading) return render2();
+      uploading = true;
+      render2();
+      let sent = [], error = "";
+      try {
+        sent = await uploadEntries(entries(), (i, n) => {
+          if (n > 1 && i < n) say(`Uploading part ${i + 1} of ${n}\u2026`);
+        });
+      } catch (e) {
+        sent = e.extra && e.extra.sent || [];
+        error = errText(e);
+      }
+      uploading = false;
+      if (sent.length) markUploaded(sent);
+      reviewing = !!error && !sent.length;
       read2 = null;
-      lastUpload = { posts };
-      say(`Uploaded ${posts.length} entr${posts.length === 1 ? "y" : "ies"}.`);
+      lastUpload = sent.length || error ? { posts: sent, error } : null;
+      say(error ? sent.length ? `Uploaded ${sent.length}; the rest didn't go: ${error}` : `Upload failed: ${error}` : `Uploaded ${sent.length} entr${sent.length === 1 ? "y" : "ies"}.`);
+      if (sent.length) refreshMe(true);
       render2();
     }
     function uploadedBox() {
       const posts = lastUpload.posts;
-      const cards2 = posts.reduce((n, e) => n + e.parts.length, 0);
+      if (!posts.length) {
+        return h("div", { class: "wz-gl-done failed" }, h("b", { text: "Nothing was uploaded." }), " ", lastUpload.error, " ", button("Dismiss", () => {
+          lastUpload = null;
+          render2();
+        }));
+      }
+      const cards2 = posts.reduce((n, e) => n + e.local.parts.length, 0);
       return h(
         "div",
-        { class: "wz-gl-done" },
+        { class: `wz-gl-done${lastUpload.error ? " failed" : ""}` },
         h("div", {}, h("b", { text: `\u2713 Sent for approval: ${posts.length} entr${posts.length === 1 ? "y" : "ies"} (${cards2} card${cards2 === 1 ? "" : "s"})` })),
-        h("ul", {}, posts.map((e) => h("li", { text: e.kind === "set" ? `${e.title} (set of ${e.parts.length})` : `${e.title} (${e.parts[0].type})` }))),
-        h("div", { class: "wz-gl-note", style: { margin: "0 0 6px" }, text: "Preview: the gallery isn't live yet, so nothing actually left your computer. Your uploads show in Browse under My posts." }),
+        h("ul", {}, posts.map((e) => h("li", { text: e.kind === "set" ? `${e.title} (set of ${e.local.parts.length})` : `${e.title} (${e.local.parts[0].type})` }))),
+        lastUpload.error ? h("div", { class: "wz-gl-issues", text: `The rest weren't sent: ${lastUpload.error} They're still in your draft below.` }) : null,
+        h("div", { class: "wz-gl-note", style: { margin: "0 0 6px" }, text: "They show under My posts as awaiting approval, and in Browse for everyone once approved." }),
         button("See my posts", () => {
           browse.mineOnly = true;
           browse.likedOnly = false;
@@ -13394,18 +13835,34 @@ ${BROWSE_CSS}
       changed2();
     });
     function browseTab() {
+      const own = acct.posts.filter((p) => (p.status === "pending" || p.status === "rejected") && draft2.uploads[p.id]).map((p) => ({ id: p.id, status: p.status, postedAt: p.postedAt, kind: draft2.uploads[p.id].kind, title: draft2.uploads[p.id].title, parts: draft2.uploads[p.id].parts }));
+      acct.posts.filter((p) => p.status === "approved" && draft2.uploads[p.id] && !gal.approved.some((a) => a.id === p.id)).forEach((p) => own.push({ id: p.id, status: "pending", postedAt: p.postedAt, kind: draft2.uploads[p.id].kind, title: draft2.uploads[p.id].title, parts: draft2.uploads[p.id].parts }));
+      const list = allEntries({ approved: gal.approved, own, totals: gal.totals, baseVotes: gal.base, current: currentVotes(), account: acct.account, samples: browse.samples, sampleVotes });
       return browseView({
         state: browse,
-        samples: browse.samples,
         wheelPages: () => !wheelPages || wheelPages(),
         onPage: hideHover,
-        entries: allEntries(draft2.posted, { samples: browse.samples, votes: draft2.votes, sampleVotes, author: author() }),
+        entries: list,
+        note: gal.error ? `Couldn't load the gallery: ${gal.error}` : browse.samples ? "Sample entries (grey tag) are mixed in. They aren't real posts." : acct.account ? "" : "Link your account to vote.",
+        emptyText: gal.loading && !gal.at ? "* Loading the gallery\u2026" : gal.error && !gal.at ? "* Couldn't load the gallery. Try again in a moment." : "",
         hoverable,
         rerender: render2,
+        onRefresh: () => {
+          voteQueue.flush();
+          refreshMe(true);
+          refreshGallery(true);
+        },
         vote(e, dir) {
-          const store = e.sample ? sampleVotes : draft2.votes;
-          store[e.key] = (store[e.key] || 0) === dir ? 0 : dir;
-          if (!e.sample) saveDraft();
+          if (e.sample) {
+            sampleVotes[e.key] = (sampleVotes[e.key] || 0) === dir ? 0 : dir;
+            return render2();
+          }
+          if (!acct.account) {
+            say("Link your Undercards account to vote: press Link my account at the top.");
+            return;
+          }
+          const cur = currentVotes()[e.id] || 0;
+          voteQueue.add(e.id, cur === dir ? 0 : dir);
           render2();
         }
       });
@@ -13421,6 +13878,8 @@ ${BROWSE_CSS}
       onChange(f) {
         listeners4.push(f);
       },
+      // Send queued votes now (the Card Maker is closing or being minimised).
+      flush: () => voteQueue.flush(),
       receiveCards(data2) {
         clearTimeout(readTimer);
         read2 = { source: data2.source, label: editorLabel(data2.source), groups: (data2.groups || []).map((g) => ({ name: g.name, parts: (g.parts || []).map((p) => ({ ...p, pick: false })) })) };
@@ -13481,7 +13940,6 @@ ${BROWSE_CSS}
   var hotfixSetting = null;
   var gallerySetting = null;
   var wheelSetting = null;
-  var authorSetting = null;
   var mounted2 = null;
   var footerButton = null;
   var log = (...a) => {
@@ -13514,6 +13972,7 @@ ${BROWSE_CSS}
     if (!mounted2) return;
     const closing = mounted2;
     mounted2 = null;
+    if (closing.gallery) closing.gallery.flush();
     closing.win.root.style.display = "none";
     Object.values(closing.frames).forEach((f) => clearTimeout(f.noReport));
     const frames = Object.values(closing.frames).map((f) => f.el);
@@ -13579,7 +14038,9 @@ ${BROWSE_CSS}
       onAction: (action) => {
         const key2 = currentEditor();
         if (action === "close") hideCardMaker();
-        else if (action === "reload") reloadEditor(key2);
+        else if (action === "minimised") {
+          if (mounted2 && mounted2.gallery) mounted2.gallery.flush();
+        } else if (action === "reload") reloadEditor(key2);
         else if (action === "site") window.open(EDITORS[key2].url, "_blank", "noopener");
       }
     });
@@ -13596,8 +14057,7 @@ ${BROWSE_CSS}
           return null;
         },
         editorLabel: (key2) => EDITORS[key2 || currentEditor()].label,
-        wheelPages: () => !wheelSetting || !!wheelSetting.value(),
-        author: () => String(authorSetting && authorSetting.value() || "").trim().slice(0, 24)
+        wheelPages: () => !wheelSetting || !!wheelSetting.value()
       });
       win.body.appendChild(gallery.el);
       mountGalleryNav({ win, gallery });
@@ -13781,13 +14241,6 @@ ${BROWSE_CSS}
       type: "boolean",
       default: true,
       refresh: true
-    });
-    authorSetting = settings3.add("galleryAuthor", {
-      name: "Card Gallery Username",
-      note: "The name your gallery posts show. Needed to upload.",
-      type: "text",
-      default: "",
-      hidden: () => !!gallerySetting && !gallerySetting.value()
     });
     wheelSetting = settings3.add("galleryWheelPages", {
       name: "Gallery: Scroll Wheel Pages",
@@ -16499,7 +16952,7 @@ ${BROWSE_CSS}
     return memo.get(path);
   }
   var slug = (name) => String(name || "").toLowerCase().replace(/&amp;/g, "&").replace(/[^a-z0-9]/g, "") || "unnamed";
-  var getIndex = () => cached("data/index.json");
+  var getIndex2 = () => cached("data/index.json");
   var getCardData = (id) => cached(`data/cards/${id}.json`);
   var getArtifactData = (name) => cached(`data/artifacts/${slug(name)}.json`);
   var getRules = () => cached("rules.json").catch(() => null);
@@ -17633,7 +18086,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     const shell = openShell(`Previous Versions - ${base.name}`, `https://undercards.fandom.com/wiki/${base.name.replace(/ /g, "_")}/Previous_Versions`);
     try {
       shell.step("Reading the card's history...");
-      const [data2, index, f] = await Promise.all([getCardData(base.id), getIndex().catch(() => null), formatter(), remoteReports()]);
+      const [data2, index, f] = await Promise.all([getCardData(base.id), getIndex2().catch(() => null), formatter(), remoteReports()]);
       useFormerNames(f, index);
       const view = cardHistoryView(base, data2, f, index);
       shell.fill(view.node, view.fit, view.wikiUrl);
@@ -17649,7 +18102,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     const shell = openShell(`Artifact History - ${a.name}`, `https://undercards.fandom.com/wiki/${a.name.replace(/ /g, "_")}`);
     try {
       shell.step("Reading the artifact's history...");
-      const [data2, index, f] = await Promise.all([getArtifactData(a.name), getIndex().catch(() => null), formatter(), remoteReports()]);
+      const [data2, index, f] = await Promise.all([getArtifactData(a.name), getIndex2().catch(() => null), formatter(), remoteReports()]);
       useFormerNames(f, index);
       const view = artifactHistoryView(a, data2, f, index);
       shell.fill(view.node, null, view.wikiUrl);

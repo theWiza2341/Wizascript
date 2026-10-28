@@ -26,7 +26,9 @@ const KIND = "BACKUP";
 const CATEGORY = "Wizascript";
 
 // Bookkeeping that describes THIS install, not the player's setup.
-const SKIP_GM = new Set(["wizascript.migration.v150", "wizascript.lastSeenVersion"]);
+// Never in a backup: the Card Gallery's install secret. Anyone given the
+// file could post and vote as this player; a restored install links again.
+const SKIP_GM = new Set(["wizascript.migration.v150", "wizascript.lastSeenVersion", "wizascript.cardMaker.galleryAuth"]);
 // Display-only rows on the Wizascript section itself.
 const SKIP_LS_PREFIXES = ["about.", "backup."];
 

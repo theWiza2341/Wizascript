@@ -24,6 +24,8 @@ export const BROWSE_CSS = `
 .wz-gl-foot { display: flex; align-items: center; gap: 8px; padding-top: 6px; border-top: 1px solid #2a2a2a; min-height: 30px; }
 .wz-gl-foot .note { opacity: .5; font-size: 11px; }
 .wz-gl-foot .grow { flex: 1; }
+.wz-gl-refresh { background: #000; border: 2px solid #777; color: #ccc; width: 26px; height: 24px; padding: 0; cursor: pointer; font-size: 14px; line-height: 18px; }
+.wz-gl-refresh:hover { border-color: #fff; color: #fff; }
 .wz-gl-pager { display: flex; align-items: center; gap: 6px; }
 .wz-gl-pager button { background: #000; border: 2px solid #fff; color: #fff; width: 28px; height: 26px; padding: 0; font: 15px/20px ${DT}; cursor: pointer; }
 .wz-gl-pager button:hover:not(:disabled) { color: var(--wz-gl-accent); border-color: var(--wz-gl-accent); }
@@ -63,6 +65,8 @@ export const BROWSE_CSS = `
 .wz-gl-filter .box { display: inline-block; width: 12px; height: 12px; border: 2px solid currentColor; font-size: 10px; line-height: 9px; text-align: center; }
 .wz-gl-filter.on { border-color: var(--wz-gl-accent); color: var(--wz-gl-accent); }
 .wz-gl-mine.pending { background: #6b5a14; border-color: #ffd84a; }
+.wz-gl-mine.rejected { background: #5a1f1f; border-color: #e07a7a; }
+.wz-gl-mine.sample { background: #333; border-color: #777; }
 .wz-gl-seg { position: relative; display: flex; margin: 0; width: 100%; max-width: 560px; flex: 1 1 360px; border: 2px solid #fff; background: #000; }
 .wz-gl-seg button { flex: 1 1 0; position: relative; z-index: 1; background: none; border: 0; color: #bbb; padding: 6px 0 5px; font-size: 14px; cursor: pointer; font-family: ${DT}; }
 .wz-gl-seg button:hover { color: #fff; }
@@ -72,13 +76,25 @@ export const BROWSE_CSS = `
 
 const seed = (s) => { let x = 7; for (const c of s) x = (x * 31 + c.charCodeAt(0)) >>> 0; return x; };
 
-// The player's uploaded posts plus (optionally) the samples, with a score each.
-export function allEntries(posted, { samples, votes, sampleVotes, author }) {
+// Everything Browse lists, each with a score and the player's vote.
+//   approved: the gallery's posts (index.json), totals { id: [up, down] }
+//   own:      the player's posts still waiting or rejected (with cards
+//             kept from their upload)
+//   myVotes:  votes the server has, at the time totals were read (base)
+//   current:  the player's votes now, incl. ones still queued
+export function allEntries({ approved, own, totals, baseVotes, current, account, samples, sampleVotes }) {
   const now = Date.now();
-  const me = (author || "").toLowerCase();
-  const mine = posted.map((e) => ({ ...e, mine: !me || (e.author || "").toLowerCase() === me, days: Math.max(0, Math.floor((now - e.postedAt) / 864e5)), base: 0 }));
-  const list = mine.concat(samples ? sampleEntries() : []);
-  list.forEach((e) => { e.vote = (e.sample ? sampleVotes : votes)[e.key] || 0; e.score = e.base + e.vote; });
+  const days = (t) => Math.max(0, Math.floor((now - (t || now)) / 864e5));
+  const server = approved.map((p) => {
+    const t = totals[p.id] || [0, 0];
+    const vote = current[p.id] || 0;
+    return { key: p.id, id: p.id, kind: p.kind, title: p.title, parts: p.parts, author: p.author, status: "approved",
+      mine: !!account && p.author === account, days: days(p.approvedAt || p.postedAt), vote, score: t[0] - t[1] - (baseVotes[p.id] || 0) + vote };
+  });
+  const waiting = own.map((p) => ({ key: p.id, id: p.id, kind: p.kind, title: p.title, parts: p.parts, author: account, status: p.status,
+    mine: true, days: days(p.postedAt), vote: 0, score: 0 }));
+  const list = server.concat(waiting, samples ? sampleEntries() : []);
+  list.forEach((e) => { if (e.sample) { e.vote = sampleVotes[e.key] || 0; e.score = e.base + e.vote; } });
   return list;
 }
 
@@ -106,9 +122,8 @@ export function browseView(ctx) {
   const prev = h("button", { title: "Previous page", text: "‹", onclick: () => turn(-1) });
   const next = h("button", { title: "Next page", text: "›", onclick: () => turn(1) });
   const foot = h("div", { class: "wz-gl-foot" },
-    h("span", { class: "note", text: ctx.samples
-      ? "Sample entries: real cards, made-up authors, dates and scores. Nothing is sent."
-      : "Preview of your own parts. Dates and scores are made up until it's live." }),
+    ctx.onRefresh ? h("button", { type: "button", class: "wz-gl-refresh", title: "Load the latest posts and votes", text: "↻", onclick: () => ctx.onRefresh() }) : null,
+    h("span", { class: "note", text: ctx.note || "" }),
     h("span", { class: "grow" }),
     h("div", { class: "wz-gl-pager" }, prev, count, next));
   const el = h("div", { class: "wz-gl-browse" }, h("div", { class: "wz-gl-listbar" }, segBar(ctx, dir), filterButtons(ctx)), area, foot);
@@ -124,7 +139,7 @@ export function browseView(ctx) {
     const grid = h("div", { class: "wz-gl-grid" });
     area.replaceChildren(grid);
     if (!items.length) {
-      area.replaceChildren(h("div", { class: "wz-gl-empty wz-gl-dt", text: state.mineOnly && !ctx.entries.some((e) => e.mine) ? "* You haven't uploaded anything yet." : state.likedOnly ? "* Nothing you've liked here yet." : "* Nothing here yet." }));
+      area.replaceChildren(h("div", { class: "wz-gl-empty wz-gl-dt", text: ctx.emptyText ? ctx.emptyText : state.mineOnly && !ctx.entries.some((e) => e.mine) ? "* You haven't uploaded anything yet." : state.likedOnly ? "* Nothing you've liked here yet." : "* Nothing here yet." }));
       pages = [[]];
       return show();
     }
@@ -220,15 +235,22 @@ function item(ctx, e, rank, listKey) {
   // Your own posts get a small tag, inside the item so it never covers
   // anything: a set's in its top row (right of the name), a single card's
   // in the votes row.
-  const pending = e.status === "pending";
-  const tag = e.mine ? h("span", { class: `wz-gl-mine${pending ? " pending" : ""}`, text: pending ? (isSet ? "awaiting approval" : "pending") : "yours", title: pending ? "Awaiting approval: shows to everyone once approved" : "Your post" }) : null;
+  const pending = e.status === "pending", rejected = e.status === "rejected";
+  const tag = e.mine || e.sample ? h("span", {
+    class: `wz-gl-mine${pending ? " pending" : rejected ? " rejected" : e.sample ? " sample" : ""}`,
+    text: pending ? (isSet ? "awaiting approval" : "pending") : rejected ? "not approved" : e.sample ? "sample" : "yours",
+    title: pending ? "Awaiting approval: shows to everyone once approved" : rejected ? "This upload wasn't approved" : e.sample ? "A sample entry, not a real post" : "Your post"
+  }) : null;
+  const canVote = e.sample || e.status === "approved";
   return h("div", { class: `wz-gl-item${isSet ? " set" : ""}`, "data-key": e.key },
     isSet ? h("div", { class: "wz-gl-sethead" }, h("div", { class: "wz-gl-setname", text: e.title || "(no name)", title: e.title || "" }), tag) : null,
     h("div", { class: "wz-gl-row" }, e.parts.map((p) => ctx.hoverable(h("div", { class: "wz-gl-zoom" }, tile(p)), p, e))),
     h("div", { class: "wz-gl-votes" },
       listKey !== "new" ? h("span", { class: "wz-gl-rank", title: "Rank", text: "# " + rank }) : null,
       isSet ? null : tag,
-      h("button", { type: "button", class: `wz-gl-vote up${e.vote === 1 ? " on" : ""}`, title: "Like", text: "▲", onclick: () => vote(1) }),
-      h("span", { class: `wz-gl-score${e.score > 0 ? " pos" : e.score < 0 ? " neg" : ""}`, text: String(e.score) }),
-      h("button", { type: "button", class: `wz-gl-vote down${e.vote === -1 ? " on" : ""}`, title: "Dislike", text: "▼", onclick: () => vote(-1) })));
+      canVote ? [
+        h("button", { type: "button", class: `wz-gl-vote up${e.vote === 1 ? " on" : ""}`, title: "Like", text: "▲", onclick: () => vote(1) }),
+        h("span", { class: `wz-gl-score${e.score > 0 ? " pos" : e.score < 0 ? " neg" : ""}`, text: String(e.score) }),
+        h("button", { type: "button", class: `wz-gl-vote down${e.vote === -1 ? " on" : ""}`, title: "Dislike", text: "▼", onclick: () => vote(-1) })
+      ] : null));
 }

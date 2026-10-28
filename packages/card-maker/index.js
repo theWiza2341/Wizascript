@@ -55,7 +55,6 @@ let editorSetting = null;
 let hotfixSetting = null;
 let gallerySetting = null;
 let wheelSetting = null;
-let authorSetting = null;
 let mounted = null; // { controller, win, frames, ... } | null - built on each open
 let footerButton = null;
 
@@ -87,6 +86,7 @@ export function hideCardMaker() {
   if (!mounted) return;
   const closing = mounted;
   mounted = null;
+  if (closing.gallery) closing.gallery.flush(); // queued votes go now
   // Gone from the screen at once; the editor unloads a moment later.
   closing.win.root.style.display = "none";
   Object.values(closing.frames).forEach((f) => clearTimeout(f.noReport));
@@ -161,6 +161,7 @@ function mount() {
     onAction: (action) => {
       const key = currentEditor();
       if (action === "close") hideCardMaker();
+      else if (action === "minimised") { if (mounted && mounted.gallery) mounted.gallery.flush(); }
       else if (action === "reload") reloadEditor(key);
       else if (action === "site") window.open(EDITORS[key].url, "_blank", "noopener");
     }
@@ -181,8 +182,7 @@ function mount() {
         return null;
       },
       editorLabel: (key) => EDITORS[key || currentEditor()].label,
-      wheelPages: () => !wheelSetting || !!wheelSetting.value(),
-      author: () => String((authorSetting && authorSetting.value()) || "").trim().slice(0, 24)
+      wheelPages: () => !wheelSetting || !!wheelSetting.value()
     });
     win.body.appendChild(gallery.el);
     mountGalleryNav({ win, gallery });
@@ -384,13 +384,6 @@ export function initCardMaker(plugin) {
     type: "boolean",
     default: true,
     refresh: true
-  });
-  authorSetting = settings.add("galleryAuthor", {
-    name: "Card Gallery Username",
-    note: "The name your gallery posts show. Needed to upload.",
-    type: "text",
-    default: "",
-    hidden: () => !!gallerySetting && !gallerySetting.value()
   });
   wheelSetting = settings.add("galleryWheelPages", {
     name: "Gallery: Scroll Wheel Pages",

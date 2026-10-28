@@ -1,9 +1,9 @@
 // packages/card-maker/gallery/draft.js
 //
-// The player's Card Gallery draft: the parts they've added, the sets
-// they've linked, what they've uploaded ("posted", until the gallery is
-// live these stay here as a preview: nothing is sent), and their votes on
-// the Browse preview. GM storage "wizascript.cardMaker.gallery", so it
+// The player's Card Gallery draft: the parts they've added and the sets
+// they've linked, plus a copy of each upload still waiting for approval
+// ("uploads", by post id), so My posts can show its cards before the
+// gallery has them. GM storage "wizascript.cardMaker.gallery", so it
 // survives a refresh and is in Back up / Restore. Art is stored as small
 // data: URLs (a card part is roughly 15-30 KB).
 
@@ -20,10 +20,12 @@ export function getDraft() {
   } catch (e) {
     draft = null;
   }
-  if (!draft || !Array.isArray(draft.parts)) draft = { parts: [], groups: [], nextId: 1, votes: {} };
+  if (!draft || !Array.isArray(draft.parts)) draft = { parts: [], groups: [], nextId: 1, uploads: {} };
   draft.groups = draft.groups || [];
-  draft.votes = draft.votes || {};
-  draft.posted = draft.posted || [];
+  draft.uploads = draft.uploads || {};
+  // dev8-dev9 kept local "posts" and votes as a preview; the server has them now.
+  delete draft.posted;
+  delete draft.votes;
   draft.parts.forEach((p) => { p.sel = false; });
   return draft;
 }
@@ -74,25 +76,31 @@ export function makeSet(members, name = "") {
   return set;
 }
 
-// Upload: every entry becomes a post (awaiting approval) and leaves the
-// draft. Returns the new posts.
-export function postEntries(author) {
+// After an upload: these parts and their sets leave the draft, and a copy
+// of each entry is kept under its new post id until it's decided.
+export function markUploaded(sent) {
   const d = getDraft();
-  const now = Date.now();
-  const posts = entries().map((e) => ({
-    key: "post" + nextId(),
-    kind: e.kind,
-    title: e.title || "",
-    parts: e.parts.map(({ sel, group, id, ...p }) => p),
-    author,
-    postedAt: now,
-    status: "pending"
-  }));
-  d.posted.push(...posts);
-  d.parts.length = 0;
-  d.groups.length = 0;
+  const gone = new Set();
+  sent.forEach(({ id, kind, title, local }) => {
+    d.uploads[id] = { kind, title, postedAt: Date.now(), parts: local.parts.map(({ sel, group, id: _, ...p }) => p) };
+    local.parts.forEach((p) => gone.add(p));
+  });
+  d.parts = d.parts.filter((p) => !gone.has(p));
+  tidySets();
   saveDraft();
-  return posts;
+}
+
+// Copies no longer needed: approved posts once the gallery's index has
+// them, rejected ones after 14 days, and ones the server no longer lists.
+export function pruneUploads(statusById, inIndex) {
+  const d = getDraft();
+  let changed = false;
+  Object.keys(d.uploads).forEach((id) => {
+    const st = statusById[id];
+    const old = Date.now() - d.uploads[id].postedAt > 14 * 864e5;
+    if ((st === "approved" && inIndex.has(id)) || ((st === "rejected" || st === "removed") && old) || (!st && old)) { delete d.uploads[id]; changed = true; }
+  });
+  if (changed) saveDraft();
 }
 
 // What would be submitted: every set, then every part not in a set.

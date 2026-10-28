@@ -1,0 +1,224 @@
+// packages/card-maker/gallery/api.js
+//
+// Talking to the Card Gallery's server (the wizascript-gallery Cloudflare
+// Worker; its code and design are in the wizascript-gallery-worker repo and
+// claude/card-gallery-backend.md) and reading approved posts from the
+// `gallery` branch.
+//
+// This install's credentials ({ install, secret }) are made on first use and
+// kept in GM storage "wizascript.cardMaker.galleryAuth". They identify this
+// copy of Wizascript, not the player: the player proves their Undercards
+// account once by sending a line in void (Link my account).
+
+export const WORKER = "https://wizascript-gallery.redstonewiza2341.workers.dev";
+export const GALLERY_RAW = "https://raw.githubusercontent.com/theWiza2341/Wizascript/gallery/";
+const AUTH_KEY = "wizascript.cardMaker.galleryAuth";
+
+// Upload limits (the Worker's, from Cloudflare's free plan): bigger
+// submissions are split into several uploads.
+export const UPLOAD_MAX_ENTRIES = 10;
+export const UPLOAD_MAX_PICTURES = 40;
+export const UPLOAD_MAX_BYTES = 1.4 * 1024 * 1024;
+export const PICTURE_MAX_BYTES = 150 * 1024;
+
+export class ApiError extends Error {
+  constructor(status, code, message, extra) { super(message); this.status = status; this.code = code; this.extra = extra || {}; }
+}
+
+function request(method, url, { body, auth } = {}) {
+  return new Promise((resolve, reject) => {
+    const headers = { "Content-Type": "application/json" };
+    if (auth) { headers["X-WZ-Install"] = auth.install; headers["X-WZ-Secret"] = auth.secret; }
+    const done = (status, text) => {
+      let data = null;
+      try { data = text ? JSON.parse(text) : null; } catch (e) { /* not JSON */ }
+      if (status >= 200 && status < 300) return resolve(data);
+      if (status === 404 && !data) return resolve(null);
+      reject(new ApiError(status, (data && data.error) || "http", (data && data.message) || `The gallery server answered ${status}.`, data));
+    };
+    if (typeof GM_xmlhttpRequest === "function") {
+      GM_xmlhttpRequest({
+        method, url, headers,
+        data: body ? JSON.stringify(body) : undefined,
+        timeout: 30000,
+        onload: (r) => done(r.status, r.responseText),
+        onerror: () => reject(new ApiError(0, "network", "Couldn't reach the gallery server.")),
+        ontimeout: () => reject(new ApiError(0, "timeout", "The gallery server took too long to answer."))
+      });
+      return;
+    }
+    fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined })
+      .then(async (r) => done(r.status, await r.text()), () => reject(new ApiError(0, "network", "Couldn't reach the gallery server.")));
+  });
+}
+
+// ---- this install ---------------------------------------------------------------
+
+function loadAuth() {
+  try { const a = JSON.parse(GM_getValue(AUTH_KEY, "null")); return a && a.install && a.secret ? a : null; } catch (e) { return null; }
+}
+let auth = null;
+let making = null;
+async function getAuth() {
+  if (auth) return auth;
+  auth = loadAuth();
+  if (auth) return auth;
+  if (!making) {
+    making = request("POST", `${WORKER}/v1/install`).then((a) => {
+      GM_setValue(AUTH_KEY, JSON.stringify({ install: a.install, secret: a.secret }));
+      auth = a;
+      return a;
+    }).finally(() => { making = null; });
+  }
+  return making;
+}
+// A server that no longer knows this install (e.g. its database was reset):
+// start over with a new one.
+async function authed(method, path, body) {
+  const a = await getAuth();
+  try {
+    return await request(method, WORKER + path, { body, auth: a });
+  } catch (e) {
+    if (e.code === "bad_install" || e.code === "no_install") {
+      GM_deleteValue(AUTH_KEY);
+      auth = null;
+      return request(method, WORKER + path, { body, auth: await getAuth() });
+    }
+    throw e;
+  }
+}
+
+// ---- endpoints --------------------------------------------------------------------
+
+export const getMe = () => authed("GET", "/v1/me");
+export const linkStart = () => authed("POST", "/v1/link/start");
+export const linkCheck = () => authed("POST", "/v1/link/check");
+export const sendVotes = (votes) => authed("POST", "/v1/votes", { votes });
+export const getTotals = () => request("GET", `${WORKER}/v1/totals`);
+
+// The approved posts (gallery branch), with art paths made into URLs.
+export async function getIndex() {
+  const idx = await request("GET", `${GALLERY_RAW}index.json?t=${Math.floor(Date.now() / 60000)}`);
+  const posts = (idx && Array.isArray(idx.posts) ? idx.posts : []).map((p) => ({
+    ...p,
+    parts: (p.parts || []).map((c) => ({
+      ...c,
+      art: c.art ? GALLERY_RAW + c.art : "",
+      picture: c.picture ? GALLERY_RAW + c.picture : undefined,
+      tribes: (c.tribes || []).map((t) => ({ ...t, icon: t.icon ? GALLERY_RAW + t.icon : "" }))
+    }))
+  }));
+  return posts;
+}
+
+// ---- uploads ----------------------------------------------------------------------
+
+const dataBytes = (s) => (typeof s === "string" && s.startsWith("data:") ? Math.floor((s.length - s.indexOf(",") - 1) * 3 / 4) : 0);
+
+// What the server keeps of a card; pictures as PNG data URLs.
+export function toUploadPart(p) {
+  const out = { type: p.type, name: p.name, desc: p.desc || "" };
+  ["cost", "atk", "hp"].forEach((k) => { if (Number.isInteger(p[k])) out[k] = p[k]; });
+  if (p.rarity) out.rarity = p.rarity;
+  if (p.soul) out.soul = p.soul;
+  if (p.picture) out.picture = p.picture;
+  else if (p.art) out.art = p.art;
+  const tribes = (p.tribes || []).filter((t) => t && typeof t.icon === "string" && t.icon.startsWith("data:image/png"));
+  if (tribes.length) out.tribes = tribes.map((t) => ({ name: t.name || "", icon: t.icon }));
+  return out;
+}
+const pictures = (u) => [u.art, u.picture, ...(u.tribes || []).map((t) => t.icon)].filter(Boolean);
+
+// Problems the server would refuse, per entry, so they show before sending.
+export function uploadProblems(entries) {
+  const out = [];
+  entries.forEach((e) => e.parts.forEach((p) => {
+    const u = toUploadPart(p);
+    pictures(u).forEach((pic) => {
+      if (!/^data:image\/png;base64,/.test(pic)) out.push(`${p.name || "A card"}: its art isn't a PNG.`);
+      else if (dataBytes(pic) > PICTURE_MAX_BYTES) out.push(`${p.name || "A card"}: its art is too big (over 150 KB).`);
+    });
+    if (!u.art && !u.picture && p.type !== "Enchantment") out.push(`${p.name || "A card"}: no art.`);
+  }));
+  return [...new Set(out)];
+}
+
+// Entries -> batches that each fit one upload.
+export function splitUploads(entries) {
+  const batches = [];
+  let cur = [], pics = 0, bytes = 0;
+  for (const e of entries) {
+    const parts = e.parts.map(toUploadPart);
+    const ePics = parts.reduce((n, u) => n + pictures(u).length, 0);
+    const eBytes = parts.reduce((n, u) => n + pictures(u).reduce((m, s) => m + dataBytes(s), 0), 0);
+    if (cur.length && (cur.length >= UPLOAD_MAX_ENTRIES || pics + ePics > UPLOAD_MAX_PICTURES || bytes + eBytes > UPLOAD_MAX_BYTES)) {
+      batches.push(cur); cur = []; pics = 0; bytes = 0;
+    }
+    cur.push({ kind: e.kind, title: e.title || "", parts, local: e });
+    pics += ePics; bytes += eBytes;
+  }
+  if (cur.length) batches.push(cur);
+  return batches;
+}
+
+// Sends every batch in turn. onProgress(done, total). Returns the posts the
+// server made, each with its `local` entry; stops at the first error, with
+// what was sent so far in error.extra.sent.
+export async function uploadEntries(entries, onProgress) {
+  const batches = splitUploads(entries);
+  const sent = [];
+  for (let i = 0; i < batches.length; i++) {
+    if (onProgress) onProgress(i, batches.length);
+    let res;
+    try {
+      res = await authed("POST", "/v1/posts", { entries: batches[i].map(({ local, ...e }) => e) });
+    } catch (e) {
+      e.extra = { ...(e.extra || {}), sent };
+      throw e;
+    }
+    res.posts.forEach((p, k) => sent.push({ ...p, local: batches[i][k].local }));
+  }
+  if (onProgress) onProgress(batches.length, batches.length);
+  return sent;
+}
+
+// ---- votes ------------------------------------------------------------------------
+// Votes wait in a queue and go in one request: 2 seconds after the last
+// click, or at once when the player leaves Browse or closes/minimises the
+// Card Maker (flush()). A vote clicked again before sending just replaces
+// the queued one.
+
+export function createVoteQueue({ onSent, onError }) {
+  let queue = {};
+  let timer = null;
+  let sending = null;
+  const flush = async () => {
+    clearTimeout(timer);
+    if (sending) await sending.catch(() => null);
+    const batch = queue;
+    if (!Object.keys(batch).length) return;
+    queue = {};
+    sending = (async () => {
+      const ids = Object.keys(batch);
+      for (let i = 0; i < ids.length; i += 100) {
+        const part = Object.fromEntries(ids.slice(i, i + 100).map((id) => [id, batch[id]]));
+        try {
+          const r = await sendVotes(part);
+          if (onSent) onSent(part, r);
+        } catch (e) {
+          // put back what didn't go, unless a newer vote replaced it
+          Object.entries(part).forEach(([id, v]) => { if (!(id in queue)) queue[id] = v; });
+          if (onError) onError(e);
+          return;
+        }
+      }
+    })();
+    await sending;
+    sending = null;
+  };
+  return {
+    add(id, v) { queue[id] = v; clearTimeout(timer); timer = setTimeout(flush, 2000); },
+    flush,
+    pending: () => ({ ...queue })
+  };
+}

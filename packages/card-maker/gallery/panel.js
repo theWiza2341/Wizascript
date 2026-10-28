@@ -18,7 +18,9 @@
 import { h, button } from "./dom.js";
 import { tile, fitText, checkFrameImages, whenFontsReady, onFontsChange, TILE_CSS } from "./render.js";
 import { partFromRaw, readUcEditorFile, picturesFromPng, readFile } from "./parts.js";
-import { getDraft, saveDraft, nextId, makeSet, tidySets, entries, postEntries, SET_CAP } from "./draft.js";
+import { getDraft, saveDraft, nextId, makeSet, tidySets, entries, markUploaded, pruneUploads, SET_CAP } from "./draft.js";
+import { getMe, linkStart, linkCheck, getIndex, getTotals, uploadEntries, uploadProblems, createVoteQueue, ApiError } from "./api.js";
+import { openVoid, canOpenVoid } from "../../core/uc-report.js";
 import { browseView, allEntries, BROWSE_CSS } from "./browse.js";
 import { loadSampleExtras } from "./mock.js";
 
@@ -37,7 +39,8 @@ const CSS = `
 .wz-gl-panel { --wz-gl-z: .6; position: absolute; inset: 0; z-index: 7; overflow: auto; background: #0d0d0d; padding: 10px; display: none; user-select: text; font: 12px Arial, sans-serif; color: #fff; }
 .wz-gl-panel.on { display: block; }
 .wz-gl-panel.on.browse { display: flex; flex-direction: column; overflow: hidden; }
-.wz-gl-panel.browse > .wz-gl-content { flex: 1 1 auto; min-height: 0; }
+.wz-gl-panel.browse > .wz-gl-content { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.wz-gl-panel.browse > .wz-gl-content > .wz-gl-browse { flex: 1 1 auto; height: auto; }
 .wz-gl-proto { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 3px 6px; margin-bottom: 8px; border: 1px dashed #665; background: #17150c; font-size: 11px; flex: none; }
 .wz-gl-proto b { color: #ffd84a; margin-right: 4px; }
 .wz-gl-proto label { margin: 0 0 0 10px; font-weight: normal; cursor: pointer; }
@@ -73,6 +76,16 @@ const CSS = `
 .wz-gl-x { position: absolute; top: 2px; right: 2px; z-index: 9; min-width: 0 !important; padding: 0 5px !important; height: 18px !important; line-height: 16px !important; }
 .wz-gl-from { display: block; opacity: .55; font-size: 10px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .wz-gl-preview { white-space: pre-wrap; max-height: 260px; overflow: auto; background: #151515 !important; color: #ddd !important; border: 1px solid #444 !important; border-radius: 3px; padding: 6px; margin-top: 10px; font: 12px monospace; }
+.wz-gl-acct { display: inline-flex; align-items: center; gap: 4px; margin-right: 6px; white-space: nowrap; }
+.wz-gl-acct b { color: #ffd84a; }
+.wz-gl-acct-err { color: #ffb4b4; }
+.wz-gl-panel .dim { opacity: .7; }
+.wz-cm-btn.wz-gl-small { height: 18px; line-height: 16px; padding: 0 5px; font-size: 10px; }
+.wz-gl-link { margin: 0 0 10px; padding: 8px 10px; border: 2px solid #ffd84a; background: #17150c; }
+.wz-gl-link ol { margin: 6px 0; padding-left: 20px; }
+.wz-gl-link li { margin: 4px 0; }
+.wz-gl-line { background: #000 !important; color: #fff !important; border: 1px solid #666; padding: 1px 6px; font: 13px monospace; user-select: all; }
+.wz-gl-done.failed { border-color: #e07a7a; background: #241010; }
 .wz-gl-upload { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; padding: 8px 10px; border: 2px solid #2f6b3a; background: #0f1a11; }
 .wz-gl-upload.open { display: block; }
 .wz-gl-revlist { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; max-height: 360px; overflow: auto; }
@@ -118,13 +131,13 @@ const sameCard = (p, source, group, raw) => p.source === source && p.editorGroup
 // requestRead(): asks the editor in the Card Maker for its cards, or
 // returns a message saying why it can't. The answer comes back through
 // receiveCards().
-export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, author = () => "" }) {
+export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
   injectStyle();
   const draft = getDraft();
   let tab = draft.parts.length ? "browse" : "submit";
   let open = false;
   const proto = draft.browseProto || {};
-  const browse = { list: "new", page: 0, samples: proto.samples !== false, dir: null, mineOnly: false, likedOnly: false };
+  const browse = { list: "new", page: 0, samples: proto.samples === true, dir: null, mineOnly: false, likedOnly: false };
   const listeners = [];
   const notify = () => listeners.forEach((f) => f());
   let browseCtl = null;
@@ -133,7 +146,115 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, author
   let read = null; // { source, label, groups: [{ name, parts: [raw + pick] }] }
   let readTimer = null;
   let reviewing = false;   // the Upload step is open
-  let lastUpload = null;   // { posts } after an upload, until the draft changes
+  let lastUpload = null;   // { posts, error } after an upload, until the draft changes
+  let uploading = false;
+
+  // ---- the gallery server: this player's account, the gallery, votes ----
+  const acct = { loaded: false, loading: false, account: null, cooldownUntil: null, votes: {}, posts: [], error: "", at: 0 };
+  let linking = null;      // { code, line, expiresAt } while linking
+  const gal = { approved: [], totals: {}, base: {}, at: 0, loading: false, error: "" };
+  const voteQueue = createVoteQueue({
+    onSent(part) { Object.entries(part).forEach(([id, v]) => { if (v) acct.votes[id] = v; else delete acct.votes[id]; }); },
+    onError(e) { say(`Your votes couldn't be sent yet (${e.message}). They'll be tried again.`); }
+  });
+  const author = () => acct.account || "";
+  const currentVotes = () => {
+    const cur = { ...acct.votes };
+    Object.entries(voteQueue.pending()).forEach(([id, v]) => { if (v) cur[id] = v; else delete cur[id]; });
+    return cur;
+  };
+  const errText = (e) => (e instanceof ApiError ? e.message : "Something went wrong.");
+
+  async function refreshMe(force) {
+    if (acct.loading || (!force && acct.loaded && Date.now() - acct.at < 30e3)) return;
+    acct.loading = true;
+    try {
+      const me = await getMe();
+      Object.assign(acct, { loaded: true, account: me.account || null, cooldownUntil: me.cooldownUntil || null, votes: me.votes || {}, posts: me.posts || [], error: "", at: Date.now() });
+      pruneUploads(Object.fromEntries(acct.posts.map((p) => [p.id, p.status])), new Set(gal.approved.map((p) => p.id)));
+    } catch (e) {
+      acct.error = errText(e);
+    } finally {
+      acct.loading = false;
+      if (open) render();
+    }
+  }
+  async function refreshGallery(force) {
+    if (gal.loading || (!force && gal.at && Date.now() - gal.at < 60e3)) return;
+    gal.loading = true;
+    if (open && tab === "browse") render();
+    try {
+      const [approved, totals] = await Promise.all([getIndex(), getTotals()]);
+      gal.approved = approved;
+      gal.totals = (totals && totals.totals) || {};
+      gal.base = { ...acct.votes };
+      gal.error = "";
+      gal.at = Date.now();
+    } catch (e) {
+      gal.error = errText(e);
+    } finally {
+      gal.loading = false;
+      if (open) render();
+    }
+  }
+
+  // ---- linking: prove which Undercards account this is, once ----
+  async function startLink() {
+    say("Getting a link code…");
+    try {
+      linking = await linkStart();
+      say("");
+    } catch (e) { say(errText(e)); }
+    render();
+  }
+  async function checkLink() {
+    say("Looking for your line in void…");
+    try {
+      const r = await linkCheck();
+      if (r.linked) {
+        linking = null;
+        acct.account = r.account;
+        acct.cooldownUntil = r.cooldownUntil || null;
+        say(`Linked as ${r.account}.`);
+        refreshMe(true);
+        refreshGallery(true);
+      } else say(r.message || "Not seen yet. Send the line in void, then check again.");
+    } catch (e) {
+      if (e.code === "cooldown") say(`This install switched accounts less than 24 hours ago. You can switch again ${new Date(e.extra.cooldownUntil).toLocaleString()}.`);
+      else if (e.code === "code_expired") { linking = null; say("That code expired. Press Link my account again."); }
+      else say(errText(e));
+    }
+    render();
+  }
+  function accountBox() {
+    if (acct.error && !acct.loaded) {
+      return h("span", { class: "wz-gl-acct" }, h("span", { class: "wz-gl-acct-err", text: "Gallery server unreachable" }), " ", button("Retry", () => { acct.error = ""; refreshMe(true); }));
+    }
+    if (!acct.loaded) return h("span", { class: "wz-gl-acct dim", text: "Checking your account…" });
+    if (acct.account) {
+      return h("span", { class: "wz-gl-acct", title: "Your posts and votes count as this Undercards account" },
+        "Linked as ", h("b", { text: acct.account }), " ",
+        linking ? null : button("Switch", () => startLink(), { title: "Link this install to a different Undercards account (once a day at most)", cls: "wz-gl-small" }));
+    }
+    return h("span", { class: "wz-gl-acct" }, linking ? h("span", { class: "dim", text: "Linking…" }) : button("Link my account", () => startLink(), { primary: true, title: "Prove which Undercards account you are, once, to post and vote" }));
+  }
+  function linkBox() {
+    if (!linking) return null;
+    const mins = Math.max(0, Math.round((linking.expiresAt - Date.now()) / 60e3));
+    const line = h("code", { class: "wz-gl-line", text: linking.line });
+    const sendBtn = button("Open void with it typed in", () => {
+      if (!openVoid(linking.line)) say("This page has no chat. Copy the line and send it in void from another page.");
+    }, { primary: true, title: "Opens chat room 0 with the line filled in. You press Enter." });
+    sendBtn.disabled = !canOpenVoid();
+    return h("div", { class: "wz-gl-link" },
+      h("b", { text: "Link your Undercards account" }),
+      h("ol", {},
+        h("li", {}, "Send this line in void (chat room 0) from the account you want to post and vote as: ", line, " ", sendBtn,
+          canOpenVoid() ? null : h("span", { class: "dim", text: " (no chat on this page: send it from another page)" })),
+        h("li", {}, "Then: ", button("Check link", () => checkLink(), { primary: true }), h("span", { class: "dim", text: ` The code works for ${mins} more minute${mins === 1 ? "" : "s"}.` }))),
+      acct.account ? h("div", { class: "dim", text: `Switching from ${acct.account}: an install can switch accounts once a day, and accounts that share an install count as one voter.` }) : null,
+      button("Cancel", () => { linking = null; say(""); render(); }, { cls: "wz-gl-small" }));
+  }
 
   const status = h("span", { class: "wz-gl-status" });
   const say = (t) => { status.textContent = t; };
@@ -224,24 +345,29 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, author
     if (!open) return;
     renderProto();
     tabs.replaceChildren(
-      status, h("span", { class: "wz-gl-grow" }), sizeButtons());
+      accountBox(), status, h("span", { class: "wz-gl-grow" }), sizeButtons());
     panel.classList.toggle("browse", tab === "browse");
     applyZoom();
     if (tab === "browse") {
       if (browse.samples && !extrasAsked) { extrasAsked = true; loadSampleExtras().then((more) => { if (more && open && tab === "browse") render(); }); }
       const ctl = browseCtl = browseTab();
-      content.replaceChildren(ctl.el);
+      content.replaceChildren(...[linkBox(), ctl.el].filter(Boolean));
       ctl.layout();
       // Again once the window has settled (a nav style or size just changed).
       requestAnimationFrame(() => { if (browseCtl === ctl) ctl.layout(); });
     } else {
-      content.replaceChildren(submitView());
+      content.replaceChildren(...[linkBox(), submitView()].filter(Boolean));
       requestAnimationFrame(refit);
     }
   }
   function setView(v) {
+    if (tab === "browse" && v !== "browse") voteQueue.flush();
     if (v === "editor") { open = false; panel.classList.remove("on"); hideHover(); }
-    else { tab = v; open = true; panel.classList.add("on"); render(); }
+    else {
+      tab = v; open = true; panel.classList.add("on"); render();
+      refreshMe();
+      if (v === "browse") refreshGallery();
+    }
     notify();
   }
   checkFrameImages().then(() => { if (open) render(); });
@@ -375,12 +501,13 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, author
   // draft empties; a box says what went.
   function problems() {
     const out = [];
-    if (!author()) out.push("Unable to Submit: Please set a Card Gallery Username first in Wizascript Settings (Card Maker tab).");
+    if (!acct.loaded) out.push(acct.error ? `Unable to Submit: the gallery server can't be reached (${acct.error})` : "Checking your account…");
+    else if (!author()) out.push("Unable to Submit: link your Undercards account first (Link my account, at the top).");
     const unnamed = draft.parts.filter((p) => !p.name).length;
     const unnamedSets = draft.groups.filter((g) => !g.name).length;
     if (unnamed) out.push(`${unnamed} card${unnamed === 1 ? " has" : "s have"} no name yet.`);
     if (unnamedSets) out.push(`${unnamedSets} set${unnamedSets === 1 ? " has" : "s have"} no name yet.`);
-    return out;
+    return out.concat(uploadProblems(entries()));
   }
   function uploadBox() {
     const list = entries();
@@ -397,34 +524,49 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, author
         h("b", { text: e.kind === "set" ? `Set ${e.label}: ${e.title || "(no name)"}` : e.title || "(no name)" }),
         h("small", { text: e.kind === "set" ? ` ${e.parts.length} cards` : ` ${e.parts[0].type}` })),
       h("div", { class: "wz-gl-revcards" }, e.parts.map((p) => h("div", { class: "wz-gl-zoom" }, tile(p))))));
-    const go = button("Upload to Gallery", () => doUpload(), { primary: true, title: issues.length ? issues[0] : "Send these for approval" });
-    go.disabled = issues.length > 0;
+    const go = button(uploading ? "Uploading…" : "Upload to Gallery", () => doUpload(), { primary: true, title: issues.length ? issues[0] : "Send these for approval" });
+    go.disabled = issues.length > 0 || uploading;
     return h("div", { class: "wz-gl-upload open" },
       h("div", { class: "wz-gl-bar" }, h("b", { text: `Upload ${summary}` }), h("span", { class: "wz-gl-grow" }),
         h("span", { class: "wz-gl-by", text: author() ? `Posting as ${author()}` : "" })),
       h("div", { class: "wz-gl-revlist" }, rows),
       issues.length ? h("div", { class: "wz-gl-issues" }, issues.map((t) => h("div", { text: t }))) : null,
       h("div", { class: "wz-gl-bar wz-gl-revfoot" },
-        h("span", { class: "wz-gl-note", style: { margin: 0 }, text: "Each set and single card is sent as its own entry. They show in Browse once approved." }),
+        h("span", { class: "wz-gl-note", style: { margin: 0 }, text: "Each set and single card is sent as its own entry, for approval. Approved ones show in Browse for everyone." }),
         h("span", { class: "wz-gl-grow" }),
         button("Back", () => { reviewing = false; render(); }), go));
   }
-  function doUpload() {
-    if (problems().length) return render();
-    const posts = postEntries(author());
-    reviewing = false;
+  async function doUpload() {
+    if (problems().length || uploading) return render();
+    uploading = true;
+    render();
+    let sent = [], error = "";
+    try {
+      sent = await uploadEntries(entries(), (i, n) => { if (n > 1 && i < n) say(`Uploading part ${i + 1} of ${n}…`); });
+    } catch (e) {
+      sent = (e.extra && e.extra.sent) || [];
+      error = errText(e);
+    }
+    uploading = false;
+    if (sent.length) markUploaded(sent);
+    reviewing = !!error && !sent.length;
     read = null;
-    lastUpload = { posts };
-    say(`Uploaded ${posts.length} entr${posts.length === 1 ? "y" : "ies"}.`);
+    lastUpload = sent.length || error ? { posts: sent, error } : null;
+    say(error ? (sent.length ? `Uploaded ${sent.length}; the rest didn't go: ${error}` : `Upload failed: ${error}`) : `Uploaded ${sent.length} entr${sent.length === 1 ? "y" : "ies"}.`);
+    if (sent.length) refreshMe(true);
     render();
   }
   function uploadedBox() {
     const posts = lastUpload.posts;
-    const cards = posts.reduce((n, e) => n + e.parts.length, 0);
-    return h("div", { class: "wz-gl-done" },
+    if (!posts.length) {
+      return h("div", { class: "wz-gl-done failed" }, h("b", { text: "Nothing was uploaded." }), " ", lastUpload.error, " ", button("Dismiss", () => { lastUpload = null; render(); }));
+    }
+    const cards = posts.reduce((n, e) => n + e.local.parts.length, 0);
+    return h("div", { class: `wz-gl-done${lastUpload.error ? " failed" : ""}` },
       h("div", {}, h("b", { text: `✓ Sent for approval: ${posts.length} entr${posts.length === 1 ? "y" : "ies"} (${cards} card${cards === 1 ? "" : "s"})` })),
-      h("ul", {}, posts.map((e) => h("li", { text: e.kind === "set" ? `${e.title} (set of ${e.parts.length})` : `${e.title} (${e.parts[0].type})` }))),
-      h("div", { class: "wz-gl-note", style: { margin: "0 0 6px" }, text: "Preview: the gallery isn't live yet, so nothing actually left your computer. Your uploads show in Browse under My posts." }),
+      h("ul", {}, posts.map((e) => h("li", { text: e.kind === "set" ? `${e.title} (set of ${e.local.parts.length})` : `${e.title} (${e.local.parts[0].type})` }))),
+      lastUpload.error ? h("div", { class: "wz-gl-issues", text: `The rest weren't sent: ${lastUpload.error} They're still in your draft below.` }) : null,
+      h("div", { class: "wz-gl-note", style: { margin: "0 0 6px" }, text: "They show under My posts as awaiting approval, and in Browse for everyone once approved." }),
       button("See my posts", () => { browse.mineOnly = true; browse.likedOnly = false; browse.list = "new"; browse.page = 0; lastUpload = null; setView("browse"); }, { primary: true }),
       " ", button("Dismiss", () => { lastUpload = null; render(); }));
   }
@@ -456,18 +598,28 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, author
 
   // ---- Browse (preview) ----
   function browseTab() {
+    const own = acct.posts
+      .filter((p) => (p.status === "pending" || p.status === "rejected") && draft.uploads[p.id])
+      .map((p) => ({ id: p.id, status: p.status, postedAt: p.postedAt, kind: draft.uploads[p.id].kind, title: draft.uploads[p.id].title, parts: draft.uploads[p.id].parts }));
+    // Just approved, but not in the gallery's index yet: still show its copy.
+    acct.posts.filter((p) => p.status === "approved" && draft.uploads[p.id] && !gal.approved.some((a) => a.id === p.id))
+      .forEach((p) => own.push({ id: p.id, status: "pending", postedAt: p.postedAt, kind: draft.uploads[p.id].kind, title: draft.uploads[p.id].title, parts: draft.uploads[p.id].parts }));
+    const list = allEntries({ approved: gal.approved, own, totals: gal.totals, baseVotes: gal.base, current: currentVotes(), account: acct.account, samples: browse.samples, sampleVotes });
     return browseView({
       state: browse,
-      samples: browse.samples,
       wheelPages: () => !wheelPages || wheelPages(),
       onPage: hideHover,
-      entries: allEntries(draft.posted, { samples: browse.samples, votes: draft.votes, sampleVotes, author: author() }),
+      entries: list,
+      note: gal.error ? `Couldn't load the gallery: ${gal.error}` : browse.samples ? "Sample entries (grey tag) are mixed in. They aren't real posts." : acct.account ? "" : "Link your account to vote.",
+      emptyText: gal.loading && !gal.at ? "* Loading the gallery…" : gal.error && !gal.at ? "* Couldn't load the gallery. Try again in a moment." : "",
       hoverable,
       rerender: render,
+      onRefresh: () => { voteQueue.flush(); refreshMe(true); refreshGallery(true); },
       vote(e, dir) {
-        const store = e.sample ? sampleVotes : draft.votes;
-        store[e.key] = (store[e.key] || 0) === dir ? 0 : dir;
-        if (!e.sample) saveDraft();
+        if (e.sample) { sampleVotes[e.key] = (sampleVotes[e.key] || 0) === dir ? 0 : dir; return render(); }
+        if (!acct.account) { say("Link your Undercards account to vote: press Link my account at the top."); return; }
+        const cur = currentVotes()[e.id] || 0;
+        voteQueue.add(e.id, cur === dir ? 0 : dir);
         render();
       }
     });
@@ -480,6 +632,8 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, author
     view: () => (open ? tab : "editor"),
     setView,
     onChange(f) { listeners.push(f); },
+    // Send queued votes now (the Card Maker is closing or being minimised).
+    flush: () => voteQueue.flush(),
     receiveCards(data) {
       clearTimeout(readTimer);
       read = { source: data.source, label: editorLabel(data.source), groups: (data.groups || []).map((g) => ({ name: g.name, parts: (g.parts || []).map((p) => ({ ...p, pick: false })) })) };

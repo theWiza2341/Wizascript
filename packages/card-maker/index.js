@@ -15,14 +15,24 @@
 //
 // Each editor is the real site, loaded in a frame from its own server
 // with its author's permission; nothing here reads or changes what
-// players make in it. Browsers keep a framed site's saves separate from
-// the same site opened on its own, so cards made here stay here.
+// players make in it. Both editors save as you go (UC Editor every
+// second, feildmaster's on each change and when its page closes), so:
+//   - _ (shrink) keeps the editor loaded, ready to carry on;
+//   - x (close) and switching editors unload it, after a moment for that
+//     last save, so nothing keeps running in the background.
+// Browsers keep a framed site's saves separate from the same site opened
+// on its own, so cards made here stay here.
+//
+// Layer: just under Undercards' chat windows, so chat stays usable even
+// with the Card Maker filling the screen, and above everything else on
+// the page (see syncLayer).
 //
 // Disabled plugin = settings registered (so they exist), nothing else.
 
 import { createFeatureSettings } from "../core/settings.js";
 import { isPluginEnabled } from "../core/plugins.js";
 import { registerKeybind } from "../core/keybinds.js";
+import { debugLoggingSetting } from "../core/debug.js";
 import { injectCardMakerStyle } from "./styles.js";
 import { buildWindow } from "./window.js";
 import { EDITORS, EDITOR_LABELS, DEFAULT_EDITOR, editorForLabel, FRAME_MESSAGE } from "./editors.js";
@@ -32,42 +42,101 @@ import PACK_ICON from "../../assets/pack.png";
 // No word from Wizascript inside feildmaster's editor this long after it
 // loads: Wizascript isn't running there, so offer the editor's own site.
 const NO_REPORT_MS = 15000;
+// UC Editor saves once a second: wait that long before unloading an
+// editor. Navigating it away first also gives feildmaster's its
+// "page closing" save.
+const SAVE_GRACE_MS = 1200;
+const UNLOAD_MS = 400;
 
 let settings = null;
 let editorSetting = null;
 let hotfixSetting = null;
-let mounted = null; // { controller, win, frames, ... } | null - built on first open
+let mounted = null; // { controller, win, frames, ... } | null - built on each open
 let footerButton = null;
 
-const log = (...a) => console.log("[Card Maker]", ...a);
+const log = (...a) => { if (debugLoggingSetting.value()) console.log("[Card Maker]", ...a); };
 
 function currentEditor() {
   return editorForLabel(editorSetting ? editorSetting.value() : EDITORS[DEFAULT_EDITOR].label);
 }
 
 export function isCardMakerOpen() {
-  return !!mounted && mounted.win.root.style.display !== "none";
+  return !!mounted;
 }
 
 export function toggleCardMaker() {
   if (!isPluginEnabled("cardMaker")) return;
-  if (isCardMakerOpen()) hideCardMaker();
+  if (mounted) hideCardMaker();
   else showCardMaker();
+}
+
+// Gives an editor frame time for its last save, then unloads it.
+function unloadFrame(el, then) {
+  setTimeout(() => {
+    try { el.src = "about:blank"; } catch (e) { /* already gone */ }
+    setTimeout(() => { el.remove(); if (then) then(); }, UNLOAD_MS);
+  }, SAVE_GRACE_MS);
 }
 
 export function hideCardMaker() {
   if (!mounted) return;
-  mounted.win.root.style.display = "none";
+  const closing = mounted;
+  mounted = null;
+  // Gone from the screen at once; the editor unloads a moment later.
+  closing.win.root.style.display = "none";
+  Object.values(closing.frames).forEach((f) => clearTimeout(f.noReport));
+  const frames = Object.values(closing.frames).map((f) => f.el);
+  const finish = () => { closing.controller.abort(); closing.win.root.remove(); };
+  if (!frames.length) finish();
+  else frames.forEach((el, i) => unloadFrame(el, i === frames.length - 1 ? finish : null));
   updateFooterButton();
 }
 
 export function showCardMaker() {
-  if (!mounted) mount();
-  mounted.win.root.style.display = "";
-  mounted.win.refit();
+  if (mounted) return;
+  mount();
   showEditor(currentEditor());
-  mounted.syncLayer();
   updateFooterButton();
+}
+
+// ---- layer ---------------------------------------------------------------------------
+// Undercards' chat windows are `.chat-box`es. The Card Maker takes the
+// layer of the lowest one and sits just before it in the page, so every
+// chat window draws on top of it (same layer, later in the page) while
+// everything else with a lower layer stays underneath. With no chat on
+// the page it keeps its own high layer (styles.js).
+function chatLayer() {
+  let best = null;
+  document.querySelectorAll(".chat-box").forEach((box) => {
+    // The layer that counts is the outermost one on the way up to <body>
+    // (the chat window's own, or a container's); "top" is its <body> child.
+    let layer = null;
+    let top = box;
+    for (let el = box; el && el !== document.body; el = el.parentElement) {
+      const style = getComputedStyle(el);
+      if (style.display === "none") return;
+      const z = parseInt(style.zIndex, 10);
+      if (style.position !== "static" && Number.isFinite(z)) layer = z;
+      top = el;
+    }
+    if (top.parentElement !== document.body || top.classList.contains("wz-cm") || layer === null) return;
+    if (!best || layer < best.z || (layer === best.z && (best.el.compareDocumentPosition(top) & Node.DOCUMENT_POSITION_PRECEDING))) best = { el: top, z: layer };
+  });
+  return best;
+}
+
+let lastLayerLog = "";
+function placeUnderChat(root) {
+  const chat = chatLayer();
+  if (chat) {
+    root.style.setProperty("--wz-cm-z", String(chat.z));
+    if (root.nextElementSibling !== chat.el) document.body.insertBefore(root, chat.el);
+  } else {
+    root.style.removeProperty("--wz-cm-z");
+    if (root.parentElement !== document.body) document.body.appendChild(root);
+  }
+  const line = chat ? `under chat (layer ${chat.z})` : "no chat window found: own layer";
+  if (line !== lastLayerLog) { lastLayerLog = line; log(line); }
 }
 
 // ---- the window --------------------------------------------------------------------
@@ -95,7 +164,8 @@ function mount() {
 
   // Step behind anything UnderScript opens on top of the page (same as
   // Tier List Maker): Bootstrap dialogs (z 1050) and the Esc menu
-  // (.menu-backdrop, z 1010, created the first time it opens).
+  // (.menu-backdrop, z 1010, created the first time it opens). And keep
+  // under chat as chat windows open, close or come to the front.
   let menuBackdrop = null;
   const layerWatch = new MutationObserver(() => syncLayer());
   function syncLayer() {
@@ -106,8 +176,11 @@ function mount() {
     const dialogOpen = document.body.classList.contains("modal-open") || !!document.querySelector(".bootstrap-dialog.in, .modal.in");
     const menuOpen = !!menuBackdrop && menuBackdrop.style.display === "block";
     win.root.classList.toggle("wz-cm-under-modal", dialogOpen || menuOpen);
+    placeUnderChat(win.root);
   }
   layerWatch.observe(document.body, { attributes: true, attributeFilter: ["class"], childList: true });
+  // A click can bring a chat window to the front (a new layer).
+  document.addEventListener("pointerdown", () => setTimeout(syncLayer, 0), { capture: true, signal });
   signal.addEventListener("abort", () => layerWatch.disconnect());
 
   // Reports from Wizascript inside feildmaster's editor (frame.js).
@@ -122,14 +195,20 @@ function mount() {
   }, { signal });
 
   mounted = { controller, win, frames: {}, syncLayer };
+  syncLayer();
 }
 
-// One frame per editor, made the first time it's shown and then only
-// hidden, so switching editors or closing the window loses nothing.
+// One editor loaded at a time: switching unloads the other (after its last save).
 function showEditor(key) {
   const { win, frames } = mounted;
   win.pick.value = key;
-  Object.entries(frames).forEach(([k, f]) => { f.el.style.display = k === key ? "" : "none"; });
+  Object.keys(frames).forEach((k) => {
+    if (k === key) return;
+    clearTimeout(frames[k].noReport);
+    frames[k].el.style.display = "none";
+    unloadFrame(frames[k].el);
+    delete frames[k];
+  });
   if (!frames[key]) {
     const el = document.createElement("iframe");
     el.title = EDITORS[key].label;
@@ -137,8 +216,6 @@ function showEditor(key) {
     frames[key] = { el, status: "loading", noReport: null };
     win.body.insertBefore(el, win.loading);
     loadEditor(key);
-  } else {
-    win.loading.style.display = frames[key].status === "loading" ? "" : "none";
   }
   updateNote();
 }
@@ -150,10 +227,11 @@ function loadEditor(key) {
   f.status = "loading";
   clearTimeout(f.noReport);
   win.loading.textContent = `Loading ${EDITORS[key].label}…`;
-  if (currentEditor() === key) win.loading.style.display = "";
+  win.loading.style.display = "";
   f.el.onload = () => {
+    if (!mounted || mounted.frames[key] !== f) return;
     if (f.status === "loading") f.status = key === "feildmaster" ? "waiting" : "ok";
-    if (currentEditor() === key) win.loading.style.display = "none";
+    win.loading.style.display = "none";
     log(`${EDITORS[key].label} loaded in ${Math.round(performance.now() - started)} ms`);
     if (key === "feildmaster") {
       f.noReport = setTimeout(() => {
@@ -253,7 +331,7 @@ export function initCardMaker(plugin) {
     type: "select",
     options: EDITOR_LABELS,
     default: EDITORS[DEFAULT_EDITOR].label,
-    onChange: () => { if (isCardMakerOpen()) showEditor(currentEditor()); }
+    onChange: () => { if (mounted) showEditor(currentEditor()); }
   });
   hotfixSetting = settings.add("feildHotfix", {
     name: "Hotfix: feildmaster's Editor",

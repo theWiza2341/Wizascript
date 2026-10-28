@@ -858,7 +858,8 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
 
 ### New: Card Maker
 Make your own custom cards without leaving Undercards, and keep chatting while you do. Turn it on in the **Plugins** list.
-- Click the new **Pack** button in the footer, left of Friends, or press **Primary + K** (Ctrl+K by default), to show or hide the Card Maker window. Move it by its title bar, resize it from any edge, fill the screen with **\u25A1**, or shrink it to its title bar with **_**.
+- Click the new **Pack** button in the footer, left of Friends, or press **Primary + K** (Ctrl+K by default), to show or hide the Card Maker window. Move it by its title bar, resize it from any edge, or fill the screen with **\u25A1**. Chat windows stay on top of it, even when it fills the screen.
+- **_** shrinks it to its title bar and keeps the editor open. **\xD7** closes the editor completely, so nothing keeps running in the background; the editors save your work as you go, so it's still there when you open it again.
 - It shows one of the community card editors: **feildmaster's Template Editor** (the default) or **UC Editor** by sernon158. Pick one in the window's title bar or on the Card Maker tab. Thanks to both of them for letting Wizascript show their editors.
 - The editors are their authors' own sites, loaded as they are. Cards you make in the Card Maker are saved separately from the same editor opened on its own site. **\u2197** opens the editor's site in a new tab.
 - If feildmaster's editor stays black inside the Card Maker, a note in the window offers a **hotfix** (also on the Card Maker tab). It's a stopgap until his editor is updated.
@@ -2852,9 +2853,10 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       pages: "every page",
       summary: "Make custom cards in a community card editor, next to chat.",
       points: () => [
-        `The <b>Pack</b> button in the footer (left of Friends) or ${key("toggleCardMaker", "KeyK")} shows/hides it. Drag its title bar to move it, its edges to resize it; <b>\u25A1</b> fills the screen, <b>_</b> shrinks it to its title bar.`,
+        `The <b>Pack</b> button in the footer (left of Friends) or ${key("toggleCardMaker", "KeyK")} shows/hides it. Drag its title bar to move it, its edges to resize it; <b>\u25A1</b> fills the screen. Chat stays on top, so you can keep talking.`,
+        "<b>_</b> shrinks it to its title bar and keeps the editor open. <b>\xD7</b> closes the editor; it saves your work as you go, so it's there next time.",
         "Pick <b>feildmaster's Template Editor</b> or <b>UC Editor</b> in its title bar. Both are their authors' own sites; <b>\u2197</b> opens the one you're using in a new tab.",
-        "Cards you make here are saved by the editor, separately from its own site. Use the editor's own download/upload to move them across.",
+        "Cards you make here are saved separately from the editor's own site. Use the editor's download/upload to move them across.",
         "If feildmaster's editor stays black, turn on the <b>hotfix</b> (on the Card Maker tab, or the note that appears in the window)."
       ]
     }
@@ -11298,11 +11300,11 @@ Version: v${version}`;
   var Z_UNDER = 1e3;
   var BAR_H = 30;
   var CSS3 = `
-.wz-cm { position: fixed; z-index: ${Z_WINDOW2}; display: flex; flex-direction: column; box-sizing: border-box;
+.wz-cm { position: fixed; z-index: var(--wz-cm-z, ${Z_WINDOW2}); display: flex; flex-direction: column; box-sizing: border-box;
   background: #0d0d0d; color: #fff; border: 2px solid #fff; border-radius: 4px; box-shadow: 0 6px 24px rgba(0,0,0,0.7);
   font: 12px Arial, sans-serif; user-select: none; }
 .wz-cm *, .wz-cm *::before, .wz-cm *::after { box-sizing: border-box; }
-.wz-cm.wz-cm-under-modal { z-index: ${Z_UNDER}; }
+.wz-cm.wz-cm-under-modal { z-index: min(var(--wz-cm-z, ${Z_WINDOW2}), ${Z_UNDER}) !important; }
 .wz-cm.wz-cm-max { left: 0 !important; top: 0 !important; width: 100vw !important; height: 100vh !important; border-radius: 0; }
 .wz-cm.wz-cm-min { height: ${BAR_H + 4}px !important; }
 .wz-cm.wz-cm-min .wz-cm-body, .wz-cm.wz-cm-min .wz-cm-resize, .wz-cm.wz-cm-max .wz-cm-resize { display: none; }
@@ -11378,8 +11380,8 @@ Version: v${version}`;
   }
 
   // packages/card-maker/window.js
-  var MIN_W2 = 420;
-  var MIN_H2 = 300;
+  var MIN_W2 = 850;
+  var MIN_H2 = 600;
   var DEFAULT_W2 = 900;
   var DEFAULT_H2 = 640;
   var EDGES2 = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
@@ -11448,9 +11450,9 @@ Version: v${version}`;
     const buttons = {
       reload: headerButton2("reload", "\u21BB", "Reload the editor"),
       site: headerButton2("site", "\u2197", "Open the editor's own site in a new tab"),
-      min: headerButton2("min", "_", "Shrink to the title bar"),
+      min: headerButton2("min", "_", "Shrink to the title bar (the editor stays open)"),
       max: headerButton2("max", "\u25A1", "Fill the screen"),
-      close: headerButton2("close", "\xD7", "Close (the editor stays loaded until you refresh)")
+      close: headerButton2("close", "\xD7", "Close (the editor saves your work as you go)")
     };
     header.append(img, title, pick, grip, ...Object.values(buttons));
     const body = document.createElement("div");
@@ -11607,35 +11609,92 @@ Version: v${version}`;
 
   // packages/card-maker/index.js
   var NO_REPORT_MS = 15e3;
+  var SAVE_GRACE_MS = 1200;
+  var UNLOAD_MS = 400;
   var settings3 = null;
   var editorSetting = null;
   var hotfixSetting = null;
   var mounted2 = null;
   var footerButton = null;
-  var log = (...a) => console.log("[Card Maker]", ...a);
+  var log = (...a) => {
+    if (debugLoggingSetting.value()) console.log("[Card Maker]", ...a);
+  };
   function currentEditor() {
     return editorForLabel(editorSetting ? editorSetting.value() : EDITORS[DEFAULT_EDITOR].label);
   }
   function isCardMakerOpen() {
-    return !!mounted2 && mounted2.win.root.style.display !== "none";
+    return !!mounted2;
   }
   function toggleCardMaker() {
     if (!isPluginEnabled("cardMaker")) return;
-    if (isCardMakerOpen()) hideCardMaker();
+    if (mounted2) hideCardMaker();
     else showCardMaker();
+  }
+  function unloadFrame(el3, then) {
+    setTimeout(() => {
+      try {
+        el3.src = "about:blank";
+      } catch (e) {
+      }
+      setTimeout(() => {
+        el3.remove();
+        if (then) then();
+      }, UNLOAD_MS);
+    }, SAVE_GRACE_MS);
   }
   function hideCardMaker() {
     if (!mounted2) return;
-    mounted2.win.root.style.display = "none";
+    const closing = mounted2;
+    mounted2 = null;
+    closing.win.root.style.display = "none";
+    Object.values(closing.frames).forEach((f) => clearTimeout(f.noReport));
+    const frames = Object.values(closing.frames).map((f) => f.el);
+    const finish = () => {
+      closing.controller.abort();
+      closing.win.root.remove();
+    };
+    if (!frames.length) finish();
+    else frames.forEach((el3, i) => unloadFrame(el3, i === frames.length - 1 ? finish : null));
     updateFooterButton();
   }
   function showCardMaker() {
-    if (!mounted2) mount();
-    mounted2.win.root.style.display = "";
-    mounted2.win.refit();
+    if (mounted2) return;
+    mount();
     showEditor(currentEditor());
-    mounted2.syncLayer();
     updateFooterButton();
+  }
+  function chatLayer() {
+    let best = null;
+    document.querySelectorAll(".chat-box").forEach((box) => {
+      let layer = null;
+      let top = box;
+      for (let el3 = box; el3 && el3 !== document.body; el3 = el3.parentElement) {
+        const style = getComputedStyle(el3);
+        if (style.display === "none") return;
+        const z = parseInt(style.zIndex, 10);
+        if (style.position !== "static" && Number.isFinite(z)) layer = z;
+        top = el3;
+      }
+      if (top.parentElement !== document.body || top.classList.contains("wz-cm") || layer === null) return;
+      if (!best || layer < best.z || layer === best.z && best.el.compareDocumentPosition(top) & Node.DOCUMENT_POSITION_PRECEDING) best = { el: top, z: layer };
+    });
+    return best;
+  }
+  var lastLayerLog = "";
+  function placeUnderChat(root) {
+    const chat = chatLayer();
+    if (chat) {
+      root.style.setProperty("--wz-cm-z", String(chat.z));
+      if (root.nextElementSibling !== chat.el) document.body.insertBefore(root, chat.el);
+    } else {
+      root.style.removeProperty("--wz-cm-z");
+      if (root.parentElement !== document.body) document.body.appendChild(root);
+    }
+    const line = chat ? `under chat (layer ${chat.z})` : "no chat window found: own layer";
+    if (line !== lastLayerLog) {
+      lastLayerLog = line;
+      log(line);
+    }
   }
   function mount() {
     injectCardMakerStyle();
@@ -11667,8 +11726,10 @@ Version: v${version}`;
       const dialogOpen = document.body.classList.contains("modal-open") || !!document.querySelector(".bootstrap-dialog.in, .modal.in");
       const menuOpen = !!menuBackdrop && menuBackdrop.style.display === "block";
       win.root.classList.toggle("wz-cm-under-modal", dialogOpen || menuOpen);
+      placeUnderChat(win.root);
     }
     layerWatch.observe(document.body, { attributes: true, attributeFilter: ["class"], childList: true });
+    document.addEventListener("pointerdown", () => setTimeout(syncLayer, 0), { capture: true, signal });
     signal.addEventListener("abort", () => layerWatch.disconnect());
     window.addEventListener("message", (e) => {
       const f = mounted2 && mounted2.frames.feildmaster;
@@ -11680,12 +11741,17 @@ Version: v${version}`;
       updateNote();
     }, { signal });
     mounted2 = { controller, win, frames: {}, syncLayer };
+    syncLayer();
   }
   function showEditor(key2) {
     const { win, frames } = mounted2;
     win.pick.value = key2;
-    Object.entries(frames).forEach(([k, f]) => {
-      f.el.style.display = k === key2 ? "" : "none";
+    Object.keys(frames).forEach((k) => {
+      if (k === key2) return;
+      clearTimeout(frames[k].noReport);
+      frames[k].el.style.display = "none";
+      unloadFrame(frames[k].el);
+      delete frames[k];
     });
     if (!frames[key2]) {
       const el3 = document.createElement("iframe");
@@ -11694,8 +11760,6 @@ Version: v${version}`;
       frames[key2] = { el: el3, status: "loading", noReport: null };
       win.body.insertBefore(el3, win.loading);
       loadEditor(key2);
-    } else {
-      win.loading.style.display = frames[key2].status === "loading" ? "" : "none";
     }
     updateNote();
   }
@@ -11706,10 +11770,11 @@ Version: v${version}`;
     f.status = "loading";
     clearTimeout(f.noReport);
     win.loading.textContent = `Loading ${EDITORS[key2].label}\u2026`;
-    if (currentEditor() === key2) win.loading.style.display = "";
+    win.loading.style.display = "";
     f.el.onload = () => {
+      if (!mounted2 || mounted2.frames[key2] !== f) return;
       if (f.status === "loading") f.status = key2 === "feildmaster" ? "waiting" : "ok";
-      if (currentEditor() === key2) win.loading.style.display = "none";
+      win.loading.style.display = "none";
       log(`${EDITORS[key2].label} loaded in ${Math.round(performance.now() - started)} ms`);
       if (key2 === "feildmaster") {
         f.noReport = setTimeout(() => {
@@ -11804,7 +11869,7 @@ Version: v${version}`;
       options: EDITOR_LABELS,
       default: EDITORS[DEFAULT_EDITOR].label,
       onChange: () => {
-        if (isCardMakerOpen()) showEditor(currentEditor());
+        if (mounted2) showEditor(currentEditor());
       }
     });
     hotfixSetting = settings3.add("feildHotfix", {

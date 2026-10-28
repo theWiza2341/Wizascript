@@ -161,9 +161,10 @@ const GUIDES = {
     pages: "every page",
     summary: "Make custom cards in a community card editor, next to chat.",
     points: () => [
-      `The <b>Pack</b> button in the footer (left of Friends) or ${key("toggleCardMaker", "KeyK")} shows/hides it. Drag its title bar to move it, its edges to resize it; <b>□</b> fills the screen, <b>_</b> shrinks it to its title bar.`,
+      `The <b>Pack</b> button in the footer (left of Friends) or ${key("toggleCardMaker", "KeyK")} shows/hides it. Drag its title bar to move it, its edges to resize it; <b>□</b> fills the screen. Chat stays on top, so you can keep talking.`,
+      '<b>_</b> shrinks it to its title bar and keeps the editor open. <b>×</b> closes the editor; it saves your work as you go, so it\'s there next time.',
       'Pick <b>feildmaster\'s Template Editor</b> or <b>UC Editor</b> in its title bar. Both are their authors\' own sites; <b>↗</b> opens the one you\'re using in a new tab.',
-      'Cards you make here are saved by the editor, separately from its own site. Use the editor\'s own download/upload to move them across.',
+      'Cards you make here are saved separately from the editor\'s own site. Use the editor\'s download/upload to move them across.',
       'If feildmaster\'s editor stays black, turn on the <b>hotfix</b> (on the Card Maker tab, or the note that appears in the window).'
     ]
   }

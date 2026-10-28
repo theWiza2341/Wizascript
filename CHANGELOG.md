@@ -6,7 +6,8 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
 
 ### New: Card Maker
 Make your own custom cards without leaving Undercards, and keep chatting while you do. Turn it on in the **Plugins** list.
-- Click the new **Pack** button in the footer, left of Friends, or press **Primary + K** (Ctrl+K by default), to show or hide the Card Maker window. Move it by its title bar, resize it from any edge, fill the screen with **□**, or shrink it to its title bar with **_**.
+- Click the new **Pack** button in the footer, left of Friends, or press **Primary + K** (Ctrl+K by default), to show or hide the Card Maker window. Move it by its title bar, resize it from any edge, or fill the screen with **□**. Chat windows stay on top of it, even when it fills the screen.
+- **_** shrinks it to its title bar and keeps the editor open. **×** closes the editor completely, so nothing keeps running in the background; the editors save your work as you go, so it's still there when you open it again.
 - It shows one of the community card editors: **feildmaster's Template Editor** (the default) or **UC Editor** by sernon158. Pick one in the window's title bar or on the Card Maker tab. Thanks to both of them for letting Wizascript show their editors.
 - The editors are their authors' own sites, loaded as they are. Cards you make in the Card Maker are saved separately from the same editor opened on its own site. **↗** opens the editor's site in a new tab.
 - If feildmaster's editor stays black inside the Card Maker, a note in the window offers a **hotfix** (also on the Card Maker tab). It's a stopgap until his editor is updated.

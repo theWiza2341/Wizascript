@@ -1,20 +1,22 @@
 // packages/card-maker/styles.js
 //
-// Card Maker CSS, injected once. Same layers as Tier List Maker: above the
-// page, below the Notepad, and down to Z_UNDER while an UnderScript dialog
-// or its Esc menu is open.
+// Card Maker CSS, injected once. Its layer is set from index.js: just
+// under Undercards' chat windows (so chat stays usable, even with the
+// Card Maker filling the screen) and above the rest of the page. Z_WINDOW
+// is only the fallback for a page without chat. Down to Z_UNDER while an
+// UnderScript dialog or its Esc menu is open.
 
 const STYLE_ID = "wizascript-cardmaker-style";
 export const Z_WINDOW = 2147482000;
-const Z_UNDER = 1000;
+export const Z_UNDER = 1000;
 export const BAR_H = 30;
 
 const CSS = `
-.wz-cm { position: fixed; z-index: ${Z_WINDOW}; display: flex; flex-direction: column; box-sizing: border-box;
+.wz-cm { position: fixed; z-index: var(--wz-cm-z, ${Z_WINDOW}); display: flex; flex-direction: column; box-sizing: border-box;
   background: #0d0d0d; color: #fff; border: 2px solid #fff; border-radius: 4px; box-shadow: 0 6px 24px rgba(0,0,0,0.7);
   font: 12px Arial, sans-serif; user-select: none; }
 .wz-cm *, .wz-cm *::before, .wz-cm *::after { box-sizing: border-box; }
-.wz-cm.wz-cm-under-modal { z-index: ${Z_UNDER}; }
+.wz-cm.wz-cm-under-modal { z-index: min(var(--wz-cm-z, ${Z_WINDOW}), ${Z_UNDER}) !important; }
 .wz-cm.wz-cm-max { left: 0 !important; top: 0 !important; width: 100vw !important; height: 100vh !important; border-radius: 0; }
 .wz-cm.wz-cm-min { height: ${BAR_H + 4}px !important; }
 .wz-cm.wz-cm-min .wz-cm-body, .wz-cm.wz-cm-min .wz-cm-resize, .wz-cm.wz-cm-max .wz-cm-resize { display: none; }

@@ -16,8 +16,9 @@
 import { loadWindowState, saveWindowState } from "./storage.js";
 import { BAR_H } from "./styles.js";
 
-export const MIN_W = 420;
-export const MIN_H = 300;
+// Big enough for both editors' layouts (smaller only if the screen is).
+export const MIN_W = 850;
+export const MIN_H = 600;
 const DEFAULT_W = 900;
 const DEFAULT_H = 640;
 const EDGES = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
@@ -94,9 +95,9 @@ export function buildWindow({ signal, icon, editors, onPick, onAction }) {
   const buttons = {
     reload: headerButton("reload", "↻", "Reload the editor"),
     site: headerButton("site", "↗", "Open the editor's own site in a new tab"),
-    min: headerButton("min", "_", "Shrink to the title bar"),
+    min: headerButton("min", "_", "Shrink to the title bar (the editor stays open)"),
     max: headerButton("max", "□", "Fill the screen"),
-    close: headerButton("close", "×", "Close (the editor stays loaded until you refresh)")
+    close: headerButton("close", "×", "Close (the editor saves your work as you go)")
   };
   header.append(img, title, pick, grip, ...Object.values(buttons));
 

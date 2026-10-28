@@ -18,6 +18,7 @@ Share the cards you make. It's part of the Card Maker: use **Browse** and **Subm
 - Link parts into sets (A, B, C…) of up to 15 cards, rename them, and preview your request. **Browse** shows how they'll look, in four lists (**Newest**, This Week, This Month, All Time), a page at a time: sets show only their name, likes and dislikes sit under each card or set, and hovering a card shows it bigger with who posted it and when. Turn pages with ‹ › at the bottom right, or the scroll wheel (**Gallery: Scroll Wheel Pages**).
 - **Size** (Small / Medium / Large) zooms the cards. Large stretches them to the window's width.
 - Cards use the game's DTM-Mono font and card frames, and long names and text shrink to fit, the way UC Editor does it (thanks to sernon158).
+- Artifacts take the same space as a card (two cards' width when their text is very long), and enchantments get a plain outer frame.
 - The gallery isn't live yet: nothing is sent, and Browse's dates and scores are made up. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
 
 ## 1.6.2

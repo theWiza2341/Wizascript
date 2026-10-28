@@ -30,8 +30,7 @@ const SOURCE_LABEL = { feildmaster: "feildmaster's editor", sernon: "UC Editor",
 // Card sizes. Large picks how many cards fit at full size, then stretches
 // them so each row reaches the panel's edge.
 const SIZES = [["small", "Small", .75, "Small cards"], ["medium", "Medium", 1, "Full-size cards"], ["large", "Large", 0, "Zoom cards to fill the width"]];
-// TEMPORARY: ways to show Editor / Browse / Submit, to compare (nav.js).
-export const NAV_STYLES = [["a", "Title bar"], ["b", "Side rail"], ["c", "Banner"]];
+
 const GAP = 10;
 
 const CSS = `
@@ -43,13 +42,7 @@ const CSS = `
 .wz-gl-proto b { color: #ffd84a; margin-right: 4px; }
 .wz-gl-proto label { margin: 0 0 0 10px; font-weight: normal; cursor: pointer; }
 .wz-gl-tabs { flex: none; }
-.wz-gl-panel[data-nav="a"] .wz-gl-innertab, .wz-gl-panel[data-nav="b"] .wz-gl-innertab { display: none; }
-.wz-gl-panel[data-nav="c"] .wz-gl-tabs { background: linear-gradient(#1d1a0c, #0d0d0d); margin: 0 -10px 10px; padding: 8px 10px; border-bottom: 2px solid #ffd84a; }
-.wz-gl-panel[data-nav="c"] .wz-gl-innertab { font: 18px "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace !important; height: 36px !important; padding: 0 18px !important; background: #000 !important; border: 2px solid #fff !important; color: #fff !important; border-radius: 0 !important; }
-.wz-gl-panel[data-nav="c"] .wz-gl-innertab.wz-gl-on { background: #ffd84a !important; border-color: #ffd84a !important; color: #000 !important; }
-.wz-gl-panel[data-nav="c"] .wz-gl-back { font-size: 12px; height: 28px; margin-right: 8px; }
-.wz-gl-back { display: none; }
-.wz-gl-panel[data-nav="c"] .wz-gl-back { display: inline-block; }
+.wz-gl-part:has(.wz-gl-wide) { width: calc(355px * var(--wz-gl-z) + 14px); }
 .wz-gl-toggle.on, .wz-cm-btn.wz-gl-on { background: #4464bd; border-color: #8ea6e8; }
 .wz-cm-btn.wz-gl-primary { background: #2f6b3a; border-color: #6fbf7e; }
 .wz-cm-btn:disabled { opacity: .4; cursor: default; }
@@ -120,7 +113,6 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
   let open = false;
   const proto = draft.browseProto || {};
   const browse = { list: "new", page: 0, samples: proto.samples !== false, dir: null };
-  let navStyle = NAV_STYLES.some((n) => n[0] === proto.nav) ? proto.nav : "a";
   const listeners = [];
   const notify = () => listeners.forEach((f) => f());
   let browseCtl = null;
@@ -136,7 +128,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
   const content = h("div", { class: "wz-gl-content" });
   const hover = h("div", { class: "wz-gl-hover" });
   const protoBar = h("div", { class: "wz-gl-proto" });
-  const panel = h("div", { class: "wz-gl-panel", "data-nav": navStyle }, protoBar, tabs, content, hover);
+  const panel = h("div", { class: "wz-gl-panel" }, protoBar, tabs, content, hover);
   const fileInput = h("input", { type: "file", accept: ".uceditor,image/png", multiple: true, style: { display: "none" } });
   panel.appendChild(fileInput);
 
@@ -207,12 +199,10 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
   panel.addEventListener("scroll", hideHover, { passive: true });
 
   function renderProto() {
-    protoBar.replaceChildren(h("b", { text: "Prototype" }), "Buttons:",
-      ...NAV_STYLES.map(([k, l]) => button(l, () => setNav(k), { cls: navStyle === k ? "wz-gl-on" : "" })),
+    protoBar.replaceChildren(h("b", { text: "Preview" }),
       h("label", {}, h("input", { type: "checkbox", checked: browse.samples, onchange: (e) => { browse.samples = e.target.checked; browse.page = 0; saveProto(); render(); } }), " Sample entries"));
   }
-  const saveProto = () => { draft.browseProto = { samples: browse.samples, nav: navStyle }; saveDraft(); };
-  function setNav(k) { navStyle = k; panel.setAttribute("data-nav", k); saveProto(); render(); notify(); }
+  const saveProto = () => { draft.browseProto = { samples: browse.samples }; saveDraft(); };
 
   function render() {
     hideHover();
@@ -220,9 +210,6 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
     if (!open) return;
     renderProto();
     tabs.replaceChildren(
-      button("◀ Editor", () => setView("editor"), { cls: "wz-gl-back", title: "Back to the editor" }),
-      button("Browse", () => setView("browse"), { cls: "wz-gl-innertab" + (tab === "browse" ? " wz-gl-on" : "") }),
-      button("Submit", () => setView("submit"), { cls: "wz-gl-innertab" + (tab === "submit" ? " wz-gl-on" : "") }),
       status, h("span", { class: "wz-gl-grow" }), sizeButtons());
     panel.classList.toggle("browse", tab === "browse");
     applyZoom();
@@ -432,7 +419,6 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
     setOpen(on) { setView(on ? tab : "editor"); },
     view: () => (open ? tab : "editor"),
     setView,
-    navStyle: () => navStyle,
     onChange(f) { listeners.push(f); },
     receiveCards(data) {
       clearTimeout(readTimer);

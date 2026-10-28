@@ -1063,6 +1063,7 @@ Share the cards you make. It's part of the Card Maker: use **Browse** and **Subm
 - Link parts into sets (A, B, C\u2026) of up to 15 cards, rename them, and preview your request. **Browse** shows how they'll look, in four lists (**Newest**, This Week, This Month, All Time), a page at a time: sets show only their name, likes and dislikes sit under each card or set, and hovering a card shows it bigger with who posted it and when. Turn pages with \u2039 \u203A at the bottom right, or the scroll wheel (**Gallery: Scroll Wheel Pages**).
 - **Size** (Small / Medium / Large) zooms the cards. Large stretches them to the window's width.
 - Cards use the game's DTM-Mono font and card frames, and long names and text shrink to fit, the way UC Editor does it (thanks to sernon158).
+- Artifacts take the same space as a card (two cards' width when their text is very long), and enchantments get a plain outer frame.
 - The gallery isn't live yet: nothing is sent, and Browse's dates and scores are made up. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
 
 ## 1.6.2
@@ -11886,17 +11887,21 @@ Version: v${version}`;
     if (p.picture) return h("div", { class: "wz-gl-card wz-gl-pic" }, h("img", { src: p.picture, alt: "" }));
     if (p.type === "Artifact") {
       const colour = rarityColor(p.rarity);
+      const icon = h("img", { class: "wz-gl-icon", src: p.art || "", alt: "" });
+      icon.addEventListener("error", () => {
+        icon.style.visibility = "hidden";
+      }, { once: true });
       return h(
         "div",
         { class: "wz-gl-artifact", style: { borderColor: colour } },
         h(
           "div",
           { class: "wz-gl-arthead" },
-          h("img", { class: "wz-gl-icon", src: p.art || "", alt: "" }),
-          h("span", { class: "wz-gl-artname", text: p.name || "(no name)", style: { color: colour } })
+          icon,
+          h("div", { class: "wz-gl-artname", style: { color: colour } }, h("span", { text: p.name || "(no name)" }))
         ),
         h("div", { class: "wz-gl-rarity", text: (p.rarity || "").split("_").pop(), style: { color: colour } }),
-        h("div", { class: "wz-gl-arttext", html: formatText(p.desc) })
+        h("div", { class: "wz-gl-arttext" }, h("div", { html: formatText(p.desc) }))
       );
     }
     const kind = p.type === "Enchantment" ? "enchant" : p.type.toLowerCase();
@@ -11911,7 +11916,7 @@ Version: v${version}`;
     }
     return h(
       "div",
-      { class: `wz-gl-card t-${kind}${frameImages ? " framed" : ""}` },
+      { class: `wz-gl-card t-${kind}${frameImages && kind !== "enchant" ? " framed" : ""}` },
       h("div", { class: "wz-gl-bg" }),
       p.art ? h("img", { class: "wz-gl-art", src: p.art, alt: "" }) : null,
       h("div", { class: "wz-gl-shade" }),
@@ -11967,27 +11972,30 @@ Version: v${version}`;
   }
   function fitCard(card) {
     const name = card.querySelector(".wz-gl-name"), text = card.querySelector(".wz-gl-text > div"), art = card.querySelector(".wz-gl-arttext");
-    const key2 = card.className + "" + (name ? name.innerHTML : "") + "" + (text ? text.innerHTML : "") + "" + (art ? art.innerHTML : "");
+    const isArt = card.classList.contains("wz-gl-artifact");
+    const key2 = card.className.replace(" wz-gl-wide", "") + "" + (name ? name.innerHTML : "") + "" + (text ? text.innerHTML : "") + "" + (art ? art.innerHTML : "");
     let r = fitCache.get(key2);
     if (!r) {
       const c = card.cloneNode(true);
       c.style.zoom = "1";
+      c.classList.remove("wz-gl-wide");
       host().appendChild(c);
       r = {};
       const n = c.querySelector(".wz-gl-name");
       if (n) r.name = shrink(n, n.firstElementChild || n, 14, 25, n);
       const t = c.querySelector(".wz-gl-text > div");
       if (t) r.text = shrink(t, t, 12, card.classList.contains("t-enchant") ? 184 : 81);
-      const a = c.querySelector(".wz-gl-arttext");
-      if (a) {
-        let size = 11, i = 0;
-        a.style.fontSize = size + "px";
-        while (i < FIT_STEPS && a.scrollHeight > a.clientHeight + 1) {
-          size -= 0.5;
-          a.style.fontSize = size + "px";
-          i++;
+      if (isArt) {
+        const an = c.querySelector(".wz-gl-artname");
+        r.artName = shrinkBox(an, 14, 8);
+        const a = c.querySelector(".wz-gl-arttext");
+        r.art = shrinkBox(a, 12, 9);
+        if (a.scrollHeight > a.clientHeight + 1) {
+          c.classList.add("wz-gl-wide");
+          r.wide = true;
+          r.artName = shrinkBox(an, 14, 8);
+          r.art = shrinkBox(a, 12, 7);
         }
-        r.art = size;
       }
       c.remove();
       if (fontsReady) {
@@ -11997,7 +12005,21 @@ Version: v${version}`;
     }
     if (name && r.name) name.style.fontSize = r.name + "px";
     if (text && r.text) text.style.fontSize = r.text + "px";
-    if (art && r.art) art.style.fontSize = r.art + "px";
+    if (isArt) {
+      card.classList.toggle("wz-gl-wide", !!r.wide);
+      const an = card.querySelector(".wz-gl-artname");
+      if (an && r.artName) an.style.fontSize = r.artName + "px";
+      if (art && r.art) art.style.fontSize = r.art + "px";
+    }
+  }
+  function shrinkBox(el3, start, min) {
+    let size = start;
+    el3.style.fontSize = size + "px";
+    while (size > min && el3.scrollHeight > el3.clientHeight + 1) {
+      size -= 0.5;
+      el3.style.fontSize = size + "px";
+    }
+    return size;
   }
   function fitText(root) {
     root.querySelectorAll(".wz-gl-card:not(.wz-gl-pic), .wz-gl-artifact").forEach(fitCard);
@@ -12040,12 +12062,16 @@ Version: v${version}`;
 .wz-gl-rar { left: 76px; top: 213px; width: 24px; height: 24px; z-index: 5; image-rendering: pixelated; }
 .wz-gl-pic img { left: 0; top: 0; width: 176px; height: 246px; }
 .wz-gl-artpic { display: block; width: 176px; height: auto; }
-.wz-gl-artifact { width: 176px; min-height: 110px; border: 2px solid #fff; background: #000; padding: 6px; color: #fff; font-size: 11px; text-align: left; flex: none; }
-.wz-gl-arthead { display: flex; align-items: center; gap: 6px; }
+.wz-gl-artifact { width: ${CARD_W}px; height: ${CARD_H}px; border: 2px solid #fff; background: #000; padding: 8px; color: #fff; font-size: 12px; line-height: 1.42857; text-align: left; flex: none; display: flex; flex-direction: column; overflow: hidden; }
+.wz-gl-artifact.wz-gl-wide { width: ${CARD_W * 2 + 3}px; }
+.t-enchant i { display: none !important; }
+.wz-gl-arthead { display: flex; align-items: center; gap: 8px; flex: none; }
 .wz-gl-icon { width: 32px; height: 32px; image-rendering: pixelated; border: 1px solid #fff; flex: none; }
-.wz-gl-artname { font-size: 13px; overflow: hidden; }
+.wz-gl-artname { flex: 1 1 auto; min-width: 0; height: 40px; font-size: 14px; line-height: 1.25; overflow: hidden; display: flex; align-items: center; overflow-wrap: anywhere; }
+.wz-gl-artname > span { max-height: 100%; }
 .wz-gl-rarity { font-size: 10px; margin: 3px 0; }
-.wz-gl-arttext { max-height: 150px; overflow: hidden; }
+.wz-gl-rarity { flex: none; padding-bottom: 4px; margin-bottom: 5px; border-bottom: 2px solid currentColor; }
+.wz-gl-arttext { flex: 1 1 auto; min-height: 0; overflow: hidden; }
 `;
 
   // packages/card-maker/gallery/parts.js
@@ -12711,7 +12737,7 @@ Version: v${version}`;
       h(
         "div",
         { class: "wz-gl-votes" },
-        listKey !== "new" ? h("span", { class: "wz-gl-rank", title: "Rank", text: "#" + rank }) : null,
+        listKey !== "new" ? h("span", { class: "wz-gl-rank", title: "Rank", text: "# " + rank }) : null,
         h("button", { type: "button", class: `wz-gl-vote up${e.vote === 1 ? " on" : ""}`, title: "Like", text: "\u25B2", onclick: () => vote(1) }),
         h("span", { class: `wz-gl-score${e.score > 0 ? " pos" : e.score < 0 ? " neg" : ""}`, text: String(e.score) }),
         h("button", { type: "button", class: `wz-gl-vote down${e.vote === -1 ? " on" : ""}`, title: "Dislike", text: "\u25BC", onclick: () => vote(-1) })
@@ -12726,7 +12752,6 @@ Version: v${version}`;
   var TYPE_COLOR = { Monster: "#f0003c", Spell: "#41fcff", Enchantment: "#fca500", Artifact: "gold" };
   var SOURCE_LABEL = { feildmaster: "feildmaster's editor", sernon: "UC Editor", picture: "picture" };
   var SIZES = [["small", "Small", 0.75, "Small cards"], ["medium", "Medium", 1, "Full-size cards"], ["large", "Large", 0, "Zoom cards to fill the width"]];
-  var NAV_STYLES = [["a", "Title bar"], ["b", "Side rail"], ["c", "Banner"]];
   var GAP = 10;
   var CSS4 = `
 .wz-gl-panel { --wz-gl-z: .6; position: absolute; inset: 0; z-index: 7; overflow: auto; background: #0d0d0d; padding: 10px; display: none; user-select: text; font: 12px Arial, sans-serif; color: #fff; }
@@ -12737,13 +12762,7 @@ Version: v${version}`;
 .wz-gl-proto b { color: #ffd84a; margin-right: 4px; }
 .wz-gl-proto label { margin: 0 0 0 10px; font-weight: normal; cursor: pointer; }
 .wz-gl-tabs { flex: none; }
-.wz-gl-panel[data-nav="a"] .wz-gl-innertab, .wz-gl-panel[data-nav="b"] .wz-gl-innertab { display: none; }
-.wz-gl-panel[data-nav="c"] .wz-gl-tabs { background: linear-gradient(#1d1a0c, #0d0d0d); margin: 0 -10px 10px; padding: 8px 10px; border-bottom: 2px solid #ffd84a; }
-.wz-gl-panel[data-nav="c"] .wz-gl-innertab { font: 18px "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace !important; height: 36px !important; padding: 0 18px !important; background: #000 !important; border: 2px solid #fff !important; color: #fff !important; border-radius: 0 !important; }
-.wz-gl-panel[data-nav="c"] .wz-gl-innertab.wz-gl-on { background: #ffd84a !important; border-color: #ffd84a !important; color: #000 !important; }
-.wz-gl-panel[data-nav="c"] .wz-gl-back { font-size: 12px; height: 28px; margin-right: 8px; }
-.wz-gl-back { display: none; }
-.wz-gl-panel[data-nav="c"] .wz-gl-back { display: inline-block; }
+.wz-gl-part:has(.wz-gl-wide) { width: calc(355px * var(--wz-gl-z) + 14px); }
 .wz-gl-toggle.on, .wz-cm-btn.wz-gl-on { background: #4464bd; border-color: #8ea6e8; }
 .wz-cm-btn.wz-gl-primary { background: #2f6b3a; border-color: #6fbf7e; }
 .wz-cm-btn:disabled { opacity: .4; cursor: default; }
@@ -12808,7 +12827,6 @@ ${BROWSE_CSS}
     let open = false;
     const proto = draft2.browseProto || {};
     const browse = { list: "new", page: 0, samples: proto.samples !== false, dir: null };
-    let navStyle = NAV_STYLES.some((n) => n[0] === proto.nav) ? proto.nav : "a";
     const listeners4 = [];
     const notify2 = () => listeners4.forEach((f) => f());
     let browseCtl = null;
@@ -12825,7 +12843,7 @@ ${BROWSE_CSS}
     const content = h("div", { class: "wz-gl-content" });
     const hover = h("div", { class: "wz-gl-hover" });
     const protoBar = h("div", { class: "wz-gl-proto" });
-    const panel = h("div", { class: "wz-gl-panel", "data-nav": navStyle }, protoBar, tabs, content, hover);
+    const panel = h("div", { class: "wz-gl-panel" }, protoBar, tabs, content, hover);
     const fileInput = h("input", { type: "file", accept: ".uceditor,image/png", multiple: true, style: { display: "none" } });
     panel.appendChild(fileInput);
     const sizeOf = () => SIZES.find((x) => x[0] === draft2.cardSize) || SIZES[1];
@@ -12916,9 +12934,7 @@ ${BROWSE_CSS}
     panel.addEventListener("scroll", hideHover, { passive: true });
     function renderProto() {
       protoBar.replaceChildren(
-        h("b", { text: "Prototype" }),
-        "Buttons:",
-        ...NAV_STYLES.map(([k, l]) => button(l, () => setNav(k), { cls: navStyle === k ? "wz-gl-on" : "" })),
+        h("b", { text: "Preview" }),
         h("label", {}, h("input", { type: "checkbox", checked: browse.samples, onchange: (e) => {
           browse.samples = e.target.checked;
           browse.page = 0;
@@ -12928,25 +12944,15 @@ ${BROWSE_CSS}
       );
     }
     const saveProto = () => {
-      draft2.browseProto = { samples: browse.samples, nav: navStyle };
+      draft2.browseProto = { samples: browse.samples };
       saveDraft();
     };
-    function setNav(k) {
-      navStyle = k;
-      panel.setAttribute("data-nav", k);
-      saveProto();
-      render2();
-      notify2();
-    }
     function render2() {
       hideHover();
       browseCtl = null;
       if (!open) return;
       renderProto();
       tabs.replaceChildren(
-        button("\u25C0 Editor", () => setView("editor"), { cls: "wz-gl-back", title: "Back to the editor" }),
-        button("Browse", () => setView("browse"), { cls: "wz-gl-innertab" + (tab === "browse" ? " wz-gl-on" : "") }),
-        button("Submit", () => setView("submit"), { cls: "wz-gl-innertab" + (tab === "submit" ? " wz-gl-on" : "") }),
         status,
         h("span", { class: "wz-gl-grow" }),
         sizeButtons()
@@ -13264,7 +13270,6 @@ ${BROWSE_CSS}
       },
       view: () => open ? tab : "editor",
       setView,
-      navStyle: () => navStyle,
       onChange(f) {
         listeners4.push(f);
       },
@@ -13282,36 +13287,14 @@ ${BROWSE_CSS}
   // packages/card-maker/gallery/nav.js
   var VIEWS = [["editor", "Editor", "\u270E"], ["browse", "Browse", "\u25A4"], ["submit", "Submit", "\u2B06"]];
   var STYLE_ID4 = "wizascript-cardgallery-nav-style";
-  var RAIL_W = 78;
   var DT2 = `"DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace`;
   var CSS5 = `
-.wz-gn-seg, .wz-gn-big, .wz-gn-rail { display: none; }
-.wz-cm[data-wz-nav="a"] .wz-gn-seg { display: flex; }
-.wz-cm[data-wz-nav="b"] .wz-gn-rail { display: flex; }
-.wz-cm[data-wz-nav="c"] .wz-gn-big { display: inline-flex; }
-
-.wz-gn-seg { flex: none; height: 24px; margin-left: 6px; border: 2px solid #fff; background: #000; }
+.wz-gn-seg { display: flex; flex: none; height: 24px; margin-left: 6px; border: 2px solid #fff; background: #000; }
 .wz-gn-seg button { display: flex; align-items: center; gap: 5px; background: none; border: 0; border-right: 2px solid #fff; color: #ccc; padding: 0 12px; font: 13px ${DT2}; cursor: pointer; }
 .wz-gn-seg button:last-child { border-right: 0; }
 .wz-gn-seg button:hover { color: #fff; background: #222; }
 .wz-gn-seg button.on { background: #ffd84a; color: #000; }
 .wz-gn-seg .ic { font-size: 12px; }
-
-.wz-gn-big { flex: none; align-items: center; gap: 6px; height: 24px; padding: 0 14px; background: #ffd84a; color: #000; border: 2px solid #ffd84a; font: 14px ${DT2}; cursor: pointer; box-shadow: 0 0 10px rgba(255, 216, 74, .45); }
-.wz-gn-big:hover { background: #ffe27a; }
-.wz-gn-big.on { background: #000; color: #ffd84a; box-shadow: none; }
-
-.wz-gn-rail { position: absolute; left: 0; top: 0; bottom: 0; width: ${RAIL_W}px; z-index: 8; flex-direction: column; gap: 6px; padding: 8px 6px; box-sizing: border-box; background: #050505; border-right: 2px solid #333; }
-.wz-gn-rail button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 0 8px; background: #000; border: 2px solid #555; color: #bbb; font: 12px ${DT2}; cursor: pointer; }
-.wz-gn-rail button .ic { font-size: 20px; line-height: 20px; }
-.wz-gn-rail button:hover { border-color: #fff; color: #fff; }
-.wz-gn-rail button.on { border-color: #ffd84a; color: #ffd84a; background: #17150c; }
-.wz-gn-rail .sep { height: 2px; background: #333; margin: 2px 4px; }
-.wz-cm[data-wz-nav="b"] .wz-cm-body > iframe,
-.wz-cm[data-wz-nav="b"] .wz-cm-body > .wz-cm-loading,
-.wz-cm[data-wz-nav="b"] .wz-cm-body > .wz-cm-note,
-.wz-cm[data-wz-nav="b"] .wz-cm-body > .wz-gl-panel { left: ${RAIL_W}px !important; }
-.wz-cm[data-wz-nav="b"] .wz-cm-body > iframe { width: auto !important; right: 0 !important; }
 `;
   function injectStyle3() {
     if (document.getElementById(STYLE_ID4)) return;
@@ -13320,28 +13303,19 @@ ${BROWSE_CSS}
     s.textContent = CSS5;
     (document.head || document.documentElement).appendChild(s);
   }
-  var viewButton = (gallery, [v, label, icon]) => h(
-    "button",
-    { type: "button", "data-view": v, title: v === "editor" ? "Back to the editor" : `Card Gallery: ${label}`, onclick: () => gallery.setView(v) },
-    h("span", { class: "ic", text: icon }),
-    h("span", { text: label })
-  );
   function mountGalleryNav({ win, gallery }) {
     injectStyle3();
     const header = win.root.querySelector(".wz-cm-header");
-    const seg = h("div", { class: "wz-gn-seg" }, VIEWS.map((v) => viewButton(gallery, v)));
-    const big = h("button", { type: "button", class: "wz-gn-big", onclick: () => gallery.setView(gallery.view() === "editor" ? "browse" : "editor") });
-    const rail = h("div", { class: "wz-gn-rail" }, viewButton(gallery, VIEWS[0]), h("div", { class: "sep" }), VIEWS.slice(1).map((v) => viewButton(gallery, v)));
+    const seg = h("div", { class: "wz-gn-seg" }, VIEWS.map(([v, label, icon]) => h(
+      "button",
+      { type: "button", "data-view": v, title: v === "editor" ? "Back to the editor" : `Card Gallery: ${label}`, onclick: () => gallery.setView(v) },
+      h("span", { class: "ic", text: icon }),
+      h("span", { text: label })
+    )));
     header.insertBefore(seg, header.querySelector(".wz-cm-grip"));
-    header.insertBefore(big, header.querySelector('[data-action="reload"]'));
-    win.body.appendChild(rail);
     function sync() {
       const view = gallery.view();
-      win.root.setAttribute("data-wz-nav", gallery.navStyle());
-      [seg, rail].forEach((box) => box.querySelectorAll("button[data-view]").forEach((b) => b.classList.toggle("on", b.dataset.view === view)));
-      big.classList.toggle("on", view !== "editor");
-      big.replaceChildren(h("span", { text: view === "editor" ? "\u2605" : "\u25C0" }), h("span", { text: view === "editor" ? "Card Gallery" : "Editor" }));
-      big.title = view === "editor" ? "Open the Card Gallery" : "Back to the editor";
+      seg.querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.view === view));
     }
     gallery.onChange(sync);
     sync();

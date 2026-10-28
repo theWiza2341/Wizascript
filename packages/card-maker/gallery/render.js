@@ -78,12 +78,16 @@ export function tile(p) {
   if (p.picture) return h("div", { class: "wz-gl-card wz-gl-pic" }, h("img", { src: p.picture, alt: "" }));
   if (p.type === "Artifact") {
     const colour = rarityColor(p.rarity);
+    // A card's space (176 x 246); fitCard() makes it two spaces wide when
+    // its text won't fit one at a readable size.
+    const icon = h("img", { class: "wz-gl-icon", src: p.art || "", alt: "" });
+    icon.addEventListener("error", () => { icon.style.visibility = "hidden"; }, { once: true });
     return h("div", { class: "wz-gl-artifact", style: { borderColor: colour } },
       h("div", { class: "wz-gl-arthead" },
-        h("img", { class: "wz-gl-icon", src: p.art || "", alt: "" }),
-        h("span", { class: "wz-gl-artname", text: p.name || "(no name)", style: { color: colour } })),
+        icon,
+        h("div", { class: "wz-gl-artname", style: { color: colour } }, h("span", { text: p.name || "(no name)" }))),
       h("div", { class: "wz-gl-rarity", text: (p.rarity || "").split("_").pop(), style: { color: colour } }),
-      h("div", { class: "wz-gl-arttext", html: formatText(p.desc) }));
+      h("div", { class: "wz-gl-arttext" }, h("div", { html: formatText(p.desc) })));
   }
   const kind = p.type === "Enchantment" ? "enchant" : p.type.toLowerCase();
   const name = h("div", { class: "wz-gl-name" }, h("span", { text: p.name || "(no name)", style: { color: p.type === "Spell" ? soulColor(p.soul) : "" } }));
@@ -95,7 +99,9 @@ export function tile(p) {
       rarity.addEventListener("error", () => rarity.remove(), { once: true });
     } else if (p.rarity) rarity = rarityImage(p.rarity);
   }
-  return h("div", { class: `wz-gl-card t-${kind}${frameImages ? " framed" : ""}` },
+  // Enchantments: the game has no enchantment frame to load, so they get a
+  // drawn outer frame only.
+  return h("div", { class: `wz-gl-card t-${kind}${frameImages && kind !== "enchant" ? " framed" : ""}` },
     h("div", { class: "wz-gl-bg" }),
     p.art ? h("img", { class: "wz-gl-art", src: p.art, alt: "" }) : null,
     h("div", { class: "wz-gl-shade" }),
@@ -149,25 +155,51 @@ export function whenFontsReady() {
 }
 export function fitCard(card) {
   const name = card.querySelector(".wz-gl-name"), text = card.querySelector(".wz-gl-text > div"), art = card.querySelector(".wz-gl-arttext");
-  const key = card.className + "\u0001" + (name ? name.innerHTML : "") + "\u0001" + (text ? text.innerHTML : "") + "\u0001" + (art ? art.innerHTML : "");
+  const isArt = card.classList.contains("wz-gl-artifact");
+  const key = card.className.replace(" wz-gl-wide", "") + "\u0001" + (name ? name.innerHTML : "") + "\u0001" + (text ? text.innerHTML : "") + "\u0001" + (art ? art.innerHTML : "");
   let r = fitCache.get(key);
   if (!r) {
     const c = card.cloneNode(true);
     c.style.zoom = "1";
+    c.classList.remove("wz-gl-wide");
     host().appendChild(c);
     r = {};
     const n = c.querySelector(".wz-gl-name");
     if (n) r.name = shrink(n, n.firstElementChild || n, 14, 25, n);
     const t = c.querySelector(".wz-gl-text > div");
     if (t) r.text = shrink(t, t, 12, card.classList.contains("t-enchant") ? 184 : 81);
-    const a = c.querySelector(".wz-gl-arttext");
-    if (a) { let size = 11, i = 0; a.style.fontSize = size + "px"; while (i < FIT_STEPS && a.scrollHeight > a.clientHeight + 1) { size -= 0.5; a.style.fontSize = size + "px"; i++; } r.art = size; }
+    if (isArt) {
+      // Name: up to two lines. Text: down to 9px in one space; if it still
+      // doesn't fit, two spaces wide, down to 7px.
+      const an = c.querySelector(".wz-gl-artname");
+      r.artName = shrinkBox(an, 14, 8);
+      const a = c.querySelector(".wz-gl-arttext");
+      r.art = shrinkBox(a, 12, 9);
+      if (a.scrollHeight > a.clientHeight + 1) {
+        c.classList.add("wz-gl-wide");
+        r.wide = true;
+        r.artName = shrinkBox(an, 14, 8);
+        r.art = shrinkBox(a, 12, 7);
+      }
+    }
     c.remove();
     if (fontsReady) { if (fitCache.size > 2000) fitCache.clear(); fitCache.set(key, r); }
   }
   if (name && r.name) name.style.fontSize = r.name + "px";
   if (text && r.text) text.style.fontSize = r.text + "px";
-  if (art && r.art) art.style.fontSize = r.art + "px";
+  if (isArt) {
+    card.classList.toggle("wz-gl-wide", !!r.wide);
+    const an = card.querySelector(".wz-gl-artname");
+    if (an && r.artName) an.style.fontSize = r.artName + "px";
+    if (art && r.art) art.style.fontSize = r.art + "px";
+  }
+}
+// Shrink until the box's content fits inside it, down to min px.
+function shrinkBox(el, start, min) {
+  let size = start;
+  el.style.fontSize = size + "px";
+  while (size > min && el.scrollHeight > el.clientHeight + 1) { size -= 0.5; el.style.fontSize = size + "px"; }
+  return size;
 }
 export function fitText(root) {
   root.querySelectorAll(".wz-gl-card:not(.wz-gl-pic), .wz-gl-artifact").forEach(fitCard);
@@ -213,10 +245,14 @@ export const TILE_CSS = `
 .wz-gl-rar { left: 76px; top: 213px; width: 24px; height: 24px; z-index: 5; image-rendering: pixelated; }
 .wz-gl-pic img { left: 0; top: 0; width: 176px; height: 246px; }
 .wz-gl-artpic { display: block; width: 176px; height: auto; }
-.wz-gl-artifact { width: 176px; min-height: 110px; border: 2px solid #fff; background: #000; padding: 6px; color: #fff; font-size: 11px; text-align: left; flex: none; }
-.wz-gl-arthead { display: flex; align-items: center; gap: 6px; }
+.wz-gl-artifact { width: ${CARD_W}px; height: ${CARD_H}px; border: 2px solid #fff; background: #000; padding: 8px; color: #fff; font-size: 12px; line-height: 1.42857; text-align: left; flex: none; display: flex; flex-direction: column; overflow: hidden; }
+.wz-gl-artifact.wz-gl-wide { width: ${CARD_W * 2 + 3}px; }
+.t-enchant i { display: none !important; }
+.wz-gl-arthead { display: flex; align-items: center; gap: 8px; flex: none; }
 .wz-gl-icon { width: 32px; height: 32px; image-rendering: pixelated; border: 1px solid #fff; flex: none; }
-.wz-gl-artname { font-size: 13px; overflow: hidden; }
+.wz-gl-artname { flex: 1 1 auto; min-width: 0; height: 40px; font-size: 14px; line-height: 1.25; overflow: hidden; display: flex; align-items: center; overflow-wrap: anywhere; }
+.wz-gl-artname > span { max-height: 100%; }
 .wz-gl-rarity { font-size: 10px; margin: 3px 0; }
-.wz-gl-arttext { max-height: 150px; overflow: hidden; }
+.wz-gl-rarity { flex: none; padding-bottom: 4px; margin-bottom: 5px; border-bottom: 2px solid currentColor; }
+.wz-gl-arttext { flex: 1 1 auto; min-height: 0; overflow: hidden; }
 `;

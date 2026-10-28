@@ -44,7 +44,10 @@ export const BROWSE_CSS = `
 .wz-gl-score { font-family: ${DT}; font-size: 13px; min-width: 28px; }
 .wz-gl-score.pos { color: #b9f5c3; } .wz-gl-score.neg { color: #f5b9b9; }
 .wz-gl-rank { color: var(--wz-gl-accent); font: 12px/16px ${DT}; margin-right: 4px; }
-.wz-gl-mine { position: absolute; top: -9px; right: -9px; z-index: 3; background: #4464bd; border: 2px solid #8ea6e8; color: #fff; font: 10px/14px Arial, sans-serif; padding: 0 4px; }
+.wz-gl-sethead { display: flex; align-items: center; gap: 8px; align-self: stretch; min-width: 0; }
+.wz-gl-sethead .wz-gl-setname { flex: 1 1 auto; min-width: 0; text-align: center; }
+.wz-gl-mine { flex: none; background: #4464bd; border: 1px solid #8ea6e8; color: #fff; font: 9px/13px Arial, sans-serif; padding: 0 4px; white-space: nowrap; }
+.wz-gl-votes .wz-gl-mine { order: 9; margin-left: 2px; }
 
 /* slide-in */
 @keyframes wz-gl-in-r { from { transform: translateX(60px); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -214,12 +217,17 @@ function segBar(ctx, dir) {
 function item(ctx, e, rank, listKey) {
   const isSet = e.kind === "set";
   const vote = (dir) => ctx.vote(e, dir);
+  // Your own posts get a small tag, inside the item so it never covers
+  // anything: a set's in its top row (right of the name), a single card's
+  // in the votes row.
+  const pending = e.status === "pending";
+  const tag = e.mine ? h("span", { class: `wz-gl-mine${pending ? " pending" : ""}`, text: pending ? (isSet ? "awaiting approval" : "pending") : "yours", title: pending ? "Awaiting approval: shows to everyone once approved" : "Your post" }) : null;
   return h("div", { class: `wz-gl-item${isSet ? " set" : ""}`, "data-key": e.key },
-    e.mine ? h("span", { class: `wz-gl-mine${e.status === "pending" ? " pending" : ""}`, text: e.status === "pending" ? "awaiting approval" : "yours", title: e.status === "pending" ? "Uploaded; shows to everyone once approved" : "" }) : null,
-    isSet ? h("div", { class: "wz-gl-setname", text: e.title || "(no name)", title: e.title || "" }) : null,
+    isSet ? h("div", { class: "wz-gl-sethead" }, h("div", { class: "wz-gl-setname", text: e.title || "(no name)", title: e.title || "" }), tag) : null,
     h("div", { class: "wz-gl-row" }, e.parts.map((p) => ctx.hoverable(h("div", { class: "wz-gl-zoom" }, tile(p)), p, e))),
     h("div", { class: "wz-gl-votes" },
       listKey !== "new" ? h("span", { class: "wz-gl-rank", title: "Rank", text: "# " + rank }) : null,
+      isSet ? null : tag,
       h("button", { type: "button", class: `wz-gl-vote up${e.vote === 1 ? " on" : ""}`, title: "Like", text: "▲", onclick: () => vote(1) }),
       h("span", { class: `wz-gl-score${e.score > 0 ? " pos" : e.score < 0 ? " neg" : ""}`, text: String(e.score) }),
       h("button", { type: "button", class: `wz-gl-vote down${e.vote === -1 ? " on" : ""}`, title: "Dislike", text: "▼", onclick: () => vote(-1) })));

@@ -16,24 +16,40 @@
 // A size control (S / M / L / Fill) zooms the cards on both tabs.
 
 import { h, button } from "./dom.js";
-import { tile, fitText, checkFrameImages, TILE_CSS } from "./render.js";
+import { tile, fitText, checkFrameImages, whenFontsReady, onFontsChange, TILE_CSS } from "./render.js";
 import { partFromRaw, readUcEditorFile, picturesFromPng, readFile } from "./parts.js";
-import { getDraft, saveDraft, nextId, makeSet, tidySets, entries } from "./draft.js";
+import { getDraft, saveDraft, nextId, makeSet, tidySets, entries, SET_CAP } from "./draft.js";
 import { browseView, allEntries, BROWSE_CSS } from "./browse.js";
+import { loadSampleExtras } from "./mock.js";
 
 const STYLE_ID = "wizascript-cardgallery-style";
 const TYPES = ["Monster", "Spell", "Enchantment", "Artifact"];
 const COLORS = ["#e6b422", "#4aa3df", "#e05a5a", "#5cc46a", "#b07de0", "#e08a3c", "#3cc8c0", "#d65ca8"];
 const TYPE_COLOR = { Monster: "#f0003c", Spell: "#41fcff", Enchantment: "#fca500", Artifact: "gold" };
 const SOURCE_LABEL = { feildmaster: "feildmaster's editor", sernon: "UC Editor", picture: "picture" };
-// Card sizes. Fill picks how many cards fit at full size, then stretches
+// Card sizes. Large picks how many cards fit at full size, then stretches
 // them so each row reaches the panel's edge.
-const SIZES = [["small", "S", .55, "Small cards"], ["medium", "M", .75, "Medium cards"], ["large", "L", 1, "Full-size cards"], ["fill", "Fill", 0, "Zoom cards to fill the width"]];
+const SIZES = [["small", "Small", .75, "Small cards"], ["medium", "Medium", 1, "Full-size cards"], ["large", "Large", 0, "Zoom cards to fill the width"]];
+// TEMPORARY: ways to show Editor / Browse / Submit, to compare (nav.js).
+export const NAV_STYLES = [["a", "Title bar"], ["b", "Side rail"], ["c", "Banner"]];
 const GAP = 10;
 
 const CSS = `
 .wz-gl-panel { --wz-gl-z: .6; position: absolute; inset: 0; z-index: 7; overflow: auto; background: #0d0d0d; padding: 10px; display: none; user-select: text; font: 12px Arial, sans-serif; color: #fff; }
 .wz-gl-panel.on { display: block; }
+.wz-gl-panel.on.browse { display: flex; flex-direction: column; overflow: hidden; }
+.wz-gl-panel.browse > .wz-gl-content { flex: 1 1 auto; min-height: 0; }
+.wz-gl-proto { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 3px 6px; margin-bottom: 8px; border: 1px dashed #665; background: #17150c; font-size: 11px; flex: none; }
+.wz-gl-proto b { color: #ffd84a; margin-right: 4px; }
+.wz-gl-proto label { margin: 0 0 0 10px; font-weight: normal; cursor: pointer; }
+.wz-gl-tabs { flex: none; }
+.wz-gl-panel[data-nav="a"] .wz-gl-innertab, .wz-gl-panel[data-nav="b"] .wz-gl-innertab { display: none; }
+.wz-gl-panel[data-nav="c"] .wz-gl-tabs { background: linear-gradient(#1d1a0c, #0d0d0d); margin: 0 -10px 10px; padding: 8px 10px; border-bottom: 2px solid #ffd84a; }
+.wz-gl-panel[data-nav="c"] .wz-gl-innertab { font: 18px "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace !important; height: 36px !important; padding: 0 18px !important; background: #000 !important; border: 2px solid #fff !important; color: #fff !important; border-radius: 0 !important; }
+.wz-gl-panel[data-nav="c"] .wz-gl-innertab.wz-gl-on { background: #ffd84a !important; border-color: #ffd84a !important; color: #000 !important; }
+.wz-gl-panel[data-nav="c"] .wz-gl-back { font-size: 12px; height: 28px; margin-right: 8px; }
+.wz-gl-back { display: none; }
+.wz-gl-panel[data-nav="c"] .wz-gl-back { display: inline-block; }
 .wz-gl-toggle.on, .wz-cm-btn.wz-gl-on { background: #4464bd; border-color: #8ea6e8; }
 .wz-cm-btn.wz-gl-primary { background: #2f6b3a; border-color: #6fbf7e; }
 .wz-cm-btn:disabled { opacity: .4; cursor: default; }
@@ -97,12 +113,18 @@ const sameCard = (p, source, group, raw) => p.source === source && p.editorGroup
 // requestRead(): asks the editor in the Card Maker for its cards, or
 // returns a message saying why it can't. The answer comes back through
 // receiveCards().
-export function buildGalleryPanel({ requestRead, editorLabel }) {
+export function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
   injectStyle();
   const draft = getDraft();
   let tab = draft.parts.length ? "browse" : "submit";
+  let open = false;
   const proto = draft.browseProto || {};
-  const browse = { list: "new", layout: proto.layout || "slides", samples: proto.samples !== false, dir: null, shelfOpen: null };
+  const browse = { list: "new", page: 0, samples: proto.samples !== false, dir: null };
+  let navStyle = NAV_STYLES.some((n) => n[0] === proto.nav) ? proto.nav : "a";
+  const listeners = [];
+  const notify = () => listeners.forEach((f) => f());
+  let browseCtl = null;
+  let extrasAsked = false;
   const sampleVotes = {};
   let read = null; // { source, label, groups: [{ name, parts: [raw + pick] }] }
   let readTimer = null;
@@ -111,14 +133,15 @@ export function buildGalleryPanel({ requestRead, editorLabel }) {
   const status = h("span", { class: "wz-gl-status" });
   const say = (t) => { status.textContent = t; };
   const tabs = h("div", { class: "wz-gl-bar wz-gl-tabs" });
-  const content = h("div");
+  const content = h("div", { class: "wz-gl-content" });
   const hover = h("div", { class: "wz-gl-hover" });
-  const panel = h("div", { class: "wz-gl-panel" }, tabs, content, hover);
+  const protoBar = h("div", { class: "wz-gl-proto" });
+  const panel = h("div", { class: "wz-gl-panel", "data-nav": navStyle }, protoBar, tabs, content, hover);
   const fileInput = h("input", { type: "file", accept: ".uceditor,image/png", multiple: true, style: { display: "none" } });
   panel.appendChild(fileInput);
 
   // ---- Card size ----
-  const sizeOf = () => SIZES.find((x) => x[0] === draft.size) || SIZES[1];
+  const sizeOf = () => SIZES.find((x) => x[0] === draft.cardSize) || SIZES[1];
   function applyZoom() {
     let z = sizeOf()[2];
     if (!z) {
@@ -132,15 +155,21 @@ export function buildGalleryPanel({ requestRead, editorLabel }) {
     panel.style.setProperty("--wz-gl-z", String(z));
     return true;
   }
-  let fitTimer = null;
+  let fitTimer = null, lastBox = "";
   new ResizeObserver(() => {
-    if (sizeOf()[2] || !panel.classList.contains("on")) return;
-    if (applyZoom()) { clearTimeout(fitTimer); fitTimer = setTimeout(() => refit(), 120); }
+    if (!open) return;
+    const box = panel.clientWidth + "x" + panel.clientHeight;
+    if (box === lastBox) return;
+    lastBox = box;
+    const zoomed = !sizeOf()[2] && applyZoom();
+    if (!zoomed && tab !== "browse") return;
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(() => { if (tab === "browse" && browseCtl) browseCtl.layout(); else refit(); }, 120);
   }).observe(panel);
   function sizeButtons() {
     return h("span", { class: "wz-gl-sizes", title: "Card size" },
       h("small", { text: "Size ", style: { opacity: ".7" } }),
-      SIZES.map(([key, label, , title]) => button(label, () => { draft.size = key; saveDraft(); render(); }, { title, cls: sizeOf()[0] === key ? "wz-gl-on" : "" })));
+      SIZES.map(([key, label, , title]) => button(label, () => { draft.cardSize = key; browse.page = 0; saveDraft(); render(); }, { title, cls: sizeOf()[0] === key ? "wz-gl-on" : "" })));
   }
   // Names and text shrink to fit at 100%; redo it when the frame art or size changes.
   function refit() {
@@ -177,17 +206,47 @@ export function buildGalleryPanel({ requestRead, editorLabel }) {
   };
   panel.addEventListener("scroll", hideHover, { passive: true });
 
+  function renderProto() {
+    protoBar.replaceChildren(h("b", { text: "Prototype" }), "Buttons:",
+      ...NAV_STYLES.map(([k, l]) => button(l, () => setNav(k), { cls: navStyle === k ? "wz-gl-on" : "" })),
+      h("label", {}, h("input", { type: "checkbox", checked: browse.samples, onchange: (e) => { browse.samples = e.target.checked; browse.page = 0; saveProto(); render(); } }), " Sample entries"));
+  }
+  const saveProto = () => { draft.browseProto = { samples: browse.samples, nav: navStyle }; saveDraft(); };
+  function setNav(k) { navStyle = k; panel.setAttribute("data-nav", k); saveProto(); render(); notify(); }
+
   function render() {
     hideHover();
+    browseCtl = null;
+    if (!open) return;
+    renderProto();
     tabs.replaceChildren(
-      button("Browse", () => { tab = "browse"; render(); }, { cls: tab === "browse" ? "wz-gl-on" : "" }),
-      button("Submit", () => { tab = "submit"; render(); }, { cls: tab === "submit" ? "wz-gl-on" : "" }),
+      button("◀ Editor", () => setView("editor"), { cls: "wz-gl-back", title: "Back to the editor" }),
+      button("Browse", () => setView("browse"), { cls: "wz-gl-innertab" + (tab === "browse" ? " wz-gl-on" : "") }),
+      button("Submit", () => setView("submit"), { cls: "wz-gl-innertab" + (tab === "submit" ? " wz-gl-on" : "") }),
       status, h("span", { class: "wz-gl-grow" }), sizeButtons());
-    content.replaceChildren(tab === "browse" ? browseTab() : submitView());
+    panel.classList.toggle("browse", tab === "browse");
     applyZoom();
-    requestAnimationFrame(refit);
+    if (tab === "browse") {
+      if (browse.samples && !extrasAsked) { extrasAsked = true; loadSampleExtras().then((more) => { if (more && open && tab === "browse") render(); }); }
+      const ctl = browseCtl = browseTab();
+      content.replaceChildren(ctl.el);
+      ctl.layout();
+      // Again once the window has settled (a nav style or size just changed).
+      requestAnimationFrame(() => { if (browseCtl === ctl) ctl.layout(); });
+    } else {
+      content.replaceChildren(submitView());
+      requestAnimationFrame(refit);
+    }
   }
-  checkFrameImages().then(() => { if (panel.classList.contains("on")) render(); });
+  function setView(v) {
+    if (v === "editor") { open = false; panel.classList.remove("on"); hideHover(); }
+    else { tab = v; open = true; panel.classList.add("on"); render(); }
+    notify();
+  }
+  checkFrameImages().then(() => { if (open) render(); });
+  whenFontsReady().then(() => { if (open) render(); });
+  let fontTimer = null;
+  onFontsChange(() => { clearTimeout(fontTimer); fontTimer = setTimeout(() => { if (open) render(); }, 50); });
   const changed = () => { tidySets(); saveDraft(); render(); };
 
   // ---- Submit ----
@@ -207,7 +266,8 @@ export function buildGalleryPanel({ requestRead, editorLabel }) {
       h("span", { class: "wz-gl-grow" }),
       button("Preview request", () => { preview = requestText(); render(); }),
       removeAllButton());
-    bar.children[2].disabled = sel.length < 2;
+    bar.children[2].disabled = sel.length < 2 || sel.length > SET_CAP;
+    if (sel.length > SET_CAP) bar.children[2].title = `Sets can have up to ${SET_CAP} cards`;
     bar.children[3].disabled = !sel.some((p) => p.group);
     const note = h("p", { class: "wz-gl-note", text: draft.parts.length
       ? "Click parts to select them, then Link selected to make a set. Anything not in a set is submitted on its own."
@@ -246,10 +306,10 @@ export function buildGalleryPanel({ requestRead, editorLabel }) {
         onchange: (e) => { open.forEach((r) => { r.pick = e.target.checked; }); render(); } });
       box.appendChild(h("div", { class: "wz-gl-pgroup" },
         h("label", {}, all, " ", h("b", { text: g.name }), h("small", { text: ` (${g.parts.length})` })),
-        open.length > 1 ? [" ", button("Add this group as a set", () => {
+        open.length > 1 ? [" ", ((b) => { if (open.length > SET_CAP) { b.disabled = true; b.title = `Sets can have up to ${SET_CAP} cards. Tick some and use Add ticked as one set.`; } return b; })(button("Add this group as a set", () => {
           read.groups.forEach((x) => x.parts.forEach((r) => { r.pick = x === g && !added(g, r); }));
           addTicked(g.name);
-        })] : null,
+        }))] : null,
         h("div", { class: "wz-gl-pparts" }, g.parts.map((raw) => {
           const done = added(g, raw);
           return h("label", { class: done ? "done" : "" },
@@ -267,6 +327,7 @@ export function buildGalleryPanel({ requestRead, editorLabel }) {
       if (raw.pick && !draft.parts.some((p) => sameCard(p, read.source, g.name, raw))) picked.push({ raw, group: g.name });
     }));
     if (!picked.length) return say("Tick some cards first.");
+    if (asSet && picked.length > SET_CAP) return say(`Sets can have up to ${SET_CAP} cards. Untick some, or add them on their own.`);
     say(`Adding ${picked.length}…`);
     const added = [];
     for (const { raw, group } of picked) {
@@ -348,10 +409,11 @@ export function buildGalleryPanel({ requestRead, editorLabel }) {
 
   // ---- Browse (preview) ----
   function browseTab() {
-    draft.browseProto = { layout: browse.layout, samples: browse.samples };
-    saveDraft();
     return browseView({
       state: browse,
+      samples: browse.samples,
+      wheelPages: () => !wheelPages || wheelPages(),
+      onPage: hideHover,
       entries: allEntries(entries(), { samples: browse.samples, votes: draft.votes, sampleVotes }),
       hoverable,
       rerender: render,
@@ -366,15 +428,19 @@ export function buildGalleryPanel({ requestRead, editorLabel }) {
 
   return {
     el: panel,
-    isOpen: () => panel.classList.contains("on"),
-    setOpen(on) { panel.classList.toggle("on", on); if (on) render(); },
+    isOpen: () => open,
+    setOpen(on) { setView(on ? tab : "editor"); },
+    view: () => (open ? tab : "editor"),
+    setView,
+    navStyle: () => navStyle,
+    onChange(f) { listeners.push(f); },
     receiveCards(data) {
       clearTimeout(readTimer);
       read = { source: data.source, label: editorLabel(data.source), groups: (data.groups || []).map((g) => ({ name: g.name, parts: (g.parts || []).map((p) => ({ ...p, pick: false })) })) };
       const n = read.groups.reduce((s, g) => s + g.parts.length, 0);
       say(`Found ${n} card${n === 1 ? "" : "s"}. Tick what to add.`);
       tab = "submit";
-      if (panel.classList.contains("on")) render();
+      if (open) render();
     }
   };
 }

@@ -13,11 +13,11 @@ Make your own custom cards without leaving Undercards, and keep chatting while y
 - If feildmaster's editor stays black inside the Card Maker, a note in the window offers a **hotfix** (also on the Card Maker tab). It's a stopgap until his editor is updated.
 
 ### New: Card Gallery (preview)
-Share the cards you make. It's part of the Card Maker: press **Gallery** in its title bar.
+Share the cards you make. It's part of the Card Maker: use **Browse** and **Submit** in its title bar (**Editor** takes you back).
 - **Read from this editor** lists every group and card you've made in the editor that's open. Tick the ones to add, one by one or a whole group as a set. UC Editor group files (.uceditor) and PNG downloads can be added too.
-- Link parts into sets (A, B, C…), rename them, and preview your request. **Browse** shows how they'll look, in four lists (**Newest**, This Week, This Month, All Time) as a compact grid: sets show only their name, likes and dislikes sit under each card or set, and hovering a card shows it bigger with who posted it and when.
-- **Size** (S / M / L / Fill) zooms the cards. Fill stretches them to the window's width.
-- Cards use the game's DTM-Mono font and card frames.
+- Link parts into sets (A, B, C…) of up to 15 cards, rename them, and preview your request. **Browse** shows how they'll look, in four lists (**Newest**, This Week, This Month, All Time), a page at a time: sets show only their name, likes and dislikes sit under each card or set, and hovering a card shows it bigger with who posted it and when. Turn pages with ‹ › at the bottom right, or the scroll wheel (**Gallery: Scroll Wheel Pages**).
+- **Size** (Small / Medium / Large) zooms the cards. Large stretches them to the window's width.
+- Cards use the game's DTM-Mono font and card frames, and long names and text shrink to fit, the way UC Editor does it (thanks to sernon158).
 - The gallery isn't live yet: nothing is sent, and Browse's dates and scores are made up. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
 
 ## 1.6.2

@@ -110,15 +110,67 @@ export function tile(p) {
     p.type === "Monster" ? h("div", { class: "wz-gl-hp", text: String(p.hp ?? "") }) : null);
 }
 
-// Shrink a name or text box's font until it fits, like the editors do.
+// Fit names and text the way UC Editor does (sernon158's getResizedFontSize,
+// used with his permission): measure a copy of the card at 100%, and while
+// the text is as tall as its box or taller, take 0.5px off the font size,
+// at most 12 times. Text starts at 12px (box 81px, enchantments 184px);
+// names start at 14px and must stay on one line (box 25px). Results are
+// cached by card, so a page of cards is measured once.
+const FIT_STEPS = 12;
+const fitCache = new Map();
+let measureHost = null;
+function host() {
+  if (!measureHost || !measureHost.isConnected) {
+    measureHost = h("div", { "aria-hidden": "true", style: { position: "fixed", left: "-10000px", top: "0", visibility: "hidden", pointerEvents: "none", zoom: "1" } });
+    (document.body || document.documentElement).appendChild(measureHost);
+  }
+  return measureHost;
+}
+function shrink(sizeEl, measureEl, start, max, wide) {
+  let size = start, i = 0;
+  sizeEl.style.fontSize = size + "px";
+  const over = () => measureEl.offsetHeight >= max || (wide && measureEl.scrollWidth > measureEl.clientWidth + 1);
+  while (i < FIT_STEPS && over()) { size -= 0.5; sizeEl.style.fontSize = size + "px"; i++; }
+  return size;
+}
+// Sizes measured before the card font has loaded are wrong, so they aren't
+// kept, and everything is measured again whenever a font finishes loading.
+let fontsReady = false;
+const fontListeners = [];
+export function onFontsChange(f) { fontListeners.push(f); }
+if (typeof document !== "undefined" && document.fonts) {
+  document.fonts.addEventListener("loadingdone", () => { fitCache.clear(); fontListeners.forEach((f) => f()); });
+}
+export function whenFontsReady() {
+  if (fontsReady || !document.fonts) return Promise.resolve();
+  return Promise.all([document.fonts.load('12px "DTM-Mono"'), document.fonts.load('12px "WZ DTM Mono"')].map((p) => p.catch(() => null)))
+    .then(() => document.fonts.ready)
+    .then(() => { fontsReady = true; fitCache.clear(); });
+}
+export function fitCard(card) {
+  const name = card.querySelector(".wz-gl-name"), text = card.querySelector(".wz-gl-text > div"), art = card.querySelector(".wz-gl-arttext");
+  const key = card.className + "\u0001" + (name ? name.innerHTML : "") + "\u0001" + (text ? text.innerHTML : "") + "\u0001" + (art ? art.innerHTML : "");
+  let r = fitCache.get(key);
+  if (!r) {
+    const c = card.cloneNode(true);
+    c.style.zoom = "1";
+    host().appendChild(c);
+    r = {};
+    const n = c.querySelector(".wz-gl-name");
+    if (n) r.name = shrink(n, n.firstElementChild || n, 14, 25, n);
+    const t = c.querySelector(".wz-gl-text > div");
+    if (t) r.text = shrink(t, t, 12, card.classList.contains("t-enchant") ? 184 : 81);
+    const a = c.querySelector(".wz-gl-arttext");
+    if (a) { let size = 11, i = 0; a.style.fontSize = size + "px"; while (i < FIT_STEPS && a.scrollHeight > a.clientHeight + 1) { size -= 0.5; a.style.fontSize = size + "px"; i++; } r.art = size; }
+    c.remove();
+    if (fontsReady) { if (fitCache.size > 2000) fitCache.clear(); fitCache.set(key, r); }
+  }
+  if (name && r.name) name.style.fontSize = r.name + "px";
+  if (text && r.text) text.style.fontSize = r.text + "px";
+  if (art && r.art) art.style.fontSize = r.art + "px";
+}
 export function fitText(root) {
-  root.querySelectorAll(".wz-gl-name, .wz-gl-text > div, .wz-gl-arttext").forEach((el) => {
-    const isName = el.classList.contains("wz-gl-name");
-    const box = el.parentElement.classList.contains("wz-gl-text") ? el.parentElement : el;
-    let size = parseFloat(getComputedStyle(el).fontSize);
-    const over = () => (isName ? el.scrollWidth > el.clientWidth + 1 : box.scrollHeight > box.clientHeight + 1 || el.scrollHeight > box.clientHeight + 1);
-    while (size > 7 && over()) el.style.fontSize = (size -= 0.5) + "px";
-  });
+  root.querySelectorAll(".wz-gl-card:not(.wz-gl-pic), .wz-gl-artifact").forEach(fitCard);
 }
 
 // The game's card font. "DTM-Mono" if undercards.net already provides it;
@@ -127,7 +179,9 @@ export const CARD_FONT = `"DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace`;
 export const TILE_CSS = `
 @font-face { font-family: "WZ DTM Mono"; src: url("/fonts/DTM-Mono.otf") format("opentype"), url("${UCE}images/fonts/DTM-Mono.otf") format("opentype"); font-display: swap; }
 .wz-gl-card, .wz-gl-artifact { font-family: ${CARD_FONT}; }
-.wz-gl-card { position: relative; width: ${CARD_W}px; height: ${CARD_H}px; color: #fff; font-size: 12px; line-height: 1.15; text-align: center; overflow: hidden; flex: none; }
+/* Like the game (Bootstrap): sizes include padding and borders, inside or outside the window. */
+.wz-gl-card, .wz-gl-card *, .wz-gl-artifact, .wz-gl-artifact * { box-sizing: border-box; }
+.wz-gl-card { position: relative; width: ${CARD_W}px; height: ${CARD_H}px; color: #fff; font-size: 12px; line-height: 1.42857; text-align: center; overflow: hidden; flex: none; }
 .wz-gl-card > * { position: absolute; }
 .wz-gl-bg { left: 8px; top: 8px; width: 160px; height: 230px; background: #000; }
 .wz-gl-art { left: 8px; top: 36px; width: 160px; height: 90px; image-rendering: pixelated; }
@@ -145,14 +199,15 @@ export const TILE_CSS = `
 .t-monster .v2 { left: 49px; top: 210px; width: 2px; height: 30px; }
 .t-monster .v3 { left: 125px; top: 210px; width: 2px; height: 30px; }
 .t-enchant .l2 { left: 6px; top: 52px; width: 164px; height: 2px; }
-.wz-gl-name { left: 8px; top: 8px; width: 106px; height: 24px; line-height: 24px; font-size: 14px; padding: 0 5px; white-space: nowrap; overflow: hidden; text-align: left; z-index: 5; }
-.t-enchant .wz-gl-name { width: 150px; }
-.wz-gl-cost { left: 128px; top: 8px; width: 40px; height: 24px; line-height: 24px; font-size: 20px; color: #00d0ff; z-index: 5; }
+.wz-gl-name { left: 8px; top: 9px; width: 116px; height: 24px; line-height: 24px; font-size: 14px; padding: 0 5px; overflow: hidden; text-align: left; z-index: 5; }
+.wz-gl-name > span { display: block; min-height: 100%; overflow-wrap: normal; }
+.t-enchant .wz-gl-name { width: 160px; }
+.wz-gl-cost { left: 128px; top: 9px; width: 40px; height: 24px; line-height: 24px; font-size: 20px; color: #00d0ff; z-index: 5; }
 .wz-gl-tribes { right: 12px; top: 106px; height: 16px; width: 80px; z-index: 6; }
 .wz-gl-tribes img { position: absolute; top: 0; max-width: 16px; max-height: 16px; }
-.wz-gl-text { left: 8px; top: 130px; width: 160px; height: 78px; display: table; z-index: 5; font-size: 12px; }
-.t-enchant .wz-gl-text { top: 56px; height: 180px; }
-.wz-gl-text > div { display: table-cell; vertical-align: middle; padding: 0 4px; }
+.wz-gl-text { left: 8px; top: 129px; width: 160px; height: 80px; display: table; z-index: 5; font-size: 12px; }
+.t-enchant .wz-gl-text { top: 54px; height: 183px; }
+.wz-gl-text > div { display: table-cell; vertical-align: middle; }
 .wz-gl-atk, .wz-gl-hp { top: 213px; width: 40px; height: 24px; line-height: 24px; font-size: 20px; z-index: 5; }
 .wz-gl-atk { left: 8px; color: #f0003c; } .wz-gl-hp { left: 128px; color: #0dd000; }
 .wz-gl-rar { left: 76px; top: 213px; width: 24px; height: 24px; z-index: 5; image-rendering: pixelated; }

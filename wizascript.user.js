@@ -1058,11 +1058,11 @@ Make your own custom cards without leaving Undercards, and keep chatting while y
 - If feildmaster's editor stays black inside the Card Maker, a note in the window offers a **hotfix** (also on the Card Maker tab). It's a stopgap until his editor is updated.
 
 ### New: Card Gallery (preview)
-Share the cards you make. It's part of the Card Maker: press **Gallery** in its title bar.
+Share the cards you make. It's part of the Card Maker: use **Browse** and **Submit** in its title bar (**Editor** takes you back).
 - **Read from this editor** lists every group and card you've made in the editor that's open. Tick the ones to add, one by one or a whole group as a set. UC Editor group files (.uceditor) and PNG downloads can be added too.
-- Link parts into sets (A, B, C\u2026), rename them, and preview your request. **Browse** shows how they'll look, in four lists (**Newest**, This Week, This Month, All Time) as a compact grid: sets show only their name, likes and dislikes sit under each card or set, and hovering a card shows it bigger with who posted it and when.
-- **Size** (S / M / L / Fill) zooms the cards. Fill stretches them to the window's width.
-- Cards use the game's DTM-Mono font and card frames.
+- Link parts into sets (A, B, C\u2026) of up to 15 cards, rename them, and preview your request. **Browse** shows how they'll look, in four lists (**Newest**, This Week, This Month, All Time), a page at a time: sets show only their name, likes and dislikes sit under each card or set, and hovering a card shows it bigger with who posted it and when. Turn pages with \u2039 \u203A at the bottom right, or the scroll wheel (**Gallery: Scroll Wheel Pages**).
+- **Size** (Small / Medium / Large) zooms the cards. Large stretches them to the window's width.
+- Cards use the game's DTM-Mono font and card frames, and long names and text shrink to fit, the way UC Editor does it (thanks to sernon158).
 - The gallery isn't live yet: nothing is sent, and Browse's dates and scores are made up. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
 
 ## 1.6.2
@@ -1189,7 +1189,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   function openVoid(message, select) {
     const w = getPageWindow();
     if (!canOpenVoid()) return false;
-    const go2 = () => {
+    const go = () => {
       if (!document.querySelector("#chat-public-0")) w.openRoom(0);
       let tries = 0;
       const fill = () => {
@@ -1207,8 +1207,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       };
       fill();
     };
-    if (closeDialogs()) setTimeout(go2, 350);
-    else go2();
+    if (closeDialogs()) setTimeout(go, 350);
+    else go();
     return true;
   }
 
@@ -3064,7 +3064,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         "Cards you make here are saved separately from the editor's own site. Use the editor's download/upload to move them across.",
         "If feildmaster's editor stays black, turn on the <b>hotfix</b> (on the Card Maker tab, or the note that appears in the window)."
       ].concat(settingOn("cardMaker.gallery", true) ? [
-        "<b>Gallery</b> (title bar): <b>Read from this editor</b> lists the cards you've made; tick the ones to add, link them into sets, and preview your request. (The gallery isn't live yet, so nothing is sent.)"
+        "<b>Browse</b> / <b>Submit</b> (title bar) open the Card Gallery. In Submit, <b>Read from this editor</b> lists the cards you've made; tick the ones to add, link them into sets, and preview your request. (The gallery isn't live yet, so nothing is sent.)"
       ] : [])
     }
   };
@@ -5760,13 +5760,13 @@ Version: v${version}`;
         artifactContainer.innerHTML = "";
         try {
           const decoded = decodeDeck(deck.deckCode);
-          const artifacts3 = ((decoded == null ? void 0 : decoded.artifactIds) || []).map((id) => getArtifactById(id)).filter(Boolean);
-          artifacts3.forEach((artifact, index) => {
+          const artifacts4 = ((decoded == null ? void 0 : decoded.artifactIds) || []).map((id) => getArtifactById(id)).filter(Boolean);
+          artifacts4.forEach((artifact, index) => {
             const img = document.createElement("img");
             img.src = `images/artifacts/${artifact.image}.png`;
             img.title = artifact.name;
             artifactContainer.appendChild(img);
-            if (index < artifacts3.length - 1) artifactContainer.append(" ");
+            if (index < artifacts4.length - 1) artifactContainer.append(" ");
           });
         } catch (err) {
           logger4.error("card", "Artifact decode failed", err, deck);
@@ -9925,8 +9925,8 @@ Version: v${version}`;
       custom.title = "Custom colour";
       custom.addEventListener("change", () => recolorTier(tierId, custom.value));
       swatches.appendChild(custom);
-      const grid2 = document.createElement("div");
-      grid2.className = "wz-tl-editor-buttons";
+      const grid = document.createElement("div");
+      grid.className = "wz-tl-editor-buttons";
       const btn = (label, fn, opts = {}) => {
         const b = document.createElement("button");
         b.type = "button";
@@ -9939,7 +9939,7 @@ Version: v${version}`;
           if (opts.close) closeEditor();
           else reopen();
         });
-        grid2.appendChild(b);
+        grid.appendChild(b);
         return b;
       };
       const reopen = () => {
@@ -9956,7 +9956,7 @@ Version: v${version}`;
       del.classList.add("wz-tl-danger");
       btn("Done", () => {
       }, { close: true }).style.gridColumn = "1 / -1";
-      el3.append(name, swatches, grid2);
+      el3.append(name, swatches, grid);
       body.appendChild(el3);
       const bodyRect = body.getBoundingClientRect();
       const aRect = anchor.getBoundingClientRect();
@@ -11926,20 +11926,89 @@ Version: v${version}`;
       p.type === "Monster" ? h("div", { class: "wz-gl-hp", text: String((_c = p.hp) != null ? _c : "") }) : null
     );
   }
-  function fitText(root) {
-    root.querySelectorAll(".wz-gl-name, .wz-gl-text > div, .wz-gl-arttext").forEach((el3) => {
-      const isName = el3.classList.contains("wz-gl-name");
-      const box = el3.parentElement.classList.contains("wz-gl-text") ? el3.parentElement : el3;
-      let size = parseFloat(getComputedStyle(el3).fontSize);
-      const over = () => isName ? el3.scrollWidth > el3.clientWidth + 1 : box.scrollHeight > box.clientHeight + 1 || el3.scrollHeight > box.clientHeight + 1;
-      while (size > 7 && over()) el3.style.fontSize = (size -= 0.5) + "px";
+  var FIT_STEPS = 12;
+  var fitCache = /* @__PURE__ */ new Map();
+  var measureHost = null;
+  function host() {
+    if (!measureHost || !measureHost.isConnected) {
+      measureHost = h("div", { "aria-hidden": "true", style: { position: "fixed", left: "-10000px", top: "0", visibility: "hidden", pointerEvents: "none", zoom: "1" } });
+      (document.body || document.documentElement).appendChild(measureHost);
+    }
+    return measureHost;
+  }
+  function shrink(sizeEl, measureEl, start, max, wide) {
+    let size = start, i = 0;
+    sizeEl.style.fontSize = size + "px";
+    const over = () => measureEl.offsetHeight >= max || wide && measureEl.scrollWidth > measureEl.clientWidth + 1;
+    while (i < FIT_STEPS && over()) {
+      size -= 0.5;
+      sizeEl.style.fontSize = size + "px";
+      i++;
+    }
+    return size;
+  }
+  var fontsReady = false;
+  var fontListeners = [];
+  function onFontsChange(f) {
+    fontListeners.push(f);
+  }
+  if (typeof document !== "undefined" && document.fonts) {
+    document.fonts.addEventListener("loadingdone", () => {
+      fitCache.clear();
+      fontListeners.forEach((f) => f());
     });
+  }
+  function whenFontsReady() {
+    if (fontsReady || !document.fonts) return Promise.resolve();
+    return Promise.all([document.fonts.load('12px "DTM-Mono"'), document.fonts.load('12px "WZ DTM Mono"')].map((p) => p.catch(() => null))).then(() => document.fonts.ready).then(() => {
+      fontsReady = true;
+      fitCache.clear();
+    });
+  }
+  function fitCard(card) {
+    const name = card.querySelector(".wz-gl-name"), text = card.querySelector(".wz-gl-text > div"), art = card.querySelector(".wz-gl-arttext");
+    const key2 = card.className + "" + (name ? name.innerHTML : "") + "" + (text ? text.innerHTML : "") + "" + (art ? art.innerHTML : "");
+    let r = fitCache.get(key2);
+    if (!r) {
+      const c = card.cloneNode(true);
+      c.style.zoom = "1";
+      host().appendChild(c);
+      r = {};
+      const n = c.querySelector(".wz-gl-name");
+      if (n) r.name = shrink(n, n.firstElementChild || n, 14, 25, n);
+      const t = c.querySelector(".wz-gl-text > div");
+      if (t) r.text = shrink(t, t, 12, card.classList.contains("t-enchant") ? 184 : 81);
+      const a = c.querySelector(".wz-gl-arttext");
+      if (a) {
+        let size = 11, i = 0;
+        a.style.fontSize = size + "px";
+        while (i < FIT_STEPS && a.scrollHeight > a.clientHeight + 1) {
+          size -= 0.5;
+          a.style.fontSize = size + "px";
+          i++;
+        }
+        r.art = size;
+      }
+      c.remove();
+      if (fontsReady) {
+        if (fitCache.size > 2e3) fitCache.clear();
+        fitCache.set(key2, r);
+      }
+    }
+    if (name && r.name) name.style.fontSize = r.name + "px";
+    if (text && r.text) text.style.fontSize = r.text + "px";
+    if (art && r.art) art.style.fontSize = r.art + "px";
+  }
+  function fitText(root) {
+    root.querySelectorAll(".wz-gl-card:not(.wz-gl-pic), .wz-gl-artifact").forEach(fitCard);
   }
   var CARD_FONT = `"DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace`;
   var TILE_CSS = `
 @font-face { font-family: "WZ DTM Mono"; src: url("/fonts/DTM-Mono.otf") format("opentype"), url("${UCE}images/fonts/DTM-Mono.otf") format("opentype"); font-display: swap; }
 .wz-gl-card, .wz-gl-artifact { font-family: ${CARD_FONT}; }
-.wz-gl-card { position: relative; width: ${CARD_W}px; height: ${CARD_H}px; color: #fff; font-size: 12px; line-height: 1.15; text-align: center; overflow: hidden; flex: none; }
+/* Like the game (Bootstrap): sizes include padding and borders, inside or outside the window. */
+.wz-gl-card, .wz-gl-card *, .wz-gl-artifact, .wz-gl-artifact * { box-sizing: border-box; }
+.wz-gl-card { position: relative; width: ${CARD_W}px; height: ${CARD_H}px; color: #fff; font-size: 12px; line-height: 1.42857; text-align: center; overflow: hidden; flex: none; }
 .wz-gl-card > * { position: absolute; }
 .wz-gl-bg { left: 8px; top: 8px; width: 160px; height: 230px; background: #000; }
 .wz-gl-art { left: 8px; top: 36px; width: 160px; height: 90px; image-rendering: pixelated; }
@@ -11957,14 +12026,15 @@ Version: v${version}`;
 .t-monster .v2 { left: 49px; top: 210px; width: 2px; height: 30px; }
 .t-monster .v3 { left: 125px; top: 210px; width: 2px; height: 30px; }
 .t-enchant .l2 { left: 6px; top: 52px; width: 164px; height: 2px; }
-.wz-gl-name { left: 8px; top: 8px; width: 106px; height: 24px; line-height: 24px; font-size: 14px; padding: 0 5px; white-space: nowrap; overflow: hidden; text-align: left; z-index: 5; }
-.t-enchant .wz-gl-name { width: 150px; }
-.wz-gl-cost { left: 128px; top: 8px; width: 40px; height: 24px; line-height: 24px; font-size: 20px; color: #00d0ff; z-index: 5; }
+.wz-gl-name { left: 8px; top: 9px; width: 116px; height: 24px; line-height: 24px; font-size: 14px; padding: 0 5px; overflow: hidden; text-align: left; z-index: 5; }
+.wz-gl-name > span { display: block; min-height: 100%; overflow-wrap: normal; }
+.t-enchant .wz-gl-name { width: 160px; }
+.wz-gl-cost { left: 128px; top: 9px; width: 40px; height: 24px; line-height: 24px; font-size: 20px; color: #00d0ff; z-index: 5; }
 .wz-gl-tribes { right: 12px; top: 106px; height: 16px; width: 80px; z-index: 6; }
 .wz-gl-tribes img { position: absolute; top: 0; max-width: 16px; max-height: 16px; }
-.wz-gl-text { left: 8px; top: 130px; width: 160px; height: 78px; display: table; z-index: 5; font-size: 12px; }
-.t-enchant .wz-gl-text { top: 56px; height: 180px; }
-.wz-gl-text > div { display: table-cell; vertical-align: middle; padding: 0 4px; }
+.wz-gl-text { left: 8px; top: 129px; width: 160px; height: 80px; display: table; z-index: 5; font-size: 12px; }
+.t-enchant .wz-gl-text { top: 54px; height: 183px; }
+.wz-gl-text > div { display: table-cell; vertical-align: middle; }
 .wz-gl-atk, .wz-gl-hp { top: 213px; width: 40px; height: 24px; line-height: 24px; font-size: 20px; z-index: 5; }
 .wz-gl-atk { left: 8px; color: #f0003c; } .wz-gl-hp { left: 128px; color: #0dd000; }
 .wz-gl-rar { left: 76px; top: 213px; width: 24px; height: 24px; z-index: 5; image-rendering: pixelated; }
@@ -12277,9 +12347,10 @@ Version: v${version}`;
       }
     }
   }
+  var SET_CAP = 15;
   function makeSet(members, name = "") {
     const d = getDraft();
-    if (members.length < 2) return null;
+    if (members.length < 2 || members.length > SET_CAP) return null;
     const used = new Set(d.groups.map((g) => g.letter));
     let letter = "A";
     while (used.has(letter)) letter = String.fromCharCode(letter.charCodeAt(0) + 1);
@@ -12302,9 +12373,11 @@ Version: v${version}`;
   // packages/card-maker/gallery/mock.js
   var AUTHORS = ["SampleMaker", "PixelSmith", "TestPlayer", "CardFan", "MockAuthor", "DraftWizard", "ExampleUser", "Placeholder"];
   var SET_NAMES = ["Hotland Heat", "Snowdin Patrol", "Core Meltdown", "Ruins Revival", "Dark World Deals", "Waterfall Echoes", "Royal Lab"];
+  var cardFile = null;
   function gameCards() {
     const w = getPageWindow();
     if (Array.isArray(w.allCards) && w.allCards.length) return w.allCards;
+    if (cardFile && cardFile.length) return cardFile;
     try {
       const ls = JSON.parse(w.localStorage.getItem("allCards") || "[]");
       if (Array.isArray(ls)) return ls;
@@ -12341,11 +12414,55 @@ Version: v${version}`;
       tribes: []
     };
   }
+  var artifacts2 = null;
+  var extras = null;
+  function loadSampleExtras() {
+    if (extras) return extras;
+    const cards2 = gameCards().length ? Promise.resolve(false) : (() => {
+      const cfg = getPageWindow().cardsClientConfig;
+      if (!cfg || !cfg.url) return Promise.resolve(false);
+      return fetch(cfg.url, { credentials: "same-origin" }).then((r) => r.json()).then((d) => {
+        const list = Array.isArray(d) ? d : d && (d.cards || d.allCards) || [];
+        cardFile = typeof list === "string" ? JSON.parse(list) : list;
+        return cardFile.length > 0;
+      }).catch(() => false);
+    })();
+    const arts = fetch("/DecksConfig", { credentials: "same-origin" }).then((r) => r.json()).then((d) => {
+      const raw = d && d.allArtifacts;
+      artifacts2 = ((typeof raw === "string" ? JSON.parse(raw) : raw) || []).filter((a) => a && a.image && !a.disabled && !a.custom);
+      return artifacts2.length > 0;
+    }).catch(() => false);
+    extras = Promise.all([cards2, arts]).then(([a, b]) => {
+      cache = null;
+      return a || b;
+    });
+    return extras;
+  }
+  var ENCHANTS = [
+    ["Sample Bonfire", "After a monster is played here, deal 2 DMG to it."],
+    ["Sample Snowfall", "Monsters here have -1 ATK."],
+    ["Sample Spotlight", "At the end of your turn, give the monster here +1/+1."],
+    ["Sample Echo Flowers", "When a monster here dies, draw 1 card."],
+    ["Sample Conveyor", "At the start of your turn, the monster here gets Haste."],
+    ["Sample Puzzle Floor", "Spells that target a monster here cost 1 more."]
+  ];
+  function artifactPart(a, i) {
+    const rarity = a.unavailable === true ? "TOKEN" : a.legendary === true ? "LEGENDARY" : a.legendary === false ? "COMMON" : String(a.rarity || "COMMON").toUpperCase();
+    return {
+      id: `mocka${i}`,
+      source: "sample",
+      type: "Artifact",
+      name: tr(`artifact-name-${a.id}`) || a.name || "",
+      desc: tr(`artifact-${a.id}`) || (a.description ? String(a.description).replace(/<[^>]+>/g, "") : ""),
+      art: `/images/artifacts/${a.image}.png`,
+      rarity
+    };
+  }
   var cache = null;
   function sampleEntries() {
     if (cache) return cache;
     const cards2 = gameCards().filter((c) => c && c.name && c.image && (c.typeCard === 0 || c.typeCard === 1) && c.rarity !== "TOKEN");
-    if (!cards2.length) return cache = [];
+    if (!cards2.length && !(artifacts2 && artifacts2.length)) return [];
     let seed2 = 12345;
     const rnd = () => (seed2 = seed2 * 1103515245 + 12345 >>> 0) / 4294967296;
     const pool = cards2.slice().sort(() => rnd() - 0.5);
@@ -12367,79 +12484,92 @@ Version: v${version}`;
         sample: true
       });
     }
+    (artifacts2 || []).slice().sort(() => rnd() - 0.5).slice(0, 8).forEach((a, k) => {
+      const part = artifactPart(a, k);
+      out.splice(Math.min(out.length, 3 + k * 5), 0, {
+        key: `samplea${k}`,
+        kind: "single",
+        title: part.name,
+        parts: [part],
+        author: AUTHORS[Math.floor(rnd() * AUTHORS.length)],
+        days: Math.floor(rnd() * rnd() * 120),
+        base: Math.floor(rnd() * rnd() * 140) - 8,
+        sample: true
+      });
+    });
+    ENCHANTS.forEach(([name, desc], k) => {
+      const part = { id: `mocke${k}`, source: "sample", type: "Enchantment", name, desc, art: "" };
+      const setAt = out.findIndex((e) => e.kind === "set" && !e.parts.some((p) => p.type === "Enchantment"));
+      if (k === 0 && setAt >= 0) {
+        out[setAt].parts.push(part);
+        return;
+      }
+      out.splice(Math.min(out.length, 5 + k * 6), 0, {
+        key: `samplee${k}`,
+        kind: "single",
+        title: name,
+        parts: [part],
+        author: AUTHORS[Math.floor(rnd() * AUTHORS.length)],
+        days: Math.floor(rnd() * rnd() * 120),
+        base: Math.floor(rnd() * rnd() * 140) - 8,
+        sample: true
+      });
+    });
     return cache = out;
   }
 
   // packages/card-maker/gallery/browse.js
   var LISTS = [["new", "Newest"], ["week", "This Week"], ["month", "This Month"], ["all", "All Time"]];
-  var LAYOUTS = [["slides", "Slides"], ["tabs", "Tabs"], ["shelves", "Shelves"]];
+  var DT = `"DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace`;
   var BROWSE_CSS = `
-.wz-gl-browse { --wz-gl-accent: #ffd84a; }
-.wz-gl-proto { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 4px 6px; margin-bottom: 10px; border: 1px dashed #665; background: #17150c; font-size: 11px; }
-.wz-gl-proto b { color: #ffd84a; margin-right: 4px; }
-.wz-gl-proto label { margin: 0 0 0 10px; font-weight: normal; cursor: pointer; }
-.wz-gl-dt { font-family: "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; }
+.wz-gl-browse { --wz-gl-accent: #ffd84a; display: flex; flex-direction: column; height: 100%; min-height: 0; }
+.wz-gl-dt { font-family: ${DT}; }
 .wz-gl-empty { opacity: .7; padding: 20px 0; text-align: center; }
-.wz-gl-note2 { opacity: .55; font-size: 11px; margin-top: 10px; text-align: center; }
+.wz-gl-pagearea { flex: 1 1 auto; min-height: 0; overflow: hidden; position: relative; }
+.wz-gl-pagearea .wz-gl-grid { align-content: flex-start; padding-top: 4px; }
+.wz-gl-foot { display: flex; align-items: center; gap: 8px; padding-top: 6px; border-top: 1px solid #2a2a2a; min-height: 30px; }
+.wz-gl-foot .note { opacity: .5; font-size: 11px; }
+.wz-gl-foot .grow { flex: 1; }
+.wz-gl-pager { display: flex; align-items: center; gap: 6px; }
+.wz-gl-pager button { background: #000; border: 2px solid #fff; color: #fff; width: 28px; height: 26px; padding: 0; font: 15px/20px ${DT}; cursor: pointer; }
+.wz-gl-pager button:hover:not(:disabled) { color: var(--wz-gl-accent); border-color: var(--wz-gl-accent); }
+.wz-gl-pager button:disabled { opacity: .3; cursor: default; }
+.wz-gl-pager .n { font: 13px ${DT}; min-width: 54px; text-align: center; }
 
 /* item + votes */
 .wz-gl-item { position: relative; transition: transform .12s; }
 .wz-gl-item:hover { transform: translateY(-2px); }
-.wz-gl-item.set { border: 2px solid #555; border-radius: 0; background: #0a0a0a; padding: 4px 6px 3px; }
+.wz-gl-item.set { border: 2px solid #555; background: #0a0a0a; padding: 4px 6px 3px; }
 .wz-gl-item.set:hover { border-color: #fff; }
-.wz-gl-setname { font-family: "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; font-size: 12px; color: var(--wz-gl-accent); letter-spacing: .5px; }
+.wz-gl-setname { font-family: ${DT}; font-size: 12px; color: var(--wz-gl-accent); letter-spacing: .5px; }
 .wz-gl-votes { gap: 6px; }
 .wz-gl-vote { background: none; border: 0; padding: 0 3px; cursor: pointer; font-size: 13px; line-height: 16px; color: #777; }
 .wz-gl-vote:hover { color: #fff; }
 .wz-gl-vote.up.on { color: #3ee05a; }
 .wz-gl-vote.down.on { color: #ff4d4d; }
-.wz-gl-score { font-family: "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; font-size: 13px; min-width: 28px; }
+.wz-gl-score { font-family: ${DT}; font-size: 13px; min-width: 28px; }
 .wz-gl-score.pos { color: #b9f5c3; } .wz-gl-score.neg { color: #f5b9b9; }
-.wz-gl-rank { color: var(--wz-gl-accent); font: 12px/16px "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; margin-right: 4px; }
+.wz-gl-rank { color: var(--wz-gl-accent); font: 12px/16px ${DT}; margin-right: 4px; }
 .wz-gl-mine { position: absolute; top: -9px; right: -9px; z-index: 3; background: #4464bd; border: 2px solid #8ea6e8; color: #fff; font: 10px/14px Arial, sans-serif; padding: 0 4px; }
 
 /* slide-in */
 @keyframes wz-gl-in-r { from { transform: translateX(60px); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes wz-gl-in-l { from { transform: translateX(-60px); opacity: 0; } to { transform: none; opacity: 1; } }
-.wz-gl-in-r { animation: wz-gl-in-r .28s ease-out; }
-.wz-gl-in-l { animation: wz-gl-in-l .28s ease-out; }
+.wz-gl-in-r { animation: wz-gl-in-r .25s ease-out; }
+.wz-gl-in-l { animation: wz-gl-in-l .25s ease-out; }
 
-/* A: Slides */
-.wz-gl-slides-nav { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 2px 0 4px; }
-.wz-gl-slides-nav .arrow { background: #000; border: 2px solid #fff; color: #fff; width: 30px; height: 30px; font: 16px/24px "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; cursor: pointer; padding: 0; }
-.wz-gl-slides-nav .arrow:hover { color: var(--wz-gl-accent); border-color: var(--wz-gl-accent); }
-.wz-gl-slides-title { min-width: 220px; text-align: center; font-size: 22px; letter-spacing: 1px; }
-.wz-gl-slides-sub { text-align: center; opacity: .6; font-size: 11px; margin-bottom: 4px; }
-.wz-gl-dots { display: flex; justify-content: center; gap: 8px; margin-bottom: 12px; }
-.wz-gl-dots button { width: 10px; height: 10px; padding: 0; border: 2px solid #fff; background: transparent; cursor: pointer; }
-.wz-gl-dots button.on { background: var(--wz-gl-accent); border-color: var(--wz-gl-accent); }
-
-/* B: Tabs */
-.wz-gl-seg { position: relative; display: flex; margin: 0 auto 12px; max-width: 560px; border: 2px solid #fff; background: #000; }
-.wz-gl-seg button { flex: 1 1 0; position: relative; z-index: 1; background: none; border: 0; color: #bbb; padding: 6px 0 5px; font-size: 14px; cursor: pointer; }
+/* list bar */
+.wz-gl-seg { position: relative; display: flex; margin: 0 auto 10px; width: 100%; max-width: 560px; flex: none; border: 2px solid #fff; background: #000; }
+.wz-gl-seg button { flex: 1 1 0; position: relative; z-index: 1; background: none; border: 0; color: #bbb; padding: 6px 0 5px; font-size: 14px; cursor: pointer; font-family: ${DT}; }
 .wz-gl-seg button:hover { color: #fff; }
 .wz-gl-seg button.on { color: #000; }
 .wz-gl-seg .pill { position: absolute; top: 0; bottom: 0; width: 25%; background: var(--wz-gl-accent); transition: left .25s ease; }
-
-/* C: Shelves */
-.wz-gl-shelf { margin-bottom: 14px; }
-.wz-gl-shelf-head { display: flex; align-items: baseline; gap: 10px; border-bottom: 2px solid #333; padding-bottom: 3px; margin-bottom: 8px; }
-.wz-gl-shelf-head .t { font-size: 17px; letter-spacing: .5px; }
-.wz-gl-shelf-head .c { opacity: .55; font-size: 11px; }
-.wz-gl-shelf-head .grow { flex: 1; }
-.wz-gl-linkbtn { background: none; border: 0; color: var(--wz-gl-accent); cursor: pointer; padding: 0 2px; font-size: 12px; }
-.wz-gl-linkbtn:hover { text-decoration: underline; }
-.wz-gl-shelf-body { position: relative; }
-.wz-gl-shelf-row { display: flex; gap: 12px; align-items: flex-end; overflow-x: auto; scroll-behavior: smooth; padding: 10px 30px 6px; scrollbar-width: thin; }
-.wz-gl-shelf-row > .wz-gl-item { flex: none; }
-.wz-gl-shelf-arrow { position: absolute; top: 50%; transform: translateY(-50%); z-index: 4; width: 26px; height: 46px; background: rgba(0,0,0,.85); border: 2px solid #fff; color: #fff; cursor: pointer; padding: 0; font-size: 14px; }
-.wz-gl-shelf-arrow.l { left: 0; } .wz-gl-shelf-arrow.r { right: 0; }
 `;
-  function seed(s) {
+  var seed = (s) => {
     let x = 7;
     for (const c of s) x = x * 31 + c.charCodeAt(0) >>> 0;
     return x;
-  }
+  };
   function allEntries(own, { samples, votes, sampleVotes }) {
     const mine = own.map((e) => {
       const n = seed(e.key + (e.title || ""));
@@ -12457,52 +12587,121 @@ Version: v${version}`;
     const max = key2 === "week" ? 7 : key2 === "month" ? 30 : Infinity;
     return entries2.filter((e) => e.days < max).sort((a, b) => b.score - a.score);
   }
-  var listCaption = (key2) => ({ new: "Latest posts first", week: "Most liked in the last 7 days", month: "Most liked in the last 30 days", all: "Most liked ever" })[key2];
   function browseView(ctx) {
     const { state: state2 } = ctx;
-    const root = h("div", { class: "wz-gl-browse" }, protoBar(ctx));
-    const body = state2.layout === "shelves" ? shelves(ctx) : state2.layout === "tabs" ? tabsView(ctx) : slidesView(ctx);
-    root.appendChild(body);
-    root.appendChild(h("div", { class: "wz-gl-note2", text: state2.samples ? "Sample entries use real cards with made-up authors, dates and scores. Nothing is sent." : "Preview of your own parts. Dates and scores are made up until the gallery is live." }));
-    return root;
-  }
-  function protoBar(ctx) {
-    const { state: state2 } = ctx;
-    return h(
+    const list = listFor(ctx.entries, state2.list);
+    const dir = state2.dir;
+    state2.dir = null;
+    const area = h("div", { class: "wz-gl-pagearea" });
+    const count = h("span", { class: "n" });
+    const prev = h("button", { title: "Previous page", text: "\u2039", onclick: () => turn(-1) });
+    const next = h("button", { title: "Next page", text: "\u203A", onclick: () => turn(1) });
+    const foot = h(
       "div",
-      { class: "wz-gl-proto" },
-      h("b", { text: "Prototype" }),
-      "Layout:",
-      LAYOUTS.map(([k, l]) => button(l, () => {
-        state2.layout = k;
-        state2.dir = null;
-        state2.shelfOpen = null;
-        ctx.rerender();
-      }, { cls: state2.layout === k ? "wz-gl-on" : "" })),
-      h("label", {}, h("input", { type: "checkbox", checked: state2.samples, onchange: (e) => {
-        state2.samples = e.target.checked;
-        ctx.rerender();
-      } }), " Sample entries")
+      { class: "wz-gl-foot" },
+      h("span", { class: "note", text: ctx.samples ? "Sample entries: real cards, made-up authors, dates and scores. Nothing is sent." : "Preview of your own parts. Dates and scores are made up until it's live." }),
+      h("span", { class: "grow" }),
+      h("div", { class: "wz-gl-pager" }, prev, count, next)
     );
+    const el3 = h("div", { class: "wz-gl-browse" }, segBar(ctx, dir), area, foot);
+    const items = list.map((e, i) => item(ctx, e, i + 1, state2.list));
+    let pages = [[]];
+    let animate = dir;
+    function layout2() {
+      const H = area.clientHeight;
+      const grid = h("div", { class: "wz-gl-grid" });
+      area.replaceChildren(grid);
+      if (!items.length) {
+        area.replaceChildren(h("div", { class: "wz-gl-empty wz-gl-dt", text: "* Nothing here yet." }));
+        pages = [[]];
+        return show();
+      }
+      items.forEach((it) => {
+        it.style.display = "";
+        grid.appendChild(it);
+      });
+      items.forEach((it) => it.querySelectorAll(".wz-gl-card:not(.wz-gl-pic), .wz-gl-artifact").forEach(fitCard));
+      const rows = [];
+      let lastLeft = Infinity;
+      items.forEach((it, i) => {
+        const t = it.offsetTop, l = it.offsetLeft;
+        if (!rows.length || l <= lastLeft) rows.push({ start: i, top: t, bottom: t + it.offsetHeight });
+        lastLeft = l;
+        const r = rows[rows.length - 1];
+        r.end = i;
+        r.top = Math.min(r.top, t);
+        r.bottom = Math.max(r.bottom, t + it.offsetHeight);
+      });
+      pages = [];
+      let page = null, pageTop = 0;
+      rows.forEach((r) => {
+        if (!page || r.bottom - pageTop > H) {
+          page = [];
+          pages.push(page);
+          pageTop = r.top;
+        }
+        for (let i = r.start; i <= r.end; i++) page.push(i);
+      });
+      state2.page = Math.max(0, Math.min(state2.page || 0, pages.length - 1));
+      show();
+    }
+    function show() {
+      const grid = area.querySelector(".wz-gl-grid");
+      if (grid) {
+        const on = new Set(pages[state2.page] || []);
+        items.forEach((it, i) => {
+          it.style.display = on.has(i) ? "" : "none";
+        });
+        grid.classList.remove("wz-gl-in-r", "wz-gl-in-l");
+        if (animate) {
+          void grid.offsetWidth;
+          grid.classList.add("wz-gl-in-" + animate);
+          animate = null;
+        }
+      }
+      count.textContent = `${pages.length ? state2.page + 1 : 0} / ${pages.length}`;
+      prev.disabled = state2.page <= 0;
+      next.disabled = state2.page >= pages.length - 1;
+    }
+    function turn(d) {
+      const to = state2.page + d;
+      if (to < 0 || to >= pages.length) return false;
+      state2.page = to;
+      animate = d > 0 ? "r" : "l";
+      ctx.onPage && ctx.onPage();
+      show();
+      return true;
+    }
+    let wheelLock = 0;
+    area.addEventListener("wheel", (e) => {
+      if (!ctx.wheelPages()) return;
+      e.preventDefault();
+      const now = Date.now();
+      if (now < wheelLock || Math.abs(e.deltaY) < 4) return;
+      if (turn(e.deltaY > 0 ? 1 : -1)) wheelLock = now + 280;
+    }, { passive: false });
+    return { el: el3, layout: layout2 };
   }
-  function go(ctx, key2) {
+  function segBar(ctx, dir) {
     const { state: state2 } = ctx;
-    if (key2 === state2.list) return;
-    const from = LISTS.findIndex((l) => l[0] === state2.list), to = LISTS.findIndex((l) => l[0] === key2);
-    state2.dir = to > from ? "r" : "l";
-    state2.list = key2;
-    ctx.rerender();
-  }
-  function grid(ctx, list, animate) {
-    const g = h("div", { class: `wz-gl-grid${animate ? " wz-gl-in-" + animate : ""}` });
-    if (!list.length) return h("div", { class: "wz-gl-empty wz-gl-dt", text: "* Nothing here yet." });
-    list.forEach((e, i) => g.appendChild(item(ctx, e, i + 1)));
-    return g;
+    const i = LISTS.findIndex((l) => l[0] === state2.list);
+    const pill = h("span", { class: "pill", style: { left: (dir ? (i + (dir === "r" ? -1 : 1)) * 25 : i * 25) + "%" } });
+    if (dir) requestAnimationFrame(() => requestAnimationFrame(() => {
+      pill.style.left = i * 25 + "%";
+    }));
+    const go = (key2) => {
+      if (key2 === state2.list) return;
+      const to = LISTS.findIndex((l) => l[0] === key2);
+      state2.dir = to > i ? "r" : "l";
+      state2.list = key2;
+      state2.page = 0;
+      ctx.rerender();
+    };
+    return h("div", { class: "wz-gl-seg" }, pill, LISTS.map(([k, l]) => h("button", { type: "button", class: k === state2.list ? "on" : "", text: l, onclick: () => go(k) })));
   }
   function item(ctx, e, rank, listKey) {
     const isSet = e.kind === "set";
     const vote = (dir) => ctx.vote(e, dir);
-    const showRank = (listKey || ctx.state.list) !== "new";
     return h(
       "div",
       { class: `wz-gl-item${isSet ? " set" : ""}`, "data-key": e.key },
@@ -12512,99 +12711,12 @@ Version: v${version}`;
       h(
         "div",
         { class: "wz-gl-votes" },
-        rank && showRank ? h("span", { class: "wz-gl-rank", title: "Rank", text: "#" + rank }) : null,
-        h("button", { class: `wz-gl-vote up${e.vote === 1 ? " on" : ""}`, title: "Like", text: "\u25B2", onclick: () => vote(1) }),
+        listKey !== "new" ? h("span", { class: "wz-gl-rank", title: "Rank", text: "#" + rank }) : null,
+        h("button", { type: "button", class: `wz-gl-vote up${e.vote === 1 ? " on" : ""}`, title: "Like", text: "\u25B2", onclick: () => vote(1) }),
         h("span", { class: `wz-gl-score${e.score > 0 ? " pos" : e.score < 0 ? " neg" : ""}`, text: String(e.score) }),
-        h("button", { class: `wz-gl-vote down${e.vote === -1 ? " on" : ""}`, title: "Dislike", text: "\u25BC", onclick: () => vote(-1) })
+        h("button", { type: "button", class: `wz-gl-vote down${e.vote === -1 ? " on" : ""}`, title: "Dislike", text: "\u25BC", onclick: () => vote(-1) })
       )
     );
-  }
-  function slidesView(ctx) {
-    const { state: state2 } = ctx;
-    const i = LISTS.findIndex((l) => l[0] === state2.list);
-    const step = (d) => go(ctx, LISTS[(i + d + LISTS.length) % LISTS.length][0]);
-    const dir = state2.dir;
-    state2.dir = null;
-    return h(
-      "div",
-      {},
-      h(
-        "div",
-        { class: "wz-gl-slides-nav" },
-        h("button", { class: "arrow", title: "Previous list", text: "\u25C0", onclick: () => step(-1) }),
-        h("div", { class: "wz-gl-slides-title wz-gl-dt", text: LISTS[i][1] }),
-        h("button", { class: "arrow", title: "Next list", text: "\u25B6", onclick: () => step(1) })
-      ),
-      h("div", { class: "wz-gl-slides-sub", text: listCaption(state2.list) }),
-      h("div", { class: "wz-gl-dots" }, LISTS.map(([k, l]) => h("button", { class: k === state2.list ? "on" : "", title: l, onclick: () => go(ctx, k) }))),
-      grid(ctx, listFor(ctx.entries, state2.list), dir)
-    );
-  }
-  function tabsView(ctx) {
-    const { state: state2 } = ctx;
-    const i = LISTS.findIndex((l) => l[0] === state2.list);
-    const dir = state2.dir;
-    state2.dir = null;
-    const pill = h("span", { class: "pill", style: { left: (dir ? (i + (dir === "r" ? -1 : 1)) * 25 : i * 25) + "%" } });
-    if (dir) requestAnimationFrame(() => requestAnimationFrame(() => {
-      pill.style.left = i * 25 + "%";
-    }));
-    return h(
-      "div",
-      {},
-      h("div", { class: "wz-gl-seg wz-gl-dt" }, pill, LISTS.map(([k, l]) => h("button", { class: k === state2.list ? "on" : "", text: l, onclick: () => go(ctx, k) }))),
-      grid(ctx, listFor(ctx.entries, state2.list), dir)
-    );
-  }
-  function shelves(ctx) {
-    const { state: state2 } = ctx;
-    if (state2.shelfOpen) {
-      const [k, l] = LISTS.find((x) => x[0] === state2.shelfOpen);
-      const list = listFor(ctx.entries, k);
-      return h(
-        "div",
-        { class: "wz-gl-shelf" },
-        h(
-          "div",
-          { class: "wz-gl-shelf-head" },
-          h("button", { class: "wz-gl-linkbtn", text: "\u2039 All lists", onclick: () => {
-            state2.shelfOpen = null;
-            ctx.rerender();
-          } }),
-          h("span", { class: "t wz-gl-dt", text: l }),
-          h("span", { class: "c", text: `${list.length} \xB7 ${listCaption(k)}` })
-        ),
-        grid(ctx, list, "r")
-      );
-    }
-    return h("div", {}, LISTS.map(([k, l]) => {
-      const list = listFor(ctx.entries, k);
-      const row2 = h("div", { class: "wz-gl-shelf-row" }, list.slice(0, 14).map((e, i) => item(ctx, e, i + 1, k)));
-      if (!list.length) row2.appendChild(h("div", { class: "wz-gl-empty wz-gl-dt", text: "* Nothing here yet." }));
-      const scroll = (d) => row2.scrollBy({ left: d * row2.clientWidth * 0.8 });
-      return h(
-        "div",
-        { class: "wz-gl-shelf" },
-        h(
-          "div",
-          { class: "wz-gl-shelf-head" },
-          h("span", { class: "t wz-gl-dt", text: l }),
-          h("span", { class: "c", text: listCaption(k) }),
-          h("span", { class: "grow" }),
-          list.length ? h("button", { class: "wz-gl-linkbtn", text: `See all ${list.length} \u203A`, onclick: () => {
-            state2.shelfOpen = k;
-            ctx.rerender();
-          } }) : null
-        ),
-        h(
-          "div",
-          { class: "wz-gl-shelf-body" },
-          list.length > 3 ? h("button", { class: "wz-gl-shelf-arrow l", text: "\u25C0", title: "Scroll left", onclick: () => scroll(-1) }) : null,
-          row2,
-          list.length > 3 ? h("button", { class: "wz-gl-shelf-arrow r", text: "\u25B6", title: "Scroll right", onclick: () => scroll(1) }) : null
-        )
-      );
-    }));
   }
 
   // packages/card-maker/gallery/panel.js
@@ -12613,11 +12725,25 @@ Version: v${version}`;
   var COLORS = ["#e6b422", "#4aa3df", "#e05a5a", "#5cc46a", "#b07de0", "#e08a3c", "#3cc8c0", "#d65ca8"];
   var TYPE_COLOR = { Monster: "#f0003c", Spell: "#41fcff", Enchantment: "#fca500", Artifact: "gold" };
   var SOURCE_LABEL = { feildmaster: "feildmaster's editor", sernon: "UC Editor", picture: "picture" };
-  var SIZES = [["small", "S", 0.55, "Small cards"], ["medium", "M", 0.75, "Medium cards"], ["large", "L", 1, "Full-size cards"], ["fill", "Fill", 0, "Zoom cards to fill the width"]];
+  var SIZES = [["small", "Small", 0.75, "Small cards"], ["medium", "Medium", 1, "Full-size cards"], ["large", "Large", 0, "Zoom cards to fill the width"]];
+  var NAV_STYLES = [["a", "Title bar"], ["b", "Side rail"], ["c", "Banner"]];
   var GAP = 10;
   var CSS4 = `
 .wz-gl-panel { --wz-gl-z: .6; position: absolute; inset: 0; z-index: 7; overflow: auto; background: #0d0d0d; padding: 10px; display: none; user-select: text; font: 12px Arial, sans-serif; color: #fff; }
 .wz-gl-panel.on { display: block; }
+.wz-gl-panel.on.browse { display: flex; flex-direction: column; overflow: hidden; }
+.wz-gl-panel.browse > .wz-gl-content { flex: 1 1 auto; min-height: 0; }
+.wz-gl-proto { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 3px 6px; margin-bottom: 8px; border: 1px dashed #665; background: #17150c; font-size: 11px; flex: none; }
+.wz-gl-proto b { color: #ffd84a; margin-right: 4px; }
+.wz-gl-proto label { margin: 0 0 0 10px; font-weight: normal; cursor: pointer; }
+.wz-gl-tabs { flex: none; }
+.wz-gl-panel[data-nav="a"] .wz-gl-innertab, .wz-gl-panel[data-nav="b"] .wz-gl-innertab { display: none; }
+.wz-gl-panel[data-nav="c"] .wz-gl-tabs { background: linear-gradient(#1d1a0c, #0d0d0d); margin: 0 -10px 10px; padding: 8px 10px; border-bottom: 2px solid #ffd84a; }
+.wz-gl-panel[data-nav="c"] .wz-gl-innertab { font: 18px "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace !important; height: 36px !important; padding: 0 18px !important; background: #000 !important; border: 2px solid #fff !important; color: #fff !important; border-radius: 0 !important; }
+.wz-gl-panel[data-nav="c"] .wz-gl-innertab.wz-gl-on { background: #ffd84a !important; border-color: #ffd84a !important; color: #000 !important; }
+.wz-gl-panel[data-nav="c"] .wz-gl-back { font-size: 12px; height: 28px; margin-right: 8px; }
+.wz-gl-back { display: none; }
+.wz-gl-panel[data-nav="c"] .wz-gl-back { display: inline-block; }
 .wz-gl-toggle.on, .wz-cm-btn.wz-gl-on { background: #4464bd; border-color: #8ea6e8; }
 .wz-cm-btn.wz-gl-primary { background: #2f6b3a; border-color: #6fbf7e; }
 .wz-cm-btn:disabled { opacity: .4; cursor: default; }
@@ -12675,12 +12801,18 @@ ${BROWSE_CSS}
   }
   var setColor = (set) => COLORS[(set.letter.charCodeAt(0) - 65) % COLORS.length];
   var sameCard = (p, source, group, raw) => p.source === source && p.editorGroup === group && p.name === (raw.name || "") && p.type === raw.type;
-  function buildGalleryPanel({ requestRead, editorLabel }) {
+  function buildGalleryPanel({ requestRead, editorLabel, wheelPages }) {
     injectStyle2();
     const draft2 = getDraft();
     let tab = draft2.parts.length ? "browse" : "submit";
+    let open = false;
     const proto = draft2.browseProto || {};
-    const browse = { list: "new", layout: proto.layout || "slides", samples: proto.samples !== false, dir: null, shelfOpen: null };
+    const browse = { list: "new", page: 0, samples: proto.samples !== false, dir: null };
+    let navStyle = NAV_STYLES.some((n) => n[0] === proto.nav) ? proto.nav : "a";
+    const listeners4 = [];
+    const notify2 = () => listeners4.forEach((f) => f());
+    let browseCtl = null;
+    let extrasAsked = false;
     const sampleVotes = {};
     let read2 = null;
     let readTimer = null;
@@ -12690,12 +12822,13 @@ ${BROWSE_CSS}
       status.textContent = t;
     };
     const tabs = h("div", { class: "wz-gl-bar wz-gl-tabs" });
-    const content = h("div");
+    const content = h("div", { class: "wz-gl-content" });
     const hover = h("div", { class: "wz-gl-hover" });
-    const panel = h("div", { class: "wz-gl-panel" }, tabs, content, hover);
+    const protoBar = h("div", { class: "wz-gl-proto" });
+    const panel = h("div", { class: "wz-gl-panel", "data-nav": navStyle }, protoBar, tabs, content, hover);
     const fileInput = h("input", { type: "file", accept: ".uceditor,image/png", multiple: true, style: { display: "none" } });
     panel.appendChild(fileInput);
-    const sizeOf = () => SIZES.find((x) => x[0] === draft2.size) || SIZES[1];
+    const sizeOf = () => SIZES.find((x) => x[0] === draft2.cardSize) || SIZES[1];
     function applyZoom() {
       let z = sizeOf()[2];
       if (!z) {
@@ -12709,13 +12842,19 @@ ${BROWSE_CSS}
       panel.style.setProperty("--wz-gl-z", String(z));
       return true;
     }
-    let fitTimer = null;
+    let fitTimer = null, lastBox = "";
     new ResizeObserver(() => {
-      if (sizeOf()[2] || !panel.classList.contains("on")) return;
-      if (applyZoom()) {
-        clearTimeout(fitTimer);
-        fitTimer = setTimeout(() => refit(), 120);
-      }
+      if (!open) return;
+      const box = panel.clientWidth + "x" + panel.clientHeight;
+      if (box === lastBox) return;
+      lastBox = box;
+      const zoomed = !sizeOf()[2] && applyZoom();
+      if (!zoomed && tab !== "browse") return;
+      clearTimeout(fitTimer);
+      fitTimer = setTimeout(() => {
+        if (tab === "browse" && browseCtl) browseCtl.layout();
+        else refit();
+      }, 120);
     }).observe(panel);
     function sizeButtons() {
       return h(
@@ -12723,7 +12862,8 @@ ${BROWSE_CSS}
         { class: "wz-gl-sizes", title: "Card size" },
         h("small", { text: "Size ", style: { opacity: ".7" } }),
         SIZES.map(([key2, label, , title]) => button(label, () => {
-          draft2.size = key2;
+          draft2.cardSize = key2;
+          browse.page = 0;
           saveDraft();
           render2();
         }, { title, cls: sizeOf()[0] === key2 ? "wz-gl-on" : "" }))
@@ -12774,27 +12914,88 @@ ${BROWSE_CSS}
       return el3;
     };
     panel.addEventListener("scroll", hideHover, { passive: true });
+    function renderProto() {
+      protoBar.replaceChildren(
+        h("b", { text: "Prototype" }),
+        "Buttons:",
+        ...NAV_STYLES.map(([k, l]) => button(l, () => setNav(k), { cls: navStyle === k ? "wz-gl-on" : "" })),
+        h("label", {}, h("input", { type: "checkbox", checked: browse.samples, onchange: (e) => {
+          browse.samples = e.target.checked;
+          browse.page = 0;
+          saveProto();
+          render2();
+        } }), " Sample entries")
+      );
+    }
+    const saveProto = () => {
+      draft2.browseProto = { samples: browse.samples, nav: navStyle };
+      saveDraft();
+    };
+    function setNav(k) {
+      navStyle = k;
+      panel.setAttribute("data-nav", k);
+      saveProto();
+      render2();
+      notify2();
+    }
     function render2() {
       hideHover();
+      browseCtl = null;
+      if (!open) return;
+      renderProto();
       tabs.replaceChildren(
-        button("Browse", () => {
-          tab = "browse";
-          render2();
-        }, { cls: tab === "browse" ? "wz-gl-on" : "" }),
-        button("Submit", () => {
-          tab = "submit";
-          render2();
-        }, { cls: tab === "submit" ? "wz-gl-on" : "" }),
+        button("\u25C0 Editor", () => setView("editor"), { cls: "wz-gl-back", title: "Back to the editor" }),
+        button("Browse", () => setView("browse"), { cls: "wz-gl-innertab" + (tab === "browse" ? " wz-gl-on" : "") }),
+        button("Submit", () => setView("submit"), { cls: "wz-gl-innertab" + (tab === "submit" ? " wz-gl-on" : "") }),
         status,
         h("span", { class: "wz-gl-grow" }),
         sizeButtons()
       );
-      content.replaceChildren(tab === "browse" ? browseTab() : submitView());
+      panel.classList.toggle("browse", tab === "browse");
       applyZoom();
-      requestAnimationFrame(refit);
+      if (tab === "browse") {
+        if (browse.samples && !extrasAsked) {
+          extrasAsked = true;
+          loadSampleExtras().then((more) => {
+            if (more && open && tab === "browse") render2();
+          });
+        }
+        const ctl2 = browseCtl = browseTab();
+        content.replaceChildren(ctl2.el);
+        ctl2.layout();
+        requestAnimationFrame(() => {
+          if (browseCtl === ctl2) ctl2.layout();
+        });
+      } else {
+        content.replaceChildren(submitView());
+        requestAnimationFrame(refit);
+      }
+    }
+    function setView(v) {
+      if (v === "editor") {
+        open = false;
+        panel.classList.remove("on");
+        hideHover();
+      } else {
+        tab = v;
+        open = true;
+        panel.classList.add("on");
+        render2();
+      }
+      notify2();
     }
     checkFrameImages().then(() => {
-      if (panel.classList.contains("on")) render2();
+      if (open) render2();
+    });
+    whenFontsReady().then(() => {
+      if (open) render2();
+    });
+    let fontTimer = null;
+    onFontsChange(() => {
+      clearTimeout(fontTimer);
+      fontTimer = setTimeout(() => {
+        if (open) render2();
+      }, 50);
     });
     const changed2 = () => {
       tidySets();
@@ -12832,7 +13033,8 @@ ${BROWSE_CSS}
         }),
         removeAllButton()
       );
-      bar.children[2].disabled = sel.length < 2;
+      bar.children[2].disabled = sel.length < 2 || sel.length > SET_CAP;
+      if (sel.length > SET_CAP) bar.children[2].title = `Sets can have up to ${SET_CAP} cards`;
       bar.children[3].disabled = !sel.some((p) => p.group);
       const note = h("p", { class: "wz-gl-note", text: draft2.parts.length ? "Click parts to select them, then Link selected to make a set. Anything not in a set is submitted on its own." : "Make cards in the editor, then Read from this editor and tick the ones to add. Files work too." });
       return h("div", {}, bar, note, read2 ? picker() : null, setsRow(), tray(), preview ? h("pre", { class: "wz-gl-preview", text: preview }) : null);
@@ -12883,13 +13085,13 @@ ${BROWSE_CSS}
       );
       if (!n) box.appendChild(h("p", { class: "wz-gl-note", text: "Nothing saved in this editor yet." }));
       read2.groups.forEach((g) => {
-        const open = free(g);
+        const open2 = free(g);
         const all = h("input", {
           type: "checkbox",
-          checked: open.length > 0 && open.every((r) => r.pick),
-          disabled: !open.length,
+          checked: open2.length > 0 && open2.every((r) => r.pick),
+          disabled: !open2.length,
           onchange: (e) => {
-            open.forEach((r) => {
+            open2.forEach((r) => {
               r.pick = e.target.checked;
             });
             render2();
@@ -12899,12 +13101,18 @@ ${BROWSE_CSS}
           "div",
           { class: "wz-gl-pgroup" },
           h("label", {}, all, " ", h("b", { text: g.name }), h("small", { text: ` (${g.parts.length})` })),
-          open.length > 1 ? [" ", button("Add this group as a set", () => {
+          open2.length > 1 ? [" ", ((b) => {
+            if (open2.length > SET_CAP) {
+              b.disabled = true;
+              b.title = `Sets can have up to ${SET_CAP} cards. Tick some and use Add ticked as one set.`;
+            }
+            return b;
+          })(button("Add this group as a set", () => {
             read2.groups.forEach((x) => x.parts.forEach((r) => {
               r.pick = x === g && !added(g, r);
             }));
             addTicked(g.name);
-          })] : null,
+          }))] : null,
           h("div", { class: "wz-gl-pparts" }, g.parts.map((raw) => {
             const done = added(g, raw);
             return h(
@@ -12931,6 +13139,7 @@ ${BROWSE_CSS}
         if (raw.pick && !draft2.parts.some((p) => sameCard(p, read2.source, g.name, raw))) picked.push({ raw, group: g.name });
       }));
       if (!picked.length) return say("Tick some cards first.");
+      if (asSet && picked.length > SET_CAP) return say(`Sets can have up to ${SET_CAP} cards. Untick some, or add them on their own.`);
       say(`Adding ${picked.length}\u2026`);
       const added = [];
       for (const { raw, group } of picked) {
@@ -13031,10 +13240,11 @@ ${BROWSE_CSS}
       changed2();
     });
     function browseTab() {
-      draft2.browseProto = { layout: browse.layout, samples: browse.samples };
-      saveDraft();
       return browseView({
         state: browse,
+        samples: browse.samples,
+        wheelPages: () => !wheelPages || wheelPages(),
+        onPage: hideHover,
         entries: allEntries(entries(), { samples: browse.samples, votes: draft2.votes, sampleVotes }),
         hoverable,
         rerender: render2,
@@ -13048,10 +13258,15 @@ ${BROWSE_CSS}
     }
     return {
       el: panel,
-      isOpen: () => panel.classList.contains("on"),
+      isOpen: () => open,
       setOpen(on) {
-        panel.classList.toggle("on", on);
-        if (on) render2();
+        setView(on ? tab : "editor");
+      },
+      view: () => open ? tab : "editor",
+      setView,
+      navStyle: () => navStyle,
+      onChange(f) {
+        listeners4.push(f);
       },
       receiveCards(data2) {
         clearTimeout(readTimer);
@@ -13059,9 +13274,77 @@ ${BROWSE_CSS}
         const n = read2.groups.reduce((s, g) => s + g.parts.length, 0);
         say(`Found ${n} card${n === 1 ? "" : "s"}. Tick what to add.`);
         tab = "submit";
-        if (panel.classList.contains("on")) render2();
+        if (open) render2();
       }
     };
+  }
+
+  // packages/card-maker/gallery/nav.js
+  var VIEWS = [["editor", "Editor", "\u270E"], ["browse", "Browse", "\u25A4"], ["submit", "Submit", "\u2B06"]];
+  var STYLE_ID4 = "wizascript-cardgallery-nav-style";
+  var RAIL_W = 78;
+  var DT2 = `"DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace`;
+  var CSS5 = `
+.wz-gn-seg, .wz-gn-big, .wz-gn-rail { display: none; }
+.wz-cm[data-wz-nav="a"] .wz-gn-seg { display: flex; }
+.wz-cm[data-wz-nav="b"] .wz-gn-rail { display: flex; }
+.wz-cm[data-wz-nav="c"] .wz-gn-big { display: inline-flex; }
+
+.wz-gn-seg { flex: none; height: 24px; margin-left: 6px; border: 2px solid #fff; background: #000; }
+.wz-gn-seg button { display: flex; align-items: center; gap: 5px; background: none; border: 0; border-right: 2px solid #fff; color: #ccc; padding: 0 12px; font: 13px ${DT2}; cursor: pointer; }
+.wz-gn-seg button:last-child { border-right: 0; }
+.wz-gn-seg button:hover { color: #fff; background: #222; }
+.wz-gn-seg button.on { background: #ffd84a; color: #000; }
+.wz-gn-seg .ic { font-size: 12px; }
+
+.wz-gn-big { flex: none; align-items: center; gap: 6px; height: 24px; padding: 0 14px; background: #ffd84a; color: #000; border: 2px solid #ffd84a; font: 14px ${DT2}; cursor: pointer; box-shadow: 0 0 10px rgba(255, 216, 74, .45); }
+.wz-gn-big:hover { background: #ffe27a; }
+.wz-gn-big.on { background: #000; color: #ffd84a; box-shadow: none; }
+
+.wz-gn-rail { position: absolute; left: 0; top: 0; bottom: 0; width: ${RAIL_W}px; z-index: 8; flex-direction: column; gap: 6px; padding: 8px 6px; box-sizing: border-box; background: #050505; border-right: 2px solid #333; }
+.wz-gn-rail button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 0 8px; background: #000; border: 2px solid #555; color: #bbb; font: 12px ${DT2}; cursor: pointer; }
+.wz-gn-rail button .ic { font-size: 20px; line-height: 20px; }
+.wz-gn-rail button:hover { border-color: #fff; color: #fff; }
+.wz-gn-rail button.on { border-color: #ffd84a; color: #ffd84a; background: #17150c; }
+.wz-gn-rail .sep { height: 2px; background: #333; margin: 2px 4px; }
+.wz-cm[data-wz-nav="b"] .wz-cm-body > iframe,
+.wz-cm[data-wz-nav="b"] .wz-cm-body > .wz-cm-loading,
+.wz-cm[data-wz-nav="b"] .wz-cm-body > .wz-cm-note,
+.wz-cm[data-wz-nav="b"] .wz-cm-body > .wz-gl-panel { left: ${RAIL_W}px !important; }
+.wz-cm[data-wz-nav="b"] .wz-cm-body > iframe { width: auto !important; right: 0 !important; }
+`;
+  function injectStyle3() {
+    if (document.getElementById(STYLE_ID4)) return;
+    const s = document.createElement("style");
+    s.id = STYLE_ID4;
+    s.textContent = CSS5;
+    (document.head || document.documentElement).appendChild(s);
+  }
+  var viewButton = (gallery, [v, label, icon]) => h(
+    "button",
+    { type: "button", "data-view": v, title: v === "editor" ? "Back to the editor" : `Card Gallery: ${label}`, onclick: () => gallery.setView(v) },
+    h("span", { class: "ic", text: icon }),
+    h("span", { text: label })
+  );
+  function mountGalleryNav({ win, gallery }) {
+    injectStyle3();
+    const header = win.root.querySelector(".wz-cm-header");
+    const seg = h("div", { class: "wz-gn-seg" }, VIEWS.map((v) => viewButton(gallery, v)));
+    const big = h("button", { type: "button", class: "wz-gn-big", onclick: () => gallery.setView(gallery.view() === "editor" ? "browse" : "editor") });
+    const rail = h("div", { class: "wz-gn-rail" }, viewButton(gallery, VIEWS[0]), h("div", { class: "sep" }), VIEWS.slice(1).map((v) => viewButton(gallery, v)));
+    header.insertBefore(seg, header.querySelector(".wz-cm-grip"));
+    header.insertBefore(big, header.querySelector('[data-action="reload"]'));
+    win.body.appendChild(rail);
+    function sync() {
+      const view = gallery.view();
+      win.root.setAttribute("data-wz-nav", gallery.navStyle());
+      [seg, rail].forEach((box) => box.querySelectorAll("button[data-view]").forEach((b) => b.classList.toggle("on", b.dataset.view === view)));
+      big.classList.toggle("on", view !== "editor");
+      big.replaceChildren(h("span", { text: view === "editor" ? "\u2605" : "\u25C0" }), h("span", { text: view === "editor" ? "Card Gallery" : "Editor" }));
+      big.title = view === "editor" ? "Open the Card Gallery" : "Back to the editor";
+    }
+    gallery.onChange(sync);
+    sync();
   }
 
   // assets/pack.png
@@ -13075,6 +13358,7 @@ ${BROWSE_CSS}
   var editorSetting = null;
   var hotfixSetting = null;
   var gallerySetting = null;
+  var wheelSetting = null;
   var mounted2 = null;
   var footerButton = null;
   var log = (...a) => {
@@ -13188,22 +13472,11 @@ ${BROWSE_CSS}
           f.el.contentWindow.postMessage({ tag: FRAME_MESSAGE, type: "read" }, EDITORS[key2].origin);
           return null;
         },
-        editorLabel: (key2) => EDITORS[key2 || currentEditor()].label
+        editorLabel: (key2) => EDITORS[key2 || currentEditor()].label,
+        wheelPages: () => !wheelSetting || !!wheelSetting.value()
       });
       win.body.appendChild(gallery.el);
-      const toggle = document.createElement("button");
-      toggle.type = "button";
-      toggle.className = "wz-cm-btn wz-gl-toggle";
-      toggle.textContent = "Gallery";
-      toggle.title = "Card Gallery";
-      toggle.addEventListener("click", () => {
-        const on = !gallery.isOpen();
-        gallery.setOpen(on);
-        toggle.classList.toggle("on", on);
-        toggle.title = on ? "Back to the editor" : "Card Gallery";
-      }, { signal });
-      const header = win.root.querySelector(".wz-cm-header");
-      header.insertBefore(toggle, header.querySelector('[data-action="reload"]'));
+      mountGalleryNav({ win, gallery });
     }
     let menuBackdrop = null;
     const layerWatch = new MutationObserver(() => syncLayer());
@@ -13380,10 +13653,17 @@ ${BROWSE_CSS}
     });
     gallerySetting = settings3.add("gallery", {
       name: "Card Gallery",
-      note: "Adds a Gallery button to the Card Maker, to share cards you make.",
+      note: "Adds the Card Gallery to the Card Maker, to share cards you make.",
       type: "boolean",
       default: true,
       refresh: true
+    });
+    wheelSetting = settings3.add("galleryWheelPages", {
+      name: "Gallery: Scroll Wheel Pages",
+      note: "Scroll the mouse wheel over the gallery to turn its pages.",
+      type: "boolean",
+      default: true,
+      hidden: () => !!gallerySetting && !gallerySetting.value()
     });
     registerKeybind(plugin, {
       key: "toggleCardMaker",
@@ -14122,7 +14402,7 @@ ${BROWSE_CSS}
   function showNotepad() {
     var _a;
     if (mounted3) return;
-    injectStyle3();
+    injectStyle4();
     const controller = new AbortController();
     const { signal } = controller;
     const { root, body, headerButtons, titleInput } = buildNotepadShell(signal);
@@ -14374,7 +14654,7 @@ ${BROWSE_CSS}
     clearSavedTitle();
     console.log("[Wizascript] Notepad forcibly reset - drawing, position, colors, and title cleared.");
   }
-  function injectStyle3() {
+  function injectStyle4() {
     if (document.getElementById("wizascript-notepad-style")) return;
     const style = document.createElement("style");
     style.id = "wizascript-notepad-style";
@@ -15313,8 +15593,8 @@ ${BROWSE_CSS}
   }
 
   // packages/misc/wishlist/styles.js
-  var STYLE_ID4 = "wizascript-wishlist-style";
-  var CSS5 = `
+  var STYLE_ID5 = "wizascript-wishlist-style";
+  var CSS6 = `
 .wz-wl-menu { position: fixed; z-index: 2147483000; min-width: 170px; max-width: 280px; background: #000; color: #fff;
   border: 1px solid #fff; font-size: 14px; user-select: none; box-shadow: 0 2px 8px rgba(0,0,0,.6); margin: 0; padding: 0; }
 .wz-wl-menu header { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-bottom: 1px solid #555; }
@@ -15350,10 +15630,10 @@ ${BROWSE_CSS}
 .wz-wl-status { flex-basis: 100%; color: #ccc; margin-top: 4px; white-space: normal; }
 `;
   function injectWishlistStyle() {
-    if (document.getElementById(STYLE_ID4)) return;
+    if (document.getElementById(STYLE_ID5)) return;
     const style = document.createElement("style");
-    style.id = STYLE_ID4;
-    style.textContent = CSS5;
+    style.id = STYLE_ID5;
+    style.textContent = CSS6;
     (document.head || document.documentElement).appendChild(style);
   }
 
@@ -16097,7 +16377,7 @@ ${BROWSE_CSS}
 
   // packages/misc/card-history/game.js
   var W = () => getPageWindow();
-  var cardFile = null;
+  var cardFile2 = null;
   var artifactList = null;
   var page$ = () => W().$;
   var hasI18n = () => {
@@ -16107,7 +16387,7 @@ ${BROWSE_CSS}
   function allCards() {
     const w = W();
     if (Array.isArray(w.allCards) && w.allCards.length) return w.allCards;
-    if (cardFile && cardFile.length) return cardFile;
+    if (cardFile2 && cardFile2.length) return cardFile2;
     try {
       const ls = JSON.parse(w.localStorage.getItem("allCards") || "[]");
       if (Array.isArray(ls) && ls.length) return ls;
@@ -16122,7 +16402,7 @@ ${BROWSE_CSS}
     try {
       const d = await (await fetch(cfg.url, { credentials: "same-origin" })).json();
       const list = Array.isArray(d) ? d : d && (d.cards || d.allCards) || [];
-      cardFile = typeof list === "string" ? JSON.parse(list) : list;
+      cardFile2 = typeof list === "string" ? JSON.parse(list) : list;
     } catch (e) {
     }
   }
@@ -16133,7 +16413,7 @@ ${BROWSE_CSS}
     const n = norm(s);
     return list.find((c) => norm(c.name) === n) || null;
   }
-  async function artifacts2() {
+  async function artifacts3() {
     if (artifactList) return artifactList;
     try {
       const data2 = await (await fetch("/DecksConfig", { credentials: "same-origin" })).json();
@@ -16295,7 +16575,7 @@ ${BROWSE_CSS}
       });
       (R.souls || []).forEach((id) => add(tr2(`soul-${id}`), `{{SOUL:${id.toUpperCase()}}}`));
       (R.legacyWithColon || []).forEach(([word, modern]) => colonCodes.set(word, tr2(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`));
-      (await artifacts2()).forEach((a) => {
+      (await artifacts3()).forEach((a) => {
         if (!a || a.id == null) return;
         const name = tr2(`artifact-name-${a.id}`) || a.name;
         addExact(name, `{{ARTIFACT:${a.id}}}`);
@@ -16911,19 +17191,19 @@ ${note}` : "");
       const newest = index && index.newestVersion;
       setQuantity(nowEl, versionLabel(newest ? { ...newest, guessed: true } : null), "Today's version - when it last changed isn't recorded.");
     }
-    const grid2 = document.createElement("div");
-    grid2.className = "cardsPreview no-hover wz-ch-grid";
-    grid2.style.cssText = `display:grid;grid-template-columns:repeat(${PER_ROW},max-content);gap:38px 8px;justify-content:center;padding-bottom:28px;`;
+    const grid = document.createElement("div");
+    grid.className = "cardsPreview no-hover wz-ch-grid";
+    grid.style.cssText = `display:grid;grid-template-columns:repeat(${PER_ROW},max-content);gap:38px 8px;justify-content:center;padding-bottom:28px;`;
     const built = index && index.builtAt || "";
     versions.forEach((v) => {
       const el3 = drawVersion(base, v, f, currentDescHtml);
       tagNode(el3, { kind: "c", id: base.id, name: base.name, label: versionLabel(v.version).text, shown: seen(base, v), built });
-      grid2.appendChild(el3);
+      grid.appendChild(el3);
     });
     tagNode(nowEl, { kind: "c", id: base.id, name: base.name, label: "today", shown: seen(base, { ...base, atk: base.attack, textKnown: false }), built });
-    grid2.appendChild(nowEl);
+    grid.appendChild(nowEl);
     const node = document.createElement("div");
-    node.appendChild(grid2);
+    node.appendChild(grid);
     const foot = document.createElement("div");
     foot.className = "wz-ch-foot";
     const src = ["Undercards Wiki (Version History"];
@@ -16940,8 +17220,8 @@ ${note}` : "");
     node.appendChild(foot);
     const fit2 = () => {
       const avail = node.clientWidth;
-      const need = grid2.scrollWidth;
-      grid2.style.zoom = need > avail && avail > 0 ? String(Math.max(0.5, avail / need)) : "";
+      const need = grid.scrollWidth;
+      grid.style.zoom = need > avail && avail > 0 ? String(Math.max(0.5, avail / need)) : "";
     };
     const wikiUrl = `https://undercards.fandom.com/wiki/${data2 && data2.pvTitle ? data2.pvTitle : `${base.name.replace(/ /g, "_")}/Previous_Versions`}`;
     return { node, fit: fit2, wikiUrl };
@@ -17111,8 +17391,8 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
   }
 
   // packages/misc/card-history/styles.js
-  var STYLE_ID5 = "wizascript-card-history-style";
-  var CSS6 = `
+  var STYLE_ID6 = "wizascript-card-history-style";
+  var CSS7 = `
 .wz-ch-loading { min-height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
 .wz-ch-loading-title { font-size: 20px; }
 .wz-ch-step { font-size: 13px; opacity: .75; }
@@ -17159,10 +17439,10 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
 .wz-ch-art-list .cardDesc.wz-ch-art-desc > div { font-size: 14px !important; }
 `;
   function injectCardHistoryStyle() {
-    if (document.getElementById(STYLE_ID5)) return;
+    if (document.getElementById(STYLE_ID6)) return;
     const st = document.createElement("style");
-    st.id = STYLE_ID5;
-    st.textContent = CSS6;
+    st.id = STYLE_ID6;
+    st.textContent = CSS7;
     (document.head || document.documentElement).appendChild(st);
   }
 
@@ -17232,7 +17512,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     }
   }
   async function openArtifact(image) {
-    const list = await artifacts2();
+    const list = await artifacts3();
     const a = findArtifact(list, image);
     if (!a) return;
     const shell = openShell(`Artifact History - ${a.name}`, `https://undercards.fandom.com/wiki/${a.name.replace(/ /g, "_")}`);
@@ -17700,10 +17980,10 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     let mulliganGrid = null;
     let mulliganRow = 0, mulliganCol = 0;
     function queryHandCards() {
-      const host = document.getElementById("handCards");
-      if (!host) return [];
-      let els = Array.from(host.querySelectorAll(".card"));
-      if (!els.length) els = Array.from(host.children);
+      const host2 = document.getElementById("handCards");
+      if (!host2) return [];
+      let els = Array.from(host2.querySelectorAll(".card"));
+      if (!els.length) els = Array.from(host2.children);
       return els.filter((el3) => el3.offsetParent !== null);
     }
     function queryBoardMonsterCards() {
@@ -17742,8 +18022,8 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       rows.forEach((r) => r.items.sort((a, b) => a.r.left - b.r.left));
       return rows.map((r) => r.items.map((i) => i.el));
     }
-    function gridFlat(grid2) {
-      return grid2 ? grid2.flat() : [];
+    function gridFlat(grid) {
+      return grid ? grid.flat() : [];
     }
     let placingOrigin = null;
     function beginCardDrag(card) {

@@ -55,9 +55,13 @@ export function tidySets() {
   }
 }
 
+// Most cards a set can have: about one full page of Medium cards, so a set
+// never needs more than a page in Browse.
+export const SET_CAP = 15;
+
 export function makeSet(members, name = "") {
   const d = getDraft();
-  if (members.length < 2) return null;
+  if (members.length < 2 || members.length > SET_CAP) return null;
   const used = new Set(d.groups.map((g) => g.letter));
   let letter = "A";
   while (used.has(letter)) letter = String.fromCharCode(letter.charCodeAt(0) + 1);

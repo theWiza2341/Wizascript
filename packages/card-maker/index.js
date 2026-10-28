@@ -38,6 +38,7 @@ import { buildWindow } from "./window.js";
 import { EDITORS, EDITOR_LABELS, DEFAULT_EDITOR, editorForLabel, FRAME_MESSAGE } from "./editors.js";
 import { isHotfixOn, setHotfix } from "./storage.js";
 import { buildGalleryPanel } from "./gallery/panel.js";
+import { mountGalleryNav } from "./gallery/nav.js";
 import PACK_ICON from "../../assets/pack.png";
 
 // No word from Wizascript inside feildmaster's editor this long after it
@@ -53,6 +54,7 @@ let settings = null;
 let editorSetting = null;
 let hotfixSetting = null;
 let gallerySetting = null;
+let wheelSetting = null;
 let mounted = null; // { controller, win, frames, ... } | null - built on each open
 let footerButton = null;
 
@@ -177,22 +179,11 @@ function mount() {
         f.el.contentWindow.postMessage({ tag: FRAME_MESSAGE, type: "read" }, EDITORS[key].origin);
         return null;
       },
-      editorLabel: (key) => EDITORS[key || currentEditor()].label
+      editorLabel: (key) => EDITORS[key || currentEditor()].label,
+      wheelPages: () => !wheelSetting || !!wheelSetting.value()
     });
     win.body.appendChild(gallery.el);
-    const toggle = document.createElement("button");
-    toggle.type = "button";
-    toggle.className = "wz-cm-btn wz-gl-toggle";
-    toggle.textContent = "Gallery";
-    toggle.title = "Card Gallery";
-    toggle.addEventListener("click", () => {
-      const on = !gallery.isOpen();
-      gallery.setOpen(on);
-      toggle.classList.toggle("on", on);
-      toggle.title = on ? "Back to the editor" : "Card Gallery";
-    }, { signal });
-    const header = win.root.querySelector(".wz-cm-header");
-    header.insertBefore(toggle, header.querySelector('[data-action="reload"]'));
+    mountGalleryNav({ win, gallery });
   }
 
   // Step behind anything UnderScript opens on top of the page (same as
@@ -387,10 +378,17 @@ export function initCardMaker(plugin) {
 
   gallerySetting = settings.add("gallery", {
     name: "Card Gallery",
-    note: "Adds a Gallery button to the Card Maker, to share cards you make.",
+    note: "Adds the Card Gallery to the Card Maker, to share cards you make.",
     type: "boolean",
     default: true,
     refresh: true
+  });
+  wheelSetting = settings.add("galleryWheelPages", {
+    name: "Gallery: Scroll Wheel Pages",
+    note: "Scroll the mouse wheel over the gallery to turn its pages.",
+    type: "boolean",
+    default: true,
+    hidden: () => !!gallerySetting && !gallerySetting.value()
   });
 
   registerKeybind(plugin, {

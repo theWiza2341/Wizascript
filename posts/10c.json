@@ -1,0 +1,19 @@
+{
+  "id": "10c",
+  "kind": "single",
+  "title": "Pink",
+  "author": ":onu4head:",
+  "postedAt": 1793250884105,
+  "contest": "c5",
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Pink",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/10c-0-pic.png"
+    }
+  ]
+}

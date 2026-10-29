@@ -4210,9 +4210,9 @@ html, body { overflow-x: hidden !important; }
       });
       TRIBE_IDS.forEach((id) => {
         const singular = getLocalizedString(`tribe-${id}`, 1);
-        const plural = getLocalizedString(`tribe-${id}`, 2);
+        const plural2 = getLocalizedString(`tribe-${id}`, 2);
         if (singular) tokens.push(singular);
-        if (plural) tokens.push(plural);
+        if (plural2) tokens.push(plural2);
       });
       const addColorEntry = (id, colorKey) => {
         const translated = getLocalizedString(colorKey === "stat" ? `stat-${id}` : `${colorKey}-${id}`, 1);
@@ -4283,9 +4283,9 @@ html, body { overflow-x: hidden !important; }
         }
         if (i18n2) {
           const singular = getLocalizedString(`card-name-${card.id}`, 1);
-          const plural = getLocalizedString(`card-name-${card.id}`, 2);
+          const plural2 = getLocalizedString(`card-name-${card.id}`, 2);
           if (singular) addNameMapping(map, singular, card.id);
-          if (plural) addNameMapping(map, plural, card.id);
+          if (plural2) addNameMapping(map, plural2, card.id);
         }
       });
     } finally {
@@ -5766,13 +5766,13 @@ Version: v${version}`;
         artifactContainer.innerHTML = "";
         try {
           const decoded = decodeDeck(deck.deckCode);
-          const artifacts3 = ((decoded == null ? void 0 : decoded.artifactIds) || []).map((id) => getArtifactById(id)).filter(Boolean);
-          artifacts3.forEach((artifact, index) => {
+          const artifacts4 = ((decoded == null ? void 0 : decoded.artifactIds) || []).map((id) => getArtifactById(id)).filter(Boolean);
+          artifacts4.forEach((artifact, index) => {
             const img = document.createElement("img");
             img.src = `images/artifacts/${artifact.image}.png`;
             img.title = artifact.name;
             artifactContainer.appendChild(img);
-            if (index < artifacts3.length - 1) artifactContainer.append(" ");
+            if (index < artifacts4.length - 1) artifactContainer.append(" ");
           });
         } catch (err) {
           logger4.error("card", "Artifact decode failed", err, deck);
@@ -8150,18 +8150,18 @@ Version: v${version}`;
     return ranks.some(rankMeetsMin);
   }
   function applyFilters(games) {
-    let pool = games;
-    const modeAllowed = pool.filter((g) => isModeAllowed(g.mode));
-    if (modeAllowed.length) pool = modeAllowed;
+    let pool2 = games;
+    const modeAllowed = pool2.filter((g) => isModeAllowed(g.mode));
+    if (modeAllowed.length) pool2 = modeAllowed;
     if (CONFIG.minLevel > 0) {
-      const meetsLevel = pool.filter((g) => levelsPass(g.levels));
-      if (meetsLevel.length) pool = meetsLevel;
+      const meetsLevel = pool2.filter((g) => levelsPass(g.levels));
+      if (meetsLevel.length) pool2 = meetsLevel;
     }
     if (CONFIG.minRankTier) {
-      const meetsRank = pool.filter((g) => ranksPass(g.ranks, g.mode));
-      if (meetsRank.length) pool = meetsRank;
+      const meetsRank = pool2.filter((g) => ranksPass(g.ranks, g.mode));
+      if (meetsRank.length) pool2 = meetsRank;
     }
-    return pool;
+    return pool2;
   }
 
   // packages/uc-tv/countdown.js
@@ -8269,12 +8269,12 @@ Version: v${version}`;
     }
     const currentGameId = new URLSearchParams(location.search).get("gameId");
     const candidates = games.filter((g) => g.gameId !== currentGameId);
-    const pool = applyFilters(candidates);
-    if (!pool.length) {
+    const pool2 = applyFilters(candidates);
+    if (!pool2.length) {
       logDebug("No other live matches found right now - staying put.");
       return;
     }
-    const sorted = [...pool].sort((a, b) => {
+    const sorted = [...pool2].sort((a, b) => {
       const ta = parseElapsedSeconds(a.time);
       const tb = parseElapsedSeconds(b.time);
       if (ta === null && tb === null) return 0;
@@ -8283,7 +8283,7 @@ Version: v${version}`;
       return ta - tb;
     });
     const next = sorted[0];
-    logDebug(`Chose gameId=${next.gameId}, playerId=${next.playerId}, elapsed=${next.time} (levels: ${next.levels.join(", ")}). ${pool.length} candidate(s) considered.`);
+    logDebug(`Chose gameId=${next.gameId}, playerId=${next.playerId}, elapsed=${next.time} (levels: ${next.levels.join(", ")}). ${pool2.length} candidate(s) considered.`);
     showCountdown(plugin, CONFIG.countdownSeconds, () => {
       location.href = `/Spectate?gameId=${next.gameId}&playerId=${next.playerId}`;
     });
@@ -8301,23 +8301,23 @@ Version: v${version}`;
         console.warn(`${LOG} [channel] Failed to fetch live games:`, e);
         return;
       }
-      const pool = applyFilters(games);
-      if (!pool.length) {
+      const pool2 = applyFilters(games);
+      if (!pool2.length) {
         logDebug("[channel] No games available to switch to.");
         return;
       }
       const currentGameId = new URLSearchParams(location.search).get("gameId");
-      const currentIndex = pool.findIndex((g) => g.gameId === currentGameId);
+      const currentIndex = pool2.findIndex((g) => g.gameId === currentGameId);
       let targetIndex;
       if (currentIndex === -1) {
-        targetIndex = direction > 0 ? 0 : pool.length - 1;
+        targetIndex = direction > 0 ? 0 : pool2.length - 1;
       } else {
-        targetIndex = ((currentIndex + direction) % pool.length + pool.length) % pool.length;
+        targetIndex = ((currentIndex + direction) % pool2.length + pool2.length) % pool2.length;
       }
-      const target = pool[targetIndex];
-      logDebug(`[channel] Switching to gameId=${target.gameId} (slot ${targetIndex + 1}/${pool.length}).`);
+      const target = pool2[targetIndex];
+      logDebug(`[channel] Switching to gameId=${target.gameId} (slot ${targetIndex + 1}/${pool2.length}).`);
       if (plugin && typeof plugin.toast === "function") {
-        plugin.toast({ title: "UC TV", text: `Channel ${targetIndex + 1}/${pool.length}` });
+        plugin.toast({ title: "UC TV", text: `Channel ${targetIndex + 1}/${pool2.length}` });
       }
       location.href = `/Spectate?gameId=${target.gameId}&playerId=${target.playerId}`;
     } finally {
@@ -10893,10 +10893,10 @@ Version: v${version}`;
       }
       root.appendChild(menu3);
       const rr = root.getBoundingClientRect();
-      const tr2 = (it ? it.el : root).getBoundingClientRect();
-      let left = tr2.right - rr.left + 6;
-      if (left + menu3.offsetWidth > rr.width - 4) left = Math.max(4, tr2.left - rr.left - menu3.offsetWidth - 6);
-      let top = tr2.top - rr.top;
+      const tr3 = (it ? it.el : root).getBoundingClientRect();
+      let left = tr3.right - rr.left + 6;
+      if (left + menu3.offsetWidth > rr.width - 4) left = Math.max(4, tr3.left - rr.left - menu3.offsetWidth - 6);
+      let top = tr3.top - rr.top;
       if (top + menu3.offsetHeight > rr.height - 4) top = Math.max(4, rr.height - menu3.offsetHeight - 4);
       menu3.style.left = left + "px";
       menu3.style.top = Math.max(4, top) + "px";
@@ -12959,6 +12959,190 @@ Version: v${version}`;
     );
   }
 
+  // packages/card-maker/gallery/mock.js
+  var AUTHORS = ["SampleMaker", "PixelSmith", "CardFan", "MockAuthor", "DraftWizard", "ExampleUser", "Placeholder", "TestDummy", "FakeFroggit", "NotARealPlayer"];
+  var JUDGES = ["Sample Judge A", "Sample Judge B", "Sample Judge C"];
+  var cardFile = null;
+  function gameCards() {
+    const w = getPageWindow();
+    if (Array.isArray(w.allCards) && w.allCards.length) return w.allCards;
+    if (cardFile && cardFile.length) return cardFile;
+    try {
+      const ls = JSON.parse(w.localStorage.getItem("allCards") || "[]");
+      if (Array.isArray(ls)) return ls;
+    } catch (e) {
+    }
+    return [];
+  }
+  function tr(key2) {
+    try {
+      const $2 = getPageWindow().$;
+      const v = $2 && $2.i18n ? $2.i18n(key2) : "";
+      if (!v || v === key2) return "";
+      const d = document.createElement("div");
+      d.innerHTML = String(v).replace(/<br\s*\/?>/gi, "\n");
+      return d.textContent;
+    } catch (e) {
+      return "";
+    }
+  }
+  function cardPart(c) {
+    const ext = c.extension === "DELTARUNE" ? "DELTARUNE" : c.extension === "UTY" ? "UTY" : "BASE";
+    const monster = c.typeCard === 0;
+    return {
+      type: monster ? "Monster" : "Spell",
+      name: tr(`card-name-${c.fixedId || c.id}`) || c.name || "",
+      cost: c.cost,
+      atk: monster ? c.attack : void 0,
+      hp: monster ? c.hp : void 0,
+      desc: tr(`card-${c.fixedId || c.id}`) || (c.description ? String(c.description).replace(/<[^>]+>/g, "") : ""),
+      art: c.image ? `/images/cards/${c.image}.png` : "",
+      rarity: c.rarity ? `${ext}_${c.rarity}` : "",
+      tribes: []
+    };
+  }
+  function artifactPart(a) {
+    const rarity = a.unavailable === true ? "TOKEN" : a.legendary === true ? "LEGENDARY" : "COMMON";
+    return {
+      type: "Artifact",
+      name: tr(`artifact-name-${a.id}`) || a.name || "",
+      desc: tr(`artifact-${a.id}`) || (a.description ? String(a.description).replace(/<[^>]+>/g, "") : ""),
+      art: `/images/artifacts/${a.image}.png`,
+      rarity
+    };
+  }
+  var ENCHANTS = [
+    ["Sample Bonfire", "After a monster is played here, deal 2 DMG to it."],
+    ["Sample Snowfall", "Monsters here have -1 ATK."],
+    ["Sample Spotlight", "At the end of your turn, give the monster here +1/+1."],
+    ["Sample Echo Flowers", "When a monster here dies, draw 1 card."],
+    ["Sample Conveyor", "At the start of your turn, the monster here gets Haste."],
+    ["Sample Puzzle Floor", "Spells that target a monster here cost 1 more."]
+  ];
+  var fallbackPart = (i) => ({ type: i % 2 ? "Spell" : "Monster", name: `Sample Card ${i + 1}`, cost: i % 7, atk: i % 2 ? void 0 : 1 + i % 5, hp: i % 2 ? void 0 : 1 + i % 4, desc: "A sample card.", art: "", rarity: "BASE_COMMON", tribes: [] });
+  var artifacts2 = null;
+  var extras = null;
+  function loadSampleExtras() {
+    if (extras) return extras;
+    const cards2 = gameCards().length ? Promise.resolve(false) : (() => {
+      const cfg = getPageWindow().cardsClientConfig;
+      if (!cfg || !cfg.url) return Promise.resolve(false);
+      return fetch(cfg.url, { credentials: "same-origin" }).then((r) => r.json()).then((d) => {
+        const list = Array.isArray(d) ? d : d && (d.cards || d.allCards) || [];
+        cardFile = typeof list === "string" ? JSON.parse(list) : list;
+        return cardFile.length > 0;
+      }).catch(() => false);
+    })();
+    const arts = fetch("/DecksConfig", { credentials: "same-origin" }).then((r) => r.json()).then((d) => {
+      const raw = d && d.allArtifacts;
+      artifacts2 = ((typeof raw === "string" ? JSON.parse(raw) : raw) || []).filter((a) => a && a.image && !a.disabled && !a.custom);
+      return artifacts2.length > 0;
+    }).catch(() => false);
+    extras = Promise.all([cards2, arts]).then(([a, b]) => {
+      cache = null;
+      return a || b;
+    });
+    return extras;
+  }
+  function pool(rnd) {
+    const cards2 = gameCards().filter((c) => c && c.name && c.image && (c.typeCard === 0 || c.typeCard === 1) && c.rarity !== "TOKEN");
+    const parts = cards2.slice().sort(() => rnd() - 0.5).map(cardPart);
+    const arts = (artifacts2 || []).slice().sort(() => rnd() - 0.5).map(artifactPart);
+    const ench = ENCHANTS.map(([name, desc]) => ({ type: "Enchantment", name, desc, art: "" }));
+    let n = 0, a = 0, e = 0;
+    return {
+      next(k) {
+        k = k || 0;
+        if (arts.length && k % 7 === 3) return arts[a++ % arts.length];
+        if (k % 9 === 5) return ench[e++ % ench.length];
+        return parts.length ? parts[n++ % parts.length] : fallbackPart(n++);
+      }
+    };
+  }
+  var DAY = 864e5;
+  var CONTESTS = [
+    ["Heart of the Underground", "Make a card about a SOUL trait: Determination, Patience, Bravery, Integrity, Perseverance, Kindness or Justice.\nOne card, or a set of up to 4.\nNo copies of existing cards."],
+    ["Hotland Heat", "Fire, lava and steam. Anything from Hotland."],
+    ["Snowdin Patrol", "Royal Guard members, real or made up."],
+    ["Royal Lab", "Amalgamates, machines and experiments."],
+    ["Dark World Deals", "Shops, salesmen and the economy of the Dark World."],
+    ["Waterfall Echoes", "Echo flowers, rain and quiet places. Spells only."],
+    ["Ruins Revival", "New cards for the Ruins. Common or rare only."],
+    ["Core Meltdown", "Things go wrong in the CORE."]
+  ];
+  var cache = null;
+  function sampleData() {
+    if (cache) return cache;
+    let seed = 4242;
+    const rnd = () => (seed = seed * 1103515245 + 12345 >>> 0) / 4294967296;
+    const p = pool(rnd);
+    let id = 0, draws = 0;
+    const now = Date.now();
+    const entry = (contest, t) => {
+      const isSet = rnd() < 0.2;
+      const size = isSet ? 2 + Math.floor(rnd() * 3) : 1;
+      const parts = [];
+      for (let k = 0; k < size; k++) {
+        let part = p.next(draws++);
+        if (isSet && part.type === "Artifact") part = p.next(draws++ + 1);
+        parts.push({ ...part });
+      }
+      const n = id++;
+      return {
+        id: `smp${n.toString(36)}`,
+        kind: size > 1 ? "set" : "single",
+        title: size > 1 ? `Sample Set ${n + 1}` : parts[0].name,
+        author: AUTHORS[Math.floor(rnd() * AUTHORS.length)],
+        postedAt: t,
+        approvedAt: t + 36e5,
+        contest,
+        parts,
+        sample: true
+      };
+    };
+    const contests = [], file = [];
+    CONTESTS.forEach(([title, rules], i) => {
+      const cid = `csmp${i}`;
+      const running = i === 0;
+      const closesAt = running ? now + 3 * DAY + 5 * 36e5 : now - (i * 16 - 4) * DAY;
+      const n = running ? 12 : 10 + Math.floor(rnd() * 6);
+      const entries2 = [];
+      for (let k = 0; k < n; k++) entries2.push(entry(cid, closesAt - (running ? 4 : 14) * DAY + k * 7 * 36e5));
+      const info = { id: cid, title, rules, closesAt, maxEntries: 3, status: running ? "open" : "archived", createdAt: closesAt - 14 * DAY, archivedAt: running ? null : closesAt + 2 * DAY, entries: n, sample: true };
+      const f = { ...info, entries: entries2 };
+      if (!running) {
+        const scores = {};
+        entries2.forEach((e) => {
+          const base = 1 + rnd() * 4;
+          const by = JUDGES.map((name) => ({ name, score: Math.max(1, Math.min(5, Math.round(base + (rnd() - 0.5) * 2))) }));
+          const avg = Math.round(by.reduce((s, b) => s + b.score, 0) / by.length * 100) / 100;
+          scores[e.id] = { avg, n: by.length };
+        });
+        const order = entries2.map((e) => e.id).sort((a, b) => scores[b].avg - scores[a].avg);
+        f.results = { manualTop: i === 2, order, scores };
+      }
+      contests.push(info);
+      file.push(f);
+    });
+    const run = file[0];
+    const mine = [run.entries[4], entry("csmp0", now - DAY)];
+    mine[0] = { ...mine[0], mine: true, status: "approved" };
+    run.entries[4] = mine[0];
+    mine[1] = { ...mine[1], mine: true, status: "pending" };
+    const uploads = [];
+    for (let k = 0; k < 6; k++) {
+      const e = entry(k % 2 ? "csmp0" : null, now - (6 - k) * 36e5);
+      if (!e.contest) delete e.contest;
+      uploads.push({ ...e, status: "pending", ...e.contest ? { contestTitle: CONTESTS[0][0] } : {} });
+    }
+    const runScores = {};
+    run.entries.forEach((e, k) => {
+      const by = JUDGES.slice(0, 1 + k % 3).map((name, j) => ({ name, score: 1 + (k * 3 + j * 2) % 5 }));
+      runScores[e.id] = { avg: Math.round(by.reduce((s, b) => s + b.score, 0) / by.length * 100) / 100, n: by.length, by };
+    });
+    return cache = { contests, file, own: mine, uploads, runScores };
+  }
+
   // packages/card-maker/gallery/contest.js
   var DT2 = `"DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace`;
   var PLACES = ["1st", "2nd", "3rd"];
@@ -12985,6 +13169,71 @@ Version: v${version}`;
 .wz-gl-panel textarea { color: #fff !important; background: #222 !important; border: 1px solid #666 !important; border-radius: 3px; font: 12px Arial, sans-serif; padding: 4px; min-height: 70px; resize: vertical; width: 100%; box-sizing: border-box; }
 .wz-gl-panel input[type="datetime-local"], .wz-gl-panel input[type="number"] { color: #fff !important; background: #222 !important; border: 1px solid #666 !important; border-radius: 3px; font: 11px Arial, sans-serif; height: 22px; padding: 0 4px; color-scheme: dark; }
 .wz-gl-cbox { border: 1px solid #444; background: #111; padding: 8px 10px; margin-bottom: 10px; }
+
+/* roomier Contest tab (dev16 prototypes A/B/C) */
+.wz-gl-cv { font-size: 14px; line-height: 1.45; }
+.wz-gl-cv .wz-cm-btn { height: 28px; font-size: 13px; padding: 0 12px; }
+.wz-gl-cnav { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #333; position: relative; flex-wrap: wrap; }
+.wz-gl-cnow { background: #17150c; border: 2px solid #ffd84a; color: #ffd84a; padding: 4px 14px; font: 15px ${DT2}; cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; }
+.wz-gl-cnow small { font: 11px Arial, sans-serif; opacity: .85; }
+.wz-gl-cnow.on { background: #ffd84a; color: #000; }
+.wz-gl-carch { background: #000; border: 2px solid #666; color: #bbb; padding: 0 10px; height: 32px; font: 13px ${DT2}; cursor: pointer; max-width: 190px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.wz-gl-carch:hover { border-color: #fff; color: #fff; }
+.wz-gl-carch.on { border-color: #fff; color: #000; background: #ddd; }
+.wz-gl-cnav .lbl { opacity: .6; font-size: 12px; }
+.wz-gl-cdropwrap { position: relative; }
+.wz-gl-cdrop { position: absolute; right: 0; top: calc(100% + 4px); z-index: 30; background: #000; border: 2px solid #fff; min-width: 260px; max-height: 300px; overflow: auto; padding: 4px 0; box-shadow: 0 8px 24px rgba(0,0,0,.8); }
+.wz-gl-cdrop button { display: flex; justify-content: space-between; gap: 12px; width: 100%; background: none; border: 0; color: #ddd; padding: 6px 12px; text-align: left; font: 13px ${DT2}; cursor: pointer; }
+.wz-gl-cdrop button:hover, .wz-gl-cdrop button.on { background: #222; color: #ffd84a; }
+.wz-gl-cdrop button small { font: 11px Arial, sans-serif; opacity: .6; }
+.wz-gl-chero { border: 2px solid #fff; background: #000; padding: 14px 18px; margin-bottom: 14px; }
+.wz-gl-chero .t { font: 28px ${DT2}; color: #ffd84a; margin-bottom: 6px; }
+.wz-gl-chero .r { white-space: pre-wrap; font-size: 15px; margin-bottom: 10px; }
+.wz-gl-chero .m { font-size: 14px; opacity: .9; }
+.wz-gl-cact { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
+.wz-gl-big { height: 38px !important; padding: 0 20px !important; font: 16px ${DT2} !important; }
+.wz-gl-pips { display: inline-flex; gap: 4px; align-items: center; }
+.wz-gl-pips i { width: 12px; height: 12px; border: 2px solid #ffd84a; border-radius: 50%; display: inline-block; }
+.wz-gl-pips i.on { background: #ffd84a; }
+.wz-gl-chip { display: inline-block; border: 1px solid #ffd84a; color: #ffd84a; padding: 1px 8px; font: 12px ${DT2}; }
+.wz-gl-csec { font: 16px ${DT2}; color: #fff; margin: 16px 0 8px; display: flex; align-items: center; gap: 10px; }
+.wz-gl-csec .n { opacity: .6; font-size: 13px; }
+.wz-gl-cv .wz-gl-note { font-size: 13px; }
+.wz-gl-cv .wz-gl-grid { gap: 16px 14px; }
+.wz-gl-cv .wz-gl-avg { font-size: 12px; }
+.wz-gl-cv .wz-gl-place { font-size: 14px; }
+/* B: sidebar */
+.wz-gl-cside { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 18px; align-items: start; }
+.wz-gl-cside > .side { position: sticky; top: 0; border: 2px solid #fff; background: #000; padding: 12px 14px; }
+.wz-gl-cside > .side .t { font: 22px ${DT2}; color: #ffd84a; margin-bottom: 6px; }
+.wz-gl-cside > .side .r { white-space: pre-wrap; margin-bottom: 10px; }
+.wz-gl-cside > .side .wz-gl-big { width: 100%; margin-top: 8px; }
+.wz-gl-cmine { margin-top: 12px; border-top: 1px solid #333; padding-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+.wz-gl-cmine div { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+.wz-gl-podlist { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.wz-gl-podlist div { display: flex; gap: 8px; align-items: baseline; }
+/* C: showcase */
+.wz-gl-cstrip { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; border: 2px solid #fff; background: #000; padding: 10px 16px; margin-bottom: 10px; }
+.wz-gl-cstrip .t { font: 22px ${DT2}; color: #ffd84a; }
+.wz-gl-ctabs { display: flex; border: 2px solid #fff; background: #000; margin-bottom: 12px; max-width: 560px; }
+.wz-gl-ctabs button { flex: 1; background: none; border: 0; color: #bbb; padding: 7px 0; font: 14px ${DT2}; cursor: pointer; }
+.wz-gl-ctabs button + button { border-left: 2px solid #fff; }
+.wz-gl-ctabs button.on { background: #ffd84a; color: #000; }
+.wz-gl-podium { display: flex; justify-content: center; align-items: flex-end; gap: 22px; margin: 6px 0 18px; flex-wrap: wrap; }
+.wz-gl-podium > div { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.wz-gl-podium .medal { font: 20px ${DT2}; }
+.wz-gl-podium .p1 .medal { color: #ffd84a; } .wz-gl-podium .p2 .medal { color: #d8d8d8; } .wz-gl-podium .p3 .medal { color: #e09a5a; }
+.wz-gl-podium .first { --wz-gl-z: 1.2; }
+.wz-gl-sample { display: inline-block; background: #333; border: 1px solid #777; color: #ddd; font: 10px/14px Arial, sans-serif; padding: 0 5px; margin-left: 8px; vertical-align: middle; }
+/* judging, one at a time */
+.wz-gl-focus { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 8px 0; }
+.wz-gl-focus .cards { --wz-gl-z: 1.3; }
+.wz-gl-focus .nav { display: flex; align-items: center; gap: 12px; font: 14px ${DT2}; }
+.wz-gl-scorebig { display: flex; gap: 8px; }
+.wz-gl-scorebig button { width: 64px; height: 50px; background: #000; border: 2px solid #777; color: #ddd; font: 20px ${DT2}; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
+.wz-gl-scorebig button small { font: 9px Arial, sans-serif; opacity: .7; }
+.wz-gl-scorebig button:hover { border-color: #fff; color: #fff; }
+.wz-gl-scorebig button.on { background: #ffd84a; border-color: #ffd84a; color: #000; }
 `;
   var pad2 = (n) => String(n).padStart(2, "0");
   var toLocalInput = (ms) => {
@@ -13004,11 +13253,13 @@ Version: v${version}`;
     if (hrs < 48) return `in ${hrs} h${m % 60 ? ` ${m % 60} min` : ""}`;
     return `in ${Math.floor(hrs / 24)} days`;
   }
+  var plural = (n) => `${n} entr${n === 1 ? "y" : "ies"}`;
   var daysAgo = (t) => Math.max(0, Math.floor((Date.now() - (t || Date.now())) / 864e5));
   function createContests(ctx) {
-    const cs = { list: null, file: null, at: 0, loading: false, error: "", pick: null, sort: "rank" };
-    const js = { id: null, data: null, at: 0, loading: false, error: "", top: null };
+    const cs = { list: null, file: null, at: 0, loading: false, error: "", pick: null, sort: "rank", drop: false, sub: "entries" };
+    const js = { id: null, data: null, at: 0, loading: false, error: "", top: null, idx: 0, sampleMine: {} };
     const cf = { title: "", rules: "", closes: "", max: 3, busy: false, editFor: null };
+    let sampleOwn = null;
     async function refresh(force) {
       if (cs.loading || !force && cs.at && Date.now() - cs.at < 3e4) return;
       cs.loading = true;
@@ -13025,8 +13276,14 @@ Version: v${version}`;
         ctx.changed();
       }
     }
+    const sample = () => ctx.samples() ? sampleData() : null;
+    const shownList = () => sample() ? sample().contests : cs.list;
+    const shownFile = (id) => ((sample() ? sample().file : cs.file) || []).find((c) => c.id === id) || null;
     const active = () => (cs.list || []).find((c) => c.status !== "archived") || null;
-    const fileFor = (id) => (cs.file || []).find((c) => c.id === id) || null;
+    const shownActive = () => (shownList() || []).find((c) => c.status !== "archived") || null;
+    if (ctx.samples()) loadSampleExtras().then((more) => {
+      if (more) ctx.changed();
+    });
     function slots() {
       const c = active();
       if (!c || c.status !== "open") return null;
@@ -13034,100 +13291,203 @@ Version: v${version}`;
       const used = mine ? mine.used : 0;
       return { contest: c, used, max: c.maxEntries, left: Math.max(0, c.maxEntries - used) };
     }
-    function entryItem(e, { place, cls, below } = {}) {
+    function shownSlots(c) {
+      if (c.sample) {
+        const used = (sampleOwn || (sampleOwn = sample().own.slice())).filter((e) => e.status !== "rejected").length;
+        return { contest: c, used, max: c.maxEntries, left: Math.max(0, c.maxEntries - used) };
+      }
+      const s = slots();
+      return s && s.contest.id === c.id ? s : null;
+    }
+    function ownEntries(c) {
+      if (c.sample) return sampleOwn || (sampleOwn = sample().own.slice());
+      return ctx.acct.posts.filter((p) => p.contest === c.id && ctx.draft.uploads[p.id]).map((p) => ({ ...ctx.draft.uploads[p.id], id: p.id, status: p.status, reason: p.reason, author: ctx.acct.account, postedAt: p.postedAt }));
+    }
+    function ranked(f) {
+      const res = f.results || { order: [], scores: {} };
+      const byId2 = new Map(f.entries.map((e) => [e.id, e]));
+      const out = res.order.map((id) => byId2.get(id)).filter(Boolean);
+      f.entries.forEach((e) => {
+        if (!res.order.includes(e.id)) out.push(e);
+      });
+      return { res, list: out };
+    }
+    function entryItem(e, { place, cls, below, style } = {}) {
       const isSet = e.kind === "set";
       const info = { author: e.author, days: daysAgo(e.approvedAt || e.postedAt), status: e.status || "approved", reason: e.reason };
       return h(
         "div",
-        { class: `wz-gl-item${isSet ? " set" : ""}${cls ? " " + cls : ""}`, "data-key": e.id },
+        { class: `wz-gl-item${isSet ? " set" : ""}${cls ? " " + cls : ""}`, "data-key": e.id, style },
         isSet ? h("div", { class: "wz-gl-sethead" }, h("div", { class: "wz-gl-setname", text: e.title || "(no name)", title: e.title || "" })) : null,
         h("div", { class: "wz-gl-row" }, e.parts.map((p) => ctx.hoverable(h("div", { class: "wz-gl-zoom" }, tile(p)), p, info))),
         place || below ? h("div", { class: "wz-gl-votes" }, place || null, below || null) : null
       );
     }
-    function view() {
-      if (!cs.list) return h("p", { class: "wz-gl-note", text: cs.error ? `Couldn't load the contests: ${cs.error}` : "Loading the contests\u2026" });
-      if (!cs.list.length) {
-        return h(
-          "div",
-          {},
-          h("p", { class: "wz-gl-note", text: "No contests yet." }),
-          h("p", { class: "wz-gl-note", text: "Contests have a theme and a deadline. Enter your designs; the organizers judge them, and the results are kept here." })
-        );
-      }
-      const cur = active();
-      if (!cs.pick || !cs.list.some((c2) => c2.id === cs.pick)) cs.pick = cur ? cur.id : cs.list[0].id;
-      const archived = cs.list.filter((c2) => c2.status === "archived");
-      const bar = h(
+    const placeTag = (i) => h("span", { class: `wz-gl-place${i < 3 ? ` p${i + 1}` : ""}`, text: i < 3 ? PLACES[i] : `# ${i + 1}` });
+    const avgTag = (sc) => h("span", { class: "wz-gl-avg", text: sc && sc.n ? `${sc.avg.toFixed(2)} (${sc.n} judge${sc.n === 1 ? "" : "s"})` : "not scored" });
+    const sampleTag = (c) => c.sample ? h("span", { class: "wz-gl-sample", text: "sample" }) : null;
+    function nav(cur, archived) {
+      const pick = (id) => {
+        cs.pick = id;
+        cs.drop = false;
+        cs.sub = "entries";
+        ctx.render();
+      };
+      const recent = archived.slice(0, 3);
+      const drop = cs.drop ? h("div", { class: "wz-gl-cdrop" }, archived.map((c) => h(
+        "button",
+        { type: "button", class: cs.pick === c.id ? "on" : "", onclick: () => pick(c.id) },
+        h("span", { text: c.title }),
+        h("small", { text: `ended ${new Date(c.closesAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })} \xB7 ${c.entries}` })
+      ))) : null;
+      if (cs.drop) setTimeout(() => document.addEventListener("click", function off(ev) {
+        if (!ev.target.closest(".wz-gl-cdropwrap")) {
+          cs.drop = false;
+          ctx.render();
+        }
+        document.removeEventListener("click", off, true);
+      }, true), 0);
+      return h(
         "div",
-        { class: "wz-gl-cbar" },
-        cur ? button(`\u2605 ${cur.title}`, () => {
-          cs.pick = cur.id;
-          ctx.render();
-        }, { primary: cs.pick === cur.id, title: "The contest running now" }) : null,
-        archived.length ? h("span", { class: "dim", text: cur ? "Past:" : "Past contests:" }) : null,
-        archived.map((c2) => button(c2.title, () => {
-          cs.pick = c2.id;
-          ctx.render();
-        }, { primary: cs.pick === c2.id, title: `Ended ${when(c2.closesAt)}` })),
+        { class: "wz-gl-cnav" },
+        cur ? h(
+          "button",
+          { type: "button", class: `wz-gl-cnow${cs.pick === cur.id ? " on" : ""}`, title: "The contest running now", onclick: () => pick(cur.id) },
+          h("span", { text: `\u2605 ${cur.title}` }),
+          h("small", { text: cur.status === "open" ? `Open \xB7 closes ${inTime(cur.closesAt)}` : "Judging" })
+        ) : h("span", { class: "lbl", text: "No contest running right now." }),
         h("span", { class: "wz-gl-grow" }),
+        archived.length ? h("span", { class: "lbl", text: "Past:" }) : null,
+        recent.map((c) => h("button", { type: "button", class: `wz-gl-carch${cs.pick === c.id ? " on" : ""}`, text: c.title, title: `${c.title} (ended ${when(c.closesAt)})`, onclick: () => pick(c.id) })),
+        archived.length ? h(
+          "span",
+          { class: "wz-gl-cdropwrap" },
+          h("button", { type: "button", class: `wz-gl-carch${cs.drop || cs.pick && !recent.some((c) => c.id === cs.pick) && archived.some((c) => c.id === cs.pick) ? " on" : ""}`, text: `Archive \u25BE`, title: `All ${archived.length} past contests`, onclick: () => {
+            cs.drop = !cs.drop;
+            ctx.render();
+          } }),
+          drop
+        ) : null,
         h("button", { type: "button", class: "wz-gl-refresh", title: "Load the latest", text: "\u21BB", onclick: () => {
           refresh(true);
           ctx.refreshMe(true);
         } })
       );
-      const c = cs.list.find((x) => x.id === cs.pick);
-      return h("div", {}, bar, c.status === "archived" ? archiveView(c) : runningView(c));
     }
-    function head(c, lines) {
-      return h(
-        "div",
-        { class: "wz-gl-chead" },
-        h("div", { class: "wz-gl-ctitle", text: c.title }),
-        c.rules ? h("div", { class: "wz-gl-crules", text: c.rules }) : null,
-        lines.map((l) => h("div", { class: "wz-gl-cmeta" }, l))
-      );
-    }
-    function runningView(c) {
-      const open = c.status === "open";
-      const s = slots();
-      const lines = [open ? ["Entries close ", h("b", { text: when(c.closesAt) }), ` (${inTime(c.closesAt)}). Up to ${c.maxEntries} per player; a set counts as one.`] : ["Entries closed ", h("b", { text: when(c.closesAt) }), ". The organizers are judging; results show here when they're done."]];
-      if (open) {
-        const enter = button(!ctx.acct.account ? "Link your account to enter" : s && !s.left ? "No entries left" : "Enter cards", () => ctx.startEntry(c.id), { primary: true, title: "Pick cards in Submit and upload them to this contest" });
-        enter.disabled = !ctx.acct.account || !s || !s.left;
-        lines.push([h("span", { text: s ? `Your entries: ${s.used} of ${s.max}. ` : "" }), enter]);
+    function view() {
+      const list = shownList();
+      if (!list) return h("p", { class: "wz-gl-note", text: cs.error ? `Couldn't load the contests: ${cs.error}` : "Loading the contests\u2026" });
+      if (!list.length) {
+        return h(
+          "div",
+          { class: "wz-gl-cv" },
+          h("p", { class: "wz-gl-note", text: "No contests yet." }),
+          h("p", { class: "wz-gl-note", text: "Contests have a theme and a deadline. Enter your designs; the organizers judge them, and the results are kept here." })
+        );
       }
-      const own = ctx.acct.posts.filter((p) => p.contest === c.id && ctx.draft.uploads[p.id]).map((p) => ({ ...ctx.draft.uploads[p.id], id: p.id, status: p.status, reason: p.reason, author: ctx.acct.account, postedAt: p.postedAt }));
-      const entriesFile = fileFor(c.id);
-      const all = entriesFile ? entriesFile.entries : [];
-      const others = all.filter((e) => !own.some((o) => o.id === e.id));
-      const ownItems = own.map((e) => {
+      const cur = shownActive();
+      const archived = list.filter((c2) => c2.status === "archived").sort((a, b) => b.closesAt - a.closesAt);
+      if (!cs.pick || !list.some((c2) => c2.id === cs.pick)) cs.pick = cur ? cur.id : archived[0].id;
+      const c = list.find((x) => x.id === cs.pick);
+      const L = ctx.layout();
+      const body = c.status === "archived" ? archiveView(c, L) : runningView(c, L);
+      return h("div", { class: `wz-gl-cv wz-gl-cv-${L}` }, nav(cur, archived), body);
+    }
+    function enterButton(c, s, big) {
+      const label = c.sample ? "Enter cards" : !ctx.acct.account ? "Link your account to enter" : s && !s.left ? "No entries left" : "Enter cards";
+      const b = button(label, () => c.sample ? ctx.say("This is a sample contest: entering is off. Turn off Sample data to enter real ones.") : ctx.startEntry(c.id), { primary: true, cls: big ? "wz-gl-big" : "", title: "Pick cards in Submit and upload them to this contest" });
+      b.disabled = !c.sample && (!ctx.acct.account || !s || !s.left);
+      return b;
+    }
+    const pips = (s) => s ? h("span", { class: "wz-gl-pips", title: `${s.used} of ${s.max} entries used` }, Array.from({ length: s.max }, (_, i) => h("i", { class: i < s.used ? "on" : "" })), h("span", { text: ` ${s.used} of ${s.max} used` })) : null;
+    const deadline = (c) => c.status === "open" ? ["Entries close ", h("b", { text: when(c.closesAt) }), ` (${inTime(c.closesAt)}). Up to ${c.maxEntries} per player; a set counts as one.`] : ["Entries closed ", h("b", { text: when(c.closesAt) }), ". The organizers are judging; results show here when they're done."];
+    function ownItems(c) {
+      const open = c.status === "open";
+      return ownEntries(c).map((e) => {
         const tagText = e.status === "approved" ? "entered" : e.status === "pending" ? "awaiting approval" : "not approved";
         const tag = h("span", { class: `wz-gl-mine${e.status === "pending" ? " pending" : e.status === "rejected" || e.status === "removed" ? " rejected" : ""}`, text: tagText });
+        const run2 = c.sample ? (x) => {
+          sampleOwn = sampleOwn.filter((o) => o.id !== x.id);
+          ctx.say("Sample entry withdrawn (nothing was sent).");
+          ctx.render();
+        } : ctx.deleteMine;
         const canWithdraw = open && (e.status === "pending" || e.status === "approved");
-        const del = canWithdraw ? removeButton({ rerender: ctx.render }, e, { label: "Withdraw", confirm: "Withdraw it?", title: "Take this entry back, to free its slot", run: ctx.deleteMine }) : e.status === "rejected" || e.status === "removed" ? removeButton({ rerender: ctx.render }, e, { label: "Delete", confirm: "Delete for good?", title: "Delete this entry: it wasn't approved", run: ctx.deleteMine }) : null;
+        const del = canWithdraw ? removeButton({ rerender: ctx.render }, e, { label: "Withdraw", confirm: "Withdraw it?", title: "Take this entry back, to free its slot", run: run2 }) : e.status === "rejected" || e.status === "removed" ? removeButton({ rerender: ctx.render }, e, { label: "Delete", confirm: "Delete for good?", title: "Delete this entry: it wasn't approved", run: run2 }) : null;
         return entryItem(e, { below: [tag, del] });
       });
+    }
+    function othersOf(c) {
+      const own = ownEntries(c);
+      const f = shownFile(c.id);
+      return (f ? f.entries : []).filter((e) => !own.some((o) => o.id === e.id));
+    }
+    const noneYet = (c) => h("p", { class: "wz-gl-note", text: c.entries ? "They'll show here in a few minutes." : "None yet. Be the first!" });
+    const noVotes = h("p", { class: "wz-gl-note", text: "There's no voting on contest entries: the organizers judge them. They join the gallery once the results are out." });
+    function runningView(c, L) {
+      const s = shownSlots(c);
+      const open = c.status === "open";
+      const mine = ownItems(c);
+      const others = othersOf(c);
+      const grid = (items) => h("div", { class: "wz-gl-grid" }, items);
+      if (L === "b") {
+        const side = h(
+          "div",
+          { class: "side" },
+          h("div", { class: "t" }, c.title, sampleTag(c)),
+          c.rules ? h("div", { class: "r", text: c.rules }) : null,
+          h("div", { class: "m" }, deadline(c)),
+          open ? [h("div", { style: { marginTop: "10px" } }, h("span", { text: "Your entries: " }), pips(s)), enterButton(c, s, true)] : null,
+          mine.length ? h("div", { class: "wz-gl-cmine" }, h("b", { text: "Your entries" }), ownEntries(c).map((e) => h("div", {}, h("span", { text: e.title || "(no name)" }), h("span", { class: "dim", text: e.status === "approved" ? "entered" : e.status === "pending" ? "waiting" : "not approved" })))) : null
+        );
+        return h("div", { class: "wz-gl-cside" }, side, h(
+          "div",
+          {},
+          mine.length ? [h("div", { class: "wz-gl-csec", style: { marginTop: 0 } }, "Your entries", h("span", { class: "n", text: String(mine.length) })), grid(mine)] : null,
+          h("div", { class: "wz-gl-csec", style: mine.length ? null : { marginTop: 0 } }, "Entries so far", h("span", { class: "n", text: String(c.entries) })),
+          others.length ? grid(others.map((e) => entryItem(e))) : noneYet(c),
+          noVotes
+        ));
+      }
+      if (L === "c") {
+        const strip = h(
+          "div",
+          { class: "wz-gl-cstrip" },
+          h("span", { class: "t" }, c.title, sampleTag(c)),
+          h("span", { class: "wz-gl-chip", text: open ? `closes ${inTime(c.closesAt)}` : "judging" }),
+          h("span", { class: "wz-gl-grow" }),
+          open ? [pips(s), enterButton(c, s, true)] : null
+        );
+        const tabs = [["entries", `Entries (${c.entries})`], ["mine", `Your entries (${mine.length})`], ["rules", "Theme & rules"]];
+        const sub = h("div", { class: "wz-gl-ctabs" }, tabs.map(([k, label]) => h("button", { type: "button", class: cs.sub === k ? "on" : "", text: label, onclick: () => {
+          cs.sub = k;
+          ctx.render();
+        } })));
+        const body = cs.sub === "rules" ? h("div", { class: "wz-gl-chero" }, h("div", { class: "r", text: c.rules || "(no rules given)" }), h("div", { class: "m" }, deadline(c))) : cs.sub === "mine" ? mine.length ? grid(mine) : h("p", { class: "wz-gl-note", text: "You haven't entered yet." }) : others.length ? grid(others.map((e) => entryItem(e))) : noneYet(c);
+        return h("div", {}, strip, sub, body, noVotes);
+      }
       return h(
         "div",
         {},
-        head(c, lines),
-        ownItems.length ? [h("div", { class: "wz-gl-csub", text: "Your entries" }), h("div", { class: "wz-gl-grid" }, ownItems)] : null,
-        h("div", { class: "wz-gl-csub", text: `Entries so far (${c.entries})` }),
-        others.length ? h("div", { class: "wz-gl-grid" }, others.map((e) => entryItem(e))) : h("p", { class: "wz-gl-note", text: c.entries ? "They'll show here in a few minutes." : "None yet. Be the first!" }),
-        h("p", { class: "wz-gl-note", text: "There's no voting on contest entries: the organizers judge them. They join the gallery once the results are out." })
+        h(
+          "div",
+          { class: "wz-gl-chero" },
+          h("div", { class: "t" }, c.title, sampleTag(c)),
+          c.rules ? h("div", { class: "r", text: c.rules }) : null,
+          h("div", { class: "m" }, deadline(c)),
+          open ? h("div", { class: "wz-gl-cact" }, enterButton(c, s, true), h("span", { text: "Your entries:" }), pips(s)) : null
+        ),
+        mine.length ? [h("div", { class: "wz-gl-csec" }, "Your entries", h("span", { class: "n", text: String(mine.length) })), grid(mine)] : null,
+        h("div", { class: "wz-gl-csec" }, "Entries so far", h("span", { class: "n", text: String(c.entries) })),
+        others.length ? grid(others.map((e) => entryItem(e))) : noneYet(c),
+        noVotes
       );
     }
-    function archiveView(c) {
-      const f = fileFor(c.id);
-      if (!f) return h("div", {}, head(c, [`Ended ${when(c.closesAt)}.`]), h("p", { class: "wz-gl-note", text: "Loading the results\u2026" }));
-      const res = f.results || { order: [], scores: {} };
-      const byId2 = new Map(f.entries.map((e) => [e.id, e]));
-      const ranked = res.order.map((id) => byId2.get(id)).filter(Boolean);
-      f.entries.forEach((e) => {
-        if (!res.order.includes(e.id)) ranked.push(e);
-      });
-      const list = cs.sort === "new" ? ranked.slice().sort((a, b) => (b.postedAt || 0) - (a.postedAt || 0)) : ranked;
+    function archiveView(c, L) {
+      const f = shownFile(c.id);
+      const ended = `Ended ${when(c.closesAt)}`;
+      if (!f) return h("div", { class: "wz-gl-chero" }, h("div", { class: "t", text: c.title }), h("div", { class: "m", text: `${ended}. Loading the results\u2026` }));
+      const { res, list: rank } = ranked(f);
+      const how = res.manualTop ? "The organizers picked the top places; the rest are by average score (1 to 5)." : "Places are by average score (1 to 5).";
       const sortBar = h(
         "div",
         { class: "wz-gl-cbar" },
@@ -13141,35 +13501,80 @@ Version: v${version}`;
           ctx.render();
         }, { primary: cs.sort === "new" })
       );
-      const items = list.map((e) => {
-        const i = ranked.indexOf(e);
-        const sc = res.scores[e.id];
-        const placeCls = i < 3 ? ` p${i + 1}` : "";
-        const place = h("span", { class: `wz-gl-place${placeCls}`, text: i < 3 ? PLACES[i] : `# ${i + 1}` });
-        const avg = h("span", { class: "wz-gl-avg", text: sc && sc.n ? `${sc.avg.toFixed(2)} (${sc.n} judge${sc.n === 1 ? "" : "s"})` : "not scored" });
-        return entryItem(e, { place, below: avg, cls: i < 3 && cs.sort !== "new" ? `p${i + 1}` : "" });
+      const shown = cs.sort === "new" ? rank.slice().sort((a, b) => (b.postedAt || 0) - (a.postedAt || 0)) : rank;
+      const items = (list) => list.map((e) => {
+        const i = rank.indexOf(e);
+        return entryItem(e, { place: placeTag(i), below: avgTag(res.scores[e.id]), cls: i < 3 && cs.sort !== "new" ? `p${i + 1}` : "" });
       });
+      if (!f.entries.length) return h("div", { class: "wz-gl-chero" }, h("div", { class: "t", text: c.title }), h("div", { class: "m", text: `${ended} \xB7 no entries.` }));
+      if (L === "b") {
+        const side = h(
+          "div",
+          { class: "side" },
+          h("div", { class: "t" }, c.title, sampleTag(c)),
+          c.rules ? h("div", { class: "r", text: c.rules }) : null,
+          h("div", { class: "m", text: `${ended} \xB7 ${plural(f.entries.length)}. ${how}` }),
+          h("div", { class: "wz-gl-podlist" }, rank.slice(0, 3).map((e, i) => h("div", {}, placeTag(i), h("b", { text: e.title || "(no name)" }), h("span", { class: "dim", text: `by ${e.author} \xB7 ${(res.scores[e.id] || {}).avg != null ? res.scores[e.id].avg.toFixed(2) : "\u2013"}` }))))
+        );
+        return h("div", { class: "wz-gl-cside" }, side, h("div", {}, sortBar, h("div", { class: "wz-gl-grid" }, items(shown))));
+      }
+      if (L === "c") {
+        const strip = h("div", { class: "wz-gl-cstrip" }, h("span", { class: "t" }, c.title, sampleTag(c)), h("span", { class: "wz-gl-chip", text: ended.toLowerCase() }), h("span", { class: "dim", text: plural(f.entries.length) }));
+        const top = rank.slice(0, 3);
+        const order = top.length === 3 ? [top[1], top[0], top[2]] : top;
+        const podium = h("div", { class: "wz-gl-podium" }, order.map((e) => {
+          const i = rank.indexOf(e);
+          return h(
+            "div",
+            { class: `p${i + 1}${i === 0 ? " first" : ""}` },
+            h("div", { class: "medal", text: PLACES[i] }),
+            entryItem(e, { below: [h("span", { class: "dim", text: `by ${e.author} ` }), avgTag(res.scores[e.id])], cls: `p${i + 1}` })
+          );
+        }));
+        const rest = rank.slice(3);
+        return h(
+          "div",
+          {},
+          strip,
+          h("p", { class: "wz-gl-note", text: c.rules ? `${c.rules.split("\n")[0]} ${how}` : how }),
+          podium,
+          rest.length ? [h("div", { class: "wz-gl-csec" }, "Everyone else", h("span", { class: "n", text: String(rest.length) })), h("div", { class: "wz-gl-grid" }, items(rest))] : null
+        );
+      }
       return h(
         "div",
         {},
-        head(c, [`Ended ${when(c.closesAt)} \xB7 ${f.entries.length} entr${f.entries.length === 1 ? "y" : "ies"}. ${res.manualTop ? "The organizers picked the top places; the rest are" : "Places are"} by average score (1 to 5).`]),
-        f.entries.length ? sortBar : null,
-        f.entries.length ? h("div", { class: "wz-gl-grid" }, items) : h("p", { class: "wz-gl-note", text: "No entries." })
+        h("div", { class: "wz-gl-chero" }, h("div", { class: "t" }, c.title, sampleTag(c)), c.rules ? h("div", { class: "r", text: c.rules }) : null, h("div", { class: "m", text: `${ended} \xB7 ${plural(f.entries.length)}. ${how}` })),
+        sortBar,
+        h("div", { class: "wz-gl-grid" }, items(shown))
       );
     }
     const judgeContestId = () => {
       const who = ctx.who();
-      if (who && who.role === "judge") return who.contest;
+      if (sample()) {
+        const c2 = shownActive();
+        return c2 ? c2.id : null;
+      }
+      if (who && who.role === "judge") return who.contest || active() && active().id;
       const c = active();
       return c ? c.id : null;
     };
     async function loadJudging(force) {
       const id = judgeContestId();
+      if (sample()) {
+        const run2 = sample().file.find((c) => c.id === id);
+        const keepTop = js.top && js.id === id && js.data && js.data.sample;
+        js.data = run2 ? { contest: { ...run2, top3: [] }, entries: run2.entries, myScores: js.sampleMine, sample: true } : null;
+        js.top = keepTop ? js.top : [];
+        js.id = id;
+        js.error = "";
+        return ctx.changed();
+      }
       if (!id || !ctx.reviewerKey()) {
         js.data = null;
         return;
       }
-      if (js.loading || !force && js.id === id && js.at && Date.now() - js.at < 3e4) return;
+      if (js.loading || !force && js.id === id && js.at && Date.now() - js.at < 3e4 && !(js.data && js.data.sample)) return;
       js.loading = true;
       try {
         const d = await reviewContest(ctx.reviewerKey(), id);
@@ -13188,14 +13593,21 @@ Version: v${version}`;
       }
     }
     const unscored = () => js.data ? js.data.entries.filter((e) => !js.data.myScores[e.id]).length : 0;
-    async function score(e, n) {
+    async function score(e, n, advance) {
       const mine = js.data.myScores[e.id] || 0;
       const value = mine === n ? 0 : n;
       try {
-        await reviewScore(ctx.reviewerKey(), js.id, e.id, value);
+        if (!js.data.sample) await reviewScore(ctx.reviewerKey(), js.id, e.id, value);
         if (value) js.data.myScores[e.id] = value;
         else delete js.data.myScores[e.id];
         ctx.changed();
+        if (advance && value) {
+          const next = js.data.entries.findIndex((x, i) => i > js.idx && !js.data.myScores[x.id]);
+          if (next >= 0) setTimeout(() => {
+            js.idx = next;
+            ctx.render();
+          }, 250);
+        }
       } catch (err) {
         ctx.say(`Couldn't save the score: ${ctx.errText(err)}`);
       }
@@ -13203,37 +13615,44 @@ Version: v${version}`;
     }
     async function saveTop(list) {
       try {
-        await manageContest(ctx.reviewerKey(), { action: "top3", id: js.id, posts: list });
+        if (!js.data.sample) await manageContest(ctx.reviewerKey(), { action: "top3", id: js.id, posts: list });
         js.top = list.slice();
         js.data.contest.top3 = list.slice();
-        ctx.say(list.length ? "Top places saved." : "Top places cleared: places come from the scores.");
+        ctx.say(js.data.sample ? "Sample: top places kept here only." : list.length ? "Top places saved." : "Top places cleared: places come from the scores.");
       } catch (err) {
         ctx.say(`Couldn't save the top places: ${ctx.errText(err)}`);
       }
       ctx.render();
     }
+    const SCORE_NAMES = ["", "Extremely poor", "Poor", "Average", "Good", "Extremely good"];
     function judgingView() {
       const id = judgeContestId();
       if (!id) return h("p", { class: "wz-gl-note", text: "No contest is running." });
       if (js.error) return h("div", { class: "wz-gl-issues", text: js.error });
-      if (!js.data || js.id !== id) return h("p", { class: "wz-gl-note", text: "Loading the entries\u2026" });
+      if (!js.data || js.id !== id || !!js.data.sample !== !!sample()) {
+        loadJudging(true);
+        return h("p", { class: "wz-gl-note", text: "Loading the entries\u2026" });
+      }
       const d = js.data, c = d.contest;
       const owner = ctx.who() && ctx.who().role === "owner";
+      const scores = d.sample ? owner ? sample().runScores : null : d.scores;
       const n = d.entries.length;
       const done = n - unscored();
+      const focus = ctx.reviewLayout() === "c";
       const headBar = h(
         "div",
         { class: "wz-gl-bar" },
         h("b", { text: `Judging: ${c.title}` }),
+        d.sample ? h("span", { class: "wz-gl-sample", text: "sample" }) : null,
         h("span", { class: "dim", text: c.status === "open" ? ` \xB7 entries close ${when(c.closesAt)}` : " \xB7 entries closed" }),
         h("span", { class: "wz-gl-grow" }),
         h("span", { text: `You've scored ${done} of ${n}` }),
         button("\u21BB Refresh", () => loadJudging(true))
       );
       const notes = [h("p", { class: "wz-gl-note", text: "Score each entry 1 (extremely poor) to 5 (extremely good); 3 is average. Click your score again to take it back. Other judges' scores stay hidden." })];
-      if (owner && d.scores) notes.push(h("p", { class: "wz-gl-note", text: "The deadline has passed, so you see everyone's scores. Places go by average score, unless you pick the top 3 below. Publish the results in Contests." }));
+      if (owner && scores) notes.push(h("p", { class: "wz-gl-note", text: d.sample ? "Sample: you see the other judges' made-up scores, as you would once the deadline has passed." : "The deadline has passed, so you see everyone's scores. Places go by average score, unless you pick the top 3 below. Publish the results in Contests." }));
       let topBar = null;
-      if (owner && d.scores) {
+      if (owner && scores) {
         const changedTop = JSON.stringify(js.top) !== JSON.stringify(c.top3 || []);
         topBar = h(
           "div",
@@ -13243,19 +13662,12 @@ Version: v${version}`;
           js.top.length ? button("Use scores instead", () => saveTop([])) : null
         );
       }
-      const sorted = d.scores ? d.entries.slice().sort((a, b) => ((d.scores[b.id] || {}).avg || 0) - ((d.scores[a.id] || {}).avg || 0)) : d.entries;
-      const items = sorted.map((e) => {
-        const mine = d.myScores[e.id] || 0;
-        const btns = h(
-          "div",
-          { class: "wz-gl-scores", title: "Your score" },
-          [1, 2, 3, 4, 5].map((k) => h("button", { type: "button", class: `wz-gl-scorebtn${mine === k ? " on" : ""}`, text: String(k), title: ["", "Extremely poor", "Poor", "Average", "Good", "Extremely good"][k], onclick: () => score(e, k) }))
-        );
-        const parts = [btns];
-        if (d.scores) {
-          const s = d.scores[e.id];
+      const extra = (e) => {
+        const parts = [];
+        if (scores) {
+          const s = scores[e.id];
           parts.push(h("span", { class: "wz-gl-avg", text: s ? `avg ${s.avg.toFixed(2)} \xB7 ${s.n} judge${s.n === 1 ? "" : "s"}` : "no scores yet" }));
-          if (s) parts.push(h("span", { class: "by", text: s.by.map((b) => `${b.name} ${b.score}`).join(", ") }));
+          if (s && s.by) parts.push(h("span", { class: "by", text: s.by.map((b) => `${b.name} ${b.score}`).join(", ") }));
           if (owner) {
             const at = js.top.indexOf(e.id);
             parts.push(h("select", { title: "Place it by hand", onchange: (ev) => {
@@ -13269,16 +13681,52 @@ Version: v${version}`;
             } }, h("option", { value: "0", text: "place: by score", selected: at < 0 }), PLACES.map((p, i) => h("option", { value: String(i + 1), text: p, selected: at === i }))));
           }
         }
-        return entryItem({ ...e, status: "approved" }, { below: h("div", { class: "wz-gl-judge" }, parts) });
+        return parts;
+      };
+      if (!n) return h("div", {}, headBar, notes, h("p", { class: "wz-gl-note", text: "No approved entries yet. Approve them in Uploads." }));
+      if (focus) {
+        js.idx = Math.max(0, Math.min(js.idx, n - 1));
+        const e = d.entries[js.idx];
+        const mine = d.myScores[e.id] || 0;
+        const go = (i) => {
+          js.idx = (i + n) % n;
+          ctx.render();
+        };
+        const nextOpen = d.entries.findIndex((x, i) => i > js.idx && !d.myScores[x.id]);
+        return h(
+          "div",
+          {},
+          headBar,
+          notes,
+          topBar,
+          h(
+            "div",
+            { class: "wz-gl-focus" },
+            h(
+              "div",
+              { class: "nav" },
+              button("\u2039", () => go(js.idx - 1), { title: "Previous" }),
+              h("span", { text: `${js.idx + 1} / ${n}` }),
+              button("\u203A", () => go(js.idx + 1), { title: "Next" }),
+              nextOpen >= 0 ? button("Next unscored", () => go(nextOpen)) : null
+            ),
+            h("div", { class: "cards" }, entryItem({ ...e, status: "approved" }, { below: h("span", { class: "dim", text: `by ${e.author}` }) })),
+            h("div", { class: "wz-gl-scorebig" }, [1, 2, 3, 4, 5].map((k) => h("button", { type: "button", class: mine === k ? "on" : "", title: SCORE_NAMES[k], onclick: () => score(e, k, true) }, String(k), h("small", { text: SCORE_NAMES[k] })))),
+            h("div", { class: "wz-gl-judge" }, extra(e))
+          )
+        );
+      }
+      const sorted = scores ? d.entries.slice().sort((a, b) => ((scores[b.id] || {}).avg || 0) - ((scores[a.id] || {}).avg || 0)) : d.entries;
+      const items = sorted.map((e) => {
+        const mine = d.myScores[e.id] || 0;
+        const btns = h(
+          "div",
+          { class: "wz-gl-scores", title: "Your score" },
+          [1, 2, 3, 4, 5].map((k) => h("button", { type: "button", class: `wz-gl-scorebtn${mine === k ? " on" : ""}`, text: String(k), title: SCORE_NAMES[k], onclick: () => score(e, k) }))
+        );
+        return entryItem({ ...e, status: "approved" }, { below: h("div", { class: "wz-gl-judge" }, btns, extra(e)) });
       });
-      return h(
-        "div",
-        {},
-        headBar,
-        notes,
-        topBar,
-        n ? h("div", { class: "wz-gl-grid" }, items) : h("p", { class: "wz-gl-note", text: "No approved entries yet. Approve them in Uploads." })
-      );
+      return h("div", {}, headBar, notes, topBar, h("div", { class: "wz-gl-grid" }, items));
     }
     async function run(body, ok) {
       cf.busy = true;
@@ -13371,7 +13819,7 @@ Version: v${version}`;
       }
       return h("div", {}, out);
     }
-    return { state: cs, refresh, active, slots, view, judgingView, manageView, loadJudging, unscored, judgeContestId };
+    return { state: cs, refresh, active, shownActive, slots, view, judgingView, manageView, loadJudging, unscored, judgeContestId };
   }
 
   // packages/card-maker/gallery/panel.js
@@ -13388,6 +13836,44 @@ Version: v${version}`;
 .wz-gl-panel.on.browse { display: flex; flex-direction: column; overflow: hidden; }
 .wz-gl-panel.browse > .wz-gl-content { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 .wz-gl-panel.browse > .wz-gl-content > .wz-gl-browse { flex: 1 1 auto; height: auto; }
+.wz-gl-proto { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 4px 8px; margin-bottom: 8px; border: 1px dashed #665; background: #17150c; font-size: 12px; flex: none; }
+.wz-gl-proto b { color: #ffd84a; margin-right: 2px; }
+.wz-gl-proto .sep { width: 1px; height: 16px; background: #554; margin: 0 4px; }
+.wz-gl-proto label { margin: 0; font-weight: normal; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.wz-gl-proto select { height: 20px !important; }
+.wz-gl-proto .wz-cm-btn { height: 20px; line-height: 18px; padding: 0 7px; font-size: 11px; }
+.wz-gl-preview-as { background: #3a1f5a; border: 1px solid #b07de0; color: #e6d4ff; padding: 1px 8px; font-size: 11px; }
+/* roomier Review (dev16 prototypes A/B/C) */
+.wz-gl-rv { font-size: 14px; line-height: 1.45; }
+.wz-gl-rv .wz-cm-btn { height: 28px; font-size: 13px; padding: 0 12px; }
+.wz-gl-rv .wz-gl-note { font-size: 13px; }
+.wz-gl-rv input[type="text"], .wz-gl-rv select { height: 28px !important; font-size: 13px !important; }
+.wz-gl-rv .wz-gl-revpost { padding: 12px 14px; border-width: 2px; }
+.wz-gl-rv .wz-gl-revmeta { font-size: 15px; margin-bottom: 10px; }
+.wz-gl-rv .wz-gl-revactions .wz-cm-btn { height: 34px; padding: 0 22px; font-size: 14px; }
+.wz-gl-rv .wz-gl-revlog { gap: 8px; font-size: 14px; }
+.wz-gl-rv .wz-gl-scorebtn { width: 26px; height: 24px; font-size: 13px; }
+.wz-gl-rseg { display: flex; border: 2px solid #fff; background: #000; margin-bottom: 14px; }
+.wz-gl-rseg button { flex: 1 1 0; background: none; border: 0; color: #bbb; padding: 8px 6px; font: 15px "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; cursor: pointer; }
+.wz-gl-rseg button + button { border-left: 2px solid #fff; }
+.wz-gl-rseg button:hover { color: #fff; }
+.wz-gl-rseg button.on { background: #ffd84a; color: #000; }
+.wz-gl-rseg .n { display: inline-block; margin-left: 6px; background: #e05a5a; color: #fff; border-radius: 9px; padding: 0 6px; font: 11px/16px Arial, sans-serif; }
+.wz-gl-rwho { font-size: 13px; opacity: .8; margin: -6px 0 12px; text-align: right; }
+.wz-gl-rside { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 18px; align-items: start; }
+.wz-gl-rmenu { position: sticky; top: 0; display: flex; flex-direction: column; border: 2px solid #fff; background: #000; }
+.wz-gl-rmenu button { display: flex; justify-content: space-between; align-items: center; background: none; border: 0; color: #bbb; padding: 10px 12px; text-align: left; font: 15px "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; cursor: pointer; }
+.wz-gl-rmenu button + button { border-top: 1px solid #333; }
+.wz-gl-rmenu button:hover { color: #fff; background: #151515; }
+.wz-gl-rmenu button.on { background: #ffd84a; color: #000; }
+.wz-gl-rmenu .n { background: #e05a5a; color: #fff; border-radius: 9px; padding: 0 6px; font: 11px/16px Arial, sans-serif; }
+.wz-gl-rmenu .who { padding: 10px 12px; border-top: 2px solid #fff; font-size: 12px; opacity: .8; }
+.wz-gl-rfocus { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.wz-gl-rfocus .nav { display: flex; align-items: center; gap: 12px; font: 14px "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; }
+.wz-gl-rfocus .wz-gl-revpost { width: 100%; max-width: 900px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; }
+.wz-gl-rfocus .wz-gl-item { --wz-gl-z: 1.3; }
+.wz-gl-rfocus .wz-gl-revactions { justify-content: center; width: 100%; }
+.wz-gl-rfocus .wz-gl-revactions input { max-width: 420px; }
 .wz-gl-ctag { display: inline-block; background: #3a2f0a; border: 1px solid #ffd84a; color: #ffd84a; font-size: 10px; padding: 0 4px; margin-left: 6px; }
 .wz-gl-target { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 8px; }
 .wz-gl-tabs { flex: none; }
@@ -13494,6 +13980,15 @@ ${CONTEST_CSS}
       saveDraft();
     }
     const browse = { list: "new", page: 0, dir: null, mineOnly: false, likedOnly: false };
+    const proto = Object.assign({ contest: "a", review: "a", samples: false, viewAs: "" }, draft2.proto || {}, { viewAs: "" });
+    const saveProto = () => {
+      draft2.proto = { contest: proto.contest, review: proto.review, samples: proto.samples };
+      saveDraft();
+    };
+    if (proto.samples) loadSampleExtras().then((more) => {
+      if (more && open) render2();
+    });
+    const sampleDecided = /* @__PURE__ */ new Set();
     const listeners4 = [];
     const notify2 = () => listeners4.forEach((f) => f());
     let browseCtl = null;
@@ -13537,15 +14032,17 @@ ${CONTEST_CSS}
       sectionError: ""
     });
     let rev = blankRev();
-    const isOwner = () => !!(rev.who && rev.who.role === "owner");
-    const isJudge = () => !!(rev.who && rev.who.role === "judge");
+    const realRole = () => rev.who ? rev.who.role : null;
+    const role = () => realRole() === "owner" && proto.viewAs ? proto.viewAs : realRole();
+    const isOwner = () => role() === "owner";
+    const isJudge = () => role() === "judge";
     async function refreshReview(force) {
       const key2 = reviewerKey2();
       if (!key2 || rev.loading || !force && rev.at && Date.now() - rev.at < 3e4) return;
       rev.loading = true;
       try {
         if (!rev.who) rev.who = await reviewWhoami(key2);
-        if (isJudge()) {
+        if (realRole() === "judge") {
           rev.at = Date.now();
           rev.error = "";
           contests.loadJudging(force);
@@ -13588,23 +14085,35 @@ ${CONTEST_CSS}
       notify2();
       render2();
     }
+    const uploadList = () => proto.samples ? sampleData().uploads.filter((u) => !sampleDecided.has(u.id)) : rev.list;
+    const uploadPost = (p) => proto.samples ? p : rev.posts[p.id];
+    let focusIdx = 0;
+    function decideAny(id, approve) {
+      if (!proto.samples) return decide(id, approve);
+      sampleDecided.add(id);
+      say(`Sample: ${approve ? "approved" : "rejected"} ${id} here only (nothing was sent).`);
+      render2();
+    }
     function uploadsView() {
+      const list = uploadList();
+      const focus = proto.review === "c";
       const head = h(
         "div",
         { class: "wz-gl-bar" },
-        h("b", { text: rev.loading && !rev.at ? "Loading uploads\u2026" : `${rev.list.length} upload${rev.list.length === 1 ? "" : "s"} waiting` }),
+        h("b", { text: rev.loading && !rev.at && !proto.samples ? "Loading uploads\u2026" : `${list.length} upload${list.length === 1 ? "" : "s"} waiting` }),
+        proto.samples ? h("span", { class: "wz-gl-sample", text: "sample" }) : null,
         h("span", { class: "wz-gl-grow" }),
         button("\u21BB Refresh", () => refreshReview(true), { title: "Look for new uploads" })
       );
-      if (rev.error) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: rev.error }));
-      if (!rev.list.length && rev.at) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing to review. New uploads appear here." }));
-      const items = rev.list.map((p) => {
-        const post = rev.posts[p.id];
+      if (rev.error && !proto.samples) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: rev.error }));
+      if (!list.length && (rev.at || proto.samples)) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing to review. New uploads appear here." }));
+      const one = (p) => {
+        const post = uploadPost(p);
         const reason = h("input", { type: "text", placeholder: "Reason (optional, shown to them if rejected)", maxLength: 300, value: rev.reasons[p.id] || "", oninput: (e) => {
           rev.reasons[p.id] = e.target.value;
         } });
-        const approveBtn = button(rev.busy[p.id] || "Approve", () => decide(p.id, true), { primary: true, title: "Add it to the gallery (one commit on the gallery branch)" });
-        const rejectBtn = button("Reject", () => decide(p.id, false), { title: "Don't add it; the author sees it as not approved" });
+        const approveBtn = button(rev.busy[p.id] || "Approve", () => decideAny(p.id, true), { primary: true, title: p.contest ? "Accept it into the contest" : "Add it to the gallery (one commit on the gallery branch)" });
+        const rejectBtn = button("Reject", () => decideAny(p.id, false), { title: "Don't add it; the author sees it as not approved" });
         approveBtn.disabled = rejectBtn.disabled = !!rev.busy[p.id] || !post;
         return h(
           "div",
@@ -13626,29 +14135,52 @@ ${CONTEST_CSS}
           ) : h("p", { class: "wz-gl-note", text: "Loading its cards\u2026" }),
           h("div", { class: "wz-gl-bar wz-gl-revactions" }, approveBtn, rejectBtn, reason)
         );
-      });
-      return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Each upload is shown exactly as it will look in Browse. Approving adds it to the gallery for everyone." }), h("div", { class: "wz-gl-revposts" }, items));
+      };
+      const note = h("p", { class: "wz-gl-note", text: "Each upload is shown exactly as it will look in Browse. Approving adds it to the gallery for everyone (contest entries: to the contest)." });
+      if (focus) {
+        focusIdx = Math.max(0, Math.min(focusIdx, list.length - 1));
+        const go = (i) => {
+          focusIdx = (i + list.length) % list.length;
+          render2();
+        };
+        return h("div", {}, head, note, h(
+          "div",
+          { class: "wz-gl-rfocus" },
+          h("div", { class: "nav" }, button("\u2039", () => go(focusIdx - 1), { title: "Previous" }), h("span", { text: `${focusIdx + 1} / ${list.length}` }), button("\u203A", () => go(focusIdx + 1), { title: "Next" })),
+          one(list[focusIdx])
+        ));
+      }
+      return h("div", {}, head, note, h("div", { class: "wz-gl-revposts" }, list.map(one)));
     }
     function reviewView() {
       if (!reviewerKey2()) return h("p", { class: "wz-gl-note", text: "Review is off." });
-      const running = contests.active();
-      const judging = ["judging", `Judging${contests.unscored() ? ` (${contests.unscored()})` : ""}`];
-      const sections = isJudge() ? [judging] : [["uploads", `Uploads${rev.list.length ? ` (${rev.list.length})` : ""}`]];
+      const running = proto.samples ? contests.shownActive() : contests.active();
+      const nUp = uploadList().length, nJudge = contests.unscored();
+      const judging = ["judging", "Judging", nJudge];
+      const sections = isJudge() ? [judging] : [["uploads", "Uploads", nUp]];
       if (!isJudge()) {
         if (running) sections.push(judging);
-        sections.push(["log", "Log"]);
+        sections.push(["log", "Log", 0]);
       }
-      if (isOwner()) sections.push(["contests", "Contests"], ["reviewers", "Reviewers"]);
-      if (!sections.some(([k]) => k === rev.section)) rev.section = sections[0][0];
-      const bar = h(
-        "div",
-        { class: "wz-gl-bar wz-gl-revtabs" },
-        ...sections.map(([k, label]) => button(label, () => openSection(k), { primary: rev.section === k })),
-        h("span", { class: "wz-gl-grow" }),
-        rev.who ? h("span", { class: "dim", text: `${isJudge() ? "Judging" : "Reviewing"} as ${rev.who.name}${isOwner() ? " (owner)" : ""}` }) : null
-      );
+      if (isOwner()) sections.push(["contests", "Contests", 0], ["reviewers", "Reviewers", 0]);
+      if (!sections.some(([k]) => k === rev.section)) {
+        rev.section = sections[0][0];
+        if (rev.section === "judging") contests.loadJudging(true);
+      }
+      const who = rev.who ? `${isJudge() ? "Judging" : "Reviewing"} as ${rev.who.name}${realRole() === "owner" ? " (owner)" : ""}${proto.viewAs ? `, previewing ${proto.viewAs}` : ""}` : "";
       const body = rev.section === "log" ? logView() : rev.section === "reviewers" ? reviewersView() : rev.section === "judging" ? contests.judgingView() : rev.section === "contests" ? contests.manageView() : uploadsView();
-      return h("div", {}, bar, body);
+      const count = (n) => n ? h("span", { class: "n", text: String(n) }) : null;
+      if (proto.review === "b") {
+        const menu3 = h(
+          "div",
+          { class: "wz-gl-rmenu" },
+          sections.map(([k, label, n]) => h("button", { type: "button", class: rev.section === k ? "on" : "", onclick: () => openSection(k) }, h("span", { text: label }), count(n))),
+          h("div", { class: "who", text: who })
+        );
+        return h("div", { class: "wz-gl-rv wz-gl-revtabs" }, h("div", { class: "wz-gl-rside" }, menu3, h("div", {}, body)));
+      }
+      const seg = h("div", { class: "wz-gl-rseg wz-gl-revtabs" }, sections.map(([k, label, n]) => h("button", { type: "button", class: rev.section === k ? "on" : "", onclick: () => openSection(k) }, label, count(n))));
+      return h("div", { class: "wz-gl-rv" }, seg, h("div", { class: "wz-gl-rwho", text: who }), body);
     }
     function openSection(k) {
       rev.section = k;
@@ -13857,7 +14389,10 @@ ${CONTEST_CSS}
       acct,
       draft: draft2,
       reviewerKey: reviewerKey2,
-      who: () => rev.who,
+      who: () => rev.who ? { ...rev.who, role: role() } : null,
+      samples: () => proto.samples,
+      layout: () => proto.contest,
+      reviewLayout: () => proto.review,
       keyRejected: (code) => onKeyRejected(code),
       refreshMe: (f) => refreshMe(f),
       deleteMine: (e) => deleteMine(e),
@@ -13991,7 +14526,8 @@ ${CONTEST_CSS}
     const tabs = h("div", { class: "wz-gl-bar wz-gl-tabs" });
     const content = h("div", { class: "wz-gl-content" });
     const hover = h("div", { class: "wz-gl-hover" });
-    const panel = h("div", { class: "wz-gl-panel" }, tabs, content, hover);
+    const protoBar = h("div", { class: "wz-gl-proto" });
+    const panel = h("div", { class: "wz-gl-panel" }, protoBar, tabs, content, hover);
     const fileInput = h("input", { type: "file", accept: ".uceditor,image/png", multiple: true, style: { display: "none" } });
     panel.appendChild(fileInput);
     const sizeOf = () => SIZES.find((x) => x[0] === draft2.cardSize) || SIZES[1];
@@ -14081,10 +14617,60 @@ ${CONTEST_CSS}
       return el3;
     };
     panel.addEventListener("scroll", hideHover, { passive: true });
+    const CONTEST_LAYOUTS = [["a", "A Banner"], ["b", "B Sidebar"], ["c", "C Showcase"]];
+    const REVIEW_LAYOUTS = [["a", "A Tabs"], ["b", "B Side menu"], ["c", "C One at a time"]];
+    function renderProto() {
+      const pick = (list, key2) => list.map(([k, label]) => button(label, () => {
+        proto[key2] = k;
+        saveProto();
+        render2();
+      }, { cls: proto[key2] === k ? "wz-gl-on" : "", title: `${key2 === "contest" ? "Contest tab" : "Review"} layout ${label}` }));
+      const owner = realRole() === "owner";
+      protoBar.replaceChildren(...[
+        h("b", { text: "Preview" }),
+        h("span", { text: "Contest:" }),
+        pick(CONTEST_LAYOUTS, "contest"),
+        reviewerKey2() ? [h("span", { class: "sep" }), h("span", { text: "Review:" }), pick(REVIEW_LAYOUTS, "review")] : null,
+        h("span", { class: "sep" }),
+        h("label", { title: "Made-up contests and uploads to try the layouts with. Nothing is sent." }, h("input", { type: "checkbox", checked: proto.samples, onchange: (e) => {
+          proto.samples = e.target.checked;
+          saveProto();
+          if (proto.samples) loadSampleExtras().then((more) => {
+            if (more && open) render2();
+          });
+          contests.loadJudging(true);
+          render2();
+        } }), "Sample data"),
+        owner ? [
+          h("span", { class: "sep" }),
+          h(
+            "label",
+            { title: "See Review as another role would. The server still treats you as the owner." },
+            "View as",
+            h(
+              "select",
+              { onchange: (e) => {
+                proto.viewAs = e.target.value === "owner" ? "" : e.target.value;
+                rev.section = "";
+                notify2();
+                render2();
+              } },
+              [["owner", "Owner"], ["reviewer", "Reviewer"], ["judge", "Judge"], ["player", "Player"]].map(([v, l]) => h("option", { value: v, text: l, selected: (proto.viewAs || "owner") === v }))
+            )
+          ),
+          proto.viewAs ? h("span", { class: "wz-gl-preview-as", text: `Previewing as ${proto.viewAs}` }) : null
+        ] : null
+      ].flat(Infinity).filter(Boolean));
+    }
     function render2() {
       hideHover();
       browseCtl = null;
       if (!open) return;
+      renderProto();
+      if (tab === "review" && !(reviewerKey2() && role() !== "player")) {
+        tab = "browse";
+        notify2();
+      }
       tabs.replaceChildren(
         accountBox(),
         status,
@@ -14547,7 +15133,7 @@ ${CONTEST_CSS}
           refreshMe(true);
           refreshGallery(true);
         },
-        onRemove: reviewerKey2() ? removePost : null,
+        onRemove: reviewerKey2() && (role() === "owner" || role() === "reviewer") ? removePost : null,
         onDelete: deleteMine,
         vote(e, dir) {
           if (!acct.account) {
@@ -14563,7 +15149,7 @@ ${CONTEST_CSS}
     return {
       el: panel,
       isOpen: () => open,
-      isReviewer: () => !!reviewerKey2(),
+      isReviewer: () => !!reviewerKey2() && role() !== "player",
       pendingCount: () => !reviewerKey2() ? 0 : isJudge() ? contests.unscored() : rev.list.length,
       // The Card Maker opened: the reviewer's count of uploads waiting.
       opened() {
@@ -17848,7 +18434,7 @@ ${CONTEST_CSS}
 
   // packages/misc/card-history/game.js
   var W = () => getPageWindow();
-  var cardFile = null;
+  var cardFile2 = null;
   var artifactList = null;
   var page$ = () => W().$;
   var hasI18n = () => {
@@ -17858,7 +18444,7 @@ ${CONTEST_CSS}
   function allCards() {
     const w = W();
     if (Array.isArray(w.allCards) && w.allCards.length) return w.allCards;
-    if (cardFile && cardFile.length) return cardFile;
+    if (cardFile2 && cardFile2.length) return cardFile2;
     try {
       const ls = JSON.parse(w.localStorage.getItem("allCards") || "[]");
       if (Array.isArray(ls) && ls.length) return ls;
@@ -17873,7 +18459,7 @@ ${CONTEST_CSS}
     try {
       const d = await (await fetch(cfg.url, { credentials: "same-origin" })).json();
       const list = Array.isArray(d) ? d : d && (d.cards || d.allCards) || [];
-      cardFile = typeof list === "string" ? JSON.parse(list) : list;
+      cardFile2 = typeof list === "string" ? JSON.parse(list) : list;
     } catch (e) {
     }
   }
@@ -17884,7 +18470,7 @@ ${CONTEST_CSS}
     const n = norm(s);
     return list.find((c) => norm(c.name) === n) || null;
   }
-  async function artifacts2() {
+  async function artifacts3() {
     if (artifactList) return artifactList;
     try {
       const data2 = await (await fetch("/DecksConfig", { credentials: "same-origin" })).json();
@@ -17896,7 +18482,7 @@ ${CONTEST_CSS}
     return artifactList;
   }
   var norm = (s) => String(s || "").toLowerCase().replace(/&amp;/g, "&").replace(/[^a-z0-9]/g, "");
-  function tr(key2, ...args) {
+  function tr2(key2, ...args) {
     try {
       const v = page$().i18n(key2, ...args);
       if (!v || v === key2) return "";
@@ -18021,17 +18607,17 @@ ${CONTEST_CSS}
     const codeNames = /* @__PURE__ */ new Map();
     if (hasI18n()) {
       const kwCode = (id, override) => `{{KW:${id.toUpperCase().replace(/-/g, "_")}${override ? `|override=${override}` : ""}}}`;
-      (R.keywords || []).forEach((id) => add(tr(`kw-${id}`), kwCode(id)));
+      (R.keywords || []).forEach((id) => add(tr2(`kw-${id}`), kwCode(id)));
       (R.legacyKeywords || []).forEach(([word, modern]) => {
         const own = word.toLowerCase().replace(/'/g, "").replace(/ /g, "-");
         if (cap.has(word.toLowerCase())) return;
-        const code = tr(`kw-${own}`) ? kwCode(own, word) : modern && tr(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`;
+        const code = tr2(`kw-${own}`) ? kwCode(own, word) : modern && tr2(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`;
         add(word, code);
       });
       uniq([...R.enchantments || [], ...knownKeys("enchant-")]).forEach((id) => {
         const code = id.toUpperCase().replace(/-/g, "_");
-        const one = tr(`enchant-${id}`, 1);
-        add(tr(`enchant-${id}`, 2), `{{ENCHANT:${code}|2}}`);
+        const one = tr2(`enchant-${id}`, 1);
+        add(tr2(`enchant-${id}`, 2), `{{ENCHANT:${code}|2}}`);
         add(one, `{{ENCHANT:${code}|1}}`);
         if (!one) {
           const words = id.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
@@ -18041,14 +18627,14 @@ ${CONTEST_CSS}
       });
       (R.tribes || []).forEach((id) => {
         const code = id.toUpperCase().replace(/-/g, "_");
-        add(tr(`tribe-${id}`, 2), `{{TRIBE:${code}|2}}`);
-        add(tr(`tribe-${id}`, 1), `{{TRIBE:${code}|1}}`);
+        add(tr2(`tribe-${id}`, 2), `{{TRIBE:${code}|2}}`);
+        add(tr2(`tribe-${id}`, 1), `{{TRIBE:${code}|1}}`);
       });
-      (R.souls || []).forEach((id) => add(tr(`soul-${id}`), `{{SOUL:${id.toUpperCase()}}}`));
-      (R.legacyWithColon || []).forEach(([word, modern]) => colonCodes.set(word, tr(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`));
-      (await artifacts2()).forEach((a) => {
+      (R.souls || []).forEach((id) => add(tr2(`soul-${id}`), `{{SOUL:${id.toUpperCase()}}}`));
+      (R.legacyWithColon || []).forEach(([word, modern]) => colonCodes.set(word, tr2(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`));
+      (await artifacts3()).forEach((a) => {
         if (!a || a.id == null) return;
-        const name = tr(`artifact-name-${a.id}`) || a.name;
+        const name = tr2(`artifact-name-${a.id}`) || a.name;
         addExact(name, `{{ARTIFACT:${a.id}}}`);
         [name, a.name].forEach((n) => {
           if (n) artIds.set(norm(n), a.id);
@@ -18057,12 +18643,12 @@ ${CONTEST_CSS}
       });
       allCards().forEach((c) => {
         const id = c.fixedId || c.id;
-        const name = tr(`card-name-${id}`, 1) || c.name;
+        const name = tr2(`card-name-${id}`, 1) || c.name;
         if (notLinks.has(name)) return;
         addExact(name, `{{CARD:${id}|1}}`);
-        addExact(tr(`card-name-${id}`, 2), `{{CARD:${id}|2}}`);
+        addExact(tr2(`card-name-${id}`, 2), `{{CARD:${id}|2}}`);
         if (!/s$/i.test(name)) addExact(`${name}s`, `{{CARD:${id}|2}}`);
-        codeNames.set(`c:${id}`, uniq([tr(`card-name-${id}`, 2), `${name}s`, name, c.name].filter(Boolean)));
+        codeNames.set(`c:${id}`, uniq([tr2(`card-name-${id}`, 2), `${name}s`, name, c.name].filter(Boolean)));
       });
     }
     const capPattern = (w) => [...w].map((ch, i) => {
@@ -18130,8 +18716,8 @@ ${CONTEST_CSS}
     const key2 = `${c[1] === "CARD" ? "c" : "a"}:${c[2]}`;
     const e = (f.former.byCode.get(key2) || []).find(inEra(verKey));
     if (!e) return void 0;
-    const plural = c[1] === "CARD" && c[3] === "2" && !/s$/i.test(e.name);
-    return { text: plural ? `${e.name}s` : e.name, swap: f.codeNames.get(key2) || [] };
+    const plural2 = c[1] === "CARD" && c[3] === "2" && !/s$/i.test(e.name);
+    return { text: plural2 ? `${e.name}s` : e.name, swap: f.codeNames.get(key2) || [] };
   }
   function withShownText(html, shown) {
     const d = document.createElement("div");
@@ -18461,13 +19047,13 @@ ${CONTEST_CSS}
       }
       const table = el2("table", "wz-ch-myreports-list");
       list.forEach((r) => {
-        const tr2 = el2("tr");
-        tr2.innerHTML = `<td>${escHtml(r.name)}</td><td>${escHtml(r.label)}</td><td class="wz-ch-dim">${r.sent ? "sent" : "not sent"}</td><td></td>`;
-        tr2.lastChild.appendChild(button2("\xD7", "btn-xs btn-default", () => {
+        const tr3 = el2("tr");
+        tr3.innerHTML = `<td>${escHtml(r.name)}</td><td>${escHtml(r.label)}</td><td class="wz-ch-dim">${r.sent ? "sent" : "not sent"}</td><td></td>`;
+        tr3.lastChild.appendChild(button2("\xD7", "btn-xs btn-default", () => {
           removeReport(r.key);
           render2();
         }));
-        table.appendChild(tr2);
+        table.appendChild(tr3);
       });
       const unsent = list.filter((r) => !r.sent);
       const toSend = unsent.length ? unsent : list;
@@ -18718,10 +19304,10 @@ ${note}` : "");
     const s = String(q);
     if (/^\d+$/.test(s)) return list.find((a) => String(a.id) === s) || null;
     const n = norm(s);
-    return list.find((a) => norm(a.name) === n || norm(tr(`artifact-name-${a.id}`)) === n) || list.find((a) => norm(a.image) === n) || null;
+    return list.find((a) => norm(a.name) === n || norm(tr2(`artifact-name-${a.id}`)) === n) || list.find((a) => norm(a.image) === n) || null;
   }
   function row(ver, rarity, f, todayName, todayHtml, target) {
-    const tr2 = document.createElement("tr");
+    const tr22 = document.createElement("tr");
     const v = document.createElement("td");
     v.className = "wz-ch-art-ver wz-ch-badge-spot";
     const label = versionLabel(ver.version);
@@ -18736,16 +19322,16 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     const oldName = ver.name && norm(ver.name) !== norm(todayName) ? `<span class="wz-ch-art-oldname">(${escHtml(ver.name)})</span>` : "";
     const body = todayHtml !== void 0 ? todayHtml : ver.textKnown && ver.text ? formatText2(ver.text, f, ver.version && ver.version.key) : "?";
     t.innerHTML = `<div class="cardDesc wz-ch-art-desc"><div>${oldName}${body}</div></div>`;
-    tr2.append(v, r, t);
+    tr22.append(v, r, t);
     if (target) {
       const d = document.createElement("div");
       d.innerHTML = body;
-      tagNode(tr2, { ...target, label: todayHtml !== void 0 ? "today" : label.text, shown: `${rarity || "?"}: ${ver.name && norm(ver.name) !== norm(todayName) ? `(${ver.name}) ` : ""}${d.textContent.replace(/\s+/g, " ").trim()}`.slice(0, 140) });
+      tagNode(tr22, { ...target, label: todayHtml !== void 0 ? "today" : label.text, shown: `${rarity || "?"}: ${ver.name && norm(ver.name) !== norm(todayName) ? `(${ver.name}) ` : ""}${d.textContent.replace(/\s+/g, " ").trim()}`.slice(0, 140) });
     }
-    return tr2;
+    return tr22;
   }
   function artifactHistoryView(a, data2, f, index) {
-    const todayName = tr(`artifact-name-${a.id}`, 1) || a.name;
+    const todayName = tr2(`artifact-name-${a.id}`, 1) || a.name;
     const todayHtml = trHtml(`artifact-${a.id}`) || (a.description ? formatText2(a.description, f) : "?");
     const today = todayArtifactRarity(a);
     const versions = (data2 && data2.versions ? data2.versions : []).map((v) => ({ ...v }));
@@ -18983,7 +19569,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     }
   }
   async function openArtifact(image) {
-    const list = await artifacts2();
+    const list = await artifacts3();
     const a = findArtifact(list, image);
     if (!a) return;
     const shell = openShell(`Artifact History - ${a.name}`, `https://undercards.fandom.com/wiki/${a.name.replace(/ /g, "_")}`);
@@ -21421,8 +22007,8 @@ d-pad move   ${label("tlSelect")} pick up / press   ${label("tlQuickSend")} send
               dpadHeld = { up, down, left, right };
               refreshHighlight();
               const targetSlot = placingGrid[placingRow][placingCol];
-              const tr2 = targetSlot.getBoundingClientRect();
-              const tcx = tr2.left + tr2.width / 2, tcy = tr2.top + tr2.height / 2;
+              const tr3 = targetSlot.getBoundingClientRect();
+              const tcx = tr3.left + tr3.width / 2, tcy = tr3.top + tr3.height / 2;
               fire(targetSlot, "pointermove", PointerEvent, tcx, tcy, 0, 1);
               fire(targetSlot, "mousemove", MouseEvent, tcx, tcy, 0, 1);
               if (btn(0) && !btnHeld[0]) {

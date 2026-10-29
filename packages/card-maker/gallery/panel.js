@@ -24,6 +24,7 @@ import { getMe, linkStart, linkCheck, getIndex, getTotals, uploadEntries, upload
 import { openVoid, canOpenVoid } from "../../core/uc-report.js";
 import { browseView, allEntries, BROWSE_CSS, removeButton } from "./browse.js";
 import { createContests, CONTEST_CSS } from "./contest.js";
+import { sampleData, loadSampleExtras } from "./mock.js";
 
 const STYLE_ID = "wizascript-cardgallery-style";
 const TYPES = ["Monster", "Spell", "Enchantment", "Artifact"];
@@ -42,6 +43,44 @@ const CSS = `
 .wz-gl-panel.on.browse { display: flex; flex-direction: column; overflow: hidden; }
 .wz-gl-panel.browse > .wz-gl-content { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 .wz-gl-panel.browse > .wz-gl-content > .wz-gl-browse { flex: 1 1 auto; height: auto; }
+.wz-gl-proto { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 4px 8px; margin-bottom: 8px; border: 1px dashed #665; background: #17150c; font-size: 12px; flex: none; }
+.wz-gl-proto b { color: #ffd84a; margin-right: 2px; }
+.wz-gl-proto .sep { width: 1px; height: 16px; background: #554; margin: 0 4px; }
+.wz-gl-proto label { margin: 0; font-weight: normal; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.wz-gl-proto select { height: 20px !important; }
+.wz-gl-proto .wz-cm-btn { height: 20px; line-height: 18px; padding: 0 7px; font-size: 11px; }
+.wz-gl-preview-as { background: #3a1f5a; border: 1px solid #b07de0; color: #e6d4ff; padding: 1px 8px; font-size: 11px; }
+/* roomier Review (dev16 prototypes A/B/C) */
+.wz-gl-rv { font-size: 14px; line-height: 1.45; }
+.wz-gl-rv .wz-cm-btn { height: 28px; font-size: 13px; padding: 0 12px; }
+.wz-gl-rv .wz-gl-note { font-size: 13px; }
+.wz-gl-rv input[type="text"], .wz-gl-rv select { height: 28px !important; font-size: 13px !important; }
+.wz-gl-rv .wz-gl-revpost { padding: 12px 14px; border-width: 2px; }
+.wz-gl-rv .wz-gl-revmeta { font-size: 15px; margin-bottom: 10px; }
+.wz-gl-rv .wz-gl-revactions .wz-cm-btn { height: 34px; padding: 0 22px; font-size: 14px; }
+.wz-gl-rv .wz-gl-revlog { gap: 8px; font-size: 14px; }
+.wz-gl-rv .wz-gl-scorebtn { width: 26px; height: 24px; font-size: 13px; }
+.wz-gl-rseg { display: flex; border: 2px solid #fff; background: #000; margin-bottom: 14px; }
+.wz-gl-rseg button { flex: 1 1 0; background: none; border: 0; color: #bbb; padding: 8px 6px; font: 15px "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; cursor: pointer; }
+.wz-gl-rseg button + button { border-left: 2px solid #fff; }
+.wz-gl-rseg button:hover { color: #fff; }
+.wz-gl-rseg button.on { background: #ffd84a; color: #000; }
+.wz-gl-rseg .n { display: inline-block; margin-left: 6px; background: #e05a5a; color: #fff; border-radius: 9px; padding: 0 6px; font: 11px/16px Arial, sans-serif; }
+.wz-gl-rwho { font-size: 13px; opacity: .8; margin: -6px 0 12px; text-align: right; }
+.wz-gl-rside { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 18px; align-items: start; }
+.wz-gl-rmenu { position: sticky; top: 0; display: flex; flex-direction: column; border: 2px solid #fff; background: #000; }
+.wz-gl-rmenu button { display: flex; justify-content: space-between; align-items: center; background: none; border: 0; color: #bbb; padding: 10px 12px; text-align: left; font: 15px "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; cursor: pointer; }
+.wz-gl-rmenu button + button { border-top: 1px solid #333; }
+.wz-gl-rmenu button:hover { color: #fff; background: #151515; }
+.wz-gl-rmenu button.on { background: #ffd84a; color: #000; }
+.wz-gl-rmenu .n { background: #e05a5a; color: #fff; border-radius: 9px; padding: 0 6px; font: 11px/16px Arial, sans-serif; }
+.wz-gl-rmenu .who { padding: 10px 12px; border-top: 2px solid #fff; font-size: 12px; opacity: .8; }
+.wz-gl-rfocus { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.wz-gl-rfocus .nav { display: flex; align-items: center; gap: 12px; font: 14px "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; }
+.wz-gl-rfocus .wz-gl-revpost { width: 100%; max-width: 900px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; }
+.wz-gl-rfocus .wz-gl-item { --wz-gl-z: 1.3; }
+.wz-gl-rfocus .wz-gl-revactions { justify-content: center; width: 100%; }
+.wz-gl-rfocus .wz-gl-revactions input { max-width: 420px; }
 .wz-gl-ctag { display: inline-block; background: #3a2f0a; border: 1px solid #ffd84a; color: #ffd84a; font-size: 10px; padding: 0 4px; margin-left: 6px; }
 .wz-gl-target { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 8px; }
 .wz-gl-tabs { flex: none; }
@@ -150,6 +189,11 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   let open = false;
   if (draft.browseProto) { delete draft.browseProto; saveDraft(); } // the old sample-entries switch
   const browse = { list: "new", page: 0, dir: null, mineOnly: false, likedOnly: false };
+  // Preview bar (dev16): layout prototypes, sample data, View as. Kept in the draft.
+  const proto = Object.assign({ contest: "a", review: "a", samples: false, viewAs: "" }, draft.proto || {}, { viewAs: "" });
+  const saveProto = () => { draft.proto = { contest: proto.contest, review: proto.review, samples: proto.samples }; saveDraft(); };
+  if (proto.samples) loadSampleExtras().then((more) => { if (more && open) render(); });
+  const sampleDecided = new Set(); // sample uploads approved/rejected here
   const listeners = [];
   const notify = () => listeners.forEach((f) => f());
   let browseCtl = null;
@@ -174,8 +218,12 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   const blankRev = () => ({ list: [], posts: {}, at: 0, loading: false, error: "", busy: {}, reasons: {},
     who: null, section: "uploads", log: null, reviewers: null, newKey: null, newName: "", newRole: "reviewer", adding: false, sectionError: "" });
   let rev = blankRev();
-  const isOwner = () => !!(rev.who && rev.who.role === "owner");
-  const isJudge = () => !!(rev.who && rev.who.role === "judge");
+  // View as (owner only, dev16): try the other roles' screens. Only what's
+  // shown changes; the server still treats the key as the owner's.
+  const realRole = () => (rev.who ? rev.who.role : null);
+  const role = () => (realRole() === "owner" && proto.viewAs ? proto.viewAs : realRole());
+  const isOwner = () => role() === "owner";
+  const isJudge = () => role() === "judge";
   async function refreshReview(force) {
     const key = reviewerKey();
     if (!key || rev.loading || (!force && rev.at && Date.now() - rev.at < 30e3)) return;
@@ -183,7 +231,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     try {
       if (!rev.who) rev.who = await reviewWhoami(key);
       // A judge key only scores its contest.
-      if (isJudge()) { rev.at = Date.now(); rev.error = ""; contests.loadJudging(force); return; }
+      if (realRole() === "judge") { rev.at = Date.now(); rev.error = ""; contests.loadJudging(force); return; }
       contests.refresh();
       const r = await reviewPending(key);
       rev.list = (r && r.posts) || [];
@@ -218,18 +266,31 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     notify();
     render();
   }
+  // Waiting uploads: the real ones, or sample ones while Sample data is on.
+  const uploadList = () => (proto.samples ? sampleData().uploads.filter((u) => !sampleDecided.has(u.id)) : rev.list);
+  const uploadPost = (p) => (proto.samples ? p : rev.posts[p.id]);
+  let focusIdx = 0;
+  function decideAny(id, approve) {
+    if (!proto.samples) return decide(id, approve);
+    sampleDecided.add(id);
+    say(`Sample: ${approve ? "approved" : "rejected"} ${id} here only (nothing was sent).`);
+    render();
+  }
   function uploadsView() {
+    const list = uploadList();
+    const focus = proto.review === "c";
     const head = h("div", { class: "wz-gl-bar" },
-      h("b", { text: rev.loading && !rev.at ? "Loading uploads…" : `${rev.list.length} upload${rev.list.length === 1 ? "" : "s"} waiting` }),
+      h("b", { text: rev.loading && !rev.at && !proto.samples ? "Loading uploads…" : `${list.length} upload${list.length === 1 ? "" : "s"} waiting` }),
+      proto.samples ? h("span", { class: "wz-gl-sample", text: "sample" }) : null,
       h("span", { class: "wz-gl-grow" }),
       button("↻ Refresh", () => refreshReview(true), { title: "Look for new uploads" }));
-    if (rev.error) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: rev.error }));
-    if (!rev.list.length && rev.at) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing to review. New uploads appear here." }));
-    const items = rev.list.map((p) => {
-      const post = rev.posts[p.id];
+    if (rev.error && !proto.samples) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: rev.error }));
+    if (!list.length && (rev.at || proto.samples)) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing to review. New uploads appear here." }));
+    const one = (p) => {
+      const post = uploadPost(p);
       const reason = h("input", { type: "text", placeholder: "Reason (optional, shown to them if rejected)", maxLength: 300, value: rev.reasons[p.id] || "", oninput: (e) => { rev.reasons[p.id] = e.target.value; } });
-      const approveBtn = button(rev.busy[p.id] || "Approve", () => decide(p.id, true), { primary: true, title: "Add it to the gallery (one commit on the gallery branch)" });
-      const rejectBtn = button("Reject", () => decide(p.id, false), { title: "Don't add it; the author sees it as not approved" });
+      const approveBtn = button(rev.busy[p.id] || "Approve", () => decideAny(p.id, true), { primary: true, title: p.contest ? "Accept it into the contest" : "Add it to the gallery (one commit on the gallery branch)" });
+      const rejectBtn = button("Reject", () => decideAny(p.id, false), { title: "Don't add it; the author sees it as not approved" });
       approveBtn.disabled = rejectBtn.disabled = !!rev.busy[p.id] || !post;
       return h("div", { class: "wz-gl-revpost" },
         h("div", { class: "wz-gl-revmeta" },
@@ -242,28 +303,44 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
           h("div", { class: "wz-gl-row" }, post.parts.map((c) => hoverable(h("div", { class: "wz-gl-zoom" }, tile(c)), c, null))))
           : h("p", { class: "wz-gl-note", text: "Loading its cards…" }),
         h("div", { class: "wz-gl-bar wz-gl-revactions" }, approveBtn, rejectBtn, reason));
-    });
-    return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Each upload is shown exactly as it will look in Browse. Approving adds it to the gallery for everyone." }), h("div", { class: "wz-gl-revposts" }, items));
+    };
+    const note = h("p", { class: "wz-gl-note", text: "Each upload is shown exactly as it will look in Browse. Approving adds it to the gallery for everyone (contest entries: to the contest)." });
+    if (focus) {
+      // C: one upload at a time, big
+      focusIdx = Math.max(0, Math.min(focusIdx, list.length - 1));
+      const go = (i) => { focusIdx = (i + list.length) % list.length; render(); };
+      return h("div", {}, head, note, h("div", { class: "wz-gl-rfocus" },
+        h("div", { class: "nav" }, button("‹", () => go(focusIdx - 1), { title: "Previous" }), h("span", { text: `${focusIdx + 1} / ${list.length}` }), button("›", () => go(focusIdx + 1), { title: "Next" })),
+        one(list[focusIdx])));
+    }
+    return h("div", {}, head, note, h("div", { class: "wz-gl-revposts" }, list.map(one)));
   }
-  // Review's sections: Uploads, Log, and (owner only) Reviewers.
+  // Review's sections: Uploads, Judging, Log, and (owner) Contests and Reviewers.
+  // Three layouts to try (Preview bar): A tabs, B side menu, C one at a time.
   function reviewView() {
     if (!reviewerKey()) return h("p", { class: "wz-gl-note", text: "Review is off." });
-    const running = contests.active();
-    const judging = ["judging", `Judging${contests.unscored() ? ` (${contests.unscored()})` : ""}`];
-    const sections = isJudge() ? [judging] : [["uploads", `Uploads${rev.list.length ? ` (${rev.list.length})` : ""}`]];
+    const running = proto.samples ? contests.shownActive() : contests.active();
+    const nUp = uploadList().length, nJudge = contests.unscored();
+    const judging = ["judging", "Judging", nJudge];
+    const sections = isJudge() ? [judging] : [["uploads", "Uploads", nUp]];
     if (!isJudge()) {
       if (running) sections.push(judging);
-      sections.push(["log", "Log"]);
+      sections.push(["log", "Log", 0]);
     }
-    if (isOwner()) sections.push(["contests", "Contests"], ["reviewers", "Reviewers"]);
-    if (!sections.some(([k]) => k === rev.section)) rev.section = sections[0][0];
-    const bar = h("div", { class: "wz-gl-bar wz-gl-revtabs" },
-      ...sections.map(([k, label]) => button(label, () => openSection(k), { primary: rev.section === k })),
-      h("span", { class: "wz-gl-grow" }),
-      rev.who ? h("span", { class: "dim", text: `${isJudge() ? "Judging" : "Reviewing"} as ${rev.who.name}${isOwner() ? " (owner)" : ""}` }) : null);
+    if (isOwner()) sections.push(["contests", "Contests", 0], ["reviewers", "Reviewers", 0]);
+    if (!sections.some(([k]) => k === rev.section)) { rev.section = sections[0][0]; if (rev.section === "judging") contests.loadJudging(true); }
+    const who = rev.who ? `${isJudge() ? "Judging" : "Reviewing"} as ${rev.who.name}${realRole() === "owner" ? " (owner)" : ""}${proto.viewAs ? `, previewing ${proto.viewAs}` : ""}` : "";
     const body = rev.section === "log" ? logView() : rev.section === "reviewers" ? reviewersView() : rev.section === "judging" ? contests.judgingView()
       : rev.section === "contests" ? contests.manageView() : uploadsView();
-    return h("div", {}, bar, body);
+    const count = (n) => (n ? h("span", { class: "n", text: String(n) }) : null);
+    if (proto.review === "b") {
+      const menu = h("div", { class: "wz-gl-rmenu" },
+        sections.map(([k, label, n]) => h("button", { type: "button", class: rev.section === k ? "on" : "", onclick: () => openSection(k) }, h("span", { text: label }), count(n))),
+        h("div", { class: "who", text: who }));
+      return h("div", { class: "wz-gl-rv wz-gl-revtabs" }, h("div", { class: "wz-gl-rside" }, menu, h("div", {}, body)));
+    }
+    const seg = h("div", { class: "wz-gl-rseg wz-gl-revtabs" }, sections.map(([k, label, n]) => h("button", { type: "button", class: rev.section === k ? "on" : "", onclick: () => openSection(k) }, label, count(n))));
+    return h("div", { class: "wz-gl-rv" }, seg, h("div", { class: "wz-gl-rwho", text: who }), body);
   }
   function openSection(k) {
     rev.section = k;
@@ -396,7 +473,10 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     acct,
     draft,
     reviewerKey,
-    who: () => rev.who,
+    who: () => (rev.who ? { ...rev.who, role: role() } : null),
+    samples: () => proto.samples,
+    layout: () => proto.contest,
+    reviewLayout: () => proto.review,
     keyRejected: (code) => onKeyRejected(code),
     refreshMe: (f) => refreshMe(f),
     deleteMine: (e) => deleteMine(e),
@@ -499,7 +579,8 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   const tabs = h("div", { class: "wz-gl-bar wz-gl-tabs" });
   const content = h("div", { class: "wz-gl-content" });
   const hover = h("div", { class: "wz-gl-hover" });
-  const panel = h("div", { class: "wz-gl-panel" }, tabs, content, hover);
+  const protoBar = h("div", { class: "wz-gl-proto" });
+  const panel = h("div", { class: "wz-gl-panel" }, protoBar, tabs, content, hover);
   const fileInput = h("input", { type: "file", accept: ".uceditor,image/png", multiple: true, style: { display: "none" } });
   panel.appendChild(fileInput);
 
@@ -571,10 +652,31 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   };
   panel.addEventListener("scroll", hideHover, { passive: true });
 
+  const CONTEST_LAYOUTS = [["a", "A Banner"], ["b", "B Sidebar"], ["c", "C Showcase"]];
+  const REVIEW_LAYOUTS = [["a", "A Tabs"], ["b", "B Side menu"], ["c", "C One at a time"]];
+  function renderProto() {
+    const pick = (list, key) => list.map(([k, label]) => button(label, () => { proto[key] = k; saveProto(); render(); }, { cls: proto[key] === k ? "wz-gl-on" : "", title: `${key === "contest" ? "Contest tab" : "Review"} layout ${label}` }));
+    const owner = realRole() === "owner";
+    protoBar.replaceChildren(...[h("b", { text: "Preview" }),
+      h("span", { text: "Contest:" }), pick(CONTEST_LAYOUTS, "contest"),
+      reviewerKey() ? [h("span", { class: "sep" }), h("span", { text: "Review:" }), pick(REVIEW_LAYOUTS, "review")] : null,
+      h("span", { class: "sep" }),
+      h("label", { title: "Made-up contests and uploads to try the layouts with. Nothing is sent." }, h("input", { type: "checkbox", checked: proto.samples, onchange: (e) => {
+        proto.samples = e.target.checked; saveProto();
+        if (proto.samples) loadSampleExtras().then((more) => { if (more && open) render(); });
+        contests.loadJudging(true); render();
+      } }), "Sample data"),
+      owner ? [h("span", { class: "sep" }), h("label", { title: "See Review as another role would. The server still treats you as the owner." }, "View as",
+        h("select", { onchange: (e) => { proto.viewAs = e.target.value === "owner" ? "" : e.target.value; rev.section = ""; notify(); render(); } },
+          [["owner", "Owner"], ["reviewer", "Reviewer"], ["judge", "Judge"], ["player", "Player"]].map(([v, l]) => h("option", { value: v, text: l, selected: (proto.viewAs || "owner") === v })))),
+      proto.viewAs ? h("span", { class: "wz-gl-preview-as", text: `Previewing as ${proto.viewAs}` }) : null] : null].flat(Infinity).filter(Boolean));
+  }
   function render() {
     hideHover();
     browseCtl = null;
     if (!open) return;
+    renderProto();
+    if (tab === "review" && !(reviewerKey() && role() !== "player")) { tab = "browse"; notify(); }
     tabs.replaceChildren(
       accountBox(), status, h("span", { class: "wz-gl-grow" }), sizeButtons());
     panel.classList.toggle("browse", tab === "browse");
@@ -876,7 +978,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
       hoverable,
       rerender: render,
       onRefresh: () => { voteQueue.flush(); refreshMe(true); refreshGallery(true); },
-      onRemove: reviewerKey() ? removePost : null,
+      onRemove: reviewerKey() && (role() === "owner" || role() === "reviewer") ? removePost : null,
       onDelete: deleteMine,
       vote(e, dir) {
         if (!acct.account) { say("Link your Undercards account to vote: press Link my account at the top."); return; }
@@ -890,7 +992,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   return {
     el: panel,
     isOpen: () => open,
-    isReviewer: () => !!reviewerKey(),
+    isReviewer: () => !!reviewerKey() && role() !== "player",
     pendingCount: () => (!reviewerKey() ? 0 : isJudge() ? contests.unscored() : rev.list.length),
     // The Card Maker opened: the reviewer's count of uploads waiting.
     opened() { if (reviewerKey()) refreshReview(); },

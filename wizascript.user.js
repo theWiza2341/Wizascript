@@ -1066,6 +1066,7 @@ Share the cards you make. It's part of the Card Maker: use **Browse** and **Subm
 - Cards use the game's DTM-Mono font and card frames, and long names and text shrink to fit, the way UC Editor does it (thanks to sernon158).
 - Artifacts take the same space as a card (two cards' width when their text is very long), and enchantments get a plain outer frame.
 - Uploads are reviewed before they appear: until then they show under **My posts** as awaiting approval, and as "not approved" (with the reason, on hover) if they're turned down. Posts that weren't approved can be deleted for good (**Delete** under the post). Likes and dislikes are saved as you go; you can change or take back a vote. **\u21BB** (bottom left of Browse) loads the latest posts and votes. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
+- **Contest** (\u2605 in the title bar): themed card-design contests. Read the theme, rules and deadline, then press **Enter cards** to enter up to 3 designs (a set counts as one). You can withdraw an entry before the deadline to free its slot. There's no voting: the organizers judge the entries, and the results and every entry stay in the contest archive. Entries join the gallery once the results are out.
 
 ## 1.6.2
 
@@ -1813,19 +1814,19 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   var AXIS_STABLE_FRAMES_NEEDED = 90;
   var AXIS_JITTER_EPS = 0.02;
   var AXIS_CALIBRATION_WINDOW_MS = 4e3;
-  function getCalibratedAxes(pad2) {
-    let cal = AXIS_CALIBRATION.get(pad2.id);
+  function getCalibratedAxes(pad3) {
+    let cal = AXIS_CALIBRATION.get(pad3.id);
     if (!cal) {
       cal = {
-        baseline: pad2.axes.map(() => 0),
-        lastRaw: pad2.axes.slice(),
-        stableFrames: pad2.axes.map(() => 0),
+        baseline: pad3.axes.map(() => 0),
+        lastRaw: pad3.axes.slice(),
+        stableFrames: pad3.axes.map(() => 0),
         calibrateUntil: Date.now() + AXIS_CALIBRATION_WINDOW_MS
       };
-      AXIS_CALIBRATION.set(pad2.id, cal);
+      AXIS_CALIBRATION.set(pad3.id, cal);
     }
     if (Date.now() < cal.calibrateUntil) {
-      pad2.axes.forEach((v, i) => {
+      pad3.axes.forEach((v, i) => {
         const prev = cal.lastRaw[i] !== void 0 ? cal.lastRaw[i] : v;
         if (Math.abs(v - prev) < AXIS_JITTER_EPS) {
           cal.stableFrames[i] = (cal.stableFrames[i] || 0) + 1;
@@ -1835,11 +1836,11 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         cal.lastRaw[i] = v;
         if (cal.stableFrames[i] === AXIS_STABLE_FRAMES_NEEDED && Math.abs(v - (cal.baseline[i] || 0)) > AXIS_JITTER_EPS) {
           cal.baseline[i] = v;
-          if (debugLoggingEnabled) console.log(`[Wizascript Controller] axis ${i} on "${pad2.id}" recalibrated to neutral=${v.toFixed(3)} after holding steady for ~1.5s (calibration window closes ${((cal.calibrateUntil - Date.now()) / 1e3).toFixed(1)}s from now)`);
+          if (debugLoggingEnabled) console.log(`[Wizascript Controller] axis ${i} on "${pad3.id}" recalibrated to neutral=${v.toFixed(3)} after holding steady for ~1.5s (calibration window closes ${((cal.calibrateUntil - Date.now()) / 1e3).toFixed(1)}s from now)`);
         }
       });
     }
-    return pad2.axes.map((v, i) => Math.max(-1, Math.min(1, v - (cal.baseline[i] || 0))));
+    return pad3.axes.map((v, i) => Math.max(-1, Math.min(1, v - (cal.baseline[i] || 0))));
   }
   var WEBHID_VENDOR_ID = 1406;
   var hidDevice = null;
@@ -3068,6 +3069,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       ].concat(settingOn("cardMaker.gallery", true) ? [
         "<b>Browse</b> / <b>Submit</b> (title bar) open the Card Gallery. First press <b>Link my account</b>: it types a one-time line into void (chat room 0) for you to send, so your posts and votes count as your Undercards account.",
         "In Submit, <b>Read from this editor</b> lists the cards you've made; tick the ones to add, link them into sets, then <b>Review upload</b> and <b>Upload to Gallery</b>. Uploads show to everyone once approved.",
+        "<b>Contest</b> shows the running contest (theme, rules, deadline) and past results. <b>Enter cards</b> takes you to Submit, to enter up to 3 designs.",
         "Given a gallery key? Press <b>Redeem Key</b> on the Card Maker tab and enter it."
       ] : [])
     }
@@ -5764,13 +5766,13 @@ Version: v${version}`;
         artifactContainer.innerHTML = "";
         try {
           const decoded = decodeDeck(deck.deckCode);
-          const artifacts4 = ((decoded == null ? void 0 : decoded.artifactIds) || []).map((id) => getArtifactById(id)).filter(Boolean);
-          artifacts4.forEach((artifact, index) => {
+          const artifacts3 = ((decoded == null ? void 0 : decoded.artifactIds) || []).map((id) => getArtifactById(id)).filter(Boolean);
+          artifacts3.forEach((artifact, index) => {
             const img = document.createElement("img");
             img.src = `images/artifacts/${artifact.image}.png`;
             img.title = artifact.name;
             artifactContainer.appendChild(img);
-            if (index < artifacts4.length - 1) artifactContainer.append(" ");
+            if (index < artifacts3.length - 1) artifactContainer.append(" ");
           });
         } catch (err) {
           logger4.error("card", "Artifact decode failed", err, deck);
@@ -10891,10 +10893,10 @@ Version: v${version}`;
       }
       root.appendChild(menu3);
       const rr = root.getBoundingClientRect();
-      const tr3 = (it ? it.el : root).getBoundingClientRect();
-      let left = tr3.right - rr.left + 6;
-      if (left + menu3.offsetWidth > rr.width - 4) left = Math.max(4, tr3.left - rr.left - menu3.offsetWidth - 6);
-      let top = tr3.top - rr.top;
+      const tr2 = (it ? it.el : root).getBoundingClientRect();
+      let left = tr2.right - rr.left + 6;
+      if (left + menu3.offsetWidth > rr.width - 4) left = Math.max(4, tr2.left - rr.left - menu3.offsetWidth - 6);
+      let top = tr2.top - rr.top;
       if (top + menu3.offsetHeight > rr.height - 4) top = Math.max(4, rr.height - menu3.offsetHeight - 4);
       menu3.style.left = left + "px";
       menu3.style.top = Math.max(4, top) + "px";
@@ -11411,7 +11413,7 @@ Version: v${version}`;
     document.body.appendChild(win.root);
     renderAll();
     ensureArtifacts();
-    const pad2 = createPad({
+    const pad3 = createPad({
       root: win.root,
       tiers,
       picker,
@@ -11420,8 +11422,8 @@ Version: v${version}`;
       isListsMenuOpen: () => !!listsMenu,
       hide: () => hideTierList()
     });
-    pad2.start();
-    mounted = { controller, win, picker, pad: pad2 };
+    pad3.start();
+    mounted = { controller, win, picker, pad: pad3 };
     applyLook();
   }
   function hideTierList() {
@@ -12529,23 +12531,38 @@ Version: v${version}`;
   var reviewersList = (key2) => admin("GET", "/v1/admin/reviewers", key2);
   var reviewerAdd = (key2, name) => admin("POST", "/v1/admin/reviewers/add", key2, { name });
   var reviewerRevoke = (key2, id) => admin("POST", "/v1/admin/reviewers/revoke", key2, { id });
+  var reviewerAddJudge = (key2, name) => admin("POST", "/v1/admin/reviewers/add", key2, { name, role: "judge" });
+  var reviewContest = (key2, id) => admin("GET", `/v1/admin/contest?id=${encodeURIComponent(id)}`, key2);
+  var reviewScore = (key2, contest, post, score) => admin("POST", "/v1/admin/score", key2, { contest, post, score });
+  var manageContest = (key2, body) => admin("POST", "/v1/admin/contests", key2, body);
+  var getContests = () => request("GET", `${WORKER}/v1/contests`);
   var reviewPending = (key2) => admin("GET", "/v1/admin/pending", key2);
   var reviewPost = (key2, id) => admin("GET", `/v1/admin/post?id=${encodeURIComponent(id)}`, key2);
   var reviewDecide = (key2, id, approve, reason) => admin("POST", "/v1/admin/decide", key2, { id, approve: !!approve, reason: reason || "" });
   var reviewRemove = (key2, id) => admin("POST", "/v1/admin/remove", key2, { id });
-  async function getIndex() {
-    const idx = await request("GET", `${GALLERY_RAW}index.json?t=${Math.floor(Date.now() / 6e4)}`);
-    const art = (p) => typeof p === "string" && /^art\/[a-z0-9-]{1,40}\.png$/.test(p) ? GALLERY_RAW + p : "";
-    const posts = (idx && Array.isArray(idx.posts) ? idx.posts : []).filter((p) => p && /^[0-9a-z]{3,8}$/.test(p.id)).map((p) => ({
+  var artUrl = (p) => typeof p === "string" && /^art\/[a-z0-9-]{1,40}\.png$/.test(p) ? GALLERY_RAW + p : "";
+  var validId = (p) => p && /^[0-9a-z]{3,8}$/.test(p.id);
+  function withArt(p) {
+    return {
       ...p,
       parts: (p.parts || []).map((c) => ({
         ...c,
-        art: art(c.art),
-        picture: c.picture ? art(c.picture) || void 0 : void 0,
-        tribes: (c.tribes || []).map((t) => ({ ...t, icon: art(t.icon) }))
+        art: artUrl(c.art),
+        picture: c.picture ? artUrl(c.picture) || void 0 : void 0,
+        tribes: (c.tribes || []).map((t) => ({ ...t, icon: artUrl(t.icon) }))
       }))
+    };
+  }
+  async function getIndex() {
+    const idx = await request("GET", `${GALLERY_RAW}index.json?t=${Math.floor(Date.now() / 6e4)}`);
+    return (idx && Array.isArray(idx.posts) ? idx.posts : []).filter(validId).map(withArt);
+  }
+  async function getContestsFile() {
+    const f = await request("GET", `${GALLERY_RAW}contests.json?t=${Math.floor(Date.now() / 6e4)}`);
+    return (f && Array.isArray(f.contests) ? f.contests : []).filter((c) => c && /^c[0-9a-z]{1,8}$/.test(c.id)).map((c) => ({
+      ...c,
+      entries: (Array.isArray(c.entries) ? c.entries : []).filter(validId).map(withArt)
     }));
-    return posts;
   }
   var dataBytes = (s) => typeof s === "string" && s.startsWith("data:") ? Math.floor((s.length - s.indexOf(",") - 1) * 3 / 4) : 0;
   function toUploadPart(p) {
@@ -12594,14 +12611,14 @@ Version: v${version}`;
     if (cur.length) batches.push(cur);
     return batches;
   }
-  async function uploadEntries(entries2, onProgress) {
+  async function uploadEntries(entries2, onProgress, contest) {
     const batches = splitUploads(entries2);
     const sent = [];
     for (let i = 0; i < batches.length; i++) {
       if (onProgress) onProgress(i, batches.length);
       let res;
       try {
-        res = await authed("POST", "/v1/posts", { entries: batches[i].map(({ local, ...e }) => e) });
+        res = await authed("POST", "/v1/posts", { entries: batches[i].map(({ local, ...e }) => e), ...contest ? { contest } : {} });
       } catch (e) {
         e.extra = { ...e.extra || {}, sent };
         throw e;
@@ -12649,157 +12666,6 @@ Version: v${version}`;
       flush,
       pending: () => ({ ...queue })
     };
-  }
-
-  // packages/card-maker/gallery/mock.js
-  var AUTHORS = ["SampleMaker", "PixelSmith", "TestPlayer", "CardFan", "MockAuthor", "DraftWizard", "ExampleUser", "Placeholder"];
-  var SET_NAMES = ["Hotland Heat", "Snowdin Patrol", "Core Meltdown", "Ruins Revival", "Dark World Deals", "Waterfall Echoes", "Royal Lab"];
-  var cardFile = null;
-  function gameCards() {
-    const w = getPageWindow();
-    if (Array.isArray(w.allCards) && w.allCards.length) return w.allCards;
-    if (cardFile && cardFile.length) return cardFile;
-    try {
-      const ls = JSON.parse(w.localStorage.getItem("allCards") || "[]");
-      if (Array.isArray(ls)) return ls;
-    } catch (e) {
-    }
-    return [];
-  }
-  function tr(key2) {
-    try {
-      const $2 = getPageWindow().$;
-      const v = $2 && $2.i18n ? $2.i18n(key2) : "";
-      if (!v || v === key2) return "";
-      const d = document.createElement("div");
-      d.innerHTML = String(v).replace(/<br\s*\/?>/gi, "\n");
-      return d.textContent;
-    } catch (e) {
-      return "";
-    }
-  }
-  function toPart(c, i) {
-    const ext = c.extension === "DELTARUNE" ? "DELTARUNE" : c.extension === "UTY" ? "UTY" : "BASE";
-    const monster = c.typeCard === 0;
-    return {
-      id: `mock${i}`,
-      source: "sample",
-      type: monster ? "Monster" : "Spell",
-      name: tr(`card-name-${c.fixedId || c.id}`) || c.name || "",
-      cost: c.cost,
-      atk: monster ? c.attack : void 0,
-      hp: monster ? c.hp : void 0,
-      desc: tr(`card-${c.fixedId || c.id}`) || (c.description ? String(c.description).replace(/<[^>]+>/g, "") : ""),
-      art: c.image ? `/images/cards/${c.image}.png` : "",
-      rarity: c.rarity ? `${ext}_${c.rarity}` : "",
-      tribes: []
-    };
-  }
-  var artifacts2 = null;
-  var extras = null;
-  function loadSampleExtras() {
-    if (extras) return extras;
-    const cards2 = gameCards().length ? Promise.resolve(false) : (() => {
-      const cfg = getPageWindow().cardsClientConfig;
-      if (!cfg || !cfg.url) return Promise.resolve(false);
-      return fetch(cfg.url, { credentials: "same-origin" }).then((r) => r.json()).then((d) => {
-        const list = Array.isArray(d) ? d : d && (d.cards || d.allCards) || [];
-        cardFile = typeof list === "string" ? JSON.parse(list) : list;
-        return cardFile.length > 0;
-      }).catch(() => false);
-    })();
-    const arts = fetch("/DecksConfig", { credentials: "same-origin" }).then((r) => r.json()).then((d) => {
-      const raw = d && d.allArtifacts;
-      artifacts2 = ((typeof raw === "string" ? JSON.parse(raw) : raw) || []).filter((a) => a && a.image && !a.disabled && !a.custom);
-      return artifacts2.length > 0;
-    }).catch(() => false);
-    extras = Promise.all([cards2, arts]).then(([a, b]) => {
-      cache = null;
-      return a || b;
-    });
-    return extras;
-  }
-  var ENCHANTS = [
-    ["Sample Bonfire", "After a monster is played here, deal 2 DMG to it."],
-    ["Sample Snowfall", "Monsters here have -1 ATK."],
-    ["Sample Spotlight", "At the end of your turn, give the monster here +1/+1."],
-    ["Sample Echo Flowers", "When a monster here dies, draw 1 card."],
-    ["Sample Conveyor", "At the start of your turn, the monster here gets Haste."],
-    ["Sample Puzzle Floor", "Spells that target a monster here cost 1 more."]
-  ];
-  function artifactPart(a, i) {
-    const rarity = a.unavailable === true ? "TOKEN" : a.legendary === true ? "LEGENDARY" : a.legendary === false ? "COMMON" : String(a.rarity || "COMMON").toUpperCase();
-    return {
-      id: `mocka${i}`,
-      source: "sample",
-      type: "Artifact",
-      name: tr(`artifact-name-${a.id}`) || a.name || "",
-      desc: tr(`artifact-${a.id}`) || (a.description ? String(a.description).replace(/<[^>]+>/g, "") : ""),
-      art: `/images/artifacts/${a.image}.png`,
-      rarity
-    };
-  }
-  var cache = null;
-  function sampleEntries() {
-    if (cache) return cache;
-    const cards2 = gameCards().filter((c) => c && c.name && c.image && (c.typeCard === 0 || c.typeCard === 1) && c.rarity !== "TOKEN");
-    if (!cards2.length && !(artifacts2 && artifacts2.length)) return [];
-    let seed = 12345;
-    const rnd = () => (seed = seed * 1103515245 + 12345 >>> 0) / 4294967296;
-    const pool = cards2.slice().sort(() => rnd() - 0.5);
-    const out = [];
-    let n = 0;
-    for (let e = 0; e < 36 && n < pool.length; e++) {
-      const isSet = e % 6 === 2;
-      const size = isSet ? 2 + Math.floor(rnd() * 3) : 1;
-      const parts = pool.slice(n, n + size).map((c, k) => toPart(c, n + k));
-      n += size;
-      out.push({
-        key: `sample${e}`,
-        kind: isSet && parts.length > 1 ? "set" : "single",
-        title: isSet ? SET_NAMES[(e / 6 | 0) % SET_NAMES.length] : parts[0].name,
-        parts,
-        author: AUTHORS[Math.floor(rnd() * AUTHORS.length)],
-        days: Math.floor(rnd() * rnd() * 120),
-        base: Math.floor(rnd() * rnd() * 140) - 8,
-        sample: true
-      });
-    }
-    const arts = (artifacts2 || []).slice().sort(() => rnd() - 0.5);
-    const evil = arts.findIndex((a) => /^evil\s*plan$/i.test(a.name || "") || /^evil_?plan$/i.test(a.image || ""));
-    if (evil > 0) arts.unshift(arts.splice(evil, 1)[0]);
-    arts.slice(0, 8).forEach((a, k) => {
-      const part = artifactPart(a, k);
-      out.splice(Math.min(out.length, 3 + k * 5), 0, {
-        key: `samplea${k}`,
-        kind: "single",
-        title: part.name,
-        parts: [part],
-        author: AUTHORS[Math.floor(rnd() * AUTHORS.length)],
-        days: Math.floor(rnd() * rnd() * 120),
-        base: Math.floor(rnd() * rnd() * 140) - 8,
-        sample: true
-      });
-    });
-    ENCHANTS.forEach(([name, desc], k) => {
-      const part = { id: `mocke${k}`, source: "sample", type: "Enchantment", name, desc, art: "" };
-      const setAt = out.findIndex((e) => e.kind === "set" && !e.parts.some((p) => p.type === "Enchantment"));
-      if (k === 0 && setAt >= 0) {
-        out[setAt].parts.push(part);
-        return;
-      }
-      out.splice(Math.min(out.length, 5 + k * 6), 0, {
-        key: `samplee${k}`,
-        kind: "single",
-        title: name,
-        parts: [part],
-        author: AUTHORS[Math.floor(rnd() * AUTHORS.length)],
-        days: Math.floor(rnd() * rnd() * 120),
-        base: Math.floor(rnd() * rnd() * 140) - 8,
-        sample: true
-      });
-    });
-    return cache = out;
   }
 
   // packages/card-maker/gallery/browse.js
@@ -12858,14 +12724,13 @@ Version: v${version}`;
 .wz-gl-remove { background: none; border: 1px solid #553; color: #a88; font-size: 10px; line-height: 14px; padding: 0 4px; margin-left: 4px; cursor: pointer; }
 .wz-gl-remove:hover, .wz-gl-remove.armed { border-color: #e07a7a; color: #ffb4b4; }
 .wz-gl-mine.rejected { background: #5a1f1f; border-color: #e07a7a; }
-.wz-gl-mine.sample { background: #333; border-color: #777; }
 .wz-gl-seg { position: relative; display: flex; margin: 0; width: 100%; max-width: 560px; flex: 1 1 360px; border: 2px solid #fff; background: #000; }
 .wz-gl-seg button { flex: 1 1 0; position: relative; z-index: 1; background: none; border: 0; color: #bbb; padding: 6px 0 5px; font-size: 14px; cursor: pointer; font-family: ${DT}; }
 .wz-gl-seg button:hover { color: #fff; }
 .wz-gl-seg button.on { color: #000; }
 .wz-gl-seg .pill { position: absolute; top: 0; bottom: 0; width: 25%; background: var(--wz-gl-accent); transition: left .25s ease; }
 `;
-  function allEntries({ approved, own, totals, baseVotes, current, account, samples, sampleVotes }) {
+  function allEntries({ approved, own, totals, baseVotes, current, account }) {
     const now = Date.now();
     const days = (t) => Math.max(0, Math.floor((now - (t || now)) / 864e5));
     const server = approved.map((p) => {
@@ -12899,14 +12764,7 @@ Version: v${version}`;
       vote: 0,
       score: 0
     }));
-    const list = server.concat(waiting, samples ? sampleEntries() : []);
-    list.forEach((e) => {
-      if (e.sample) {
-        e.vote = sampleVotes[e.key] || 0;
-        e.score = e.base + e.vote;
-      }
-    });
-    return list;
+    return server.concat(waiting);
   }
   function filtered(entries2, { mineOnly, likedOnly }) {
     return entries2.filter((e) => (!mineOnly || e.mine) && (!likedOnly || e.vote === 1));
@@ -13074,12 +12932,12 @@ Version: v${version}`;
     const isSet = e.kind === "set";
     const vote = (dir) => ctx.vote(e, dir);
     const pending = e.status === "pending", rejected = e.status === "rejected";
-    const tag = e.mine || e.sample ? h("span", {
-      class: `wz-gl-mine${pending ? " pending" : rejected ? " rejected" : e.sample ? " sample" : ""}`,
-      text: pending ? isSet ? "awaiting approval" : "pending" : rejected ? "not approved" : e.sample ? "sample" : "yours",
-      title: pending ? "Awaiting approval: shows to everyone once approved" : rejected ? "This upload wasn't approved" : e.sample ? "A sample entry, not a real post" : "Your post"
+    const tag = e.mine ? h("span", {
+      class: `wz-gl-mine${pending ? " pending" : rejected ? " rejected" : ""}`,
+      text: pending ? isSet ? "awaiting approval" : "pending" : rejected ? "not approved" : "yours",
+      title: pending ? "Awaiting approval: shows to everyone once approved" : rejected ? "This upload wasn't approved" : "Your post"
     }) : null;
-    const canVote = e.sample || e.status === "approved";
+    const canVote = e.status === "approved";
     return h(
       "div",
       { class: `wz-gl-item${isSet ? " set" : ""}`, "data-key": e.key },
@@ -13101,6 +12959,421 @@ Version: v${version}`;
     );
   }
 
+  // packages/card-maker/gallery/contest.js
+  var DT2 = `"DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace`;
+  var PLACES = ["1st", "2nd", "3rd"];
+  var CONTEST_CSS = `
+.wz-gl-cbar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+.wz-gl-chead { border: 2px solid #fff; background: #000; padding: 8px 12px; margin-bottom: 10px; }
+.wz-gl-ctitle { font: 18px ${DT2}; color: #ffd84a; margin-bottom: 4px; }
+.wz-gl-crules { white-space: pre-wrap; margin: 4px 0 6px; line-height: 1.4; }
+.wz-gl-cmeta { opacity: .85; }
+.wz-gl-cmeta b { color: #fff; }
+.wz-gl-csub { font: 13px ${DT2}; margin: 12px 0 6px; color: #ddd; }
+.wz-gl-place { font: 12px/16px ${DT2}; color: #ffd84a; }
+.wz-gl-place.p1 { color: #ffd84a; } .wz-gl-place.p2 { color: #d8d8d8; } .wz-gl-place.p3 { color: #e09a5a; }
+.wz-gl-item.p1 { border: 2px solid #ffd84a; } .wz-gl-item.p2 { border: 2px solid #d8d8d8; } .wz-gl-item.p3 { border: 2px solid #e09a5a; }
+.wz-gl-avg { font-size: 11px; opacity: .8; }
+.wz-gl-scores { display: flex; gap: 2px; align-items: center; }
+.wz-gl-scorebtn { background: #000; border: 1px solid #777; color: #ccc; width: 20px; height: 18px; padding: 0; font: 11px/16px ${DT2}; cursor: pointer; }
+.wz-gl-scorebtn:hover { border-color: #fff; color: #fff; }
+.wz-gl-scorebtn.on { background: #ffd84a; border-color: #ffd84a; color: #000; }
+.wz-gl-judge { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.wz-gl-judge .by { font-size: 10px; opacity: .7; max-width: 200px; text-align: center; }
+.wz-gl-form { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 10px; align-items: center; max-width: 620px; margin: 6px 0 10px; }
+.wz-gl-form label { margin: 0; font-weight: normal; opacity: .85; }
+.wz-gl-panel textarea { color: #fff !important; background: #222 !important; border: 1px solid #666 !important; border-radius: 3px; font: 12px Arial, sans-serif; padding: 4px; min-height: 70px; resize: vertical; width: 100%; box-sizing: border-box; }
+.wz-gl-panel input[type="datetime-local"], .wz-gl-panel input[type="number"] { color: #fff !important; background: #222 !important; border: 1px solid #666 !important; border-radius: 3px; font: 11px Arial, sans-serif; height: 22px; padding: 0 4px; color-scheme: dark; }
+.wz-gl-cbox { border: 1px solid #444; background: #111; padding: 8px 10px; margin-bottom: 10px; }
+`;
+  var pad2 = (n) => String(n).padStart(2, "0");
+  var toLocalInput = (ms) => {
+    const d = new Date(ms);
+    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  };
+  var fromLocalInput = (v) => {
+    const t = new Date(v).getTime();
+    return Number.isFinite(t) ? t : null;
+  };
+  var when = (ms) => new Date(ms).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  function inTime(ms) {
+    const m = Math.round((ms - Date.now()) / 6e4);
+    if (m <= 0) return "now";
+    if (m < 60) return `in ${m} min`;
+    const hrs = Math.floor(m / 60);
+    if (hrs < 48) return `in ${hrs} h${m % 60 ? ` ${m % 60} min` : ""}`;
+    return `in ${Math.floor(hrs / 24)} days`;
+  }
+  var daysAgo = (t) => Math.max(0, Math.floor((Date.now() - (t || Date.now())) / 864e5));
+  function createContests(ctx) {
+    const cs = { list: null, file: null, at: 0, loading: false, error: "", pick: null, sort: "rank" };
+    const js = { id: null, data: null, at: 0, loading: false, error: "", top: null };
+    const cf = { title: "", rules: "", closes: "", max: 3, busy: false, editFor: null };
+    async function refresh(force) {
+      if (cs.loading || !force && cs.at && Date.now() - cs.at < 3e4) return;
+      cs.loading = true;
+      try {
+        const [api, file] = await Promise.all([getContests(), getContestsFile().catch(() => null)]);
+        cs.list = api && api.contests || [];
+        if (file) cs.file = file;
+        cs.error = "";
+        cs.at = Date.now();
+      } catch (e) {
+        cs.error = ctx.errText(e);
+      } finally {
+        cs.loading = false;
+        ctx.changed();
+      }
+    }
+    const active = () => (cs.list || []).find((c) => c.status !== "archived") || null;
+    const fileFor = (id) => (cs.file || []).find((c) => c.id === id) || null;
+    function slots() {
+      const c = active();
+      if (!c || c.status !== "open") return null;
+      const mine = ctx.acct.contest && ctx.acct.contest.id === c.id ? ctx.acct.contest : null;
+      const used = mine ? mine.used : 0;
+      return { contest: c, used, max: c.maxEntries, left: Math.max(0, c.maxEntries - used) };
+    }
+    function entryItem(e, { place, cls, below } = {}) {
+      const isSet = e.kind === "set";
+      const info = { author: e.author, days: daysAgo(e.approvedAt || e.postedAt), status: e.status || "approved", reason: e.reason };
+      return h(
+        "div",
+        { class: `wz-gl-item${isSet ? " set" : ""}${cls ? " " + cls : ""}`, "data-key": e.id },
+        isSet ? h("div", { class: "wz-gl-sethead" }, h("div", { class: "wz-gl-setname", text: e.title || "(no name)", title: e.title || "" })) : null,
+        h("div", { class: "wz-gl-row" }, e.parts.map((p) => ctx.hoverable(h("div", { class: "wz-gl-zoom" }, tile(p)), p, info))),
+        place || below ? h("div", { class: "wz-gl-votes" }, place || null, below || null) : null
+      );
+    }
+    function view() {
+      if (!cs.list) return h("p", { class: "wz-gl-note", text: cs.error ? `Couldn't load the contests: ${cs.error}` : "Loading the contests\u2026" });
+      if (!cs.list.length) {
+        return h(
+          "div",
+          {},
+          h("p", { class: "wz-gl-note", text: "No contests yet." }),
+          h("p", { class: "wz-gl-note", text: "Contests have a theme and a deadline. Enter your designs; the organizers judge them, and the results are kept here." })
+        );
+      }
+      const cur = active();
+      if (!cs.pick || !cs.list.some((c2) => c2.id === cs.pick)) cs.pick = cur ? cur.id : cs.list[0].id;
+      const archived = cs.list.filter((c2) => c2.status === "archived");
+      const bar = h(
+        "div",
+        { class: "wz-gl-cbar" },
+        cur ? button(`\u2605 ${cur.title}`, () => {
+          cs.pick = cur.id;
+          ctx.render();
+        }, { primary: cs.pick === cur.id, title: "The contest running now" }) : null,
+        archived.length ? h("span", { class: "dim", text: cur ? "Past:" : "Past contests:" }) : null,
+        archived.map((c2) => button(c2.title, () => {
+          cs.pick = c2.id;
+          ctx.render();
+        }, { primary: cs.pick === c2.id, title: `Ended ${when(c2.closesAt)}` })),
+        h("span", { class: "wz-gl-grow" }),
+        h("button", { type: "button", class: "wz-gl-refresh", title: "Load the latest", text: "\u21BB", onclick: () => {
+          refresh(true);
+          ctx.refreshMe(true);
+        } })
+      );
+      const c = cs.list.find((x) => x.id === cs.pick);
+      return h("div", {}, bar, c.status === "archived" ? archiveView(c) : runningView(c));
+    }
+    function head(c, lines) {
+      return h(
+        "div",
+        { class: "wz-gl-chead" },
+        h("div", { class: "wz-gl-ctitle", text: c.title }),
+        c.rules ? h("div", { class: "wz-gl-crules", text: c.rules }) : null,
+        lines.map((l) => h("div", { class: "wz-gl-cmeta" }, l))
+      );
+    }
+    function runningView(c) {
+      const open = c.status === "open";
+      const s = slots();
+      const lines = [open ? ["Entries close ", h("b", { text: when(c.closesAt) }), ` (${inTime(c.closesAt)}). Up to ${c.maxEntries} per player; a set counts as one.`] : ["Entries closed ", h("b", { text: when(c.closesAt) }), ". The organizers are judging; results show here when they're done."]];
+      if (open) {
+        const enter = button(!ctx.acct.account ? "Link your account to enter" : s && !s.left ? "No entries left" : "Enter cards", () => ctx.startEntry(c.id), { primary: true, title: "Pick cards in Submit and upload them to this contest" });
+        enter.disabled = !ctx.acct.account || !s || !s.left;
+        lines.push([h("span", { text: s ? `Your entries: ${s.used} of ${s.max}. ` : "" }), enter]);
+      }
+      const own = ctx.acct.posts.filter((p) => p.contest === c.id && ctx.draft.uploads[p.id]).map((p) => ({ ...ctx.draft.uploads[p.id], id: p.id, status: p.status, reason: p.reason, author: ctx.acct.account, postedAt: p.postedAt }));
+      const entriesFile = fileFor(c.id);
+      const all = entriesFile ? entriesFile.entries : [];
+      const others = all.filter((e) => !own.some((o) => o.id === e.id));
+      const ownItems = own.map((e) => {
+        const tagText = e.status === "approved" ? "entered" : e.status === "pending" ? "awaiting approval" : "not approved";
+        const tag = h("span", { class: `wz-gl-mine${e.status === "pending" ? " pending" : e.status === "rejected" || e.status === "removed" ? " rejected" : ""}`, text: tagText });
+        const canWithdraw = open && (e.status === "pending" || e.status === "approved");
+        const del = canWithdraw ? removeButton({ rerender: ctx.render }, e, { label: "Withdraw", confirm: "Withdraw it?", title: "Take this entry back, to free its slot", run: ctx.deleteMine }) : e.status === "rejected" || e.status === "removed" ? removeButton({ rerender: ctx.render }, e, { label: "Delete", confirm: "Delete for good?", title: "Delete this entry: it wasn't approved", run: ctx.deleteMine }) : null;
+        return entryItem(e, { below: [tag, del] });
+      });
+      return h(
+        "div",
+        {},
+        head(c, lines),
+        ownItems.length ? [h("div", { class: "wz-gl-csub", text: "Your entries" }), h("div", { class: "wz-gl-grid" }, ownItems)] : null,
+        h("div", { class: "wz-gl-csub", text: `Entries so far (${c.entries})` }),
+        others.length ? h("div", { class: "wz-gl-grid" }, others.map((e) => entryItem(e))) : h("p", { class: "wz-gl-note", text: c.entries ? "They'll show here in a few minutes." : "None yet. Be the first!" }),
+        h("p", { class: "wz-gl-note", text: "There's no voting on contest entries: the organizers judge them. They join the gallery once the results are out." })
+      );
+    }
+    function archiveView(c) {
+      const f = fileFor(c.id);
+      if (!f) return h("div", {}, head(c, [`Ended ${when(c.closesAt)}.`]), h("p", { class: "wz-gl-note", text: "Loading the results\u2026" }));
+      const res = f.results || { order: [], scores: {} };
+      const byId2 = new Map(f.entries.map((e) => [e.id, e]));
+      const ranked = res.order.map((id) => byId2.get(id)).filter(Boolean);
+      f.entries.forEach((e) => {
+        if (!res.order.includes(e.id)) ranked.push(e);
+      });
+      const list = cs.sort === "new" ? ranked.slice().sort((a, b) => (b.postedAt || 0) - (a.postedAt || 0)) : ranked;
+      const sortBar = h(
+        "div",
+        { class: "wz-gl-cbar" },
+        h("span", { class: "dim", text: "Sort:" }),
+        button("Ranking", () => {
+          cs.sort = "rank";
+          ctx.render();
+        }, { primary: cs.sort !== "new" }),
+        button("Newest", () => {
+          cs.sort = "new";
+          ctx.render();
+        }, { primary: cs.sort === "new" })
+      );
+      const items = list.map((e) => {
+        const i = ranked.indexOf(e);
+        const sc = res.scores[e.id];
+        const placeCls = i < 3 ? ` p${i + 1}` : "";
+        const place = h("span", { class: `wz-gl-place${placeCls}`, text: i < 3 ? PLACES[i] : `# ${i + 1}` });
+        const avg = h("span", { class: "wz-gl-avg", text: sc && sc.n ? `${sc.avg.toFixed(2)} (${sc.n} judge${sc.n === 1 ? "" : "s"})` : "not scored" });
+        return entryItem(e, { place, below: avg, cls: i < 3 && cs.sort !== "new" ? `p${i + 1}` : "" });
+      });
+      return h(
+        "div",
+        {},
+        head(c, [`Ended ${when(c.closesAt)} \xB7 ${f.entries.length} entr${f.entries.length === 1 ? "y" : "ies"}. ${res.manualTop ? "The organizers picked the top places; the rest are" : "Places are"} by average score (1 to 5).`]),
+        f.entries.length ? sortBar : null,
+        f.entries.length ? h("div", { class: "wz-gl-grid" }, items) : h("p", { class: "wz-gl-note", text: "No entries." })
+      );
+    }
+    const judgeContestId = () => {
+      const who = ctx.who();
+      if (who && who.role === "judge") return who.contest;
+      const c = active();
+      return c ? c.id : null;
+    };
+    async function loadJudging(force) {
+      const id = judgeContestId();
+      if (!id || !ctx.reviewerKey()) {
+        js.data = null;
+        return;
+      }
+      if (js.loading || !force && js.id === id && js.at && Date.now() - js.at < 3e4) return;
+      js.loading = true;
+      try {
+        const d = await reviewContest(ctx.reviewerKey(), id);
+        d.entries = (d.entries || []).filter((e) => e && /^[0-9a-z]{3,8}$/.test(e.id)).map(withArt);
+        js.data = d;
+        js.id = id;
+        js.top = (js.data.contest.top3 || []).slice();
+        js.error = "";
+        js.at = Date.now();
+      } catch (e) {
+        if (e.code === "not_admin" || e.code === "key_expired") return ctx.keyRejected(e.code);
+        js.error = ctx.errText(e);
+      } finally {
+        js.loading = false;
+        ctx.changed();
+      }
+    }
+    const unscored = () => js.data ? js.data.entries.filter((e) => !js.data.myScores[e.id]).length : 0;
+    async function score(e, n) {
+      const mine = js.data.myScores[e.id] || 0;
+      const value = mine === n ? 0 : n;
+      try {
+        await reviewScore(ctx.reviewerKey(), js.id, e.id, value);
+        if (value) js.data.myScores[e.id] = value;
+        else delete js.data.myScores[e.id];
+        ctx.changed();
+      } catch (err) {
+        ctx.say(`Couldn't save the score: ${ctx.errText(err)}`);
+      }
+      ctx.render();
+    }
+    async function saveTop(list) {
+      try {
+        await manageContest(ctx.reviewerKey(), { action: "top3", id: js.id, posts: list });
+        js.top = list.slice();
+        js.data.contest.top3 = list.slice();
+        ctx.say(list.length ? "Top places saved." : "Top places cleared: places come from the scores.");
+      } catch (err) {
+        ctx.say(`Couldn't save the top places: ${ctx.errText(err)}`);
+      }
+      ctx.render();
+    }
+    function judgingView() {
+      const id = judgeContestId();
+      if (!id) return h("p", { class: "wz-gl-note", text: "No contest is running." });
+      if (js.error) return h("div", { class: "wz-gl-issues", text: js.error });
+      if (!js.data || js.id !== id) return h("p", { class: "wz-gl-note", text: "Loading the entries\u2026" });
+      const d = js.data, c = d.contest;
+      const owner = ctx.who() && ctx.who().role === "owner";
+      const n = d.entries.length;
+      const done = n - unscored();
+      const headBar = h(
+        "div",
+        { class: "wz-gl-bar" },
+        h("b", { text: `Judging: ${c.title}` }),
+        h("span", { class: "dim", text: c.status === "open" ? ` \xB7 entries close ${when(c.closesAt)}` : " \xB7 entries closed" }),
+        h("span", { class: "wz-gl-grow" }),
+        h("span", { text: `You've scored ${done} of ${n}` }),
+        button("\u21BB Refresh", () => loadJudging(true))
+      );
+      const notes = [h("p", { class: "wz-gl-note", text: "Score each entry 1 (extremely poor) to 5 (extremely good); 3 is average. Click your score again to take it back. Other judges' scores stay hidden." })];
+      if (owner && d.scores) notes.push(h("p", { class: "wz-gl-note", text: "The deadline has passed, so you see everyone's scores. Places go by average score, unless you pick the top 3 below. Publish the results in Contests." }));
+      let topBar = null;
+      if (owner && d.scores) {
+        const changedTop = JSON.stringify(js.top) !== JSON.stringify(c.top3 || []);
+        topBar = h(
+          "div",
+          { class: "wz-gl-bar" },
+          h("span", { text: js.top.length ? `Top places by hand: ${js.top.map((pid, i) => `${PLACES[i]} #${pid}`).join(", ")}` : "Top places: by score" }),
+          button("Save top places", () => saveTop(js.top.filter(Boolean)), { primary: changedTop }),
+          js.top.length ? button("Use scores instead", () => saveTop([])) : null
+        );
+      }
+      const sorted = d.scores ? d.entries.slice().sort((a, b) => ((d.scores[b.id] || {}).avg || 0) - ((d.scores[a.id] || {}).avg || 0)) : d.entries;
+      const items = sorted.map((e) => {
+        const mine = d.myScores[e.id] || 0;
+        const btns = h(
+          "div",
+          { class: "wz-gl-scores", title: "Your score" },
+          [1, 2, 3, 4, 5].map((k) => h("button", { type: "button", class: `wz-gl-scorebtn${mine === k ? " on" : ""}`, text: String(k), title: ["", "Extremely poor", "Poor", "Average", "Good", "Extremely good"][k], onclick: () => score(e, k) }))
+        );
+        const parts = [btns];
+        if (d.scores) {
+          const s = d.scores[e.id];
+          parts.push(h("span", { class: "wz-gl-avg", text: s ? `avg ${s.avg.toFixed(2)} \xB7 ${s.n} judge${s.n === 1 ? "" : "s"}` : "no scores yet" }));
+          if (s) parts.push(h("span", { class: "by", text: s.by.map((b) => `${b.name} ${b.score}`).join(", ") }));
+          if (owner) {
+            const at = js.top.indexOf(e.id);
+            parts.push(h("select", { title: "Place it by hand", onchange: (ev) => {
+              const want = Number(ev.target.value);
+              js.top = js.top.filter((x) => x !== e.id);
+              if (want) {
+                js.top.splice(want - 1, 0, e.id);
+                js.top = js.top.slice(0, 3);
+              }
+              ctx.render();
+            } }, h("option", { value: "0", text: "place: by score", selected: at < 0 }), PLACES.map((p, i) => h("option", { value: String(i + 1), text: p, selected: at === i }))));
+          }
+        }
+        return entryItem({ ...e, status: "approved" }, { below: h("div", { class: "wz-gl-judge" }, parts) });
+      });
+      return h(
+        "div",
+        {},
+        headBar,
+        notes,
+        topBar,
+        n ? h("div", { class: "wz-gl-grid" }, items) : h("p", { class: "wz-gl-note", text: "No approved entries yet. Approve them in Uploads." })
+      );
+    }
+    async function run(body, ok) {
+      cf.busy = true;
+      ctx.render();
+      try {
+        const r = await manageContest(ctx.reviewerKey(), body);
+        ctx.say(ok(r));
+        js.at = 0;
+        await refresh(true);
+      } catch (e) {
+        ctx.say(ctx.errText(e));
+      }
+      cf.busy = false;
+      ctx.render();
+    }
+    function form(c) {
+      if (c && cf.editFor !== c.id) Object.assign(cf, { editFor: c.id, title: c.title, rules: c.rules || "", closes: toLocalInput(c.closesAt), max: c.maxEntries });
+      if (!c && cf.editFor) Object.assign(cf, { editFor: null, title: "", rules: "", closes: "", max: 3 });
+      const input = (key2, props) => h("input", { ...props, value: String(cf[key2]), oninput: (e) => {
+        cf[key2] = e.target.value;
+      } });
+      return h(
+        "div",
+        { class: "wz-gl-form" },
+        h("label", { text: "Title" }),
+        input("title", { type: "text", maxLength: 60, placeholder: "e.g. Heart of the Underground" }),
+        h("label", { text: "Theme and rules" }),
+        h("textarea", { maxLength: 1500, placeholder: "What to make, and any rules", text: cf.rules, oninput: (e) => {
+          cf.rules = e.target.value;
+        } }),
+        h("label", { text: "Deadline" }),
+        input("closes", { type: "datetime-local" }),
+        h("label", { text: "Entries per player" }),
+        input("max", { type: "number", min: 1, max: 10, step: 1, style: { width: "60px" } })
+      );
+    }
+    const fields = () => {
+      const closesAt = fromLocalInput(cf.closes);
+      return { title: cf.title.trim(), rules: cf.rules.trim(), closesAt, maxEntries: Math.round(Number(cf.max)) };
+    };
+    function manageView() {
+      if (!cs.list) return h("p", { class: "wz-gl-note", text: "Loading the contests\u2026" });
+      const cur = active();
+      const out = [];
+      if (cur) {
+        const save2 = button(cf.busy ? "Saving\u2026" : "Save changes", () => {
+          const f = fields();
+          if (!f.title || !f.closesAt) return ctx.say("Fill in a title and a deadline.");
+          run({ action: "edit", id: cur.id, ...f }, () => "Contest updated.");
+        }, { primary: true });
+        save2.disabled = cf.busy;
+        const publish = removeButton({ rerender: ctx.render }, cur, { label: "Publish results", confirm: "Publish? This is final.", title: "Archive the contest: places are frozen, entries join the gallery, judge keys stop working", run: () => run({ action: "archive", id: cur.id }, () => `Results of "${cur.title}" published.`) });
+        publish.disabled = cur.status === "open";
+        if (cur.status === "open") publish.title = "Available once the deadline has passed";
+        out.push(h(
+          "div",
+          { class: "wz-gl-cbox" },
+          h("div", { class: "wz-gl-bar" }, h("b", { text: `Running: ${cur.title}` }), h("span", { class: "dim", text: ` \xB7 ${cur.status === "open" ? `entries close ${when(cur.closesAt)} (${inTime(cur.closesAt)})` : "judging"} \xB7 ${cur.entries} approved entr${cur.entries === 1 ? "y" : "ies"}` })),
+          form(cur),
+          h(
+            "div",
+            { class: "wz-gl-bar" },
+            save2,
+            publish,
+            h("span", { class: "wz-gl-grow" }),
+            removeButton({ rerender: ctx.render }, cur, { label: "Delete contest", confirm: "Delete it and its entries?", title: "For mistakes and tests: removes the contest and everything entered in it", run: () => run({ action: "delete", id: cur.id }, () => "Contest deleted.") })
+          ),
+          h("p", { class: "wz-gl-note", text: "Judge keys (in Reviewers) work for this contest until you publish the results. Score entries in Judging." })
+        ));
+      } else {
+        const start = button(cf.busy ? "Starting\u2026" : "Start contest", () => {
+          const f = fields();
+          if (!f.title || !f.closesAt) return ctx.say("Fill in a title and a deadline.");
+          if (f.closesAt <= Date.now()) return ctx.say("The deadline must be in the future.");
+          run({ action: "create", ...f }, (r) => `Started "${r.contest.title}".`);
+        }, { primary: true });
+        start.disabled = cf.busy;
+        out.push(h("div", { class: "wz-gl-cbox" }, h("b", { text: "Start a contest" }), form(null), h("div", { class: "wz-gl-bar" }, start)));
+      }
+      const past = cs.list.filter((c) => c.status === "archived");
+      if (past.length) {
+        out.push(h("div", { class: "wz-gl-csub", text: "Past contests" }), h("div", { class: "wz-gl-revlog" }, past.map((c) => h(
+          "div",
+          { class: "wz-gl-bar" },
+          h("b", { text: c.title }),
+          h("span", { class: "dim", text: `ended ${when(c.closesAt)} \xB7 ${c.entries} entr${c.entries === 1 ? "y" : "ies"}` }),
+          h("span", { class: "wz-gl-grow" }),
+          removeButton({ rerender: ctx.render }, c, { label: "Delete", confirm: "Delete it and its entries?", title: "Remove this contest from the archive, with its entries", run: () => run({ action: "delete", id: c.id }, () => "Contest deleted.") })
+        ))));
+      }
+      return h("div", {}, out);
+    }
+    return { state: cs, refresh, active, slots, view, judgingView, manageView, loadJudging, unscored, judgeContestId };
+  }
+
   // packages/card-maker/gallery/panel.js
   var STYLE_ID3 = "wizascript-cardgallery-style";
   var TYPES2 = ["Monster", "Spell", "Enchantment", "Artifact"];
@@ -13115,9 +13388,8 @@ Version: v${version}`;
 .wz-gl-panel.on.browse { display: flex; flex-direction: column; overflow: hidden; }
 .wz-gl-panel.browse > .wz-gl-content { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 .wz-gl-panel.browse > .wz-gl-content > .wz-gl-browse { flex: 1 1 auto; height: auto; }
-.wz-gl-proto { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 3px 6px; margin-bottom: 8px; border: 1px dashed #665; background: #17150c; font-size: 11px; flex: none; }
-.wz-gl-proto b { color: #ffd84a; margin-right: 4px; }
-.wz-gl-proto label { margin: 0 0 0 10px; font-weight: normal; cursor: pointer; }
+.wz-gl-ctag { display: inline-block; background: #3a2f0a; border: 1px solid #ffd84a; color: #ffd84a; font-size: 10px; padding: 0 4px; margin-left: 6px; }
+.wz-gl-target { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 8px; }
 .wz-gl-tabs { flex: none; }
 .wz-gl-part:has(.wz-gl-wide) { width: calc(355px * var(--wz-gl-z) + 14px); }
 .wz-gl-toggle.on, .wz-cm-btn.wz-gl-on { background: #4464bd; border-color: #8ea6e8; }
@@ -13200,6 +13472,7 @@ Version: v${version}`;
 .wz-gl-hinfo .dim { opacity: .7; }
 ${TILE_CSS}
 ${BROWSE_CSS}
+${CONTEST_CSS}
 `;
   function injectStyle2() {
     if (document.getElementById(STYLE_ID3)) return;
@@ -13216,19 +13489,21 @@ ${BROWSE_CSS}
     const draft2 = getDraft();
     let tab = draft2.parts.length ? "browse" : "submit";
     let open = false;
-    const proto = draft2.browseProto || {};
-    const browse = { list: "new", page: 0, samples: proto.samples === true, dir: null, mineOnly: false, likedOnly: false };
+    if (draft2.browseProto) {
+      delete draft2.browseProto;
+      saveDraft();
+    }
+    const browse = { list: "new", page: 0, dir: null, mineOnly: false, likedOnly: false };
     const listeners4 = [];
     const notify2 = () => listeners4.forEach((f) => f());
     let browseCtl = null;
-    let extrasAsked = false;
-    const sampleVotes = {};
     let read2 = null;
     let readTimer = null;
     let reviewing = false;
     let lastUpload = null;
     let uploading = false;
-    const acct = { loaded: false, loading: false, account: null, cooldownUntil: null, votes: {}, posts: [], error: "", at: 0 };
+    let submitTo = null;
+    const acct = { loaded: false, loading: false, account: null, cooldownUntil: null, votes: {}, posts: [], contest: null, error: "", at: 0 };
     let linking = null;
     const gal = { approved: [], totals: {}, base: {}, at: 0, loading: false, error: "" };
     const voteQueue = createVoteQueue({
@@ -13257,17 +13532,26 @@ ${BROWSE_CSS}
       reviewers: null,
       newKey: null,
       newName: "",
+      newRole: "reviewer",
       adding: false,
       sectionError: ""
     });
     let rev = blankRev();
     const isOwner = () => !!(rev.who && rev.who.role === "owner");
+    const isJudge = () => !!(rev.who && rev.who.role === "judge");
     async function refreshReview(force) {
       const key2 = reviewerKey2();
       if (!key2 || rev.loading || !force && rev.at && Date.now() - rev.at < 3e4) return;
       rev.loading = true;
       try {
         if (!rev.who) rev.who = await reviewWhoami(key2);
+        if (isJudge()) {
+          rev.at = Date.now();
+          rev.error = "";
+          contests.loadJudging(force);
+          return;
+        }
+        contests.refresh();
         const r = await reviewPending(key2);
         rev.list = r && r.posts || [];
         rev.error = "";
@@ -13329,6 +13613,7 @@ ${BROWSE_CSS}
             "div",
             { class: "wz-gl-revmeta" },
             h("b", { text: p.title || "(no name)" }),
+            p.contest ? h("span", { class: "wz-gl-ctag", text: `Contest: ${p.contestTitle || p.contest}`, title: "Entered in this contest: check it follows the theme and rules" }) : null,
             h("span", { class: "dim", text: ` ${p.kind === "set" ? `set of ${post ? post.parts.length : "?"}` : post ? post.parts[0].type : ""} \xB7 by ` }),
             h("b", { text: p.author }),
             h("span", { class: "dim", text: ` \xB7 ${new Date(p.postedAt).toLocaleString()} \xB7 #${p.id}` })
@@ -13346,17 +13631,23 @@ ${BROWSE_CSS}
     }
     function reviewView() {
       if (!reviewerKey2()) return h("p", { class: "wz-gl-note", text: "Review is off." });
-      const sections = [["uploads", `Uploads${rev.list.length ? ` (${rev.list.length})` : ""}`], ["log", "Log"]];
-      if (isOwner()) sections.push(["reviewers", "Reviewers"]);
-      if (!sections.some(([k]) => k === rev.section)) rev.section = "uploads";
+      const running = contests.active();
+      const judging = ["judging", `Judging${contests.unscored() ? ` (${contests.unscored()})` : ""}`];
+      const sections = isJudge() ? [judging] : [["uploads", `Uploads${rev.list.length ? ` (${rev.list.length})` : ""}`]];
+      if (!isJudge()) {
+        if (running) sections.push(judging);
+        sections.push(["log", "Log"]);
+      }
+      if (isOwner()) sections.push(["contests", "Contests"], ["reviewers", "Reviewers"]);
+      if (!sections.some(([k]) => k === rev.section)) rev.section = sections[0][0];
       const bar = h(
         "div",
         { class: "wz-gl-bar wz-gl-revtabs" },
         ...sections.map(([k, label]) => button(label, () => openSection(k), { primary: rev.section === k })),
         h("span", { class: "wz-gl-grow" }),
-        rev.who ? h("span", { class: "dim", text: `Reviewing as ${rev.who.name}${isOwner() ? " (owner)" : ""}` }) : null
+        rev.who ? h("span", { class: "dim", text: `${isJudge() ? "Judging" : "Reviewing"} as ${rev.who.name}${isOwner() ? " (owner)" : ""}` }) : null
       );
-      const body = rev.section === "log" ? logView() : rev.section === "reviewers" ? reviewersView() : uploadsView();
+      const body = rev.section === "log" ? logView() : rev.section === "reviewers" ? reviewersView() : rev.section === "judging" ? contests.judgingView() : rev.section === "contests" ? contests.manageView() : uploadsView();
       return h("div", {}, bar, body);
     }
     function openSection(k) {
@@ -13364,7 +13655,12 @@ ${BROWSE_CSS}
       rev.sectionError = "";
       if (k !== "reviewers") rev.newKey = null;
       if (k === "log") loadLog();
-      if (k === "reviewers") loadReviewers();
+      if (k === "reviewers") {
+        loadReviewers();
+        contests.refresh();
+      }
+      if (k === "judging") contests.loadJudging(true);
+      if (k === "contests") contests.refresh(true);
       render2();
     }
     const ago = (t) => {
@@ -13390,7 +13686,18 @@ ${BROWSE_CSS}
       }
       if (open && tab === "review") render2();
     }
-    const ACTIONS = { approve: "approved", reject: "rejected", remove: "removed", add_reviewer: "added reviewer", revoke_reviewer: "revoked reviewer" };
+    const ACTIONS = {
+      approve: "approved",
+      reject: "rejected",
+      remove: "removed",
+      add_reviewer: "added reviewer",
+      add_judge: "added judge",
+      revoke_reviewer: "revoked key of",
+      contest_create: "started contest",
+      contest_edit: "edited contest",
+      contest_archive: "published the results of",
+      contest_delete: "deleted contest"
+    };
     function logView() {
       const head = h("div", { class: "wz-gl-bar" }, h("b", { text: "Recent review actions" }), h("span", { class: "wz-gl-grow" }), button("\u21BB Refresh", loadLog));
       if (rev.sectionError) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: rev.sectionError }));
@@ -13412,8 +13719,9 @@ ${BROWSE_CSS}
       rev.adding = true;
       render2();
       try {
-        const r = await reviewerAdd(reviewerKey2(), name);
-        rev.newKey = { name: r.name, key: r.key };
+        const judge = rev.newRole === "judge" && contests.active();
+        const r = judge ? await reviewerAddJudge(reviewerKey2(), name) : await reviewerAdd(reviewerKey2(), name);
+        rev.newKey = { name: r.name, key: r.key, role: r.role };
         rev.newName = "";
         await loadReviewers();
       } catch (e) {
@@ -13442,18 +13750,31 @@ ${BROWSE_CSS}
       }, onkeydown: (e) => {
         if (e.key === "Enter") addReviewer();
       } });
-      const addBtn = button(rev.adding ? "Adding\u2026" : "Add reviewer", addReviewer, { primary: true, title: "Make a new review key for them" });
+      const running = contests.active();
+      if (!running) rev.newRole = "reviewer";
+      const judge = rev.newRole === "judge";
+      const addBtn = button(rev.adding ? "Adding\u2026" : judge ? "Add judge" : "Add reviewer", addReviewer, { primary: true, title: judge ? `Make a judge key for "${running.title}"` : "Make a new review key for them" });
       addBtn.disabled = rev.adding;
+      const roleBtns = running ? [
+        button("Reviewer", () => {
+          rev.newRole = "reviewer";
+          render2();
+        }, { cls: !judge ? "wz-gl-on" : "", title: "Reviews uploads and can remove posts. Can also score contests." }),
+        button(`Judge: ${running.title}`, () => {
+          rev.newRole = "judge";
+          render2();
+        }, { cls: judge ? "wz-gl-on" : "", title: "Only scores this contest's entries; stops working when its results are published" })
+      ] : null;
       const parts = [
-        h("p", { class: "wz-gl-note", text: "Each reviewer gets their own key. They can approve, reject and remove posts; only your key can add or revoke reviewers." }),
-        h("div", { class: "wz-gl-bar" }, nameBox, addBtn)
+        h("p", { class: "wz-gl-note", text: "Each person gets their own key. Reviewers approve, reject and remove posts, and score contests. Judges only score the running contest, and their key stops working when its results are published. Only your key can add or revoke keys." }),
+        h("div", { class: "wz-gl-bar" }, roleBtns, nameBox, addBtn)
       ];
       if (rev.newKey) {
         const keyBox = h("input", { type: "text", readOnly: true, value: rev.newKey.key, class: "wz-gl-key", onfocus: (e) => e.target.select() });
         parts.push(h(
           "div",
           { class: "wz-gl-rev wz-gl-newkey" },
-          h("div", {}, h("b", { text: `${rev.newKey.name}'s key` }), h("span", { class: "dim", text: " (shown once: it isn't stored anywhere, so copy it now)" })),
+          h("div", {}, h("b", { text: `${rev.newKey.name}'s ${rev.newKey.role === "judge" ? "judge " : ""}key` }), h("span", { class: "dim", text: " (shown once: it isn't stored anywhere, so copy it now)" })),
           h(
             "div",
             { class: "wz-gl-bar" },
@@ -13470,7 +13791,7 @@ ${BROWSE_CSS}
               render2();
             })
           ),
-          h("div", { class: "dim", text: "Send it to them privately (a DM, not a channel). They turn review on with the console command, using this key." })
+          h("div", { class: "dim", text: "Send it to them privately (a DM, not a channel). They enter it with Redeem Key, on the Card Maker tab of Wizascript's settings." })
         ));
       }
       if (rev.sectionError) parts.push(h("div", { class: "wz-gl-issues", text: rev.sectionError }));
@@ -13480,7 +13801,7 @@ ${BROWSE_CSS}
         "div",
         { class: "wz-gl-bar" },
         h("b", { text: r.name }),
-        h("span", { class: "dim", text: `added ${ago(r.addedAt)} \xB7 last used ${ago(r.lastUsedAt)}` }),
+        h("span", { class: "dim", text: `${r.role === "judge" ? `judge${running && running.id === r.contest ? ` (${running.title})` : ""}` : "reviewer"} \xB7 added ${ago(r.addedAt)} \xB7 last used ${ago(r.lastUsedAt)}` }),
         h("span", { class: "wz-gl-grow" }),
         removeButton({ rerender: render2 }, r, { label: "Revoke", confirm: "Revoke?", title: `Stop ${r.name}'s key working`, run: revokeReviewer })
       ))));
@@ -13489,10 +13810,15 @@ ${BROWSE_CSS}
     async function deleteMine(e) {
       try {
         await deleteOwnPost(e.id);
+        const wasEntry = acct.posts.some((p) => p.id === e.id && p.contest && (p.status === "pending" || p.status === "approved"));
         delete draft2.uploads[e.id];
         saveDraft();
         acct.posts = acct.posts.filter((p) => p.id !== e.id);
-        say(`Deleted "${e.title}".`);
+        say(wasEntry ? `Withdrew "${e.title}". Its slot is free again.` : `Deleted "${e.title}".`);
+        if (wasEntry) {
+          refreshMe(true);
+          contests.refresh(true);
+        }
         render2();
       } catch (err) {
         say(`Couldn't delete it: ${errText(err)}`);
@@ -13519,12 +13845,34 @@ ${BROWSE_CSS}
       return cur;
     };
     const errText = (e) => e instanceof ApiError ? e.message : "Something went wrong.";
+    const contests = createContests({
+      say: (t) => say(t),
+      render: () => render2(),
+      changed: () => {
+        notify2();
+        if (open && (tab === "contest" || tab === "review" || tab === "submit")) render2();
+      },
+      errText,
+      hoverable: (el3, p, e) => hoverable(el3, p, e),
+      acct,
+      draft: draft2,
+      reviewerKey: reviewerKey2,
+      who: () => rev.who,
+      keyRejected: (code) => onKeyRejected(code),
+      refreshMe: (f) => refreshMe(f),
+      deleteMine: (e) => deleteMine(e),
+      startEntry(id) {
+        submitTo = id;
+        setView("submit");
+        say("Add the cards to enter, then Review upload.");
+      }
+    });
     async function refreshMe(force) {
       if (acct.loading || !force && acct.loaded && Date.now() - acct.at < 3e4) return;
       acct.loading = true;
       try {
         const me = await getMe();
-        Object.assign(acct, { loaded: true, account: me.account || null, cooldownUntil: me.cooldownUntil || null, votes: me.votes || {}, posts: me.posts || [], error: "", at: Date.now() });
+        Object.assign(acct, { loaded: true, account: me.account || null, cooldownUntil: me.cooldownUntil || null, votes: me.votes || {}, posts: me.posts || [], contest: me.contest || null, error: "", at: Date.now() });
         pruneUploads(Object.fromEntries(acct.posts.map((p) => [p.id, p.status])), new Set(gal.approved.map((p) => p.id)));
       } catch (e) {
         acct.error = errText(e);
@@ -13643,8 +13991,7 @@ ${BROWSE_CSS}
     const tabs = h("div", { class: "wz-gl-bar wz-gl-tabs" });
     const content = h("div", { class: "wz-gl-content" });
     const hover = h("div", { class: "wz-gl-hover" });
-    const protoBar = h("div", { class: "wz-gl-proto" });
-    const panel = h("div", { class: "wz-gl-panel" }, protoBar, tabs, content, hover);
+    const panel = h("div", { class: "wz-gl-panel" }, tabs, content, hover);
     const fileInput = h("input", { type: "file", accept: ".uceditor,image/png", multiple: true, style: { display: "none" } });
     panel.appendChild(fileInput);
     const sizeOf = () => SIZES.find((x) => x[0] === draft2.cardSize) || SIZES[1];
@@ -13652,9 +13999,9 @@ ${BROWSE_CSS}
       let z = sizeOf()[2];
       if (!z) {
         const w = content.clientWidth || panel.clientWidth - 20;
-        const pad2 = tab === "submit" ? 14 + 4 : 0;
-        const cols = Math.max(1, Math.floor((w + GAP) / (176 + pad2 + GAP)));
-        z = Math.max(0.5, Math.min(2.5, ((w + GAP) / cols - GAP - pad2) / 176));
+        const pad3 = tab === "submit" ? 14 + 4 : 0;
+        const cols = Math.max(1, Math.floor((w + GAP) / (176 + pad3 + GAP)));
+        z = Math.max(0.5, Math.min(2.5, ((w + GAP) / cols - GAP - pad3) / 176));
       }
       z = Math.round(z * 100) / 100;
       if (panel.style.getPropertyValue("--wz-gl-z") === String(z)) return false;
@@ -13734,26 +14081,10 @@ ${BROWSE_CSS}
       return el3;
     };
     panel.addEventListener("scroll", hideHover, { passive: true });
-    function renderProto() {
-      protoBar.replaceChildren(
-        h("b", { text: "Preview" }),
-        h("label", {}, h("input", { type: "checkbox", checked: browse.samples, onchange: (e) => {
-          browse.samples = e.target.checked;
-          browse.page = 0;
-          saveProto();
-          render2();
-        } }), " Sample entries")
-      );
-    }
-    const saveProto = () => {
-      draft2.browseProto = { samples: browse.samples };
-      saveDraft();
-    };
     function render2() {
       hideHover();
       browseCtl = null;
       if (!open) return;
-      renderProto();
       tabs.replaceChildren(
         accountBox(),
         status,
@@ -13763,12 +14094,6 @@ ${BROWSE_CSS}
       panel.classList.toggle("browse", tab === "browse");
       applyZoom();
       if (tab === "browse") {
-        if (browse.samples && !extrasAsked) {
-          extrasAsked = true;
-          loadSampleExtras().then((more) => {
-            if (more && open && tab === "browse") render2();
-          });
-        }
         const ctl2 = browseCtl = browseTab();
         content.replaceChildren(...[linkBox(), ctl2.el].filter(Boolean));
         ctl2.layout();
@@ -13777,6 +14102,9 @@ ${BROWSE_CSS}
         });
       } else if (tab === "review") {
         content.replaceChildren(reviewView());
+        requestAnimationFrame(refit);
+      } else if (tab === "contest") {
+        content.replaceChildren(...[linkBox(), contests.view()].filter(Boolean));
         requestAnimationFrame(refit);
       } else {
         content.replaceChildren(...[linkBox(), submitView()].filter(Boolean));
@@ -13797,6 +14125,7 @@ ${BROWSE_CSS}
         refreshMe();
         if (v === "browse") refreshGallery();
         if (v === "review") refreshReview(true);
+        if (v === "contest" || v === "submit") contests.refresh();
       }
       notify2();
     }
@@ -14019,21 +14348,51 @@ ${BROWSE_CSS}
       const out = [];
       if (!acct.loaded) out.push(acct.error ? `Unable to Submit: the gallery server can't be reached (${acct.error})` : "Checking your account\u2026");
       else if (!author()) out.push("Unable to Submit: link your Undercards account first (Link my account, at the top).");
+      const s = targetSlots();
+      if (submitTo && !s) out.push("That contest isn't taking entries any more. Upload to the gallery instead.");
+      if (s && entries().length > s.left) out.push(s.left ? `This contest takes ${s.left} more entr${s.left === 1 ? "y" : "ies"} from you (${s.used} of ${s.max} used). A set counts as one.` : `You've used all ${s.max} entries in this contest. Withdraw one in the Contest tab to free a slot.`);
       const unnamed = draft2.parts.filter((p) => !p.name).length;
       const unnamedSets = draft2.groups.filter((g) => !g.name).length;
       if (unnamed) out.push(`${unnamed} card${unnamed === 1 ? " has" : "s have"} no name yet.`);
       if (unnamedSets) out.push(`${unnamedSets} set${unnamedSets === 1 ? " has" : "s have"} no name yet.`);
       return out.concat(uploadProblems(entries()));
     }
+    function targetSlots() {
+      const s = contests.slots();
+      if (!submitTo) return null;
+      return s && s.contest.id === submitTo ? s : null;
+    }
+    function targetPicker() {
+      const s = contests.slots();
+      if (!s && !submitTo) return null;
+      if (!s) {
+        submitTo = null;
+        return null;
+      }
+      return h(
+        "div",
+        { class: "wz-gl-target" },
+        h("span", { text: "Upload to:" }),
+        button("Gallery", () => {
+          submitTo = null;
+          render2();
+        }, { cls: !submitTo ? "wz-gl-on" : "", title: "The main gallery, voted on by everyone" }),
+        button(`Contest: ${s.contest.title} (${s.left} of ${s.max} left)`, () => {
+          submitTo = s.contest.id;
+          render2();
+        }, { cls: submitTo ? "wz-gl-on" : "", title: `Enter these in the contest. Entries close ${new Date(s.contest.closesAt).toLocaleString()}.` })
+      );
+    }
     function uploadBox() {
       const list = entries();
       const nCards = draft2.parts.length;
       const summary = `${list.length} entr${list.length === 1 ? "y" : "ies"} (${nCards} card${nCards === 1 ? "" : "s"})`;
       if (!reviewing) {
+        const s = targetSlots();
         return h(
           "div",
           { class: "wz-gl-upload" },
-          h("span", { text: `Ready to upload: ${summary}.` }),
+          h("span", { text: `Ready to upload: ${summary}${s ? `, into ${s.contest.title}` : ""}.` }),
           h("span", { class: "wz-gl-grow" }),
           button("Review upload", () => {
             reviewing = true;
@@ -14054,15 +14413,17 @@ ${BROWSE_CSS}
         ),
         h("div", { class: "wz-gl-revcards" }, e.parts.map((p) => h("div", { class: "wz-gl-zoom" }, tile(p))))
       ));
-      const go = button(uploading ? "Uploading\u2026" : "Upload to Gallery", () => doUpload(), { primary: true, title: issues.length ? issues[0] : "Send these for approval" });
+      const into = targetSlots();
+      const go = button(uploading ? "Uploading\u2026" : into ? "Enter in Contest" : "Upload to Gallery", () => doUpload(), { primary: true, title: issues.length ? issues[0] : "Send these for approval" });
       go.disabled = issues.length > 0 || uploading;
       return h(
         "div",
         { class: "wz-gl-upload open" },
+        targetPicker(),
         h(
           "div",
           { class: "wz-gl-bar" },
-          h("b", { text: `Upload ${summary}` }),
+          h("b", { text: into ? `Enter ${summary} in ${into.contest.title}` : `Upload ${summary}` }),
           h("span", { class: "wz-gl-grow" }),
           h("span", { class: "wz-gl-by", text: author() ? `Posting as ${author()}` : "" })
         ),
@@ -14071,7 +14432,7 @@ ${BROWSE_CSS}
         h(
           "div",
           { class: "wz-gl-bar wz-gl-revfoot" },
-          h("span", { class: "wz-gl-note", style: { margin: 0 }, text: "Each set and single card is sent as its own entry, for approval. Approved ones show in Browse for everyone." }),
+          h("span", { class: "wz-gl-note", style: { margin: 0 }, text: into ? "Each set and single card is one entry, checked against the contest's rules. Approved entries show in the Contest tab, and join the gallery when the results are out." : "Each set and single card is sent as its own entry, for approval. Approved ones show in Browse for everyone." }),
           h("span", { class: "wz-gl-grow" }),
           button("Back", () => {
             reviewing = false;
@@ -14089,7 +14450,7 @@ ${BROWSE_CSS}
       try {
         sent = await uploadEntries(entries(), (i, n) => {
           if (n > 1 && i < n) say(`Uploading part ${i + 1} of ${n}\u2026`);
-        });
+        }, targetSlots() ? submitTo : null);
       } catch (e) {
         sent = e.extra && e.extra.sent || [];
         error = errText(e);
@@ -14098,9 +14459,15 @@ ${BROWSE_CSS}
       if (sent.length) markUploaded(sent);
       reviewing = !!error && !sent.length;
       read2 = null;
-      lastUpload = sent.length || error ? { posts: sent, error } : null;
+      lastUpload = sent.length || error ? { posts: sent, error, contest: sent.length && sent[0].contest ? contests.active() : null } : null;
       say(error ? sent.length ? `Uploaded ${sent.length}; the rest didn't go: ${error}` : `Upload failed: ${error}` : `Uploaded ${sent.length} entr${sent.length === 1 ? "y" : "ies"}.`);
-      if (sent.length) refreshMe(true);
+      if (sent.length) {
+        refreshMe(true);
+        if (lastUpload.contest) {
+          submitTo = null;
+          contests.refresh(true);
+        }
+      }
       render2();
     }
     function uploadedBox() {
@@ -14115,11 +14482,14 @@ ${BROWSE_CSS}
       return h(
         "div",
         { class: `wz-gl-done${lastUpload.error ? " failed" : ""}` },
-        h("div", {}, h("b", { text: `\u2713 Sent for approval: ${posts.length} entr${posts.length === 1 ? "y" : "ies"} (${cards2} card${cards2 === 1 ? "" : "s"})` })),
+        h("div", {}, h("b", { text: `\u2713 ${lastUpload.contest ? `Entered in ${lastUpload.contest.title}` : "Sent for approval"}: ${posts.length} entr${posts.length === 1 ? "y" : "ies"} (${cards2} card${cards2 === 1 ? "" : "s"})` })),
         h("ul", {}, posts.map((e) => h("li", { text: e.kind === "set" ? `${e.title} (set of ${e.local.parts.length})` : `${e.title} (${e.local.parts[0].type})` }))),
         lastUpload.error ? h("div", { class: "wz-gl-issues", text: `The rest weren't sent: ${lastUpload.error} They're still in your draft below.` }) : null,
-        h("div", { class: "wz-gl-note", style: { margin: "0 0 6px" }, text: "They show under My posts as awaiting approval, and in Browse for everyone once approved." }),
-        button("See my posts", () => {
+        h("div", { class: "wz-gl-note", style: { margin: "0 0 6px" }, text: lastUpload.contest ? "They're checked against the contest's rules first. See them under Your entries in the Contest tab." : "They show under My posts as awaiting approval, and in Browse for everyone once approved." }),
+        lastUpload.contest ? button("See the contest", () => {
+          lastUpload = null;
+          setView("contest");
+        }, { primary: true }) : button("See my posts", () => {
           browse.mineOnly = true;
           browse.likedOnly = false;
           browse.list = "new";
@@ -14160,15 +14530,15 @@ ${BROWSE_CSS}
       changed2();
     });
     function browseTab() {
-      const own = acct.posts.filter((p) => (p.status === "pending" || p.status === "rejected") && draft2.uploads[p.id]).map((p) => ({ id: p.id, status: p.status, reason: p.reason, postedAt: p.postedAt, kind: draft2.uploads[p.id].kind, title: draft2.uploads[p.id].title, parts: draft2.uploads[p.id].parts }));
-      acct.posts.filter((p) => p.status === "approved" && draft2.uploads[p.id] && !gal.approved.some((a) => a.id === p.id)).forEach((p) => own.push({ id: p.id, status: "pending", postedAt: p.postedAt, kind: draft2.uploads[p.id].kind, title: draft2.uploads[p.id].title, parts: draft2.uploads[p.id].parts }));
-      const list = allEntries({ approved: gal.approved, own, totals: gal.totals, baseVotes: gal.base, current: currentVotes(), account: acct.account, samples: browse.samples, sampleVotes });
+      const own = acct.posts.filter((p) => !p.contest && (p.status === "pending" || p.status === "rejected") && draft2.uploads[p.id]).map((p) => ({ id: p.id, status: p.status, reason: p.reason, postedAt: p.postedAt, kind: draft2.uploads[p.id].kind, title: draft2.uploads[p.id].title, parts: draft2.uploads[p.id].parts }));
+      acct.posts.filter((p) => !p.contest && p.status === "approved" && draft2.uploads[p.id] && !gal.approved.some((a) => a.id === p.id)).forEach((p) => own.push({ id: p.id, status: "pending", postedAt: p.postedAt, kind: draft2.uploads[p.id].kind, title: draft2.uploads[p.id].title, parts: draft2.uploads[p.id].parts }));
+      const list = allEntries({ approved: gal.approved, own, totals: gal.totals, baseVotes: gal.base, current: currentVotes(), account: acct.account });
       return browseView({
         state: browse,
         wheelPages: () => !wheelPages || wheelPages(),
         onPage: hideHover,
         entries: list,
-        note: gal.error ? `Couldn't load the gallery: ${gal.error}` : browse.samples ? "Sample entries (grey tag) are mixed in. They aren't real posts." : acct.account ? "" : "Link your account to vote.",
+        note: gal.error ? `Couldn't load the gallery: ${gal.error}` : acct.account ? "" : "Link your account to vote.",
         emptyText: gal.loading && !gal.at ? "* Loading the gallery\u2026" : gal.error && !gal.at ? "* Couldn't load the gallery. Try again in a moment." : "",
         hoverable,
         rerender: render2,
@@ -14180,10 +14550,6 @@ ${BROWSE_CSS}
         onRemove: reviewerKey2() ? removePost : null,
         onDelete: deleteMine,
         vote(e, dir) {
-          if (e.sample) {
-            sampleVotes[e.key] = (sampleVotes[e.key] || 0) === dir ? 0 : dir;
-            return render2();
-          }
           if (!acct.account) {
             say("Link your Undercards account to vote: press Link my account at the top.");
             return;
@@ -14198,7 +14564,7 @@ ${BROWSE_CSS}
       el: panel,
       isOpen: () => open,
       isReviewer: () => !!reviewerKey2(),
-      pendingCount: () => reviewerKey2() ? rev.list.length : 0,
+      pendingCount: () => !reviewerKey2() ? 0 : isJudge() ? contests.unscored() : rev.list.length,
       // The Card Maker opened: the reviewer's count of uploads waiting.
       opened() {
         if (reviewerKey2()) refreshReview();
@@ -14236,12 +14602,12 @@ ${BROWSE_CSS}
   }
 
   // packages/card-maker/gallery/nav.js
-  var VIEWS = [["editor", "Editor", "\u270E"], ["browse", "Browse", "\u25A4"], ["submit", "Submit", "\u2B06"], ["review", "Review", "\u2713"]];
+  var VIEWS = [["editor", "Editor", "\u270E"], ["browse", "Browse", "\u25A4"], ["contest", "Contest", "\u2605"], ["submit", "Submit", "\u2B06"], ["review", "Review", "\u2713"]];
   var STYLE_ID4 = "wizascript-cardgallery-nav-style";
-  var DT2 = `"DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace`;
+  var DT3 = `"DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace`;
   var CSS5 = `
 .wz-gn-seg { display: flex; flex: none; height: 24px; margin-left: 6px; border: 2px solid #fff; background: #000; }
-.wz-gn-seg button { display: flex; align-items: center; gap: 5px; background: none; border: 0; color: #ccc; padding: 0 12px; font: 13px ${DT2}; cursor: pointer; }
+.wz-gn-seg button { display: flex; align-items: center; gap: 5px; background: none; border: 0; color: #ccc; padding: 0 12px; font: 13px ${DT3}; cursor: pointer; }
 .wz-gn-seg button + button { border-left: 2px solid #fff; }
 .wz-gn-seg button:hover { color: #fff; background: #222; }
 .wz-gn-seg button.on { background: #ffd84a; color: #000; }
@@ -14261,7 +14627,7 @@ ${BROWSE_CSS}
     const header = win.root.querySelector(".wz-cm-header");
     const seg = h("div", { class: "wz-gn-seg" }, VIEWS.map(([v, label, icon]) => h(
       "button",
-      { type: "button", "data-view": v, title: v === "editor" ? "Back to the editor" : v === "review" ? "Uploads waiting for your review" : `Card Gallery: ${label}`, onclick: () => gallery.setView(v) },
+      { type: "button", "data-view": v, title: v === "editor" ? "Back to the editor" : v === "review" ? "Uploads waiting for your review, and contest judging" : v === "contest" ? "Card Gallery: contests (the running one, and past results)" : `Card Gallery: ${label}`, onclick: () => gallery.setView(v) },
       h("span", { class: "ic", text: icon }),
       h("span", { text: label }),
       v === "review" ? h("span", { class: "count" }) : null
@@ -14608,7 +14974,6 @@ ${BROWSE_CSS}
     } catch (e) {
       throw new Error(e && e.code === "not_admin" ? "That key isn't valid." : e && e.code === "key_expired" ? "That key has expired." : e && e.code === "rate_limited" ? "Too many wrong keys. Try again in an hour." : e && e.message || "Couldn't check the key.");
     }
-    if (me.role === "judge") throw new Error("That's a judge key. Judging comes with contests.");
     GM_setValue(REVIEW_KEY, k);
     GM_setValue(REVIEW_WHO, JSON.stringify({ name: me.name, role: me.role }));
     keyChanged();
@@ -14657,7 +15022,7 @@ ${BROWSE_CSS}
         try {
           const me = await redeemKey(input.value);
           draw();
-          show(`Redeemed. You're reviewing as ${me.name}.`, true);
+          show(me.role === "judge" ? `Redeemed. You're judging as ${me.name}: open the Card Maker and press Review.` : `Redeemed. You're reviewing as ${me.name}.`, true);
         } catch (e) {
           show(e.message, false);
         }
@@ -14672,7 +15037,7 @@ ${BROWSE_CSS}
         }
       });
       wrap.append(
-        el3("p", { textContent: "Enter a key you were given to review gallery uploads." }),
+        el3("p", { textContent: "Enter a key you were given to review gallery uploads or judge a contest." }),
         el3("p", {}, go, " Redeem"),
         input,
         status
@@ -14699,7 +15064,7 @@ ${BROWSE_CSS}
         return;
       }
       redeemKey(key2).then(
-        (me) => console.log(`Review: on, as ${me.name} (${me.role}). Open the Card Maker to review uploads.`),
+        (me) => console.log(`Review: on, as ${me.name} (${me.role}). Open the Card Maker and press Review.`),
         (e) => console.log(`Review: not turned on (${e.message})`)
       );
     };
@@ -14712,7 +15077,6 @@ ${BROWSE_CSS}
     const k = reviewerKey();
     if (!k) return;
     reviewWhoami(k).then((me) => {
-      if (me.role === "judge") return forgetKey();
       GM_setValue(REVIEW_WHO, JSON.stringify({ name: me.name, role: me.role }));
       if (keyButton && keyButton.isConnected) keyButton.value = keyLabel();
     }, (e) => {
@@ -14761,7 +15125,7 @@ ${BROWSE_CSS}
     });
     settings3.add("galleryKey", {
       name: "Gallery Key",
-      note: "For gallery reviewers: enter the key you were given.",
+      note: "For gallery reviewers and contest judges: enter the key you were given.",
       type: "text",
       default: "Redeem Key",
       hidden: () => !!gallerySetting && !gallerySetting.value()
@@ -17484,7 +17848,7 @@ ${BROWSE_CSS}
 
   // packages/misc/card-history/game.js
   var W = () => getPageWindow();
-  var cardFile2 = null;
+  var cardFile = null;
   var artifactList = null;
   var page$ = () => W().$;
   var hasI18n = () => {
@@ -17494,7 +17858,7 @@ ${BROWSE_CSS}
   function allCards() {
     const w = W();
     if (Array.isArray(w.allCards) && w.allCards.length) return w.allCards;
-    if (cardFile2 && cardFile2.length) return cardFile2;
+    if (cardFile && cardFile.length) return cardFile;
     try {
       const ls = JSON.parse(w.localStorage.getItem("allCards") || "[]");
       if (Array.isArray(ls) && ls.length) return ls;
@@ -17509,7 +17873,7 @@ ${BROWSE_CSS}
     try {
       const d = await (await fetch(cfg.url, { credentials: "same-origin" })).json();
       const list = Array.isArray(d) ? d : d && (d.cards || d.allCards) || [];
-      cardFile2 = typeof list === "string" ? JSON.parse(list) : list;
+      cardFile = typeof list === "string" ? JSON.parse(list) : list;
     } catch (e) {
     }
   }
@@ -17520,7 +17884,7 @@ ${BROWSE_CSS}
     const n = norm(s);
     return list.find((c) => norm(c.name) === n) || null;
   }
-  async function artifacts3() {
+  async function artifacts2() {
     if (artifactList) return artifactList;
     try {
       const data2 = await (await fetch("/DecksConfig", { credentials: "same-origin" })).json();
@@ -17532,7 +17896,7 @@ ${BROWSE_CSS}
     return artifactList;
   }
   var norm = (s) => String(s || "").toLowerCase().replace(/&amp;/g, "&").replace(/[^a-z0-9]/g, "");
-  function tr2(key2, ...args) {
+  function tr(key2, ...args) {
     try {
       const v = page$().i18n(key2, ...args);
       if (!v || v === key2) return "";
@@ -17657,17 +18021,17 @@ ${BROWSE_CSS}
     const codeNames = /* @__PURE__ */ new Map();
     if (hasI18n()) {
       const kwCode = (id, override) => `{{KW:${id.toUpperCase().replace(/-/g, "_")}${override ? `|override=${override}` : ""}}}`;
-      (R.keywords || []).forEach((id) => add(tr2(`kw-${id}`), kwCode(id)));
+      (R.keywords || []).forEach((id) => add(tr(`kw-${id}`), kwCode(id)));
       (R.legacyKeywords || []).forEach(([word, modern]) => {
         const own = word.toLowerCase().replace(/'/g, "").replace(/ /g, "-");
         if (cap.has(word.toLowerCase())) return;
-        const code = tr2(`kw-${own}`) ? kwCode(own, word) : modern && tr2(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`;
+        const code = tr(`kw-${own}`) ? kwCode(own, word) : modern && tr(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`;
         add(word, code);
       });
       uniq([...R.enchantments || [], ...knownKeys("enchant-")]).forEach((id) => {
         const code = id.toUpperCase().replace(/-/g, "_");
-        const one = tr2(`enchant-${id}`, 1);
-        add(tr2(`enchant-${id}`, 2), `{{ENCHANT:${code}|2}}`);
+        const one = tr(`enchant-${id}`, 1);
+        add(tr(`enchant-${id}`, 2), `{{ENCHANT:${code}|2}}`);
         add(one, `{{ENCHANT:${code}|1}}`);
         if (!one) {
           const words = id.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
@@ -17677,14 +18041,14 @@ ${BROWSE_CSS}
       });
       (R.tribes || []).forEach((id) => {
         const code = id.toUpperCase().replace(/-/g, "_");
-        add(tr2(`tribe-${id}`, 2), `{{TRIBE:${code}|2}}`);
-        add(tr2(`tribe-${id}`, 1), `{{TRIBE:${code}|1}}`);
+        add(tr(`tribe-${id}`, 2), `{{TRIBE:${code}|2}}`);
+        add(tr(`tribe-${id}`, 1), `{{TRIBE:${code}|1}}`);
       });
-      (R.souls || []).forEach((id) => add(tr2(`soul-${id}`), `{{SOUL:${id.toUpperCase()}}}`));
-      (R.legacyWithColon || []).forEach(([word, modern]) => colonCodes.set(word, tr2(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`));
-      (await artifacts3()).forEach((a) => {
+      (R.souls || []).forEach((id) => add(tr(`soul-${id}`), `{{SOUL:${id.toUpperCase()}}}`));
+      (R.legacyWithColon || []).forEach(([word, modern]) => colonCodes.set(word, tr(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`));
+      (await artifacts2()).forEach((a) => {
         if (!a || a.id == null) return;
-        const name = tr2(`artifact-name-${a.id}`) || a.name;
+        const name = tr(`artifact-name-${a.id}`) || a.name;
         addExact(name, `{{ARTIFACT:${a.id}}}`);
         [name, a.name].forEach((n) => {
           if (n) artIds.set(norm(n), a.id);
@@ -17693,12 +18057,12 @@ ${BROWSE_CSS}
       });
       allCards().forEach((c) => {
         const id = c.fixedId || c.id;
-        const name = tr2(`card-name-${id}`, 1) || c.name;
+        const name = tr(`card-name-${id}`, 1) || c.name;
         if (notLinks.has(name)) return;
         addExact(name, `{{CARD:${id}|1}}`);
-        addExact(tr2(`card-name-${id}`, 2), `{{CARD:${id}|2}}`);
+        addExact(tr(`card-name-${id}`, 2), `{{CARD:${id}|2}}`);
         if (!/s$/i.test(name)) addExact(`${name}s`, `{{CARD:${id}|2}}`);
-        codeNames.set(`c:${id}`, uniq([tr2(`card-name-${id}`, 2), `${name}s`, name, c.name].filter(Boolean)));
+        codeNames.set(`c:${id}`, uniq([tr(`card-name-${id}`, 2), `${name}s`, name, c.name].filter(Boolean)));
       });
     }
     const capPattern = (w) => [...w].map((ch, i) => {
@@ -18097,13 +18461,13 @@ ${BROWSE_CSS}
       }
       const table = el2("table", "wz-ch-myreports-list");
       list.forEach((r) => {
-        const tr3 = el2("tr");
-        tr3.innerHTML = `<td>${escHtml(r.name)}</td><td>${escHtml(r.label)}</td><td class="wz-ch-dim">${r.sent ? "sent" : "not sent"}</td><td></td>`;
-        tr3.lastChild.appendChild(button2("\xD7", "btn-xs btn-default", () => {
+        const tr2 = el2("tr");
+        tr2.innerHTML = `<td>${escHtml(r.name)}</td><td>${escHtml(r.label)}</td><td class="wz-ch-dim">${r.sent ? "sent" : "not sent"}</td><td></td>`;
+        tr2.lastChild.appendChild(button2("\xD7", "btn-xs btn-default", () => {
           removeReport(r.key);
           render2();
         }));
-        table.appendChild(tr3);
+        table.appendChild(tr2);
       });
       const unsent = list.filter((r) => !r.sent);
       const toSend = unsent.length ? unsent : list;
@@ -18151,11 +18515,11 @@ ${BROWSE_CSS}
     const before = v.label.match(/^Before\s+(Alpha|Beta)\s*([\d.]+)/i);
     if (before) return { text: `<${/alpha/i.test(before[1]) ? "A" : ""}${before[2]}`, title: `${v.label} (from the wiki's Previous Versions page)` };
     if (/^Pre-?Alpha$/i.test(v.label)) return { text: "PA", title: "Pre-Alpha (from the Miraheze wiki)" };
-    const when = v.date ? ` (${v.date})` : "";
+    const when2 = v.date ? ` (${v.date})` : "";
     const a = v.label.match(/^Alpha\s*([\d.]+)/i);
-    if (a) return { text: `A${a[1]}`, uncertain: !!v.guessed, title: `${v.guessed ? "Probably " : ""}${v.label}${when}` };
+    if (a) return { text: `A${a[1]}`, uncertain: !!v.guessed, title: `${v.guessed ? "Probably " : ""}${v.label}${when2}` };
     const m = v.label.match(/^Beta\s*([\d.]+)/i);
-    return { text: m ? m[1] : v.label, uncertain: !!v.guessed, title: `${v.guessed ? "Probably " : ""}${v.label}${when}` };
+    return { text: m ? m[1] : v.label, uncertain: !!v.guessed, title: `${v.guessed ? "Probably " : ""}${v.label}${when2}` };
   }
   function fitText2(desc, html) {
     const inner = document.createElement("div");
@@ -18354,10 +18718,10 @@ ${note}` : "");
     const s = String(q);
     if (/^\d+$/.test(s)) return list.find((a) => String(a.id) === s) || null;
     const n = norm(s);
-    return list.find((a) => norm(a.name) === n || norm(tr2(`artifact-name-${a.id}`)) === n) || list.find((a) => norm(a.image) === n) || null;
+    return list.find((a) => norm(a.name) === n || norm(tr(`artifact-name-${a.id}`)) === n) || list.find((a) => norm(a.image) === n) || null;
   }
   function row(ver, rarity, f, todayName, todayHtml, target) {
-    const tr22 = document.createElement("tr");
+    const tr2 = document.createElement("tr");
     const v = document.createElement("td");
     v.className = "wz-ch-art-ver wz-ch-badge-spot";
     const label = versionLabel(ver.version);
@@ -18372,16 +18736,16 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     const oldName = ver.name && norm(ver.name) !== norm(todayName) ? `<span class="wz-ch-art-oldname">(${escHtml(ver.name)})</span>` : "";
     const body = todayHtml !== void 0 ? todayHtml : ver.textKnown && ver.text ? formatText2(ver.text, f, ver.version && ver.version.key) : "?";
     t.innerHTML = `<div class="cardDesc wz-ch-art-desc"><div>${oldName}${body}</div></div>`;
-    tr22.append(v, r, t);
+    tr2.append(v, r, t);
     if (target) {
       const d = document.createElement("div");
       d.innerHTML = body;
-      tagNode(tr22, { ...target, label: todayHtml !== void 0 ? "today" : label.text, shown: `${rarity || "?"}: ${ver.name && norm(ver.name) !== norm(todayName) ? `(${ver.name}) ` : ""}${d.textContent.replace(/\s+/g, " ").trim()}`.slice(0, 140) });
+      tagNode(tr2, { ...target, label: todayHtml !== void 0 ? "today" : label.text, shown: `${rarity || "?"}: ${ver.name && norm(ver.name) !== norm(todayName) ? `(${ver.name}) ` : ""}${d.textContent.replace(/\s+/g, " ").trim()}`.slice(0, 140) });
     }
-    return tr22;
+    return tr2;
   }
   function artifactHistoryView(a, data2, f, index) {
-    const todayName = tr2(`artifact-name-${a.id}`, 1) || a.name;
+    const todayName = tr(`artifact-name-${a.id}`, 1) || a.name;
     const todayHtml = trHtml(`artifact-${a.id}`) || (a.description ? formatText2(a.description, f) : "?");
     const today = todayArtifactRarity(a);
     const versions = (data2 && data2.versions ? data2.versions : []).map((v) => ({ ...v }));
@@ -18619,7 +18983,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     }
   }
   async function openArtifact(image) {
-    const list = await artifacts3();
+    const list = await artifacts2();
     const a = findArtifact(list, image);
     if (!a) return;
     const shell = openShell(`Artifact History - ${a.name}`, `https://undercards.fandom.com/wiki/${a.name.replace(/ /g, "_")}`);
@@ -21057,8 +21421,8 @@ d-pad move   ${label("tlSelect")} pick up / press   ${label("tlQuickSend")} send
               dpadHeld = { up, down, left, right };
               refreshHighlight();
               const targetSlot = placingGrid[placingRow][placingCol];
-              const tr3 = targetSlot.getBoundingClientRect();
-              const tcx = tr3.left + tr3.width / 2, tcy = tr3.top + tr3.height / 2;
+              const tr2 = targetSlot.getBoundingClientRect();
+              const tcx = tr2.left + tr2.width / 2, tcy = tr2.top + tr2.height / 2;
               fire(targetSlot, "pointermove", PointerEvent, tcx, tcy, 0, 1);
               fire(targetSlot, "mousemove", MouseEvent, tcx, tcy, 0, 1);
               if (btn(0) && !btnHeld[0]) {

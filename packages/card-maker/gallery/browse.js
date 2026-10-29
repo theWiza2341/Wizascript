@@ -10,7 +10,6 @@
 
 import { h } from "./dom.js";
 import { tile, fitCard } from "./render.js";
-import { sampleEntries } from "./mock.js";
 
 export const LISTS = [["new", "Newest"], ["week", "This Week"], ["month", "This Month"], ["all", "All Time"]];
 const DT = `"DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace`;
@@ -68,7 +67,6 @@ export const BROWSE_CSS = `
 .wz-gl-remove { background: none; border: 1px solid #553; color: #a88; font-size: 10px; line-height: 14px; padding: 0 4px; margin-left: 4px; cursor: pointer; }
 .wz-gl-remove:hover, .wz-gl-remove.armed { border-color: #e07a7a; color: #ffb4b4; }
 .wz-gl-mine.rejected { background: #5a1f1f; border-color: #e07a7a; }
-.wz-gl-mine.sample { background: #333; border-color: #777; }
 .wz-gl-seg { position: relative; display: flex; margin: 0; width: 100%; max-width: 560px; flex: 1 1 360px; border: 2px solid #fff; background: #000; }
 .wz-gl-seg button { flex: 1 1 0; position: relative; z-index: 1; background: none; border: 0; color: #bbb; padding: 6px 0 5px; font-size: 14px; cursor: pointer; font-family: ${DT}; }
 .wz-gl-seg button:hover { color: #fff; }
@@ -84,7 +82,7 @@ const seed = (s) => { let x = 7; for (const c of s) x = (x * 31 + c.charCodeAt(0
 //             kept from their upload)
 //   myVotes:  votes the server has, at the time totals were read (base)
 //   current:  the player's votes now, incl. ones still queued
-export function allEntries({ approved, own, totals, baseVotes, current, account, samples, sampleVotes }) {
+export function allEntries({ approved, own, totals, baseVotes, current, account }) {
   const now = Date.now();
   const days = (t) => Math.max(0, Math.floor((now - (t || now)) / 864e5));
   const server = approved.map((p) => {
@@ -95,9 +93,7 @@ export function allEntries({ approved, own, totals, baseVotes, current, account,
   });
   const waiting = own.map((p) => ({ key: p.id, id: p.id, kind: p.kind, title: p.title, parts: p.parts, author: account, status: p.status, reason: p.reason,
     mine: true, days: days(p.postedAt), vote: 0, score: 0 }));
-  const list = server.concat(waiting, samples ? sampleEntries() : []);
-  list.forEach((e) => { if (e.sample) { e.vote = sampleVotes[e.key] || 0; e.score = e.base + e.vote; } });
-  return list;
+  return server.concat(waiting);
 }
 
 // My posts / Liked: narrow any list, separately or together.
@@ -253,12 +249,12 @@ function item(ctx, e, rank, listKey) {
   // anything: a set's in its top row (right of the name), a single card's
   // in the votes row.
   const pending = e.status === "pending", rejected = e.status === "rejected";
-  const tag = e.mine || e.sample ? h("span", {
-    class: `wz-gl-mine${pending ? " pending" : rejected ? " rejected" : e.sample ? " sample" : ""}`,
-    text: pending ? (isSet ? "awaiting approval" : "pending") : rejected ? "not approved" : e.sample ? "sample" : "yours",
-    title: pending ? "Awaiting approval: shows to everyone once approved" : rejected ? "This upload wasn't approved" : e.sample ? "A sample entry, not a real post" : "Your post"
+  const tag = e.mine ? h("span", {
+    class: `wz-gl-mine${pending ? " pending" : rejected ? " rejected" : ""}`,
+    text: pending ? (isSet ? "awaiting approval" : "pending") : rejected ? "not approved" : "yours",
+    title: pending ? "Awaiting approval: shows to everyone once approved" : rejected ? "This upload wasn't approved" : "Your post"
   }) : null;
-  const canVote = e.sample || e.status === "approved";
+  const canVote = e.status === "approved";
   return h("div", { class: `wz-gl-item${isSet ? " set" : ""}`, "data-key": e.key },
     isSet ? h("div", { class: "wz-gl-sethead" }, h("div", { class: "wz-gl-setname", text: e.title || "(no name)", title: e.title || "" }), tag) : null,
     h("div", { class: "wz-gl-row" }, e.parts.map((p) => ctx.hoverable(h("div", { class: "wz-gl-zoom" }, tile(p)), p, e))),

@@ -10,19 +10,20 @@
 //             Review upload -> Upload to Gallery (needs the Card Gallery
 //             Username setting). Uploads leave the draft as posts.
 //   Browse  - the gallery's lists, a page at a time (browse.js), with My
-//             posts / Liked filters. Until the gallery is live it shows your
-//             uploads (awaiting approval) and sample entries, and nothing
-//             is sent anywhere.
+//             posts / Liked filters, and your uploads awaiting approval.
+//   Contest - the running contest and the archive (contest.js).
+//   Review  - for keys the owner gave out: uploads, judging, the log, and
+//             (owner) contests and reviewers.
 // A size control (Small / Medium / Large) zooms the cards on both views.
 
 import { h, button } from "./dom.js";
 import { tile, fitText, checkFrameImages, whenFontsReady, onFontsChange, TILE_CSS } from "./render.js";
 import { partFromRaw, readUcEditorFile, picturesFromPng, readFile } from "./parts.js";
 import { getDraft, saveDraft, nextId, makeSet, tidySets, entries, markUploaded, pruneUploads, SET_CAP } from "./draft.js";
-import { getMe, linkStart, linkCheck, getIndex, getTotals, uploadEntries, uploadProblems, createVoteQueue, ApiError, reviewPending, reviewPost, reviewDecide, reviewRemove, deleteOwnPost, reviewWhoami, reviewLog, reviewersList, reviewerAdd, reviewerRevoke } from "./api.js";
+import { getMe, linkStart, linkCheck, getIndex, getTotals, uploadEntries, uploadProblems, createVoteQueue, ApiError, reviewPending, reviewPost, reviewDecide, reviewRemove, deleteOwnPost, reviewWhoami, reviewLog, reviewersList, reviewerAdd, reviewerRevoke, reviewerAddJudge } from "./api.js";
 import { openVoid, canOpenVoid } from "../../core/uc-report.js";
 import { browseView, allEntries, BROWSE_CSS, removeButton } from "./browse.js";
-import { loadSampleExtras } from "./mock.js";
+import { createContests, CONTEST_CSS } from "./contest.js";
 
 const STYLE_ID = "wizascript-cardgallery-style";
 const TYPES = ["Monster", "Spell", "Enchantment", "Artifact"];
@@ -41,9 +42,8 @@ const CSS = `
 .wz-gl-panel.on.browse { display: flex; flex-direction: column; overflow: hidden; }
 .wz-gl-panel.browse > .wz-gl-content { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 .wz-gl-panel.browse > .wz-gl-content > .wz-gl-browse { flex: 1 1 auto; height: auto; }
-.wz-gl-proto { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; padding: 3px 6px; margin-bottom: 8px; border: 1px dashed #665; background: #17150c; font-size: 11px; flex: none; }
-.wz-gl-proto b { color: #ffd84a; margin-right: 4px; }
-.wz-gl-proto label { margin: 0 0 0 10px; font-weight: normal; cursor: pointer; }
+.wz-gl-ctag { display: inline-block; background: #3a2f0a; border: 1px solid #ffd84a; color: #ffd84a; font-size: 10px; padding: 0 4px; margin-left: 6px; }
+.wz-gl-target { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 8px; }
 .wz-gl-tabs { flex: none; }
 .wz-gl-part:has(.wz-gl-wide) { width: calc(355px * var(--wz-gl-z) + 14px); }
 .wz-gl-toggle.on, .wz-cm-btn.wz-gl-on { background: #4464bd; border-color: #8ea6e8; }
@@ -126,6 +126,7 @@ const CSS = `
 .wz-gl-hinfo .dim { opacity: .7; }
 ${TILE_CSS}
 ${BROWSE_CSS}
+${CONTEST_CSS}
 `;
 
 function injectStyle() {
@@ -147,21 +148,20 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   const draft = getDraft();
   let tab = draft.parts.length ? "browse" : "submit";
   let open = false;
-  const proto = draft.browseProto || {};
-  const browse = { list: "new", page: 0, samples: proto.samples === true, dir: null, mineOnly: false, likedOnly: false };
+  if (draft.browseProto) { delete draft.browseProto; saveDraft(); } // the old sample-entries switch
+  const browse = { list: "new", page: 0, dir: null, mineOnly: false, likedOnly: false };
   const listeners = [];
   const notify = () => listeners.forEach((f) => f());
   let browseCtl = null;
-  let extrasAsked = false;
-  const sampleVotes = {};
   let read = null; // { source, label, groups: [{ name, parts: [raw + pick] }] }
   let readTimer = null;
   let reviewing = false;   // the Upload step is open
   let lastUpload = null;   // { posts, error } after an upload, until the draft changes
   let uploading = false;
+  let submitTo = null;     // a contest id: Submit uploads into that contest
 
   // ---- the gallery server: this player's account, the gallery, votes ----
-  const acct = { loaded: false, loading: false, account: null, cooldownUntil: null, votes: {}, posts: [], error: "", at: 0 };
+  const acct = { loaded: false, loading: false, account: null, cooldownUntil: null, votes: {}, posts: [], contest: null, error: "", at: 0 };
   let linking = null;      // { code, line, expiresAt } while linking
   const gal = { approved: [], totals: {}, base: {}, at: 0, loading: false, error: "" };
   const voteQueue = createVoteQueue({
@@ -172,15 +172,19 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
 
   // ---- review (turned on with the console command; the key is the owner's or a reviewer's) ----
   const blankRev = () => ({ list: [], posts: {}, at: 0, loading: false, error: "", busy: {}, reasons: {},
-    who: null, section: "uploads", log: null, reviewers: null, newKey: null, newName: "", adding: false, sectionError: "" });
+    who: null, section: "uploads", log: null, reviewers: null, newKey: null, newName: "", newRole: "reviewer", adding: false, sectionError: "" });
   let rev = blankRev();
   const isOwner = () => !!(rev.who && rev.who.role === "owner");
+  const isJudge = () => !!(rev.who && rev.who.role === "judge");
   async function refreshReview(force) {
     const key = reviewerKey();
     if (!key || rev.loading || (!force && rev.at && Date.now() - rev.at < 30e3)) return;
     rev.loading = true;
     try {
       if (!rev.who) rev.who = await reviewWhoami(key);
+      // A judge key only scores its contest.
+      if (isJudge()) { rev.at = Date.now(); rev.error = ""; contests.loadJudging(force); return; }
+      contests.refresh();
       const r = await reviewPending(key);
       rev.list = (r && r.posts) || [];
       rev.error = "";
@@ -230,6 +234,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
       return h("div", { class: "wz-gl-revpost" },
         h("div", { class: "wz-gl-revmeta" },
           h("b", { text: p.title || "(no name)" }),
+          p.contest ? h("span", { class: "wz-gl-ctag", text: `Contest: ${p.contestTitle || p.contest}`, title: "Entered in this contest: check it follows the theme and rules" }) : null,
           h("span", { class: "dim", text: ` ${p.kind === "set" ? `set of ${post ? post.parts.length : "?"}` : post ? post.parts[0].type : ""} · by ` }), h("b", { text: p.author }),
           h("span", { class: "dim", text: ` · ${new Date(p.postedAt).toLocaleString()} · #${p.id}` })),
         post ? h("div", { class: `wz-gl-item${p.kind === "set" ? " set" : ""}` },
@@ -243,14 +248,21 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   // Review's sections: Uploads, Log, and (owner only) Reviewers.
   function reviewView() {
     if (!reviewerKey()) return h("p", { class: "wz-gl-note", text: "Review is off." });
-    const sections = [["uploads", `Uploads${rev.list.length ? ` (${rev.list.length})` : ""}`], ["log", "Log"]];
-    if (isOwner()) sections.push(["reviewers", "Reviewers"]);
-    if (!sections.some(([k]) => k === rev.section)) rev.section = "uploads";
+    const running = contests.active();
+    const judging = ["judging", `Judging${contests.unscored() ? ` (${contests.unscored()})` : ""}`];
+    const sections = isJudge() ? [judging] : [["uploads", `Uploads${rev.list.length ? ` (${rev.list.length})` : ""}`]];
+    if (!isJudge()) {
+      if (running) sections.push(judging);
+      sections.push(["log", "Log"]);
+    }
+    if (isOwner()) sections.push(["contests", "Contests"], ["reviewers", "Reviewers"]);
+    if (!sections.some(([k]) => k === rev.section)) rev.section = sections[0][0];
     const bar = h("div", { class: "wz-gl-bar wz-gl-revtabs" },
       ...sections.map(([k, label]) => button(label, () => openSection(k), { primary: rev.section === k })),
       h("span", { class: "wz-gl-grow" }),
-      rev.who ? h("span", { class: "dim", text: `Reviewing as ${rev.who.name}${isOwner() ? " (owner)" : ""}` }) : null);
-    const body = rev.section === "log" ? logView() : rev.section === "reviewers" ? reviewersView() : uploadsView();
+      rev.who ? h("span", { class: "dim", text: `${isJudge() ? "Judging" : "Reviewing"} as ${rev.who.name}${isOwner() ? " (owner)" : ""}` }) : null);
+    const body = rev.section === "log" ? logView() : rev.section === "reviewers" ? reviewersView() : rev.section === "judging" ? contests.judgingView()
+      : rev.section === "contests" ? contests.manageView() : uploadsView();
     return h("div", {}, bar, body);
   }
   function openSection(k) {
@@ -258,7 +270,9 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     rev.sectionError = "";
     if (k !== "reviewers") rev.newKey = null; // a new key is shown once, then gone
     if (k === "log") loadLog();
-    if (k === "reviewers") loadReviewers();
+    if (k === "reviewers") { loadReviewers(); contests.refresh(); }
+    if (k === "judging") contests.loadJudging(true);
+    if (k === "contests") contests.refresh(true);
     render();
   }
   const ago = (t) => {
@@ -274,7 +288,8 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     try { rev.reviewers = (await reviewersList(reviewerKey())).reviewers; rev.sectionError = ""; } catch (e) { rev.sectionError = errText(e); }
     if (open && tab === "review") render();
   }
-  const ACTIONS = { approve: "approved", reject: "rejected", remove: "removed", add_reviewer: "added reviewer", revoke_reviewer: "revoked reviewer" };
+  const ACTIONS = { approve: "approved", reject: "rejected", remove: "removed", add_reviewer: "added reviewer", add_judge: "added judge", revoke_reviewer: "revoked key of",
+    contest_create: "started contest", contest_edit: "edited contest", contest_archive: "published the results of", contest_delete: "deleted contest" };
   function logView() {
     const head = h("div", { class: "wz-gl-bar" }, h("b", { text: "Recent review actions" }), h("span", { class: "wz-gl-grow" }), button("↻ Refresh", loadLog));
     if (rev.sectionError) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: rev.sectionError }));
@@ -291,8 +306,9 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     if (!name) return say("Type the reviewer's name first.");
     rev.adding = true; render();
     try {
-      const r = await reviewerAdd(reviewerKey(), name);
-      rev.newKey = { name: r.name, key: r.key };
+      const judge = rev.newRole === "judge" && contests.active();
+      const r = judge ? await reviewerAddJudge(reviewerKey(), name) : await reviewerAdd(reviewerKey(), name);
+      rev.newKey = { name: r.name, key: r.key, role: r.role };
       rev.newName = "";
       await loadReviewers();
     } catch (e) { say(`Couldn't add ${name}: ${errText(e)}`); }
@@ -312,25 +328,32 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   }
   function reviewersView() {
     const nameBox = h("input", { type: "text", placeholder: "Their name", maxLength: 30, value: rev.newName, oninput: (e) => { rev.newName = e.target.value; }, onkeydown: (e) => { if (e.key === "Enter") addReviewer(); } });
-    const addBtn = button(rev.adding ? "Adding…" : "Add reviewer", addReviewer, { primary: true, title: "Make a new review key for them" });
+    const running = contests.active();
+    if (!running) rev.newRole = "reviewer";
+    const judge = rev.newRole === "judge";
+    const addBtn = button(rev.adding ? "Adding…" : judge ? "Add judge" : "Add reviewer", addReviewer, { primary: true, title: judge ? `Make a judge key for "${running.title}"` : "Make a new review key for them" });
     addBtn.disabled = rev.adding;
-    const parts = [h("p", { class: "wz-gl-note", text: "Each reviewer gets their own key. They can approve, reject and remove posts; only your key can add or revoke reviewers." }),
-      h("div", { class: "wz-gl-bar" }, nameBox, addBtn)];
+    const roleBtns = running ? [
+      button("Reviewer", () => { rev.newRole = "reviewer"; render(); }, { cls: !judge ? "wz-gl-on" : "", title: "Reviews uploads and can remove posts. Can also score contests." }),
+      button(`Judge: ${running.title}`, () => { rev.newRole = "judge"; render(); }, { cls: judge ? "wz-gl-on" : "", title: "Only scores this contest's entries; stops working when its results are published" })
+    ] : null;
+    const parts = [h("p", { class: "wz-gl-note", text: "Each person gets their own key. Reviewers approve, reject and remove posts, and score contests. Judges only score the running contest, and their key stops working when its results are published. Only your key can add or revoke keys." }),
+      h("div", { class: "wz-gl-bar" }, roleBtns, nameBox, addBtn)];
     if (rev.newKey) {
       const keyBox = h("input", { type: "text", readOnly: true, value: rev.newKey.key, class: "wz-gl-key", onfocus: (e) => e.target.select() });
       parts.push(h("div", { class: "wz-gl-rev wz-gl-newkey" },
-        h("div", {}, h("b", { text: `${rev.newKey.name}'s key` }), h("span", { class: "dim", text: " (shown once: it isn't stored anywhere, so copy it now)" })),
+        h("div", {}, h("b", { text: `${rev.newKey.name}'s ${rev.newKey.role === "judge" ? "judge " : ""}key` }), h("span", { class: "dim", text: " (shown once: it isn't stored anywhere, so copy it now)" })),
         h("div", { class: "wz-gl-bar" }, keyBox,
           button("Copy", () => copyText(rev.newKey.key).then((ok) => { if (ok) say("Copied."); else { keyBox.focus(); say("Press Ctrl+C to copy."); } })),
           button("Done", () => { rev.newKey = null; render(); })),
-        h("div", { class: "dim", text: "Send it to them privately (a DM, not a channel). They turn review on with the console command, using this key." })));
+        h("div", { class: "dim", text: "Send it to them privately (a DM, not a channel). They enter it with Redeem Key, on the Card Maker tab of Wizascript's settings." })));
     }
     if (rev.sectionError) parts.push(h("div", { class: "wz-gl-issues", text: rev.sectionError }));
     else if (!rev.reviewers) parts.push(h("p", { class: "wz-gl-note", text: "Loading…" }));
     else if (!rev.reviewers.length) parts.push(h("p", { class: "wz-gl-note", text: "No reviewers yet." }));
     else parts.push(h("div", { class: "wz-gl-revlog" }, rev.reviewers.map((r) => h("div", { class: "wz-gl-bar" },
       h("b", { text: r.name }),
-      h("span", { class: "dim", text: `added ${ago(r.addedAt)} · last used ${ago(r.lastUsedAt)}` }),
+      h("span", { class: "dim", text: `${r.role === "judge" ? `judge${running && running.id === r.contest ? ` (${running.title})` : ""}` : "reviewer"} · added ${ago(r.addedAt)} · last used ${ago(r.lastUsedAt)}` }),
       h("span", { class: "wz-gl-grow" }),
       removeButton({ rerender: render }, r, { label: "Revoke", confirm: "Revoke?", title: `Stop ${r.name}'s key working`, run: revokeReviewer })))));
     return h("div", {}, ...parts);
@@ -338,10 +361,12 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   async function deleteMine(e) {
     try {
       await deleteOwnPost(e.id);
+      const wasEntry = acct.posts.some((p) => p.id === e.id && p.contest && (p.status === "pending" || p.status === "approved"));
       delete draft.uploads[e.id];
       saveDraft();
       acct.posts = acct.posts.filter((p) => p.id !== e.id);
-      say(`Deleted "${e.title}".`);
+      say(wasEntry ? `Withdrew "${e.title}". Its slot is free again.` : `Deleted "${e.title}".`);
+      if (wasEntry) { refreshMe(true); contests.refresh(true); }
       render();
     } catch (err) { say(`Couldn't delete it: ${errText(err)}`); render(); }
   }
@@ -361,12 +386,29 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   };
   const errText = (e) => (e instanceof ApiError ? e.message : "Something went wrong.");
 
+  // ---- contests (contest.js) ----
+  const contests = createContests({
+    say: (t) => say(t),
+    render: () => render(),
+    changed: () => { notify(); if (open && (tab === "contest" || tab === "review" || tab === "submit")) render(); },
+    errText,
+    hoverable: (el, p, e) => hoverable(el, p, e),
+    acct,
+    draft,
+    reviewerKey,
+    who: () => rev.who,
+    keyRejected: (code) => onKeyRejected(code),
+    refreshMe: (f) => refreshMe(f),
+    deleteMine: (e) => deleteMine(e),
+    startEntry(id) { submitTo = id; setView("submit"); say("Add the cards to enter, then Review upload."); }
+  });
+
   async function refreshMe(force) {
     if (acct.loading || (!force && acct.loaded && Date.now() - acct.at < 30e3)) return;
     acct.loading = true;
     try {
       const me = await getMe();
-      Object.assign(acct, { loaded: true, account: me.account || null, cooldownUntil: me.cooldownUntil || null, votes: me.votes || {}, posts: me.posts || [], error: "", at: Date.now() });
+      Object.assign(acct, { loaded: true, account: me.account || null, cooldownUntil: me.cooldownUntil || null, votes: me.votes || {}, posts: me.posts || [], contest: me.contest || null, error: "", at: Date.now() });
       pruneUploads(Object.fromEntries(acct.posts.map((p) => [p.id, p.status])), new Set(gal.approved.map((p) => p.id)));
     } catch (e) {
       acct.error = errText(e);
@@ -457,8 +499,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   const tabs = h("div", { class: "wz-gl-bar wz-gl-tabs" });
   const content = h("div", { class: "wz-gl-content" });
   const hover = h("div", { class: "wz-gl-hover" });
-  const protoBar = h("div", { class: "wz-gl-proto" });
-  const panel = h("div", { class: "wz-gl-panel" }, protoBar, tabs, content, hover);
+  const panel = h("div", { class: "wz-gl-panel" }, tabs, content, hover);
   const fileInput = h("input", { type: "file", accept: ".uceditor,image/png", multiple: true, style: { display: "none" } });
   panel.appendChild(fileInput);
 
@@ -530,23 +571,15 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   };
   panel.addEventListener("scroll", hideHover, { passive: true });
 
-  function renderProto() {
-    protoBar.replaceChildren(h("b", { text: "Preview" }),
-      h("label", {}, h("input", { type: "checkbox", checked: browse.samples, onchange: (e) => { browse.samples = e.target.checked; browse.page = 0; saveProto(); render(); } }), " Sample entries"));
-  }
-  const saveProto = () => { draft.browseProto = { samples: browse.samples }; saveDraft(); };
-
   function render() {
     hideHover();
     browseCtl = null;
     if (!open) return;
-    renderProto();
     tabs.replaceChildren(
       accountBox(), status, h("span", { class: "wz-gl-grow" }), sizeButtons());
     panel.classList.toggle("browse", tab === "browse");
     applyZoom();
     if (tab === "browse") {
-      if (browse.samples && !extrasAsked) { extrasAsked = true; loadSampleExtras().then((more) => { if (more && open && tab === "browse") render(); }); }
       const ctl = browseCtl = browseTab();
       content.replaceChildren(...[linkBox(), ctl.el].filter(Boolean));
       ctl.layout();
@@ -554,6 +587,9 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
       requestAnimationFrame(() => { if (browseCtl === ctl) ctl.layout(); });
     } else if (tab === "review") {
       content.replaceChildren(reviewView());
+      requestAnimationFrame(refit);
+    } else if (tab === "contest") {
+      content.replaceChildren(...[linkBox(), contests.view()].filter(Boolean));
       requestAnimationFrame(refit);
     } else {
       content.replaceChildren(...[linkBox(), submitView()].filter(Boolean));
@@ -568,6 +604,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
       refreshMe();
       if (v === "browse") refreshGallery();
       if (v === "review") refreshReview(true);
+      if (v === "contest" || v === "submit") contests.refresh();
     }
     notify();
   }
@@ -704,19 +741,38 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     const out = [];
     if (!acct.loaded) out.push(acct.error ? `Unable to Submit: the gallery server can't be reached (${acct.error})` : "Checking your account…");
     else if (!author()) out.push("Unable to Submit: link your Undercards account first (Link my account, at the top).");
+    const s = targetSlots();
+    if (submitTo && !s) out.push("That contest isn't taking entries any more. Upload to the gallery instead.");
+    if (s && entries().length > s.left) out.push(s.left ? `This contest takes ${s.left} more entr${s.left === 1 ? "y" : "ies"} from you (${s.used} of ${s.max} used). A set counts as one.` : `You've used all ${s.max} entries in this contest. Withdraw one in the Contest tab to free a slot.`);
     const unnamed = draft.parts.filter((p) => !p.name).length;
     const unnamedSets = draft.groups.filter((g) => !g.name).length;
     if (unnamed) out.push(`${unnamed} card${unnamed === 1 ? " has" : "s have"} no name yet.`);
     if (unnamedSets) out.push(`${unnamedSets} set${unnamedSets === 1 ? " has" : "s have"} no name yet.`);
     return out.concat(uploadProblems(entries()));
   }
+  // Where Submit uploads to: the gallery, or the open contest.
+  function targetSlots() {
+    const s = contests.slots();
+    if (!submitTo) return null;
+    return s && s.contest.id === submitTo ? s : null;
+  }
+  function targetPicker() {
+    const s = contests.slots();
+    if (!s && !submitTo) return null;
+    if (!s) { submitTo = null; return null; }
+    return h("div", { class: "wz-gl-target" },
+      h("span", { text: "Upload to:" }),
+      button("Gallery", () => { submitTo = null; render(); }, { cls: !submitTo ? "wz-gl-on" : "", title: "The main gallery, voted on by everyone" }),
+      button(`Contest: ${s.contest.title} (${s.left} of ${s.max} left)`, () => { submitTo = s.contest.id; render(); }, { cls: submitTo ? "wz-gl-on" : "", title: `Enter these in the contest. Entries close ${new Date(s.contest.closesAt).toLocaleString()}.` }));
+  }
   function uploadBox() {
     const list = entries();
     const nCards = draft.parts.length;
     const summary = `${list.length} entr${list.length === 1 ? "y" : "ies"} (${nCards} card${nCards === 1 ? "" : "s"})`;
     if (!reviewing) {
+      const s = targetSlots();
       return h("div", { class: "wz-gl-upload" },
-        h("span", { text: `Ready to upload: ${summary}.` }), h("span", { class: "wz-gl-grow" }),
+        h("span", { text: `Ready to upload: ${summary}${s ? `, into ${s.contest.title}` : ""}.` }), h("span", { class: "wz-gl-grow" }),
         button("Review upload", () => { reviewing = true; render(); panel.scrollTop = 0; }, { primary: true, title: "See exactly what will be sent before uploading" }));
     }
     const issues = problems();
@@ -725,15 +781,17 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
         h("b", { text: e.kind === "set" ? `Set ${e.label}: ${e.title || "(no name)"}` : e.title || "(no name)" }),
         h("small", { text: e.kind === "set" ? ` ${e.parts.length} cards` : ` ${e.parts[0].type}` })),
       h("div", { class: "wz-gl-revcards" }, e.parts.map((p) => h("div", { class: "wz-gl-zoom" }, tile(p))))));
-    const go = button(uploading ? "Uploading…" : "Upload to Gallery", () => doUpload(), { primary: true, title: issues.length ? issues[0] : "Send these for approval" });
+    const into = targetSlots();
+    const go = button(uploading ? "Uploading…" : into ? "Enter in Contest" : "Upload to Gallery", () => doUpload(), { primary: true, title: issues.length ? issues[0] : "Send these for approval" });
     go.disabled = issues.length > 0 || uploading;
     return h("div", { class: "wz-gl-upload open" },
-      h("div", { class: "wz-gl-bar" }, h("b", { text: `Upload ${summary}` }), h("span", { class: "wz-gl-grow" }),
+      targetPicker(),
+      h("div", { class: "wz-gl-bar" }, h("b", { text: into ? `Enter ${summary} in ${into.contest.title}` : `Upload ${summary}` }), h("span", { class: "wz-gl-grow" }),
         h("span", { class: "wz-gl-by", text: author() ? `Posting as ${author()}` : "" })),
       h("div", { class: "wz-gl-revlist" }, rows),
       issues.length ? h("div", { class: "wz-gl-issues" }, issues.map((t) => h("div", { text: t }))) : null,
       h("div", { class: "wz-gl-bar wz-gl-revfoot" },
-        h("span", { class: "wz-gl-note", style: { margin: 0 }, text: "Each set and single card is sent as its own entry, for approval. Approved ones show in Browse for everyone." }),
+        h("span", { class: "wz-gl-note", style: { margin: 0 }, text: into ? "Each set and single card is one entry, checked against the contest's rules. Approved entries show in the Contest tab, and join the gallery when the results are out." : "Each set and single card is sent as its own entry, for approval. Approved ones show in Browse for everyone." }),
         h("span", { class: "wz-gl-grow" }),
         button("Back", () => { reviewing = false; render(); }), go));
   }
@@ -743,7 +801,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     render();
     let sent = [], error = "";
     try {
-      sent = await uploadEntries(entries(), (i, n) => { if (n > 1 && i < n) say(`Uploading part ${i + 1} of ${n}…`); });
+      sent = await uploadEntries(entries(), (i, n) => { if (n > 1 && i < n) say(`Uploading part ${i + 1} of ${n}…`); }, targetSlots() ? submitTo : null);
     } catch (e) {
       sent = (e.extra && e.extra.sent) || [];
       error = errText(e);
@@ -752,9 +810,9 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     if (sent.length) markUploaded(sent);
     reviewing = !!error && !sent.length;
     read = null;
-    lastUpload = sent.length || error ? { posts: sent, error } : null;
+    lastUpload = sent.length || error ? { posts: sent, error, contest: sent.length && sent[0].contest ? contests.active() : null } : null;
     say(error ? (sent.length ? `Uploaded ${sent.length}; the rest didn't go: ${error}` : `Upload failed: ${error}`) : `Uploaded ${sent.length} entr${sent.length === 1 ? "y" : "ies"}.`);
-    if (sent.length) refreshMe(true);
+    if (sent.length) { refreshMe(true); if (lastUpload.contest) { submitTo = null; contests.refresh(true); } }
     render();
   }
   function uploadedBox() {
@@ -764,11 +822,12 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     }
     const cards = posts.reduce((n, e) => n + e.local.parts.length, 0);
     return h("div", { class: `wz-gl-done${lastUpload.error ? " failed" : ""}` },
-      h("div", {}, h("b", { text: `✓ Sent for approval: ${posts.length} entr${posts.length === 1 ? "y" : "ies"} (${cards} card${cards === 1 ? "" : "s"})` })),
+      h("div", {}, h("b", { text: `✓ ${lastUpload.contest ? `Entered in ${lastUpload.contest.title}` : "Sent for approval"}: ${posts.length} entr${posts.length === 1 ? "y" : "ies"} (${cards} card${cards === 1 ? "" : "s"})` })),
       h("ul", {}, posts.map((e) => h("li", { text: e.kind === "set" ? `${e.title} (set of ${e.local.parts.length})` : `${e.title} (${e.local.parts[0].type})` }))),
       lastUpload.error ? h("div", { class: "wz-gl-issues", text: `The rest weren't sent: ${lastUpload.error} They're still in your draft below.` }) : null,
-      h("div", { class: "wz-gl-note", style: { margin: "0 0 6px" }, text: "They show under My posts as awaiting approval, and in Browse for everyone once approved." }),
-      button("See my posts", () => { browse.mineOnly = true; browse.likedOnly = false; browse.list = "new"; browse.page = 0; lastUpload = null; setView("browse"); }, { primary: true }),
+      h("div", { class: "wz-gl-note", style: { margin: "0 0 6px" }, text: lastUpload.contest ? "They're checked against the contest's rules first. See them under Your entries in the Contest tab." : "They show under My posts as awaiting approval, and in Browse for everyone once approved." }),
+      lastUpload.contest ? button("See the contest", () => { lastUpload = null; setView("contest"); }, { primary: true })
+        : button("See my posts", () => { browse.mineOnly = true; browse.likedOnly = false; browse.list = "new"; browse.page = 0; lastUpload = null; setView("browse"); }, { primary: true }),
       " ", button("Dismiss", () => { lastUpload = null; render(); }));
   }
 
@@ -799,19 +858,20 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
 
   // ---- Browse (preview) ----
   function browseTab() {
+    // Contest entries show in the Contest tab, and join Browse with the results.
     const own = acct.posts
-      .filter((p) => (p.status === "pending" || p.status === "rejected") && draft.uploads[p.id])
+      .filter((p) => !p.contest && (p.status === "pending" || p.status === "rejected") && draft.uploads[p.id])
       .map((p) => ({ id: p.id, status: p.status, reason: p.reason, postedAt: p.postedAt, kind: draft.uploads[p.id].kind, title: draft.uploads[p.id].title, parts: draft.uploads[p.id].parts }));
     // Just approved, but not in the gallery's index yet: still show its copy.
-    acct.posts.filter((p) => p.status === "approved" && draft.uploads[p.id] && !gal.approved.some((a) => a.id === p.id))
+    acct.posts.filter((p) => !p.contest && p.status === "approved" && draft.uploads[p.id] && !gal.approved.some((a) => a.id === p.id))
       .forEach((p) => own.push({ id: p.id, status: "pending", postedAt: p.postedAt, kind: draft.uploads[p.id].kind, title: draft.uploads[p.id].title, parts: draft.uploads[p.id].parts }));
-    const list = allEntries({ approved: gal.approved, own, totals: gal.totals, baseVotes: gal.base, current: currentVotes(), account: acct.account, samples: browse.samples, sampleVotes });
+    const list = allEntries({ approved: gal.approved, own, totals: gal.totals, baseVotes: gal.base, current: currentVotes(), account: acct.account });
     return browseView({
       state: browse,
       wheelPages: () => !wheelPages || wheelPages(),
       onPage: hideHover,
       entries: list,
-      note: gal.error ? `Couldn't load the gallery: ${gal.error}` : browse.samples ? "Sample entries (grey tag) are mixed in. They aren't real posts." : acct.account ? "" : "Link your account to vote.",
+      note: gal.error ? `Couldn't load the gallery: ${gal.error}` : acct.account ? "" : "Link your account to vote.",
       emptyText: gal.loading && !gal.at ? "* Loading the gallery…" : gal.error && !gal.at ? "* Couldn't load the gallery. Try again in a moment." : "",
       hoverable,
       rerender: render,
@@ -819,7 +879,6 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
       onRemove: reviewerKey() ? removePost : null,
       onDelete: deleteMine,
       vote(e, dir) {
-        if (e.sample) { sampleVotes[e.key] = (sampleVotes[e.key] || 0) === dir ? 0 : dir; return render(); }
         if (!acct.account) { say("Link your Undercards account to vote: press Link my account at the top."); return; }
         const cur = currentVotes()[e.id] || 0;
         voteQueue.add(e.id, cur === dir ? 0 : dir);
@@ -832,7 +891,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     el: panel,
     isOpen: () => open,
     isReviewer: () => !!reviewerKey(),
-    pendingCount: () => (reviewerKey() ? rev.list.length : 0),
+    pendingCount: () => (!reviewerKey() ? 0 : isJudge() ? contests.unscored() : rev.list.length),
     // The Card Maker opened: the reviewer's count of uploads waiting.
     opened() { if (reviewerKey()) refreshReview(); },
     // ___ucReviewList turned review on or off.

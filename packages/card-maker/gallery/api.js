@@ -107,27 +107,48 @@ export const reviewLog = (key) => admin("GET", "/v1/admin/log", key);
 export const reviewersList = (key) => admin("GET", "/v1/admin/reviewers", key);
 export const reviewerAdd = (key, name) => admin("POST", "/v1/admin/reviewers/add", key, { name });
 export const reviewerRevoke = (key, id) => admin("POST", "/v1/admin/reviewers/revoke", key, { id });
+export const reviewerAddJudge = (key, name) => admin("POST", "/v1/admin/reviewers/add", key, { name, role: "judge" });
+// contests: judging (any key for that contest) and running them (owner)
+export const reviewContest = (key, id) => admin("GET", `/v1/admin/contest?id=${encodeURIComponent(id)}`, key);
+export const reviewScore = (key, contest, post, score) => admin("POST", "/v1/admin/score", key, { contest, post, score });
+export const manageContest = (key, body) => admin("POST", "/v1/admin/contests", key, body);
+// The contests, as the Worker has them now (status, deadline, entry counts).
+export const getContests = () => request("GET", `${WORKER}/v1/contests`);
 export const reviewPending = (key) => admin("GET", "/v1/admin/pending", key);
 export const reviewPost = (key, id) => admin("GET", `/v1/admin/post?id=${encodeURIComponent(id)}`, key);
 export const reviewDecide = (key, id, approve, reason) => admin("POST", "/v1/admin/decide", key, { id, approve: !!approve, reason: reason || "" });
 export const reviewRemove = (key, id) => admin("POST", "/v1/admin/remove", key, { id });
 
-// The approved posts (gallery branch), with art paths made into URLs.
-export async function getIndex() {
-  const idx = await request("GET", `${GALLERY_RAW}index.json?t=${Math.floor(Date.now() / 60000)}`);
-  // Only paths the Worker writes (art/<id>-<n>.png, art/tribe-<hash>.png) become
-  // addresses, so nothing in the file can point a card's art elsewhere.
-  const art = (p) => (typeof p === "string" && /^art\/[a-z0-9-]{1,40}\.png$/.test(p) ? GALLERY_RAW + p : "");
-  const posts = (idx && Array.isArray(idx.posts) ? idx.posts : []).filter((p) => p && /^[0-9a-z]{3,8}$/.test(p.id)).map((p) => ({
+// Only paths the Worker writes (art/<id>-<n>.png, art/tribe-<hash>.png) become
+// addresses, so nothing in the gallery's files can point a card's art elsewhere.
+const artUrl = (p) => (typeof p === "string" && /^art\/[a-z0-9-]{1,40}\.png$/.test(p) ? GALLERY_RAW + p : "");
+const validId = (p) => p && /^[0-9a-z]{3,8}$/.test(p.id);
+export function withArt(p) {
+  return {
     ...p,
     parts: (p.parts || []).map((c) => ({
       ...c,
-      art: art(c.art),
-      picture: c.picture ? art(c.picture) || undefined : undefined,
-      tribes: (c.tribes || []).map((t) => ({ ...t, icon: art(t.icon) }))
+      art: artUrl(c.art),
+      picture: c.picture ? artUrl(c.picture) || undefined : undefined,
+      tribes: (c.tribes || []).map((t) => ({ ...t, icon: artUrl(t.icon) }))
     }))
+  };
+}
+
+// The approved posts (gallery branch), with art paths made into URLs.
+export async function getIndex() {
+  const idx = await request("GET", `${GALLERY_RAW}index.json?t=${Math.floor(Date.now() / 60000)}`);
+  return (idx && Array.isArray(idx.posts) ? idx.posts : []).filter(validId).map(withArt);
+}
+
+// contests.json (gallery branch): each contest's approved entries, and the
+// results of archived ones.
+export async function getContestsFile() {
+  const f = await request("GET", `${GALLERY_RAW}contests.json?t=${Math.floor(Date.now() / 60000)}`);
+  return (f && Array.isArray(f.contests) ? f.contests : []).filter((c) => c && /^c[0-9a-z]{1,8}$/.test(c.id)).map((c) => ({
+    ...c,
+    entries: (Array.isArray(c.entries) ? c.entries : []).filter(validId).map(withArt)
   }));
-  return posts;
 }
 
 // ---- uploads ----------------------------------------------------------------------
@@ -183,14 +204,14 @@ export function splitUploads(entries) {
 // Sends every batch in turn. onProgress(done, total). Returns the posts the
 // server made, each with its `local` entry; stops at the first error, with
 // what was sent so far in error.extra.sent.
-export async function uploadEntries(entries, onProgress) {
+export async function uploadEntries(entries, onProgress, contest) {
   const batches = splitUploads(entries);
   const sent = [];
   for (let i = 0; i < batches.length; i++) {
     if (onProgress) onProgress(i, batches.length);
     let res;
     try {
-      res = await authed("POST", "/v1/posts", { entries: batches[i].map(({ local, ...e }) => e) });
+      res = await authed("POST", "/v1/posts", { entries: batches[i].map(({ local, ...e }) => e), ...(contest ? { contest } : {}) });
     } catch (e) {
       e.extra = { ...(e.extra || {}), sent };
       throw e;

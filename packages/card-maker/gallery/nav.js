@@ -1,13 +1,13 @@
 // packages/card-maker/gallery/nav.js
 //
-// Editor | Browse | Submit, one bar in the Card Maker's title bar, so the
+// Editor | Browse | Contest | Submit, one bar in the Card Maker's title bar, so the
 // gallery is always one click away. (Chosen over a side rail and a banner,
 // 2026-10-28.) The gallery's reviewer also gets Review, with a count of
 // uploads waiting.
 
 import { h } from "./dom.js";
 
-const VIEWS = [["editor", "Editor", "✎"], ["browse", "Browse", "▤"], ["submit", "Submit", "⬆"], ["review", "Review", "✓"]];
+const VIEWS = [["editor", "Editor", "✎"], ["browse", "Browse", "▤"], ["contest", "Contest", "★"], ["submit", "Submit", "⬆"], ["review", "Review", "✓"]];
 const STYLE_ID = "wizascript-cardgallery-nav-style";
 const DT = `"DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace`;
 
@@ -34,7 +34,7 @@ export function mountGalleryNav({ win, gallery }) {
   injectStyle();
   const header = win.root.querySelector(".wz-cm-header");
   const seg = h("div", { class: "wz-gn-seg" }, VIEWS.map(([v, label, icon]) =>
-    h("button", { type: "button", "data-view": v, title: v === "editor" ? "Back to the editor" : v === "review" ? "Uploads waiting for your review" : `Card Gallery: ${label}`, onclick: () => gallery.setView(v) },
+    h("button", { type: "button", "data-view": v, title: v === "editor" ? "Back to the editor" : v === "review" ? "Uploads waiting for your review, and contest judging" : v === "contest" ? "Card Gallery: contests (the running one, and past results)" : `Card Gallery: ${label}`, onclick: () => gallery.setView(v) },
       h("span", { class: "ic", text: icon }), h("span", { text: label }), v === "review" ? h("span", { class: "count" }) : null)));
   header.insertBefore(seg, header.querySelector(".wz-cm-grip"));
   function sync() {

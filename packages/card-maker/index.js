@@ -401,8 +401,6 @@ async function redeemKey(raw) {
   try { me = await reviewWhoami(k); } catch (e) {
     throw new Error(e && e.code === "not_admin" ? "That key isn't valid." : e && e.code === "key_expired" ? "That key has expired." : e && e.code === "rate_limited" ? "Too many wrong keys. Try again in an hour." : (e && e.message) || "Couldn't check the key.");
   }
-  // Judge keys only score contests, which aren't in Wizascript yet.
-  if (me.role === "judge") throw new Error("That's a judge key. Judging comes with contests.");
   GM_setValue(REVIEW_KEY, k);
   GM_setValue(REVIEW_WHO, JSON.stringify({ name: me.name, role: me.role }));
   keyChanged();
@@ -438,7 +436,7 @@ function openKeyDialog() {
       try {
         const me = await redeemKey(input.value);
         draw();
-        show(`Redeemed. You're reviewing as ${me.name}.`, true);
+        show(me.role === "judge" ? `Redeemed. You're judging as ${me.name}: open the Card Maker and press Review.` : `Redeemed. You're reviewing as ${me.name}.`, true);
       } catch (e) {
         show(e.message, false);
       }
@@ -447,7 +445,7 @@ function openKeyDialog() {
     go.addEventListener("click", submit);
     input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } });
     wrap.append(
-      el("p", { textContent: "Enter a key you were given to review gallery uploads." }),
+      el("p", { textContent: "Enter a key you were given to review gallery uploads or judge a contest." }),
       el("p", {}, go, " Redeem"),
       input, status);
     setTimeout(() => input.focus(), 100);
@@ -468,7 +466,7 @@ function installReviewCommand() {
   const w = getPageWindow();
   const command = (key) => {
     if (reviewerKey()) { forgetKey(); console.log("Review: off."); return; }
-    redeemKey(key).then((me) => console.log(`Review: on, as ${me.name} (${me.role}). Open the Card Maker to review uploads.`),
+    redeemKey(key).then((me) => console.log(`Review: on, as ${me.name} (${me.role}). Open the Card Maker and press Review.`),
       (e) => console.log(`Review: not turned on (${e.message})`));
   };
   // Locked once defined (not writable, not configurable), so no other script
@@ -484,7 +482,6 @@ function recheckKey() {
   const k = reviewerKey();
   if (!k) return;
   reviewWhoami(k).then((me) => {
-    if (me.role === "judge") return forgetKey();
     GM_setValue(REVIEW_WHO, JSON.stringify({ name: me.name, role: me.role }));
     if (keyButton && keyButton.isConnected) keyButton.value = keyLabel();
   }, (e) => {
@@ -534,7 +531,7 @@ export function initCardMaker(plugin) {
   });
   settings.add("galleryKey", {
     name: "Gallery Key",
-    note: "For gallery reviewers: enter the key you were given.",
+    note: "For gallery reviewers and contest judges: enter the key you were given.",
     type: "text",
     default: "Redeem Key",
     hidden: () => !!gallerySetting && !gallerySetting.value()

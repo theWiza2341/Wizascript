@@ -12523,6 +12523,11 @@ Version: v${version}`;
   var deleteOwnPost = (id) => authed("POST", "/v1/posts/delete", { id });
   var getTotals = () => request("GET", `${WORKER}/v1/totals`);
   var admin = (method, path, key2, body) => request(method, WORKER + path, { body, adminKey: key2 });
+  var reviewWhoami = (key2) => admin("GET", "/v1/admin/whoami", key2);
+  var reviewLog = (key2) => admin("GET", "/v1/admin/log", key2);
+  var reviewersList = (key2) => admin("GET", "/v1/admin/reviewers", key2);
+  var reviewerAdd = (key2, name) => admin("POST", "/v1/admin/reviewers/add", key2, { name });
+  var reviewerRevoke = (key2, id) => admin("POST", "/v1/admin/reviewers/revoke", key2, { id });
   var reviewPending = (key2) => admin("GET", "/v1/admin/pending", key2);
   var reviewPost = (key2, id) => admin("GET", `/v1/admin/post?id=${encodeURIComponent(id)}`, key2);
   var reviewDecide = (key2, id, approve, reason) => admin("POST", "/v1/admin/decide", key2, { id, approve: !!approve, reason: reason || "" });
@@ -13165,6 +13170,10 @@ Version: v${version}`;
 .wz-gl-upload.open { display: block; }
 .wz-gl-revlist { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; max-height: 360px; overflow: auto; }
 .wz-gl-rev { border: 1px solid #444; background: #111; padding: 4px 6px; }
+.wz-gl-revtabs { margin-bottom: 8px; }
+.wz-gl-revlog { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.wz-gl-newkey { margin: 8px 0; display: flex; flex-direction: column; gap: 6px; border-color: #ff0; }
+.wz-gl-key { flex: 1; min-width: 0; font-family: monospace; }
 .wz-gl-revhead { margin-bottom: 3px; }
 .wz-gl-revcards { display: flex; gap: 3px; --wz-gl-z: .45; }
 .wz-gl-revcards .wz-gl-zoom { margin: 0; cursor: default; }
@@ -13232,12 +13241,31 @@ ${BROWSE_CSS}
       }
     });
     const author = () => acct.account || "";
-    const rev = { list: [], posts: {}, at: 0, loading: false, error: "", busy: {}, reasons: {} };
+    const blankRev = () => ({
+      list: [],
+      posts: {},
+      at: 0,
+      loading: false,
+      error: "",
+      busy: {},
+      reasons: {},
+      who: null,
+      section: "uploads",
+      log: null,
+      reviewers: null,
+      newKey: null,
+      newName: "",
+      adding: false,
+      sectionError: ""
+    });
+    let rev = blankRev();
+    const isOwner = () => !!(rev.who && rev.who.role === "owner");
     async function refreshReview(force) {
       const key2 = reviewerKey2();
       if (!key2 || rev.loading || !force && rev.at && Date.now() - rev.at < 3e4) return;
       rev.loading = true;
       try {
+        if (!rev.who) rev.who = await reviewWhoami(key2);
         const r = await reviewPending(key2);
         rev.list = r && r.posts || [];
         rev.error = "";
@@ -13246,7 +13274,7 @@ ${BROWSE_CSS}
           if (!rev.posts[p.id]) rev.posts[p.id] = await reviewPost(key2, p.id).catch(() => null);
         }
       } catch (e) {
-        rev.error = e.code === "not_admin" ? "The server no longer accepts this review key." : errText(e);
+        rev.error = e.code === "not_admin" ? "The server no longer accepts this review key. Turn review off and on again with a current key." : errText(e);
       } finally {
         rev.loading = false;
         notify2();
@@ -13269,8 +13297,7 @@ ${BROWSE_CSS}
       notify2();
       render2();
     }
-    function reviewView() {
-      if (!reviewerKey2()) return h("p", { class: "wz-gl-note", text: "Review is off." });
+    function uploadsView() {
       const head = h(
         "div",
         { class: "wz-gl-bar" },
@@ -13309,6 +13336,148 @@ ${BROWSE_CSS}
         );
       });
       return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Each upload is shown exactly as it will look in Browse. Approving adds it to the gallery for everyone." }), h("div", { class: "wz-gl-revposts" }, items));
+    }
+    function reviewView() {
+      if (!reviewerKey2()) return h("p", { class: "wz-gl-note", text: "Review is off." });
+      const sections = [["uploads", `Uploads${rev.list.length ? ` (${rev.list.length})` : ""}`], ["log", "Log"]];
+      if (isOwner()) sections.push(["reviewers", "Reviewers"]);
+      if (!sections.some(([k]) => k === rev.section)) rev.section = "uploads";
+      const bar = h(
+        "div",
+        { class: "wz-gl-bar wz-gl-revtabs" },
+        ...sections.map(([k, label]) => button(label, () => openSection(k), { primary: rev.section === k })),
+        h("span", { class: "wz-gl-grow" }),
+        rev.who ? h("span", { class: "dim", text: `Reviewing as ${rev.who.name}${isOwner() ? " (owner)" : ""}` }) : null
+      );
+      const body = rev.section === "log" ? logView() : rev.section === "reviewers" ? reviewersView() : uploadsView();
+      return h("div", {}, bar, body);
+    }
+    function openSection(k) {
+      rev.section = k;
+      rev.sectionError = "";
+      if (k !== "reviewers") rev.newKey = null;
+      if (k === "log") loadLog();
+      if (k === "reviewers") loadReviewers();
+      render2();
+    }
+    const ago = (t) => {
+      if (!t) return "never";
+      const m = Math.max(0, Math.round((Date.now() - t) / 6e4));
+      return m < 1 ? "just now" : m < 60 ? `${m} min ago` : m < 48 * 60 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} days ago`;
+    };
+    async function loadLog() {
+      try {
+        rev.log = (await reviewLog(reviewerKey2())).log;
+        rev.sectionError = "";
+      } catch (e) {
+        rev.sectionError = errText(e);
+      }
+      if (open && tab === "review") render2();
+    }
+    async function loadReviewers() {
+      try {
+        rev.reviewers = (await reviewersList(reviewerKey2())).reviewers;
+        rev.sectionError = "";
+      } catch (e) {
+        rev.sectionError = errText(e);
+      }
+      if (open && tab === "review") render2();
+    }
+    const ACTIONS = { approve: "approved", reject: "rejected", remove: "removed", add_reviewer: "added reviewer", revoke_reviewer: "revoked reviewer" };
+    function logView() {
+      const head = h("div", { class: "wz-gl-bar" }, h("b", { text: "Recent review actions" }), h("span", { class: "wz-gl-grow" }), button("\u21BB Refresh", loadLog));
+      if (rev.sectionError) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: rev.sectionError }));
+      if (!rev.log) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Loading\u2026" }));
+      if (!rev.log.length) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing yet." }));
+      return h("div", {}, head, h("div", { class: "wz-gl-revlog" }, rev.log.map((l) => h(
+        "div",
+        {},
+        h("b", { text: l.who }),
+        ` ${ACTIONS[l.action] || l.action} `,
+        l.post ? h("span", { text: `"${l.title || ""}" #${l.post}` }) : h("b", { text: l.detail || "" }),
+        l.post && l.detail ? h("span", { class: "dim", text: ` (${l.detail})` }) : null,
+        h("span", { class: "dim", text: ` \xB7 ${ago(l.at)}` })
+      ))));
+    }
+    async function addReviewer() {
+      const name = rev.newName.trim();
+      if (!name) return say("Type the reviewer's name first.");
+      rev.adding = true;
+      render2();
+      try {
+        const r = await reviewerAdd(reviewerKey2(), name);
+        rev.newKey = { name: r.name, key: r.key };
+        rev.newName = "";
+        await loadReviewers();
+      } catch (e) {
+        say(`Couldn't add ${name}: ${errText(e)}`);
+      }
+      rev.adding = false;
+      render2();
+    }
+    async function revokeReviewer(r) {
+      try {
+        await reviewerRevoke(reviewerKey2(), r.id);
+        say(`Revoked ${r.name}'s key. It stops working now.`);
+        await loadReviewers();
+      } catch (e) {
+        say(`Couldn't revoke ${r.name}: ${errText(e)}`);
+        render2();
+      }
+    }
+    function copyText2(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text).then(() => true, () => false);
+      return Promise.resolve(false);
+    }
+    function reviewersView() {
+      const nameBox = h("input", { type: "text", placeholder: "Their name", maxLength: 30, value: rev.newName, oninput: (e) => {
+        rev.newName = e.target.value;
+      }, onkeydown: (e) => {
+        if (e.key === "Enter") addReviewer();
+      } });
+      const addBtn = button(rev.adding ? "Adding\u2026" : "Add reviewer", addReviewer, { primary: true, title: "Make a new review key for them" });
+      addBtn.disabled = rev.adding;
+      const parts = [
+        h("p", { class: "wz-gl-note", text: "Each reviewer gets their own key. They can approve, reject and remove posts; only your key can add or revoke reviewers." }),
+        h("div", { class: "wz-gl-bar" }, nameBox, addBtn)
+      ];
+      if (rev.newKey) {
+        const keyBox = h("input", { type: "text", readOnly: true, value: rev.newKey.key, class: "wz-gl-key", onfocus: (e) => e.target.select() });
+        parts.push(h(
+          "div",
+          { class: "wz-gl-rev wz-gl-newkey" },
+          h("div", {}, h("b", { text: `${rev.newKey.name}'s key` }), h("span", { class: "dim", text: " (shown once: it isn't stored anywhere, so copy it now)" })),
+          h(
+            "div",
+            { class: "wz-gl-bar" },
+            keyBox,
+            button("Copy", () => copyText2(rev.newKey.key).then((ok) => {
+              if (ok) say("Copied.");
+              else {
+                keyBox.focus();
+                say("Press Ctrl+C to copy.");
+              }
+            })),
+            button("Done", () => {
+              rev.newKey = null;
+              render2();
+            })
+          ),
+          h("div", { class: "dim", text: "Send it to them privately (a DM, not a channel). They turn review on with the console command, using this key." })
+        ));
+      }
+      if (rev.sectionError) parts.push(h("div", { class: "wz-gl-issues", text: rev.sectionError }));
+      else if (!rev.reviewers) parts.push(h("p", { class: "wz-gl-note", text: "Loading\u2026" }));
+      else if (!rev.reviewers.length) parts.push(h("p", { class: "wz-gl-note", text: "No reviewers yet." }));
+      else parts.push(h("div", { class: "wz-gl-revlog" }, rev.reviewers.map((r) => h(
+        "div",
+        { class: "wz-gl-bar" },
+        h("b", { text: r.name }),
+        h("span", { class: "dim", text: `added ${ago(r.addedAt)} \xB7 last used ${ago(r.lastUsedAt)}` }),
+        h("span", { class: "wz-gl-grow" }),
+        removeButton({ rerender: render2 }, r, { label: "Revoke", confirm: "Revoke?", title: `Stop ${r.name}'s key working`, run: revokeReviewer })
+      ))));
+      return h("div", {}, ...parts);
     }
     async function deleteMine(e) {
       try {
@@ -14029,10 +14198,7 @@ ${BROWSE_CSS}
       },
       // ___ucReviewList turned review on or off.
       reviewerChanged() {
-        rev.list = [];
-        rev.posts = {};
-        rev.at = 0;
-        rev.error = "";
+        rev = blankRev();
         if (reviewerKey2()) refreshReview(true);
         else if (open && tab === "review") {
           setView("browse");
@@ -14421,11 +14587,15 @@ ${BROWSE_CSS}
         console.log("Review: no key given.");
         return;
       }
-      reviewPending(k).then(() => {
+      reviewWhoami(k).then((me) => {
+        if (me.role === "judge") {
+          console.log("Review: that's a judge key. Judging comes with contests.");
+          return;
+        }
         GM_setValue(REVIEW_KEY, k);
         changed2();
-        console.log("Review: on. Open the Card Maker to review uploads.");
-      }, (e) => console.log(`Review: not turned on (${e && e.code === "not_admin" ? "wrong key" : e && e.message}).`));
+        console.log(`Review: on, as ${me.name} (${me.role}). Open the Card Maker to review uploads.`);
+      }, (e) => console.log(`Review: not turned on (${e && e.code === "not_admin" ? "wrong key" : e && e.code === "key_expired" ? "that key has expired" : e && e.message}).`));
     };
     try {
       Object.defineProperty(w, "___ucReviewList", { value: typeof exportFunction === "function" ? exportFunction(command, w) : command, writable: false, configurable: false, enumerable: false });

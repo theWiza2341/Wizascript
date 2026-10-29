@@ -38,7 +38,7 @@ import { buildWindow } from "./window.js";
 import { EDITORS, EDITOR_LABELS, DEFAULT_EDITOR, editorForLabel, FRAME_MESSAGE } from "./editors.js";
 import { isHotfixOn, setHotfix } from "./storage.js";
 import { buildGalleryPanel } from "./gallery/panel.js";
-import { reviewPending } from "./gallery/api.js";
+import { reviewWhoami } from "./gallery/api.js";
 import { getPageWindow } from "../core/page-window.js";
 import { mountGalleryNav } from "./gallery/nav.js";
 import PACK_ICON from "../../assets/pack.png";
@@ -382,11 +382,13 @@ function installReviewCommand() {
     }
     const k = typeof key === "string" ? key.trim() : "";
     if (!k) { console.log("Review: no key given."); return; }
-    reviewPending(k).then(() => {
+    reviewWhoami(k).then((me) => {
+      // Judge keys only score contests, which aren't in Wizascript yet.
+      if (me.role === "judge") { console.log("Review: that's a judge key. Judging comes with contests."); return; }
       GM_setValue(REVIEW_KEY, k);
       changed();
-      console.log("Review: on. Open the Card Maker to review uploads.");
-    }, (e) => console.log(`Review: not turned on (${e && e.code === "not_admin" ? "wrong key" : e && e.message}).`));
+      console.log(`Review: on, as ${me.name} (${me.role}). Open the Card Maker to review uploads.`);
+    }, (e) => console.log(`Review: not turned on (${e && e.code === "not_admin" ? "wrong key" : e && e.code === "key_expired" ? "that key has expired" : e && e.message}).`));
   };
   // Locked once defined (not writable, not configurable), so no other script
   // on the page can swap in its own version to catch the key as it's typed.

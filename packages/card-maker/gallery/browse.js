@@ -233,7 +233,7 @@ function segBar(ctx, dir) {
 
 // A two-click button: click once to arm, again within 3 s. Used by the
 // reviewer to take a post down, and by authors to delete a rejected post.
-function removeButton(ctx, e, { label = "✕", confirm = "Remove?", title = "Remove from the gallery (reviewer)", run = ctx.onRemove } = {}) {
+export function removeButton(ctx, e, { label = "✕", confirm = "Remove?", title = "Remove from the gallery (reviewer)", run = ctx.onRemove } = {}) {
   const b = h("button", { type: "button", class: "wz-gl-remove", title, text: label });
   let armed = null;
   b.addEventListener("click", () => {

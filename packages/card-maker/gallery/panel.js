@@ -19,9 +19,9 @@ import { h, button } from "./dom.js";
 import { tile, fitText, checkFrameImages, whenFontsReady, onFontsChange, TILE_CSS } from "./render.js";
 import { partFromRaw, readUcEditorFile, picturesFromPng, readFile } from "./parts.js";
 import { getDraft, saveDraft, nextId, makeSet, tidySets, entries, markUploaded, pruneUploads, SET_CAP } from "./draft.js";
-import { getMe, linkStart, linkCheck, getIndex, getTotals, uploadEntries, uploadProblems, createVoteQueue, ApiError, reviewPending, reviewPost, reviewDecide, reviewRemove, deleteOwnPost } from "./api.js";
+import { getMe, linkStart, linkCheck, getIndex, getTotals, uploadEntries, uploadProblems, createVoteQueue, ApiError, reviewPending, reviewPost, reviewDecide, reviewRemove, deleteOwnPost, reviewWhoami, reviewLog, reviewersList, reviewerAdd, reviewerRevoke } from "./api.js";
 import { openVoid, canOpenVoid } from "../../core/uc-report.js";
-import { browseView, allEntries, BROWSE_CSS } from "./browse.js";
+import { browseView, allEntries, BROWSE_CSS, removeButton } from "./browse.js";
 import { loadSampleExtras } from "./mock.js";
 
 const STYLE_ID = "wizascript-cardgallery-style";
@@ -97,6 +97,10 @@ const CSS = `
 .wz-gl-upload.open { display: block; }
 .wz-gl-revlist { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; max-height: 360px; overflow: auto; }
 .wz-gl-rev { border: 1px solid #444; background: #111; padding: 4px 6px; }
+.wz-gl-revtabs { margin-bottom: 8px; }
+.wz-gl-revlog { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.wz-gl-newkey { margin: 8px 0; display: flex; flex-direction: column; gap: 6px; border-color: #ff0; }
+.wz-gl-key { flex: 1; min-width: 0; font-family: monospace; }
 .wz-gl-revhead { margin-bottom: 3px; }
 .wz-gl-revcards { display: flex; gap: 3px; --wz-gl-z: .45; }
 .wz-gl-revcards .wz-gl-zoom { margin: 0; cursor: default; }
@@ -166,13 +170,17 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   });
   const author = () => acct.account || "";
 
-  // ---- review (the gallery's reviewer: the Gallery Reviewer Key setting) ----
-  const rev = { list: [], posts: {}, at: 0, loading: false, error: "", busy: {}, reasons: {} };
+  // ---- review (turned on with the console command; the key is the owner's or a reviewer's) ----
+  const blankRev = () => ({ list: [], posts: {}, at: 0, loading: false, error: "", busy: {}, reasons: {},
+    who: null, section: "uploads", log: null, reviewers: null, newKey: null, newName: "", adding: false, sectionError: "" });
+  let rev = blankRev();
+  const isOwner = () => !!(rev.who && rev.who.role === "owner");
   async function refreshReview(force) {
     const key = reviewerKey();
     if (!key || rev.loading || (!force && rev.at && Date.now() - rev.at < 30e3)) return;
     rev.loading = true;
     try {
+      if (!rev.who) rev.who = await reviewWhoami(key);
       const r = await reviewPending(key);
       rev.list = (r && r.posts) || [];
       rev.error = "";
@@ -181,7 +189,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
         if (!rev.posts[p.id]) rev.posts[p.id] = await reviewPost(key, p.id).catch(() => null);
       }
     } catch (e) {
-      rev.error = e.code === "not_admin" ? "The server no longer accepts this review key." : errText(e);
+      rev.error = e.code === "not_admin" ? "The server no longer accepts this review key. Turn review off and on again with a current key." : errText(e);
     } finally {
       rev.loading = false;
       notify();
@@ -204,8 +212,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     notify();
     render();
   }
-  function reviewView() {
-    if (!reviewerKey()) return h("p", { class: "wz-gl-note", text: "Review is off." });
+  function uploadsView() {
     const head = h("div", { class: "wz-gl-bar" },
       h("b", { text: rev.loading && !rev.at ? "Loading uploads…" : `${rev.list.length} upload${rev.list.length === 1 ? "" : "s"} waiting` }),
       h("span", { class: "wz-gl-grow" }),
@@ -230,6 +237,101 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
         h("div", { class: "wz-gl-bar wz-gl-revactions" }, approveBtn, rejectBtn, reason));
     });
     return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Each upload is shown exactly as it will look in Browse. Approving adds it to the gallery for everyone." }), h("div", { class: "wz-gl-revposts" }, items));
+  }
+  // Review's sections: Uploads, Log, and (owner only) Reviewers.
+  function reviewView() {
+    if (!reviewerKey()) return h("p", { class: "wz-gl-note", text: "Review is off." });
+    const sections = [["uploads", `Uploads${rev.list.length ? ` (${rev.list.length})` : ""}`], ["log", "Log"]];
+    if (isOwner()) sections.push(["reviewers", "Reviewers"]);
+    if (!sections.some(([k]) => k === rev.section)) rev.section = "uploads";
+    const bar = h("div", { class: "wz-gl-bar wz-gl-revtabs" },
+      ...sections.map(([k, label]) => button(label, () => openSection(k), { primary: rev.section === k })),
+      h("span", { class: "wz-gl-grow" }),
+      rev.who ? h("span", { class: "dim", text: `Reviewing as ${rev.who.name}${isOwner() ? " (owner)" : ""}` }) : null);
+    const body = rev.section === "log" ? logView() : rev.section === "reviewers" ? reviewersView() : uploadsView();
+    return h("div", {}, bar, body);
+  }
+  function openSection(k) {
+    rev.section = k;
+    rev.sectionError = "";
+    if (k !== "reviewers") rev.newKey = null; // a new key is shown once, then gone
+    if (k === "log") loadLog();
+    if (k === "reviewers") loadReviewers();
+    render();
+  }
+  const ago = (t) => {
+    if (!t) return "never";
+    const m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    return m < 1 ? "just now" : m < 60 ? `${m} min ago` : m < 48 * 60 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} days ago`;
+  };
+  async function loadLog() {
+    try { rev.log = (await reviewLog(reviewerKey())).log; rev.sectionError = ""; } catch (e) { rev.sectionError = errText(e); }
+    if (open && tab === "review") render();
+  }
+  async function loadReviewers() {
+    try { rev.reviewers = (await reviewersList(reviewerKey())).reviewers; rev.sectionError = ""; } catch (e) { rev.sectionError = errText(e); }
+    if (open && tab === "review") render();
+  }
+  const ACTIONS = { approve: "approved", reject: "rejected", remove: "removed", add_reviewer: "added reviewer", revoke_reviewer: "revoked reviewer" };
+  function logView() {
+    const head = h("div", { class: "wz-gl-bar" }, h("b", { text: "Recent review actions" }), h("span", { class: "wz-gl-grow" }), button("↻ Refresh", loadLog));
+    if (rev.sectionError) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: rev.sectionError }));
+    if (!rev.log) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Loading…" }));
+    if (!rev.log.length) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing yet." }));
+    return h("div", {}, head, h("div", { class: "wz-gl-revlog" }, rev.log.map((l) => h("div", {},
+      h("b", { text: l.who }), ` ${ACTIONS[l.action] || l.action} `,
+      l.post ? h("span", { text: `"${l.title || ""}" #${l.post}` }) : h("b", { text: l.detail || "" }),
+      l.post && l.detail ? h("span", { class: "dim", text: ` (${l.detail})` }) : null,
+      h("span", { class: "dim", text: ` · ${ago(l.at)}` })))));
+  }
+  async function addReviewer() {
+    const name = rev.newName.trim();
+    if (!name) return say("Type the reviewer's name first.");
+    rev.adding = true; render();
+    try {
+      const r = await reviewerAdd(reviewerKey(), name);
+      rev.newKey = { name: r.name, key: r.key };
+      rev.newName = "";
+      await loadReviewers();
+    } catch (e) { say(`Couldn't add ${name}: ${errText(e)}`); }
+    rev.adding = false;
+    render();
+  }
+  async function revokeReviewer(r) {
+    try {
+      await reviewerRevoke(reviewerKey(), r.id);
+      say(`Revoked ${r.name}'s key. It stops working now.`);
+      await loadReviewers();
+    } catch (e) { say(`Couldn't revoke ${r.name}: ${errText(e)}`); render(); }
+  }
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text).then(() => true, () => false);
+    return Promise.resolve(false);
+  }
+  function reviewersView() {
+    const nameBox = h("input", { type: "text", placeholder: "Their name", maxLength: 30, value: rev.newName, oninput: (e) => { rev.newName = e.target.value; }, onkeydown: (e) => { if (e.key === "Enter") addReviewer(); } });
+    const addBtn = button(rev.adding ? "Adding…" : "Add reviewer", addReviewer, { primary: true, title: "Make a new review key for them" });
+    addBtn.disabled = rev.adding;
+    const parts = [h("p", { class: "wz-gl-note", text: "Each reviewer gets their own key. They can approve, reject and remove posts; only your key can add or revoke reviewers." }),
+      h("div", { class: "wz-gl-bar" }, nameBox, addBtn)];
+    if (rev.newKey) {
+      const keyBox = h("input", { type: "text", readOnly: true, value: rev.newKey.key, class: "wz-gl-key", onfocus: (e) => e.target.select() });
+      parts.push(h("div", { class: "wz-gl-rev wz-gl-newkey" },
+        h("div", {}, h("b", { text: `${rev.newKey.name}'s key` }), h("span", { class: "dim", text: " (shown once: it isn't stored anywhere, so copy it now)" })),
+        h("div", { class: "wz-gl-bar" }, keyBox,
+          button("Copy", () => copyText(rev.newKey.key).then((ok) => { if (ok) say("Copied."); else { keyBox.focus(); say("Press Ctrl+C to copy."); } })),
+          button("Done", () => { rev.newKey = null; render(); })),
+        h("div", { class: "dim", text: "Send it to them privately (a DM, not a channel). They turn review on with the console command, using this key." })));
+    }
+    if (rev.sectionError) parts.push(h("div", { class: "wz-gl-issues", text: rev.sectionError }));
+    else if (!rev.reviewers) parts.push(h("p", { class: "wz-gl-note", text: "Loading…" }));
+    else if (!rev.reviewers.length) parts.push(h("p", { class: "wz-gl-note", text: "No reviewers yet." }));
+    else parts.push(h("div", { class: "wz-gl-revlog" }, rev.reviewers.map((r) => h("div", { class: "wz-gl-bar" },
+      h("b", { text: r.name }),
+      h("span", { class: "dim", text: `added ${ago(r.addedAt)} · last used ${ago(r.lastUsedAt)}` }),
+      h("span", { class: "wz-gl-grow" }),
+      removeButton({ rerender: render }, r, { label: "Revoke", confirm: "Revoke?", title: `Stop ${r.name}'s key working`, run: revokeReviewer })))));
+    return h("div", {}, ...parts);
   }
   async function deleteMine(e) {
     try {
@@ -733,7 +835,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     opened() { if (reviewerKey()) refreshReview(); },
     // ___ucReviewList turned review on or off.
     reviewerChanged() {
-      rev.list = []; rev.posts = {}; rev.at = 0; rev.error = "";
+      rev = blankRev();
       if (reviewerKey()) refreshReview(true);
       else if (open && tab === "review") { setView("browse"); return; }
       notify();

@@ -98,8 +98,15 @@ export const sendVotes = (votes) => authed("POST", "/v1/votes", { votes });
 export const deleteOwnPost = (id) => authed("POST", "/v1/posts/delete", { id });
 export const getTotals = () => request("GET", `${WORKER}/v1/totals`);
 
-// ---- the reviewer (the Worker's admin key, from the Gallery Reviewer Key setting) ----
+// ---- review (the owner's key, ADMIN_KEY, or a reviewer's key; turned on with
+// the console command, kept in GM "wizascript.cardMaker.galleryReview") ----
 const admin = (method, path, key, body) => request(method, WORKER + path, { body, adminKey: key });
+export const reviewWhoami = (key) => admin("GET", "/v1/admin/whoami", key);
+export const reviewLog = (key) => admin("GET", "/v1/admin/log", key);
+// owner only
+export const reviewersList = (key) => admin("GET", "/v1/admin/reviewers", key);
+export const reviewerAdd = (key, name) => admin("POST", "/v1/admin/reviewers/add", key, { name });
+export const reviewerRevoke = (key, id) => admin("POST", "/v1/admin/reviewers/revoke", key, { id });
 export const reviewPending = (key) => admin("GET", "/v1/admin/pending", key);
 export const reviewPost = (key, id) => admin("GET", `/v1/admin/post?id=${encodeURIComponent(id)}`, key);
 export const reviewDecide = (key, id, approve, reason) => admin("POST", "/v1/admin/decide", key, { id, approve: !!approve, reason: reason || "" });

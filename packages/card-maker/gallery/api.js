@@ -95,6 +95,7 @@ export const getMe = () => authed("GET", "/v1/me");
 export const linkStart = () => authed("POST", "/v1/link/start");
 export const linkCheck = () => authed("POST", "/v1/link/check");
 export const sendVotes = (votes) => authed("POST", "/v1/votes", { votes });
+export const deleteOwnPost = (id) => authed("POST", "/v1/posts/delete", { id });
 export const getTotals = () => request("GET", `${WORKER}/v1/totals`);
 
 // ---- the reviewer (the Worker's admin key, from the Gallery Reviewer Key setting) ----
@@ -107,13 +108,16 @@ export const reviewRemove = (key, id) => admin("POST", "/v1/admin/remove", key, 
 // The approved posts (gallery branch), with art paths made into URLs.
 export async function getIndex() {
   const idx = await request("GET", `${GALLERY_RAW}index.json?t=${Math.floor(Date.now() / 60000)}`);
-  const posts = (idx && Array.isArray(idx.posts) ? idx.posts : []).map((p) => ({
+  // Only paths the Worker writes (art/<id>-<n>.png, art/tribe-<hash>.png) become
+  // addresses, so nothing in the file can point a card's art elsewhere.
+  const art = (p) => (typeof p === "string" && /^art\/[a-z0-9-]{1,40}\.png$/.test(p) ? GALLERY_RAW + p : "");
+  const posts = (idx && Array.isArray(idx.posts) ? idx.posts : []).filter((p) => p && /^[0-9a-z]{3,8}$/.test(p.id)).map((p) => ({
     ...p,
     parts: (p.parts || []).map((c) => ({
       ...c,
-      art: c.art ? GALLERY_RAW + c.art : "",
-      picture: c.picture ? GALLERY_RAW + c.picture : undefined,
-      tribes: (c.tribes || []).map((t) => ({ ...t, icon: t.icon ? GALLERY_RAW + t.icon : "" }))
+      art: art(c.art),
+      picture: c.picture ? art(c.picture) || undefined : undefined,
+      tribes: (c.tribes || []).map((t) => ({ ...t, icon: art(t.icon) }))
     }))
   }));
   return posts;

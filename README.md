@@ -59,7 +59,7 @@ Part of the Card Maker (its **Card Gallery** setting turns it off). **Editor / B
 - Parts are redrawn in the game's card layout: DTM-Mono, the game's frames and rarity icons, with names and text shrunk to fit using sernon158's method from UC Editor (with his permission). Artifacts fill a card's space, two spaces wide when their text won't fit at 9px. Enchantments get a drawn outer frame, since the game has no enchantment frame image.
 - Parts are linked into sets of up to 15, then **Review upload** (every entry and its cards) and **Upload to Gallery**. Uploading needs a linked account, a name on every card and set, and PNG art of 150 KB or less.
 - Uploads are split automatically to fit the Worker's free-plan limits (40 pictures and about 1.4 MB per request). They wait in the Worker's database until the reviewer decides.
-- **Review** (title bar, only with the **Gallery Reviewer Key** setting, i.e. the Worker's admin key; kept out of backups) lists waiting uploads drawn exactly as Browse draws them, with **Approve** and **Reject** (optional reason, shown to the author). Approving writes one commit to `gallery` (post file, art, index.json): no branches or pull requests. The reviewer also gets a ✕ under each Browse post to take it down (two clicks).
+- Approved posts are written to `gallery` by the Worker, one commit each. A post that isn't approved shows its reason to the author, who can then delete it (**Delete**, two clicks).
 - A copy of each upload is kept until it's in the gallery (`uploads` in the draft), so **My posts** can show it as awaiting approval.
 
 **Browse** (`gallery/browse.js`) shows the gallery's four lists (Newest, This Week, This Month, All Time) a page at a time.

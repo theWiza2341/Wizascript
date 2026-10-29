@@ -231,16 +231,17 @@ function segBar(ctx, dir) {
   return h("div", { class: "wz-gl-seg" }, pill, LISTS.map(([k, l]) => h("button", { type: "button", class: k === state.list ? "on" : "", text: l, onclick: () => go(k) })));
 }
 
-// The reviewer can take a post down: click once to arm, again within 3 s.
-function removeButton(ctx, e) {
-  const b = h("button", { type: "button", class: "wz-gl-remove", title: "Remove from the gallery (reviewer)", text: "✕" });
+// A two-click button: click once to arm, again within 3 s. Used by the
+// reviewer to take a post down, and by authors to delete a rejected post.
+function removeButton(ctx, e, { label = "✕", confirm = "Remove?", title = "Remove from the gallery (reviewer)", run = ctx.onRemove } = {}) {
+  const b = h("button", { type: "button", class: "wz-gl-remove", title, text: label });
   let armed = null;
   b.addEventListener("click", () => {
-    if (!armed) { b.classList.add("armed"); b.textContent = "Remove?"; armed = setTimeout(() => { armed = null; b.classList.remove("armed"); b.textContent = "✕"; }, 3000); return; }
+    if (!armed) { b.classList.add("armed"); b.textContent = confirm; armed = setTimeout(() => { armed = null; b.classList.remove("armed"); b.textContent = label; }, 3000); return; }
     clearTimeout(armed);
     b.disabled = true;
     b.textContent = "…";
-    ctx.onRemove(e);
+    run(e);
   });
   return b;
 }
@@ -269,5 +270,6 @@ function item(ctx, e, rank, listKey) {
         h("span", { class: `wz-gl-score${e.score > 0 ? " pos" : e.score < 0 ? " neg" : ""}`, text: String(e.score) }),
         h("button", { type: "button", class: `wz-gl-vote down${e.vote === -1 ? " on" : ""}`, title: "Dislike", text: "▼", onclick: () => vote(-1) })
       ] : null,
-      ctx.onRemove && e.status === "approved" ? removeButton(ctx, e) : null));
+      ctx.onRemove && e.status === "approved" ? removeButton(ctx, e) : null,
+      ctx.onDelete && e.mine && e.status === "rejected" ? removeButton(ctx, e, { label: "Delete", confirm: "Delete for good?", title: "Delete this post: it wasn't approved, so it's only taking up space", run: ctx.onDelete }) : null));
 }

@@ -1557,7 +1557,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   var GM_PREFIX2 = "wizascript.";
   var KIND = "BACKUP";
   var CATEGORY2 = "Wizascript";
-  var SKIP_GM = /* @__PURE__ */ new Set(["wizascript.migration.v150", "wizascript.lastSeenVersion", "wizascript.cardMaker.galleryAuth"]);
+  var SKIP_GM = /* @__PURE__ */ new Set(["wizascript.migration.v150", "wizascript.lastSeenVersion", "wizascript.cardMaker.galleryAuth", "wizascript.cardMaker.galleryReview"]);
   var SKIP_LS_PREFIXES = ["about.", "backup.", "cardMaker.galleryReviewerKey"];
   function isBackedUpLsKey(key2) {
     if (!key2.startsWith(LS_PREFIX2)) return false;
@@ -11875,6 +11875,7 @@ Version: v${version}`;
     return checking;
   }
   function rarityImage(name) {
+    if (!/^[A-Za-z0-9_]{1,40}$/.test(String(name || ""))) return null;
     const tries = [assetBase, ...ASSET_BASES.filter((b) => b !== assetBase)].filter(Boolean).map((b) => `${b}rarity/${name}.png`);
     const img = h("img", { class: "wz-gl-rar", alt: "" });
     let n = 0;
@@ -12519,6 +12520,7 @@ Version: v${version}`;
   var linkStart = () => authed("POST", "/v1/link/start");
   var linkCheck = () => authed("POST", "/v1/link/check");
   var sendVotes = (votes) => authed("POST", "/v1/votes", { votes });
+  var deleteOwnPost = (id) => authed("POST", "/v1/posts/delete", { id });
   var getTotals = () => request("GET", `${WORKER}/v1/totals`);
   var admin = (method, path, key2, body) => request(method, WORKER + path, { body, adminKey: key2 });
   var reviewPending = (key2) => admin("GET", "/v1/admin/pending", key2);
@@ -12527,13 +12529,14 @@ Version: v${version}`;
   var reviewRemove = (key2, id) => admin("POST", "/v1/admin/remove", key2, { id });
   async function getIndex() {
     const idx = await request("GET", `${GALLERY_RAW}index.json?t=${Math.floor(Date.now() / 6e4)}`);
-    const posts = (idx && Array.isArray(idx.posts) ? idx.posts : []).map((p) => ({
+    const art = (p) => typeof p === "string" && /^art\/[a-z0-9-]{1,40}\.png$/.test(p) ? GALLERY_RAW + p : "";
+    const posts = (idx && Array.isArray(idx.posts) ? idx.posts : []).filter((p) => p && /^[0-9a-z]{3,8}$/.test(p.id)).map((p) => ({
       ...p,
       parts: (p.parts || []).map((c) => ({
         ...c,
-        art: c.art ? GALLERY_RAW + c.art : "",
-        picture: c.picture ? GALLERY_RAW + c.picture : void 0,
-        tribes: (c.tribes || []).map((t) => ({ ...t, icon: t.icon ? GALLERY_RAW + t.icon : "" }))
+        art: art(c.art),
+        picture: c.picture ? art(c.picture) || void 0 : void 0,
+        tribes: (c.tribes || []).map((t) => ({ ...t, icon: art(t.icon) }))
       }))
     }));
     return posts;
@@ -13040,24 +13043,24 @@ Version: v${version}`;
     };
     return h("div", { class: "wz-gl-seg" }, pill, LISTS.map(([k, l]) => h("button", { type: "button", class: k === state2.list ? "on" : "", text: l, onclick: () => go(k) })));
   }
-  function removeButton(ctx, e) {
-    const b = h("button", { type: "button", class: "wz-gl-remove", title: "Remove from the gallery (reviewer)", text: "\u2715" });
+  function removeButton(ctx, e, { label = "\u2715", confirm = "Remove?", title = "Remove from the gallery (reviewer)", run = ctx.onRemove } = {}) {
+    const b = h("button", { type: "button", class: "wz-gl-remove", title, text: label });
     let armed = null;
     b.addEventListener("click", () => {
       if (!armed) {
         b.classList.add("armed");
-        b.textContent = "Remove?";
+        b.textContent = confirm;
         armed = setTimeout(() => {
           armed = null;
           b.classList.remove("armed");
-          b.textContent = "\u2715";
+          b.textContent = label;
         }, 3e3);
         return;
       }
       clearTimeout(armed);
       b.disabled = true;
       b.textContent = "\u2026";
-      ctx.onRemove(e);
+      run(e);
     });
     return b;
   }
@@ -13086,7 +13089,8 @@ Version: v${version}`;
           h("span", { class: `wz-gl-score${e.score > 0 ? " pos" : e.score < 0 ? " neg" : ""}`, text: String(e.score) }),
           h("button", { type: "button", class: `wz-gl-vote down${e.vote === -1 ? " on" : ""}`, title: "Dislike", text: "\u25BC", onclick: () => vote(-1) })
         ] : null,
-        ctx.onRemove && e.status === "approved" ? removeButton(ctx, e) : null
+        ctx.onRemove && e.status === "approved" ? removeButton(ctx, e) : null,
+        ctx.onDelete && e.mine && e.status === "rejected" ? removeButton(ctx, e, { label: "Delete", confirm: "Delete for good?", title: "Delete this post: it wasn't approved, so it's only taking up space", run: ctx.onDelete }) : null
       )
     );
   }
@@ -13196,7 +13200,7 @@ ${BROWSE_CSS}
   }
   var setColor = (set) => COLORS[(set.letter.charCodeAt(0) - 65) % COLORS.length];
   var sameCard = (p, source, group, raw) => p.source === source && p.editorGroup === group && p.name === (raw.name || "") && p.type === raw.type;
-  function buildGalleryPanel({ requestRead, editorLabel, wheelPages, reviewerKey = () => "" }) {
+  function buildGalleryPanel({ requestRead, editorLabel, wheelPages, reviewerKey: reviewerKey2 = () => "" }) {
     injectStyle2();
     const draft2 = getDraft();
     let tab = draft2.parts.length ? "browse" : "submit";
@@ -13230,7 +13234,7 @@ ${BROWSE_CSS}
     const author = () => acct.account || "";
     const rev = { list: [], posts: {}, at: 0, loading: false, error: "", busy: {}, reasons: {} };
     async function refreshReview(force) {
-      const key2 = reviewerKey();
+      const key2 = reviewerKey2();
       if (!key2 || rev.loading || !force && rev.at && Date.now() - rev.at < 3e4) return;
       rev.loading = true;
       try {
@@ -13242,7 +13246,7 @@ ${BROWSE_CSS}
           if (!rev.posts[p.id]) rev.posts[p.id] = await reviewPost(key2, p.id).catch(() => null);
         }
       } catch (e) {
-        rev.error = e.code === "not_admin" ? "The Gallery Reviewer Key doesn't match the server's admin key." : errText(e);
+        rev.error = e.code === "not_admin" ? "The server no longer accepts this review key." : errText(e);
       } finally {
         rev.loading = false;
         notify2();
@@ -13253,7 +13257,7 @@ ${BROWSE_CSS}
       rev.busy[id] = approve ? "Approving\u2026" : "Rejecting\u2026";
       render2();
       try {
-        await reviewDecide(reviewerKey(), id, approve, rev.reasons[id]);
+        await reviewDecide(reviewerKey2(), id, approve, rev.reasons[id]);
         rev.list = rev.list.filter((p) => p.id !== id);
         delete rev.posts[id];
         say(approve ? `Approved ${id}. It's in the gallery now.` : `Rejected ${id}.`);
@@ -13266,7 +13270,7 @@ ${BROWSE_CSS}
       render2();
     }
     function reviewView() {
-      if (!reviewerKey()) return h("p", { class: "wz-gl-note", text: "Set the Gallery Reviewer Key (Card Maker tab) to review uploads." });
+      if (!reviewerKey2()) return h("p", { class: "wz-gl-note", text: "Review is off." });
       const head = h(
         "div",
         { class: "wz-gl-bar" },
@@ -13306,9 +13310,22 @@ ${BROWSE_CSS}
       });
       return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Each upload is shown exactly as it will look in Browse. Approving adds it to the gallery for everyone." }), h("div", { class: "wz-gl-revposts" }, items));
     }
+    async function deleteMine(e) {
+      try {
+        await deleteOwnPost(e.id);
+        delete draft2.uploads[e.id];
+        saveDraft();
+        acct.posts = acct.posts.filter((p) => p.id !== e.id);
+        say(`Deleted "${e.title}".`);
+        render2();
+      } catch (err) {
+        say(`Couldn't delete it: ${errText(err)}`);
+        render2();
+      }
+    }
     async function removePost(e) {
       try {
-        await reviewRemove(reviewerKey(), e.id);
+        await reviewRemove(reviewerKey2(), e.id);
         say(`Removed ${e.id} from the gallery.`);
         gal.approved = gal.approved.filter((p) => p.id !== e.id);
         render2();
@@ -13984,7 +14001,8 @@ ${BROWSE_CSS}
           refreshMe(true);
           refreshGallery(true);
         },
-        onRemove: reviewerKey() ? removePost : null,
+        onRemove: reviewerKey2() ? removePost : null,
+        onDelete: deleteMine,
         vote(e, dir) {
           if (e.sample) {
             sampleVotes[e.key] = (sampleVotes[e.key] || 0) === dir ? 0 : dir;
@@ -14003,11 +14021,25 @@ ${BROWSE_CSS}
     return {
       el: panel,
       isOpen: () => open,
-      isReviewer: () => !!reviewerKey(),
-      pendingCount: () => reviewerKey() ? rev.list.length : 0,
+      isReviewer: () => !!reviewerKey2(),
+      pendingCount: () => reviewerKey2() ? rev.list.length : 0,
       // The Card Maker opened: the reviewer's count of uploads waiting.
       opened() {
-        if (reviewerKey()) refreshReview();
+        if (reviewerKey2()) refreshReview();
+      },
+      // ___ucReviewList turned review on or off.
+      reviewerChanged() {
+        rev.list = [];
+        rev.posts = {};
+        rev.at = 0;
+        rev.error = "";
+        if (reviewerKey2()) refreshReview(true);
+        else if (open && tab === "review") {
+          setView("browse");
+          return;
+        }
+        notify2();
+        if (open) render2();
       },
       setOpen(on) {
         setView(on ? tab : "editor");
@@ -14088,7 +14120,14 @@ ${BROWSE_CSS}
   var hotfixSetting = null;
   var gallerySetting = null;
   var wheelSetting = null;
-  var reviewerSetting = null;
+  var REVIEW_KEY = "wizascript.cardMaker.galleryReview";
+  var reviewerKey = () => {
+    try {
+      return String(GM_getValue(REVIEW_KEY, "") || "");
+    } catch (e) {
+      return "";
+    }
+  };
   var mounted2 = null;
   var footerButton = null;
   var log = (...a) => {
@@ -14207,7 +14246,7 @@ ${BROWSE_CSS}
         },
         editorLabel: (key2) => EDITORS[key2 || currentEditor()].label,
         wheelPages: () => !wheelSetting || !!wheelSetting.value(),
-        reviewerKey: () => String(reviewerSetting && reviewerSetting.value() || "").trim()
+        reviewerKey
       });
       win.body.appendChild(gallery.el);
       mountGalleryNav({ win, gallery });
@@ -14361,6 +14400,38 @@ ${BROWSE_CSS}
     item2.parentNode.insertBefore(footerButton, item2);
     return true;
   }
+  function installReviewCommand() {
+    try {
+      localStorage.removeItem("underscript.plugin.Wizascript.cardMaker.galleryReviewerKey");
+    } catch (e) {
+    }
+    const w = getPageWindow();
+    const changed2 = () => {
+      if (mounted2 && mounted2.gallery) mounted2.gallery.reviewerChanged();
+    };
+    const command = (key2) => {
+      if (reviewerKey()) {
+        GM_deleteValue(REVIEW_KEY);
+        changed2();
+        console.log("Review: off.");
+        return;
+      }
+      const k = typeof key2 === "string" ? key2.trim() : "";
+      if (!k) {
+        console.log("Review: no key given.");
+        return;
+      }
+      reviewPending(k).then(() => {
+        GM_setValue(REVIEW_KEY, k);
+        changed2();
+        console.log("Review: on. Open the Card Maker to review uploads.");
+      }, (e) => console.log(`Review: not turned on (${e && e.code === "not_admin" ? "wrong key" : e && e.message}).`));
+    };
+    try {
+      Object.defineProperty(w, "___ucReviewList", { value: typeof exportFunction === "function" ? exportFunction(command, w) : command, writable: false, configurable: false, enumerable: false });
+    } catch (e) {
+    }
+  }
   function initCardMaker(plugin) {
     settings3 = createFeatureSettings(plugin, "cardMaker", {
       tab: "Card Maker",
@@ -14393,13 +14464,6 @@ ${BROWSE_CSS}
       default: true,
       refresh: true
     });
-    reviewerSetting = settings3.add("galleryReviewerKey", {
-      name: "Gallery Reviewer Key",
-      note: "Only for the gallery's reviewer. Adds Review to the Card Maker.",
-      type: "text",
-      default: "",
-      hidden: () => !!gallerySetting && !gallerySetting.value()
-    });
     wheelSetting = settings3.add("galleryWheelPages", {
       name: "Gallery: Scroll Wheel Pages",
       note: "Scroll the mouse wheel over the gallery to turn its pages.",
@@ -14415,6 +14479,7 @@ ${BROWSE_CSS}
       onMatch: () => toggleCardMaker()
     });
     if (!isPluginEnabled("cardMaker")) return;
+    installReviewCommand();
     if (isHotfixOn() !== !!hotfixSetting.value()) setHotfix(!!hotfixSetting.value());
     if (!addFooterButton()) {
       const watch2 = new MutationObserver(() => {

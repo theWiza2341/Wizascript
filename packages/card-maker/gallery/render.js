@@ -65,6 +65,7 @@ export function checkFrameImages() {
 
 // A rarity icon: the game's, then UC Editor's copy, then nothing (no broken image).
 function rarityImage(name) {
+  if (!/^[A-Za-z0-9_]{1,40}$/.test(String(name || ""))) return null;
   const tries = [assetBase, ...ASSET_BASES.filter((b) => b !== assetBase)].filter(Boolean).map((b) => `${b}rarity/${name}.png`);
   const img = h("img", { class: "wz-gl-rar", alt: "" });
   let n = 0;

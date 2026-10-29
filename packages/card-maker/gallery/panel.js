@@ -19,7 +19,7 @@ import { h, button } from "./dom.js";
 import { tile, fitText, checkFrameImages, whenFontsReady, onFontsChange, TILE_CSS } from "./render.js";
 import { partFromRaw, readUcEditorFile, picturesFromPng, readFile } from "./parts.js";
 import { getDraft, saveDraft, nextId, makeSet, tidySets, entries, markUploaded, pruneUploads, SET_CAP } from "./draft.js";
-import { getMe, linkStart, linkCheck, getIndex, getTotals, uploadEntries, uploadProblems, createVoteQueue, ApiError, reviewPending, reviewPost, reviewDecide, reviewRemove } from "./api.js";
+import { getMe, linkStart, linkCheck, getIndex, getTotals, uploadEntries, uploadProblems, createVoteQueue, ApiError, reviewPending, reviewPost, reviewDecide, reviewRemove, deleteOwnPost } from "./api.js";
 import { openVoid, canOpenVoid } from "../../core/uc-report.js";
 import { browseView, allEntries, BROWSE_CSS } from "./browse.js";
 import { loadSampleExtras } from "./mock.js";
@@ -181,7 +181,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
         if (!rev.posts[p.id]) rev.posts[p.id] = await reviewPost(key, p.id).catch(() => null);
       }
     } catch (e) {
-      rev.error = e.code === "not_admin" ? "The Gallery Reviewer Key doesn't match the server's admin key." : errText(e);
+      rev.error = e.code === "not_admin" ? "The server no longer accepts this review key." : errText(e);
     } finally {
       rev.loading = false;
       notify();
@@ -205,7 +205,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     render();
   }
   function reviewView() {
-    if (!reviewerKey()) return h("p", { class: "wz-gl-note", text: "Set the Gallery Reviewer Key (Card Maker tab) to review uploads." });
+    if (!reviewerKey()) return h("p", { class: "wz-gl-note", text: "Review is off." });
     const head = h("div", { class: "wz-gl-bar" },
       h("b", { text: rev.loading && !rev.at ? "Loading uploads…" : `${rev.list.length} upload${rev.list.length === 1 ? "" : "s"} waiting` }),
       h("span", { class: "wz-gl-grow" }),
@@ -230,6 +230,16 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
         h("div", { class: "wz-gl-bar wz-gl-revactions" }, approveBtn, rejectBtn, reason));
     });
     return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Each upload is shown exactly as it will look in Browse. Approving adds it to the gallery for everyone." }), h("div", { class: "wz-gl-revposts" }, items));
+  }
+  async function deleteMine(e) {
+    try {
+      await deleteOwnPost(e.id);
+      delete draft.uploads[e.id];
+      saveDraft();
+      acct.posts = acct.posts.filter((p) => p.id !== e.id);
+      say(`Deleted "${e.title}".`);
+      render();
+    } catch (err) { say(`Couldn't delete it: ${errText(err)}`); render(); }
   }
   async function removePost(e) {
     try {
@@ -703,6 +713,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
       rerender: render,
       onRefresh: () => { voteQueue.flush(); refreshMe(true); refreshGallery(true); },
       onRemove: reviewerKey() ? removePost : null,
+      onDelete: deleteMine,
       vote(e, dir) {
         if (e.sample) { sampleVotes[e.key] = (sampleVotes[e.key] || 0) === dir ? 0 : dir; return render(); }
         if (!acct.account) { say("Link your Undercards account to vote: press Link my account at the top."); return; }
@@ -720,6 +731,14 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     pendingCount: () => (reviewerKey() ? rev.list.length : 0),
     // The Card Maker opened: the reviewer's count of uploads waiting.
     opened() { if (reviewerKey()) refreshReview(); },
+    // ___ucReviewList turned review on or off.
+    reviewerChanged() {
+      rev.list = []; rev.posts = {}; rev.at = 0; rev.error = "";
+      if (reviewerKey()) refreshReview(true);
+      else if (open && tab === "review") { setView("browse"); return; }
+      notify();
+      if (open) render();
+    },
     setOpen(on) { setView(on ? tab : "editor"); },
     view: () => (open ? tab : "editor"),
     setView,

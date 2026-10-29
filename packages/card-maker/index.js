@@ -38,6 +38,8 @@ import { buildWindow } from "./window.js";
 import { EDITORS, EDITOR_LABELS, DEFAULT_EDITOR, editorForLabel, FRAME_MESSAGE } from "./editors.js";
 import { isHotfixOn, setHotfix } from "./storage.js";
 import { buildGalleryPanel } from "./gallery/panel.js";
+import { reviewPending } from "./gallery/api.js";
+import { getPageWindow } from "../core/page-window.js";
 import { mountGalleryNav } from "./gallery/nav.js";
 import PACK_ICON from "../../assets/pack.png";
 
@@ -55,7 +57,11 @@ let editorSetting = null;
 let hotfixSetting = null;
 let gallerySetting = null;
 let wheelSetting = null;
-let reviewerSetting = null;
+// The gallery reviewer's key (the Worker's admin key). Turned on and off
+// only from the console, ___ucReviewList("<key>"); kept in GM storage, which
+// no page script can read, and never in backups.
+const REVIEW_KEY = "wizascript.cardMaker.galleryReview";
+const reviewerKey = () => { try { return String(GM_getValue(REVIEW_KEY, "") || ""); } catch (e) { return ""; } };
 let mounted = null; // { controller, win, frames, ... } | null - built on each open
 let footerButton = null;
 
@@ -184,7 +190,7 @@ function mount() {
       },
       editorLabel: (key) => EDITORS[key || currentEditor()].label,
       wheelPages: () => !wheelSetting || !!wheelSetting.value(),
-      reviewerKey: () => String((reviewerSetting && reviewerSetting.value()) || "").trim()
+      reviewerKey
     });
     win.body.appendChild(gallery.el);
     mountGalleryNav({ win, gallery });
@@ -356,6 +362,39 @@ function addFooterButton() {
   return true;
 }
 
+// ---- the reviewer's console command ---------------------------------------------------
+// ___ucReviewList("<admin key>") turns review on, after the server confirms
+// the key; called again (with anything), it turns review off and forgets the
+// key. It never prints or returns the key. Without the right key the server
+// refuses every review request anyway: this only decides whether the Review
+// button shows.
+function installReviewCommand() {
+  // dev11 kept the key in a setting (localStorage, readable by page scripts): drop it.
+  try { localStorage.removeItem("underscript.plugin.Wizascript.cardMaker.galleryReviewerKey"); } catch (e) { /* none */ }
+  const w = getPageWindow();
+  const changed = () => { if (mounted && mounted.gallery) mounted.gallery.reviewerChanged(); };
+  const command = (key) => {
+    if (reviewerKey()) {
+      GM_deleteValue(REVIEW_KEY);
+      changed();
+      console.log("Review: off.");
+      return;
+    }
+    const k = typeof key === "string" ? key.trim() : "";
+    if (!k) { console.log("Review: no key given."); return; }
+    reviewPending(k).then(() => {
+      GM_setValue(REVIEW_KEY, k);
+      changed();
+      console.log("Review: on. Open the Card Maker to review uploads.");
+    }, (e) => console.log(`Review: not turned on (${e && e.code === "not_admin" ? "wrong key" : e && e.message}).`));
+  };
+  // Locked once defined (not writable, not configurable), so no other script
+  // on the page can swap in its own version to catch the key as it's typed.
+  try {
+    Object.defineProperty(w, "___ucReviewList", { value: typeof exportFunction === "function" ? exportFunction(command, w) : command, writable: false, configurable: false, enumerable: false });
+  } catch (e) { /* already defined by something else: leave it, and don't trust it */ }
+}
+
 // ---- settings ----------------------------------------------------------------------------
 export function initCardMaker(plugin) {
   settings = createFeatureSettings(plugin, "cardMaker", {
@@ -388,13 +427,6 @@ export function initCardMaker(plugin) {
     default: true,
     refresh: true
   });
-  reviewerSetting = settings.add("galleryReviewerKey", {
-    name: "Gallery Reviewer Key",
-    note: "Only for the gallery's reviewer. Adds Review to the Card Maker.",
-    type: "text",
-    default: "",
-    hidden: () => !!gallerySetting && !gallerySetting.value()
-  });
   wheelSetting = settings.add("galleryWheelPages", {
     name: "Gallery: Scroll Wheel Pages",
     note: "Scroll the mouse wheel over the gallery to turn its pages.",
@@ -412,6 +444,7 @@ export function initCardMaker(plugin) {
   });
 
   if (!isPluginEnabled("cardMaker")) return;
+  installReviewCommand();
   // GM copy follows the setting (e.g. after Restore).
   if (isHotfixOn() !== !!hotfixSetting.value()) setHotfix(!!hotfixSetting.value());
 

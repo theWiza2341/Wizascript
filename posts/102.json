@@ -1,0 +1,25 @@
+{
+  "id": "102",
+  "kind": "set",
+  "title": "Netskie",
+  "author": ":onu4head:",
+  "postedAt": 1793233736115,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Netskie",
+      "desc": "Magic: Enchant this slot with _Fluffy $$$$ing Tail_.",
+      "cost": 8,
+      "atk": 6,
+      "hp": 8,
+      "rarity": "DELTARUNE_EPIC",
+      "art": "art/102-0.png"
+    },
+    {
+      "type": "Enchantment",
+      "name": "Fluffy $$$$ing Tail",
+      "desc": "After a non-Charge non-DT monster is played, turn the monster on this slot into a copy of it with this monster's current stats. Turn end: If this slot is empty, this effect expires.",
+      "art": "art/102-1.png"
+    }
+  ]
+}

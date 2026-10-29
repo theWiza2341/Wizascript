@@ -12958,6 +12958,89 @@ Version: v${version}`;
       )
     );
   }
+  function pagedGrid(items, { state: state2, wheelPages = () => true, onPage, empty = "* Nothing here yet." }) {
+    const area = h("div", { class: "wz-gl-pagearea" });
+    const count = h("span", { class: "n" });
+    const prev = h("button", { type: "button", title: "Previous page", text: "\u2039", onclick: () => turn(-1) });
+    const next = h("button", { type: "button", title: "Next page", text: "\u203A", onclick: () => turn(1) });
+    const pager = h("div", { class: "wz-gl-pager" }, prev, count, next);
+    let pages = [[]];
+    let animate = null;
+    function layout2() {
+      const H = area.clientHeight;
+      const grid = h("div", { class: "wz-gl-grid" });
+      area.replaceChildren(grid);
+      if (!items.length) {
+        area.replaceChildren(h("div", { class: "wz-gl-empty wz-gl-dt", text: empty }));
+        pages = [[]];
+        return show();
+      }
+      items.forEach((it) => {
+        it.style.display = "";
+        grid.appendChild(it);
+      });
+      items.forEach((it) => it.querySelectorAll(".wz-gl-card:not(.wz-gl-pic), .wz-gl-artifact").forEach(fitCard));
+      const rows = [];
+      let lastLeft = Infinity;
+      items.forEach((it, i) => {
+        const t = it.offsetTop, l = it.offsetLeft;
+        if (!rows.length || l <= lastLeft) rows.push({ start: i, top: t, bottom: t + it.offsetHeight });
+        lastLeft = l;
+        const r = rows[rows.length - 1];
+        r.end = i;
+        r.top = Math.min(r.top, t);
+        r.bottom = Math.max(r.bottom, t + it.offsetHeight);
+      });
+      pages = [];
+      let page = null, pageTop = 0;
+      rows.forEach((r) => {
+        if (!page || r.bottom - pageTop > H) {
+          page = [];
+          pages.push(page);
+          pageTop = r.top;
+        }
+        for (let i = r.start; i <= r.end; i++) page.push(i);
+      });
+      state2.page = Math.max(0, Math.min(state2.page || 0, pages.length - 1));
+      show();
+    }
+    function show() {
+      const grid = area.querySelector(".wz-gl-grid");
+      if (grid) {
+        const on = new Set(pages[state2.page] || []);
+        items.forEach((it, i) => {
+          it.style.display = on.has(i) ? "" : "none";
+        });
+        grid.classList.remove("wz-gl-in-r", "wz-gl-in-l");
+        if (animate) {
+          void grid.offsetWidth;
+          grid.classList.add("wz-gl-in-" + animate);
+          animate = null;
+        }
+      }
+      count.textContent = `${pages.length ? (state2.page || 0) + 1 : 0} / ${pages.length}`;
+      prev.disabled = (state2.page || 0) <= 0;
+      next.disabled = (state2.page || 0) >= pages.length - 1;
+    }
+    function turn(d) {
+      const to = (state2.page || 0) + d;
+      if (to < 0 || to >= pages.length) return false;
+      state2.page = to;
+      animate = d > 0 ? "r" : "l";
+      if (onPage) onPage();
+      show();
+      return true;
+    }
+    let wheelLock = 0;
+    area.addEventListener("wheel", (e) => {
+      if (!wheelPages()) return;
+      e.preventDefault();
+      const now = Date.now();
+      if (now < wheelLock || Math.abs(e.deltaY) < 4) return;
+      if (turn(e.deltaY > 0 ? 1 : -1)) wheelLock = now + 280;
+    }, { passive: false });
+    return { area, pager, layout: layout2 };
+  }
 
   // packages/card-maker/gallery/mock.js
   var AUTHORS = ["SampleMaker", "PixelSmith", "CardFan", "MockAuthor", "DraftWizard", "ExampleUser", "Placeholder", "TestDummy", "FakeFroggit", "NotARealPlayer"];
@@ -13202,38 +13285,41 @@ Version: v${version}`;
 .wz-gl-cv .wz-gl-grid { gap: 16px 14px; }
 .wz-gl-cv .wz-gl-avg { font-size: 12px; }
 .wz-gl-cv .wz-gl-place { font-size: 14px; }
-/* B: sidebar */
-.wz-gl-cside { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 18px; align-items: start; }
-.wz-gl-cside > .side { position: sticky; top: 0; border: 2px solid #fff; background: #000; padding: 12px 14px; }
-.wz-gl-cside > .side .t { font: 22px ${DT2}; color: #ffd84a; margin-bottom: 6px; }
-.wz-gl-cside > .side .r { white-space: pre-wrap; margin-bottom: 10px; }
+/* paged layouts: the tab fills the panel */
+.wz-gl-cvp { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+.wz-gl-cvp > .wz-gl-cnav { flex: none; }
+.wz-gl-cvbody { flex: 1 1 auto; min-height: 0; }
+.wz-gl-cside { display: grid; grid-template-columns: 290px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 18px; }
+.wz-gl-cside > .side { border: 2px solid #fff; background: #000; padding: 12px 14px; overflow: auto; min-height: 0; max-height: 100%; box-sizing: border-box; align-self: start; }
+.wz-gl-cside > .side .t, .wz-gl-crulesbox .t { font: 22px ${DT2}; color: #ffd84a; margin-bottom: 6px; }
+.wz-gl-cside > .side .r, .wz-gl-crulesbox .r { white-space: pre-wrap; margin-bottom: 10px; }
 .wz-gl-cside > .side .wz-gl-big { width: 100%; margin-top: 8px; }
+.wz-gl-cmain { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.wz-gl-cmain > .wz-gl-csec { flex: none; margin: 0 0 8px; }
+.wz-gl-cmain > .wz-gl-pagearea { flex: 1 1 auto; }
+.wz-gl-cmain > .wz-gl-foot { flex: none; }
+.wz-gl-csort { display: inline-flex; gap: 4px; }
+.wz-gl-cfull { display: flex; flex-direction: column; }
+.wz-gl-cfull > .wz-gl-cmain { flex: 1 1 auto; }
+.wz-gl-crulesbox { flex: none; border: 2px solid #555; border-top: 0; background: #0a0a0a; padding: 8px 16px 10px; margin: -10px 0 10px; max-height: 40%; overflow: auto; }
 .wz-gl-cmine { margin-top: 12px; border-top: 1px solid #333; padding-top: 8px; display: flex; flex-direction: column; gap: 5px; }
 .wz-gl-cmine div { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
 .wz-gl-podlist { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
-.wz-gl-podlist div { display: flex; gap: 8px; align-items: baseline; }
-/* C: showcase */
-.wz-gl-cstrip { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; border: 2px solid #fff; background: #000; padding: 10px 16px; margin-bottom: 10px; }
+.wz-gl-podlist div { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.wz-gl-cstrip { flex: none; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; border: 2px solid #fff; background: #000; padding: 10px 16px; margin-bottom: 10px; }
 .wz-gl-cstrip .t { font: 22px ${DT2}; color: #ffd84a; }
-.wz-gl-ctabs { display: flex; border: 2px solid #fff; background: #000; margin-bottom: 12px; max-width: 560px; }
-.wz-gl-ctabs button { flex: 1; background: none; border: 0; color: #bbb; padding: 7px 0; font: 14px ${DT2}; cursor: pointer; }
-.wz-gl-ctabs button + button { border-left: 2px solid #fff; }
-.wz-gl-ctabs button.on { background: #ffd84a; color: #000; }
-.wz-gl-podium { display: flex; justify-content: center; align-items: flex-end; gap: 22px; margin: 6px 0 18px; flex-wrap: wrap; }
-.wz-gl-podium > div { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.wz-gl-podium .medal { font: 20px ${DT2}; }
+.wz-gl-podium { flex: none; display: flex; justify-content: center; align-items: flex-end; gap: 22px; margin: 0 0 10px; flex-wrap: wrap; }
+.wz-gl-podium > div { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.wz-gl-podium .medal { font: 18px ${DT2}; }
 .wz-gl-podium .p1 .medal { color: #ffd84a; } .wz-gl-podium .p2 .medal { color: #d8d8d8; } .wz-gl-podium .p3 .medal { color: #e09a5a; }
-.wz-gl-podium .first { --wz-gl-z: 1.2; }
+/* the podium keeps to a set size, so the pages below keep their room */
+.wz-gl-podrow { flex: 0 0 100%; flex-wrap: nowrap !important; overflow: hidden; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid #333; }
+.wz-gl-podium-sm > div { --wz-gl-z: .62; }
+.wz-gl-podrow > div, .wz-gl-podrow .wz-gl-item { flex: none; max-width: none; }
+.wz-gl-podrow .wz-gl-row { flex-wrap: nowrap; }
+.wz-gl-podrow .wz-gl-votes { flex-direction: column; gap: 0; align-items: center; font-size: 11px; line-height: 1.3; }
+.wz-gl-podium-sm > div.first { --wz-gl-z: .74; }
 .wz-gl-sample { display: inline-block; background: #333; border: 1px solid #777; color: #ddd; font: 10px/14px Arial, sans-serif; padding: 0 5px; margin-left: 8px; vertical-align: middle; }
-/* judging, one at a time */
-.wz-gl-focus { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 8px 0; }
-.wz-gl-focus .cards { --wz-gl-z: 1.3; }
-.wz-gl-focus .nav { display: flex; align-items: center; gap: 12px; font: 14px ${DT2}; }
-.wz-gl-scorebig { display: flex; gap: 8px; }
-.wz-gl-scorebig button { width: 64px; height: 50px; background: #000; border: 2px solid #777; color: #ddd; font: 20px ${DT2}; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
-.wz-gl-scorebig button small { font: 9px Arial, sans-serif; opacity: .7; }
-.wz-gl-scorebig button:hover { border-color: #fff; color: #fff; }
-.wz-gl-scorebig button.on { background: #ffd84a; border-color: #ffd84a; color: #000; }
 `;
   var pad2 = (n) => String(n).padStart(2, "0");
   var toLocalInput = (ms) => {
@@ -13256,7 +13342,7 @@ Version: v${version}`;
   var plural = (n) => `${n} entr${n === 1 ? "y" : "ies"}`;
   var daysAgo = (t) => Math.max(0, Math.floor((Date.now() - (t || Date.now())) / 864e5));
   function createContests(ctx) {
-    const cs = { list: null, file: null, at: 0, loading: false, error: "", pick: null, sort: "rank", drop: false, sub: "entries" };
+    const cs = { list: null, file: null, at: 0, loading: false, error: "", pick: null, sort: "rank", drop: false, sub: "entries", pages: {}, rulesOpen: false };
     const js = { id: null, data: null, at: 0, loading: false, error: "", top: null, idx: 0, sampleMine: {} };
     const cf = { title: "", rules: "", closes: "", max: 3, busy: false, editFor: null };
     let sampleOwn = null;
@@ -13374,7 +13460,32 @@ Version: v${version}`;
         } })
       );
     }
+    let pagers = [];
+    const pageState = (key2) => cs.pages[key2] || (cs.pages[key2] = { page: 0 });
+    function paged(items, key2, empty) {
+      const g = pagedGrid(items, { state: pageState(key2), wheelPages: () => ctx.wheelPages(), onPage: ctx.hideHover, empty });
+      pagers.push(g);
+      return g;
+    }
+    function layout2() {
+      pagers.forEach((g) => {
+        if (g.podium) {
+          const set = (z12) => g.podium.querySelectorAll(":scope > div").forEach((d) => d.style.setProperty("--wz-gl-z", String(Math.round((d.classList.contains("first") ? z12 : z12 * 0.84) * 100) / 100)));
+          let z1 = Math.max(0.3, Math.min(0.74, (g.area.clientHeight - 90) / 246));
+          set(z1);
+          g.podium.style.display = "";
+          if (!g.area.contains(g.podium)) g.area.appendChild(g.podium);
+          const over = g.podium.scrollWidth / Math.max(1, g.area.clientWidth);
+          if (over > 1) {
+            z1 = Math.max(0.3, z1 / over * 0.95);
+            set(z1);
+          }
+        }
+        g.layout();
+      });
+    }
     function view() {
+      pagers = [];
       const list = shownList();
       if (!list) return h("p", { class: "wz-gl-note", text: cs.error ? `Couldn't load the contests: ${cs.error}` : "Loading the contests\u2026" });
       if (!list.length) {
@@ -13391,7 +13502,7 @@ Version: v${version}`;
       const c = list.find((x) => x.id === cs.pick);
       const L = ctx.layout();
       const body = c.status === "archived" ? archiveView(c, L) : runningView(c, L);
-      return h("div", { class: `wz-gl-cv wz-gl-cv-${L}` }, nav(cur, archived), body);
+      return h("div", { class: `wz-gl-cv wz-gl-cvp wz-gl-cv-${L}` }, nav(cur, archived), body);
     }
     function enterButton(c, s, big) {
       const label = c.sample ? "Enter cards" : !ctx.acct.account ? "Link your account to enter" : s && !s.left ? "No entries left" : "Enter cards";
@@ -13423,106 +13534,95 @@ Version: v${version}`;
     }
     const noneYet = (c) => h("p", { class: "wz-gl-note", text: c.entries ? "They'll show here in a few minutes." : "None yet. Be the first!" });
     const noVotes = h("p", { class: "wz-gl-note", text: "There's no voting on contest entries: the organizers judge them. They join the gallery once the results are out." });
+    function mainPart({ heading, extra, top, podium, items, key: key2, empty, note }) {
+      const g = paged(items, key2, empty);
+      g.podium = podium || null;
+      return h(
+        "div",
+        { class: "wz-gl-cmain" },
+        h("div", { class: "wz-gl-csec" }, heading, extra || null),
+        top || null,
+        g.area,
+        h("div", { class: "wz-gl-foot" }, h("span", { class: "note", text: note || "" }), h("span", { class: "grow" }), g.pager)
+      );
+    }
+    const sideInfo = (c, more) => h(
+      "div",
+      { class: "side" },
+      h("div", { class: "t" }, c.title, sampleTag(c)),
+      c.rules ? h("div", { class: "r", text: c.rules }) : null,
+      more
+    );
+    function strip(c, right) {
+      const rules = cs.rulesOpen ? h("div", { class: "wz-gl-crulesbox" }, h("div", { class: "r", text: c.rules || "(no rules given)" }), h("div", { class: "m" }, c.status === "archived" ? `Ended ${when(c.closesAt)}.` : deadline(c))) : null;
+      return [h(
+        "div",
+        { class: "wz-gl-cstrip" },
+        h("span", { class: "t" }, c.title, sampleTag(c)),
+        h("span", { class: "wz-gl-chip", text: c.status === "open" ? `closes ${inTime(c.closesAt)}` : c.status === "archived" ? `ended ${when(c.closesAt)}` : "judging" }),
+        button(cs.rulesOpen ? "Theme & rules \u25B4" : "Theme & rules \u25BE", () => {
+          cs.rulesOpen = !cs.rulesOpen;
+          ctx.render();
+        }, { title: "Show or hide the theme and rules" }),
+        h("span", { class: "wz-gl-grow" }),
+        right
+      ), rules];
+    }
     function runningView(c, L) {
       const s = shownSlots(c);
       const open = c.status === "open";
       const mine = ownItems(c);
-      const others = othersOf(c);
-      const grid = (items) => h("div", { class: "wz-gl-grid" }, items);
-      if (L === "b") {
-        const side = h(
-          "div",
-          { class: "side" },
-          h("div", { class: "t" }, c.title, sampleTag(c)),
-          c.rules ? h("div", { class: "r", text: c.rules }) : null,
-          h("div", { class: "m" }, deadline(c)),
-          open ? [h("div", { style: { marginTop: "10px" } }, h("span", { text: "Your entries: " }), pips(s)), enterButton(c, s, true)] : null,
-          mine.length ? h("div", { class: "wz-gl-cmine" }, h("b", { text: "Your entries" }), ownEntries(c).map((e) => h("div", {}, h("span", { text: e.title || "(no name)" }), h("span", { class: "dim", text: e.status === "approved" ? "entered" : e.status === "pending" ? "waiting" : "not approved" })))) : null
-        );
-        return h("div", { class: "wz-gl-cside" }, side, h(
-          "div",
-          {},
-          mine.length ? [h("div", { class: "wz-gl-csec", style: { marginTop: 0 } }, "Your entries", h("span", { class: "n", text: String(mine.length) })), grid(mine)] : null,
-          h("div", { class: "wz-gl-csec", style: mine.length ? null : { marginTop: 0 } }, "Entries so far", h("span", { class: "n", text: String(c.entries) })),
-          others.length ? grid(others.map((e) => entryItem(e))) : noneYet(c),
-          noVotes
-        ));
+      const others = othersOf(c).map((e) => entryItem(e));
+      const items = mine.concat(others);
+      const main = mainPart({
+        heading: "Entries",
+        extra: h("span", { class: "n", text: `${c.entries}${mine.length ? ` \xB7 ${mine.length} yours` : ""}` }),
+        items,
+        key: `${c.id}:run`,
+        empty: c.entries ? "* They'll show here in a few minutes." : "* None yet. Be the first!",
+        note: "No voting: the organizers judge entries. They join the gallery with the results."
+      });
+      if (L === "e") {
+        return h("div", { class: "wz-gl-cvbody wz-gl-cfull" }, strip(c, open ? [pips(s), enterButton(c, s, true)] : null), main);
       }
-      if (L === "c") {
-        const strip = h(
-          "div",
-          { class: "wz-gl-cstrip" },
-          h("span", { class: "t" }, c.title, sampleTag(c)),
-          h("span", { class: "wz-gl-chip", text: open ? `closes ${inTime(c.closesAt)}` : "judging" }),
-          h("span", { class: "wz-gl-grow" }),
-          open ? [pips(s), enterButton(c, s, true)] : null
-        );
-        const tabs = [["entries", `Entries (${c.entries})`], ["mine", `Your entries (${mine.length})`], ["rules", "Theme & rules"]];
-        const sub = h("div", { class: "wz-gl-ctabs" }, tabs.map(([k, label]) => h("button", { type: "button", class: cs.sub === k ? "on" : "", text: label, onclick: () => {
-          cs.sub = k;
-          ctx.render();
-        } })));
-        const body = cs.sub === "rules" ? h("div", { class: "wz-gl-chero" }, h("div", { class: "r", text: c.rules || "(no rules given)" }), h("div", { class: "m" }, deadline(c))) : cs.sub === "mine" ? mine.length ? grid(mine) : h("p", { class: "wz-gl-note", text: "You haven't entered yet." }) : others.length ? grid(others.map((e) => entryItem(e))) : noneYet(c);
-        return h("div", {}, strip, sub, body, noVotes);
-      }
-      return h(
-        "div",
-        {},
-        h(
-          "div",
-          { class: "wz-gl-chero" },
-          h("div", { class: "t" }, c.title, sampleTag(c)),
-          c.rules ? h("div", { class: "r", text: c.rules }) : null,
-          h("div", { class: "m" }, deadline(c)),
-          open ? h("div", { class: "wz-gl-cact" }, enterButton(c, s, true), h("span", { text: "Your entries:" }), pips(s)) : null
-        ),
-        mine.length ? [h("div", { class: "wz-gl-csec" }, "Your entries", h("span", { class: "n", text: String(mine.length) })), grid(mine)] : null,
-        h("div", { class: "wz-gl-csec" }, "Entries so far", h("span", { class: "n", text: String(c.entries) })),
-        others.length ? grid(others.map((e) => entryItem(e))) : noneYet(c),
-        noVotes
-      );
+      const side = sideInfo(c, [
+        h("div", { class: "m" }, deadline(c)),
+        open ? [h("div", { style: { marginTop: "10px" } }, h("span", { text: "Your entries: " }), pips(s)), enterButton(c, s, true)] : null,
+        mine.length ? h("div", { class: "wz-gl-cmine" }, h("b", { text: "Your entries" }), ownEntries(c).map((e) => h("div", {}, h("span", { text: e.title || "(no name)" }), h("span", { class: "dim", text: e.status === "approved" ? "entered" : e.status === "pending" ? "waiting" : "not approved" })))) : null
+      ]);
+      return h("div", { class: "wz-gl-cvbody wz-gl-cside" }, side, main);
     }
     function archiveView(c, L) {
       const f = shownFile(c.id);
       const ended = `Ended ${when(c.closesAt)}`;
       if (!f) return h("div", { class: "wz-gl-chero" }, h("div", { class: "t", text: c.title }), h("div", { class: "m", text: `${ended}. Loading the results\u2026` }));
+      if (!f.entries.length) return h("div", { class: "wz-gl-chero" }, h("div", { class: "t", text: c.title }), h("div", { class: "m", text: `${ended} \xB7 no entries.` }));
       const { res, list: rank } = ranked(f);
       const how = res.manualTop ? "The organizers picked the top places; the rest are by average score (1 to 5)." : "Places are by average score (1 to 5).";
-      const sortBar = h(
-        "div",
-        { class: "wz-gl-cbar" },
-        h("span", { class: "dim", text: "Sort:" }),
+      const sortBtns = h(
+        "span",
+        { class: "wz-gl-csort" },
         button("Ranking", () => {
           cs.sort = "rank";
+          pageState(`${c.id}:${L}:rank`).page = 0;
           ctx.render();
         }, { primary: cs.sort !== "new" }),
         button("Newest", () => {
           cs.sort = "new";
+          pageState(`${c.id}:${L}:new`).page = 0;
           ctx.render();
         }, { primary: cs.sort === "new" })
       );
-      const shown = cs.sort === "new" ? rank.slice().sort((a, b) => (b.postedAt || 0) - (a.postedAt || 0)) : rank;
-      const items = (list) => list.map((e) => {
+      const card = (e) => {
         const i = rank.indexOf(e);
         return entryItem(e, { place: placeTag(i), below: avgTag(res.scores[e.id]), cls: i < 3 && cs.sort !== "new" ? `p${i + 1}` : "" });
-      });
-      if (!f.entries.length) return h("div", { class: "wz-gl-chero" }, h("div", { class: "t", text: c.title }), h("div", { class: "m", text: `${ended} \xB7 no entries.` }));
-      if (L === "b") {
-        const side = h(
-          "div",
-          { class: "side" },
-          h("div", { class: "t" }, c.title, sampleTag(c)),
-          c.rules ? h("div", { class: "r", text: c.rules }) : null,
-          h("div", { class: "m", text: `${ended} \xB7 ${plural(f.entries.length)}. ${how}` }),
-          h("div", { class: "wz-gl-podlist" }, rank.slice(0, 3).map((e, i) => h("div", {}, placeTag(i), h("b", { text: e.title || "(no name)" }), h("span", { class: "dim", text: `by ${e.author} \xB7 ${(res.scores[e.id] || {}).avg != null ? res.scores[e.id].avg.toFixed(2) : "\u2013"}` }))))
-        );
-        return h("div", { class: "wz-gl-cside" }, side, h("div", {}, sortBar, h("div", { class: "wz-gl-grid" }, items(shown))));
-      }
-      if (L === "c") {
-        const strip = h("div", { class: "wz-gl-cstrip" }, h("span", { class: "t" }, c.title, sampleTag(c)), h("span", { class: "wz-gl-chip", text: ended.toLowerCase() }), h("span", { class: "dim", text: plural(f.entries.length) }));
-        const top = rank.slice(0, 3);
-        const order = top.length === 3 ? [top[1], top[0], top[2]] : top;
-        const podium = h("div", { class: "wz-gl-podium" }, order.map((e) => {
+      };
+      const withPodium = L === "d" || L === "e";
+      let top = null, pageList = cs.sort === "new" ? rank.slice().sort((a, b) => (b.postedAt || 0) - (a.postedAt || 0)) : rank;
+      if (withPodium && cs.sort !== "new") {
+        const three = rank.slice(0, 3);
+        const order = three.length === 3 ? [three[1], three[0], three[2]] : three;
+        top = h("div", { class: "wz-gl-podium wz-gl-podium-sm wz-gl-podrow" }, order.map((e) => {
           const i = rank.indexOf(e);
           return h(
             "div",
@@ -13531,23 +13631,23 @@ Version: v${version}`;
             entryItem(e, { below: [h("span", { class: "dim", text: `by ${e.author} ` }), avgTag(res.scores[e.id])], cls: `p${i + 1}` })
           );
         }));
-        const rest = rank.slice(3);
-        return h(
-          "div",
-          {},
-          strip,
-          h("p", { class: "wz-gl-note", text: c.rules ? `${c.rules.split("\n")[0]} ${how}` : how }),
-          podium,
-          rest.length ? [h("div", { class: "wz-gl-csec" }, "Everyone else", h("span", { class: "n", text: String(rest.length) })), h("div", { class: "wz-gl-grid" }, items(rest))] : null
-        );
+        pageList = rank.slice(3);
       }
-      return h(
-        "div",
-        {},
-        h("div", { class: "wz-gl-chero" }, h("div", { class: "t" }, c.title, sampleTag(c)), c.rules ? h("div", { class: "r", text: c.rules }) : null, h("div", { class: "m", text: `${ended} \xB7 ${plural(f.entries.length)}. ${how}` })),
-        sortBar,
-        h("div", { class: "wz-gl-grid" }, items(shown))
-      );
+      const main = mainPart({
+        heading: "Entries",
+        extra: [h("span", { class: "n", text: String(f.entries.length) }), h("span", { class: "wz-gl-grow" }), sortBtns],
+        podium: top,
+        items: (top ? [top] : []).concat(pageList.map(card)),
+        key: `${c.id}:${L}:${cs.sort}`,
+        empty: "* No other entries.",
+        note: how
+      });
+      if (L === "e") return h("div", { class: "wz-gl-cvbody wz-gl-cfull" }, strip(c, h("span", { class: "dim", text: plural(f.entries.length) })), main);
+      const side = sideInfo(c, [
+        h("div", { class: "m", text: `${ended} \xB7 ${plural(f.entries.length)}.` }),
+        L === "b" ? h("div", { class: "wz-gl-podlist" }, rank.slice(0, 3).map((e, i) => h("div", {}, placeTag(i), h("b", { text: e.title || "(no name)" }), h("span", { class: "dim", text: `by ${e.author} \xB7 ${(res.scores[e.id] || {}).avg != null ? res.scores[e.id].avg.toFixed(2) : "\u2013"}` })))) : null
+      ]);
+      return h("div", { class: "wz-gl-cvbody wz-gl-cside" }, side, main);
     }
     const judgeContestId = () => {
       const who = ctx.who();
@@ -13593,7 +13693,7 @@ Version: v${version}`;
       }
     }
     const unscored = () => js.data ? js.data.entries.filter((e) => !js.data.myScores[e.id]).length : 0;
-    async function score(e, n, advance) {
+    async function score(e, n) {
       const mine = js.data.myScores[e.id] || 0;
       const value = mine === n ? 0 : n;
       try {
@@ -13601,13 +13701,6 @@ Version: v${version}`;
         if (value) js.data.myScores[e.id] = value;
         else delete js.data.myScores[e.id];
         ctx.changed();
-        if (advance && value) {
-          const next = js.data.entries.findIndex((x, i) => i > js.idx && !js.data.myScores[x.id]);
-          if (next >= 0) setTimeout(() => {
-            js.idx = next;
-            ctx.render();
-          }, 250);
-        }
       } catch (err) {
         ctx.say(`Couldn't save the score: ${ctx.errText(err)}`);
       }
@@ -13638,7 +13731,6 @@ Version: v${version}`;
       const scores = d.sample ? owner ? sample().runScores : null : d.scores;
       const n = d.entries.length;
       const done = n - unscored();
-      const focus = ctx.reviewLayout() === "c";
       const headBar = h(
         "div",
         { class: "wz-gl-bar" },
@@ -13684,38 +13776,6 @@ Version: v${version}`;
         return parts;
       };
       if (!n) return h("div", {}, headBar, notes, h("p", { class: "wz-gl-note", text: "No approved entries yet. Approve them in Uploads." }));
-      if (focus) {
-        js.idx = Math.max(0, Math.min(js.idx, n - 1));
-        const e = d.entries[js.idx];
-        const mine = d.myScores[e.id] || 0;
-        const go = (i) => {
-          js.idx = (i + n) % n;
-          ctx.render();
-        };
-        const nextOpen = d.entries.findIndex((x, i) => i > js.idx && !d.myScores[x.id]);
-        return h(
-          "div",
-          {},
-          headBar,
-          notes,
-          topBar,
-          h(
-            "div",
-            { class: "wz-gl-focus" },
-            h(
-              "div",
-              { class: "nav" },
-              button("\u2039", () => go(js.idx - 1), { title: "Previous" }),
-              h("span", { text: `${js.idx + 1} / ${n}` }),
-              button("\u203A", () => go(js.idx + 1), { title: "Next" }),
-              nextOpen >= 0 ? button("Next unscored", () => go(nextOpen)) : null
-            ),
-            h("div", { class: "cards" }, entryItem({ ...e, status: "approved" }, { below: h("span", { class: "dim", text: `by ${e.author}` }) })),
-            h("div", { class: "wz-gl-scorebig" }, [1, 2, 3, 4, 5].map((k) => h("button", { type: "button", class: mine === k ? "on" : "", title: SCORE_NAMES[k], onclick: () => score(e, k, true) }, String(k), h("small", { text: SCORE_NAMES[k] })))),
-            h("div", { class: "wz-gl-judge" }, extra(e))
-          )
-        );
-      }
       const sorted = scores ? d.entries.slice().sort((a, b) => ((scores[b.id] || {}).avg || 0) - ((scores[a.id] || {}).avg || 0)) : d.entries;
       const items = sorted.map((e) => {
         const mine = d.myScores[e.id] || 0;
@@ -13819,7 +13879,7 @@ Version: v${version}`;
       }
       return h("div", {}, out);
     }
-    return { state: cs, refresh, active, shownActive, slots, view, judgingView, manageView, loadJudging, unscored, judgeContestId };
+    return { state: cs, refresh, active, shownActive, slots, view, layout: layout2, judgingView, manageView, loadJudging, unscored, judgeContestId };
   }
 
   // packages/card-maker/gallery/panel.js
@@ -13836,6 +13896,7 @@ Version: v${version}`;
 .wz-gl-panel.on.browse { display: flex; flex-direction: column; overflow: hidden; }
 .wz-gl-panel.browse > .wz-gl-content { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 .wz-gl-panel.browse > .wz-gl-content > .wz-gl-browse { flex: 1 1 auto; height: auto; }
+.wz-gl-panel.browse > .wz-gl-content > .wz-gl-cv { flex: 1 1 auto; min-height: 0; }
 .wz-gl-proto { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 4px 8px; margin-bottom: 8px; border: 1px dashed #665; background: #17150c; font-size: 12px; flex: none; }
 .wz-gl-proto b { color: #ffd84a; margin-right: 2px; }
 .wz-gl-proto .sep { width: 1px; height: 16px; background: #554; margin: 0 4px; }
@@ -13843,7 +13904,7 @@ Version: v${version}`;
 .wz-gl-proto select { height: 20px !important; }
 .wz-gl-proto .wz-cm-btn { height: 20px; line-height: 18px; padding: 0 7px; font-size: 11px; }
 .wz-gl-preview-as { background: #3a1f5a; border: 1px solid #b07de0; color: #e6d4ff; padding: 1px 8px; font-size: 11px; }
-/* roomier Review (dev16 prototypes A/B/C) */
+/* Review: roomy, with a side menu (dev16) */
 .wz-gl-rv { font-size: 14px; line-height: 1.45; }
 .wz-gl-rv .wz-cm-btn { height: 28px; font-size: 13px; padding: 0 12px; }
 .wz-gl-rv .wz-gl-note { font-size: 13px; }
@@ -13853,13 +13914,6 @@ Version: v${version}`;
 .wz-gl-rv .wz-gl-revactions .wz-cm-btn { height: 34px; padding: 0 22px; font-size: 14px; }
 .wz-gl-rv .wz-gl-revlog { gap: 8px; font-size: 14px; }
 .wz-gl-rv .wz-gl-scorebtn { width: 26px; height: 24px; font-size: 13px; }
-.wz-gl-rseg { display: flex; border: 2px solid #fff; background: #000; margin-bottom: 14px; }
-.wz-gl-rseg button { flex: 1 1 0; background: none; border: 0; color: #bbb; padding: 8px 6px; font: 15px "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; cursor: pointer; }
-.wz-gl-rseg button + button { border-left: 2px solid #fff; }
-.wz-gl-rseg button:hover { color: #fff; }
-.wz-gl-rseg button.on { background: #ffd84a; color: #000; }
-.wz-gl-rseg .n { display: inline-block; margin-left: 6px; background: #e05a5a; color: #fff; border-radius: 9px; padding: 0 6px; font: 11px/16px Arial, sans-serif; }
-.wz-gl-rwho { font-size: 13px; opacity: .8; margin: -6px 0 12px; text-align: right; }
 .wz-gl-rside { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 18px; align-items: start; }
 .wz-gl-rmenu { position: sticky; top: 0; display: flex; flex-direction: column; border: 2px solid #fff; background: #000; }
 .wz-gl-rmenu button { display: flex; justify-content: space-between; align-items: center; background: none; border: 0; color: #bbb; padding: 10px 12px; text-align: left; font: 15px "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; cursor: pointer; }
@@ -13868,12 +13922,6 @@ Version: v${version}`;
 .wz-gl-rmenu button.on { background: #ffd84a; color: #000; }
 .wz-gl-rmenu .n { background: #e05a5a; color: #fff; border-radius: 9px; padding: 0 6px; font: 11px/16px Arial, sans-serif; }
 .wz-gl-rmenu .who { padding: 10px 12px; border-top: 2px solid #fff; font-size: 12px; opacity: .8; }
-.wz-gl-rfocus { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-.wz-gl-rfocus .nav { display: flex; align-items: center; gap: 12px; font: 14px "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; }
-.wz-gl-rfocus .wz-gl-revpost { width: 100%; max-width: 900px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; }
-.wz-gl-rfocus .wz-gl-item { --wz-gl-z: 1.3; }
-.wz-gl-rfocus .wz-gl-revactions { justify-content: center; width: 100%; }
-.wz-gl-rfocus .wz-gl-revactions input { max-width: 420px; }
 .wz-gl-ctag { display: inline-block; background: #3a2f0a; border: 1px solid #ffd84a; color: #ffd84a; font-size: 10px; padding: 0 4px; margin-left: 6px; }
 .wz-gl-target { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 8px; }
 .wz-gl-tabs { flex: none; }
@@ -13980,9 +14028,10 @@ ${CONTEST_CSS}
       saveDraft();
     }
     const browse = { list: "new", page: 0, dir: null, mineOnly: false, likedOnly: false };
-    const proto = Object.assign({ contest: "a", review: "a", samples: false, viewAs: "" }, draft2.proto || {}, { viewAs: "" });
+    const proto = Object.assign({ contest: "b", samples: false, viewAs: "" }, draft2.proto || {}, { viewAs: "" });
+    if (!["b", "d", "e"].includes(proto.contest)) proto.contest = "b";
     const saveProto = () => {
-      draft2.proto = { contest: proto.contest, review: proto.review, samples: proto.samples };
+      draft2.proto = { contest: proto.contest, samples: proto.samples };
       saveDraft();
     };
     if (proto.samples) loadSampleExtras().then((more) => {
@@ -14087,7 +14136,6 @@ ${CONTEST_CSS}
     }
     const uploadList = () => proto.samples ? sampleData().uploads.filter((u) => !sampleDecided.has(u.id)) : rev.list;
     const uploadPost = (p) => proto.samples ? p : rev.posts[p.id];
-    let focusIdx = 0;
     function decideAny(id, approve) {
       if (!proto.samples) return decide(id, approve);
       sampleDecided.add(id);
@@ -14096,7 +14144,6 @@ ${CONTEST_CSS}
     }
     function uploadsView() {
       const list = uploadList();
-      const focus = proto.review === "c";
       const head = h(
         "div",
         { class: "wz-gl-bar" },
@@ -14137,19 +14184,6 @@ ${CONTEST_CSS}
         );
       };
       const note = h("p", { class: "wz-gl-note", text: "Each upload is shown exactly as it will look in Browse. Approving adds it to the gallery for everyone (contest entries: to the contest)." });
-      if (focus) {
-        focusIdx = Math.max(0, Math.min(focusIdx, list.length - 1));
-        const go = (i) => {
-          focusIdx = (i + list.length) % list.length;
-          render2();
-        };
-        return h("div", {}, head, note, h(
-          "div",
-          { class: "wz-gl-rfocus" },
-          h("div", { class: "nav" }, button("\u2039", () => go(focusIdx - 1), { title: "Previous" }), h("span", { text: `${focusIdx + 1} / ${list.length}` }), button("\u203A", () => go(focusIdx + 1), { title: "Next" })),
-          one(list[focusIdx])
-        ));
-      }
       return h("div", {}, head, note, h("div", { class: "wz-gl-revposts" }, list.map(one)));
     }
     function reviewView() {
@@ -14170,17 +14204,13 @@ ${CONTEST_CSS}
       const who = rev.who ? `${isJudge() ? "Judging" : "Reviewing"} as ${rev.who.name}${realRole() === "owner" ? " (owner)" : ""}${proto.viewAs ? `, previewing ${proto.viewAs}` : ""}` : "";
       const body = rev.section === "log" ? logView() : rev.section === "reviewers" ? reviewersView() : rev.section === "judging" ? contests.judgingView() : rev.section === "contests" ? contests.manageView() : uploadsView();
       const count = (n) => n ? h("span", { class: "n", text: String(n) }) : null;
-      if (proto.review === "b") {
-        const menu3 = h(
-          "div",
-          { class: "wz-gl-rmenu" },
-          sections.map(([k, label, n]) => h("button", { type: "button", class: rev.section === k ? "on" : "", onclick: () => openSection(k) }, h("span", { text: label }), count(n))),
-          h("div", { class: "who", text: who })
-        );
-        return h("div", { class: "wz-gl-rv wz-gl-revtabs" }, h("div", { class: "wz-gl-rside" }, menu3, h("div", {}, body)));
-      }
-      const seg = h("div", { class: "wz-gl-rseg wz-gl-revtabs" }, sections.map(([k, label, n]) => h("button", { type: "button", class: rev.section === k ? "on" : "", onclick: () => openSection(k) }, label, count(n))));
-      return h("div", { class: "wz-gl-rv" }, seg, h("div", { class: "wz-gl-rwho", text: who }), body);
+      const menu3 = h(
+        "div",
+        { class: "wz-gl-rmenu wz-gl-revtabs" },
+        sections.map(([k, label, n]) => h("button", { type: "button", class: rev.section === k ? "on" : "", onclick: () => openSection(k) }, h("span", { text: label }), count(n))),
+        h("div", { class: "who wz-gl-rwho", text: who })
+      );
+      return h("div", { class: "wz-gl-rv" }, h("div", { class: "wz-gl-rside" }, menu3, h("div", {}, body)));
     }
     function openSection(k) {
       rev.section = k;
@@ -14392,7 +14422,8 @@ ${CONTEST_CSS}
       who: () => rev.who ? { ...rev.who, role: role() } : null,
       samples: () => proto.samples,
       layout: () => proto.contest,
-      reviewLayout: () => proto.review,
+      wheelPages: () => !wheelPages || wheelPages(),
+      hideHover: () => hideHover(),
       keyRejected: (code) => onKeyRejected(code),
       refreshMe: (f) => refreshMe(f),
       deleteMine: (e) => deleteMine(e),
@@ -14551,10 +14582,11 @@ ${CONTEST_CSS}
       if (box === lastBox) return;
       lastBox = box;
       const zoomed = !sizeOf()[2] && applyZoom();
-      if (!zoomed && tab !== "browse") return;
+      if (!zoomed && tab !== "browse" && tab !== "contest") return;
       clearTimeout(fitTimer);
       fitTimer = setTimeout(() => {
         if (tab === "browse" && browseCtl) browseCtl.layout();
+        else if (tab === "contest") contests.layout();
         else refit();
       }, 120);
     }).observe(panel);
@@ -14617,20 +14649,18 @@ ${CONTEST_CSS}
       return el3;
     };
     panel.addEventListener("scroll", hideHover, { passive: true });
-    const CONTEST_LAYOUTS = [["a", "A Banner"], ["b", "B Sidebar"], ["c", "C Showcase"]];
-    const REVIEW_LAYOUTS = [["a", "A Tabs"], ["b", "B Side menu"], ["c", "C One at a time"]];
+    const CONTEST_LAYOUTS = [["b", "Sidebar"], ["d", "Sidebar + Podium"], ["e", "Full width"]];
     function renderProto() {
       const pick = (list, key2) => list.map(([k, label]) => button(label, () => {
         proto[key2] = k;
         saveProto();
         render2();
-      }, { cls: proto[key2] === k ? "wz-gl-on" : "", title: `${key2 === "contest" ? "Contest tab" : "Review"} layout ${label}` }));
+      }, { cls: proto[key2] === k ? "wz-gl-on" : "", title: `Contest tab layout: ${label}` }));
       const owner = realRole() === "owner";
       protoBar.replaceChildren(...[
         h("b", { text: "Preview" }),
         h("span", { text: "Contest:" }),
         pick(CONTEST_LAYOUTS, "contest"),
-        reviewerKey2() ? [h("span", { class: "sep" }), h("span", { text: "Review:" }), pick(REVIEW_LAYOUTS, "review")] : null,
         h("span", { class: "sep" }),
         h("label", { title: "Made-up contests and uploads to try the layouts with. Nothing is sent." }, h("input", { type: "checkbox", checked: proto.samples, onchange: (e) => {
           proto.samples = e.target.checked;
@@ -14677,7 +14707,7 @@ ${CONTEST_CSS}
         h("span", { class: "wz-gl-grow" }),
         sizeButtons()
       );
-      panel.classList.toggle("browse", tab === "browse");
+      panel.classList.toggle("browse", tab === "browse" || tab === "contest");
       applyZoom();
       if (tab === "browse") {
         const ctl2 = browseCtl = browseTab();
@@ -14691,7 +14721,10 @@ ${CONTEST_CSS}
         requestAnimationFrame(refit);
       } else if (tab === "contest") {
         content.replaceChildren(...[linkBox(), contests.view()].filter(Boolean));
-        requestAnimationFrame(refit);
+        contests.layout();
+        requestAnimationFrame(() => {
+          if (open && tab === "contest") contests.layout();
+        });
       } else {
         content.replaceChildren(...[linkBox(), submitView()].filter(Boolean));
         requestAnimationFrame(refit);

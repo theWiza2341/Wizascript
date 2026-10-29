@@ -20,7 +20,7 @@
 import { h, button } from "./dom.js";
 import { tile } from "./render.js";
 import { getContests, getContestsFile, reviewContest, reviewScore, manageContest, withArt } from "./api.js";
-import { removeButton } from "./browse.js";
+import { removeButton, pagedGrid } from "./browse.js";
 import { sampleData, loadSampleExtras } from "./mock.js";
 
 const DT = `"DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace`;
@@ -82,38 +82,41 @@ export const CONTEST_CSS = `
 .wz-gl-cv .wz-gl-grid { gap: 16px 14px; }
 .wz-gl-cv .wz-gl-avg { font-size: 12px; }
 .wz-gl-cv .wz-gl-place { font-size: 14px; }
-/* B: sidebar */
-.wz-gl-cside { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 18px; align-items: start; }
-.wz-gl-cside > .side { position: sticky; top: 0; border: 2px solid #fff; background: #000; padding: 12px 14px; }
-.wz-gl-cside > .side .t { font: 22px ${DT}; color: #ffd84a; margin-bottom: 6px; }
-.wz-gl-cside > .side .r { white-space: pre-wrap; margin-bottom: 10px; }
+/* paged layouts: the tab fills the panel */
+.wz-gl-cvp { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+.wz-gl-cvp > .wz-gl-cnav { flex: none; }
+.wz-gl-cvbody { flex: 1 1 auto; min-height: 0; }
+.wz-gl-cside { display: grid; grid-template-columns: 290px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 18px; }
+.wz-gl-cside > .side { border: 2px solid #fff; background: #000; padding: 12px 14px; overflow: auto; min-height: 0; max-height: 100%; box-sizing: border-box; align-self: start; }
+.wz-gl-cside > .side .t, .wz-gl-crulesbox .t { font: 22px ${DT}; color: #ffd84a; margin-bottom: 6px; }
+.wz-gl-cside > .side .r, .wz-gl-crulesbox .r { white-space: pre-wrap; margin-bottom: 10px; }
 .wz-gl-cside > .side .wz-gl-big { width: 100%; margin-top: 8px; }
+.wz-gl-cmain { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.wz-gl-cmain > .wz-gl-csec { flex: none; margin: 0 0 8px; }
+.wz-gl-cmain > .wz-gl-pagearea { flex: 1 1 auto; }
+.wz-gl-cmain > .wz-gl-foot { flex: none; }
+.wz-gl-csort { display: inline-flex; gap: 4px; }
+.wz-gl-cfull { display: flex; flex-direction: column; }
+.wz-gl-cfull > .wz-gl-cmain { flex: 1 1 auto; }
+.wz-gl-crulesbox { flex: none; border: 2px solid #555; border-top: 0; background: #0a0a0a; padding: 8px 16px 10px; margin: -10px 0 10px; max-height: 40%; overflow: auto; }
 .wz-gl-cmine { margin-top: 12px; border-top: 1px solid #333; padding-top: 8px; display: flex; flex-direction: column; gap: 5px; }
 .wz-gl-cmine div { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
 .wz-gl-podlist { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
-.wz-gl-podlist div { display: flex; gap: 8px; align-items: baseline; }
-/* C: showcase */
-.wz-gl-cstrip { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; border: 2px solid #fff; background: #000; padding: 10px 16px; margin-bottom: 10px; }
+.wz-gl-podlist div { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.wz-gl-cstrip { flex: none; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; border: 2px solid #fff; background: #000; padding: 10px 16px; margin-bottom: 10px; }
 .wz-gl-cstrip .t { font: 22px ${DT}; color: #ffd84a; }
-.wz-gl-ctabs { display: flex; border: 2px solid #fff; background: #000; margin-bottom: 12px; max-width: 560px; }
-.wz-gl-ctabs button { flex: 1; background: none; border: 0; color: #bbb; padding: 7px 0; font: 14px ${DT}; cursor: pointer; }
-.wz-gl-ctabs button + button { border-left: 2px solid #fff; }
-.wz-gl-ctabs button.on { background: #ffd84a; color: #000; }
-.wz-gl-podium { display: flex; justify-content: center; align-items: flex-end; gap: 22px; margin: 6px 0 18px; flex-wrap: wrap; }
-.wz-gl-podium > div { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.wz-gl-podium .medal { font: 20px ${DT}; }
+.wz-gl-podium { flex: none; display: flex; justify-content: center; align-items: flex-end; gap: 22px; margin: 0 0 10px; flex-wrap: wrap; }
+.wz-gl-podium > div { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.wz-gl-podium .medal { font: 18px ${DT}; }
 .wz-gl-podium .p1 .medal { color: #ffd84a; } .wz-gl-podium .p2 .medal { color: #d8d8d8; } .wz-gl-podium .p3 .medal { color: #e09a5a; }
-.wz-gl-podium .first { --wz-gl-z: 1.2; }
+/* the podium keeps to a set size, so the pages below keep their room */
+.wz-gl-podrow { flex: 0 0 100%; flex-wrap: nowrap !important; overflow: hidden; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid #333; }
+.wz-gl-podium-sm > div { --wz-gl-z: .62; }
+.wz-gl-podrow > div, .wz-gl-podrow .wz-gl-item { flex: none; max-width: none; }
+.wz-gl-podrow .wz-gl-row { flex-wrap: nowrap; }
+.wz-gl-podrow .wz-gl-votes { flex-direction: column; gap: 0; align-items: center; font-size: 11px; line-height: 1.3; }
+.wz-gl-podium-sm > div.first { --wz-gl-z: .74; }
 .wz-gl-sample { display: inline-block; background: #333; border: 1px solid #777; color: #ddd; font: 10px/14px Arial, sans-serif; padding: 0 5px; margin-left: 8px; vertical-align: middle; }
-/* judging, one at a time */
-.wz-gl-focus { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 8px 0; }
-.wz-gl-focus .cards { --wz-gl-z: 1.3; }
-.wz-gl-focus .nav { display: flex; align-items: center; gap: 12px; font: 14px ${DT}; }
-.wz-gl-scorebig { display: flex; gap: 8px; }
-.wz-gl-scorebig button { width: 64px; height: 50px; background: #000; border: 2px solid #777; color: #ddd; font: 20px ${DT}; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; }
-.wz-gl-scorebig button small { font: 9px Arial, sans-serif; opacity: .7; }
-.wz-gl-scorebig button:hover { border-color: #fff; color: #fff; }
-.wz-gl-scorebig button.on { background: #ffd84a; border-color: #ffd84a; color: #000; }
 `;
 
 const pad = (n) => String(n).padStart(2, "0");
@@ -133,10 +136,10 @@ const daysAgo = (t) => Math.max(0, Math.floor((Date.now() - (t || Date.now())) /
 
 // ctx: { say, render, changed, errText, hoverable, acct, draft, reviewerKey,
 //        who(), keyRejected(code), refreshMe(force), startEntry(contestId),
-//        deleteMine(entry), samples(), layout() -> "a" | "b" | "c",
-//        reviewLayout() -> "a" | "b" | "c" }
+//        deleteMine(entry), samples(), layout() -> "b" | "d" | "e",
+//        wheelPages(), hideHover() }
 export function createContests(ctx) {
-  const cs = { list: null, file: null, at: 0, loading: false, error: "", pick: null, sort: "rank", drop: false, sub: "entries" };
+  const cs = { list: null, file: null, at: 0, loading: false, error: "", pick: null, sort: "rank", drop: false, sub: "entries", pages: {}, rulesOpen: false };
   const js = { id: null, data: null, at: 0, loading: false, error: "", top: null, idx: 0, sampleMine: {} };
   const cf = { title: "", rules: "", closes: "", max: 3, busy: false, editFor: null };
   let sampleOwn = null; // sample "your entries", withdrawn locally
@@ -228,7 +231,35 @@ export function createContests(ctx) {
       h("button", { type: "button", class: "wz-gl-refresh", title: "Load the latest", text: "↻", onclick: () => { refresh(true); ctx.refreshMe(true); } }));
   }
 
+  // The tab fills the panel and never scrolls: entries come a page at a time.
+  // Three prototypes (Preview bar): b Sidebar, d Sidebar + podium, e Full width.
+  let pagers = [];
+  const pageState = (key) => cs.pages[key] || (cs.pages[key] = { page: 0 });
+  function paged(items, key, empty) {
+    const g = pagedGrid(items, { state: pageState(key), wheelPages: () => ctx.wheelPages(), onPage: ctx.hideHover, empty });
+    pagers.push(g);
+    return g;
+  }
+  // Called once the view is on screen, and after a resize.
+  // A podium (page 1's first row) shrinks to fit the page area's height.
+  function layout() {
+    pagers.forEach((g) => {
+      if (g.podium) {
+        const set = (z1) => g.podium.querySelectorAll(":scope > div").forEach((d) => d.style.setProperty("--wz-gl-z", String(Math.round((d.classList.contains("first") ? z1 : z1 * 0.84) * 100) / 100)));
+        let z1 = Math.max(0.3, Math.min(0.74, (g.area.clientHeight - 90) / 246));
+        set(z1);
+        // and to its width (a set in the top 3 is wide): measure once on screen
+        g.podium.style.display = "";
+        if (!g.area.contains(g.podium)) g.area.appendChild(g.podium);
+        const over = g.podium.scrollWidth / Math.max(1, g.area.clientWidth);
+        if (over > 1) { z1 = Math.max(0.3, z1 / over * 0.95); set(z1); }
+      }
+      g.layout();
+    });
+  }
+
   function view() {
+    pagers = [];
     const list = shownList();
     if (!list) return h("p", { class: "wz-gl-note", text: cs.error ? `Couldn't load the contests: ${cs.error}` : "Loading the contests…" });
     if (!list.length) {
@@ -242,7 +273,7 @@ export function createContests(ctx) {
     const c = list.find((x) => x.id === cs.pick);
     const L = ctx.layout();
     const body = c.status === "archived" ? archiveView(c, L) : runningView(c, L);
-    return h("div", { class: `wz-gl-cv wz-gl-cv-${L}` }, nav(cur, archived), body);
+    return h("div", { class: `wz-gl-cv wz-gl-cvp wz-gl-cv-${L}` }, nav(cur, archived), body);
   }
 
   // pieces of a running contest
@@ -277,90 +308,91 @@ export function createContests(ctx) {
   const noneYet = (c) => h("p", { class: "wz-gl-note", text: c.entries ? "They'll show here in a few minutes." : "None yet. Be the first!" });
   const noVotes = h("p", { class: "wz-gl-note", text: "There's no voting on contest entries: the organizers judge them. They join the gallery once the results are out." });
 
+  // The right-hand (or full-width) part: a heading, an optional podium, the
+  // paged grid, and a footer with a note and ‹ 1 / 3 ›.
+  function mainPart({ heading, extra, top, podium, items, key, empty, note }) {
+    const g = paged(items, key, empty);
+    g.podium = podium || null;
+    return h("div", { class: "wz-gl-cmain" },
+      h("div", { class: "wz-gl-csec" }, heading, extra || null),
+      top || null,
+      g.area,
+      h("div", { class: "wz-gl-foot" }, h("span", { class: "note", text: note || "" }), h("span", { class: "grow" }), g.pager));
+  }
+  const sideInfo = (c, more) => h("div", { class: "side" },
+    h("div", { class: "t" }, c.title, sampleTag(c)),
+    c.rules ? h("div", { class: "r", text: c.rules }) : null,
+    more);
+  // Full width (e): the theme and rules fold away under the title strip.
+  function strip(c, right) {
+    const rules = cs.rulesOpen ? h("div", { class: "wz-gl-crulesbox" }, h("div", { class: "r", text: c.rules || "(no rules given)" }), h("div", { class: "m" }, c.status === "archived" ? `Ended ${when(c.closesAt)}.` : deadline(c))) : null;
+    return [h("div", { class: "wz-gl-cstrip" },
+      h("span", { class: "t" }, c.title, sampleTag(c)),
+      h("span", { class: "wz-gl-chip", text: c.status === "open" ? `closes ${inTime(c.closesAt)}` : c.status === "archived" ? `ended ${when(c.closesAt)}` : "judging" }),
+      button(cs.rulesOpen ? "Theme & rules ▴" : "Theme & rules ▾", () => { cs.rulesOpen = !cs.rulesOpen; ctx.render(); }, { title: "Show or hide the theme and rules" }),
+      h("span", { class: "wz-gl-grow" }), right), rules];
+  }
+
   function runningView(c, L) {
     const s = shownSlots(c);
     const open = c.status === "open";
     const mine = ownItems(c);
-    const others = othersOf(c);
-    const grid = (items) => h("div", { class: "wz-gl-grid" }, items);
-    if (L === "b") {
-      const side = h("div", { class: "side" },
-        h("div", { class: "t" }, c.title, sampleTag(c)),
-        c.rules ? h("div", { class: "r", text: c.rules }) : null,
-        h("div", { class: "m" }, deadline(c)),
-        open ? [h("div", { style: { marginTop: "10px" } }, h("span", { text: "Your entries: " }), pips(s)), enterButton(c, s, true)] : null,
-        mine.length ? h("div", { class: "wz-gl-cmine" }, h("b", { text: "Your entries" }), ownEntries(c).map((e) => h("div", {}, h("span", { text: e.title || "(no name)" }), h("span", { class: "dim", text: e.status === "approved" ? "entered" : e.status === "pending" ? "waiting" : "not approved" })))) : null);
-      return h("div", { class: "wz-gl-cside" }, side, h("div", {},
-        mine.length ? [h("div", { class: "wz-gl-csec", style: { marginTop: 0 } }, "Your entries", h("span", { class: "n", text: String(mine.length) })), grid(mine)] : null,
-        h("div", { class: "wz-gl-csec", style: mine.length ? null : { marginTop: 0 } }, "Entries so far", h("span", { class: "n", text: String(c.entries) })),
-        others.length ? grid(others.map((e) => entryItem(e))) : noneYet(c), noVotes));
+    const others = othersOf(c).map((e) => entryItem(e));
+    // your entries first (tagged), then everyone else's
+    const items = mine.concat(others);
+    const main = mainPart({
+      heading: "Entries", extra: h("span", { class: "n", text: `${c.entries}${mine.length ? ` · ${mine.length} yours` : ""}` }),
+      items, key: `${c.id}:run`, empty: c.entries ? "* They'll show here in a few minutes." : "* None yet. Be the first!",
+      note: "No voting: the organizers judge entries. They join the gallery with the results."
+    });
+    if (L === "e") {
+      return h("div", { class: "wz-gl-cvbody wz-gl-cfull" }, strip(c, open ? [pips(s), enterButton(c, s, true)] : null), main);
     }
-    if (L === "c") {
-      const strip = h("div", { class: "wz-gl-cstrip" },
-        h("span", { class: "t" }, c.title, sampleTag(c)),
-        h("span", { class: "wz-gl-chip", text: open ? `closes ${inTime(c.closesAt)}` : "judging" }),
-        h("span", { class: "wz-gl-grow" }),
-        open ? [pips(s), enterButton(c, s, true)] : null);
-      const tabs = [["entries", `Entries (${c.entries})`], ["mine", `Your entries (${mine.length})`], ["rules", "Theme & rules"]];
-      const sub = h("div", { class: "wz-gl-ctabs" }, tabs.map(([k, label]) => h("button", { type: "button", class: cs.sub === k ? "on" : "", text: label, onclick: () => { cs.sub = k; ctx.render(); } })));
-      const body = cs.sub === "rules"
-        ? h("div", { class: "wz-gl-chero" }, h("div", { class: "r", text: c.rules || "(no rules given)" }), h("div", { class: "m" }, deadline(c)))
-        : cs.sub === "mine" ? (mine.length ? grid(mine) : h("p", { class: "wz-gl-note", text: "You haven't entered yet." }))
-          : others.length ? grid(others.map((e) => entryItem(e))) : noneYet(c);
-      return h("div", {}, strip, sub, body, noVotes);
-    }
-    // A: banner
-    return h("div", {},
-      h("div", { class: "wz-gl-chero" },
-        h("div", { class: "t" }, c.title, sampleTag(c)),
-        c.rules ? h("div", { class: "r", text: c.rules }) : null,
-        h("div", { class: "m" }, deadline(c)),
-        open ? h("div", { class: "wz-gl-cact" }, enterButton(c, s, true), h("span", { text: "Your entries:" }), pips(s)) : null),
-      mine.length ? [h("div", { class: "wz-gl-csec" }, "Your entries", h("span", { class: "n", text: String(mine.length) })), grid(mine)] : null,
-      h("div", { class: "wz-gl-csec" }, "Entries so far", h("span", { class: "n", text: String(c.entries) })),
-      others.length ? grid(others.map((e) => entryItem(e))) : noneYet(c), noVotes);
+    const side = sideInfo(c, [
+      h("div", { class: "m" }, deadline(c)),
+      open ? [h("div", { style: { marginTop: "10px" } }, h("span", { text: "Your entries: " }), pips(s)), enterButton(c, s, true)] : null,
+      mine.length ? h("div", { class: "wz-gl-cmine" }, h("b", { text: "Your entries" }), ownEntries(c).map((e) => h("div", {}, h("span", { text: e.title || "(no name)" }), h("span", { class: "dim", text: e.status === "approved" ? "entered" : e.status === "pending" ? "waiting" : "not approved" })))) : null]);
+    return h("div", { class: "wz-gl-cvbody wz-gl-cside" }, side, main);
   }
 
   function archiveView(c, L) {
     const f = shownFile(c.id);
     const ended = `Ended ${when(c.closesAt)}`;
     if (!f) return h("div", { class: "wz-gl-chero" }, h("div", { class: "t", text: c.title }), h("div", { class: "m", text: `${ended}. Loading the results…` }));
+    if (!f.entries.length) return h("div", { class: "wz-gl-chero" }, h("div", { class: "t", text: c.title }), h("div", { class: "m", text: `${ended} · no entries.` }));
     const { res, list: rank } = ranked(f);
     const how = res.manualTop ? "The organizers picked the top places; the rest are by average score (1 to 5)." : "Places are by average score (1 to 5).";
-    const sortBar = h("div", { class: "wz-gl-cbar" },
-      h("span", { class: "dim", text: "Sort:" }),
-      button("Ranking", () => { cs.sort = "rank"; ctx.render(); }, { primary: cs.sort !== "new" }),
-      button("Newest", () => { cs.sort = "new"; ctx.render(); }, { primary: cs.sort === "new" }));
-    const shown = cs.sort === "new" ? rank.slice().sort((a, b) => (b.postedAt || 0) - (a.postedAt || 0)) : rank;
-    const items = (list) => list.map((e) => {
+    const sortBtns = h("span", { class: "wz-gl-csort" },
+      button("Ranking", () => { cs.sort = "rank"; pageState(`${c.id}:${L}:rank`).page = 0; ctx.render(); }, { primary: cs.sort !== "new" }),
+      button("Newest", () => { cs.sort = "new"; pageState(`${c.id}:${L}:new`).page = 0; ctx.render(); }, { primary: cs.sort === "new" }));
+    const card = (e) => {
       const i = rank.indexOf(e);
       return entryItem(e, { place: placeTag(i), below: avgTag(res.scores[e.id]), cls: i < 3 && cs.sort !== "new" ? `p${i + 1}` : "" });
-    });
-    if (!f.entries.length) return h("div", { class: "wz-gl-chero" }, h("div", { class: "t", text: c.title }), h("div", { class: "m", text: `${ended} · no entries.` }));
-    if (L === "b") {
-      const side = h("div", { class: "side" },
-        h("div", { class: "t" }, c.title, sampleTag(c)),
-        c.rules ? h("div", { class: "r", text: c.rules }) : null,
-        h("div", { class: "m", text: `${ended} · ${plural(f.entries.length)}. ${how}` }),
-        h("div", { class: "wz-gl-podlist" }, rank.slice(0, 3).map((e, i) => h("div", {}, placeTag(i), h("b", { text: e.title || "(no name)" }), h("span", { class: "dim", text: `by ${e.author} · ${(res.scores[e.id] || {}).avg != null ? res.scores[e.id].avg.toFixed(2) : "–"}` })))));
-      return h("div", { class: "wz-gl-cside" }, side, h("div", {}, sortBar, h("div", { class: "wz-gl-grid" }, items(shown))));
-    }
-    if (L === "c") {
-      const strip = h("div", { class: "wz-gl-cstrip" }, h("span", { class: "t" }, c.title, sampleTag(c)), h("span", { class: "wz-gl-chip", text: ended.toLowerCase() }), h("span", { class: "dim", text: plural(f.entries.length) }));
-      const top = rank.slice(0, 3);
-      const order = top.length === 3 ? [top[1], top[0], top[2]] : top; // 2nd, 1st, 3rd
-      const podium = h("div", { class: "wz-gl-podium" }, order.map((e) => {
+    };
+    // With a podium (d, e), the top 3 stand above the pages; the pages hold the rest.
+    const withPodium = L === "d" || L === "e";
+    let top = null, pageList = cs.sort === "new" ? rank.slice().sort((a, b) => (b.postedAt || 0) - (a.postedAt || 0)) : rank;
+    if (withPodium && cs.sort !== "new") {
+      const three = rank.slice(0, 3);
+      const order = three.length === 3 ? [three[1], three[0], three[2]] : three; // 2nd, 1st, 3rd
+      // the podium is page 1's first row, so it pages like everything else
+      top = h("div", { class: "wz-gl-podium wz-gl-podium-sm wz-gl-podrow" }, order.map((e) => {
         const i = rank.indexOf(e);
         return h("div", { class: `p${i + 1}${i === 0 ? " first" : ""}` }, h("div", { class: "medal", text: PLACES[i] }),
           entryItem(e, { below: [h("span", { class: "dim", text: `by ${e.author} ` }), avgTag(res.scores[e.id])], cls: `p${i + 1}` }));
       }));
-      const rest = rank.slice(3);
-      return h("div", {}, strip, h("p", { class: "wz-gl-note", text: c.rules ? `${c.rules.split("\n")[0]} ${how}` : how }), podium,
-        rest.length ? [h("div", { class: "wz-gl-csec" }, "Everyone else", h("span", { class: "n", text: String(rest.length) })), h("div", { class: "wz-gl-grid" }, items(rest))] : null);
+      pageList = rank.slice(3);
     }
-    return h("div", {},
-      h("div", { class: "wz-gl-chero" }, h("div", { class: "t" }, c.title, sampleTag(c)), c.rules ? h("div", { class: "r", text: c.rules }) : null, h("div", { class: "m", text: `${ended} · ${plural(f.entries.length)}. ${how}` })),
-      sortBar, h("div", { class: "wz-gl-grid" }, items(shown)));
+    const main = mainPart({
+      heading: "Entries",
+      extra: [h("span", { class: "n", text: String(f.entries.length) }), h("span", { class: "wz-gl-grow" }), sortBtns],
+      podium: top, items: (top ? [top] : []).concat(pageList.map(card)), key: `${c.id}:${L}:${cs.sort}`, empty: "* No other entries.", note: how
+    });
+    if (L === "e") return h("div", { class: "wz-gl-cvbody wz-gl-cfull" }, strip(c, h("span", { class: "dim", text: plural(f.entries.length) })), main);
+    const side = sideInfo(c, [
+      h("div", { class: "m", text: `${ended} · ${plural(f.entries.length)}.` }),
+      L === "b" ? h("div", { class: "wz-gl-podlist" }, rank.slice(0, 3).map((e, i) => h("div", {}, placeTag(i), h("b", { text: e.title || "(no name)" }), h("span", { class: "dim", text: `by ${e.author} · ${(res.scores[e.id] || {}).avg != null ? res.scores[e.id].avg.toFixed(2) : "–"}` })))) : null]);
+    return h("div", { class: "wz-gl-cvbody wz-gl-cside" }, side, main);
   }
 
   // ---- Review -> Judging ----
@@ -401,17 +433,13 @@ export function createContests(ctx) {
     }
   }
   const unscored = () => (js.data ? js.data.entries.filter((e) => !js.data.myScores[e.id]).length : 0);
-  async function score(e, n, advance) {
+  async function score(e, n) {
     const mine = js.data.myScores[e.id] || 0;
     const value = mine === n ? 0 : n; // the same score again takes it back
     try {
       if (!js.data.sample) await reviewScore(ctx.reviewerKey(), js.id, e.id, value);
       if (value) js.data.myScores[e.id] = value; else delete js.data.myScores[e.id];
       ctx.changed();
-      if (advance && value) {
-        const next = js.data.entries.findIndex((x, i) => i > js.idx && !js.data.myScores[x.id]);
-        if (next >= 0) setTimeout(() => { js.idx = next; ctx.render(); }, 250);
-      }
     } catch (err) { ctx.say(`Couldn't save the score: ${ctx.errText(err)}`); }
     ctx.render();
   }
@@ -436,7 +464,6 @@ export function createContests(ctx) {
     const scores = d.sample ? (owner ? sample().runScores : null) : d.scores;
     const n = d.entries.length;
     const done = n - unscored();
-    const focus = ctx.reviewLayout() === "c";
     const headBar = h("div", { class: "wz-gl-bar" },
       h("b", { text: `Judging: ${c.title}` }), d.sample ? h("span", { class: "wz-gl-sample", text: "sample" }) : null,
       h("span", { class: "dim", text: c.status === "open" ? ` · entries close ${when(c.closesAt)}` : " · entries closed" }),
@@ -472,21 +499,6 @@ export function createContests(ctx) {
       return parts;
     };
     if (!n) return h("div", {}, headBar, notes, h("p", { class: "wz-gl-note", text: "No approved entries yet. Approve them in Uploads." }));
-    if (focus) {
-      // C: one entry at a time, big, moving on to the next unscored one
-      js.idx = Math.max(0, Math.min(js.idx, n - 1));
-      const e = d.entries[js.idx];
-      const mine = d.myScores[e.id] || 0;
-      const go = (i) => { js.idx = (i + n) % n; ctx.render(); };
-      const nextOpen = d.entries.findIndex((x, i) => i > js.idx && !d.myScores[x.id]);
-      return h("div", {}, headBar, notes, topBar,
-        h("div", { class: "wz-gl-focus" },
-          h("div", { class: "nav" }, button("‹", () => go(js.idx - 1), { title: "Previous" }), h("span", { text: `${js.idx + 1} / ${n}` }), button("›", () => go(js.idx + 1), { title: "Next" }),
-            nextOpen >= 0 ? button("Next unscored", () => go(nextOpen)) : null),
-          h("div", { class: "cards" }, entryItem({ ...e, status: "approved" }, { below: h("span", { class: "dim", text: `by ${e.author}` }) })),
-          h("div", { class: "wz-gl-scorebig" }, [1, 2, 3, 4, 5].map((k) => h("button", { type: "button", class: mine === k ? "on" : "", title: SCORE_NAMES[k], onclick: () => score(e, k, true) }, String(k), h("small", { text: SCORE_NAMES[k] })))),
-          h("div", { class: "wz-gl-judge" }, extra(e))));
-    }
     const sorted = scores ? d.entries.slice().sort((a, b) => ((scores[b.id] || {}).avg || 0) - ((scores[a.id] || {}).avg || 0)) : d.entries;
     const items = sorted.map((e) => {
       const mine = d.myScores[e.id] || 0;
@@ -564,5 +576,5 @@ export function createContests(ctx) {
     return h("div", {}, out);
   }
 
-  return { state: cs, refresh, active, shownActive, slots, view, judgingView, manageView, loadJudging, unscored, judgeContestId };
+  return { state: cs, refresh, active, shownActive, slots, view, layout, judgingView, manageView, loadJudging, unscored, judgeContestId };
 }

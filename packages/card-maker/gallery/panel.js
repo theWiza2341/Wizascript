@@ -43,6 +43,7 @@ const CSS = `
 .wz-gl-panel.on.browse { display: flex; flex-direction: column; overflow: hidden; }
 .wz-gl-panel.browse > .wz-gl-content { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 .wz-gl-panel.browse > .wz-gl-content > .wz-gl-browse { flex: 1 1 auto; height: auto; }
+.wz-gl-panel.browse > .wz-gl-content > .wz-gl-cv { flex: 1 1 auto; min-height: 0; }
 .wz-gl-proto { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 4px 8px; margin-bottom: 8px; border: 1px dashed #665; background: #17150c; font-size: 12px; flex: none; }
 .wz-gl-proto b { color: #ffd84a; margin-right: 2px; }
 .wz-gl-proto .sep { width: 1px; height: 16px; background: #554; margin: 0 4px; }
@@ -50,7 +51,7 @@ const CSS = `
 .wz-gl-proto select { height: 20px !important; }
 .wz-gl-proto .wz-cm-btn { height: 20px; line-height: 18px; padding: 0 7px; font-size: 11px; }
 .wz-gl-preview-as { background: #3a1f5a; border: 1px solid #b07de0; color: #e6d4ff; padding: 1px 8px; font-size: 11px; }
-/* roomier Review (dev16 prototypes A/B/C) */
+/* Review: roomy, with a side menu (dev16) */
 .wz-gl-rv { font-size: 14px; line-height: 1.45; }
 .wz-gl-rv .wz-cm-btn { height: 28px; font-size: 13px; padding: 0 12px; }
 .wz-gl-rv .wz-gl-note { font-size: 13px; }
@@ -60,13 +61,6 @@ const CSS = `
 .wz-gl-rv .wz-gl-revactions .wz-cm-btn { height: 34px; padding: 0 22px; font-size: 14px; }
 .wz-gl-rv .wz-gl-revlog { gap: 8px; font-size: 14px; }
 .wz-gl-rv .wz-gl-scorebtn { width: 26px; height: 24px; font-size: 13px; }
-.wz-gl-rseg { display: flex; border: 2px solid #fff; background: #000; margin-bottom: 14px; }
-.wz-gl-rseg button { flex: 1 1 0; background: none; border: 0; color: #bbb; padding: 8px 6px; font: 15px "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; cursor: pointer; }
-.wz-gl-rseg button + button { border-left: 2px solid #fff; }
-.wz-gl-rseg button:hover { color: #fff; }
-.wz-gl-rseg button.on { background: #ffd84a; color: #000; }
-.wz-gl-rseg .n { display: inline-block; margin-left: 6px; background: #e05a5a; color: #fff; border-radius: 9px; padding: 0 6px; font: 11px/16px Arial, sans-serif; }
-.wz-gl-rwho { font-size: 13px; opacity: .8; margin: -6px 0 12px; text-align: right; }
 .wz-gl-rside { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 18px; align-items: start; }
 .wz-gl-rmenu { position: sticky; top: 0; display: flex; flex-direction: column; border: 2px solid #fff; background: #000; }
 .wz-gl-rmenu button { display: flex; justify-content: space-between; align-items: center; background: none; border: 0; color: #bbb; padding: 10px 12px; text-align: left; font: 15px "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; cursor: pointer; }
@@ -75,12 +69,6 @@ const CSS = `
 .wz-gl-rmenu button.on { background: #ffd84a; color: #000; }
 .wz-gl-rmenu .n { background: #e05a5a; color: #fff; border-radius: 9px; padding: 0 6px; font: 11px/16px Arial, sans-serif; }
 .wz-gl-rmenu .who { padding: 10px 12px; border-top: 2px solid #fff; font-size: 12px; opacity: .8; }
-.wz-gl-rfocus { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-.wz-gl-rfocus .nav { display: flex; align-items: center; gap: 12px; font: 14px "DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace; }
-.wz-gl-rfocus .wz-gl-revpost { width: 100%; max-width: 900px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; }
-.wz-gl-rfocus .wz-gl-item { --wz-gl-z: 1.3; }
-.wz-gl-rfocus .wz-gl-revactions { justify-content: center; width: 100%; }
-.wz-gl-rfocus .wz-gl-revactions input { max-width: 420px; }
 .wz-gl-ctag { display: inline-block; background: #3a2f0a; border: 1px solid #ffd84a; color: #ffd84a; font-size: 10px; padding: 0 4px; margin-left: 6px; }
 .wz-gl-target { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 8px; }
 .wz-gl-tabs { flex: none; }
@@ -190,8 +178,9 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   if (draft.browseProto) { delete draft.browseProto; saveDraft(); } // the old sample-entries switch
   const browse = { list: "new", page: 0, dir: null, mineOnly: false, likedOnly: false };
   // Preview bar (dev16): layout prototypes, sample data, View as. Kept in the draft.
-  const proto = Object.assign({ contest: "a", review: "a", samples: false, viewAs: "" }, draft.proto || {}, { viewAs: "" });
-  const saveProto = () => { draft.proto = { contest: proto.contest, review: proto.review, samples: proto.samples }; saveDraft(); };
+  const proto = Object.assign({ contest: "b", samples: false, viewAs: "" }, draft.proto || {}, { viewAs: "" });
+  if (!["b", "d", "e"].includes(proto.contest)) proto.contest = "b"; // dev16's A/C are gone
+  const saveProto = () => { draft.proto = { contest: proto.contest, samples: proto.samples }; saveDraft(); };
   if (proto.samples) loadSampleExtras().then((more) => { if (more && open) render(); });
   const sampleDecided = new Set(); // sample uploads approved/rejected here
   const listeners = [];
@@ -269,7 +258,6 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   // Waiting uploads: the real ones, or sample ones while Sample data is on.
   const uploadList = () => (proto.samples ? sampleData().uploads.filter((u) => !sampleDecided.has(u.id)) : rev.list);
   const uploadPost = (p) => (proto.samples ? p : rev.posts[p.id]);
-  let focusIdx = 0;
   function decideAny(id, approve) {
     if (!proto.samples) return decide(id, approve);
     sampleDecided.add(id);
@@ -278,7 +266,6 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   }
   function uploadsView() {
     const list = uploadList();
-    const focus = proto.review === "c";
     const head = h("div", { class: "wz-gl-bar" },
       h("b", { text: rev.loading && !rev.at && !proto.samples ? "Loading uploads…" : `${list.length} upload${list.length === 1 ? "" : "s"} waiting` }),
       proto.samples ? h("span", { class: "wz-gl-sample", text: "sample" }) : null,
@@ -305,18 +292,10 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
         h("div", { class: "wz-gl-bar wz-gl-revactions" }, approveBtn, rejectBtn, reason));
     };
     const note = h("p", { class: "wz-gl-note", text: "Each upload is shown exactly as it will look in Browse. Approving adds it to the gallery for everyone (contest entries: to the contest)." });
-    if (focus) {
-      // C: one upload at a time, big
-      focusIdx = Math.max(0, Math.min(focusIdx, list.length - 1));
-      const go = (i) => { focusIdx = (i + list.length) % list.length; render(); };
-      return h("div", {}, head, note, h("div", { class: "wz-gl-rfocus" },
-        h("div", { class: "nav" }, button("‹", () => go(focusIdx - 1), { title: "Previous" }), h("span", { text: `${focusIdx + 1} / ${list.length}` }), button("›", () => go(focusIdx + 1), { title: "Next" })),
-        one(list[focusIdx])));
-    }
     return h("div", {}, head, note, h("div", { class: "wz-gl-revposts" }, list.map(one)));
   }
   // Review's sections: Uploads, Judging, Log, and (owner) Contests and Reviewers.
-  // Three layouts to try (Preview bar): A tabs, B side menu, C one at a time.
+  // Laid out with a side menu (chosen 2026-10-28 from three prototypes).
   function reviewView() {
     if (!reviewerKey()) return h("p", { class: "wz-gl-note", text: "Review is off." });
     const running = proto.samples ? contests.shownActive() : contests.active();
@@ -333,14 +312,10 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     const body = rev.section === "log" ? logView() : rev.section === "reviewers" ? reviewersView() : rev.section === "judging" ? contests.judgingView()
       : rev.section === "contests" ? contests.manageView() : uploadsView();
     const count = (n) => (n ? h("span", { class: "n", text: String(n) }) : null);
-    if (proto.review === "b") {
-      const menu = h("div", { class: "wz-gl-rmenu" },
-        sections.map(([k, label, n]) => h("button", { type: "button", class: rev.section === k ? "on" : "", onclick: () => openSection(k) }, h("span", { text: label }), count(n))),
-        h("div", { class: "who", text: who }));
-      return h("div", { class: "wz-gl-rv wz-gl-revtabs" }, h("div", { class: "wz-gl-rside" }, menu, h("div", {}, body)));
-    }
-    const seg = h("div", { class: "wz-gl-rseg wz-gl-revtabs" }, sections.map(([k, label, n]) => h("button", { type: "button", class: rev.section === k ? "on" : "", onclick: () => openSection(k) }, label, count(n))));
-    return h("div", { class: "wz-gl-rv" }, seg, h("div", { class: "wz-gl-rwho", text: who }), body);
+    const menu = h("div", { class: "wz-gl-rmenu wz-gl-revtabs" },
+      sections.map(([k, label, n]) => h("button", { type: "button", class: rev.section === k ? "on" : "", onclick: () => openSection(k) }, h("span", { text: label }), count(n))),
+      h("div", { class: "who wz-gl-rwho", text: who }));
+    return h("div", { class: "wz-gl-rv" }, h("div", { class: "wz-gl-rside" }, menu, h("div", {}, body)));
   }
   function openSection(k) {
     rev.section = k;
@@ -476,7 +451,8 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     who: () => (rev.who ? { ...rev.who, role: role() } : null),
     samples: () => proto.samples,
     layout: () => proto.contest,
-    reviewLayout: () => proto.review,
+    wheelPages: () => !wheelPages || wheelPages(),
+    hideHover: () => hideHover(),
     keyRejected: (code) => onKeyRejected(code),
     refreshMe: (f) => refreshMe(f),
     deleteMine: (e) => deleteMine(e),
@@ -606,9 +582,9 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     if (box === lastBox) return;
     lastBox = box;
     const zoomed = !sizeOf()[2] && applyZoom();
-    if (!zoomed && tab !== "browse") return;
+    if (!zoomed && tab !== "browse" && tab !== "contest") return;
     clearTimeout(fitTimer);
-    fitTimer = setTimeout(() => { if (tab === "browse" && browseCtl) browseCtl.layout(); else refit(); }, 120);
+    fitTimer = setTimeout(() => { if (tab === "browse" && browseCtl) browseCtl.layout(); else if (tab === "contest") contests.layout(); else refit(); }, 120);
   }).observe(panel);
   function sizeButtons() {
     return h("span", { class: "wz-gl-sizes", title: "Card size" },
@@ -652,14 +628,12 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   };
   panel.addEventListener("scroll", hideHover, { passive: true });
 
-  const CONTEST_LAYOUTS = [["a", "A Banner"], ["b", "B Sidebar"], ["c", "C Showcase"]];
-  const REVIEW_LAYOUTS = [["a", "A Tabs"], ["b", "B Side menu"], ["c", "C One at a time"]];
+  const CONTEST_LAYOUTS = [["b", "Sidebar"], ["d", "Sidebar + Podium"], ["e", "Full width"]];
   function renderProto() {
-    const pick = (list, key) => list.map(([k, label]) => button(label, () => { proto[key] = k; saveProto(); render(); }, { cls: proto[key] === k ? "wz-gl-on" : "", title: `${key === "contest" ? "Contest tab" : "Review"} layout ${label}` }));
+    const pick = (list, key) => list.map(([k, label]) => button(label, () => { proto[key] = k; saveProto(); render(); }, { cls: proto[key] === k ? "wz-gl-on" : "", title: `Contest tab layout: ${label}` }));
     const owner = realRole() === "owner";
     protoBar.replaceChildren(...[h("b", { text: "Preview" }),
       h("span", { text: "Contest:" }), pick(CONTEST_LAYOUTS, "contest"),
-      reviewerKey() ? [h("span", { class: "sep" }), h("span", { text: "Review:" }), pick(REVIEW_LAYOUTS, "review")] : null,
       h("span", { class: "sep" }),
       h("label", { title: "Made-up contests and uploads to try the layouts with. Nothing is sent." }, h("input", { type: "checkbox", checked: proto.samples, onchange: (e) => {
         proto.samples = e.target.checked; saveProto();
@@ -679,7 +653,8 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     if (tab === "review" && !(reviewerKey() && role() !== "player")) { tab = "browse"; notify(); }
     tabs.replaceChildren(
       accountBox(), status, h("span", { class: "wz-gl-grow" }), sizeButtons());
-    panel.classList.toggle("browse", tab === "browse");
+    // Browse and Contest fill the panel and turn pages instead of scrolling.
+    panel.classList.toggle("browse", tab === "browse" || tab === "contest");
     applyZoom();
     if (tab === "browse") {
       const ctl = browseCtl = browseTab();
@@ -692,7 +667,8 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
       requestAnimationFrame(refit);
     } else if (tab === "contest") {
       content.replaceChildren(...[linkBox(), contests.view()].filter(Boolean));
-      requestAnimationFrame(refit);
+      contests.layout();
+      requestAnimationFrame(() => { if (open && tab === "contest") contests.layout(); });
     } else {
       content.replaceChildren(...[linkBox(), submitView()].filter(Boolean));
       requestAnimationFrame(refit);

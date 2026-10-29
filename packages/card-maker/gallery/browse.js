@@ -269,3 +269,81 @@ function item(ctx, e, rank, listKey) {
       ctx.onRemove && e.status === "approved" ? removeButton(ctx, e) : null,
       ctx.onDelete && e.mine && e.status === "rejected" ? removeButton(ctx, e, { label: "Delete", confirm: "Delete for good?", title: "Delete this post: it wasn't approved, so it's only taking up space", run: ctx.onDelete }) : null));
 }
+
+// Any list of items, a page at a time, like Browse: lays the items out in the
+// real width, cuts the rows into pages that fit the area's height, and turns
+// pages with ‹ › or (setting) the scroll wheel. Used by the Contest tab.
+//   items: elements; state: { page } (kept by the caller, so a page survives
+//   a redraw); wheelPages(): bool; onPage(); empty: text when there are none.
+// Returns { area, pager, layout }: put area (it fills the height it's given)
+// and pager on screen, then call layout() (and again after a resize).
+export function pagedGrid(items, { state, wheelPages = () => true, onPage, empty = "* Nothing here yet." }) {
+  const area = h("div", { class: "wz-gl-pagearea" });
+  const count = h("span", { class: "n" });
+  const prev = h("button", { type: "button", title: "Previous page", text: "‹", onclick: () => turn(-1) });
+  const next = h("button", { type: "button", title: "Next page", text: "›", onclick: () => turn(1) });
+  const pager = h("div", { class: "wz-gl-pager" }, prev, count, next);
+  let pages = [[]];
+  let animate = null;
+  function layout() {
+    const H = area.clientHeight;
+    const grid = h("div", { class: "wz-gl-grid" });
+    area.replaceChildren(grid);
+    if (!items.length) {
+      area.replaceChildren(h("div", { class: "wz-gl-empty wz-gl-dt", text: empty }));
+      pages = [[]];
+      return show();
+    }
+    items.forEach((it) => { it.style.display = ""; grid.appendChild(it); });
+    items.forEach((it) => it.querySelectorAll(".wz-gl-card:not(.wz-gl-pic), .wz-gl-artifact").forEach(fitCard));
+    const rows = [];
+    let lastLeft = Infinity;
+    items.forEach((it, i) => {
+      const t = it.offsetTop, l = it.offsetLeft;
+      if (!rows.length || l <= lastLeft) rows.push({ start: i, top: t, bottom: t + it.offsetHeight });
+      lastLeft = l;
+      const r = rows[rows.length - 1];
+      r.end = i;
+      r.top = Math.min(r.top, t);
+      r.bottom = Math.max(r.bottom, t + it.offsetHeight);
+    });
+    pages = [];
+    let page = null, pageTop = 0;
+    rows.forEach((r) => {
+      if (!page || r.bottom - pageTop > H) { page = []; pages.push(page); pageTop = r.top; }
+      for (let i = r.start; i <= r.end; i++) page.push(i);
+    });
+    state.page = Math.max(0, Math.min(state.page || 0, pages.length - 1));
+    show();
+  }
+  function show() {
+    const grid = area.querySelector(".wz-gl-grid");
+    if (grid) {
+      const on = new Set(pages[state.page] || []);
+      items.forEach((it, i) => { it.style.display = on.has(i) ? "" : "none"; });
+      grid.classList.remove("wz-gl-in-r", "wz-gl-in-l");
+      if (animate) { void grid.offsetWidth; grid.classList.add("wz-gl-in-" + animate); animate = null; }
+    }
+    count.textContent = `${pages.length ? (state.page || 0) + 1 : 0} / ${pages.length}`;
+    prev.disabled = (state.page || 0) <= 0;
+    next.disabled = (state.page || 0) >= pages.length - 1;
+  }
+  function turn(d) {
+    const to = (state.page || 0) + d;
+    if (to < 0 || to >= pages.length) return false;
+    state.page = to;
+    animate = d > 0 ? "r" : "l";
+    if (onPage) onPage();
+    show();
+    return true;
+  }
+  let wheelLock = 0;
+  area.addEventListener("wheel", (e) => {
+    if (!wheelPages()) return;
+    e.preventDefault();
+    const now = Date.now();
+    if (now < wheelLock || Math.abs(e.deltaY) < 4) return;
+    if (turn(e.deltaY > 0 ? 1 : -1)) wheelLock = now + 280;
+  }, { passive: false });
+  return { area, pager, layout };
+}

@@ -21,7 +21,6 @@ import { h, button } from "./dom.js";
 import { tile } from "./render.js";
 import { getContests, getContestsFile, reviewContest, reviewScore, manageContest, withArt } from "./api.js";
 import { removeButton, pagedGrid } from "./browse.js";
-import { sampleData, loadSampleExtras } from "./mock.js";
 
 const DT = `"DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace`;
 const PLACES = ["1st", "2nd", "3rd"];
@@ -41,6 +40,7 @@ export const CONTEST_CSS = `
 .wz-gl-scores { display: flex; gap: 2px; align-items: center; }
 .wz-gl-scorebtn { background: #000; border: 1px solid #777; color: #ccc; width: 20px; height: 18px; padding: 0; font: 11px/16px ${DT}; cursor: pointer; }
 .wz-gl-scorebtn:hover { border-color: #fff; color: #fff; }
+.wz-gl-scorebtn.half { width: 26px; font-size: 10px; opacity: .85; }
 .wz-gl-scorebtn.on { background: #ffd84a; border-color: #ffd84a; color: #000; }
 .wz-gl-judge { display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .wz-gl-judge .by { font-size: 10px; opacity: .7; max-width: 200px; text-align: center; }
@@ -88,35 +88,18 @@ export const CONTEST_CSS = `
 .wz-gl-cvbody { flex: 1 1 auto; min-height: 0; }
 .wz-gl-cside { display: grid; grid-template-columns: 290px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 18px; }
 .wz-gl-cside > .side { border: 2px solid #fff; background: #000; padding: 12px 14px; overflow: auto; min-height: 0; max-height: 100%; box-sizing: border-box; align-self: start; }
-.wz-gl-cside > .side .t, .wz-gl-crulesbox .t { font: 22px ${DT}; color: #ffd84a; margin-bottom: 6px; }
-.wz-gl-cside > .side .r, .wz-gl-crulesbox .r { white-space: pre-wrap; margin-bottom: 10px; }
+.wz-gl-cside > .side .t { font: 22px ${DT}; color: #ffd84a; margin-bottom: 6px; }
+.wz-gl-cside > .side .r { white-space: pre-wrap; margin-bottom: 10px; }
 .wz-gl-cside > .side .wz-gl-big { width: 100%; margin-top: 8px; }
 .wz-gl-cmain { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 .wz-gl-cmain > .wz-gl-csec { flex: none; margin: 0 0 8px; }
 .wz-gl-cmain > .wz-gl-pagearea { flex: 1 1 auto; }
 .wz-gl-cmain > .wz-gl-foot { flex: none; }
 .wz-gl-csort { display: inline-flex; gap: 4px; }
-.wz-gl-cfull { display: flex; flex-direction: column; }
-.wz-gl-cfull > .wz-gl-cmain { flex: 1 1 auto; }
-.wz-gl-crulesbox { flex: none; border: 2px solid #555; border-top: 0; background: #0a0a0a; padding: 8px 16px 10px; margin: -10px 0 10px; max-height: 40%; overflow: auto; }
 .wz-gl-cmine { margin-top: 12px; border-top: 1px solid #333; padding-top: 8px; display: flex; flex-direction: column; gap: 5px; }
 .wz-gl-cmine div { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
 .wz-gl-podlist { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
 .wz-gl-podlist div { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
-.wz-gl-cstrip { flex: none; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; border: 2px solid #fff; background: #000; padding: 10px 16px; margin-bottom: 10px; }
-.wz-gl-cstrip .t { font: 22px ${DT}; color: #ffd84a; }
-.wz-gl-podium { flex: none; display: flex; justify-content: center; align-items: flex-end; gap: 22px; margin: 0 0 10px; flex-wrap: wrap; }
-.wz-gl-podium > div { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.wz-gl-podium .medal { font: 18px ${DT}; }
-.wz-gl-podium .p1 .medal { color: #ffd84a; } .wz-gl-podium .p2 .medal { color: #d8d8d8; } .wz-gl-podium .p3 .medal { color: #e09a5a; }
-/* the podium keeps to a set size, so the pages below keep their room */
-.wz-gl-podrow { flex: 0 0 100%; flex-wrap: nowrap !important; overflow: hidden; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid #333; }
-.wz-gl-podium-sm > div { --wz-gl-z: .62; }
-.wz-gl-podrow > div, .wz-gl-podrow .wz-gl-item { flex: none; max-width: none; }
-.wz-gl-podrow .wz-gl-row { flex-wrap: nowrap; }
-.wz-gl-podrow .wz-gl-votes { flex-direction: column; gap: 0; align-items: center; font-size: 11px; line-height: 1.3; }
-.wz-gl-podium-sm > div.first { --wz-gl-z: .74; }
-.wz-gl-sample { display: inline-block; background: #333; border: 1px solid #777; color: #ddd; font: 10px/14px Arial, sans-serif; padding: 0 5px; margin-left: 8px; vertical-align: middle; }
 `;
 
 const pad = (n) => String(n).padStart(2, "0");
@@ -136,13 +119,11 @@ const daysAgo = (t) => Math.max(0, Math.floor((Date.now() - (t || Date.now())) /
 
 // ctx: { say, render, changed, errText, hoverable, acct, draft, reviewerKey,
 //        who(), keyRejected(code), refreshMe(force), startEntry(contestId),
-//        deleteMine(entry), samples(), layout() -> "b" | "d" | "e",
-//        wheelPages(), hideHover() }
+//        deleteMine(entry), wheelPages(), hideHover() }
 export function createContests(ctx) {
-  const cs = { list: null, file: null, at: 0, loading: false, error: "", pick: null, sort: "rank", drop: false, sub: "entries", pages: {}, rulesOpen: false };
-  const js = { id: null, data: null, at: 0, loading: false, error: "", top: null, idx: 0, sampleMine: {} };
+  const cs = { list: null, file: null, at: 0, loading: false, error: "", pick: null, sort: "rank", drop: false, pages: {} };
+  const js = { id: null, data: null, at: 0, loading: false, error: "", top: null };
   const cf = { title: "", rules: "", closes: "", max: 3, busy: false, editFor: null };
-  let sampleOwn = null; // sample "your entries", withdrawn locally
 
   async function refresh(force) {
     if (cs.loading || (!force && cs.at && Date.now() - cs.at < 30e3)) return;
@@ -160,14 +141,10 @@ export function createContests(ctx) {
       ctx.changed();
     }
   }
-  // Real contests (entering, managing) vs. what the Contest tab and Judging
-  // show (sample contests while Sample data is on).
-  const sample = () => (ctx.samples() ? sampleData() : null);
-  const shownList = () => (sample() ? sample().contests : cs.list);
-  const shownFile = (id) => ((sample() ? sample().file : cs.file) || []).find((c) => c.id === id) || null;
+  const shownList = () => cs.list;
+  const shownFile = (id) => (cs.file || []).find((c) => c.id === id) || null;
   const active = () => (cs.list || []).find((c) => c.status !== "archived") || null;
-  const shownActive = () => (shownList() || []).find((c) => c.status !== "archived") || null;
-  if (ctx.samples()) loadSampleExtras().then((more) => { if (more) ctx.changed(); });
+  const shownActive = active;
   // The player's slots in the open contest (from /v1/me: counts every account
   // that shares their voter group).
   function slots() {
@@ -178,15 +155,10 @@ export function createContests(ctx) {
     return { contest: c, used, max: c.maxEntries, left: Math.max(0, c.maxEntries - used) };
   }
   function shownSlots(c) {
-    if (c.sample) {
-      const used = (sampleOwn || (sampleOwn = sample().own.slice())).filter((e) => e.status !== "rejected").length;
-      return { contest: c, used, max: c.maxEntries, left: Math.max(0, c.maxEntries - used) };
-    }
     const s = slots();
     return s && s.contest.id === c.id ? s : null;
   }
   function ownEntries(c) {
-    if (c.sample) return sampleOwn || (sampleOwn = sample().own.slice());
     return ctx.acct.posts.filter((p) => p.contest === c.id && ctx.draft.uploads[p.id]).map((p) => ({ ...ctx.draft.uploads[p.id], id: p.id, status: p.status, reason: p.reason, author: ctx.acct.account, postedAt: p.postedAt }));
   }
   function ranked(f) {
@@ -208,13 +180,12 @@ export function createContests(ctx) {
   }
   const placeTag = (i) => h("span", { class: `wz-gl-place${i < 3 ? ` p${i + 1}` : ""}`, text: i < 3 ? PLACES[i] : `# ${i + 1}` });
   const avgTag = (sc) => h("span", { class: "wz-gl-avg", text: sc && sc.n ? `${sc.avg.toFixed(2)} (${sc.n} judge${sc.n === 1 ? "" : "s"})` : "not scored" });
-  const sampleTag = (c) => (c.sample ? h("span", { class: "wz-gl-sample", text: "sample" }) : null);
 
   // ---- the Contest tab ----
   // The bar: the running contest far left, the archive far right (the 3 most
   // recent as buttons, the rest under Archive ▾).
   function nav(cur, archived) {
-    const pick = (id) => { cs.pick = id; cs.drop = false; cs.sub = "entries"; ctx.render(); };
+    const pick = (id) => { cs.pick = id; cs.drop = false; ctx.render(); };
     const recent = archived.slice(0, 3);
     const drop = cs.drop ? h("div", { class: "wz-gl-cdrop" }, archived.map((c) => h("button", { type: "button", class: cs.pick === c.id ? "on" : "", onclick: () => pick(c.id) },
       h("span", { text: c.title }), h("small", { text: `ended ${new Date(c.closesAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })} · ${c.entries}` })))) : null;
@@ -232,7 +203,7 @@ export function createContests(ctx) {
   }
 
   // The tab fills the panel and never scrolls: entries come a page at a time.
-  // Three prototypes (Preview bar): b Sidebar, d Sidebar + podium, e Full width.
+  // Laid out with a sidebar (chosen 2026-10-28 from five prototypes).
   let pagers = [];
   const pageState = (key) => cs.pages[key] || (cs.pages[key] = { page: 0 });
   function paged(items, key, empty) {
@@ -241,22 +212,7 @@ export function createContests(ctx) {
     return g;
   }
   // Called once the view is on screen, and after a resize.
-  // A podium (page 1's first row) shrinks to fit the page area's height.
-  function layout() {
-    pagers.forEach((g) => {
-      if (g.podium) {
-        const set = (z1) => g.podium.querySelectorAll(":scope > div").forEach((d) => d.style.setProperty("--wz-gl-z", String(Math.round((d.classList.contains("first") ? z1 : z1 * 0.84) * 100) / 100)));
-        let z1 = Math.max(0.3, Math.min(0.74, (g.area.clientHeight - 90) / 246));
-        set(z1);
-        // and to its width (a set in the top 3 is wide): measure once on screen
-        g.podium.style.display = "";
-        if (!g.area.contains(g.podium)) g.area.appendChild(g.podium);
-        const over = g.podium.scrollWidth / Math.max(1, g.area.clientWidth);
-        if (over > 1) { z1 = Math.max(0.3, z1 / over * 0.95); set(z1); }
-      }
-      g.layout();
-    });
-  }
+  function layout() { pagers.forEach((g) => g.layout()); }
 
   function view() {
     pagers = [];
@@ -271,16 +227,15 @@ export function createContests(ctx) {
     const archived = list.filter((c) => c.status === "archived").sort((a, b) => b.closesAt - a.closesAt);
     if (!cs.pick || !list.some((c) => c.id === cs.pick)) cs.pick = cur ? cur.id : archived[0].id;
     const c = list.find((x) => x.id === cs.pick);
-    const L = ctx.layout();
-    const body = c.status === "archived" ? archiveView(c, L) : runningView(c, L);
-    return h("div", { class: `wz-gl-cv wz-gl-cvp wz-gl-cv-${L}` }, nav(cur, archived), body);
+    const body = c.status === "archived" ? archiveView(c) : runningView(c);
+    return h("div", { class: "wz-gl-cv wz-gl-cvp" }, nav(cur, archived), body);
   }
 
   // pieces of a running contest
   function enterButton(c, s, big) {
-    const label = c.sample ? "Enter cards" : !ctx.acct.account ? "Link your account to enter" : s && !s.left ? "No entries left" : "Enter cards";
-    const b = button(label, () => (c.sample ? ctx.say("This is a sample contest: entering is off. Turn off Sample data to enter real ones.") : ctx.startEntry(c.id)), { primary: true, cls: big ? "wz-gl-big" : "", title: "Pick cards in Submit and upload them to this contest" });
-    b.disabled = !c.sample && (!ctx.acct.account || !s || !s.left);
+    const label = !ctx.acct.account ? "Link your account to enter" : s && !s.left ? "No entries left" : "Enter cards";
+    const b = button(label, () => ctx.startEntry(c.id), { primary: true, cls: big ? "wz-gl-big" : "", title: "Pick cards in Submit and upload them to this contest" });
+    b.disabled = !ctx.acct.account || !s || !s.left;
     return b;
   }
   const pips = (s) => (s ? h("span", { class: "wz-gl-pips", title: `${s.used} of ${s.max} entries used` }, Array.from({ length: s.max }, (_, i) => h("i", { class: i < s.used ? "on" : "" })), h("span", { text: ` ${s.used} of ${s.max} used` })) : null);
@@ -292,7 +247,7 @@ export function createContests(ctx) {
     return ownEntries(c).map((e) => {
       const tagText = e.status === "approved" ? "entered" : e.status === "pending" ? "awaiting approval" : "not approved";
       const tag = h("span", { class: `wz-gl-mine${e.status === "pending" ? " pending" : e.status === "rejected" || e.status === "removed" ? " rejected" : ""}`, text: tagText });
-      const run = c.sample ? (x) => { sampleOwn = sampleOwn.filter((o) => o.id !== x.id); ctx.say("Sample entry withdrawn (nothing was sent)."); ctx.render(); } : ctx.deleteMine;
+      const run = ctx.deleteMine;
       const canWithdraw = open && (e.status === "pending" || e.status === "approved");
       const del = canWithdraw
         ? removeButton({ rerender: ctx.render }, e, { label: "Withdraw", confirm: "Withdraw it?", title: "Take this entry back, to free its slot", run })
@@ -308,32 +263,20 @@ export function createContests(ctx) {
   const noneYet = (c) => h("p", { class: "wz-gl-note", text: c.entries ? "They'll show here in a few minutes." : "None yet. Be the first!" });
   const noVotes = h("p", { class: "wz-gl-note", text: "There's no voting on contest entries: the organizers judge them. They join the gallery once the results are out." });
 
-  // The right-hand (or full-width) part: a heading, an optional podium, the
-  // paged grid, and a footer with a note and ‹ 1 / 3 ›.
-  function mainPart({ heading, extra, top, podium, items, key, empty, note }) {
+  // The right-hand part: a heading, the paged grid, and a footer with a note
+  // and ‹ 1 / 3 ›.
+  function mainPart({ heading, extra, items, key, empty, note }) {
     const g = paged(items, key, empty);
-    g.podium = podium || null;
     return h("div", { class: "wz-gl-cmain" },
       h("div", { class: "wz-gl-csec" }, heading, extra || null),
-      top || null,
       g.area,
       h("div", { class: "wz-gl-foot" }, h("span", { class: "note", text: note || "" }), h("span", { class: "grow" }), g.pager));
   }
   const sideInfo = (c, more) => h("div", { class: "side" },
-    h("div", { class: "t" }, c.title, sampleTag(c)),
+    h("div", { class: "t" }, c.title),
     c.rules ? h("div", { class: "r", text: c.rules }) : null,
     more);
-  // Full width (e): the theme and rules fold away under the title strip.
-  function strip(c, right) {
-    const rules = cs.rulesOpen ? h("div", { class: "wz-gl-crulesbox" }, h("div", { class: "r", text: c.rules || "(no rules given)" }), h("div", { class: "m" }, c.status === "archived" ? `Ended ${when(c.closesAt)}.` : deadline(c))) : null;
-    return [h("div", { class: "wz-gl-cstrip" },
-      h("span", { class: "t" }, c.title, sampleTag(c)),
-      h("span", { class: "wz-gl-chip", text: c.status === "open" ? `closes ${inTime(c.closesAt)}` : c.status === "archived" ? `ended ${when(c.closesAt)}` : "judging" }),
-      button(cs.rulesOpen ? "Theme & rules ▴" : "Theme & rules ▾", () => { cs.rulesOpen = !cs.rulesOpen; ctx.render(); }, { title: "Show or hide the theme and rules" }),
-      h("span", { class: "wz-gl-grow" }), right), rules];
-  }
-
-  function runningView(c, L) {
+  function runningView(c) {
     const s = shownSlots(c);
     const open = c.status === "open";
     const mine = ownItems(c);
@@ -345,9 +288,6 @@ export function createContests(ctx) {
       items, key: `${c.id}:run`, empty: c.entries ? "* They'll show here in a few minutes." : "* None yet. Be the first!",
       note: "No voting: the organizers judge entries. They join the gallery with the results."
     });
-    if (L === "e") {
-      return h("div", { class: "wz-gl-cvbody wz-gl-cfull" }, strip(c, open ? [pips(s), enterButton(c, s, true)] : null), main);
-    }
     const side = sideInfo(c, [
       h("div", { class: "m" }, deadline(c)),
       open ? [h("div", { style: { marginTop: "10px" } }, h("span", { text: "Your entries: " }), pips(s)), enterButton(c, s, true)] : null,
@@ -355,7 +295,7 @@ export function createContests(ctx) {
     return h("div", { class: "wz-gl-cvbody wz-gl-cside" }, side, main);
   }
 
-  function archiveView(c, L) {
+  function archiveView(c) {
     const f = shownFile(c.id);
     const ended = `Ended ${when(c.closesAt)}`;
     if (!f) return h("div", { class: "wz-gl-chero" }, h("div", { class: "t", text: c.title }), h("div", { class: "m", text: `${ended}. Loading the results…` }));
@@ -363,57 +303,35 @@ export function createContests(ctx) {
     const { res, list: rank } = ranked(f);
     const how = res.manualTop ? "The organizers picked the top places; the rest are by average score (1 to 5)." : "Places are by average score (1 to 5).";
     const sortBtns = h("span", { class: "wz-gl-csort" },
-      button("Ranking", () => { cs.sort = "rank"; pageState(`${c.id}:${L}:rank`).page = 0; ctx.render(); }, { primary: cs.sort !== "new" }),
-      button("Newest", () => { cs.sort = "new"; pageState(`${c.id}:${L}:new`).page = 0; ctx.render(); }, { primary: cs.sort === "new" }));
+      button("Ranking", () => { cs.sort = "rank"; pageState(`${c.id}:rank`).page = 0; ctx.render(); }, { primary: cs.sort !== "new" }),
+      button("Newest", () => { cs.sort = "new"; pageState(`${c.id}:new`).page = 0; ctx.render(); }, { primary: cs.sort === "new" }));
     const card = (e) => {
       const i = rank.indexOf(e);
       return entryItem(e, { place: placeTag(i), below: avgTag(res.scores[e.id]), cls: i < 3 && cs.sort !== "new" ? `p${i + 1}` : "" });
     };
-    // With a podium (d, e), the top 3 stand above the pages; the pages hold the rest.
-    const withPodium = L === "d" || L === "e";
-    let top = null, pageList = cs.sort === "new" ? rank.slice().sort((a, b) => (b.postedAt || 0) - (a.postedAt || 0)) : rank;
-    if (withPodium && cs.sort !== "new") {
-      const three = rank.slice(0, 3);
-      const order = three.length === 3 ? [three[1], three[0], three[2]] : three; // 2nd, 1st, 3rd
-      // the podium is page 1's first row, so it pages like everything else
-      top = h("div", { class: "wz-gl-podium wz-gl-podium-sm wz-gl-podrow" }, order.map((e) => {
-        const i = rank.indexOf(e);
-        return h("div", { class: `p${i + 1}${i === 0 ? " first" : ""}` }, h("div", { class: "medal", text: PLACES[i] }),
-          entryItem(e, { below: [h("span", { class: "dim", text: `by ${e.author} ` }), avgTag(res.scores[e.id])], cls: `p${i + 1}` }));
-      }));
-      pageList = rank.slice(3);
-    }
+    const pageList = cs.sort === "new" ? rank.slice().sort((a, b) => (b.postedAt || 0) - (a.postedAt || 0)) : rank;
     const main = mainPart({
       heading: "Entries",
       extra: [h("span", { class: "n", text: String(f.entries.length) }), h("span", { class: "wz-gl-grow" }), sortBtns],
-      podium: top, items: (top ? [top] : []).concat(pageList.map(card)), key: `${c.id}:${L}:${cs.sort}`, empty: "* No other entries.", note: how
+      items: pageList.map(card), key: `${c.id}:${cs.sort}`, empty: "* No entries.", note: how
     });
-    if (L === "e") return h("div", { class: "wz-gl-cvbody wz-gl-cfull" }, strip(c, h("span", { class: "dim", text: plural(f.entries.length) })), main);
     const side = sideInfo(c, [
       h("div", { class: "m", text: `${ended} · ${plural(f.entries.length)}.` }),
-      L === "b" ? h("div", { class: "wz-gl-podlist" }, rank.slice(0, 3).map((e, i) => h("div", {}, placeTag(i), h("b", { text: e.title || "(no name)" }), h("span", { class: "dim", text: `by ${e.author} · ${(res.scores[e.id] || {}).avg != null ? res.scores[e.id].avg.toFixed(2) : "–"}` })))) : null]);
+      h("div", { class: "wz-gl-podlist" }, rank.slice(0, 3).map((e, i) => h("div", {}, placeTag(i), h("b", { text: e.title || "(no name)" }), h("span", { class: "dim", text: `by ${e.author} · ${(res.scores[e.id] || {}).avg != null ? res.scores[e.id].avg.toFixed(2) : "–"}` }))))]);
     return h("div", { class: "wz-gl-cvbody wz-gl-cside" }, side, main);
   }
 
   // ---- Review -> Judging ----
   const judgeContestId = () => {
     const who = ctx.who();
-    if (sample()) { const c = shownActive(); return c ? c.id : null; }
     if (who && who.role === "judge") return who.contest || (active() && active().id);
     const c = active();
     return c ? c.id : null;
   };
   async function loadJudging(force) {
     const id = judgeContestId();
-    if (sample()) {
-      const run = sample().file.find((c) => c.id === id);
-      const keepTop = js.top && js.id === id && js.data && js.data.sample;
-      js.data = run ? { contest: { ...run, top3: [] }, entries: run.entries, myScores: js.sampleMine, sample: true } : null;
-      js.top = keepTop ? js.top : []; js.id = id; js.error = "";
-      return ctx.changed();
-    }
     if (!id || !ctx.reviewerKey()) { js.data = null; return; }
-    if (js.loading || (!force && js.id === id && js.at && Date.now() - js.at < 30e3 && !(js.data && js.data.sample))) return;
+    if (js.loading || (!force && js.id === id && js.at && Date.now() - js.at < 30e3)) return;
     js.loading = true;
     try {
       const d = await reviewContest(ctx.reviewerKey(), id);
@@ -437,7 +355,7 @@ export function createContests(ctx) {
     const mine = js.data.myScores[e.id] || 0;
     const value = mine === n ? 0 : n; // the same score again takes it back
     try {
-      if (!js.data.sample) await reviewScore(ctx.reviewerKey(), js.id, e.id, value);
+      await reviewScore(ctx.reviewerKey(), js.id, e.id, value);
       if (value) js.data.myScores[e.id] = value; else delete js.data.myScores[e.id];
       ctx.changed();
     } catch (err) { ctx.say(`Couldn't save the score: ${ctx.errText(err)}`); }
@@ -445,33 +363,34 @@ export function createContests(ctx) {
   }
   async function saveTop(list) {
     try {
-      if (!js.data.sample) await manageContest(ctx.reviewerKey(), { action: "top3", id: js.id, posts: list });
+      await manageContest(ctx.reviewerKey(), { action: "top3", id: js.id, posts: list });
       js.top = list.slice();
       js.data.contest.top3 = list.slice();
-      ctx.say(js.data.sample ? "Sample: top places kept here only." : list.length ? "Top places saved." : "Top places cleared: places come from the scores.");
+      ctx.say(list.length ? "Top places saved." : "Top places cleared: places come from the scores.");
     } catch (err) { ctx.say(`Couldn't save the top places: ${ctx.errText(err)}`); }
     ctx.render();
   }
-  const SCORE_NAMES = ["", "Extremely poor", "Poor", "Average", "Good", "Extremely good"];
+  // Half points: 2.5 is "neutral", 3 already means "OK for the game".
+  const SCORES = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
+  const SCORE_NAMES = { 1: "Extremely poor", 1.5: "Very poor", 2: "Poor", 2.5: "Neutral", 3: "OK for the game", 3.5: "Decent", 4: "Good", 4.5: "Very good", 5: "Extremely good" };
   function judgingView() {
     const id = judgeContestId();
     if (!id) return h("p", { class: "wz-gl-note", text: "No contest is running." });
     if (js.error) return h("div", { class: "wz-gl-issues", text: js.error });
-    if (!js.data || js.id !== id || (!!js.data.sample !== !!sample())) { loadJudging(true); return h("p", { class: "wz-gl-note", text: "Loading the entries…" }); }
+    if (!js.data || js.id !== id) { loadJudging(true); return h("p", { class: "wz-gl-note", text: "Loading the entries…" }); }
     const d = js.data, c = d.contest;
     const owner = ctx.who() && ctx.who().role === "owner";
-    // samples: the owner sees the made-up scores, as after a deadline
-    const scores = d.sample ? (owner ? sample().runScores : null) : d.scores;
+    const scores = d.scores;
     const n = d.entries.length;
     const done = n - unscored();
     const headBar = h("div", { class: "wz-gl-bar" },
-      h("b", { text: `Judging: ${c.title}` }), d.sample ? h("span", { class: "wz-gl-sample", text: "sample" }) : null,
+      h("b", { text: `Judging: ${c.title}` }),
       h("span", { class: "dim", text: c.status === "open" ? ` · entries close ${when(c.closesAt)}` : " · entries closed" }),
       h("span", { class: "wz-gl-grow" }),
       h("span", { text: `You've scored ${done} of ${n}` }),
       button("↻ Refresh", () => loadJudging(true)));
-    const notes = [h("p", { class: "wz-gl-note", text: "Score each entry 1 (extremely poor) to 5 (extremely good); 3 is average. Click your score again to take it back. Other judges' scores stay hidden." })];
-    if (owner && scores) notes.push(h("p", { class: "wz-gl-note", text: d.sample ? "Sample: you see the other judges' made-up scores, as you would once the deadline has passed." : "The deadline has passed, so you see everyone's scores. Places go by average score, unless you pick the top 3 below. Publish the results in Contests." }));
+    const notes = [h("p", { class: "wz-gl-note", text: "Score each entry 1 (extremely poor) to 5 (extremely good), in half points: 2.5 is neutral, 3 means it would be OK in the game. Click your score again to take it back. Other judges' scores stay hidden." })];
+    if (owner && scores) notes.push(h("p", { class: "wz-gl-note", text: "The deadline has passed, so you see everyone's scores. Places go by average score, unless you pick the top 3 below. Publish the results in Contests." }));
     let topBar = null;
     if (owner && scores) {
       const changedTop = JSON.stringify(js.top) !== JSON.stringify(c.top3 || []);
@@ -503,7 +422,7 @@ export function createContests(ctx) {
     const items = sorted.map((e) => {
       const mine = d.myScores[e.id] || 0;
       const btns = h("div", { class: "wz-gl-scores", title: "Your score" },
-        [1, 2, 3, 4, 5].map((k) => h("button", { type: "button", class: `wz-gl-scorebtn${mine === k ? " on" : ""}`, text: String(k), title: SCORE_NAMES[k], onclick: () => score(e, k) })));
+        SCORES.map((k) => h("button", { type: "button", class: `wz-gl-scorebtn${mine === k ? " on" : ""}${k % 1 ? " half" : ""}`, text: String(k), title: `${k}: ${SCORE_NAMES[k]}`, onclick: () => score(e, k) })));
       return entryItem({ ...e, status: "approved" }, { below: h("div", { class: "wz-gl-judge" }, btns, extra(e)) });
     });
     return h("div", {}, headBar, notes, topBar, h("div", { class: "wz-gl-grid" }, items));

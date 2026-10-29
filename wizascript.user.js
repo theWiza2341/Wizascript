@@ -398,10 +398,10 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
     if (document.body) ensureObserver();
     else document.addEventListener("DOMContentLoaded", ensureObserver, { once: true });
   }
-  function asButton(label, onClick) {
+  function asButton(label2, onClick) {
     return (el3) => {
       el3.readOnly = true;
-      el3.value = typeof label === "function" ? label() : label;
+      el3.value = typeof label2 === "function" ? label2() : label2;
       Object.assign(el3.style, {
         cursor: "pointer",
         backgroundColor: "black",
@@ -610,8 +610,8 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
     "Tier List": "tierList",
     "Card Maker": "cardMaker"
   };
-  function pluginIdForLabel(label) {
-    return LABEL_TO_PLUGIN[label] || null;
+  function pluginIdForLabel(label2) {
+    return LABEL_TO_PLUGIN[label2] || null;
   }
   function runMigrations() {
     if (GM_getValue(MIGRATION_FLAG, false)) return "done";
@@ -1066,6 +1066,7 @@ Share the cards you make. It's part of the Card Maker: use **Browse** and **Subm
 - Cards use the game's DTM-Mono font and card frames, and long names and text shrink to fit, the way UC Editor does it (thanks to sernon158).
 - Artifacts take the same space as a card (two cards' width when their text is very long), and enchantments get a plain outer frame.
 - Uploads are reviewed before they appear: until then they show under **My posts** as awaiting approval, and as "not approved" (with the reason, on hover) if they're turned down. Posts that weren't approved can be deleted for good (**Delete** under the post). Likes and dislikes are saved as you go; you can change or take back a vote. **\u21BB** (bottom left of Browse) loads the latest posts and votes. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
+- **Undercards Account** (on the Wizascript tab): link Wizascript to your Undercards account once, for features that need to know who you are. The Card Gallery uses it, and you can link from there too.
 - **Contest** (\u2605 in the title bar): themed card-design contests. Read the theme, rules and deadline, then press **Enter cards** to enter up to 3 designs (a set counts as one). You can withdraw an entry before the deadline to free its slot. There's no voting: the organizers judge the entries, and the results and every entry stay in the contest archive. Entries join the gallery once the results are out.
 
 ## 1.6.2
@@ -1535,7 +1536,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     if (lastSeen === SUITE_VERSION) return;
     const markSeen = () => GM_setValue(LAST_SEEN_KEY, SUITE_VERSION);
     const isFresh = installState === "fresh";
-    const toast2 = isFresh ? {
+    const toast3 = isFresh ? {
       title: "Welcome to Wizascript!",
       text: "Wizascript's features start switched off. Turn on the ones you want in the Plugins list.",
       buttons: [{ text: "Open Wizascript settings", className: "dismiss", ...toastClick(() => plugin.settings().open()) }]
@@ -1545,7 +1546,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       buttons: [{ text: "View changelog", className: "dismiss", ...toastClick(() => openChangelog()) }]
     };
     plugin.toast({
-      ...toast2,
+      ...toast3,
       className: "dismissable",
       onClose: () => {
         markSeen();
@@ -1553,11 +1554,272 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     });
   }
 
+  // packages/core/account.js
+  var WORKER = "https://wizascript-gallery.redstonewiza2341.workers.dev";
+  var AUTH_KEY = "wizascript.cardMaker.galleryAuth";
+  var CATEGORY2 = "Wizascript";
+  var ApiError = class extends Error {
+    constructor(status, code, message, extra) {
+      super(message);
+      this.status = status;
+      this.code = code;
+      this.extra = extra || {};
+    }
+  };
+  function request(method, url, { body, auth: auth2, adminKey } = {}) {
+    return new Promise((resolve2, reject) => {
+      const headers = { "Content-Type": "application/json" };
+      if (auth2) {
+        headers["X-WZ-Install"] = auth2.install;
+        headers["X-WZ-Secret"] = auth2.secret;
+      }
+      if (adminKey) headers["X-WZ-Admin"] = adminKey;
+      const done = (status, text) => {
+        let data2 = null;
+        try {
+          data2 = text ? JSON.parse(text) : null;
+        } catch (e) {
+        }
+        if (status >= 200 && status < 300) return resolve2(data2);
+        if (status === 404 && !data2) return resolve2(null);
+        reject(new ApiError(status, data2 && data2.error || "http", data2 && data2.message || `The gallery server answered ${status}.`, data2));
+      };
+      if (typeof GM_xmlhttpRequest === "function") {
+        GM_xmlhttpRequest({
+          method,
+          url,
+          headers,
+          data: body ? JSON.stringify(body) : void 0,
+          timeout: 3e4,
+          onload: (r) => done(r.status, r.responseText),
+          onerror: () => reject(new ApiError(0, "network", "Couldn't reach the gallery server.")),
+          ontimeout: () => reject(new ApiError(0, "timeout", "The gallery server took too long to answer."))
+        });
+        return;
+      }
+      fetch(url, { method, headers, body: body ? JSON.stringify(body) : void 0 }).then(async (r) => done(r.status, await r.text()), () => reject(new ApiError(0, "network", "Couldn't reach the gallery server.")));
+    });
+  }
+  function loadAuth() {
+    try {
+      const a = JSON.parse(GM_getValue(AUTH_KEY, "null"));
+      return a && a.install && a.secret ? a : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  var auth = null;
+  var making = null;
+  async function getAuth() {
+    if (auth) return auth;
+    auth = loadAuth();
+    if (auth) return auth;
+    if (!making) {
+      making = request("POST", `${WORKER}/v1/install`).then((a) => {
+        GM_setValue(AUTH_KEY, JSON.stringify({ install: a.install, secret: a.secret }));
+        auth = a;
+        return a;
+      }).finally(() => {
+        making = null;
+      });
+    }
+    return making;
+  }
+  async function authed(method, path, body) {
+    const a = await getAuth();
+    try {
+      return await request(method, WORKER + path, { body, auth: a });
+    } catch (e) {
+      if (e.code === "bad_install" || e.code === "no_install") {
+        GM_deleteValue(AUTH_KEY);
+        auth = null;
+        return request(method, WORKER + path, { body, auth: await getAuth() });
+      }
+      throw e;
+    }
+  }
+  var getMe = () => authed("GET", "/v1/me");
+  var linkStart = () => authed("POST", "/v1/link/start");
+  var linkCheck = () => authed("POST", "/v1/link/check");
+  var state = { name: null, cooldownUntil: null, known: false };
+  var listeners = [];
+  var onAccountChange = (fn) => {
+    listeners.push(fn);
+    return () => listeners.splice(listeners.indexOf(fn), 1);
+  };
+  function accountChanged(name, cooldownUntil) {
+    const was = state.name;
+    state.name = name || null;
+    state.cooldownUntil = cooldownUntil || null;
+    state.known = true;
+    if (was !== state.name) listeners.slice().forEach((f) => {
+      try {
+        f(state.name);
+      } catch (e) {
+      }
+    });
+  }
+  async function refreshAccount() {
+    const me = await getMe();
+    accountChanged(me.account, me.cooldownUntil);
+    return me;
+  }
+  var watching = null;
+  function watchForLink(onDone, { every = 5e3, forMs = 18e4 } = {}) {
+    if (watching) clearInterval(watching.timer);
+    const until = Date.now() + forMs;
+    const w = { timer: null, busy: false };
+    watching = w;
+    const tick = async () => {
+      if (w.busy) return;
+      if (Date.now() > until) {
+        clearInterval(w.timer);
+        if (watching === w) watching = null;
+        return onDone({ error: "timeout" });
+      }
+      w.busy = true;
+      try {
+        const r = await linkCheck();
+        if (r && r.linked) {
+          clearInterval(w.timer);
+          if (watching === w) watching = null;
+          accountChanged(r.account, r.cooldownUntil);
+          onDone({ account: r.account });
+        }
+      } catch (e) {
+        if (e.code === "cooldown" || e.code === "code_expired" || e.code === "bad_install") {
+          clearInterval(w.timer);
+          if (watching === w) watching = null;
+          onDone({ error: e.code, e });
+        }
+      } finally {
+        w.busy = false;
+      }
+    };
+    w.timer = setInterval(tick, every);
+    setTimeout(tick, Math.min(every, 2500));
+  }
+  var button = null;
+  var label = () => state.name ? `Linked as ${state.name}` : "Link my account";
+  function toast(plugin, title, text) {
+    try {
+      plugin.toast({ title, text, className: "dismissable" });
+    } catch (e) {
+      console.log(`[Wizascript] ${title}: ${text}`);
+    }
+  }
+  function openAccountDialog(plugin) {
+    const BD = getPageWindow().BootstrapDialog;
+    if (!BD || typeof BD.show !== "function") return;
+    const el3 = (tag, props = {}, ...kids) => {
+      const n = Object.assign(document.createElement(tag), props);
+      kids.forEach((k) => k && n.append(k));
+      return n;
+    };
+    const wrap = el3("div", { className: "wz-acct-dialog" });
+    const status = el3("p", { className: "wz-acct-status" });
+    const show = (text, ok) => {
+      status.textContent = text;
+      status.style.color = ok ? "#7f7" : "#f77";
+    };
+    let code = null;
+    const startLink = async () => {
+      show("Getting a link code\u2026", true);
+      try {
+        code = await linkStart();
+        show("", true);
+      } catch (e) {
+        show(e.message || "Couldn't reach the Wizascript server.", false);
+      }
+      draw();
+    };
+    function draw() {
+      wrap.replaceChildren();
+      if (state.name && !code) {
+        const sw = el3("button", { type: "button", className: "btn btn-sm btn-default", textContent: "Switch account" });
+        sw.addEventListener("click", startLink);
+        wrap.append(
+          el3("p", {}, "Linked as ", el3("b", { textContent: state.name }), "."),
+          el3("p", { textContent: "Features that need your account (like posting to the Card Gallery) use this one." }),
+          el3("p", {}, sw, " ", el3("small", { textContent: "An install can switch accounts once a day." })),
+          status
+        );
+        return;
+      }
+      if (!code) {
+        const go = el3("button", { type: "button", className: "btn btn-sm btn-success", textContent: "Link my account" });
+        go.addEventListener("click", startLink);
+        wrap.append(
+          el3("p", { textContent: "Some features need to know which Undercards account you're on, like posting and voting in the Card Gallery." }),
+          el3("p", { textContent: "You link once: Wizascript types a one-time line into void (chat room 0), and you press Enter to send it." }),
+          el3("p", {}, go),
+          status
+        );
+        return;
+      }
+      const line = el3("code", { textContent: code.line, style: "user-select:all;padding:1px 6px;background:#000;border:1px solid #666" });
+      const open = el3("button", { type: "button", className: "btn btn-sm btn-success", textContent: "Open void with it typed in" });
+      open.disabled = !canOpenVoid();
+      open.addEventListener("click", () => {
+        watchForLink((r) => {
+          if (r.account) toast(plugin, "Wizascript", `Linked as ${r.account}.`);
+          else if (r.error === "cooldown") toast(plugin, "Wizascript", "This install switched accounts less than a day ago. Try again later.");
+          else if (r.error === "code_expired") toast(plugin, "Wizascript", "That link code expired. Press Link my account again.");
+          else toast(plugin, "Wizascript", "Your account isn't linked yet: the line wasn't seen in void. Open Undercards Account on the Wizascript tab to check again.");
+        });
+        openVoid(code.line);
+      });
+      const check = el3("button", { type: "button", className: "btn btn-sm btn-default", textContent: "Check now" });
+      check.addEventListener("click", async () => {
+        show("Looking for your line in void\u2026", true);
+        try {
+          const r = await linkCheck();
+          if (r.linked) {
+            accountChanged(r.account, r.cooldownUntil);
+            code = null;
+            draw();
+            show(`Linked as ${r.account}.`, true);
+          } else show(r.message || "Not seen yet. Send the line in void, then check again.", false);
+        } catch (e) {
+          show(e.message || "Couldn't check.", false);
+        }
+      });
+      wrap.append(
+        el3("p", {}, "1. Send this line in void (chat room 0) from the account to link: ", line),
+        el3("p", {}, open, canOpenVoid() ? null : el3("small", { textContent: " (no chat on this page: open the settings on a page with chat, like Home)" })),
+        el3("p", { textContent: "2. Press Enter in the chat. Wizascript spots it by itself and tells you when you're linked (or press Check now)." }),
+        el3("p", {}, check),
+        status
+      );
+    }
+    draw();
+    BD.show({ title: "Undercards Account", message: wrap, buttons: [{ label: "Close", action: (d) => d.close() }] });
+  }
+  function registerAccountSetting(plugin) {
+    const settingsApi = plugin.settings();
+    settingsApi.add({
+      key: "about.account",
+      name: "Undercards Account",
+      note: "Link Wizascript to your Undercards account, for features that need it (like the Card Gallery).",
+      type: "text",
+      default: "Link my account",
+      category: CATEGORY2
+    });
+    registerSettingWidget("about.account", (el3) => {
+      button = el3;
+      asButton(label, () => openAccountDialog(plugin))(el3);
+      if (!state.known) refreshAccount().catch(() => null);
+    });
+    onAccountChange(() => {
+      if (button && button.isConnected) button.value = label();
+    });
+  }
+
   // packages/core/backup.js
   var LS_PREFIX2 = "underscript.plugin.Wizascript.";
   var GM_PREFIX2 = "wizascript.";
   var KIND = "BACKUP";
-  var CATEGORY2 = "Wizascript";
+  var CATEGORY3 = "Wizascript";
   var SKIP_GM = /* @__PURE__ */ new Set(["wizascript.migration.v150", "wizascript.lastSeenVersion", "wizascript.cardMaker.galleryAuth", "wizascript.cardMaker.galleryReview", "wizascript.cardMaker.galleryReviewWho"]);
   var SKIP_LS_PREFIXES = ["about.", "backup.", "cardMaker.galleryReviewerKey"];
   function isBackedUpLsKey(key2) {
@@ -1674,7 +1936,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       note: "Save all your Wizascript settings and data as a code or file.",
       type: "text",
       default: "Back up\u2026",
-      category: CATEGORY2
+      category: CATEGORY3
     });
     registerSettingWidget("backup.export", asButton("Back up\u2026", () => exportBackup().catch((e) => console.error("[Wizascript] backup failed", e))));
     settingsApi.add({
@@ -1683,7 +1945,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       note: "Replace your Wizascript settings with a saved backup.",
       type: "text",
       default: "Restore\u2026",
-      category: CATEGORY2
+      category: CATEGORY3
     });
     registerSettingWidget("backup.import", asButton("Restore\u2026", () => importBackup()));
   }
@@ -3115,8 +3377,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
           el3.style.display = "none";
           const row2 = el3.closest(".flex-start");
           if (!row2) return;
-          const label = row2.querySelector("label");
-          if (label) label.style.fontWeight = "bold";
+          const label2 = row2.querySelector("label");
+          if (label2) label2.style.fontWeight = "bold";
           const box = document.createElement("div");
           box.className = "wizascript-guide";
           box.style.cssText = BOX_STYLE;
@@ -3128,8 +3390,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       if (!toggle) return;
       registerSettingWidget(toggle.key, (el3) => {
         const row2 = el3.closest(".flex-start");
-        const label = row2 && row2.querySelector("label");
-        if (!label || row2.querySelector(".wizascript-guide-link")) return;
+        const label2 = row2 && row2.querySelector("label");
+        if (!label2 || row2.querySelector(".wizascript-guide-link")) return;
         const link = document.createElement("a");
         link.href = "#";
         link.className = "wizascript-guide-link";
@@ -3142,7 +3404,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
           e.stopPropagation();
           openGuideDialog(id);
         });
-        label.insertAdjacentElement("afterend", link);
+        label2.insertAdjacentElement("afterend", link);
       });
     });
   }
@@ -3184,9 +3446,9 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     return Array.from(view.querySelectorAll(":scope > .tabLabel")).filter((l) => !l.classList.contains(ARROW_CLASS));
   }
   function renameMainTab(mainContent) {
-    const label = mainContent.previousElementSibling;
-    if (label && label.classList.contains("tabLabel") && label.textContent !== MAIN_TAB_LABEL) {
-      label.textContent = MAIN_TAB_LABEL;
+    const label2 = mainContent.previousElementSibling;
+    if (label2 && label2.classList.contains("tabLabel") && label2.textContent !== MAIN_TAB_LABEL) {
+      label2.textContent = MAIN_TAB_LABEL;
     }
   }
   function makeArrow(view, text, dir) {
@@ -3507,9 +3769,9 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     function createSection(container) {
       const p = document.createElement("p");
       p.className = "uc-new-cards-header";
-      const label = document.createElement("span");
-      label.textContent = "New cards";
-      p.appendChild(label);
+      const label2 = document.createElement("span");
+      label2.textContent = "New cards";
+      p.appendChild(label2);
       const section = document.createElement("div");
       section.className = "uc-card-section";
       const gallery = document.createElement("div");
@@ -4449,10 +4711,10 @@ Version: v${version}`;
     });
     function saveState() {
       try {
-        const state2 = collectState();
-        if (state2) {
-          GM_setValue(STATE_KEY, JSON.stringify(state2));
-          logger4.log("save", "State saved.", { sections: state2.sections.length });
+        const state3 = collectState();
+        if (state3) {
+          GM_setValue(STATE_KEY, JSON.stringify(state3));
+          logger4.log("save", "State saved.", { sections: state3.sections.length });
         }
       } catch (e) {
         logger4.error("save", "Failed to save state", e);
@@ -4597,13 +4859,13 @@ Version: v${version}`;
         document.execCommand("insertText", false, sanitizeText(txt));
       });
     }
-    function appendSection(label, isCustom, focusName, beforeNode, startCollapsed = false) {
+    function appendSection(label2, isCustom, focusName, beforeNode, startCollapsed = false) {
       const p = document.createElement("p");
       p.className = "uc-section-header";
       p.dataset.custom = isCustom ? "true" : "false";
       const labelEl = document.createElement("span");
       labelEl.className = "uc-section-label";
-      labelEl.textContent = label || "[New Balance Section]";
+      labelEl.textContent = label2 || "[New Balance Section]";
       labelEl.setAttribute("contenteditable", isCustom ? "true" : "false");
       labelEl.setAttribute("tabindex", "0");
       labelEl.spellcheck = false;
@@ -4801,8 +5063,8 @@ Version: v${version}`;
         const p = document.activeElement.closest("p.uc-section-header");
         if (!p) return;
         moveSection(p, -1);
-        const label = p.querySelector(".uc-section-label");
-        if (label) setTimeout(() => label.focus(), 0);
+        const label2 = p.querySelector(".uc-section-label");
+        if (label2) setTimeout(() => label2.focus(), 0);
       }
     });
     register({
@@ -4815,8 +5077,8 @@ Version: v${version}`;
         const p = document.activeElement.closest("p.uc-section-header");
         if (!p) return;
         moveSection(p, 1);
-        const label = p.querySelector(".uc-section-label");
-        if (label) setTimeout(() => label.focus(), 0);
+        const label2 = p.querySelector(".uc-section-label");
+        if (label2) setTimeout(() => label2.focus(), 0);
       }
     });
     register({
@@ -4870,14 +5132,14 @@ Version: v${version}`;
     }
     function collectState() {
       if (!container) return null;
-      const state2 = { title: "", sections: [], newCards: newCards.collectState(container) };
+      const state3 = { title: "", sections: [], newCards: newCards.collectState(container) };
       const h2 = container.querySelector("h2");
-      if (h2) state2.title = h2.textContent.trim();
+      if (h2) state3.title = h2.textContent.trim();
       container.querySelectorAll("p.uc-section-header").forEach((p) => {
         const labelEl = p.querySelector(".uc-section-label");
         const ul = p.nextElementSibling;
         if (!ul) return;
-        state2.sections.push({
+        state3.sections.push({
           label: labelEl ? labelEl.textContent.trim() : "",
           custom: p.dataset.custom === "true",
           collapsed: ul.style.display === "none",
@@ -4887,7 +5149,7 @@ Version: v${version}`;
           }))
         });
       });
-      return state2;
+      return state3;
     }
     function restoreState(saved) {
       const h2 = container.querySelector("h2");
@@ -4982,8 +5244,8 @@ Version: v${version}`;
       newCardsSec.section.style.display = "none";
       const newCardsBtn = newCardsSec.p.querySelector(".uc-collapse-btn");
       if (newCardsBtn) newCardsBtn.textContent = "+";
-      DEFAULT_SECTIONS.forEach((label) => {
-        appendSection(label, false, false, null, !DEFAULT_OPEN_SECTIONS.has(label));
+      DEFAULT_SECTIONS.forEach((label2) => {
+        appendSection(label2, false, false, null, !DEFAULT_OPEN_SECTIONS.has(label2));
       });
       const addSectionRow = document.createElement("div");
       addSectionRow.className = "uc-add-section-row";
@@ -5766,13 +6028,13 @@ Version: v${version}`;
         artifactContainer.innerHTML = "";
         try {
           const decoded = decodeDeck(deck.deckCode);
-          const artifacts4 = ((decoded == null ? void 0 : decoded.artifactIds) || []).map((id) => getArtifactById(id)).filter(Boolean);
-          artifacts4.forEach((artifact, index) => {
+          const artifacts3 = ((decoded == null ? void 0 : decoded.artifactIds) || []).map((id) => getArtifactById(id)).filter(Boolean);
+          artifacts3.forEach((artifact, index) => {
             const img = document.createElement("img");
             img.src = `images/artifacts/${artifact.image}.png`;
             img.title = artifact.name;
             artifactContainer.appendChild(img);
-            if (index < artifacts4.length - 1) artifactContainer.append(" ");
+            if (index < artifacts3.length - 1) artifactContainer.append(" ");
           });
         } catch (err) {
           logger4.error("card", "Artifact decode failed", err, deck);
@@ -8150,18 +8412,18 @@ Version: v${version}`;
     return ranks.some(rankMeetsMin);
   }
   function applyFilters(games) {
-    let pool2 = games;
-    const modeAllowed = pool2.filter((g) => isModeAllowed(g.mode));
-    if (modeAllowed.length) pool2 = modeAllowed;
+    let pool = games;
+    const modeAllowed = pool.filter((g) => isModeAllowed(g.mode));
+    if (modeAllowed.length) pool = modeAllowed;
     if (CONFIG.minLevel > 0) {
-      const meetsLevel = pool2.filter((g) => levelsPass(g.levels));
-      if (meetsLevel.length) pool2 = meetsLevel;
+      const meetsLevel = pool.filter((g) => levelsPass(g.levels));
+      if (meetsLevel.length) pool = meetsLevel;
     }
     if (CONFIG.minRankTier) {
-      const meetsRank = pool2.filter((g) => ranksPass(g.ranks, g.mode));
-      if (meetsRank.length) pool2 = meetsRank;
+      const meetsRank = pool.filter((g) => ranksPass(g.ranks, g.mode));
+      if (meetsRank.length) pool = meetsRank;
     }
-    return pool2;
+    return pool;
   }
 
   // packages/uc-tv/countdown.js
@@ -8182,15 +8444,15 @@ Version: v${version}`;
   }
   function showCountdownViaToast(plugin, seconds, onComplete) {
     let remaining = seconds;
-    const toast2 = plugin.toast({
+    const toast3 = plugin.toast({
       title: "UC TV",
       text: `Spectating a new match in ${remaining}s... (${cancelHint()})`
     });
     function cancel() {
       clearInterval(interval);
       activeCancelFn = null;
-      if (toast2 && typeof toast2.setText === "function") toast2.setText("Auto-continue canceled.");
-      if (toast2 && typeof toast2.close === "function") setTimeout(() => toast2.close(), 1500);
+      if (toast3 && typeof toast3.setText === "function") toast3.setText("Auto-continue canceled.");
+      if (toast3 && typeof toast3.close === "function") setTimeout(() => toast3.close(), 1500);
       logDebug("Auto-continue canceled - Primary pressed during countdown.");
     }
     activeCancelFn = cancel;
@@ -8199,12 +8461,12 @@ Version: v${version}`;
       if (remaining <= 0) {
         clearInterval(interval);
         activeCancelFn = null;
-        if (toast2 && typeof toast2.close === "function") toast2.close();
+        if (toast3 && typeof toast3.close === "function") toast3.close();
         onComplete();
         return;
       }
-      if (toast2 && typeof toast2.setText === "function") {
-        toast2.setText(`Spectating a new match in ${remaining}s... (${cancelHint()})`);
+      if (toast3 && typeof toast3.setText === "function") {
+        toast3.setText(`Spectating a new match in ${remaining}s... (${cancelHint()})`);
       }
     }, 1e3);
   }
@@ -8269,12 +8531,12 @@ Version: v${version}`;
     }
     const currentGameId = new URLSearchParams(location.search).get("gameId");
     const candidates = games.filter((g) => g.gameId !== currentGameId);
-    const pool2 = applyFilters(candidates);
-    if (!pool2.length) {
+    const pool = applyFilters(candidates);
+    if (!pool.length) {
       logDebug("No other live matches found right now - staying put.");
       return;
     }
-    const sorted = [...pool2].sort((a, b) => {
+    const sorted = [...pool].sort((a, b) => {
       const ta = parseElapsedSeconds(a.time);
       const tb = parseElapsedSeconds(b.time);
       if (ta === null && tb === null) return 0;
@@ -8283,7 +8545,7 @@ Version: v${version}`;
       return ta - tb;
     });
     const next = sorted[0];
-    logDebug(`Chose gameId=${next.gameId}, playerId=${next.playerId}, elapsed=${next.time} (levels: ${next.levels.join(", ")}). ${pool2.length} candidate(s) considered.`);
+    logDebug(`Chose gameId=${next.gameId}, playerId=${next.playerId}, elapsed=${next.time} (levels: ${next.levels.join(", ")}). ${pool.length} candidate(s) considered.`);
     showCountdown(plugin, CONFIG.countdownSeconds, () => {
       location.href = `/Spectate?gameId=${next.gameId}&playerId=${next.playerId}`;
     });
@@ -8301,23 +8563,23 @@ Version: v${version}`;
         console.warn(`${LOG} [channel] Failed to fetch live games:`, e);
         return;
       }
-      const pool2 = applyFilters(games);
-      if (!pool2.length) {
+      const pool = applyFilters(games);
+      if (!pool.length) {
         logDebug("[channel] No games available to switch to.");
         return;
       }
       const currentGameId = new URLSearchParams(location.search).get("gameId");
-      const currentIndex = pool2.findIndex((g) => g.gameId === currentGameId);
+      const currentIndex = pool.findIndex((g) => g.gameId === currentGameId);
       let targetIndex;
       if (currentIndex === -1) {
-        targetIndex = direction > 0 ? 0 : pool2.length - 1;
+        targetIndex = direction > 0 ? 0 : pool.length - 1;
       } else {
-        targetIndex = ((currentIndex + direction) % pool2.length + pool2.length) % pool2.length;
+        targetIndex = ((currentIndex + direction) % pool.length + pool.length) % pool.length;
       }
-      const target = pool2[targetIndex];
-      logDebug(`[channel] Switching to gameId=${target.gameId} (slot ${targetIndex + 1}/${pool2.length}).`);
+      const target = pool[targetIndex];
+      logDebug(`[channel] Switching to gameId=${target.gameId} (slot ${targetIndex + 1}/${pool.length}).`);
       if (plugin && typeof plugin.toast === "function") {
-        plugin.toast({ title: "UC TV", text: `Channel ${targetIndex + 1}/${pool2.length}` });
+        plugin.toast({ title: "UC TV", text: `Channel ${targetIndex + 1}/${pool.length}` });
       }
       location.href = `/Spectate?gameId=${target.gameId}&playerId=${target.playerId}`;
     } finally {
@@ -8552,9 +8814,9 @@ Version: v${version}`;
       item2.style.cssText = "display:flex; align-items:center; gap:4px; opacity:0.85;";
       const swatch = document.createElement("span");
       swatch.style.cssText = `width:9px; height:9px; border-radius:2px; background:${MODE_COLORS[mode]}; flex-shrink:0;`;
-      const label = document.createElement("span");
-      label.textContent = mode;
-      item2.append(swatch, label);
+      const label2 = document.createElement("span");
+      label2.textContent = mode;
+      item2.append(swatch, label2);
       legend.appendChild(item2);
     });
     overlay.appendChild(legend);
@@ -9115,8 +9377,8 @@ Version: v${version}`;
   function loadWindowState() {
     return readJSON(WINDOW_KEY, null);
   }
-  function saveWindowState(state2) {
-    writeJSON(WINDOW_KEY, state2);
+  function saveWindowState(state3) {
+    writeJSON(WINDOW_KEY, state3);
   }
 
   // packages/misc/tier-list/model.js
@@ -9148,15 +9410,15 @@ Version: v${version}`;
   var MAX_TEXT = 40;
   var MAX_LISTS = 50;
   var DEFAULT_TITLE = "My Tier List";
-  var state = null;
+  var state2 = null;
   var undoStack = [];
-  var listeners = /* @__PURE__ */ new Set();
+  var listeners2 = /* @__PURE__ */ new Set();
   var saveTimer = null;
   function uid(prefix) {
     return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   }
-  function makeTier(label, color) {
-    return { id: uid("t"), label, color, items: [] };
+  function makeTier(label2, color) {
+    return { id: uid("t"), label: label2, color, items: [] };
   }
   function makeList(title = DEFAULT_TITLE) {
     return { id: uid("l"), title, texts: {}, tiers: DEFAULT_TIERS.map(([l, c]) => makeTier(l, c)) };
@@ -9187,19 +9449,19 @@ Version: v${version}`;
     return { version: 1, active, lists };
   }
   function ensureLoaded() {
-    if (!state) state = sanitize(loadLists());
+    if (!state2) state2 = sanitize(loadLists());
   }
   function scheduleSave() {
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => saveLists(state), SAVE_DELAY_MS);
+    saveTimer = setTimeout(() => saveLists(state2), SAVE_DELAY_MS);
   }
   function flushSave() {
-    if (!state) return;
+    if (!state2) return;
     clearTimeout(saveTimer);
-    saveLists(state);
+    saveLists(state2);
   }
   function notify() {
-    listeners.forEach((fn) => {
+    listeners2.forEach((fn) => {
       try {
         fn();
       } catch (e) {
@@ -9209,10 +9471,10 @@ Version: v${version}`;
   }
   function change(mutator) {
     ensureLoaded();
-    const before = JSON.stringify(state);
+    const before = JSON.stringify(state2);
     const result = mutator(activeList());
     if (result === false) return false;
-    if (JSON.stringify(state) === before) return false;
+    if (JSON.stringify(state2) === before) return false;
     undoStack.push(before);
     if (undoStack.length > MAX_UNDO) undoStack.shift();
     scheduleSave();
@@ -9220,7 +9482,7 @@ Version: v${version}`;
     return true;
   }
   function activeList() {
-    return state.lists.find((l) => l.id === state.active) || state.lists[0];
+    return state2.lists.find((l) => l.id === state2.active) || state2.lists[0];
   }
   function findTier(list, tierId) {
     return list.tiers.find((t) => t.id === tierId) || null;
@@ -9232,8 +9494,8 @@ Version: v${version}`;
     });
   }
   function subscribe(fn) {
-    listeners.add(fn);
-    return () => listeners.delete(fn);
+    listeners2.add(fn);
+    return () => listeners2.delete(fn);
   }
   function getActiveList() {
     ensureLoaded();
@@ -9247,11 +9509,11 @@ Version: v${version}`;
   }
   function getLists() {
     ensureLoaded();
-    return state.lists.map((l) => ({
+    return state2.lists.map((l) => ({
       id: l.id,
       title: l.title,
       count: l.tiers.reduce((n, t) => n + t.items.length, 0),
-      active: l.id === state.active
+      active: l.id === state2.active
     }));
   }
   function getTextLabel(textId) {
@@ -9288,11 +9550,11 @@ Version: v${version}`;
       list.tiers.splice(i, 1);
     });
   }
-  function renameTier(tierId, label) {
+  function renameTier(tierId, label2) {
     return change((list) => {
       const tier = findTier(list, tierId);
       if (!tier) return false;
-      tier.label = String(label).slice(0, MAX_LABEL);
+      tier.label = String(label2).slice(0, MAX_LABEL);
     });
   }
   function recolorTier(tierId, color) {
@@ -9329,8 +9591,8 @@ Version: v${version}`;
       list.tiers = DEFAULT_TIERS.map(([l, c]) => makeTier(l, c));
     });
   }
-  function addText(label) {
-    const clean = String(label || "").trim().slice(0, MAX_TEXT);
+  function addText(label2) {
+    const clean = String(label2 || "").trim().slice(0, MAX_TEXT);
     if (!clean) return null;
     const id = uid("x");
     const ok = change((list) => {
@@ -9338,8 +9600,8 @@ Version: v${version}`;
     });
     return ok ? `text:${id}` : null;
   }
-  function renameText(textId, label) {
-    const clean = String(label || "").trim().slice(0, MAX_TEXT);
+  function renameText(textId, label2) {
+    const clean = String(label2 || "").trim().slice(0, MAX_TEXT);
     if (!clean) return false;
     return change((list) => {
       if (!(textId in list.texts)) return false;
@@ -9355,8 +9617,8 @@ Version: v${version}`;
   }
   function setActiveList(listId) {
     ensureLoaded();
-    if (state.active === listId || !state.lists.some((l) => l.id === listId)) return false;
-    state.active = listId;
+    if (state2.active === listId || !state2.lists.some((l) => l.id === listId)) return false;
+    state2.active = listId;
     undoStack.length = 0;
     scheduleSave();
     notify();
@@ -9364,30 +9626,30 @@ Version: v${version}`;
   }
   function createList() {
     ensureLoaded();
-    if (state.lists.length >= MAX_LISTS) return false;
-    const list = makeList(`Tier List ${state.lists.length + 1}`);
-    state.lists.push(list);
+    if (state2.lists.length >= MAX_LISTS) return false;
+    const list = makeList(`Tier List ${state2.lists.length + 1}`);
+    state2.lists.push(list);
     return setActiveList(list.id);
   }
   function duplicateList() {
     ensureLoaded();
-    if (state.lists.length >= MAX_LISTS) return false;
+    if (state2.lists.length >= MAX_LISTS) return false;
     const copy2 = JSON.parse(JSON.stringify(activeList()));
     copy2.id = uid("l");
     copy2.title = `${copy2.title} (copy)`.slice(0, MAX_TITLE);
     copy2.tiers.forEach((t) => {
       t.id = uid("t");
     });
-    state.lists.push(copy2);
+    state2.lists.push(copy2);
     return setActiveList(copy2.id);
   }
   function deleteActiveList() {
     ensureLoaded();
-    const before = JSON.stringify(state);
-    const i = state.lists.findIndex((l) => l.id === state.active);
-    state.lists.splice(i, 1);
-    if (!state.lists.length) state.lists.push(makeList());
-    state.active = state.lists[Math.max(0, i - 1)].id;
+    const before = JSON.stringify(state2);
+    const i = state2.lists.findIndex((l) => l.id === state2.active);
+    state2.lists.splice(i, 1);
+    if (!state2.lists.length) state2.lists.push(makeList());
+    state2.active = state2.lists[Math.max(0, i - 1)].id;
     undoStack.length = 0;
     undoStack.push(before);
     scheduleSave();
@@ -9409,14 +9671,14 @@ Version: v${version}`;
   function importList(data2) {
     ensureLoaded();
     if (!data2 || typeof data2 !== "object" || !Array.isArray(data2.tiers)) throw new Error("That code doesn't contain a tier list.");
-    if (state.lists.length >= MAX_LISTS) throw new Error(`You already have ${MAX_LISTS} lists. Delete one first.`);
+    if (state2.lists.length >= MAX_LISTS) throw new Error(`You already have ${MAX_LISTS} lists. Delete one first.`);
     const list = makeList();
     const textMap = {};
-    Object.entries(data2.texts && typeof data2.texts === "object" ? data2.texts : {}).forEach(([oldId, label]) => {
-      if (typeof label !== "string" || !label.trim()) return;
+    Object.entries(data2.texts && typeof data2.texts === "object" ? data2.texts : {}).forEach(([oldId, label2]) => {
+      if (typeof label2 !== "string" || !label2.trim()) return;
       const id = uid("x");
       textMap[oldId] = id;
-      list.texts[id] = label.trim().slice(0, MAX_TEXT);
+      list.texts[id] = label2.trim().slice(0, MAX_TEXT);
     });
     let count = 0;
     const seen2 = /* @__PURE__ */ new Set();
@@ -9442,14 +9704,14 @@ Version: v${version}`;
     });
     if (!list.tiers.length) list.tiers = DEFAULT_TIERS.map(([l, c]) => makeTier(l, c));
     let title = typeof data2.title === "string" && data2.title.trim() ? data2.title.trim().slice(0, MAX_TITLE) : "Imported list";
-    const titles = new Set(state.lists.map((l) => l.title));
+    const titles = new Set(state2.lists.map((l) => l.title));
     if (titles.has(title)) {
       let n = 2;
       while (titles.has(`${title} (${n})`)) n += 1;
       title = `${title} (${n})`.slice(0, MAX_TITLE);
     }
     list.title = title;
-    state.lists.push(list);
+    state2.lists.push(list);
     setActiveList(list.id);
     return title;
   }
@@ -9460,7 +9722,7 @@ Version: v${version}`;
     ensureLoaded();
     const prev = undoStack.pop();
     if (!prev) return false;
-    state = sanitize(JSON.parse(prev));
+    state2 = sanitize(JSON.parse(prev));
     scheduleSave();
     notify();
     return true;
@@ -9642,8 +9904,8 @@ Version: v${version}`;
       return { key: key2, kind, card: null, label: "Artifact", image: "", rarity: null };
     }
     if (kind === "text") {
-      const label = getTextLabel(id);
-      return { key: key2, kind, card: null, label: label === null ? "(deleted text)" : label, image: "", rarity: null, text: true };
+      const label2 = getTextLabel(id);
+      return { key: key2, kind, card: null, label: label2 === null ? "(deleted text)" : label2, image: "", rarity: null, text: true };
     }
     return { key: key2, kind, card: null, label: "Unknown item", image: "", rarity: null };
   }
@@ -9933,11 +10195,11 @@ Version: v${version}`;
       swatches.appendChild(custom);
       const grid = document.createElement("div");
       grid.className = "wz-tl-editor-buttons";
-      const btn = (label, fn, opts = {}) => {
+      const btn = (label2, fn, opts = {}) => {
         const b = document.createElement("button");
         b.type = "button";
         b.className = "wz-tl-btn";
-        b.textContent = label;
+        b.textContent = label2;
         if (opts.disabled) b.disabled = true;
         b.addEventListener("click", () => {
           commitName();
@@ -9982,12 +10244,12 @@ Version: v${version}`;
         const row2 = document.createElement("div");
         row2.className = "wz-tl-row";
         row2.dataset.tierId = tier.id;
-        const label = document.createElement("div");
-        label.className = "wz-tl-row-label";
-        label.style.background = tier.color;
-        label.textContent = tier.label;
-        label.title = "Click to edit this tier";
-        label.addEventListener("click", () => openEditor(tier.id, row2));
+        const label2 = document.createElement("div");
+        label2.className = "wz-tl-row-label";
+        label2.style.background = tier.color;
+        label2.textContent = tier.label;
+        label2.title = "Click to edit this tier";
+        label2.addEventListener("click", () => openEditor(tier.id, row2));
         const items = document.createElement("div");
         items.className = "wz-tl-row-items";
         tier.items.forEach((key2) => items.appendChild(buildTile(key2)));
@@ -10009,7 +10271,7 @@ Version: v${version}`;
         down.title = "Move tier down";
         down.addEventListener("click", () => moveTier(tier.id, 1));
         tools.append(up, gear, down);
-        row2.append(label, items, tools);
+        row2.append(label2, items, tools);
         container.appendChild(row2);
       });
       const add = document.createElement("button");
@@ -10063,19 +10325,19 @@ Version: v${version}`;
     const panel = document.createElement("div");
     panel.className = "wz-tl-picker";
     let type = "cards";
-    const state2 = { rarities: /* @__PURE__ */ new Set(), sets: /* @__PURE__ */ new Set(), tribes: false, monster: false, spell: false };
+    const state3 = { rarities: /* @__PURE__ */ new Set(), sets: /* @__PURE__ */ new Set(), tribes: false, monster: false, spell: false };
     const toggles2 = [];
     const searchText = { cards: "", souls: "", artifacts: "", text: "" };
     const filters = document.createElement("div");
     filters.className = "wz-tl-filters";
     const tabs = document.createElement("div");
     tabs.className = "wz-tl-type-tabs";
-    const tabButtons = TYPES.map(([value, label]) => {
+    const tabButtons = TYPES.map(([value, label2]) => {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "wz-tl-type-tab";
       b.dataset.type = value;
-      b.textContent = label;
+      b.textContent = label2;
       b.addEventListener("click", () => setType(value), { signal });
       tabs.appendChild(b);
       return b;
@@ -10122,11 +10384,11 @@ Version: v${version}`;
     const cardToggles = document.createElement("div");
     cardToggles.className = "wz-tl-card-toggles";
     cardToggles.append(
-      group(RARITY_TOGGLES, (v) => state2.rarities.has(v), flipSet(state2.rarities)),
-      group(KIND_TOGGLES, (v) => state2[v], (v) => {
-        state2[v] = !state2[v];
+      group(RARITY_TOGGLES, (v) => state3.rarities.has(v), flipSet(state3.rarities)),
+      group(KIND_TOGGLES, (v) => state3[v], (v) => {
+        state3[v] = !state3[v];
       }),
-      group(SET_TOGGLES, (v) => state2.sets.has(v), flipSet(state2.sets))
+      group(SET_TOGGLES, (v) => state3.sets.has(v), flipSet(state3.sets))
     );
     filters.append(tabs, searchRow, cardToggles);
     const hint = document.createElement("div");
@@ -10136,7 +10398,7 @@ Version: v${version}`;
     panel.append(filters, hint, results);
     body.appendChild(panel);
     function cardFilters() {
-      return { text: search.value, ...state2 };
+      return { text: search.value, ...state3 };
     }
     function setType(value) {
       searchText[type] = search.value;
@@ -10274,9 +10536,9 @@ Version: v${version}`;
       }
       search.value = "";
       if (type === "cards") {
-        state2.rarities.clear();
-        state2.sets.clear();
-        state2.tribes = state2.monster = state2.spell = false;
+        state3.rarities.clear();
+        state3.sets.clear();
+        state3.tribes = state3.monster = state3.spell = false;
       }
       render2();
     }, { signal });
@@ -10893,10 +11155,10 @@ Version: v${version}`;
       }
       root.appendChild(menu3);
       const rr = root.getBoundingClientRect();
-      const tr3 = (it ? it.el : root).getBoundingClientRect();
-      let left = tr3.right - rr.left + 6;
-      if (left + menu3.offsetWidth > rr.width - 4) left = Math.max(4, tr3.left - rr.left - menu3.offsetWidth - 6);
-      let top = tr3.top - rr.top;
+      const tr2 = (it ? it.el : root).getBoundingClientRect();
+      let left = tr2.right - rr.left + 6;
+      if (left + menu3.offsetWidth > rr.width - 4) left = Math.max(4, tr2.left - rr.left - menu3.offsetWidth - 6);
+      let top = tr2.top - rr.top;
       if (top + menu3.offsetHeight > rr.height - 4) top = Math.max(4, rr.height - menu3.offsetHeight - 4);
       menu3.style.left = left + "px";
       menu3.style.top = Math.max(4, top) + "px";
@@ -11148,11 +11410,11 @@ Version: v${version}`;
       tagsFor: isPluginEnabled("cardTags") ? (id) => tagObjectsForCard(id).map((t) => t.name) : null
     };
   }
-  function headerButton(label, title) {
+  function headerButton(label2, title) {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "wz-tl-btn";
-    b.textContent = label;
+    b.textContent = label2;
     b.title = title;
     return b;
   }
@@ -11232,8 +11494,8 @@ Version: v${version}`;
       });
       const actions = document.createElement("div");
       actions.className = "wz-tl-menu-actions";
-      const act = (label, title, fn) => {
-        const b = headerButton(label, title);
+      const act = (label2, title, fn) => {
+        const b = headerButton(label2, title);
         b.addEventListener("click", fn);
         actions.appendChild(b);
         return b;
@@ -11327,13 +11589,13 @@ Version: v${version}`;
       const textId = tile2.dataset.key.slice(5);
       const current = getTextLabel(textId);
       if (current === null) return;
-      const label = tile2.querySelector(".wz-tl-tile-name");
+      const label2 = tile2.querySelector(".wz-tl-tile-name");
       const input = document.createElement("input");
       input.type = "text";
       input.maxLength = MAX_TEXT;
       input.value = current;
-      label.textContent = "";
-      label.appendChild(input);
+      label2.textContent = "";
+      label2.appendChild(input);
       input.focus();
       input.select();
       let done = false;
@@ -11570,9 +11832,9 @@ Version: v${version}`;
       return null;
     }
   }
-  function saveWindowState2(state2) {
+  function saveWindowState2(state3) {
     try {
-      GM_setValue(WINDOW_KEY2, JSON.stringify(state2));
+      GM_setValue(WINDOW_KEY2, JSON.stringify(state3));
     } catch (e) {
       console.warn("[Card Maker] Failed to save the window", e);
     }
@@ -11605,12 +11867,12 @@ Version: v${version}`;
     const top = footer ? footer.getBoundingClientRect().top : NaN;
     return { w, h: top > h2 / 2 && top < h2 ? Math.floor(top) : h2 };
   }
-  function headerButton2(action, label, title) {
+  function headerButton2(action, label2, title) {
     const b = document.createElement("button");
     b.type = "button";
     b.className = "wz-cm-btn";
     b.dataset.action = action;
-    b.textContent = label;
+    b.textContent = label2;
     b.title = title;
     return b;
   }
@@ -11814,8 +12076,8 @@ Version: v${version}`;
   };
   var DEFAULT_EDITOR = "feildmaster";
   var EDITOR_LABELS = Object.values(EDITORS).map((e) => e.label);
-  function editorForLabel(label) {
-    return Object.keys(EDITORS).find((k) => EDITORS[k].label === label) || DEFAULT_EDITOR;
+  function editorForLabel(label2) {
+    return Object.keys(EDITORS).find((k) => EDITORS[k].label === label2) || DEFAULT_EDITOR;
   }
   var FRAME_MESSAGE = "wizascript-card-maker";
 
@@ -11838,8 +12100,8 @@ Version: v${version}`;
     return el3;
   }
   var esc2 = (s) => String(s != null ? s : "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-  function button(label, onclick, { title, primary: primary2, cls } = {}) {
-    return h("button", { type: "button", class: `wz-cm-btn${primary2 ? " wz-gl-primary" : ""}${cls ? " " + cls : ""}`, title, onclick }, label);
+  function button2(label2, onclick, { title, primary: primary2, cls } = {}) {
+    return h("button", { type: "button", class: `wz-cm-btn${primary2 ? " wz-gl-primary" : ""}${cls ? " " + cls : ""}`, title, onclick }, label2);
   }
 
   // packages/card-maker/gallery/render.js
@@ -12432,96 +12694,11 @@ Version: v${version}`;
   }
 
   // packages/card-maker/gallery/api.js
-  var WORKER = "https://wizascript-gallery.redstonewiza2341.workers.dev";
   var GALLERY_RAW = "https://raw.githubusercontent.com/theWiza2341/Wizascript/gallery/";
-  var AUTH_KEY = "wizascript.cardMaker.galleryAuth";
   var UPLOAD_MAX_ENTRIES = 10;
   var UPLOAD_MAX_PICTURES = 40;
   var UPLOAD_MAX_BYTES = 1.4 * 1024 * 1024;
   var PICTURE_MAX_BYTES = 150 * 1024;
-  var ApiError = class extends Error {
-    constructor(status, code, message, extra) {
-      super(message);
-      this.status = status;
-      this.code = code;
-      this.extra = extra || {};
-    }
-  };
-  function request(method, url, { body, auth: auth2, adminKey } = {}) {
-    return new Promise((resolve2, reject) => {
-      const headers = { "Content-Type": "application/json" };
-      if (auth2) {
-        headers["X-WZ-Install"] = auth2.install;
-        headers["X-WZ-Secret"] = auth2.secret;
-      }
-      if (adminKey) headers["X-WZ-Admin"] = adminKey;
-      const done = (status, text) => {
-        let data2 = null;
-        try {
-          data2 = text ? JSON.parse(text) : null;
-        } catch (e) {
-        }
-        if (status >= 200 && status < 300) return resolve2(data2);
-        if (status === 404 && !data2) return resolve2(null);
-        reject(new ApiError(status, data2 && data2.error || "http", data2 && data2.message || `The gallery server answered ${status}.`, data2));
-      };
-      if (typeof GM_xmlhttpRequest === "function") {
-        GM_xmlhttpRequest({
-          method,
-          url,
-          headers,
-          data: body ? JSON.stringify(body) : void 0,
-          timeout: 3e4,
-          onload: (r) => done(r.status, r.responseText),
-          onerror: () => reject(new ApiError(0, "network", "Couldn't reach the gallery server.")),
-          ontimeout: () => reject(new ApiError(0, "timeout", "The gallery server took too long to answer."))
-        });
-        return;
-      }
-      fetch(url, { method, headers, body: body ? JSON.stringify(body) : void 0 }).then(async (r) => done(r.status, await r.text()), () => reject(new ApiError(0, "network", "Couldn't reach the gallery server.")));
-    });
-  }
-  function loadAuth() {
-    try {
-      const a = JSON.parse(GM_getValue(AUTH_KEY, "null"));
-      return a && a.install && a.secret ? a : null;
-    } catch (e) {
-      return null;
-    }
-  }
-  var auth = null;
-  var making = null;
-  async function getAuth() {
-    if (auth) return auth;
-    auth = loadAuth();
-    if (auth) return auth;
-    if (!making) {
-      making = request("POST", `${WORKER}/v1/install`).then((a) => {
-        GM_setValue(AUTH_KEY, JSON.stringify({ install: a.install, secret: a.secret }));
-        auth = a;
-        return a;
-      }).finally(() => {
-        making = null;
-      });
-    }
-    return making;
-  }
-  async function authed(method, path, body) {
-    const a = await getAuth();
-    try {
-      return await request(method, WORKER + path, { body, auth: a });
-    } catch (e) {
-      if (e.code === "bad_install" || e.code === "no_install") {
-        GM_deleteValue(AUTH_KEY);
-        auth = null;
-        return request(method, WORKER + path, { body, auth: await getAuth() });
-      }
-      throw e;
-    }
-  }
-  var getMe = () => authed("GET", "/v1/me");
-  var linkStart = () => authed("POST", "/v1/link/start");
-  var linkCheck = () => authed("POST", "/v1/link/check");
   var sendVotes = (votes) => authed("POST", "/v1/votes", { votes });
   var deleteOwnPost = (id) => authed("POST", "/v1/posts/delete", { id });
   var getTotals = () => request("GET", `${WORKER}/v1/totals`);
@@ -12775,10 +12952,10 @@ Version: v${version}`;
     return entries2.filter((e) => e.days < max).sort((a, b) => b.score - a.score);
   }
   function browseView(ctx) {
-    const { state: state2 } = ctx;
-    const list = listFor(filtered(ctx.entries, state2), state2.list);
-    const dir = state2.dir;
-    state2.dir = null;
+    const { state: state3 } = ctx;
+    const list = listFor(filtered(ctx.entries, state3), state3.list);
+    const dir = state3.dir;
+    state3.dir = null;
     const area = h("div", { class: "wz-gl-pagearea" });
     const count = h("span", { class: "n" });
     const prev = h("button", { title: "Previous page", text: "\u2039", onclick: () => turn(-1) });
@@ -12792,7 +12969,7 @@ Version: v${version}`;
       h("div", { class: "wz-gl-pager" }, prev, count, next)
     );
     const el3 = h("div", { class: "wz-gl-browse" }, h("div", { class: "wz-gl-listbar" }, segBar(ctx, dir), filterButtons(ctx)), area, foot);
-    const items = list.map((e, i) => item(ctx, e, i + 1, state2.list));
+    const items = list.map((e, i) => item(ctx, e, i + 1, state3.list));
     let pages = [[]];
     let animate = dir;
     function layout2() {
@@ -12800,7 +12977,7 @@ Version: v${version}`;
       const grid = h("div", { class: "wz-gl-grid" });
       area.replaceChildren(grid);
       if (!items.length) {
-        area.replaceChildren(h("div", { class: "wz-gl-empty wz-gl-dt", text: ctx.emptyText ? ctx.emptyText : state2.mineOnly && !ctx.entries.some((e) => e.mine) ? "* You haven't uploaded anything yet." : state2.likedOnly ? "* Nothing you've liked here yet." : "* Nothing here yet." }));
+        area.replaceChildren(h("div", { class: "wz-gl-empty wz-gl-dt", text: ctx.emptyText ? ctx.emptyText : state3.mineOnly && !ctx.entries.some((e) => e.mine) ? "* You haven't uploaded anything yet." : state3.likedOnly ? "* Nothing you've liked here yet." : "* Nothing here yet." }));
         pages = [[]];
         return show();
       }
@@ -12830,13 +13007,13 @@ Version: v${version}`;
         }
         for (let i = r.start; i <= r.end; i++) page.push(i);
       });
-      state2.page = Math.max(0, Math.min(state2.page || 0, pages.length - 1));
+      state3.page = Math.max(0, Math.min(state3.page || 0, pages.length - 1));
       show();
     }
     function show() {
       const grid = area.querySelector(".wz-gl-grid");
       if (grid) {
-        const on = new Set(pages[state2.page] || []);
+        const on = new Set(pages[state3.page] || []);
         items.forEach((it, i) => {
           it.style.display = on.has(i) ? "" : "none";
         });
@@ -12847,14 +13024,14 @@ Version: v${version}`;
           animate = null;
         }
       }
-      count.textContent = `${pages.length ? state2.page + 1 : 0} / ${pages.length}`;
-      prev.disabled = state2.page <= 0;
-      next.disabled = state2.page >= pages.length - 1;
+      count.textContent = `${pages.length ? state3.page + 1 : 0} / ${pages.length}`;
+      prev.disabled = state3.page <= 0;
+      next.disabled = state3.page >= pages.length - 1;
     }
     function turn(d) {
-      const to = state2.page + d;
+      const to = state3.page + d;
       if (to < 0 || to >= pages.length) return false;
-      state2.page = to;
+      state3.page = to;
       animate = d > 0 ? "r" : "l";
       ctx.onPage && ctx.onPage();
       show();
@@ -12871,18 +13048,18 @@ Version: v${version}`;
     return { el: el3, layout: layout2 };
   }
   function filterButtons(ctx) {
-    const { state: state2 } = ctx;
-    const toggle = (key2, label, title) => h("button", {
+    const { state: state3 } = ctx;
+    const toggle = (key2, label2, title) => h("button", {
       type: "button",
-      class: `wz-gl-filter${state2[key2] ? " on" : ""}`,
+      class: `wz-gl-filter${state3[key2] ? " on" : ""}`,
       title,
-      "aria-pressed": state2[key2] ? "true" : "false",
+      "aria-pressed": state3[key2] ? "true" : "false",
       onclick: () => {
-        state2[key2] = !state2[key2];
-        state2.page = 0;
+        state3[key2] = !state3[key2];
+        state3.page = 0;
         ctx.rerender();
       }
-    }, h("span", { class: "box", text: state2[key2] ? "\u2713" : "" }), label);
+    }, h("span", { class: "box", text: state3[key2] ? "\u2713" : "" }), label2);
     return h(
       "div",
       { class: "wz-gl-filters" },
@@ -12891,24 +13068,24 @@ Version: v${version}`;
     );
   }
   function segBar(ctx, dir) {
-    const { state: state2 } = ctx;
-    const i = LISTS.findIndex((l) => l[0] === state2.list);
+    const { state: state3 } = ctx;
+    const i = LISTS.findIndex((l) => l[0] === state3.list);
     const pill = h("span", { class: "pill", style: { left: (dir ? (i + (dir === "r" ? -1 : 1)) * 25 : i * 25) + "%" } });
     if (dir) requestAnimationFrame(() => requestAnimationFrame(() => {
       pill.style.left = i * 25 + "%";
     }));
     const go = (key2) => {
-      if (key2 === state2.list) return;
+      if (key2 === state3.list) return;
       const to = LISTS.findIndex((l) => l[0] === key2);
-      state2.dir = to > i ? "r" : "l";
-      state2.list = key2;
-      state2.page = 0;
+      state3.dir = to > i ? "r" : "l";
+      state3.list = key2;
+      state3.page = 0;
       ctx.rerender();
     };
-    return h("div", { class: "wz-gl-seg" }, pill, LISTS.map(([k, l]) => h("button", { type: "button", class: k === state2.list ? "on" : "", text: l, onclick: () => go(k) })));
+    return h("div", { class: "wz-gl-seg" }, pill, LISTS.map(([k, l]) => h("button", { type: "button", class: k === state3.list ? "on" : "", text: l, onclick: () => go(k) })));
   }
-  function removeButton(ctx, e, { label = "\u2715", confirm = "Remove?", title = "Remove from the gallery (reviewer)", run = ctx.onRemove } = {}) {
-    const b = h("button", { type: "button", class: "wz-gl-remove", title, text: label });
+  function removeButton(ctx, e, { label: label2 = "\u2715", confirm = "Remove?", title = "Remove from the gallery (reviewer)", run = ctx.onRemove } = {}) {
+    const b = h("button", { type: "button", class: "wz-gl-remove", title, text: label2 });
     let armed = null;
     b.addEventListener("click", () => {
       if (!armed) {
@@ -12917,7 +13094,7 @@ Version: v${version}`;
         armed = setTimeout(() => {
           armed = null;
           b.classList.remove("armed");
-          b.textContent = label;
+          b.textContent = label2;
         }, 3e3);
         return;
       }
@@ -12958,7 +13135,7 @@ Version: v${version}`;
       )
     );
   }
-  function pagedGrid(items, { state: state2, wheelPages = () => true, onPage, empty = "* Nothing here yet." }) {
+  function pagedGrid(items, { state: state3, wheelPages = () => true, onPage, empty = "* Nothing here yet." }) {
     const area = h("div", { class: "wz-gl-pagearea" });
     const count = h("span", { class: "n" });
     const prev = h("button", { type: "button", title: "Previous page", text: "\u2039", onclick: () => turn(-1) });
@@ -13001,13 +13178,13 @@ Version: v${version}`;
         }
         for (let i = r.start; i <= r.end; i++) page.push(i);
       });
-      state2.page = Math.max(0, Math.min(state2.page || 0, pages.length - 1));
+      state3.page = Math.max(0, Math.min(state3.page || 0, pages.length - 1));
       show();
     }
     function show() {
       const grid = area.querySelector(".wz-gl-grid");
       if (grid) {
-        const on = new Set(pages[state2.page] || []);
+        const on = new Set(pages[state3.page] || []);
         items.forEach((it, i) => {
           it.style.display = on.has(i) ? "" : "none";
         });
@@ -13018,14 +13195,14 @@ Version: v${version}`;
           animate = null;
         }
       }
-      count.textContent = `${pages.length ? (state2.page || 0) + 1 : 0} / ${pages.length}`;
-      prev.disabled = (state2.page || 0) <= 0;
-      next.disabled = (state2.page || 0) >= pages.length - 1;
+      count.textContent = `${pages.length ? (state3.page || 0) + 1 : 0} / ${pages.length}`;
+      prev.disabled = (state3.page || 0) <= 0;
+      next.disabled = (state3.page || 0) >= pages.length - 1;
     }
     function turn(d) {
-      const to = (state2.page || 0) + d;
+      const to = (state3.page || 0) + d;
       if (to < 0 || to >= pages.length) return false;
-      state2.page = to;
+      state3.page = to;
       animate = d > 0 ? "r" : "l";
       if (onPage) onPage();
       show();
@@ -13040,190 +13217,6 @@ Version: v${version}`;
       if (turn(e.deltaY > 0 ? 1 : -1)) wheelLock = now + 280;
     }, { passive: false });
     return { area, pager, layout: layout2 };
-  }
-
-  // packages/card-maker/gallery/mock.js
-  var AUTHORS = ["SampleMaker", "PixelSmith", "CardFan", "MockAuthor", "DraftWizard", "ExampleUser", "Placeholder", "TestDummy", "FakeFroggit", "NotARealPlayer"];
-  var JUDGES = ["Sample Judge A", "Sample Judge B", "Sample Judge C"];
-  var cardFile = null;
-  function gameCards() {
-    const w = getPageWindow();
-    if (Array.isArray(w.allCards) && w.allCards.length) return w.allCards;
-    if (cardFile && cardFile.length) return cardFile;
-    try {
-      const ls = JSON.parse(w.localStorage.getItem("allCards") || "[]");
-      if (Array.isArray(ls)) return ls;
-    } catch (e) {
-    }
-    return [];
-  }
-  function tr(key2) {
-    try {
-      const $2 = getPageWindow().$;
-      const v = $2 && $2.i18n ? $2.i18n(key2) : "";
-      if (!v || v === key2) return "";
-      const d = document.createElement("div");
-      d.innerHTML = String(v).replace(/<br\s*\/?>/gi, "\n");
-      return d.textContent;
-    } catch (e) {
-      return "";
-    }
-  }
-  function cardPart(c) {
-    const ext = c.extension === "DELTARUNE" ? "DELTARUNE" : c.extension === "UTY" ? "UTY" : "BASE";
-    const monster = c.typeCard === 0;
-    return {
-      type: monster ? "Monster" : "Spell",
-      name: tr(`card-name-${c.fixedId || c.id}`) || c.name || "",
-      cost: c.cost,
-      atk: monster ? c.attack : void 0,
-      hp: monster ? c.hp : void 0,
-      desc: tr(`card-${c.fixedId || c.id}`) || (c.description ? String(c.description).replace(/<[^>]+>/g, "") : ""),
-      art: c.image ? `/images/cards/${c.image}.png` : "",
-      rarity: c.rarity ? `${ext}_${c.rarity}` : "",
-      tribes: []
-    };
-  }
-  function artifactPart(a) {
-    const rarity = a.unavailable === true ? "TOKEN" : a.legendary === true ? "LEGENDARY" : "COMMON";
-    return {
-      type: "Artifact",
-      name: tr(`artifact-name-${a.id}`) || a.name || "",
-      desc: tr(`artifact-${a.id}`) || (a.description ? String(a.description).replace(/<[^>]+>/g, "") : ""),
-      art: `/images/artifacts/${a.image}.png`,
-      rarity
-    };
-  }
-  var ENCHANTS = [
-    ["Sample Bonfire", "After a monster is played here, deal 2 DMG to it."],
-    ["Sample Snowfall", "Monsters here have -1 ATK."],
-    ["Sample Spotlight", "At the end of your turn, give the monster here +1/+1."],
-    ["Sample Echo Flowers", "When a monster here dies, draw 1 card."],
-    ["Sample Conveyor", "At the start of your turn, the monster here gets Haste."],
-    ["Sample Puzzle Floor", "Spells that target a monster here cost 1 more."]
-  ];
-  var fallbackPart = (i) => ({ type: i % 2 ? "Spell" : "Monster", name: `Sample Card ${i + 1}`, cost: i % 7, atk: i % 2 ? void 0 : 1 + i % 5, hp: i % 2 ? void 0 : 1 + i % 4, desc: "A sample card.", art: "", rarity: "BASE_COMMON", tribes: [] });
-  var artifacts2 = null;
-  var extras = null;
-  function loadSampleExtras() {
-    if (extras) return extras;
-    const cards2 = gameCards().length ? Promise.resolve(false) : (() => {
-      const cfg = getPageWindow().cardsClientConfig;
-      if (!cfg || !cfg.url) return Promise.resolve(false);
-      return fetch(cfg.url, { credentials: "same-origin" }).then((r) => r.json()).then((d) => {
-        const list = Array.isArray(d) ? d : d && (d.cards || d.allCards) || [];
-        cardFile = typeof list === "string" ? JSON.parse(list) : list;
-        return cardFile.length > 0;
-      }).catch(() => false);
-    })();
-    const arts = fetch("/DecksConfig", { credentials: "same-origin" }).then((r) => r.json()).then((d) => {
-      const raw = d && d.allArtifacts;
-      artifacts2 = ((typeof raw === "string" ? JSON.parse(raw) : raw) || []).filter((a) => a && a.image && !a.disabled && !a.custom);
-      return artifacts2.length > 0;
-    }).catch(() => false);
-    extras = Promise.all([cards2, arts]).then(([a, b]) => {
-      cache = null;
-      return a || b;
-    });
-    return extras;
-  }
-  function pool(rnd) {
-    const cards2 = gameCards().filter((c) => c && c.name && c.image && (c.typeCard === 0 || c.typeCard === 1) && c.rarity !== "TOKEN");
-    const parts = cards2.slice().sort(() => rnd() - 0.5).map(cardPart);
-    const arts = (artifacts2 || []).slice().sort(() => rnd() - 0.5).map(artifactPart);
-    const ench = ENCHANTS.map(([name, desc]) => ({ type: "Enchantment", name, desc, art: "" }));
-    let n = 0, a = 0, e = 0;
-    return {
-      next(k) {
-        k = k || 0;
-        if (arts.length && k % 7 === 3) return arts[a++ % arts.length];
-        if (k % 9 === 5) return ench[e++ % ench.length];
-        return parts.length ? parts[n++ % parts.length] : fallbackPart(n++);
-      }
-    };
-  }
-  var DAY = 864e5;
-  var CONTESTS = [
-    ["Heart of the Underground", "Make a card about a SOUL trait: Determination, Patience, Bravery, Integrity, Perseverance, Kindness or Justice.\nOne card, or a set of up to 4.\nNo copies of existing cards."],
-    ["Hotland Heat", "Fire, lava and steam. Anything from Hotland."],
-    ["Snowdin Patrol", "Royal Guard members, real or made up."],
-    ["Royal Lab", "Amalgamates, machines and experiments."],
-    ["Dark World Deals", "Shops, salesmen and the economy of the Dark World."],
-    ["Waterfall Echoes", "Echo flowers, rain and quiet places. Spells only."],
-    ["Ruins Revival", "New cards for the Ruins. Common or rare only."],
-    ["Core Meltdown", "Things go wrong in the CORE."]
-  ];
-  var cache = null;
-  function sampleData() {
-    if (cache) return cache;
-    let seed = 4242;
-    const rnd = () => (seed = seed * 1103515245 + 12345 >>> 0) / 4294967296;
-    const p = pool(rnd);
-    let id = 0, draws = 0;
-    const now = Date.now();
-    const entry = (contest, t) => {
-      const isSet = rnd() < 0.2;
-      const size = isSet ? 2 + Math.floor(rnd() * 3) : 1;
-      const parts = [];
-      for (let k = 0; k < size; k++) {
-        let part = p.next(draws++);
-        if (isSet && part.type === "Artifact") part = p.next(draws++ + 1);
-        parts.push({ ...part });
-      }
-      const n = id++;
-      return {
-        id: `smp${n.toString(36)}`,
-        kind: size > 1 ? "set" : "single",
-        title: size > 1 ? `Sample Set ${n + 1}` : parts[0].name,
-        author: AUTHORS[Math.floor(rnd() * AUTHORS.length)],
-        postedAt: t,
-        approvedAt: t + 36e5,
-        contest,
-        parts,
-        sample: true
-      };
-    };
-    const contests = [], file = [];
-    CONTESTS.forEach(([title, rules], i) => {
-      const cid = `csmp${i}`;
-      const running = i === 0;
-      const closesAt = running ? now + 3 * DAY + 5 * 36e5 : now - (i * 16 - 4) * DAY;
-      const n = running ? 12 : 10 + Math.floor(rnd() * 6);
-      const entries2 = [];
-      for (let k = 0; k < n; k++) entries2.push(entry(cid, closesAt - (running ? 4 : 14) * DAY + k * 7 * 36e5));
-      const info = { id: cid, title, rules, closesAt, maxEntries: 3, status: running ? "open" : "archived", createdAt: closesAt - 14 * DAY, archivedAt: running ? null : closesAt + 2 * DAY, entries: n, sample: true };
-      const f = { ...info, entries: entries2 };
-      if (!running) {
-        const scores = {};
-        entries2.forEach((e) => {
-          const base = 1 + rnd() * 4;
-          const by = JUDGES.map((name) => ({ name, score: Math.max(1, Math.min(5, Math.round(base + (rnd() - 0.5) * 2))) }));
-          const avg = Math.round(by.reduce((s, b) => s + b.score, 0) / by.length * 100) / 100;
-          scores[e.id] = { avg, n: by.length };
-        });
-        const order = entries2.map((e) => e.id).sort((a, b) => scores[b].avg - scores[a].avg);
-        f.results = { manualTop: i === 2, order, scores };
-      }
-      contests.push(info);
-      file.push(f);
-    });
-    const run = file[0];
-    const mine = [run.entries[4], entry("csmp0", now - DAY)];
-    mine[0] = { ...mine[0], mine: true, status: "approved" };
-    run.entries[4] = mine[0];
-    mine[1] = { ...mine[1], mine: true, status: "pending" };
-    const uploads = [];
-    for (let k = 0; k < 6; k++) {
-      const e = entry(k % 2 ? "csmp0" : null, now - (6 - k) * 36e5);
-      if (!e.contest) delete e.contest;
-      uploads.push({ ...e, status: "pending", ...e.contest ? { contestTitle: CONTESTS[0][0] } : {} });
-    }
-    const runScores = {};
-    run.entries.forEach((e, k) => {
-      const by = JUDGES.slice(0, 1 + k % 3).map((name, j) => ({ name, score: 1 + (k * 3 + j * 2) % 5 }));
-      runScores[e.id] = { avg: Math.round(by.reduce((s, b) => s + b.score, 0) / by.length * 100) / 100, n: by.length, by };
-    });
-    return cache = { contests, file, own: mine, uploads, runScores };
   }
 
   // packages/card-maker/gallery/contest.js
@@ -13244,6 +13237,7 @@ Version: v${version}`;
 .wz-gl-scores { display: flex; gap: 2px; align-items: center; }
 .wz-gl-scorebtn { background: #000; border: 1px solid #777; color: #ccc; width: 20px; height: 18px; padding: 0; font: 11px/16px ${DT2}; cursor: pointer; }
 .wz-gl-scorebtn:hover { border-color: #fff; color: #fff; }
+.wz-gl-scorebtn.half { width: 26px; font-size: 10px; opacity: .85; }
 .wz-gl-scorebtn.on { background: #ffd84a; border-color: #ffd84a; color: #000; }
 .wz-gl-judge { display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .wz-gl-judge .by { font-size: 10px; opacity: .7; max-width: 200px; text-align: center; }
@@ -13291,35 +13285,18 @@ Version: v${version}`;
 .wz-gl-cvbody { flex: 1 1 auto; min-height: 0; }
 .wz-gl-cside { display: grid; grid-template-columns: 290px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 18px; }
 .wz-gl-cside > .side { border: 2px solid #fff; background: #000; padding: 12px 14px; overflow: auto; min-height: 0; max-height: 100%; box-sizing: border-box; align-self: start; }
-.wz-gl-cside > .side .t, .wz-gl-crulesbox .t { font: 22px ${DT2}; color: #ffd84a; margin-bottom: 6px; }
-.wz-gl-cside > .side .r, .wz-gl-crulesbox .r { white-space: pre-wrap; margin-bottom: 10px; }
+.wz-gl-cside > .side .t { font: 22px ${DT2}; color: #ffd84a; margin-bottom: 6px; }
+.wz-gl-cside > .side .r { white-space: pre-wrap; margin-bottom: 10px; }
 .wz-gl-cside > .side .wz-gl-big { width: 100%; margin-top: 8px; }
 .wz-gl-cmain { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 .wz-gl-cmain > .wz-gl-csec { flex: none; margin: 0 0 8px; }
 .wz-gl-cmain > .wz-gl-pagearea { flex: 1 1 auto; }
 .wz-gl-cmain > .wz-gl-foot { flex: none; }
 .wz-gl-csort { display: inline-flex; gap: 4px; }
-.wz-gl-cfull { display: flex; flex-direction: column; }
-.wz-gl-cfull > .wz-gl-cmain { flex: 1 1 auto; }
-.wz-gl-crulesbox { flex: none; border: 2px solid #555; border-top: 0; background: #0a0a0a; padding: 8px 16px 10px; margin: -10px 0 10px; max-height: 40%; overflow: auto; }
 .wz-gl-cmine { margin-top: 12px; border-top: 1px solid #333; padding-top: 8px; display: flex; flex-direction: column; gap: 5px; }
 .wz-gl-cmine div { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
 .wz-gl-podlist { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
 .wz-gl-podlist div { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
-.wz-gl-cstrip { flex: none; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; border: 2px solid #fff; background: #000; padding: 10px 16px; margin-bottom: 10px; }
-.wz-gl-cstrip .t { font: 22px ${DT2}; color: #ffd84a; }
-.wz-gl-podium { flex: none; display: flex; justify-content: center; align-items: flex-end; gap: 22px; margin: 0 0 10px; flex-wrap: wrap; }
-.wz-gl-podium > div { display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.wz-gl-podium .medal { font: 18px ${DT2}; }
-.wz-gl-podium .p1 .medal { color: #ffd84a; } .wz-gl-podium .p2 .medal { color: #d8d8d8; } .wz-gl-podium .p3 .medal { color: #e09a5a; }
-/* the podium keeps to a set size, so the pages below keep their room */
-.wz-gl-podrow { flex: 0 0 100%; flex-wrap: nowrap !important; overflow: hidden; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid #333; }
-.wz-gl-podium-sm > div { --wz-gl-z: .62; }
-.wz-gl-podrow > div, .wz-gl-podrow .wz-gl-item { flex: none; max-width: none; }
-.wz-gl-podrow .wz-gl-row { flex-wrap: nowrap; }
-.wz-gl-podrow .wz-gl-votes { flex-direction: column; gap: 0; align-items: center; font-size: 11px; line-height: 1.3; }
-.wz-gl-podium-sm > div.first { --wz-gl-z: .74; }
-.wz-gl-sample { display: inline-block; background: #333; border: 1px solid #777; color: #ddd; font: 10px/14px Arial, sans-serif; padding: 0 5px; margin-left: 8px; vertical-align: middle; }
 `;
   var pad2 = (n) => String(n).padStart(2, "0");
   var toLocalInput = (ms) => {
@@ -13342,10 +13319,9 @@ Version: v${version}`;
   var plural = (n) => `${n} entr${n === 1 ? "y" : "ies"}`;
   var daysAgo = (t) => Math.max(0, Math.floor((Date.now() - (t || Date.now())) / 864e5));
   function createContests(ctx) {
-    const cs = { list: null, file: null, at: 0, loading: false, error: "", pick: null, sort: "rank", drop: false, sub: "entries", pages: {}, rulesOpen: false };
-    const js = { id: null, data: null, at: 0, loading: false, error: "", top: null, idx: 0, sampleMine: {} };
+    const cs = { list: null, file: null, at: 0, loading: false, error: "", pick: null, sort: "rank", drop: false, pages: {} };
+    const js = { id: null, data: null, at: 0, loading: false, error: "", top: null };
     const cf = { title: "", rules: "", closes: "", max: 3, busy: false, editFor: null };
-    let sampleOwn = null;
     async function refresh(force) {
       if (cs.loading || !force && cs.at && Date.now() - cs.at < 3e4) return;
       cs.loading = true;
@@ -13362,14 +13338,10 @@ Version: v${version}`;
         ctx.changed();
       }
     }
-    const sample = () => ctx.samples() ? sampleData() : null;
-    const shownList = () => sample() ? sample().contests : cs.list;
-    const shownFile = (id) => ((sample() ? sample().file : cs.file) || []).find((c) => c.id === id) || null;
+    const shownList = () => cs.list;
+    const shownFile = (id) => (cs.file || []).find((c) => c.id === id) || null;
     const active = () => (cs.list || []).find((c) => c.status !== "archived") || null;
-    const shownActive = () => (shownList() || []).find((c) => c.status !== "archived") || null;
-    if (ctx.samples()) loadSampleExtras().then((more) => {
-      if (more) ctx.changed();
-    });
+    const shownActive = active;
     function slots() {
       const c = active();
       if (!c || c.status !== "open") return null;
@@ -13378,15 +13350,10 @@ Version: v${version}`;
       return { contest: c, used, max: c.maxEntries, left: Math.max(0, c.maxEntries - used) };
     }
     function shownSlots(c) {
-      if (c.sample) {
-        const used = (sampleOwn || (sampleOwn = sample().own.slice())).filter((e) => e.status !== "rejected").length;
-        return { contest: c, used, max: c.maxEntries, left: Math.max(0, c.maxEntries - used) };
-      }
       const s = slots();
       return s && s.contest.id === c.id ? s : null;
     }
     function ownEntries(c) {
-      if (c.sample) return sampleOwn || (sampleOwn = sample().own.slice());
       return ctx.acct.posts.filter((p) => p.contest === c.id && ctx.draft.uploads[p.id]).map((p) => ({ ...ctx.draft.uploads[p.id], id: p.id, status: p.status, reason: p.reason, author: ctx.acct.account, postedAt: p.postedAt }));
     }
     function ranked(f) {
@@ -13411,12 +13378,10 @@ Version: v${version}`;
     }
     const placeTag = (i) => h("span", { class: `wz-gl-place${i < 3 ? ` p${i + 1}` : ""}`, text: i < 3 ? PLACES[i] : `# ${i + 1}` });
     const avgTag = (sc) => h("span", { class: "wz-gl-avg", text: sc && sc.n ? `${sc.avg.toFixed(2)} (${sc.n} judge${sc.n === 1 ? "" : "s"})` : "not scored" });
-    const sampleTag = (c) => c.sample ? h("span", { class: "wz-gl-sample", text: "sample" }) : null;
     function nav(cur, archived) {
       const pick = (id) => {
         cs.pick = id;
         cs.drop = false;
-        cs.sub = "entries";
         ctx.render();
       };
       const recent = archived.slice(0, 3);
@@ -13468,21 +13433,7 @@ Version: v${version}`;
       return g;
     }
     function layout2() {
-      pagers.forEach((g) => {
-        if (g.podium) {
-          const set = (z12) => g.podium.querySelectorAll(":scope > div").forEach((d) => d.style.setProperty("--wz-gl-z", String(Math.round((d.classList.contains("first") ? z12 : z12 * 0.84) * 100) / 100)));
-          let z1 = Math.max(0.3, Math.min(0.74, (g.area.clientHeight - 90) / 246));
-          set(z1);
-          g.podium.style.display = "";
-          if (!g.area.contains(g.podium)) g.area.appendChild(g.podium);
-          const over = g.podium.scrollWidth / Math.max(1, g.area.clientWidth);
-          if (over > 1) {
-            z1 = Math.max(0.3, z1 / over * 0.95);
-            set(z1);
-          }
-        }
-        g.layout();
-      });
+      pagers.forEach((g) => g.layout());
     }
     function view() {
       pagers = [];
@@ -13500,14 +13451,13 @@ Version: v${version}`;
       const archived = list.filter((c2) => c2.status === "archived").sort((a, b) => b.closesAt - a.closesAt);
       if (!cs.pick || !list.some((c2) => c2.id === cs.pick)) cs.pick = cur ? cur.id : archived[0].id;
       const c = list.find((x) => x.id === cs.pick);
-      const L = ctx.layout();
-      const body = c.status === "archived" ? archiveView(c, L) : runningView(c, L);
-      return h("div", { class: `wz-gl-cv wz-gl-cvp wz-gl-cv-${L}` }, nav(cur, archived), body);
+      const body = c.status === "archived" ? archiveView(c) : runningView(c);
+      return h("div", { class: "wz-gl-cv wz-gl-cvp" }, nav(cur, archived), body);
     }
     function enterButton(c, s, big) {
-      const label = c.sample ? "Enter cards" : !ctx.acct.account ? "Link your account to enter" : s && !s.left ? "No entries left" : "Enter cards";
-      const b = button(label, () => c.sample ? ctx.say("This is a sample contest: entering is off. Turn off Sample data to enter real ones.") : ctx.startEntry(c.id), { primary: true, cls: big ? "wz-gl-big" : "", title: "Pick cards in Submit and upload them to this contest" });
-      b.disabled = !c.sample && (!ctx.acct.account || !s || !s.left);
+      const label2 = !ctx.acct.account ? "Link your account to enter" : s && !s.left ? "No entries left" : "Enter cards";
+      const b = button2(label2, () => ctx.startEntry(c.id), { primary: true, cls: big ? "wz-gl-big" : "", title: "Pick cards in Submit and upload them to this contest" });
+      b.disabled = !ctx.acct.account || !s || !s.left;
       return b;
     }
     const pips = (s) => s ? h("span", { class: "wz-gl-pips", title: `${s.used} of ${s.max} entries used` }, Array.from({ length: s.max }, (_, i) => h("i", { class: i < s.used ? "on" : "" })), h("span", { text: ` ${s.used} of ${s.max} used` })) : null;
@@ -13517,11 +13467,7 @@ Version: v${version}`;
       return ownEntries(c).map((e) => {
         const tagText = e.status === "approved" ? "entered" : e.status === "pending" ? "awaiting approval" : "not approved";
         const tag = h("span", { class: `wz-gl-mine${e.status === "pending" ? " pending" : e.status === "rejected" || e.status === "removed" ? " rejected" : ""}`, text: tagText });
-        const run2 = c.sample ? (x) => {
-          sampleOwn = sampleOwn.filter((o) => o.id !== x.id);
-          ctx.say("Sample entry withdrawn (nothing was sent).");
-          ctx.render();
-        } : ctx.deleteMine;
+        const run2 = ctx.deleteMine;
         const canWithdraw = open && (e.status === "pending" || e.status === "approved");
         const del = canWithdraw ? removeButton({ rerender: ctx.render }, e, { label: "Withdraw", confirm: "Withdraw it?", title: "Take this entry back, to free its slot", run: run2 }) : e.status === "rejected" || e.status === "removed" ? removeButton({ rerender: ctx.render }, e, { label: "Delete", confirm: "Delete for good?", title: "Delete this entry: it wasn't approved", run: run2 }) : null;
         return entryItem(e, { below: [tag, del] });
@@ -13534,14 +13480,12 @@ Version: v${version}`;
     }
     const noneYet = (c) => h("p", { class: "wz-gl-note", text: c.entries ? "They'll show here in a few minutes." : "None yet. Be the first!" });
     const noVotes = h("p", { class: "wz-gl-note", text: "There's no voting on contest entries: the organizers judge them. They join the gallery once the results are out." });
-    function mainPart({ heading, extra, top, podium, items, key: key2, empty, note }) {
+    function mainPart({ heading, extra, items, key: key2, empty, note }) {
       const g = paged(items, key2, empty);
-      g.podium = podium || null;
       return h(
         "div",
         { class: "wz-gl-cmain" },
         h("div", { class: "wz-gl-csec" }, heading, extra || null),
-        top || null,
         g.area,
         h("div", { class: "wz-gl-foot" }, h("span", { class: "note", text: note || "" }), h("span", { class: "grow" }), g.pager)
       );
@@ -13549,26 +13493,11 @@ Version: v${version}`;
     const sideInfo = (c, more) => h(
       "div",
       { class: "side" },
-      h("div", { class: "t" }, c.title, sampleTag(c)),
+      h("div", { class: "t" }, c.title),
       c.rules ? h("div", { class: "r", text: c.rules }) : null,
       more
     );
-    function strip(c, right) {
-      const rules = cs.rulesOpen ? h("div", { class: "wz-gl-crulesbox" }, h("div", { class: "r", text: c.rules || "(no rules given)" }), h("div", { class: "m" }, c.status === "archived" ? `Ended ${when(c.closesAt)}.` : deadline(c))) : null;
-      return [h(
-        "div",
-        { class: "wz-gl-cstrip" },
-        h("span", { class: "t" }, c.title, sampleTag(c)),
-        h("span", { class: "wz-gl-chip", text: c.status === "open" ? `closes ${inTime(c.closesAt)}` : c.status === "archived" ? `ended ${when(c.closesAt)}` : "judging" }),
-        button(cs.rulesOpen ? "Theme & rules \u25B4" : "Theme & rules \u25BE", () => {
-          cs.rulesOpen = !cs.rulesOpen;
-          ctx.render();
-        }, { title: "Show or hide the theme and rules" }),
-        h("span", { class: "wz-gl-grow" }),
-        right
-      ), rules];
-    }
-    function runningView(c, L) {
+    function runningView(c) {
       const s = shownSlots(c);
       const open = c.status === "open";
       const mine = ownItems(c);
@@ -13582,9 +13511,6 @@ Version: v${version}`;
         empty: c.entries ? "* They'll show here in a few minutes." : "* None yet. Be the first!",
         note: "No voting: the organizers judge entries. They join the gallery with the results."
       });
-      if (L === "e") {
-        return h("div", { class: "wz-gl-cvbody wz-gl-cfull" }, strip(c, open ? [pips(s), enterButton(c, s, true)] : null), main);
-      }
       const side = sideInfo(c, [
         h("div", { class: "m" }, deadline(c)),
         open ? [h("div", { style: { marginTop: "10px" } }, h("span", { text: "Your entries: " }), pips(s)), enterButton(c, s, true)] : null,
@@ -13592,7 +13518,7 @@ Version: v${version}`;
       ]);
       return h("div", { class: "wz-gl-cvbody wz-gl-cside" }, side, main);
     }
-    function archiveView(c, L) {
+    function archiveView(c) {
       const f = shownFile(c.id);
       const ended = `Ended ${when(c.closesAt)}`;
       if (!f) return h("div", { class: "wz-gl-chero" }, h("div", { class: "t", text: c.title }), h("div", { class: "m", text: `${ended}. Loading the results\u2026` }));
@@ -13602,14 +13528,14 @@ Version: v${version}`;
       const sortBtns = h(
         "span",
         { class: "wz-gl-csort" },
-        button("Ranking", () => {
+        button2("Ranking", () => {
           cs.sort = "rank";
-          pageState(`${c.id}:${L}:rank`).page = 0;
+          pageState(`${c.id}:rank`).page = 0;
           ctx.render();
         }, { primary: cs.sort !== "new" }),
-        button("Newest", () => {
+        button2("Newest", () => {
           cs.sort = "new";
-          pageState(`${c.id}:${L}:new`).page = 0;
+          pageState(`${c.id}:new`).page = 0;
           ctx.render();
         }, { primary: cs.sort === "new" })
       );
@@ -13617,64 +13543,34 @@ Version: v${version}`;
         const i = rank.indexOf(e);
         return entryItem(e, { place: placeTag(i), below: avgTag(res.scores[e.id]), cls: i < 3 && cs.sort !== "new" ? `p${i + 1}` : "" });
       };
-      const withPodium = L === "d" || L === "e";
-      let top = null, pageList = cs.sort === "new" ? rank.slice().sort((a, b) => (b.postedAt || 0) - (a.postedAt || 0)) : rank;
-      if (withPodium && cs.sort !== "new") {
-        const three = rank.slice(0, 3);
-        const order = three.length === 3 ? [three[1], three[0], three[2]] : three;
-        top = h("div", { class: "wz-gl-podium wz-gl-podium-sm wz-gl-podrow" }, order.map((e) => {
-          const i = rank.indexOf(e);
-          return h(
-            "div",
-            { class: `p${i + 1}${i === 0 ? " first" : ""}` },
-            h("div", { class: "medal", text: PLACES[i] }),
-            entryItem(e, { below: [h("span", { class: "dim", text: `by ${e.author} ` }), avgTag(res.scores[e.id])], cls: `p${i + 1}` })
-          );
-        }));
-        pageList = rank.slice(3);
-      }
+      const pageList = cs.sort === "new" ? rank.slice().sort((a, b) => (b.postedAt || 0) - (a.postedAt || 0)) : rank;
       const main = mainPart({
         heading: "Entries",
         extra: [h("span", { class: "n", text: String(f.entries.length) }), h("span", { class: "wz-gl-grow" }), sortBtns],
-        podium: top,
-        items: (top ? [top] : []).concat(pageList.map(card)),
-        key: `${c.id}:${L}:${cs.sort}`,
-        empty: "* No other entries.",
+        items: pageList.map(card),
+        key: `${c.id}:${cs.sort}`,
+        empty: "* No entries.",
         note: how
       });
-      if (L === "e") return h("div", { class: "wz-gl-cvbody wz-gl-cfull" }, strip(c, h("span", { class: "dim", text: plural(f.entries.length) })), main);
       const side = sideInfo(c, [
         h("div", { class: "m", text: `${ended} \xB7 ${plural(f.entries.length)}.` }),
-        L === "b" ? h("div", { class: "wz-gl-podlist" }, rank.slice(0, 3).map((e, i) => h("div", {}, placeTag(i), h("b", { text: e.title || "(no name)" }), h("span", { class: "dim", text: `by ${e.author} \xB7 ${(res.scores[e.id] || {}).avg != null ? res.scores[e.id].avg.toFixed(2) : "\u2013"}` })))) : null
+        h("div", { class: "wz-gl-podlist" }, rank.slice(0, 3).map((e, i) => h("div", {}, placeTag(i), h("b", { text: e.title || "(no name)" }), h("span", { class: "dim", text: `by ${e.author} \xB7 ${(res.scores[e.id] || {}).avg != null ? res.scores[e.id].avg.toFixed(2) : "\u2013"}` }))))
       ]);
       return h("div", { class: "wz-gl-cvbody wz-gl-cside" }, side, main);
     }
     const judgeContestId = () => {
       const who = ctx.who();
-      if (sample()) {
-        const c2 = shownActive();
-        return c2 ? c2.id : null;
-      }
       if (who && who.role === "judge") return who.contest || active() && active().id;
       const c = active();
       return c ? c.id : null;
     };
     async function loadJudging(force) {
       const id = judgeContestId();
-      if (sample()) {
-        const run2 = sample().file.find((c) => c.id === id);
-        const keepTop = js.top && js.id === id && js.data && js.data.sample;
-        js.data = run2 ? { contest: { ...run2, top3: [] }, entries: run2.entries, myScores: js.sampleMine, sample: true } : null;
-        js.top = keepTop ? js.top : [];
-        js.id = id;
-        js.error = "";
-        return ctx.changed();
-      }
       if (!id || !ctx.reviewerKey()) {
         js.data = null;
         return;
       }
-      if (js.loading || !force && js.id === id && js.at && Date.now() - js.at < 3e4 && !(js.data && js.data.sample)) return;
+      if (js.loading || !force && js.id === id && js.at && Date.now() - js.at < 3e4) return;
       js.loading = true;
       try {
         const d = await reviewContest(ctx.reviewerKey(), id);
@@ -13697,7 +13593,7 @@ Version: v${version}`;
       const mine = js.data.myScores[e.id] || 0;
       const value = mine === n ? 0 : n;
       try {
-        if (!js.data.sample) await reviewScore(ctx.reviewerKey(), js.id, e.id, value);
+        await reviewScore(ctx.reviewerKey(), js.id, e.id, value);
         if (value) js.data.myScores[e.id] = value;
         else delete js.data.myScores[e.id];
         ctx.changed();
@@ -13708,41 +13604,41 @@ Version: v${version}`;
     }
     async function saveTop(list) {
       try {
-        if (!js.data.sample) await manageContest(ctx.reviewerKey(), { action: "top3", id: js.id, posts: list });
+        await manageContest(ctx.reviewerKey(), { action: "top3", id: js.id, posts: list });
         js.top = list.slice();
         js.data.contest.top3 = list.slice();
-        ctx.say(js.data.sample ? "Sample: top places kept here only." : list.length ? "Top places saved." : "Top places cleared: places come from the scores.");
+        ctx.say(list.length ? "Top places saved." : "Top places cleared: places come from the scores.");
       } catch (err) {
         ctx.say(`Couldn't save the top places: ${ctx.errText(err)}`);
       }
       ctx.render();
     }
-    const SCORE_NAMES = ["", "Extremely poor", "Poor", "Average", "Good", "Extremely good"];
+    const SCORES = [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
+    const SCORE_NAMES = { 1: "Extremely poor", 1.5: "Very poor", 2: "Poor", 2.5: "Neutral", 3: "OK for the game", 3.5: "Decent", 4: "Good", 4.5: "Very good", 5: "Extremely good" };
     function judgingView() {
       const id = judgeContestId();
       if (!id) return h("p", { class: "wz-gl-note", text: "No contest is running." });
       if (js.error) return h("div", { class: "wz-gl-issues", text: js.error });
-      if (!js.data || js.id !== id || !!js.data.sample !== !!sample()) {
+      if (!js.data || js.id !== id) {
         loadJudging(true);
         return h("p", { class: "wz-gl-note", text: "Loading the entries\u2026" });
       }
       const d = js.data, c = d.contest;
       const owner = ctx.who() && ctx.who().role === "owner";
-      const scores = d.sample ? owner ? sample().runScores : null : d.scores;
+      const scores = d.scores;
       const n = d.entries.length;
       const done = n - unscored();
       const headBar = h(
         "div",
         { class: "wz-gl-bar" },
         h("b", { text: `Judging: ${c.title}` }),
-        d.sample ? h("span", { class: "wz-gl-sample", text: "sample" }) : null,
         h("span", { class: "dim", text: c.status === "open" ? ` \xB7 entries close ${when(c.closesAt)}` : " \xB7 entries closed" }),
         h("span", { class: "wz-gl-grow" }),
         h("span", { text: `You've scored ${done} of ${n}` }),
-        button("\u21BB Refresh", () => loadJudging(true))
+        button2("\u21BB Refresh", () => loadJudging(true))
       );
-      const notes = [h("p", { class: "wz-gl-note", text: "Score each entry 1 (extremely poor) to 5 (extremely good); 3 is average. Click your score again to take it back. Other judges' scores stay hidden." })];
-      if (owner && scores) notes.push(h("p", { class: "wz-gl-note", text: d.sample ? "Sample: you see the other judges' made-up scores, as you would once the deadline has passed." : "The deadline has passed, so you see everyone's scores. Places go by average score, unless you pick the top 3 below. Publish the results in Contests." }));
+      const notes = [h("p", { class: "wz-gl-note", text: "Score each entry 1 (extremely poor) to 5 (extremely good), in half points: 2.5 is neutral, 3 means it would be OK in the game. Click your score again to take it back. Other judges' scores stay hidden." })];
+      if (owner && scores) notes.push(h("p", { class: "wz-gl-note", text: "The deadline has passed, so you see everyone's scores. Places go by average score, unless you pick the top 3 below. Publish the results in Contests." }));
       let topBar = null;
       if (owner && scores) {
         const changedTop = JSON.stringify(js.top) !== JSON.stringify(c.top3 || []);
@@ -13750,8 +13646,8 @@ Version: v${version}`;
           "div",
           { class: "wz-gl-bar" },
           h("span", { text: js.top.length ? `Top places by hand: ${js.top.map((pid, i) => `${PLACES[i]} #${pid}`).join(", ")}` : "Top places: by score" }),
-          button("Save top places", () => saveTop(js.top.filter(Boolean)), { primary: changedTop }),
-          js.top.length ? button("Use scores instead", () => saveTop([])) : null
+          button2("Save top places", () => saveTop(js.top.filter(Boolean)), { primary: changedTop }),
+          js.top.length ? button2("Use scores instead", () => saveTop([])) : null
         );
       }
       const extra = (e) => {
@@ -13782,7 +13678,7 @@ Version: v${version}`;
         const btns = h(
           "div",
           { class: "wz-gl-scores", title: "Your score" },
-          [1, 2, 3, 4, 5].map((k) => h("button", { type: "button", class: `wz-gl-scorebtn${mine === k ? " on" : ""}`, text: String(k), title: SCORE_NAMES[k], onclick: () => score(e, k) }))
+          SCORES.map((k) => h("button", { type: "button", class: `wz-gl-scorebtn${mine === k ? " on" : ""}${k % 1 ? " half" : ""}`, text: String(k), title: `${k}: ${SCORE_NAMES[k]}`, onclick: () => score(e, k) }))
         );
         return entryItem({ ...e, status: "approved" }, { below: h("div", { class: "wz-gl-judge" }, btns, extra(e)) });
       });
@@ -13832,7 +13728,7 @@ Version: v${version}`;
       const cur = active();
       const out = [];
       if (cur) {
-        const save2 = button(cf.busy ? "Saving\u2026" : "Save changes", () => {
+        const save2 = button2(cf.busy ? "Saving\u2026" : "Save changes", () => {
           const f = fields();
           if (!f.title || !f.closesAt) return ctx.say("Fill in a title and a deadline.");
           run({ action: "edit", id: cur.id, ...f }, () => "Contest updated.");
@@ -13857,7 +13753,7 @@ Version: v${version}`;
           h("p", { class: "wz-gl-note", text: "Judge keys (in Reviewers) work for this contest until you publish the results. Score entries in Judging." })
         ));
       } else {
-        const start = button(cf.busy ? "Starting\u2026" : "Start contest", () => {
+        const start = button2(cf.busy ? "Starting\u2026" : "Start contest", () => {
           const f = fields();
           if (!f.title || !f.closesAt) return ctx.say("Fill in a title and a deadline.");
           if (f.closesAt <= Date.now()) return ctx.say("The deadline must be in the future.");
@@ -13897,13 +13793,9 @@ Version: v${version}`;
 .wz-gl-panel.browse > .wz-gl-content { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 .wz-gl-panel.browse > .wz-gl-content > .wz-gl-browse { flex: 1 1 auto; height: auto; }
 .wz-gl-panel.browse > .wz-gl-content > .wz-gl-cv { flex: 1 1 auto; min-height: 0; }
-.wz-gl-proto { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 4px 8px; margin-bottom: 8px; border: 1px dashed #665; background: #17150c; font-size: 12px; flex: none; }
-.wz-gl-proto b { color: #ffd84a; margin-right: 2px; }
-.wz-gl-proto .sep { width: 1px; height: 16px; background: #554; margin: 0 4px; }
-.wz-gl-proto label { margin: 0; font-weight: normal; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
-.wz-gl-proto select { height: 20px !important; }
-.wz-gl-proto .wz-cm-btn { height: 20px; line-height: 18px; padding: 0 7px; font-size: 11px; }
-.wz-gl-preview-as { background: #3a1f5a; border: 1px solid #b07de0; color: #e6d4ff; padding: 1px 8px; font-size: 11px; }
+.wz-gl-preview-as { background: #3a1f5a; border: 1px solid #b07de0; color: #e6d4ff; padding: 1px 4px 1px 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px; }
+.wz-gl-viewas { margin: 0; font-weight: normal; display: flex; align-items: center; gap: 6px; }
+.wz-gl-viewas select { height: 22px !important; flex: 1; }
 /* Review: roomy, with a side menu (dev16) */
 .wz-gl-rv { font-size: 14px; line-height: 1.45; }
 .wz-gl-rv .wz-cm-btn { height: 28px; font-size: 13px; padding: 0 12px; }
@@ -14028,18 +13920,13 @@ ${CONTEST_CSS}
       saveDraft();
     }
     const browse = { list: "new", page: 0, dir: null, mineOnly: false, likedOnly: false };
-    const proto = Object.assign({ contest: "b", samples: false, viewAs: "" }, draft2.proto || {}, { viewAs: "" });
-    if (!["b", "d", "e"].includes(proto.contest)) proto.contest = "b";
-    const saveProto = () => {
-      draft2.proto = { contest: proto.contest, samples: proto.samples };
+    if (draft2.proto) {
+      delete draft2.proto;
       saveDraft();
-    };
-    if (proto.samples) loadSampleExtras().then((more) => {
-      if (more && open) render2();
-    });
-    const sampleDecided = /* @__PURE__ */ new Set();
-    const listeners4 = [];
-    const notify2 = () => listeners4.forEach((f) => f());
+    }
+    let viewAs = "";
+    const listeners5 = [];
+    const notify2 = () => listeners5.forEach((f) => f());
     let browseCtl = null;
     let read2 = null;
     let readTimer = null;
@@ -14082,7 +13969,7 @@ ${CONTEST_CSS}
     });
     let rev = blankRev();
     const realRole = () => rev.who ? rev.who.role : null;
-    const role = () => realRole() === "owner" && proto.viewAs ? proto.viewAs : realRole();
+    const role = () => realRole() === "owner" && viewAs ? viewAs : realRole();
     const isOwner = () => role() === "owner";
     const isJudge = () => role() === "judge";
     async function refreshReview(force) {
@@ -14134,33 +14021,26 @@ ${CONTEST_CSS}
       notify2();
       render2();
     }
-    const uploadList = () => proto.samples ? sampleData().uploads.filter((u) => !sampleDecided.has(u.id)) : rev.list;
-    const uploadPost = (p) => proto.samples ? p : rev.posts[p.id];
-    function decideAny(id, approve) {
-      if (!proto.samples) return decide(id, approve);
-      sampleDecided.add(id);
-      say(`Sample: ${approve ? "approved" : "rejected"} ${id} here only (nothing was sent).`);
-      render2();
-    }
+    const uploadList = () => rev.list;
+    const uploadPost = (p) => rev.posts[p.id];
     function uploadsView() {
       const list = uploadList();
       const head = h(
         "div",
         { class: "wz-gl-bar" },
-        h("b", { text: rev.loading && !rev.at && !proto.samples ? "Loading uploads\u2026" : `${list.length} upload${list.length === 1 ? "" : "s"} waiting` }),
-        proto.samples ? h("span", { class: "wz-gl-sample", text: "sample" }) : null,
+        h("b", { text: rev.loading && !rev.at ? "Loading uploads\u2026" : `${list.length} upload${list.length === 1 ? "" : "s"} waiting` }),
         h("span", { class: "wz-gl-grow" }),
-        button("\u21BB Refresh", () => refreshReview(true), { title: "Look for new uploads" })
+        button2("\u21BB Refresh", () => refreshReview(true), { title: "Look for new uploads" })
       );
-      if (rev.error && !proto.samples) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: rev.error }));
-      if (!list.length && (rev.at || proto.samples)) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing to review. New uploads appear here." }));
+      if (rev.error) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: rev.error }));
+      if (!list.length && rev.at) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing to review. New uploads appear here." }));
       const one = (p) => {
         const post = uploadPost(p);
         const reason = h("input", { type: "text", placeholder: "Reason (optional, shown to them if rejected)", maxLength: 300, value: rev.reasons[p.id] || "", oninput: (e) => {
           rev.reasons[p.id] = e.target.value;
         } });
-        const approveBtn = button(rev.busy[p.id] || "Approve", () => decideAny(p.id, true), { primary: true, title: p.contest ? "Accept it into the contest" : "Add it to the gallery (one commit on the gallery branch)" });
-        const rejectBtn = button("Reject", () => decideAny(p.id, false), { title: "Don't add it; the author sees it as not approved" });
+        const approveBtn = button2(rev.busy[p.id] || "Approve", () => decide(p.id, true), { primary: true, title: p.contest ? "Accept it into the contest" : "Add it to the gallery (one commit on the gallery branch)" });
+        const rejectBtn = button2("Reject", () => decide(p.id, false), { title: "Don't add it; the author sees it as not approved" });
         approveBtn.disabled = rejectBtn.disabled = !!rev.busy[p.id] || !post;
         return h(
           "div",
@@ -14188,7 +14068,7 @@ ${CONTEST_CSS}
     }
     function reviewView() {
       if (!reviewerKey2()) return h("p", { class: "wz-gl-note", text: "Review is off." });
-      const running = proto.samples ? contests.shownActive() : contests.active();
+      const running = contests.active();
       const nUp = uploadList().length, nJudge = contests.unscored();
       const judging = ["judging", "Judging", nJudge];
       const sections = isJudge() ? [judging] : [["uploads", "Uploads", nUp]];
@@ -14201,14 +14081,15 @@ ${CONTEST_CSS}
         rev.section = sections[0][0];
         if (rev.section === "judging") contests.loadJudging(true);
       }
-      const who = rev.who ? `${isJudge() ? "Judging" : "Reviewing"} as ${rev.who.name}${realRole() === "owner" ? " (owner)" : ""}${proto.viewAs ? `, previewing ${proto.viewAs}` : ""}` : "";
+      const who = rev.who ? `${isJudge() ? "Judging" : "Reviewing"} as ${rev.who.name}${realRole() === "owner" ? " (owner)" : ""}${viewAs ? `, previewing ${viewAs}` : ""}` : "";
       const body = rev.section === "log" ? logView() : rev.section === "reviewers" ? reviewersView() : rev.section === "judging" ? contests.judgingView() : rev.section === "contests" ? contests.manageView() : uploadsView();
       const count = (n) => n ? h("span", { class: "n", text: String(n) }) : null;
       const menu3 = h(
         "div",
         { class: "wz-gl-rmenu wz-gl-revtabs" },
-        sections.map(([k, label, n]) => h("button", { type: "button", class: rev.section === k ? "on" : "", onclick: () => openSection(k) }, h("span", { text: label }), count(n))),
-        h("div", { class: "who wz-gl-rwho", text: who })
+        sections.map(([k, label2, n]) => h("button", { type: "button", class: rev.section === k ? "on" : "", onclick: () => openSection(k) }, h("span", { text: label2 }), count(n))),
+        h("div", { class: "who wz-gl-rwho", text: who }),
+        realRole() === "owner" ? h("div", { class: "who" }, viewAsControl()) : null
       );
       return h("div", { class: "wz-gl-rv" }, h("div", { class: "wz-gl-rside" }, menu3, h("div", {}, body)));
     }
@@ -14261,7 +14142,7 @@ ${CONTEST_CSS}
       contest_delete: "deleted contest"
     };
     function logView() {
-      const head = h("div", { class: "wz-gl-bar" }, h("b", { text: "Recent review actions" }), h("span", { class: "wz-gl-grow" }), button("\u21BB Refresh", loadLog));
+      const head = h("div", { class: "wz-gl-bar" }, h("b", { text: "Recent review actions" }), h("span", { class: "wz-gl-grow" }), button2("\u21BB Refresh", loadLog));
       if (rev.sectionError) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: rev.sectionError }));
       if (!rev.log) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Loading\u2026" }));
       if (!rev.log.length) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing yet." }));
@@ -14315,14 +14196,14 @@ ${CONTEST_CSS}
       const running = contests.active();
       if (!running) rev.newRole = "reviewer";
       const judge = rev.newRole === "judge";
-      const addBtn = button(rev.adding ? "Adding\u2026" : judge ? "Add judge" : "Add reviewer", addReviewer, { primary: true, title: judge ? `Make a judge key for "${running.title}"` : "Make a new review key for them" });
+      const addBtn = button2(rev.adding ? "Adding\u2026" : judge ? "Add judge" : "Add reviewer", addReviewer, { primary: true, title: judge ? `Make a judge key for "${running.title}"` : "Make a new review key for them" });
       addBtn.disabled = rev.adding;
       const roleBtns = running ? [
-        button("Reviewer", () => {
+        button2("Reviewer", () => {
           rev.newRole = "reviewer";
           render2();
         }, { cls: !judge ? "wz-gl-on" : "", title: "Reviews uploads and can remove posts. Can also score contests." }),
-        button(`Judge: ${running.title}`, () => {
+        button2(`Judge: ${running.title}`, () => {
           rev.newRole = "judge";
           render2();
         }, { cls: judge ? "wz-gl-on" : "", title: "Only scores this contest's entries; stops working when its results are published" })
@@ -14341,14 +14222,14 @@ ${CONTEST_CSS}
             "div",
             { class: "wz-gl-bar" },
             keyBox,
-            button("Copy", () => copyText2(rev.newKey.key).then((ok) => {
+            button2("Copy", () => copyText2(rev.newKey.key).then((ok) => {
               if (ok) say("Copied.");
               else {
                 keyBox.focus();
                 say("Press Ctrl+C to copy.");
               }
             })),
-            button("Done", () => {
+            button2("Done", () => {
               rev.newKey = null;
               render2();
             })
@@ -14407,6 +14288,12 @@ ${CONTEST_CSS}
       return cur;
     };
     const errText = (e) => e instanceof ApiError ? e.message : "Something went wrong.";
+    onAccountChange((name) => {
+      if (name !== acct.account) {
+        linking = null;
+        refreshMe(true);
+      }
+    });
     const contests = createContests({
       say: (t) => say(t),
       render: () => render2(),
@@ -14420,8 +14307,6 @@ ${CONTEST_CSS}
       draft: draft2,
       reviewerKey: reviewerKey2,
       who: () => rev.who ? { ...rev.who, role: role() } : null,
-      samples: () => proto.samples,
-      layout: () => proto.contest,
       wheelPages: () => !wheelPages || wheelPages(),
       hideHover: () => hideHover(),
       keyRejected: (code) => onKeyRejected(code),
@@ -14439,6 +14324,7 @@ ${CONTEST_CSS}
       try {
         const me = await getMe();
         Object.assign(acct, { loaded: true, account: me.account || null, cooldownUntil: me.cooldownUntil || null, votes: me.votes || {}, posts: me.posts || [], contest: me.contest || null, error: "", at: Date.now() });
+        accountChanged(acct.account, acct.cooldownUntil);
         pruneUploads(Object.fromEntries(acct.posts.map((p) => [p.id, p.status])), new Set(gal.approved.map((p) => p.id)));
       } catch (e) {
         acct.error = errText(e);
@@ -14483,6 +14369,7 @@ ${CONTEST_CSS}
           linking = null;
           acct.account = r.account;
           acct.cooldownUntil = r.cooldownUntil || null;
+          accountChanged(r.account, r.cooldownUntil);
           say(`Linked as ${r.account}.`);
           refreshMe(true);
           refreshGallery(true);
@@ -14498,7 +14385,7 @@ ${CONTEST_CSS}
     }
     function accountBox() {
       if (acct.error && !acct.loaded) {
-        return h("span", { class: "wz-gl-acct" }, h("span", { class: "wz-gl-acct-err", text: "Gallery server unreachable" }), " ", button("Retry", () => {
+        return h("span", { class: "wz-gl-acct" }, h("span", { class: "wz-gl-acct-err", text: "Gallery server unreachable" }), " ", button2("Retry", () => {
           acct.error = "";
           refreshMe(true);
         }));
@@ -14511,16 +14398,16 @@ ${CONTEST_CSS}
           "Linked as ",
           h("b", { text: acct.account }),
           " ",
-          linking ? null : button("Switch", () => startLink(), { title: "Link this install to a different Undercards account (once a day at most)", cls: "wz-gl-small" })
+          linking ? null : button2("Switch", () => startLink(), { title: "Link this install to a different Undercards account (once a day at most)", cls: "wz-gl-small" })
         );
       }
-      return h("span", { class: "wz-gl-acct" }, linking ? h("span", { class: "dim", text: "Linking\u2026" }) : button("Link my account", () => startLink(), { primary: true, title: "Prove which Undercards account you are, once, to post and vote" }));
+      return h("span", { class: "wz-gl-acct" }, linking ? h("span", { class: "dim", text: "Linking\u2026" }) : button2("Link my account", () => startLink(), { primary: true, title: "Prove which Undercards account you are, once, to post and vote" }));
     }
     function linkBox() {
       if (!linking) return null;
       const mins = Math.max(0, Math.round((linking.expiresAt - Date.now()) / 6e4));
       const line = h("code", { class: "wz-gl-line", text: linking.line });
-      const sendBtn = button("Open void with it typed in", () => {
+      const sendBtn = button2("Open void with it typed in", () => {
         if (!openVoid(linking.line)) say("This page has no chat. Copy the line and send it in void from another page.");
       }, { primary: true, title: "Opens chat room 0 with the line filled in. You press Enter." });
       sendBtn.disabled = !canOpenVoid();
@@ -14540,10 +14427,10 @@ ${CONTEST_CSS}
             sendBtn,
             canOpenVoid() ? null : h("span", { class: "dim", text: " (no chat on this page: send it from another page)" })
           ),
-          h("li", {}, "Then: ", button("Check link", () => checkLink(), { primary: true }), h("span", { class: "dim", text: ` The code works for ${mins} more minute${mins === 1 ? "" : "s"}.` }))
+          h("li", {}, "Then: ", button2("Check link", () => checkLink(), { primary: true }), h("span", { class: "dim", text: ` The code works for ${mins} more minute${mins === 1 ? "" : "s"}.` }))
         ),
         acct.account ? h("div", { class: "dim", text: `Switching from ${acct.account}: an install can switch accounts once a day, and accounts that share an install count as one voter.` }) : null,
-        button("Cancel", () => {
+        button2("Cancel", () => {
           linking = null;
           say("");
           render2();
@@ -14557,8 +14444,7 @@ ${CONTEST_CSS}
     const tabs = h("div", { class: "wz-gl-bar wz-gl-tabs" });
     const content = h("div", { class: "wz-gl-content" });
     const hover = h("div", { class: "wz-gl-hover" });
-    const protoBar = h("div", { class: "wz-gl-proto" });
-    const panel = h("div", { class: "wz-gl-panel" }, protoBar, tabs, content, hover);
+    const panel = h("div", { class: "wz-gl-panel" }, tabs, content, hover);
     const fileInput = h("input", { type: "file", accept: ".uceditor,image/png", multiple: true, style: { display: "none" } });
     panel.appendChild(fileInput);
     const sizeOf = () => SIZES.find((x) => x[0] === draft2.cardSize) || SIZES[1];
@@ -14595,7 +14481,7 @@ ${CONTEST_CSS}
         "span",
         { class: "wz-gl-sizes", title: "Card size" },
         h("small", { text: "Size ", style: { opacity: ".7" } }),
-        SIZES.map(([key2, label, , title]) => button(label, () => {
+        SIZES.map(([key2, label2, , title]) => button2(label2, () => {
           draft2.cardSize = key2;
           browse.page = 0;
           saveDraft();
@@ -14649,64 +14535,35 @@ ${CONTEST_CSS}
       return el3;
     };
     panel.addEventListener("scroll", hideHover, { passive: true });
-    const CONTEST_LAYOUTS = [["b", "Sidebar"], ["d", "Sidebar + Podium"], ["e", "Full width"]];
-    function renderProto() {
-      const pick = (list, key2) => list.map(([k, label]) => button(label, () => {
-        proto[key2] = k;
-        saveProto();
-        render2();
-      }, { cls: proto[key2] === k ? "wz-gl-on" : "", title: `Contest tab layout: ${label}` }));
-      const owner = realRole() === "owner";
-      protoBar.replaceChildren(...[
-        h("b", { text: "Preview" }),
-        h("span", { text: "Contest:" }),
-        pick(CONTEST_LAYOUTS, "contest"),
-        h("span", { class: "sep" }),
-        h("label", { title: "Made-up contests and uploads to try the layouts with. Nothing is sent." }, h("input", { type: "checkbox", checked: proto.samples, onchange: (e) => {
-          proto.samples = e.target.checked;
-          saveProto();
-          if (proto.samples) loadSampleExtras().then((more) => {
-            if (more && open) render2();
-          });
-          contests.loadJudging(true);
-          render2();
-        } }), "Sample data"),
-        owner ? [
-          h("span", { class: "sep" }),
-          h(
-            "label",
-            { title: "See Review as another role would. The server still treats you as the owner." },
-            "View as",
-            h(
-              "select",
-              { onchange: (e) => {
-                proto.viewAs = e.target.value === "owner" ? "" : e.target.value;
-                rev.section = "";
-                notify2();
-                render2();
-              } },
-              [["owner", "Owner"], ["reviewer", "Reviewer"], ["judge", "Judge"], ["player", "Player"]].map(([v, l]) => h("option", { value: v, text: l, selected: (proto.viewAs || "owner") === v }))
-            )
-          ),
-          proto.viewAs ? h("span", { class: "wz-gl-preview-as", text: `Previewing as ${proto.viewAs}` }) : null
-        ] : null
-      ].flat(Infinity).filter(Boolean));
+    function setViewAs(v) {
+      viewAs = v === "owner" ? "" : v;
+      rev.section = "";
+      notify2();
+      render2();
     }
+    function viewAsControl() {
+      if (realRole() !== "owner") return null;
+      return h(
+        "label",
+        { class: "wz-gl-viewas", title: "See the gallery as another role would. Only the screens change: the server still treats your key as the owner's." },
+        "View as ",
+        h(
+          "select",
+          { onchange: (e) => setViewAs(e.target.value) },
+          [["owner", "Owner"], ["reviewer", "Reviewer"], ["judge", "Judge"], ["player", "Player"]].map(([v, l]) => h("option", { value: v, text: l, selected: (viewAs || "owner") === v }))
+        )
+      );
+    }
+    const viewAsBadge = () => viewAs ? h("span", { class: "wz-gl-preview-as" }, `Viewing as ${viewAs} `, button2("Stop", () => setViewAs("owner"), { cls: "wz-gl-small", title: "Back to your own view" })) : null;
     function render2() {
       hideHover();
       browseCtl = null;
       if (!open) return;
-      renderProto();
       if (tab === "review" && !(reviewerKey2() && role() !== "player")) {
         tab = "browse";
         notify2();
       }
-      tabs.replaceChildren(
-        accountBox(),
-        status,
-        h("span", { class: "wz-gl-grow" }),
-        sizeButtons()
-      );
+      tabs.replaceChildren(...[accountBox(), viewAsBadge(), status, h("span", { class: "wz-gl-grow" }), sizeButtons()].filter(Boolean));
       panel.classList.toggle("browse", tab === "browse" || tab === "contest");
       applyZoom();
       if (tab === "browse") {
@@ -14772,19 +14629,19 @@ ${CONTEST_CSS}
       const bar = h(
         "div",
         { class: "wz-gl-bar" },
-        button("Read from this editor", () => {
+        button2("Read from this editor", () => {
           const problem = requestRead();
           if (problem) return say(problem);
           clearTimeout(readTimer);
           readTimer = setTimeout(() => say("No answer from the editor. Wait for it to finish loading, then try again."), 4e3);
           say(`Reading ${editorLabel()}\u2026`);
         }, { primary: true, title: "List the cards you've made in the editor open here" }),
-        button("Add files\u2026", () => fileInput.click(), { title: "A UC Editor group file (.uceditor) or PNG downloads" }),
-        button("Link selected", () => {
+        button2("Add files\u2026", () => fileInput.click(), { title: "A UC Editor group file (.uceditor) or PNG downloads" }),
+        button2("Link selected", () => {
           makeSet(draft2.parts.filter((p) => p.sel));
           changed2();
         }, { title: "Make the selected parts one set" }),
-        button("Unlink selected", () => {
+        button2("Unlink selected", () => {
           draft2.parts.filter((p) => p.sel).forEach((p) => {
             p.group = null;
             p.sel = false;
@@ -14802,7 +14659,7 @@ ${CONTEST_CSS}
     }
     let removeArmed = false;
     function removeAllButton() {
-      const b = button(removeArmed ? "Click again to remove all" : "Remove all", () => {
+      const b = button2(removeArmed ? "Click again to remove all" : "Remove all", () => {
         if (!draft2.parts.length) return;
         if (!removeArmed) {
           removeArmed = true;
@@ -14835,10 +14692,10 @@ ${CONTEST_CSS}
           "div",
           { class: "wz-gl-bar" },
           h("b", { text: `In ${read2.label}: ${n} card${n === 1 ? "" : "s"} in ${read2.groups.length} group${read2.groups.length === 1 ? "" : "s"}` }),
-          button("Add ticked", () => addTicked(false), { primary: true }),
-          button("Add ticked as one set", () => addTicked(true)),
+          button2("Add ticked", () => addTicked(false), { primary: true }),
+          button2("Add ticked as one set", () => addTicked(true)),
           h("span", { class: "wz-gl-grow" }),
-          button("Close list", () => {
+          button2("Close list", () => {
             read2 = null;
             render2();
           })
@@ -14868,7 +14725,7 @@ ${CONTEST_CSS}
               b.title = `Sets can have up to ${SET_CAP} cards. Tick some and use Add ticked as one set.`;
             }
             return b;
-          })(button("Add this group as a set", () => {
+          })(button2("Add this group as a set", () => {
             read2.groups.forEach((x) => x.parts.forEach((r) => {
               r.pick = x === g && !added(g, r);
             }));
@@ -14952,7 +14809,7 @@ ${CONTEST_CSS}
           "div",
           { class: `wz-gl-part${p.sel ? " sel" : ""}` },
           set ? h("span", { class: "wz-gl-badge", text: set.letter, style: { background: setColor(set) } }) : null,
-          button("\xD7", () => {
+          button2("\xD7", () => {
             draft2.parts.splice(draft2.parts.indexOf(p), 1);
             changed2();
           }, { title: "Remove this part", cls: "wz-gl-x" }),
@@ -14992,11 +14849,11 @@ ${CONTEST_CSS}
         "div",
         { class: "wz-gl-target" },
         h("span", { text: "Upload to:" }),
-        button("Gallery", () => {
+        button2("Gallery", () => {
           submitTo = null;
           render2();
         }, { cls: !submitTo ? "wz-gl-on" : "", title: "The main gallery, voted on by everyone" }),
-        button(`Contest: ${s.contest.title} (${s.left} of ${s.max} left)`, () => {
+        button2(`Contest: ${s.contest.title} (${s.left} of ${s.max} left)`, () => {
           submitTo = s.contest.id;
           render2();
         }, { cls: submitTo ? "wz-gl-on" : "", title: `Enter these in the contest. Entries close ${new Date(s.contest.closesAt).toLocaleString()}.` })
@@ -15013,7 +14870,7 @@ ${CONTEST_CSS}
           { class: "wz-gl-upload" },
           h("span", { text: `Ready to upload: ${summary}${s ? `, into ${s.contest.title}` : ""}.` }),
           h("span", { class: "wz-gl-grow" }),
-          button("Review upload", () => {
+          button2("Review upload", () => {
             reviewing = true;
             render2();
             panel.scrollTop = 0;
@@ -15033,7 +14890,7 @@ ${CONTEST_CSS}
         h("div", { class: "wz-gl-revcards" }, e.parts.map((p) => h("div", { class: "wz-gl-zoom" }, tile(p))))
       ));
       const into = targetSlots();
-      const go = button(uploading ? "Uploading\u2026" : into ? "Enter in Contest" : "Upload to Gallery", () => doUpload(), { primary: true, title: issues.length ? issues[0] : "Send these for approval" });
+      const go = button2(uploading ? "Uploading\u2026" : into ? "Enter in Contest" : "Upload to Gallery", () => doUpload(), { primary: true, title: issues.length ? issues[0] : "Send these for approval" });
       go.disabled = issues.length > 0 || uploading;
       return h(
         "div",
@@ -15053,7 +14910,7 @@ ${CONTEST_CSS}
           { class: "wz-gl-bar wz-gl-revfoot" },
           h("span", { class: "wz-gl-note", style: { margin: 0 }, text: into ? "Each set and single card is one entry, checked against the contest's rules. Approved entries show in the Contest tab, and join the gallery when the results are out." : "Each set and single card is sent as its own entry, for approval. Approved ones show in Browse for everyone." }),
           h("span", { class: "wz-gl-grow" }),
-          button("Back", () => {
+          button2("Back", () => {
             reviewing = false;
             render2();
           }),
@@ -15092,7 +14949,7 @@ ${CONTEST_CSS}
     function uploadedBox() {
       const posts = lastUpload.posts;
       if (!posts.length) {
-        return h("div", { class: "wz-gl-done failed" }, h("b", { text: "Nothing was uploaded." }), " ", lastUpload.error, " ", button("Dismiss", () => {
+        return h("div", { class: "wz-gl-done failed" }, h("b", { text: "Nothing was uploaded." }), " ", lastUpload.error, " ", button2("Dismiss", () => {
           lastUpload = null;
           render2();
         }));
@@ -15105,10 +14962,10 @@ ${CONTEST_CSS}
         h("ul", {}, posts.map((e) => h("li", { text: e.kind === "set" ? `${e.title} (set of ${e.local.parts.length})` : `${e.title} (${e.local.parts[0].type})` }))),
         lastUpload.error ? h("div", { class: "wz-gl-issues", text: `The rest weren't sent: ${lastUpload.error} They're still in your draft below.` }) : null,
         h("div", { class: "wz-gl-note", style: { margin: "0 0 6px" }, text: lastUpload.contest ? "They're checked against the contest's rules first. See them under Your entries in the Contest tab." : "They show under My posts as awaiting approval, and in Browse for everyone once approved." }),
-        lastUpload.contest ? button("See the contest", () => {
+        lastUpload.contest ? button2("See the contest", () => {
           lastUpload = null;
           setView("contest");
-        }, { primary: true }) : button("See my posts", () => {
+        }, { primary: true }) : button2("See my posts", () => {
           browse.mineOnly = true;
           browse.likedOnly = false;
           browse.list = "new";
@@ -15117,7 +14974,7 @@ ${CONTEST_CSS}
           setView("browse");
         }, { primary: true }),
         " ",
-        button("Dismiss", () => {
+        button2("Dismiss", () => {
           lastUpload = null;
           render2();
         })
@@ -15205,7 +15062,7 @@ ${CONTEST_CSS}
       view: () => open ? tab : "editor",
       setView,
       onChange(f) {
-        listeners4.push(f);
+        listeners5.push(f);
       },
       // Send queued votes now (the Card Maker is closing or being minimised).
       flush: () => voteQueue.flush(),
@@ -15244,11 +15101,11 @@ ${CONTEST_CSS}
   function mountGalleryNav({ win, gallery }) {
     injectStyle3();
     const header = win.root.querySelector(".wz-cm-header");
-    const seg = h("div", { class: "wz-gn-seg" }, VIEWS.map(([v, label, icon]) => h(
+    const seg = h("div", { class: "wz-gn-seg" }, VIEWS.map(([v, label2, icon]) => h(
       "button",
-      { type: "button", "data-view": v, title: v === "editor" ? "Back to the editor" : v === "review" ? "Uploads waiting for your review, and contest judging" : v === "contest" ? "Card Gallery: contests (the running one, and past results)" : `Card Gallery: ${label}`, onclick: () => gallery.setView(v) },
+      { type: "button", "data-view": v, title: v === "editor" ? "Back to the editor" : v === "review" ? "Uploads waiting for your review, and contest judging" : v === "contest" ? "Card Gallery: contests (the running one, and past results)" : `Card Gallery: ${label2}`, onclick: () => gallery.setView(v) },
       h("span", { class: "ic", text: icon }),
-      h("span", { text: label }),
+      h("span", { text: label2 }),
       v === "review" ? h("span", { class: "count" }) : null
     )));
     header.insertBefore(seg, header.querySelector(".wz-cm-grip"));
@@ -15513,24 +15370,24 @@ ${CONTEST_CSS}
     note.hidden = true;
     if (key2 !== "feildmaster" || !["broken", "silent"].includes(status)) return;
     const text = document.createElement("span");
-    const button3 = (label, fn) => {
+    const button4 = (label2, fn) => {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "wz-cm-btn";
-      b.textContent = label;
+      b.textContent = label2;
       b.addEventListener("click", fn);
       return b;
     };
-    const site = button3("Open its site \u2197", () => window.open(EDITORS[key2].url, "_blank", "noopener"));
+    const site = button4("Open its site \u2197", () => window.open(EDITORS[key2].url, "_blank", "noopener"));
     if (status === "silent") {
       text.textContent = "If the editor stays black, open it on its own site instead.";
       note.append(text, site);
     } else if (!isHotfixOn()) {
       text.textContent = "Trouble loading? feildmaster's editor can't start inside the Card Maker yet. The hotfix lets it.";
-      note.append(text, button3("Turn on the hotfix", () => setHotfixEverywhere(true)), site);
+      note.append(text, button4("Turn on the hotfix", () => setHotfixEverywhere(true)), site);
     } else {
       text.textContent = "feildmaster's editor still didn't start, even with the hotfix.";
-      note.append(text, site, button3("Turn off the hotfix", () => setHotfixEverywhere(false)));
+      note.append(text, site, button4("Turn off the hotfix", () => setHotfixEverywhere(false)));
     }
     note.hidden = false;
   }
@@ -15832,8 +15689,8 @@ ${CONTEST_CSS}
   function getSavedPenColor() {
     return readJSON2(PEN_COLOR_KEY, null);
   }
-  function setSavedPenColor(state2) {
-    writeJSON2(PEN_COLOR_KEY, state2);
+  function setSavedPenColor(state3) {
+    writeJSON2(PEN_COLOR_KEY, state3);
   }
   function clearSavedPenColor() {
     try {
@@ -16154,17 +16011,17 @@ ${CONTEST_CSS}
     function notifyHistoryChange() {
       if (onHistoryChange) onHistoryChange(undoStack2.length > 0, redoStack.length > 0);
     }
-    async function restoreState(state2) {
+    async function restoreState(state3) {
       const myGeneration = ++restoreGeneration;
-      paintBackground(state2.backgroundColor);
-      while (layers.length < state2.layers.length) addLayerInternal();
-      while (layers.length > state2.layers.length) {
+      paintBackground(state3.backgroundColor);
+      while (layers.length < state3.layers.length) addLayerInternal();
+      while (layers.length > state3.layers.length) {
         const removed = layers.pop();
         removed.canvas.remove();
       }
       if (activeLayerIndex > layers.length) activeLayerIndex = layers.length || 1;
       layers.forEach((l) => l.ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT));
-      await Promise.all(layers.map((l, i) => loadLayerContent(l.ctx, state2.layers[i])));
+      await Promise.all(layers.map((l, i) => loadLayerContent(l.ctx, state3.layers[i])));
       if (myGeneration !== restoreGeneration) return;
       scheduleSave2();
       notifyLayersChange();
@@ -16461,12 +16318,12 @@ ${CONTEST_CSS}
   function buildRecentColorsRow({ signal, onSelect }) {
     const wrap = document.createElement("div");
     wrap.className = "wizascript-notepad-recent-wrap";
-    const label = document.createElement("div");
-    label.className = "wizascript-notepad-side-label";
-    label.textContent = "Recent Colors";
+    const label2 = document.createElement("div");
+    label2.className = "wizascript-notepad-side-label";
+    label2.textContent = "Recent Colors";
     const row2 = document.createElement("div");
     row2.className = "wizascript-notepad-recent-colors";
-    wrap.append(label, row2);
+    wrap.append(label2, row2);
     function render2(colors) {
       row2.innerHTML = "";
       colors.forEach((entry) => {
@@ -17306,7 +17163,7 @@ ${CONTEST_CSS}
     menu3.appendChild(filterInput);
     const rowsWrap = document.createElement("div");
     Object.assign(rowsWrap.style, { maxHeight: "220px", overflowY: "auto" });
-    function makeRow({ label, onClick, active, secondary, swatch }) {
+    function makeRow({ label: label2, onClick, active, secondary, swatch }) {
       const row2 = document.createElement("div");
       Object.assign(row2.style, {
         display: "flex",
@@ -17332,7 +17189,7 @@ ${CONTEST_CSS}
         left.appendChild(dot);
       }
       const text = document.createElement("span");
-      text.textContent = (active ? "\u2713 " : "") + label;
+      text.textContent = (active ? "\u2713 " : "") + label2;
       text.style.cssText = "overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
       left.appendChild(text);
       row2.appendChild(left);
@@ -17826,7 +17683,7 @@ ${CONTEST_CSS}
   var ITEMS_KEY = "wizascript.wishlist.items";
   var STATE_KEY2 = "wizascript.wishlist.state";
   var OWNED_KEY = "wizascript.wishlist.owned";
-  var listeners2 = /* @__PURE__ */ new Set();
+  var listeners3 = /* @__PURE__ */ new Set();
   function read(key2, fallback) {
     try {
       const raw = GM_getValue(key2, null);
@@ -17841,7 +17698,7 @@ ${CONTEST_CSS}
     GM_setValue(key2, JSON.stringify(value));
   }
   function emit() {
-    listeners2.forEach((fn) => {
+    listeners3.forEach((fn) => {
       try {
         fn();
       } catch (e) {
@@ -17898,8 +17755,8 @@ ${CONTEST_CSS}
     emit();
   }
   function onItemsChange(fn) {
-    listeners2.add(fn);
-    return () => listeners2.delete(fn);
+    listeners3.add(fn);
+    return () => listeners3.delete(fn);
   }
   function getState() {
     return read(STATE_KEY2, {});
@@ -18071,17 +17928,17 @@ ${CONTEST_CSS}
   function noBackgroundHere() {
     return matchesPage(["/Game", { prefix: "/Spectate" }]);
   }
-  function isDue(freq, now = Date.now(), state2 = getState()) {
+  function isDue(freq, now = Date.now(), state3 = getState()) {
     if (freq === FREQ_VISIT || !hasItems()) return false;
-    if (state2.checkingUntil && state2.checkingUntil > now) return false;
-    if (state2.retryAt && state2.retryAt > now) return false;
-    if (!state2.lastCheckAt) return true;
-    if (now - state2.lastCheckAt < MIN_GAP) return false;
-    if (!state2.nextDailyAt && !state2.nextWeeklyAt) return true;
-    if (state2.nextDailyAt && now >= state2.nextDailyAt) return true;
-    if (state2.nextWeeklyAt && now >= state2.nextWeeklyAt) return true;
+    if (state3.checkingUntil && state3.checkingUntil > now) return false;
+    if (state3.retryAt && state3.retryAt > now) return false;
+    if (!state3.lastCheckAt) return true;
+    if (now - state3.lastCheckAt < MIN_GAP) return false;
+    if (!state3.nextDailyAt && !state3.nextWeeklyAt) return true;
+    if (state3.nextDailyAt && now >= state3.nextDailyAt) return true;
+    if (state3.nextWeeklyAt && now >= state3.nextWeeklyAt) return true;
     const interval = INTERVALS[freq];
-    return !!(interval && now - state2.lastCheckAt >= interval);
+    return !!(interval && now - state3.lastCheckAt >= interval);
   }
   function nextAt(prev, seconds, now) {
     if (seconds == null) return null;
@@ -18089,10 +17946,10 @@ ${CONTEST_CSS}
     return prev && Math.abs(prev - at) < SAME_REFRESH ? prev : at;
   }
   function applyShop(shop, now = Date.now()) {
-    const state2 = getState();
-    const nextDailyAt = nextAt(state2.nextDailyAt, shop.timers.Daily, now);
+    const state3 = getState();
+    const nextDailyAt = nextAt(state3.nextDailyAt, shop.timers.Daily, now);
     const weeklySecs = [shop.timers.New, shop.timers.Sale].filter((s) => s != null);
-    const nextWeeklyAt = nextAt(state2.nextWeeklyAt, weeklySecs.length ? Math.min(...weeklySecs) : null, now);
+    const nextWeeklyAt = nextAt(state3.nextWeeklyAt, weeklySecs.length ? Math.min(...weeklySecs) : null, now);
     setState({ lastCheckAt: now, nextDailyAt, nextWeeklyAt, retryAt: 0, checkingUntil: 0 });
     recordOwnership(shop.items, now);
     const removed = [];
@@ -18127,13 +17984,13 @@ ${CONTEST_CSS}
   function goToShop(key2) {
     location.href = "/CosmeticsShop" + (key2 ? `#wz=${encodeURIComponent(key2)}` : "");
   }
-  function toast(plugin, opts) {
+  function toast2(plugin, opts) {
     if (!plugin || typeof plugin.toast !== "function") return null;
     return plugin.toast({ className: "dismissable", ...opts });
   }
   function showMatchesToast(plugin, matches) {
     const n = matches.length;
-    return toast(plugin, {
+    return toast2(plugin, {
       title: `${n} wishlist item${n === 1 ? "" : "s"} in the Cosmetics Shop!`,
       text: rowsHtml(matches),
       buttons: [{ text: "Take me there!", className: "dismiss", ...toastClick(() => goToShop(matches[0].key)) }]
@@ -18141,7 +17998,7 @@ ${CONTEST_CSS}
   }
   function showRemovedToast(plugin, names) {
     if (!names.length) return null;
-    return toast(plugin, {
+    return toast2(plugin, {
       title: "Cosmetic Wishlist",
       text: `Removed from your wishlist (you own ${names.length === 1 ? "it" : "them"} now): ${names.map(esc3).join(", ")}`
     });
@@ -18165,8 +18022,8 @@ ${CONTEST_CSS}
     }
     const result = applyShop(shop, Date.now());
     showRemovedToast(plugin, result.removed);
-    const state2 = getState();
-    const notified = { ...state2.notified || {} };
+    const state3 = getState();
+    const notified = { ...state3.notified || {} };
     const fresh = remind === REMIND_ALWAYS ? result.matches : result.matches.filter((m) => notified[m.key] !== result.cycle(m.section));
     result.matches.forEach((m) => {
       notified[m.key] = result.cycle(m.section);
@@ -18184,7 +18041,7 @@ ${CONTEST_CSS}
     try {
       shop = await fetchShop();
     } catch (e) {
-      toast(plugin, { title: "Cosmetic Wishlist", text: `Couldn't read the Cosmetics Shop: ${esc3(e.message)}` });
+      toast2(plugin, { title: "Cosmetic Wishlist", text: `Couldn't read the Cosmetics Shop: ${esc3(e.message)}` });
       return { error: e };
     }
     const result = applyShop(shop, Date.now());
@@ -18197,10 +18054,10 @@ ${CONTEST_CSS}
     if (result.matches.length) {
       showMatchesToast(plugin, result.matches);
     } else {
-      const state2 = getState();
-      toast(plugin, {
+      const state3 = getState();
+      toast2(plugin, {
         title: "Cosmetic Wishlist",
-        text: `Nothing from your wishlist is in the Cosmetics Shop right now.` + (state2.nextDailyAt ? `<br><small>Next daily refresh in ${formatIn(state2.nextDailyAt - Date.now())}.</small>` : "")
+        text: `Nothing from your wishlist is in the Cosmetics Shop right now.` + (state3.nextDailyAt ? `<br><small>Next daily refresh in ${formatIn(state3.nextDailyAt - Date.now())}.</small>` : "")
       });
     }
     return result;
@@ -18245,9 +18102,9 @@ ${CONTEST_CSS}
     const where = s.section === "Sale" ? "on sale" : `in ${s.section}`;
     return `Last seen ${where}, ${whenText(s.at)}${s.cost != null ? ` \xB7 ${s.cost} UCP` : ""}`;
   }
-  function renderList2(box, label) {
+  function renderList2(box, label2) {
     const pins = getItemList();
-    if (label) label.textContent = `Your Wishlist (${pins.length})`;
+    if (label2) label2.textContent = `Your Wishlist (${pins.length})`;
     box.textContent = "";
     if (!pins.length) {
       const empty = document.createElement("div");
@@ -18290,18 +18147,18 @@ ${CONTEST_CSS}
       el3.style.display = "none";
       const row2 = el3.closest(".flex-start");
       if (!row2) return;
-      const label = row2.querySelector("label");
-      if (label) label.style.fontWeight = "bold";
+      const label2 = row2.querySelector("label");
+      if (label2) label2.style.fontWeight = "bold";
       const box = document.createElement("div");
       box.className = "wz-wl-list";
       row2.appendChild(box);
-      renderList2(box, label);
+      renderList2(box, label2);
       const off = onItemsChange(() => {
         if (!box.isConnected) {
           off();
           return;
         }
-        renderList2(box, label);
+        renderList2(box, label2);
       });
     });
     let checking2 = false;
@@ -18467,7 +18324,7 @@ ${CONTEST_CSS}
 
   // packages/misc/card-history/game.js
   var W = () => getPageWindow();
-  var cardFile2 = null;
+  var cardFile = null;
   var artifactList = null;
   var page$ = () => W().$;
   var hasI18n = () => {
@@ -18477,7 +18334,7 @@ ${CONTEST_CSS}
   function allCards() {
     const w = W();
     if (Array.isArray(w.allCards) && w.allCards.length) return w.allCards;
-    if (cardFile2 && cardFile2.length) return cardFile2;
+    if (cardFile && cardFile.length) return cardFile;
     try {
       const ls = JSON.parse(w.localStorage.getItem("allCards") || "[]");
       if (Array.isArray(ls) && ls.length) return ls;
@@ -18492,7 +18349,7 @@ ${CONTEST_CSS}
     try {
       const d = await (await fetch(cfg.url, { credentials: "same-origin" })).json();
       const list = Array.isArray(d) ? d : d && (d.cards || d.allCards) || [];
-      cardFile2 = typeof list === "string" ? JSON.parse(list) : list;
+      cardFile = typeof list === "string" ? JSON.parse(list) : list;
     } catch (e) {
     }
   }
@@ -18503,7 +18360,7 @@ ${CONTEST_CSS}
     const n = norm(s);
     return list.find((c) => norm(c.name) === n) || null;
   }
-  async function artifacts3() {
+  async function artifacts2() {
     if (artifactList) return artifactList;
     try {
       const data2 = await (await fetch("/DecksConfig", { credentials: "same-origin" })).json();
@@ -18515,7 +18372,7 @@ ${CONTEST_CSS}
     return artifactList;
   }
   var norm = (s) => String(s || "").toLowerCase().replace(/&amp;/g, "&").replace(/[^a-z0-9]/g, "");
-  function tr2(key2, ...args) {
+  function tr(key2, ...args) {
     try {
       const v = page$().i18n(key2, ...args);
       if (!v || v === key2) return "";
@@ -18640,17 +18497,17 @@ ${CONTEST_CSS}
     const codeNames = /* @__PURE__ */ new Map();
     if (hasI18n()) {
       const kwCode = (id, override) => `{{KW:${id.toUpperCase().replace(/-/g, "_")}${override ? `|override=${override}` : ""}}}`;
-      (R.keywords || []).forEach((id) => add(tr2(`kw-${id}`), kwCode(id)));
+      (R.keywords || []).forEach((id) => add(tr(`kw-${id}`), kwCode(id)));
       (R.legacyKeywords || []).forEach(([word, modern]) => {
         const own = word.toLowerCase().replace(/'/g, "").replace(/ /g, "-");
         if (cap.has(word.toLowerCase())) return;
-        const code = tr2(`kw-${own}`) ? kwCode(own, word) : modern && tr2(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`;
+        const code = tr(`kw-${own}`) ? kwCode(own, word) : modern && tr(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`;
         add(word, code);
       });
       uniq([...R.enchantments || [], ...knownKeys("enchant-")]).forEach((id) => {
         const code = id.toUpperCase().replace(/-/g, "_");
-        const one = tr2(`enchant-${id}`, 1);
-        add(tr2(`enchant-${id}`, 2), `{{ENCHANT:${code}|2}}`);
+        const one = tr(`enchant-${id}`, 1);
+        add(tr(`enchant-${id}`, 2), `{{ENCHANT:${code}|2}}`);
         add(one, `{{ENCHANT:${code}|1}}`);
         if (!one) {
           const words = id.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
@@ -18660,14 +18517,14 @@ ${CONTEST_CSS}
       });
       (R.tribes || []).forEach((id) => {
         const code = id.toUpperCase().replace(/-/g, "_");
-        add(tr2(`tribe-${id}`, 2), `{{TRIBE:${code}|2}}`);
-        add(tr2(`tribe-${id}`, 1), `{{TRIBE:${code}|1}}`);
+        add(tr(`tribe-${id}`, 2), `{{TRIBE:${code}|2}}`);
+        add(tr(`tribe-${id}`, 1), `{{TRIBE:${code}|1}}`);
       });
-      (R.souls || []).forEach((id) => add(tr2(`soul-${id}`), `{{SOUL:${id.toUpperCase()}}}`));
-      (R.legacyWithColon || []).forEach(([word, modern]) => colonCodes.set(word, tr2(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`));
-      (await artifacts3()).forEach((a) => {
+      (R.souls || []).forEach((id) => add(tr(`soul-${id}`), `{{SOUL:${id.toUpperCase()}}}`));
+      (R.legacyWithColon || []).forEach(([word, modern]) => colonCodes.set(word, tr(`kw-${modern}`) ? kwCode(modern, word) : `<span class="underlined">${escHtml(word)}</span>`));
+      (await artifacts2()).forEach((a) => {
         if (!a || a.id == null) return;
-        const name = tr2(`artifact-name-${a.id}`) || a.name;
+        const name = tr(`artifact-name-${a.id}`) || a.name;
         addExact(name, `{{ARTIFACT:${a.id}}}`);
         [name, a.name].forEach((n) => {
           if (n) artIds.set(norm(n), a.id);
@@ -18676,12 +18533,12 @@ ${CONTEST_CSS}
       });
       allCards().forEach((c) => {
         const id = c.fixedId || c.id;
-        const name = tr2(`card-name-${id}`, 1) || c.name;
+        const name = tr(`card-name-${id}`, 1) || c.name;
         if (notLinks.has(name)) return;
         addExact(name, `{{CARD:${id}|1}}`);
-        addExact(tr2(`card-name-${id}`, 2), `{{CARD:${id}|2}}`);
+        addExact(tr(`card-name-${id}`, 2), `{{CARD:${id}|2}}`);
         if (!/s$/i.test(name)) addExact(`${name}s`, `{{CARD:${id}|2}}`);
-        codeNames.set(`c:${id}`, uniq([tr2(`card-name-${id}`, 2), `${name}s`, name, c.name].filter(Boolean)));
+        codeNames.set(`c:${id}`, uniq([tr(`card-name-${id}`, 2), `${name}s`, name, c.name].filter(Boolean)));
       });
     }
     const capPattern = (w) => [...w].map((ch, i) => {
@@ -18826,8 +18683,8 @@ ${CONTEST_CSS}
 
   // packages/misc/card-history/report-codes.js
   var HEAD = `${HEADER}CH`;
-  var encLabel = (label) => label === "today" ? "now" : String(label).replace(/^</, "-").replace(/[^A-Za-z0-9.?-]/g, "");
-  var decLabel = (label) => label === "now" ? "today" : label.replace(/^-/, "<");
+  var encLabel = (label2) => label2 === "today" ? "now" : String(label2).replace(/^</, "-").replace(/[^A-Za-z0-9.?-]/g, "");
+  var decLabel = (label2) => label2 === "now" ? "today" : label2.replace(/^-/, "<");
   var token = (r) => `${r.kind === "a" ? `A${r.id}` : r.id}@${encLabel(r.label)}`;
   function buildDate(builtAt) {
     const m = String(builtAt || "").match(/^\d{2}(\d{2})-(\d{2})-(\d{2})/);
@@ -18863,10 +18720,10 @@ ${CONTEST_CSS}
       const items = rest.trim().split(" ").map((t) => {
         const at = t.lastIndexOf("@");
         const who = t.slice(0, at);
-        const label = decLabel(t.slice(at + 1));
+        const label2 = decLabel(t.slice(at + 1));
         const kind = who[0] === "A" ? "a" : "c";
         const id = kind === "a" ? who.slice(1) : who;
-        return { key: `${kind}:${id}:${label}`, kind, id, label };
+        return { key: `${kind}:${id}:${label2}`, kind, id, label: label2 };
       });
       out.push({ line, date, items });
       return line;
@@ -18892,13 +18749,13 @@ ${CONTEST_CSS}
     GM_setValue(STORE, JSON.stringify(list));
     changed();
   }
-  var listeners3 = /* @__PURE__ */ new Set();
+  var listeners4 = /* @__PURE__ */ new Set();
   var onReportsChanged = (fn) => {
-    listeners3.add(fn);
-    return () => listeners3.delete(fn);
+    listeners4.add(fn);
+    return () => listeners4.delete(fn);
   };
   function changed() {
-    listeners3.forEach((fn) => {
+    listeners4.forEach((fn) => {
       try {
         fn();
       } catch (e) {
@@ -19055,8 +18912,8 @@ ${CONTEST_CSS}
     if (text !== void 0) e.textContent = text;
     return e;
   };
-  var button2 = (label, cls, fn) => {
-    const b = el2("button", `btn ${cls}`, label);
+  var button3 = (label2, cls, fn) => {
+    const b = el2("button", `btn ${cls}`, label2);
     b.type = "button";
     b.addEventListener("click", fn);
     return b;
@@ -19080,13 +18937,13 @@ ${CONTEST_CSS}
       }
       const table = el2("table", "wz-ch-myreports-list");
       list.forEach((r) => {
-        const tr3 = el2("tr");
-        tr3.innerHTML = `<td>${escHtml(r.name)}</td><td>${escHtml(r.label)}</td><td class="wz-ch-dim">${r.sent ? "sent" : "not sent"}</td><td></td>`;
-        tr3.lastChild.appendChild(button2("\xD7", "btn-xs btn-default", () => {
+        const tr2 = el2("tr");
+        tr2.innerHTML = `<td>${escHtml(r.name)}</td><td>${escHtml(r.label)}</td><td class="wz-ch-dim">${r.sent ? "sent" : "not sent"}</td><td></td>`;
+        tr2.lastChild.appendChild(button3("\xD7", "btn-xs btn-default", () => {
           removeReport(r.key);
           render2();
         }));
-        table.appendChild(tr3);
+        table.appendChild(tr2);
       });
       const unsent = list.filter((r) => !r.sent);
       const toSend = unsent.length ? unsent : list;
@@ -19104,12 +18961,12 @@ ${CONTEST_CSS}
         code.addEventListener("focus", () => code.select());
         row2.appendChild(code);
         if (chat) {
-          row2.appendChild(button2("Send", "btn-primary btn-sm", () => {
+          row2.appendChild(button3("Send", "btn-primary btn-sm", () => {
             markSent(keys);
             openVoid(line);
           }));
         }
-        row2.appendChild(button2("Copy", "btn-default btn-sm", async () => {
+        row2.appendChild(button3("Copy", "btn-default btn-sm", async () => {
           const ok = await copy(line, code);
           markSent(keys);
           status.textContent = ok ? "Copied." : "Select the line and copy it.";
@@ -19147,15 +19004,15 @@ ${CONTEST_CSS}
     desc.appendChild(inner);
     gameFontSize(inner, 81);
   }
-  function setQuantity(el3, label, note) {
+  function setQuantity(el3, label2, note) {
     let q = el3.querySelector(".cardQuantity");
     if (!q) {
       q = document.createElement("div");
       q.className = "cardQuantity";
       el3.appendChild(q);
     }
-    q.textContent = label.text + (note || label.uncertain ? " *" : "");
-    q.title = label.title + (note ? `
+    q.textContent = label2.text + (note || label2.uncertain ? " *" : "");
+    q.title = label2.title + (note ? `
 ${note}` : "");
   }
   function tidy(el3) {
@@ -19337,15 +19194,15 @@ ${note}` : "");
     const s = String(q);
     if (/^\d+$/.test(s)) return list.find((a) => String(a.id) === s) || null;
     const n = norm(s);
-    return list.find((a) => norm(a.name) === n || norm(tr2(`artifact-name-${a.id}`)) === n) || list.find((a) => norm(a.image) === n) || null;
+    return list.find((a) => norm(a.name) === n || norm(tr(`artifact-name-${a.id}`)) === n) || list.find((a) => norm(a.image) === n) || null;
   }
   function row(ver, rarity, f, todayName, todayHtml, target) {
-    const tr22 = document.createElement("tr");
+    const tr2 = document.createElement("tr");
     const v = document.createElement("td");
     v.className = "wz-ch-art-ver wz-ch-badge-spot";
-    const label = versionLabel(ver.version);
-    v.textContent = label.text + (ver.note || label.uncertain ? " *" : "");
-    v.title = label.title + (ver.note ? `
+    const label2 = versionLabel(ver.version);
+    v.textContent = label2.text + (ver.note || label2.uncertain ? " *" : "");
+    v.title = label2.title + (ver.note ? `
 ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     const r = document.createElement("td");
     r.className = "wz-ch-art-rar";
@@ -19355,16 +19212,16 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     const oldName = ver.name && norm(ver.name) !== norm(todayName) ? `<span class="wz-ch-art-oldname">(${escHtml(ver.name)})</span>` : "";
     const body = todayHtml !== void 0 ? todayHtml : ver.textKnown && ver.text ? formatText2(ver.text, f, ver.version && ver.version.key) : "?";
     t.innerHTML = `<div class="cardDesc wz-ch-art-desc"><div>${oldName}${body}</div></div>`;
-    tr22.append(v, r, t);
+    tr2.append(v, r, t);
     if (target) {
       const d = document.createElement("div");
       d.innerHTML = body;
-      tagNode(tr22, { ...target, label: todayHtml !== void 0 ? "today" : label.text, shown: `${rarity || "?"}: ${ver.name && norm(ver.name) !== norm(todayName) ? `(${ver.name}) ` : ""}${d.textContent.replace(/\s+/g, " ").trim()}`.slice(0, 140) });
+      tagNode(tr2, { ...target, label: todayHtml !== void 0 ? "today" : label2.text, shown: `${rarity || "?"}: ${ver.name && norm(ver.name) !== norm(todayName) ? `(${ver.name}) ` : ""}${d.textContent.replace(/\s+/g, " ").trim()}`.slice(0, 140) });
     }
-    return tr22;
+    return tr2;
   }
   function artifactHistoryView(a, data2, f, index) {
-    const todayName = tr2(`artifact-name-${a.id}`, 1) || a.name;
+    const todayName = tr(`artifact-name-${a.id}`, 1) || a.name;
     const todayHtml = trHtml(`artifact-${a.id}`) || (a.description ? formatText2(a.description, f) : "?");
     const today = todayArtifactRarity(a);
     const versions = (data2 && data2.versions ? data2.versions : []).map((v) => ({ ...v }));
@@ -19423,7 +19280,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     const box = document.createElement("div");
     box.className = "wz-ch-loading";
     box.innerHTML = '<div class="wz-ch-loading-title">Loading...</div><div class="wz-ch-step"></div>';
-    const state2 = { url: wikiUrl, shown: false, onShown: null };
+    const state3 = { url: wikiUrl, shown: false, onShown: null };
     const api = dialogApi();
     let off = null;
     if (api) {
@@ -19432,8 +19289,8 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         size: api.BD.SIZE_WIDE,
         message: api.$(box),
         onshown: () => {
-          state2.shown = true;
-          if (state2.onShown) state2.onShown();
+          state3.shown = true;
+          if (state3.onShown) state3.onShown();
         },
         onhidden: () => {
           if (off) off();
@@ -19441,13 +19298,13 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         },
         buttons: [
           { id: "wz-ch-myreports-btn", label: reportsLabel(), action: () => openMyReports() },
-          { label: "Open on the wiki", action: () => window.open(state2.url, "_blank", "noopener") },
+          { label: "Open on the wiki", action: () => window.open(state3.url, "_blank", "noopener") },
           { label: "Close", cssClass: "btn-primary", action: (d) => d.close() }
         ]
       });
     } else {
       document.body.appendChild(box);
-      state2.shown = true;
+      state3.shown = true;
     }
     off = onReportsChanged(() => {
       repaintAll(box);
@@ -19460,7 +19317,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         if (el3) el3.textContent = text;
       },
       fill(node, fit2, url) {
-        if (url) state2.url = url;
+        if (url) state3.url = url;
         box.className = "";
         box.replaceChildren(node);
         if (!fit2) return;
@@ -19469,8 +19326,8 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
           if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit2);
           setTimeout(fit2, 400);
         };
-        if (state2.shown) run();
-        else state2.onShown = run;
+        if (state3.shown) run();
+        else state3.onShown = run;
       },
       fail(err) {
         const t = box.querySelector(".wz-ch-loading-title");
@@ -19602,7 +19459,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     }
   }
   async function openArtifact(image) {
-    const list = await artifacts3();
+    const list = await artifacts2();
     const a = findArtifact(list, image);
     if (!a) return;
     const shell = openShell(`Artifact History - ${a.name}`, `https://undercards.fandom.com/wiki/${a.name.replace(/ /g, "_")}`);
@@ -19694,9 +19551,9 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         ["\u2423"]
       ]
     };
-    function displayLabel(label, shift) {
-      if (label === "\u2423") return "SPACE";
-      return shift ? label.toUpperCase() : label;
+    function displayLabel(label2, shift) {
+      if (label2 === "\u2423") return "SPACE";
+      return shift ? label2.toUpperCase() : label2;
     }
     function keyInfo(ch) {
       if (ch === " ") return { code: "Space", keyCode: 32 };
@@ -19921,10 +19778,10 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         const rowEl = document.createElement("div");
         Object.assign(rowEl.style, { display: "flex", justifyContent: "center", marginBottom: "5px" });
         const keyEls = [];
-        row2.forEach((label) => {
+        row2.forEach((label2) => {
           const keyEl = document.createElement("div");
-          keyEl.textContent = displayLabel(label, oskShift);
-          const wide = label === "\u2423";
+          keyEl.textContent = displayLabel(label2, oskShift);
+          const wide = label2 === "\u2423";
           Object.assign(keyEl.style, {
             minWidth: wide ? "220px" : "34px",
             height: "34px",
@@ -20199,19 +20056,19 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         return ra.left - rb.left;
       });
     }
-    function isTabLabelChecked(label) {
-      const radio = label && label.previousElementSibling;
+    function isTabLabelChecked(label2) {
+      const radio = label2 && label2.previousElementSibling;
       return !!(radio && radio.tagName === "INPUT" && radio.checked);
     }
-    function isFoldLabel(label) {
-      const content = label && label.nextElementSibling;
+    function isFoldLabel(label2) {
+      const content = label2 && label2.nextElementSibling;
       return !!(content && content.classList.contains("tabContent") && content.classList.contains("nested"));
     }
     function queryActiveTabContent(tabbedRoot) {
       let view = tabbedRoot;
       for (let depth = 0; view && depth < 5; depth++) {
-        const label = Array.from(view.querySelectorAll(":scope > .tabLabel")).find(isTabLabelChecked);
-        const content = label && label.nextElementSibling;
+        const label2 = Array.from(view.querySelectorAll(":scope > .tabLabel")).find(isTabLabelChecked);
+        const content = label2 && label2.nextElementSibling;
         if (!content || !content.classList.contains("tabContent")) return null;
         if (!content.classList.contains("nested")) return content;
         view = content.querySelector(":scope > .tabbedView");
@@ -20340,9 +20197,9 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         return handItems[handIndex] || null;
       }
       if (activeSubmenu) return activeSubmenu.items[activeSubmenu.index] || null;
-      const state2 = chromeStates[chromeIndex];
-      if (!state2 || state2.type !== "group") return null;
-      const g = state2.group;
+      const state3 = chromeStates[chromeIndex];
+      if (!state3 || state3.type !== "group") return null;
+      const g = state3.group;
       const idx = itemIndexByGroupName[g.name] || 0;
       return g.items[idx] || null;
     }
@@ -20457,12 +20314,12 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     let activeRows = KEY_PAGES.letters;
     buildGrid(activeRows);
     function renderOskLabels() {
-      activeRows.forEach((row2, r) => row2.forEach((label, c) => {
-        oskRowEls[r][c].textContent = displayLabel(label, oskShift);
+      activeRows.forEach((row2, r) => row2.forEach((label2, c) => {
+        oskRowEls[r][c].textContent = displayLabel(label2, oskShift);
       }));
     }
     function updateOskHighlight() {
-      activeRows.forEach((row2, r) => row2.forEach((label, c) => {
+      activeRows.forEach((row2, r) => row2.forEach((label2, c) => {
         const active = r === oskRow && c === oskCol;
         oskRowEls[r][c].style.border = active ? "2px solid #0f0" : "2px solid transparent";
         oskRowEls[r][c].style.background = active ? "#0a4d0a" : "#232326";
@@ -20557,13 +20414,13 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       el3.dispatchEvent(new KeyboardEvent("keyup", base));
       scrollFieldToCaret(el3);
     }
-    function pressKey(label) {
+    function pressKey(label2) {
       if (!oskTarget) return;
-      if (label === "\u2423") {
+      if (label2 === "\u2423") {
         typeChar(oskTarget, " ");
         return;
       }
-      const ch = oskShift ? label.toUpperCase() : label;
+      const ch = oskShift ? label2.toUpperCase() : label2;
       typeChar(oskTarget, ch);
     }
     let sliderTarget = null;
@@ -20638,7 +20495,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       }
       closeSelectPicker();
     }
-    function activateHighlighted(button3) {
+    function activateHighlighted(button4) {
       const el3 = currentFocusedEl();
       if (!el3) return;
       const rect = el3.getBoundingClientRect();
@@ -20647,7 +20504,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         activatePatchMakerResetButton(el3, cx, cy);
         return;
       }
-      dispatchClick(el3, cx, cy, button3 === 2 ? 2 : 0);
+      dispatchClick(el3, cx, cy, button4 === 2 ? 2 : 0);
       const openPresetMenu = getPresetMenuState();
       if (openPresetMenu) {
         fieldSubmenu = {
@@ -20762,14 +20619,14 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       }
       return rowEls.length - 1;
     }
-    function fire(el3, type, ctor, clientX, clientY, button3, buttons) {
+    function fire(el3, type, ctor, clientX, clientY, button4, buttons) {
       const opts = {
         bubbles: true,
         cancelable: true,
         view: pageWindow2,
         clientX,
         clientY,
-        button: button3 || 0,
+        button: button4 || 0,
         buttons: buttons || 0
       };
       if (ctor === PointerEvent) {
@@ -20792,8 +20649,8 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       fire(el3, "mouseup", MouseEvent, x, y, 1, 0);
       fire(el3, "auxclick", MouseEvent, x, y, 1, 0);
     }
-    function dispatchClick(el3, cx, cy, button3) {
-      if (button3 === 2) {
+    function dispatchClick(el3, cx, cy, button4) {
+      if (button4 === 2) {
         fire(el3, "pointerdown", PointerEvent, cx, cy, 2, 2);
         fire(el3, "mousedown", MouseEvent, cx, cy, 2, 2);
         fire(el3, "pointerup", PointerEvent, cx, cy, 2, 0);
@@ -20882,13 +20739,13 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       })();
     }
     const drag = { left: null, right: null };
-    function beginPress(side, button3) {
+    function beginPress(side, button4) {
       cursor.style.display = "none";
       const hitEl = document.elementFromPoint(x, y);
       cursor.style.display = "block";
       if (!hitEl) return;
       drag[side] = { downEl: hitEl };
-      if (button3 === 2) {
+      if (button4 === 2) {
         fire(hitEl, "pointerdown", PointerEvent, x, y, 2, 2);
         fire(hitEl, "mousedown", MouseEvent, x, y, 2, 2);
       } else {
@@ -20896,13 +20753,13 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         fire(hitEl, "mousedown", MouseEvent, x, y, 0, 1);
       }
     }
-    function continuePress(side, button3) {
+    function continuePress(side, button4) {
       if (!drag[side]) return;
       cursor.style.display = "none";
       const hitEl = document.elementFromPoint(x, y);
       cursor.style.display = "block";
       if (!hitEl) return;
-      if (button3 === 2) {
+      if (button4 === 2) {
         fire(hitEl, "pointermove", PointerEvent, x, y, 2, 2);
         fire(hitEl, "mousemove", MouseEvent, x, y, 2, 2);
       } else {
@@ -20910,22 +20767,22 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         fire(hitEl, "mousemove", MouseEvent, x, y, 0, 1);
       }
     }
-    function endPress(side, button3) {
-      const state2 = drag[side];
+    function endPress(side, button4) {
+      const state3 = drag[side];
       drag[side] = null;
-      if (!state2) return;
+      if (!state3) return;
       cursor.style.display = "none";
       const hitEl = document.elementFromPoint(x, y);
       cursor.style.display = "block";
       if (!hitEl) return;
-      if (button3 === 2) {
+      if (button4 === 2) {
         fire(hitEl, "pointerup", PointerEvent, x, y, 2, 0);
         fire(hitEl, "mouseup", MouseEvent, x, y, 2, 0);
-        if (hitEl === state2.downEl) fire(hitEl, "contextmenu", MouseEvent, x, y, 2, 0);
+        if (hitEl === state3.downEl) fire(hitEl, "contextmenu", MouseEvent, x, y, 2, 0);
       } else {
         fire(hitEl, "pointerup", PointerEvent, x, y, 0, 0);
         fire(hitEl, "mouseup", MouseEvent, x, y, 0, 0);
-        if (hitEl === state2.downEl) fire(hitEl, "click", MouseEvent, x, y, 0, 0);
+        if (hitEl === state3.downEl) fire(hitEl, "click", MouseEvent, x, y, 0, 0);
       }
     }
     function collectHoverRules() {
@@ -21659,7 +21516,7 @@ ${btnLabel(0)} ${focusedIsConfirm ? "confirm" : "toggle swap"}`;
               categoryIndex = keep >= 0 ? keep : Math.min(categoryIndex, Math.max(0, categoryItems.length - 1));
             }
             if (categoryItems.length) {
-              let activeIdx = categoryItems.findIndex((label) => isTabLabelChecked(label) && !isFoldLabel(label));
+              let activeIdx = categoryItems.findIndex((label2) => isTabLabelChecked(label2) && !isFoldLabel(label2));
               if (activeIdx < 0) activeIdx = categoryItems.findIndex(isTabLabelChecked);
               if (activeIdx >= 0) {
                 if (activeIdx !== lastKnownActiveCategoryIdx) categoryIndex = activeIdx;
@@ -21975,12 +21832,12 @@ ${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   ${btnLabel(1)} close`;
           if (tlClaimed) {
             dpadHeld = { up, down, left, right };
             btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
-            const label = (key2) => bindingToDisplay(getBoundTierListButton(key2));
-            const state3 = tlPad.state();
-            hud.textContent = state3 === "send" ? `tier list: send to tier
-d-pad pick   ${label("tlSelect")} send   ${label("tlBack")} cancel` : state3 === "holding" ? `tier list: holding an item
-d-pad move   ${label("tlSelect")} place   ${label("tlJump")} jump   ${label("tlBack")} cancel` : `tier list
-d-pad move   ${label("tlSelect")} pick up / press   ${label("tlQuickSend")} send   ${label("tlJump")} jump   ${label("tlBack")} back`;
+            const label2 = (key2) => bindingToDisplay(getBoundTierListButton(key2));
+            const state4 = tlPad.state();
+            hud.textContent = state4 === "send" ? `tier list: send to tier
+d-pad pick   ${label2("tlSelect")} send   ${label2("tlBack")} cancel` : state4 === "holding" ? `tier list: holding an item
+d-pad move   ${label2("tlSelect")} place   ${label2("tlJump")} jump   ${label2("tlBack")} cancel` : `tier list
+d-pad move   ${label2("tlSelect")} pick up / press   ${label2("tlQuickSend")} send   ${label2("tlJump")} jump   ${label2("tlBack")} back`;
             return;
           }
         }
@@ -22040,8 +21897,8 @@ d-pad move   ${label("tlSelect")} pick up / press   ${label("tlQuickSend")} send
               dpadHeld = { up, down, left, right };
               refreshHighlight();
               const targetSlot = placingGrid[placingRow][placingCol];
-              const tr3 = targetSlot.getBoundingClientRect();
-              const tcx = tr3.left + tr3.width / 2, tcy = tr3.top + tr3.height / 2;
+              const tr2 = targetSlot.getBoundingClientRect();
+              const tcx = tr2.left + tr2.width / 2, tcy = tr2.top + tr2.height / 2;
               fire(targetSlot, "pointermove", PointerEvent, tcx, tcy, 0, 1);
               fire(targetSlot, "mousemove", MouseEvent, tcx, tcy, 0, 1);
               if (btn(0) && !btnHeld[0]) {
@@ -22249,7 +22106,7 @@ ${btnLabel(0)} select attacker   \u2193/${btnLabel(1)} hand`;
             refreshHighlight();
           }
         }
-        const state2 = chromeStates[chromeIndex];
+        const state3 = chromeStates[chromeIndex];
         if (activeSubmenu) {
           if (up && !dpadHeld.up) {
             activeSubmenu.index = (activeSubmenu.index - 1 + activeSubmenu.items.length) % activeSubmenu.items.length;
@@ -22260,7 +22117,7 @@ ${btnLabel(0)} select attacker   \u2193/${btnLabel(1)} hand`;
             refreshHighlight();
           }
           dpadText = `submenu (${activeSubmenu.index + 1}/${activeSubmenu.items.length})`;
-        } else if (state2 && state2.type === "group") {
+        } else if (state3 && state3.type === "group") {
           if (up && !dpadHeld.up) {
             chromeIndex = Math.max(0, chromeIndex - 1);
             refreshHighlight();
@@ -22269,7 +22126,7 @@ ${btnLabel(0)} select attacker   \u2193/${btnLabel(1)} hand`;
             chromeIndex = Math.min(chromeStates.length - 1, chromeIndex + 1);
             refreshHighlight();
           }
-          const g = state2.group;
+          const g = state3.group;
           if (left && !dpadHeld.left) {
             itemIndexByGroupName[g.name] = ((itemIndexByGroupName[g.name] || 0) - 1 + g.items.length) % g.items.length;
             refreshHighlight();
@@ -22388,6 +22245,7 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     const installState = runMigrations();
     registerPluginToggles(plugin);
     registerAboutSection(plugin);
+    registerAccountSetting(plugin);
     registerBackupSection(plugin);
     registerDebugSetting(plugin);
     initTabBar(plugin);

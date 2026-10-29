@@ -10,9 +10,11 @@
 // copy of Wizascript, not the player: the player proves their Undercards
 // account once by sending a line in void (Link my account).
 
-export const WORKER = "https://wizascript-gallery.redstonewiza2341.workers.dev";
+// The server, this install's credentials and account linking live in
+// core/account.js (any plugin can use them); re-exported here for the gallery.
+import { WORKER, ApiError, request, authed, getMe, linkStart, linkCheck } from "../../core/account.js";
+export { WORKER, ApiError, getMe, linkStart, linkCheck };
 export const GALLERY_RAW = "https://raw.githubusercontent.com/theWiza2341/Wizascript/gallery/";
-const AUTH_KEY = "wizascript.cardMaker.galleryAuth";
 
 // Upload limits (the Worker's, from Cloudflare's free plan): bigger
 // submissions are split into several uploads.
@@ -21,79 +23,6 @@ export const UPLOAD_MAX_PICTURES = 40;
 export const UPLOAD_MAX_BYTES = 1.4 * 1024 * 1024;
 export const PICTURE_MAX_BYTES = 150 * 1024;
 
-export class ApiError extends Error {
-  constructor(status, code, message, extra) { super(message); this.status = status; this.code = code; this.extra = extra || {}; }
-}
-
-function request(method, url, { body, auth, adminKey } = {}) {
-  return new Promise((resolve, reject) => {
-    const headers = { "Content-Type": "application/json" };
-    if (auth) { headers["X-WZ-Install"] = auth.install; headers["X-WZ-Secret"] = auth.secret; }
-    if (adminKey) headers["X-WZ-Admin"] = adminKey;
-    const done = (status, text) => {
-      let data = null;
-      try { data = text ? JSON.parse(text) : null; } catch (e) { /* not JSON */ }
-      if (status >= 200 && status < 300) return resolve(data);
-      if (status === 404 && !data) return resolve(null);
-      reject(new ApiError(status, (data && data.error) || "http", (data && data.message) || `The gallery server answered ${status}.`, data));
-    };
-    if (typeof GM_xmlhttpRequest === "function") {
-      GM_xmlhttpRequest({
-        method, url, headers,
-        data: body ? JSON.stringify(body) : undefined,
-        timeout: 30000,
-        onload: (r) => done(r.status, r.responseText),
-        onerror: () => reject(new ApiError(0, "network", "Couldn't reach the gallery server.")),
-        ontimeout: () => reject(new ApiError(0, "timeout", "The gallery server took too long to answer."))
-      });
-      return;
-    }
-    fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined })
-      .then(async (r) => done(r.status, await r.text()), () => reject(new ApiError(0, "network", "Couldn't reach the gallery server.")));
-  });
-}
-
-// ---- this install ---------------------------------------------------------------
-
-function loadAuth() {
-  try { const a = JSON.parse(GM_getValue(AUTH_KEY, "null")); return a && a.install && a.secret ? a : null; } catch (e) { return null; }
-}
-let auth = null;
-let making = null;
-async function getAuth() {
-  if (auth) return auth;
-  auth = loadAuth();
-  if (auth) return auth;
-  if (!making) {
-    making = request("POST", `${WORKER}/v1/install`).then((a) => {
-      GM_setValue(AUTH_KEY, JSON.stringify({ install: a.install, secret: a.secret }));
-      auth = a;
-      return a;
-    }).finally(() => { making = null; });
-  }
-  return making;
-}
-// A server that no longer knows this install (e.g. its database was reset):
-// start over with a new one.
-async function authed(method, path, body) {
-  const a = await getAuth();
-  try {
-    return await request(method, WORKER + path, { body, auth: a });
-  } catch (e) {
-    if (e.code === "bad_install" || e.code === "no_install") {
-      GM_deleteValue(AUTH_KEY);
-      auth = null;
-      return request(method, WORKER + path, { body, auth: await getAuth() });
-    }
-    throw e;
-  }
-}
-
-// ---- endpoints --------------------------------------------------------------------
-
-export const getMe = () => authed("GET", "/v1/me");
-export const linkStart = () => authed("POST", "/v1/link/start");
-export const linkCheck = () => authed("POST", "/v1/link/check");
 export const sendVotes = (votes) => authed("POST", "/v1/votes", { votes });
 export const deleteOwnPost = (id) => authed("POST", "/v1/posts/delete", { id });
 export const getTotals = () => request("GET", `${WORKER}/v1/totals`);

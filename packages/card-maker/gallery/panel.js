@@ -22,9 +22,9 @@ import { partFromRaw, readUcEditorFile, picturesFromPng, readFile } from "./part
 import { getDraft, saveDraft, nextId, makeSet, tidySets, entries, markUploaded, pruneUploads, SET_CAP } from "./draft.js";
 import { getMe, linkStart, linkCheck, getIndex, getTotals, uploadEntries, uploadProblems, createVoteQueue, ApiError, reviewPending, reviewPost, reviewDecide, reviewRemove, deleteOwnPost, reviewWhoami, reviewLog, reviewersList, reviewerAdd, reviewerRevoke, reviewerAddJudge } from "./api.js";
 import { openVoid, canOpenVoid } from "../../core/uc-report.js";
+import { accountChanged, onAccountChange } from "../../core/account.js";
 import { browseView, allEntries, BROWSE_CSS, removeButton } from "./browse.js";
 import { createContests, CONTEST_CSS } from "./contest.js";
-import { sampleData, loadSampleExtras } from "./mock.js";
 
 const STYLE_ID = "wizascript-cardgallery-style";
 const TYPES = ["Monster", "Spell", "Enchantment", "Artifact"];
@@ -44,13 +44,9 @@ const CSS = `
 .wz-gl-panel.browse > .wz-gl-content { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
 .wz-gl-panel.browse > .wz-gl-content > .wz-gl-browse { flex: 1 1 auto; height: auto; }
 .wz-gl-panel.browse > .wz-gl-content > .wz-gl-cv { flex: 1 1 auto; min-height: 0; }
-.wz-gl-proto { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 4px 8px; margin-bottom: 8px; border: 1px dashed #665; background: #17150c; font-size: 12px; flex: none; }
-.wz-gl-proto b { color: #ffd84a; margin-right: 2px; }
-.wz-gl-proto .sep { width: 1px; height: 16px; background: #554; margin: 0 4px; }
-.wz-gl-proto label { margin: 0; font-weight: normal; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
-.wz-gl-proto select { height: 20px !important; }
-.wz-gl-proto .wz-cm-btn { height: 20px; line-height: 18px; padding: 0 7px; font-size: 11px; }
-.wz-gl-preview-as { background: #3a1f5a; border: 1px solid #b07de0; color: #e6d4ff; padding: 1px 8px; font-size: 11px; }
+.wz-gl-preview-as { background: #3a1f5a; border: 1px solid #b07de0; color: #e6d4ff; padding: 1px 4px 1px 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px; }
+.wz-gl-viewas { margin: 0; font-weight: normal; display: flex; align-items: center; gap: 6px; }
+.wz-gl-viewas select { height: 22px !important; flex: 1; }
 /* Review: roomy, with a side menu (dev16) */
 .wz-gl-rv { font-size: 14px; line-height: 1.45; }
 .wz-gl-rv .wz-cm-btn { height: 28px; font-size: 13px; padding: 0 12px; }
@@ -177,12 +173,8 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   let open = false;
   if (draft.browseProto) { delete draft.browseProto; saveDraft(); } // the old sample-entries switch
   const browse = { list: "new", page: 0, dir: null, mineOnly: false, likedOnly: false };
-  // Preview bar (dev16): layout prototypes, sample data, View as. Kept in the draft.
-  const proto = Object.assign({ contest: "b", samples: false, viewAs: "" }, draft.proto || {}, { viewAs: "" });
-  if (!["b", "d", "e"].includes(proto.contest)) proto.contest = "b"; // dev16's A/C are gone
-  const saveProto = () => { draft.proto = { contest: proto.contest, samples: proto.samples }; saveDraft(); };
-  if (proto.samples) loadSampleExtras().then((more) => { if (more && open) render(); });
-  const sampleDecided = new Set(); // sample uploads approved/rejected here
+  if (draft.proto) { delete draft.proto; saveDraft(); } // dev16/17's layout prototypes
+  let viewAs = ""; // the owner's View as (Review's side menu); "" = themselves
   const listeners = [];
   const notify = () => listeners.forEach((f) => f());
   let browseCtl = null;
@@ -210,7 +202,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   // View as (owner only, dev16): try the other roles' screens. Only what's
   // shown changes; the server still treats the key as the owner's.
   const realRole = () => (rev.who ? rev.who.role : null);
-  const role = () => (realRole() === "owner" && proto.viewAs ? proto.viewAs : realRole());
+  const role = () => (realRole() === "owner" && viewAs ? viewAs : realRole());
   const isOwner = () => role() === "owner";
   const isJudge = () => role() === "judge";
   async function refreshReview(force) {
@@ -255,29 +247,21 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     notify();
     render();
   }
-  // Waiting uploads: the real ones, or sample ones while Sample data is on.
-  const uploadList = () => (proto.samples ? sampleData().uploads.filter((u) => !sampleDecided.has(u.id)) : rev.list);
-  const uploadPost = (p) => (proto.samples ? p : rev.posts[p.id]);
-  function decideAny(id, approve) {
-    if (!proto.samples) return decide(id, approve);
-    sampleDecided.add(id);
-    say(`Sample: ${approve ? "approved" : "rejected"} ${id} here only (nothing was sent).`);
-    render();
-  }
+  const uploadList = () => rev.list;
+  const uploadPost = (p) => rev.posts[p.id];
   function uploadsView() {
     const list = uploadList();
     const head = h("div", { class: "wz-gl-bar" },
-      h("b", { text: rev.loading && !rev.at && !proto.samples ? "Loading uploads…" : `${list.length} upload${list.length === 1 ? "" : "s"} waiting` }),
-      proto.samples ? h("span", { class: "wz-gl-sample", text: "sample" }) : null,
+      h("b", { text: rev.loading && !rev.at ? "Loading uploads…" : `${list.length} upload${list.length === 1 ? "" : "s"} waiting` }),
       h("span", { class: "wz-gl-grow" }),
       button("↻ Refresh", () => refreshReview(true), { title: "Look for new uploads" }));
-    if (rev.error && !proto.samples) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: rev.error }));
-    if (!list.length && (rev.at || proto.samples)) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing to review. New uploads appear here." }));
+    if (rev.error) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: rev.error }));
+    if (!list.length && rev.at) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing to review. New uploads appear here." }));
     const one = (p) => {
       const post = uploadPost(p);
       const reason = h("input", { type: "text", placeholder: "Reason (optional, shown to them if rejected)", maxLength: 300, value: rev.reasons[p.id] || "", oninput: (e) => { rev.reasons[p.id] = e.target.value; } });
-      const approveBtn = button(rev.busy[p.id] || "Approve", () => decideAny(p.id, true), { primary: true, title: p.contest ? "Accept it into the contest" : "Add it to the gallery (one commit on the gallery branch)" });
-      const rejectBtn = button("Reject", () => decideAny(p.id, false), { title: "Don't add it; the author sees it as not approved" });
+      const approveBtn = button(rev.busy[p.id] || "Approve", () => decide(p.id, true), { primary: true, title: p.contest ? "Accept it into the contest" : "Add it to the gallery (one commit on the gallery branch)" });
+      const rejectBtn = button("Reject", () => decide(p.id, false), { title: "Don't add it; the author sees it as not approved" });
       approveBtn.disabled = rejectBtn.disabled = !!rev.busy[p.id] || !post;
       return h("div", { class: "wz-gl-revpost" },
         h("div", { class: "wz-gl-revmeta" },
@@ -298,7 +282,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   // Laid out with a side menu (chosen 2026-10-28 from three prototypes).
   function reviewView() {
     if (!reviewerKey()) return h("p", { class: "wz-gl-note", text: "Review is off." });
-    const running = proto.samples ? contests.shownActive() : contests.active();
+    const running = contests.active();
     const nUp = uploadList().length, nJudge = contests.unscored();
     const judging = ["judging", "Judging", nJudge];
     const sections = isJudge() ? [judging] : [["uploads", "Uploads", nUp]];
@@ -308,13 +292,14 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     }
     if (isOwner()) sections.push(["contests", "Contests", 0], ["reviewers", "Reviewers", 0]);
     if (!sections.some(([k]) => k === rev.section)) { rev.section = sections[0][0]; if (rev.section === "judging") contests.loadJudging(true); }
-    const who = rev.who ? `${isJudge() ? "Judging" : "Reviewing"} as ${rev.who.name}${realRole() === "owner" ? " (owner)" : ""}${proto.viewAs ? `, previewing ${proto.viewAs}` : ""}` : "";
+    const who = rev.who ? `${isJudge() ? "Judging" : "Reviewing"} as ${rev.who.name}${realRole() === "owner" ? " (owner)" : ""}${viewAs ? `, previewing ${viewAs}` : ""}` : "";
     const body = rev.section === "log" ? logView() : rev.section === "reviewers" ? reviewersView() : rev.section === "judging" ? contests.judgingView()
       : rev.section === "contests" ? contests.manageView() : uploadsView();
     const count = (n) => (n ? h("span", { class: "n", text: String(n) }) : null);
     const menu = h("div", { class: "wz-gl-rmenu wz-gl-revtabs" },
       sections.map(([k, label, n]) => h("button", { type: "button", class: rev.section === k ? "on" : "", onclick: () => openSection(k) }, h("span", { text: label }), count(n))),
-      h("div", { class: "who wz-gl-rwho", text: who }));
+      h("div", { class: "who wz-gl-rwho", text: who }),
+      realRole() === "owner" ? h("div", { class: "who" }, viewAsControl()) : null);
     return h("div", { class: "wz-gl-rv" }, h("div", { class: "wz-gl-rside" }, menu, h("div", {}, body)));
   }
   function openSection(k) {
@@ -438,6 +423,9 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   };
   const errText = (e) => (e instanceof ApiError ? e.message : "Something went wrong.");
 
+  // Linked (or switched) on the Wizascript tab: show it here too.
+  onAccountChange((name) => { if (name !== acct.account) { linking = null; refreshMe(true); } });
+
   // ---- contests (contest.js) ----
   const contests = createContests({
     say: (t) => say(t),
@@ -449,8 +437,6 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     draft,
     reviewerKey,
     who: () => (rev.who ? { ...rev.who, role: role() } : null),
-    samples: () => proto.samples,
-    layout: () => proto.contest,
     wheelPages: () => !wheelPages || wheelPages(),
     hideHover: () => hideHover(),
     keyRejected: (code) => onKeyRejected(code),
@@ -465,6 +451,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     try {
       const me = await getMe();
       Object.assign(acct, { loaded: true, account: me.account || null, cooldownUntil: me.cooldownUntil || null, votes: me.votes || {}, posts: me.posts || [], contest: me.contest || null, error: "", at: Date.now() });
+      accountChanged(acct.account, acct.cooldownUntil);
       pruneUploads(Object.fromEntries(acct.posts.map((p) => [p.id, p.status])), new Set(gal.approved.map((p) => p.id)));
     } catch (e) {
       acct.error = errText(e);
@@ -509,6 +496,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
         linking = null;
         acct.account = r.account;
         acct.cooldownUntil = r.cooldownUntil || null;
+        accountChanged(r.account, r.cooldownUntil);
         say(`Linked as ${r.account}.`);
         refreshMe(true);
         refreshGallery(true);
@@ -555,8 +543,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   const tabs = h("div", { class: "wz-gl-bar wz-gl-tabs" });
   const content = h("div", { class: "wz-gl-content" });
   const hover = h("div", { class: "wz-gl-hover" });
-  const protoBar = h("div", { class: "wz-gl-proto" });
-  const panel = h("div", { class: "wz-gl-panel" }, protoBar, tabs, content, hover);
+  const panel = h("div", { class: "wz-gl-panel" }, tabs, content, hover);
   const fileInput = h("input", { type: "file", accept: ".uceditor,image/png", multiple: true, style: { display: "none" } });
   panel.appendChild(fileInput);
 
@@ -628,31 +615,22 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   };
   panel.addEventListener("scroll", hideHover, { passive: true });
 
-  const CONTEST_LAYOUTS = [["b", "Sidebar"], ["d", "Sidebar + Podium"], ["e", "Full width"]];
-  function renderProto() {
-    const pick = (list, key) => list.map(([k, label]) => button(label, () => { proto[key] = k; saveProto(); render(); }, { cls: proto[key] === k ? "wz-gl-on" : "", title: `Contest tab layout: ${label}` }));
-    const owner = realRole() === "owner";
-    protoBar.replaceChildren(...[h("b", { text: "Preview" }),
-      h("span", { text: "Contest:" }), pick(CONTEST_LAYOUTS, "contest"),
-      h("span", { class: "sep" }),
-      h("label", { title: "Made-up contests and uploads to try the layouts with. Nothing is sent." }, h("input", { type: "checkbox", checked: proto.samples, onchange: (e) => {
-        proto.samples = e.target.checked; saveProto();
-        if (proto.samples) loadSampleExtras().then((more) => { if (more && open) render(); });
-        contests.loadJudging(true); render();
-      } }), "Sample data"),
-      owner ? [h("span", { class: "sep" }), h("label", { title: "See Review as another role would. The server still treats you as the owner." }, "View as",
-        h("select", { onchange: (e) => { proto.viewAs = e.target.value === "owner" ? "" : e.target.value; rev.section = ""; notify(); render(); } },
-          [["owner", "Owner"], ["reviewer", "Reviewer"], ["judge", "Judge"], ["player", "Player"]].map(([v, l]) => h("option", { value: v, text: l, selected: (proto.viewAs || "owner") === v })))),
-      proto.viewAs ? h("span", { class: "wz-gl-preview-as", text: `Previewing as ${proto.viewAs}` }) : null] : null].flat(Infinity).filter(Boolean));
+  // View as (owner only, for checking what each role sees): a small select
+  // under Review's side menu, and a badge to stop it from anywhere.
+  function setViewAs(v) { viewAs = v === "owner" ? "" : v; rev.section = ""; notify(); render(); }
+  function viewAsControl() {
+    if (realRole() !== "owner") return null;
+    return h("label", { class: "wz-gl-viewas", title: "See the gallery as another role would. Only the screens change: the server still treats your key as the owner's." }, "View as ",
+      h("select", { onchange: (e) => setViewAs(e.target.value) },
+        [["owner", "Owner"], ["reviewer", "Reviewer"], ["judge", "Judge"], ["player", "Player"]].map(([v, l]) => h("option", { value: v, text: l, selected: (viewAs || "owner") === v }))));
   }
+  const viewAsBadge = () => (viewAs ? h("span", { class: "wz-gl-preview-as" }, `Viewing as ${viewAs} `, button("Stop", () => setViewAs("owner"), { cls: "wz-gl-small", title: "Back to your own view" })) : null);
   function render() {
     hideHover();
     browseCtl = null;
     if (!open) return;
-    renderProto();
     if (tab === "review" && !(reviewerKey() && role() !== "player")) { tab = "browse"; notify(); }
-    tabs.replaceChildren(
-      accountBox(), status, h("span", { class: "wz-gl-grow" }), sizeButtons());
+    tabs.replaceChildren(...[accountBox(), viewAsBadge(), status, h("span", { class: "wz-gl-grow" }), sizeButtons()].filter(Boolean));
     // Browse and Contest fill the panel and turn pages instead of scrolling.
     panel.classList.toggle("browse", tab === "browse" || tab === "contest");
     applyZoom();

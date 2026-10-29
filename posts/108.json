@@ -1,0 +1,37 @@
+{
+  "id": "108",
+  "kind": "set",
+  "title": "Coasters",
+  "author": ":onu4head:",
+  "postedAt": 1793246064360,
+  "contest": "c4",
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Ralseicoaster",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/108-0-pic.png"
+    },
+    {
+      "type": "Monster",
+      "name": "Kriscoaster",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/108-1-pic.png"
+    },
+    {
+      "type": "Monster",
+      "name": "Susiecoaster",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/108-2-pic.png"
+    }
+  ]
+}

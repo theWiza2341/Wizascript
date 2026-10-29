@@ -142,7 +142,7 @@ const sameCard = (p, source, group, raw) => p.source === source && p.editorGroup
 // requestRead(): asks the editor in the Card Maker for its cards, or
 // returns a message saying why it can't. The answer comes back through
 // receiveCards().
-export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, reviewerKey = () => "" }) {
+export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, reviewerKey = () => "", onKeyRejected = () => {} }) {
   injectStyle();
   const draft = getDraft();
   let tab = draft.parts.length ? "browse" : "submit";
@@ -189,7 +189,9 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
         if (!rev.posts[p.id]) rev.posts[p.id] = await reviewPost(key, p.id).catch(() => null);
       }
     } catch (e) {
-      rev.error = e.code === "not_admin" ? "The server no longer accepts this review key. Turn review off and on again with a current key." : errText(e);
+      // Revoked or expired: Wizascript forgets the key (Review disappears).
+      if (e.code === "not_admin" || e.code === "key_expired") { rev.loading = false; onKeyRejected(e.code); return; }
+      rev.error = errText(e);
     } finally {
       rev.loading = false;
       notify();

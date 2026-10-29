@@ -1557,7 +1557,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   var GM_PREFIX2 = "wizascript.";
   var KIND = "BACKUP";
   var CATEGORY2 = "Wizascript";
-  var SKIP_GM = /* @__PURE__ */ new Set(["wizascript.migration.v150", "wizascript.lastSeenVersion", "wizascript.cardMaker.galleryAuth", "wizascript.cardMaker.galleryReview"]);
+  var SKIP_GM = /* @__PURE__ */ new Set(["wizascript.migration.v150", "wizascript.lastSeenVersion", "wizascript.cardMaker.galleryAuth", "wizascript.cardMaker.galleryReview", "wizascript.cardMaker.galleryReviewWho"]);
   var SKIP_LS_PREFIXES = ["about.", "backup.", "cardMaker.galleryReviewerKey"];
   function isBackedUpLsKey(key2) {
     if (!key2.startsWith(LS_PREFIX2)) return false;
@@ -3067,7 +3067,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         "If feildmaster's editor stays black, turn on the <b>hotfix</b> (on the Card Maker tab, or the note that appears in the window)."
       ].concat(settingOn("cardMaker.gallery", true) ? [
         "<b>Browse</b> / <b>Submit</b> (title bar) open the Card Gallery. First press <b>Link my account</b>: it types a one-time line into void (chat room 0) for you to send, so your posts and votes count as your Undercards account.",
-        "In Submit, <b>Read from this editor</b> lists the cards you've made; tick the ones to add, link them into sets, then <b>Review upload</b> and <b>Upload to Gallery</b>. Uploads show to everyone once approved."
+        "In Submit, <b>Read from this editor</b> lists the cards you've made; tick the ones to add, link them into sets, then <b>Review upload</b> and <b>Upload to Gallery</b>. Uploads show to everyone once approved.",
+        "Given a gallery key? Press <b>Redeem Key</b> on the Card Maker tab and enter it."
       ] : [])
     }
   };
@@ -13209,7 +13210,8 @@ ${BROWSE_CSS}
   }
   var setColor = (set) => COLORS[(set.letter.charCodeAt(0) - 65) % COLORS.length];
   var sameCard = (p, source, group, raw) => p.source === source && p.editorGroup === group && p.name === (raw.name || "") && p.type === raw.type;
-  function buildGalleryPanel({ requestRead, editorLabel, wheelPages, reviewerKey: reviewerKey2 = () => "" }) {
+  function buildGalleryPanel({ requestRead, editorLabel, wheelPages, reviewerKey: reviewerKey2 = () => "", onKeyRejected = () => {
+  } }) {
     injectStyle2();
     const draft2 = getDraft();
     let tab = draft2.parts.length ? "browse" : "submit";
@@ -13274,7 +13276,12 @@ ${BROWSE_CSS}
           if (!rev.posts[p.id]) rev.posts[p.id] = await reviewPost(key2, p.id).catch(() => null);
         }
       } catch (e) {
-        rev.error = e.code === "not_admin" ? "The server no longer accepts this review key. Turn review off and on again with a current key." : errText(e);
+        if (e.code === "not_admin" || e.code === "key_expired") {
+          rev.loading = false;
+          onKeyRejected(e.code);
+          return;
+        }
+        rev.error = errText(e);
       } finally {
         rev.loading = false;
         notify2();
@@ -14287,6 +14294,7 @@ ${BROWSE_CSS}
   var gallerySetting = null;
   var wheelSetting = null;
   var REVIEW_KEY = "wizascript.cardMaker.galleryReview";
+  var REVIEW_WHO = "wizascript.cardMaker.galleryReviewWho";
   var reviewerKey = () => {
     try {
       return String(GM_getValue(REVIEW_KEY, "") || "");
@@ -14294,6 +14302,14 @@ ${BROWSE_CSS}
       return "";
     }
   };
+  var reviewerWho = () => {
+    try {
+      return JSON.parse(GM_getValue(REVIEW_WHO, "null"));
+    } catch (e) {
+      return null;
+    }
+  };
+  var ROLE_NAMES = { owner: "owner", reviewer: "reviewer", judge: "judge" };
   var mounted2 = null;
   var footerButton = null;
   var log = (...a) => {
@@ -14412,7 +14428,8 @@ ${BROWSE_CSS}
         },
         editorLabel: (key2) => EDITORS[key2 || currentEditor()].label,
         wheelPages: () => !wheelSetting || !!wheelSetting.value(),
-        reviewerKey
+        reviewerKey,
+        onKeyRejected: (code) => forgetKey(code === "key_expired" ? "Your gallery key has expired, so it was removed." : "Your gallery key was revoked, so it was removed.")
       });
       win.body.appendChild(gallery.el);
       mountGalleryNav({ win, gallery });
@@ -14566,41 +14583,142 @@ ${BROWSE_CSS}
     item2.parentNode.insertBefore(footerButton, item2);
     return true;
   }
+  var keyButton = null;
+  var keyLabel = () => {
+    const who = reviewerKey() && reviewerWho();
+    return who ? `Key: ${who.name} (${ROLE_NAMES[who.role] || "reviewer"})` : "Redeem Key";
+  };
+  function keyChanged() {
+    if (keyButton && keyButton.isConnected) keyButton.value = keyLabel();
+    if (mounted2 && mounted2.gallery) mounted2.gallery.reviewerChanged();
+  }
+  function forgetKey(message) {
+    if (!reviewerKey()) return;
+    GM_deleteValue(REVIEW_KEY);
+    GM_deleteValue(REVIEW_WHO);
+    keyChanged();
+    if (message) console.log(`[Wizascript] ${message}`);
+  }
+  async function redeemKey(raw) {
+    const k = typeof raw === "string" ? raw.trim() : "";
+    if (!k) throw new Error("Enter the key you were given.");
+    let me;
+    try {
+      me = await reviewWhoami(k);
+    } catch (e) {
+      throw new Error(e && e.code === "not_admin" ? "That key isn't valid." : e && e.code === "key_expired" ? "That key has expired." : e && e.code === "rate_limited" ? "Too many wrong keys. Try again in an hour." : e && e.message || "Couldn't check the key.");
+    }
+    if (me.role === "judge") throw new Error("That's a judge key. Judging comes with contests.");
+    GM_setValue(REVIEW_KEY, k);
+    GM_setValue(REVIEW_WHO, JSON.stringify({ name: me.name, role: me.role }));
+    keyChanged();
+    return me;
+  }
+  function openKeyDialog() {
+    const BD = getPageWindow().BootstrapDialog;
+    if (!BD || typeof BD.show !== "function") return;
+    const el3 = (tag, props = {}, ...kids) => {
+      const n = Object.assign(document.createElement(tag), props);
+      kids.forEach((k) => n.append(k));
+      return n;
+    };
+    const wrap = el3("div", { className: "wz-key-dialog" });
+    const status = el3("p", { className: "wz-key-status" });
+    const show = (text, ok) => {
+      status.textContent = text;
+      status.style.color = ok ? "#7f7" : "#f77";
+    };
+    function draw() {
+      wrap.replaceChildren();
+      const who = reviewerKey() && reviewerWho();
+      if (who) {
+        const remove = el3("button", { type: "button", className: "btn btn-sm btn-danger", textContent: "Remove key" });
+        remove.addEventListener("click", () => {
+          forgetKey();
+          draw();
+          show("Key removed.", true);
+        });
+        wrap.append(
+          el3("p", {}, "Active key: ", el3("b", { textContent: who.name }), ` (${ROLE_NAMES[who.role] || "reviewer"}).`),
+          el3("p", { textContent: "Review is in the Card Maker's title bar." }),
+          el3("p", {}, remove),
+          status
+        );
+        return;
+      }
+      const input = el3("input", { type: "password", className: "form-control", placeholder: "Key", autocomplete: "off", spellcheck: false });
+      const go = el3("button", { type: "button", className: "btn btn-sm btn-success", title: "Redeem" }, el3("span", { className: "glyphicon glyphicon-import" }));
+      let busy2 = false;
+      const submit = async () => {
+        if (busy2) return;
+        busy2 = true;
+        go.disabled = true;
+        show("Checking\u2026", true);
+        try {
+          const me = await redeemKey(input.value);
+          draw();
+          show(`Redeemed. You're reviewing as ${me.name}.`, true);
+        } catch (e) {
+          show(e.message, false);
+        }
+        busy2 = false;
+        go.disabled = false;
+      };
+      go.addEventListener("click", submit);
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          submit();
+        }
+      });
+      wrap.append(
+        el3("p", { textContent: "Enter a key you were given to review gallery uploads." }),
+        el3("p", {}, go, " Redeem"),
+        input,
+        status
+      );
+      setTimeout(() => input.focus(), 100);
+    }
+    draw();
+    BD.show({
+      title: "Redeem Key",
+      message: wrap,
+      buttons: [{ label: "Close", cssClass: "btn-danger", action: (d) => d.close() }]
+    });
+  }
   function installReviewCommand() {
     try {
       localStorage.removeItem("underscript.plugin.Wizascript.cardMaker.galleryReviewerKey");
     } catch (e) {
     }
     const w = getPageWindow();
-    const changed2 = () => {
-      if (mounted2 && mounted2.gallery) mounted2.gallery.reviewerChanged();
-    };
     const command = (key2) => {
       if (reviewerKey()) {
-        GM_deleteValue(REVIEW_KEY);
-        changed2();
+        forgetKey();
         console.log("Review: off.");
         return;
       }
-      const k = typeof key2 === "string" ? key2.trim() : "";
-      if (!k) {
-        console.log("Review: no key given.");
-        return;
-      }
-      reviewWhoami(k).then((me) => {
-        if (me.role === "judge") {
-          console.log("Review: that's a judge key. Judging comes with contests.");
-          return;
-        }
-        GM_setValue(REVIEW_KEY, k);
-        changed2();
-        console.log(`Review: on, as ${me.name} (${me.role}). Open the Card Maker to review uploads.`);
-      }, (e) => console.log(`Review: not turned on (${e && e.code === "not_admin" ? "wrong key" : e && e.code === "key_expired" ? "that key has expired" : e && e.message}).`));
+      redeemKey(key2).then(
+        (me) => console.log(`Review: on, as ${me.name} (${me.role}). Open the Card Maker to review uploads.`),
+        (e) => console.log(`Review: not turned on (${e.message})`)
+      );
     };
     try {
       Object.defineProperty(w, "___ucReviewList", { value: typeof exportFunction === "function" ? exportFunction(command, w) : command, writable: false, configurable: false, enumerable: false });
     } catch (e) {
     }
+  }
+  function recheckKey() {
+    const k = reviewerKey();
+    if (!k) return;
+    reviewWhoami(k).then((me) => {
+      if (me.role === "judge") return forgetKey();
+      GM_setValue(REVIEW_WHO, JSON.stringify({ name: me.name, role: me.role }));
+      if (keyButton && keyButton.isConnected) keyButton.value = keyLabel();
+    }, (e) => {
+      if (e && e.code === "key_expired") forgetKey("Your gallery key has expired, so it was removed.");
+      else if (e && e.code === "not_admin") forgetKey("Your gallery key was revoked, so it was removed.");
+    });
   }
   function initCardMaker(plugin) {
     settings3 = createFeatureSettings(plugin, "cardMaker", {
@@ -14641,6 +14759,17 @@ ${BROWSE_CSS}
       default: true,
       hidden: () => !!gallerySetting && !gallerySetting.value()
     });
+    settings3.add("galleryKey", {
+      name: "Gallery Key",
+      note: "For gallery reviewers: enter the key you were given.",
+      type: "text",
+      default: "Redeem Key",
+      hidden: () => !!gallerySetting && !gallerySetting.value()
+    });
+    registerSettingWidget("cardMaker.galleryKey", (el3) => {
+      keyButton = el3;
+      asButton(keyLabel, () => openKeyDialog())(el3);
+    });
     registerKeybind(plugin, {
       key: "toggleCardMaker",
       name: "Toggle Card Maker",
@@ -14650,6 +14779,7 @@ ${BROWSE_CSS}
     });
     if (!isPluginEnabled("cardMaker")) return;
     installReviewCommand();
+    setTimeout(recheckKey, 4e3);
     if (isHotfixOn() !== !!hotfixSetting.value()) setHotfix(!!hotfixSetting.value());
     if (!addFooterButton()) {
       const watch2 = new MutationObserver(() => {

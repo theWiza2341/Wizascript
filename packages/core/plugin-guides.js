@@ -173,7 +173,8 @@ const GUIDES = {
       'If feildmaster\'s editor stays black, turn on the <b>hotfix</b> (on the Card Maker tab, or the note that appears in the window).'
     ].concat(settingOn("cardMaker.gallery", true) ? [
       '<b>Browse</b> / <b>Submit</b> (title bar) open the Card Gallery. First press <b>Link my account</b>: it types a one-time line into void (chat room 0) for you to send, so your posts and votes count as your Undercards account.',
-      'In Submit, <b>Read from this editor</b> lists the cards you\'ve made; tick the ones to add, link them into sets, then <b>Review upload</b> and <b>Upload to Gallery</b>. Uploads show to everyone once approved.'
+      'In Submit, <b>Read from this editor</b> lists the cards you\'ve made; tick the ones to add, link them into sets, then <b>Review upload</b> and <b>Upload to Gallery</b>. Uploads show to everyone once approved.',
+      'Given a gallery key? Press <b>Redeem Key</b> on the Card Maker tab and enter it.'
     ] : [])
   }
 };

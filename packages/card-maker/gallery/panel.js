@@ -20,7 +20,7 @@ import { h, button } from "./dom.js";
 import { tile, fitText, checkFrameImages, whenFontsReady, onFontsChange, TILE_CSS } from "./render.js";
 import { partFromRaw, readUcEditorFile, picturesFromPng, readFile } from "./parts.js";
 import { getDraft, saveDraft, nextId, makeSet, tidySets, entries, markUploaded, pruneUploads, SET_CAP } from "./draft.js";
-import { getMe, linkStart, linkCheck, getIndex, getTotals, uploadEntries, uploadProblems, createVoteQueue, ApiError, reviewPending, reviewPost, reviewDecide, reviewRemove, deleteOwnPost, reviewWhoami, reviewLog, reviewersList, reviewerAdd, reviewerRevoke, reviewerAddJudge } from "./api.js";
+import { getMe, linkStart, linkCheck, getIndex, getTotals, uploadEntries, uploadProblems, createVoteQueue, ApiError, reviewPending, reviewPost, reviewDecide, reviewRemove, deleteOwnPost, reviewWhoami, reviewLog, reviewersList, reviewerAdd, reviewerRevoke, reviewerAddJudge, getHealth } from "./api.js";
 import { openVoid, canOpenVoid } from "../../core/uc-report.js";
 import { accountChanged, onAccountChange } from "../../core/account.js";
 import { browseView, allEntries, BROWSE_CSS, removeButton } from "./browse.js";
@@ -45,6 +45,7 @@ const CSS = `
 .wz-gl-panel.browse > .wz-gl-content > .wz-gl-browse { flex: 1 1 auto; height: auto; }
 .wz-gl-panel.browse > .wz-gl-content > .wz-gl-cv { flex: 1 1 auto; min-height: 0; }
 .wz-gl-preview-as { background: #3a1f5a; border: 1px solid #b07de0; color: #e6d4ff; padding: 1px 4px 1px 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px; }
+.wz-gl-tokenwarn { border: 2px solid #e07a7a; background: #241010; padding: 8px 12px; margin: 0 0 12px; font-size: 14px; }
 .wz-gl-viewas { margin: 0; font-weight: normal; display: flex; align-items: center; gap: 6px; }
 .wz-gl-viewas select { height: 22px !important; flex: 1; }
 /* Review: roomy, with a side menu (dev16) */
@@ -214,6 +215,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
       // A judge key only scores its contest.
       if (realRole() === "judge") { rev.at = Date.now(); rev.error = ""; contests.loadJudging(force); return; }
       contests.refresh();
+      if (realRole() === "owner" && !rev.health) rev.health = await getHealth().catch(() => null);
       const r = await reviewPending(key);
       rev.list = (r && r.posts) || [];
       rev.error = "";
@@ -300,7 +302,17 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
       sections.map(([k, label, n]) => h("button", { type: "button", class: rev.section === k ? "on" : "", onclick: () => openSection(k) }, h("span", { text: label }), count(n))),
       h("div", { class: "who wz-gl-rwho", text: who }),
       realRole() === "owner" ? h("div", { class: "who" }, viewAsControl()) : null);
-    return h("div", { class: "wz-gl-rv" }, h("div", { class: "wz-gl-rside" }, menu, h("div", {}, body)));
+    return h("div", { class: "wz-gl-rv" }, h("div", { class: "wz-gl-rside" }, menu, h("div", {}, tokenWarning(), body)));
+  }
+  // Owner only: the Worker's GitHub key lasts a year at most. Without it,
+  // approvals and contest results can't be published.
+  function tokenWarning() {
+    const d = realRole() === "owner" && rev.health ? rev.health.tokenDaysLeft : null;
+    if (d === null || d === undefined || d >= 30) return null;
+    const when = rev.health.tokenExpires ? ` (${new Date(rev.health.tokenExpires.replace(" UTC", "Z").replace(" ", "T")).toLocaleDateString()})` : "";
+    return h("div", { class: "wz-gl-issues wz-gl-tokenwarn" }, d <= 0
+      ? `The gallery server's GitHub key has run out${when}. Approvals and contest results can't be published until you make a new one: see "Once a year" in the Worker's README.`
+      : `The gallery server's GitHub key runs out in ${d} day${d === 1 ? "" : "s"}${when}. Make a new one before then: see "Once a year" in the Worker's README.`);
   }
   function openSection(k) {
     rev.section = k;

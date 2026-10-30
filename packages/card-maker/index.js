@@ -58,11 +58,8 @@ let editorSetting = null;
 let hotfixSetting = null;
 let gallerySetting = null;
 let wheelSetting = null;
-// The gallery reviewer's key (the Worker's admin key). Turned on and off
-// only from the console, ___ucReviewList("<key>"); kept in GM storage, which
-// no page script can read, and never in backups.
-// A review/judge key the player redeemed (Redeem Key on the Card Maker tab,
-// or the console command), and who the server says it belongs to. GM storage,
+// A review/judge key the player redeemed (Redeem Key on the Card Maker tab),
+// and who the server says it belongs to. GM storage,
 // so page scripts can't read it; never in backups.
 const REVIEW_KEY = "wizascript.cardMaker.galleryReview";
 const REVIEW_WHO = "wizascript.cardMaker.galleryReviewWho";
@@ -458,22 +455,11 @@ function openKeyDialog() {
   });
 }
 
-// ___ucReviewList("<key>") does the same from the console; called again, it
-// removes the key. It never prints or returns the key.
-function installReviewCommand() {
-  // dev11 kept the key in a setting (localStorage, readable by page scripts): drop it.
+// dev11 kept the review key in a setting (localStorage, readable by page
+// scripts), and dev12-18 also had a console command for it (retired in dev19:
+// Redeem Key does the same). Drop dev11's leftover.
+function dropOldReviewKey() {
   try { localStorage.removeItem("underscript.plugin.Wizascript.cardMaker.galleryReviewerKey"); } catch (e) { /* none */ }
-  const w = getPageWindow();
-  const command = (key) => {
-    if (reviewerKey()) { forgetKey(); console.log("Review: off."); return; }
-    redeemKey(key).then((me) => console.log(`Review: on, as ${me.name} (${me.role}). Open the Card Maker and press Review.`),
-      (e) => console.log(`Review: not turned on (${e.message})`));
-  };
-  // Locked once defined (not writable, not configurable), so no other script
-  // on the page can swap in its own version to catch the key as it's typed.
-  try {
-    Object.defineProperty(w, "___ucReviewList", { value: typeof exportFunction === "function" ? exportFunction(command, w) : command, writable: false, configurable: false, enumerable: false });
-  } catch (e) { /* already defined by something else: leave it, and don't trust it */ }
 }
 
 // Once per page load, a stored key is checked, so one that was revoked or has
@@ -550,7 +536,7 @@ export function initCardMaker(plugin) {
   });
 
   if (!isPluginEnabled("cardMaker")) return;
-  installReviewCommand();
+  dropOldReviewKey();
   setTimeout(recheckKey, 4000);
   // GM copy follows the setting (e.g. after Restore).
   if (isHotfixOn() !== !!hotfixSetting.value()) setHotfix(!!hotfixSetting.value());

@@ -26,6 +26,8 @@ export const PICTURE_MAX_BYTES = 150 * 1024;
 export const sendVotes = (votes) => authed("POST", "/v1/votes", { votes });
 export const deleteOwnPost = (id) => authed("POST", "/v1/posts/delete", { id });
 export const getTotals = () => request("GET", `${WORKER}/v1/totals`);
+// The server's status, incl. how many days the GitHub key has left.
+export const getHealth = () => request("GET", `${WORKER}/v1/health`);
 
 // ---- review (the owner's key, ADMIN_KEY, or a reviewer's key; turned on with
 // the console command, kept in GM "wizascript.cardMaker.galleryReview") ----

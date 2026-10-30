@@ -12702,6 +12702,7 @@ Version: v${version}`;
   var sendVotes = (votes) => authed("POST", "/v1/votes", { votes });
   var deleteOwnPost = (id) => authed("POST", "/v1/posts/delete", { id });
   var getTotals = () => request("GET", `${WORKER}/v1/totals`);
+  var getHealth = () => request("GET", `${WORKER}/v1/health`);
   var admin = (method, path, key2, body) => request(method, WORKER + path, { body, adminKey: key2 });
   var reviewWhoami = (key2) => admin("GET", "/v1/admin/whoami", key2);
   var reviewLog = (key2) => admin("GET", "/v1/admin/log", key2);
@@ -13794,6 +13795,7 @@ Version: v${version}`;
 .wz-gl-panel.browse > .wz-gl-content > .wz-gl-browse { flex: 1 1 auto; height: auto; }
 .wz-gl-panel.browse > .wz-gl-content > .wz-gl-cv { flex: 1 1 auto; min-height: 0; }
 .wz-gl-preview-as { background: #3a1f5a; border: 1px solid #b07de0; color: #e6d4ff; padding: 1px 4px 1px 8px; font-size: 11px; display: inline-flex; align-items: center; gap: 4px; }
+.wz-gl-tokenwarn { border: 2px solid #e07a7a; background: #241010; padding: 8px 12px; margin: 0 0 12px; font-size: 14px; }
 .wz-gl-viewas { margin: 0; font-weight: normal; display: flex; align-items: center; gap: 6px; }
 .wz-gl-viewas select { height: 22px !important; flex: 1; }
 /* Review: roomy, with a side menu (dev16) */
@@ -13985,6 +13987,7 @@ ${CONTEST_CSS}
           return;
         }
         contests.refresh();
+        if (realRole() === "owner" && !rev.health) rev.health = await getHealth().catch(() => null);
         const r = await reviewPending(key2);
         rev.list = r && r.posts || [];
         rev.error = "";
@@ -14091,7 +14094,13 @@ ${CONTEST_CSS}
         h("div", { class: "who wz-gl-rwho", text: who }),
         realRole() === "owner" ? h("div", { class: "who" }, viewAsControl()) : null
       );
-      return h("div", { class: "wz-gl-rv" }, h("div", { class: "wz-gl-rside" }, menu3, h("div", {}, body)));
+      return h("div", { class: "wz-gl-rv" }, h("div", { class: "wz-gl-rside" }, menu3, h("div", {}, tokenWarning(), body)));
+    }
+    function tokenWarning() {
+      const d = realRole() === "owner" && rev.health ? rev.health.tokenDaysLeft : null;
+      if (d === null || d === void 0 || d >= 30) return null;
+      const when2 = rev.health.tokenExpires ? ` (${new Date(rev.health.tokenExpires.replace(" UTC", "Z").replace(" ", "T")).toLocaleDateString()})` : "";
+      return h("div", { class: "wz-gl-issues wz-gl-tokenwarn" }, d <= 0 ? `The gallery server's GitHub key has run out${when2}. Approvals and contest results can't be published until you make a new one: see "Once a year" in the Worker's README.` : `The gallery server's GitHub key runs out in ${d} day${d === 1 ? "" : "s"}${when2}. Make a new one before then: see "Once a year" in the Worker's README.`);
     }
     function openSection(k) {
       rev.section = k;
@@ -15527,25 +15536,9 @@ ${CONTEST_CSS}
       buttons: [{ label: "Close", cssClass: "btn-danger", action: (d) => d.close() }]
     });
   }
-  function installReviewCommand() {
+  function dropOldReviewKey() {
     try {
       localStorage.removeItem("underscript.plugin.Wizascript.cardMaker.galleryReviewerKey");
-    } catch (e) {
-    }
-    const w = getPageWindow();
-    const command = (key2) => {
-      if (reviewerKey()) {
-        forgetKey();
-        console.log("Review: off.");
-        return;
-      }
-      redeemKey(key2).then(
-        (me) => console.log(`Review: on, as ${me.name} (${me.role}). Open the Card Maker and press Review.`),
-        (e) => console.log(`Review: not turned on (${e.message})`)
-      );
-    };
-    try {
-      Object.defineProperty(w, "___ucReviewList", { value: typeof exportFunction === "function" ? exportFunction(command, w) : command, writable: false, configurable: false, enumerable: false });
     } catch (e) {
     }
   }
@@ -15618,7 +15611,7 @@ ${CONTEST_CSS}
       onMatch: () => toggleCardMaker()
     });
     if (!isPluginEnabled("cardMaker")) return;
-    installReviewCommand();
+    dropOldReviewKey();
     setTimeout(recheckKey, 4e3);
     if (isHotfixOn() !== !!hotfixSetting.value()) setHotfix(!!hotfixSetting.value());
     if (!addFooterButton()) {

@@ -2,7 +2,7 @@
   "version": 1,
   "about": "Flowery's voice clips from the Undercards wiki, for Wizascript's Flowery Mode. Free to use for non-commercial purposes only.",
   "base": "https://raw.githubusercontent.com/theWiza2341/Wizascript/sounds/flowery/",
-  "note": "title comes from the wiki's file name. use lists the cards or moments a clip is meant for (empty = not used yet). Build URLs with base + encodeURIComponent(file).",
+  "note": "title comes from the wiki's file name. use lists the cards or moments a clip is meant for (empty = not used yet). Build URLs with base + encodeURIComponent(file). File names use only letters, digits, _ - ' (commas broke loading in browsers).",
   "lines": [
     {
       "file": "Flowery_voiceclip_blingo_blizzard.wav",
@@ -53,7 +53,7 @@
       "use": []
     },
     {
-      "file": "Flowery_voiceclip_heh,_it's_my_Jarona.wav",
+      "file": "Flowery_voiceclip_heh_it's_my_Jarona.wav",
       "title": "heh, it's my Jarona",
       "seconds": 1.9,
       "use": []
@@ -65,7 +65,7 @@
       "use": []
     },
     {
-      "file": "Flowery_voiceclip_hey_guys,_I_think_I_found_a_glue.wav",
+      "file": "Flowery_voiceclip_hey_guys_I_think_I_found_a_glue.wav",
       "title": "hey guys, I think I found a glue",
       "seconds": 2.27,
       "use": []
@@ -77,7 +77,7 @@
       "use": []
     },
     {
-      "file": "Flowery_voiceclip_huh,_I'll_show_you.wav",
+      "file": "Flowery_voiceclip_huh_I'll_show_you.wav",
       "title": "huh, I'll show you",
       "seconds": 1.06,
       "use": []
@@ -167,13 +167,13 @@
       "use": []
     },
     {
-      "file": "Flowery_voiceclip_no,_no,_no.wav",
+      "file": "Flowery_voiceclip_no_no_no.wav",
       "title": "no, no, no",
       "seconds": 1.08,
       "use": []
     },
     {
-      "file": "Flowery_voiceclip_no_way,_it's_your_children.wav",
+      "file": "Flowery_voiceclip_no_way_it's_your_children.wav",
       "title": "no way, it's your children",
       "seconds": 3.03,
       "use": []

@@ -1,0 +1,296 @@
+{
+  "version": 1,
+  "about": "Flowery's voice clips from the Undercards wiki, for Wizascript's Flowery Mode. Free to use for non-commercial purposes only.",
+  "base": "https://raw.githubusercontent.com/theWiza2341/Wizascript/sounds/flowery/",
+  "note": "title comes from the wiki's file name. use lists the cards or moments a clip is meant for (empty = not used yet). Build URLs with base + encodeURIComponent(file).",
+  "lines": [
+    {
+      "file": "Flowery_voiceclip_blingo_blizzard.wav",
+      "title": "blingo blizzard",
+      "seconds": 2.07,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_flowers_blooms_in_your_heart.wav",
+      "title": "flowers blooms in your heart",
+      "seconds": 2.1,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_Flowery_2.wav",
+      "title": "Flowery 2",
+      "seconds": 0.63,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_get_a_chance_2.wav",
+      "title": "get a chance 2",
+      "seconds": 2.16,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_give_to_you.wav",
+      "title": "give to you",
+      "seconds": 0.94,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_glue.wav",
+      "title": "glue",
+      "seconds": 0.51,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_great_style.wav",
+      "title": "great style",
+      "seconds": 1.5,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_grown_like_a_turnip.wav",
+      "title": "grown like a turnip",
+      "seconds": 3.02,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_heh,_it's_my_Jarona.wav",
+      "title": "heh, it's my Jarona",
+      "seconds": 1.9,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_hey_boys.wav",
+      "title": "hey boys",
+      "seconds": 2.74,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_hey_guys,_I_think_I_found_a_glue.wav",
+      "title": "hey guys, I think I found a glue",
+      "seconds": 2.27,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_hey_there_little_guy.wav",
+      "title": "hey there little guy",
+      "seconds": 1.29,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_huh,_I'll_show_you.wav",
+      "title": "huh, I'll show you",
+      "seconds": 1.06,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_huh.wav",
+      "title": "huh",
+      "seconds": 0.38,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_I'm_only_trying_to_help_you.wav",
+      "title": "I'm only trying to help you",
+      "seconds": 2.29,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_I'm_sorry_once_again_I_kept_a_lady_in_waiting.wav",
+      "title": "I'm sorry once again I kept a lady in waiting",
+      "seconds": 2.07,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_it's_all_in_a_name.wav",
+      "title": "it's all in a name",
+      "seconds": 1.5,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_it's_all_yours.wav",
+      "title": "it's all yours",
+      "seconds": 1.22,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_it's_me.wav",
+      "title": "it's me",
+      "seconds": 0.47,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_Ja-st_kidding.wav",
+      "title": "Ja-st kidding",
+      "seconds": 1.47,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_leaf_it_to_me.wav",
+      "title": "leaf it to me",
+      "seconds": 1.51,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_lend_me_your_power.wav",
+      "title": "lend me your power",
+      "seconds": 5.05,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_mini_peppers.wav",
+      "title": "mini peppers",
+      "seconds": 1.66,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_mostlys.wav",
+      "title": "mostlys",
+      "seconds": 1.35,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_my_favorite_two.wav",
+      "title": "my favorite two",
+      "seconds": 2.73,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_mysterious_wind.wav",
+      "title": "mysterious wind",
+      "seconds": 3.03,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_mysterious_wind_JP.wav",
+      "title": "mysterious wind JP",
+      "seconds": 2.7,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_no,_no,_no.wav",
+      "title": "no, no, no",
+      "seconds": 1.08,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_no_way,_it's_your_children.wav",
+      "title": "no way, it's your children",
+      "seconds": 3.03,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_Omega_Flowery.wav",
+      "title": "Omega Flowery",
+      "seconds": 4.36,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_one_more_for_the_fans.wav",
+      "title": "one more for the fans",
+      "seconds": 2.41,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_prism_blow.wav",
+      "title": "prism blow",
+      "seconds": 1.7,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_say_that_again.wav",
+      "title": "say that again",
+      "seconds": 1.74,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_sorry_about_that_guys.wav",
+      "title": "sorry about that guys",
+      "seconds": 1.55,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_sorry_to_keep_a_lady_in_waiting.wav",
+      "title": "sorry to keep a lady in waiting",
+      "seconds": 1.54,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_sorry_to_keep_you_ladies.wav",
+      "title": "sorry to keep you ladies",
+      "seconds": 1.23,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_suckle_it_up.wav",
+      "title": "suckle it up",
+      "seconds": 1.65,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_take_that.wav",
+      "title": "take that",
+      "seconds": 1.75,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_that's_great.wav",
+      "title": "that's great",
+      "seconds": 1.0,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_the_boys.wav",
+      "title": "the boys",
+      "seconds": 1.26,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_the_diner.wav",
+      "title": "the diner",
+      "seconds": 1.46,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_they're_eating_my_flesh.wav",
+      "title": "they're eating my flesh",
+      "seconds": 2.54,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_try_my_flavor.wav",
+      "title": "try my flavor",
+      "seconds": 1.72,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_wow.wav",
+      "title": "wow",
+      "seconds": 0.61,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_yes.wav",
+      "title": "yes",
+      "seconds": 0.73,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_you're_a_hero.wav",
+      "title": "you're a hero",
+      "seconds": 1.83,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_your_dad's_my_best_friend.wav",
+      "title": "your dad's my best friend",
+      "seconds": 1.8,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_your_dad.wav",
+      "title": "your dad",
+      "seconds": 1.1,
+      "use": []
+    }
+  ]
+}

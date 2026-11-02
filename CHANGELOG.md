@@ -2,6 +2,11 @@
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
 
+## 1.7.1
+
+### Fixes
+- **Card Gallery:** fixed "Gallery server unreachable" for everyone after 1.7.0. Tampermonkey wasn't letting Wizascript talk to the gallery server.
+
 ## 1.7.0
 
 ### New: Card Maker

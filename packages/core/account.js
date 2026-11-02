@@ -17,18 +17,25 @@ import { getPageWindow } from "./page-window.js";
 import { canOpenVoid, openVoid } from "./uc-report.js";
 
 // ---- which server ------------------------------------------------------------------
-// The Worker's address can be moved without a Wizascript update: it's read from
-// server.json on the repo's `sounds` branch ({ "worker": "https://….workers.dev" }),
-// cached in GM for 30 minutes, with this built-in address as the fallback. Only an
-// https *.workers.dev address is accepted (build.js has `@connect workers.dev`,
-// which Tampermonkey takes as every workers.dev subdomain). The `sounds` branch
-// is only ever edited by the maintainer; the Worker rewrites `gallery` itself.
+// The Worker's address is read from server.json on the repo's `sounds` branch
+// ({ "worker": "https://….workers.dev" }), cached in GM for 30 minutes, with the
+// built-in address as the fallback. Tampermonkey only lets the script reach hosts
+// listed EXACTLY in `@connect` (build.js): `@connect workers.dev` does NOT cover
+// subdomains, because workers.dev is on the Public Suffix List (1.7.0's bug). So
+// server.json can only choose among WORKER_HOSTS; a new host needs an update that
+// adds it here AND to build.js's @connect lines (170-server-test checks they match).
+// The `sounds` branch is only ever edited by the maintainer; the Worker rewrites `gallery`.
 export const DEFAULT_WORKER = "https://wizascript-gallery.thewiza2341.workers.dev";
+export const WORKER_HOSTS = ["wizascript-gallery.thewiza2341.workers.dev"];
 const SERVER_FILE = "https://raw.githubusercontent.com/theWiza2341/Wizascript/sounds/server.json";
 const SERVER_KEY = "wizascript.account.server"; // GM: { at, url }
 const SERVER_TTL = 30 * 60 * 1000;
 const WORKER_RE = /^https:\/\/[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*\.workers\.dev$/i;
-export const isWorkerUrl = (u) => typeof u === "string" && WORKER_RE.test(u.replace(/\/+$/, ""));
+export const isWorkerUrl = (u) => {
+  if (typeof u !== "string") return false;
+  const v = u.replace(/\/+$/, "");
+  return WORKER_RE.test(v) && WORKER_HOSTS.includes(v.slice("https://".length).toLowerCase());
+};
 function cachedServer() {
   try { const c = JSON.parse(GM_getValue(SERVER_KEY, "null")); return c && isWorkerUrl(c.url) ? c : null; } catch (e) { return null; }
 }

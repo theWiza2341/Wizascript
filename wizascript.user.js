@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.7.0
+// @version      1.7.1
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -17,7 +17,7 @@
 // @grant        GM_listValues
 // @grant        GM_xmlhttpRequest
 // @connect      raw.githubusercontent.com
-// @connect      workers.dev
+// @connect      wizascript-gallery.thewiza2341.workers.dev
 // ==/UserScript==
 
 if (location.hostname === "undercard.feildmaster.com" || (location.hostname === "sernon158.github.io" && location.pathname.startsWith("/uc-editor"))) {
@@ -311,7 +311,7 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
   }
 
   // packages/core/version.js
-  var SUITE_VERSION = "1.7.0";
+  var SUITE_VERSION = "1.7.1";
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
@@ -1067,6 +1067,11 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
 
+## 1.7.1
+
+### Fixes
+- **Card Gallery:** fixed "Gallery server unreachable" for everyone after 1.7.0. Tampermonkey wasn't letting Wizascript talk to the gallery server.
+
 ## 1.7.0
 
 ### New: Card Maker
@@ -1584,11 +1589,16 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
 
   // packages/core/account.js
   var DEFAULT_WORKER = "https://wizascript-gallery.thewiza2341.workers.dev";
+  var WORKER_HOSTS = ["wizascript-gallery.thewiza2341.workers.dev"];
   var SERVER_FILE = "https://raw.githubusercontent.com/theWiza2341/Wizascript/sounds/server.json";
   var SERVER_KEY = "wizascript.account.server";
   var SERVER_TTL = 30 * 60 * 1e3;
   var WORKER_RE = /^https:\/\/[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*\.workers\.dev$/i;
-  var isWorkerUrl = (u) => typeof u === "string" && WORKER_RE.test(u.replace(/\/+$/, ""));
+  var isWorkerUrl = (u) => {
+    if (typeof u !== "string") return false;
+    const v = u.replace(/\/+$/, "");
+    return WORKER_RE.test(v) && WORKER_HOSTS.includes(v.slice("https://".length).toLowerCase());
+  };
   function cachedServer() {
     try {
       const c = JSON.parse(GM_getValue(SERVER_KEY, "null"));

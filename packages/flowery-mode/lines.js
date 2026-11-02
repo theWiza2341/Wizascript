@@ -46,9 +46,14 @@
 //   from        random rules: pick from these [{ sound } | { file }] instead of all clips
 //   key, label  a stable id and a readable name: the Advanced Settings row for this rule
 //   kill        (on) a monster dies; target "ally" | "enemy" = whose monster
+//   generate    (on) a card appears in YOUR hand, made by another card (creatorInfo); card/id = which
+//   status      attack / log: the card has (or had when played) this status, e.g. "Charge", "Bullseye"
+//   afterKill   log: a monster died since this card's previous battle-log entry (how a Bullseye shows)
+//   createdBy   play: the card was made by this card (game fixedId), e.g. K-Round by Crown (379)
+//   loopCopy    play: a copy the card made of itself (Loop) with no Loop left, of a card seen with Loop
 
 const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-const KINDS = new Set(["play", "attack", "log", "animation", "overdraw", "kill", "victory", "defeat", "wizascript"]);
+const KINDS = new Set(["play", "attack", "log", "animation", "overdraw", "kill", "generate", "victory", "defeat", "wizascript"]);
 const KEY_RE = /^[a-z0-9][a-z0-9-]{0,47}$/;
 const FILE_RE = /^[A-Za-z0-9_\-']+\.wav$/; // no commas (they wouldn't load), no paths
 const SOUND_RE = /^flowery[A-Za-z0-9]+$/;
@@ -77,6 +82,10 @@ function cleanRule(r, secondsOf) {
   if (r.nameWord != null && String(r.nameWord).trim()) out.nameWord = String(r.nameWord).trim().toLowerCase().replace(/[^a-z0-9 ]/g, "");
   out.summoned = r.summoned === true;
   if (r.turn === "me" || r.turn === "opponent") out.turn = r.turn;
+  if (r.status != null && String(r.status).trim()) out.status = String(r.status).trim().toLowerCase();
+  out.afterKill = r.afterKill === true;
+  if (Number.isInteger(r.createdBy)) out.createdBy = r.createdBy;
+  out.loopCopy = r.loopCopy === true;
   if (r.key != null && KEY_RE.test(String(r.key))) out.key = String(r.key);
   if (r.label != null) out.label = String(r.label).slice(0, 80);
   out.chance = clampN(r.chance, 1, 10000, 1);
@@ -95,8 +104,9 @@ function cleanRule(r, secondsOf) {
     out.from = r.from.map((x) => clipOf(x, secondsOf && x && secondsOf(x.file))).filter(Boolean);
     if (!out.from.length) return null;
   }
-  if (out.on === "play" && out.card == null && out.id == null && out.minBuff == null && out.nameWord == null && out.maxCost == null) return null;
-  if (out.on === "attack" && out.card == null && out.id == null && out.minAttack == null) return null;
+  if (out.on === "play" && out.card == null && out.id == null && out.minBuff == null && out.nameWord == null && out.maxCost == null && !out.loopCopy) return null;
+  if (out.on === "generate" && out.card == null && out.id == null) return null;
+  if (out.on === "attack" && out.card == null && out.id == null && out.minAttack == null && !out.status) return null;
   if ((out.on === "log" || out.on === "animation") && !out.type) return null;
   if (out.on === "wizascript" && !out.event) return null;
   return out;
@@ -155,9 +165,11 @@ function parse(v) {
 // hand; the server gives those no line. Checked against every play in the
 // first recording.
 const EFFECTS = new Set(["getDoingEffect", "getSoulDoingEffect", "getArtifactDoingEffect"]);
+// getMonsterPlayed is NOT a reset: one effect can summon several monsters in a
+// row (GIGA Balls → two GIGA Baseballs, Arcade Samurai → two Arcade Bats).
 const RESETS = new Set([
   "getTempCancel", "getMonsterTemp", "getSpellTemp", "getTurnStart", "getTurnEnd",
-  "getAttackDelock", "getFight", "getFightPlayer", "getMonsterPlayed", "getSpellPlayed"
+  "getAttackDelock", "getFight", "getFightPlayer", "getSpellPlayed"
 ]);
 
 // Two clips never start within this of each other, and a server Flowery line
@@ -170,7 +182,10 @@ const cardMatches = (rule, card) => !!card && (
   (rule.id != null && rule.id === card.fixedId) || (rule.card != null && rule.card === norm(card.name)));
 const typeOk = (rule, card) => !rule.cardType || (card && (rule.cardType === "spell" ? card.typeCard === 1 : card.typeCard === 0));
 const wordOk = (rule, card) => rule.nameWord == null || (card && new RegExp("(^|[^a-z0-9])" + rule.nameWord.replace(/ /g, "[^a-z0-9]+") + "s?($|[^a-z0-9])", "i").test(String(card.name || "")));
-const costOk = (rule, card) => rule.maxCost == null || (card && Number(card.cost) <= rule.maxCost);
+// Base cost (originalCost): a 10-cost card discounted to 0 isn't a "little guy".
+const costOk = (rule, card) => rule.maxCost == null || (card && Number(card.originalCost != null ? card.originalCost : card.cost) <= rule.maxCost);
+const hasStatus = (card, name) => !!card && Array.isArray(card.statuses) && card.statuses.some((x) => String(x && x.name).toLowerCase() === name);
+const createdByOk = (rule, card) => rule.createdBy == null || (card && card.creatorInfo && card.creatorInfo.typeCreator >= 0 && card.creatorInfo.id === rule.createdBy);
 const buffOk = (rule, card) => rule.minBuff == null || (card &&
   (card.attack - card.originalAttack) >= rule.minBuff && ((card.maxHp != null ? card.maxHp : card.hp) - card.originalHp) >= rule.minBuff);
 
@@ -188,6 +203,25 @@ export function createReactor({ rules, play, isOwn, settings, now = () => Date.n
   const spellsSeen = new Set();
   const owners = new Map();     // monster instance id → owner id (public: the board)
   let turnOf = null;            // whose turn it is (getTurnStart)
+  const statusEver = new Map(); // monster board id → statuses it has had (Charge is gone by the time it attacks)
+  const deathSince = new Map(); // battle-log actor → a monster died since its last entry (Bullseye)
+  const loopSeen = new Set();   // fixedIds seen carrying Loop this match
+  let handIds = null;           // your hand's card instances (null = not seen yet: the first update is the baseline)
+  // Battle-log cards are numbered 100000 above their board id (10115 → 110115).
+  const boardId = (id) => (id >= 100000 && (owners.has(id - 100000) || statusEver.has(id - 100000)) ? id - 100000 : id);
+  const noteStatuses = (card) => {
+    if (!card || !Array.isArray(card.statuses)) return;
+    const names = card.statuses.map((x) => String(x && x.name).toLowerCase());
+    if (names.includes("loop") && card.fixedId != null) loopSeen.add(card.fixedId);
+    if (card.id == null || card.typeCard !== 0) return;
+    const id = boardId(card.id);
+    const set = statusEver.get(id) || new Set();
+    names.forEach((n) => set.add(n));
+    statusEver.set(id, set);
+  };
+  const hadStatus = (card, name) => hasStatus(card, name) || (!!card && card.id != null && (statusEver.get(boardId(card.id)) || new Set()).has(name));
+  const isLoopCopy = (card) => !!card && card.creatorInfo && card.creatorInfo.typeCreator >= 0 && card.creatorInfo.id === card.fixedId
+    && !hasStatus(card, "loop") && loopSeen.has(card.fixedId);
 
   const roll = (n) => n <= 1 || Math.floor(random() * n) === 0;
 
@@ -244,7 +278,7 @@ export function createReactor({ rules, play, isOwn, settings, now = () => Date.n
   }
 
   const find = (pred) => rules().rules.filter((m) => pred(m.rule));
-  const remember = (card) => { if (card && card.id != null && card.ownerId != null) owners.set(card.id, card.ownerId); };
+  const remember = (card) => { if (card && card.id != null && card.ownerId != null) owners.set(boardId(card.id), card.ownerId); };
 
   // Feed every game event (UnderScript's GameEvent) in order.
   function onEvent(data) {
@@ -257,6 +291,8 @@ export function createReactor({ rules, play, isOwn, settings, now = () => Date.n
     } else if (a === "getMonsterPlayed" || a === "getSpellPlayed") {
       const card = parse(data.card);
       remember(card);
+      const loopCopy = isLoopCopy(card); // before this play's own statuses are noted
+      noteStatuses(card);
       const pid = data.idPlayer != null ? data.idPlayer : card && card.ownerId;
       let ok = !!card;
       // A MONSTER card in getSpellPlayed is the game showing a Dust effect after a
@@ -268,9 +304,21 @@ export function createReactor({ rules, play, isOwn, settings, now = () => Date.n
         else spellsSeen.add(card.id);
       }
       if (ok) played = fire(find((r) => r.on === "play" && (!fromEffect || r.summoned) && cardMatches(r, card) && typeOk(r, card)
-        && buffOk(r, card) && wordOk(r, card) && costOk(r, card) && whoOk(r, pid)));
+        && buffOk(r, card) && wordOk(r, card) && costOk(r, card) && createdByOk(r, card) && (!r.loopCopy || loopCopy) && whoOk(r, pid)));
     } else if (a === "updateCard" || a === "updateMonster") {
-      remember(parse(data.monster || data.card));
+      const c = parse(data.monster || data.card);
+      remember(c);
+      noteStatuses(c);
+    } else if (a === "getUpdateHand") {
+      // Only ever YOUR hand. New cards made by another card = "generate".
+      const hand = parse(data.hand);
+      if (Array.isArray(hand)) {
+        hand.forEach(noteStatuses);
+        const fresh = handIds ? hand.filter((c) => c && c.id != null && !handIds.has(c.id)) : [];
+        handIds = new Set(hand.filter((c) => c && c.id != null).map((c) => c.id));
+        const made = fresh.filter((c) => c.creatorInfo && c.creatorInfo.typeCreator >= 0 && c.creatorInfo.id !== c.fixedId);
+        if (made.length) played = fire(find((r) => r.on === "generate" && made.some((c) => cardMatches(r, c))));
+      }
     } else if (a === "getUpdateBoard") {
       const board = parse(data.board);
       if (Array.isArray(board)) board.forEach(remember);
@@ -280,15 +328,25 @@ export function createReactor({ rules, play, isOwn, settings, now = () => Date.n
         const type = String(log.battleLogType).toUpperCase();
         const actor = log.cardActor;
         remember(actor);
+        noteStatuses(actor);
+        const aKey = actor && actor.id != null ? boardId(actor.id) : null;
+        const afterKill = aKey != null && deathSince.get(aKey) === true;
+        if (aKey != null) deathSince.set(aKey, false);
+        if (type === "DEATH") deathSince.forEach((v, k) => deathSince.set(k, true));
         played = fire(find((r) => {
           if (r.on === "attack") {
             if (!/^ATTACK_(MONSTER|PLAYER)$/.test(type)) return false;
             if (r.target === "player" && type !== "ATTACK_PLAYER") return false;
             if (r.target === "monster" && type !== "ATTACK_MONSTER") return false;
             if (r.minAttack != null && !(actor && Number(actor.attack) >= r.minAttack)) return false;
+            if (r.status && !hadStatus(actor, r.status)) return false;
             return cardMatches(r, actor) && whoOk(r, log.playerId);
           }
-          if (r.on === "log") return r.type === type && cardMatches(r, actor) && whoOk(r, log.playerId);
+          if (r.on === "log") {
+            if (r.type !== type || !cardMatches(r, actor) || !whoOk(r, log.playerId)) return false;
+            if (r.status && !hadStatus(actor, r.status)) return false;
+            return !r.afterKill || afterKill;
+          }
           return false;
         }));
       }
@@ -345,6 +403,10 @@ export function createReactor({ rules, play, isOwn, settings, now = () => Date.n
     spellsSeen.clear();
     owners.clear();
     turnOf = null;
+    statusEver.clear();
+    deathSince.clear();
+    loopSeen.clear();
+    handIds = null;
   }
 
   return { onEvent, onWizascript, reset };

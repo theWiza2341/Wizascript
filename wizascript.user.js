@@ -15841,7 +15841,7 @@ ${CONTEST_CSS}
 
   // packages/flowery-mode/lines.js
   var norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-  var KINDS = /* @__PURE__ */ new Set(["play", "attack", "log", "animation", "overdraw", "kill", "victory", "defeat", "wizascript"]);
+  var KINDS = /* @__PURE__ */ new Set(["play", "attack", "log", "animation", "overdraw", "kill", "generate", "victory", "defeat", "wizascript"]);
   var KEY_RE = /^[a-z0-9][a-z0-9-]{0,47}$/;
   var FILE_RE = /^[A-Za-z0-9_\-']+\.wav$/;
   var SOUND_RE = /^flowery[A-Za-z0-9]+$/;
@@ -15870,6 +15870,10 @@ ${CONTEST_CSS}
     if (r.nameWord != null && String(r.nameWord).trim()) out.nameWord = String(r.nameWord).trim().toLowerCase().replace(/[^a-z0-9 ]/g, "");
     out.summoned = r.summoned === true;
     if (r.turn === "me" || r.turn === "opponent") out.turn = r.turn;
+    if (r.status != null && String(r.status).trim()) out.status = String(r.status).trim().toLowerCase();
+    out.afterKill = r.afterKill === true;
+    if (Number.isInteger(r.createdBy)) out.createdBy = r.createdBy;
+    out.loopCopy = r.loopCopy === true;
     if (r.key != null && KEY_RE.test(String(r.key))) out.key = String(r.key);
     if (r.label != null) out.label = String(r.label).slice(0, 80);
     out.chance = clampN(r.chance, 1, 1e4, 1);
@@ -15887,8 +15891,9 @@ ${CONTEST_CSS}
       out.from = r.from.map((x) => clipOf(x, secondsOf && x && secondsOf(x.file))).filter(Boolean);
       if (!out.from.length) return null;
     }
-    if (out.on === "play" && out.card == null && out.id == null && out.minBuff == null && out.nameWord == null && out.maxCost == null) return null;
-    if (out.on === "attack" && out.card == null && out.id == null && out.minAttack == null) return null;
+    if (out.on === "play" && out.card == null && out.id == null && out.minBuff == null && out.nameWord == null && out.maxCost == null && !out.loopCopy) return null;
+    if (out.on === "generate" && out.card == null && out.id == null) return null;
+    if (out.on === "attack" && out.card == null && out.id == null && out.minAttack == null && !out.status) return null;
     if ((out.on === "log" || out.on === "animation") && !out.type) return null;
     if (out.on === "wizascript" && !out.event) return null;
     return out;
@@ -15949,14 +15954,15 @@ ${CONTEST_CSS}
     "getAttackDelock",
     "getFight",
     "getFightPlayer",
-    "getMonsterPlayed",
     "getSpellPlayed"
   ]);
   var QUIET_MS = 1200;
   var cardMatches = (rule, card) => !!card && (rule.id == null && rule.card == null || rule.id != null && rule.id === card.fixedId || rule.card != null && rule.card === norm(card.name));
   var typeOk = (rule, card) => !rule.cardType || card && (rule.cardType === "spell" ? card.typeCard === 1 : card.typeCard === 0);
   var wordOk = (rule, card) => rule.nameWord == null || card && new RegExp("(^|[^a-z0-9])" + rule.nameWord.replace(/ /g, "[^a-z0-9]+") + "s?($|[^a-z0-9])", "i").test(String(card.name || ""));
-  var costOk = (rule, card) => rule.maxCost == null || card && Number(card.cost) <= rule.maxCost;
+  var costOk = (rule, card) => rule.maxCost == null || card && Number(card.originalCost != null ? card.originalCost : card.cost) <= rule.maxCost;
+  var hasStatus = (card, name) => !!card && Array.isArray(card.statuses) && card.statuses.some((x) => String(x && x.name).toLowerCase() === name);
+  var createdByOk = (rule, card) => rule.createdBy == null || card && card.creatorInfo && card.creatorInfo.typeCreator >= 0 && card.creatorInfo.id === rule.createdBy;
   var buffOk = (rule, card) => rule.minBuff == null || card && card.attack - card.originalAttack >= rule.minBuff && (card.maxHp != null ? card.maxHp : card.hp) - card.originalHp >= rule.minBuff;
   function createReactor({ rules, play, isOwn, settings: settings6, now = () => Date.now(), random = () => Math.random() }) {
     let lastAction = null;
@@ -15966,6 +15972,23 @@ ${CONTEST_CSS}
     const spellsSeen = /* @__PURE__ */ new Set();
     const owners = /* @__PURE__ */ new Map();
     let turnOf = null;
+    const statusEver = /* @__PURE__ */ new Map();
+    const deathSince = /* @__PURE__ */ new Map();
+    const loopSeen = /* @__PURE__ */ new Set();
+    let handIds = null;
+    const boardId = (id) => id >= 1e5 && (owners.has(id - 1e5) || statusEver.has(id - 1e5)) ? id - 1e5 : id;
+    const noteStatuses = (card) => {
+      if (!card || !Array.isArray(card.statuses)) return;
+      const names = card.statuses.map((x) => String(x && x.name).toLowerCase());
+      if (names.includes("loop") && card.fixedId != null) loopSeen.add(card.fixedId);
+      if (card.id == null || card.typeCard !== 0) return;
+      const id = boardId(card.id);
+      const set = statusEver.get(id) || /* @__PURE__ */ new Set();
+      names.forEach((n) => set.add(n));
+      statusEver.set(id, set);
+    };
+    const hadStatus = (card, name) => hasStatus(card, name) || !!card && card.id != null && (statusEver.get(boardId(card.id)) || /* @__PURE__ */ new Set()).has(name);
+    const isLoopCopy = (card) => !!card && card.creatorInfo && card.creatorInfo.typeCreator >= 0 && card.creatorInfo.id === card.fixedId && !hasStatus(card, "loop") && loopSeen.has(card.fixedId);
     const roll = (n) => n <= 1 || Math.floor(random() * n) === 0;
     function whoOk(rule, playerId) {
       const s = settings6();
@@ -16023,7 +16046,7 @@ ${CONTEST_CSS}
     }
     const find = (pred) => rules().rules.filter((m) => pred(m.rule));
     const remember = (card) => {
-      if (card && card.id != null && card.ownerId != null) owners.set(card.id, card.ownerId);
+      if (card && card.id != null && card.ownerId != null) owners.set(boardId(card.id), card.ownerId);
     };
     function onEvent(data2) {
       if (!data2 || !data2.action) return null;
@@ -16034,6 +16057,8 @@ ${CONTEST_CSS}
       } else if (a === "getMonsterPlayed" || a === "getSpellPlayed") {
         const card = parse(data2.card);
         remember(card);
+        const loopCopy = isLoopCopy(card);
+        noteStatuses(card);
         const pid = data2.idPlayer != null ? data2.idPlayer : card && card.ownerId;
         let ok = !!card;
         if (a === "getSpellPlayed" && card && card.typeCard !== 1) ok = false;
@@ -16042,9 +16067,20 @@ ${CONTEST_CSS}
           if (spellsSeen.has(card.id)) ok = false;
           else spellsSeen.add(card.id);
         }
-        if (ok) played = fire(find((r) => r.on === "play" && (!fromEffect || r.summoned) && cardMatches(r, card) && typeOk(r, card) && buffOk(r, card) && wordOk(r, card) && costOk(r, card) && whoOk(r, pid)));
+        if (ok) played = fire(find((r) => r.on === "play" && (!fromEffect || r.summoned) && cardMatches(r, card) && typeOk(r, card) && buffOk(r, card) && wordOk(r, card) && costOk(r, card) && createdByOk(r, card) && (!r.loopCopy || loopCopy) && whoOk(r, pid)));
       } else if (a === "updateCard" || a === "updateMonster") {
-        remember(parse(data2.monster || data2.card));
+        const c = parse(data2.monster || data2.card);
+        remember(c);
+        noteStatuses(c);
+      } else if (a === "getUpdateHand") {
+        const hand = parse(data2.hand);
+        if (Array.isArray(hand)) {
+          hand.forEach(noteStatuses);
+          const fresh = handIds ? hand.filter((c) => c && c.id != null && !handIds.has(c.id)) : [];
+          handIds = new Set(hand.filter((c) => c && c.id != null).map((c) => c.id));
+          const made = fresh.filter((c) => c.creatorInfo && c.creatorInfo.typeCreator >= 0 && c.creatorInfo.id !== c.fixedId);
+          if (made.length) played = fire(find((r) => r.on === "generate" && made.some((c) => cardMatches(r, c))));
+        }
       } else if (a === "getUpdateBoard") {
         const board = parse(data2.board);
         if (Array.isArray(board)) board.forEach(remember);
@@ -16054,15 +16090,25 @@ ${CONTEST_CSS}
           const type = String(log3.battleLogType).toUpperCase();
           const actor = log3.cardActor;
           remember(actor);
+          noteStatuses(actor);
+          const aKey = actor && actor.id != null ? boardId(actor.id) : null;
+          const afterKill = aKey != null && deathSince.get(aKey) === true;
+          if (aKey != null) deathSince.set(aKey, false);
+          if (type === "DEATH") deathSince.forEach((v, k) => deathSince.set(k, true));
           played = fire(find((r) => {
             if (r.on === "attack") {
               if (!/^ATTACK_(MONSTER|PLAYER)$/.test(type)) return false;
               if (r.target === "player" && type !== "ATTACK_PLAYER") return false;
               if (r.target === "monster" && type !== "ATTACK_MONSTER") return false;
               if (r.minAttack != null && !(actor && Number(actor.attack) >= r.minAttack)) return false;
+              if (r.status && !hadStatus(actor, r.status)) return false;
               return cardMatches(r, actor) && whoOk(r, log3.playerId);
             }
-            if (r.on === "log") return r.type === type && cardMatches(r, actor) && whoOk(r, log3.playerId);
+            if (r.on === "log") {
+              if (r.type !== type || !cardMatches(r, actor) || !whoOk(r, log3.playerId)) return false;
+              if (r.status && !hadStatus(actor, r.status)) return false;
+              return !r.afterKill || afterKill;
+            }
             return false;
           }));
         }
@@ -16115,6 +16161,10 @@ ${CONTEST_CSS}
       spellsSeen.clear();
       owners.clear();
       turnOf = null;
+      statusEver.clear();
+      deathSince.clear();
+      loopSeen.clear();
+      handIds = null;
     }
     return { onEvent, onWizascript, reset };
   }

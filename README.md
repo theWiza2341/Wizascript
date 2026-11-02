@@ -49,7 +49,7 @@ The community card editors, on undercards.net, in a window that works like Tier 
 ### Card Gallery
 Part of the Card Maker (its **Card Gallery** setting turns it off). **Editor / Browse / Submit** in the Card Maker's title bar switch between the editor and the gallery, a panel over the editor (`gallery/nav.js`).
 
-**Server.** The gallery's server is a Cloudflare Worker in its own repo, `wizascript-gallery-worker` (design: the Wizascript project's `claude/card-gallery-backend.md`). It's the only thing that writes to this repo. Approved posts live on the `gallery` branch: `posts/<id>.json`, art in `art/`, and an `index.json` the Worker keeps up to date. Wizascript reads them through raw.githubusercontent and talks to the Worker with GM_xmlhttpRequest (`gallery/api.js`).
+**Server.** The gallery's server is a Cloudflare Worker in its own repo. It's the only thing that writes to this repo. Approved posts live on the `gallery` branch: `posts/<id>.json`, art in `art/`, and an `index.json` the Worker keeps up to date. Wizascript reads them through raw.githubusercontent and talks to the Worker with GM_xmlhttpRequest (`gallery/api.js`).
 
 **Identity.** **Link my account** gets a one-time code from the Worker and opens void (room 0) with `#CG1 L <code>` typed in (`core/uc-report.js`). The player presses Enter; nothing is sent for them. **Check link** has the Worker look for the line in feildmaster's chat-log Discord, through the Report Hub's read-only bot, and tie this install to the sender's Undercards name. That name is the author of the player's posts.
 - This install's credentials are in GM `wizascript.cardMaker.galleryAuth`. They're never put in backups.

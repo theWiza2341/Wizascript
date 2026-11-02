@@ -13,9 +13,9 @@ Patch notes: 159 versions read, 9 corrections/additions to Version History
   errata: removed Generous Gifts from Beta 105.0
   errata: replace Clover in Beta 95.0
 Miraheze unreachable (HTTP 403), using the cached copy (2961 rows)
-Card-Tracker: 25736 snapshots of 938 cards, 938 cards today (commit 1da0511)
-Fandom Previous Versions: 508 pages (508 read live, 0 from cache), 297 exist
-Cards: 938 written, 0 failed
-Former card names: 53 (for linking old text)
+Card-Tracker: 25814 snapshots of 951 cards, 951 cards today (commit 430a328)
+Fandom Previous Versions: 523 pages (523 read live, 0 from cache), 297 exist
+Cards: 951 written, 0 failed
+Former card names: 55 (for linking old text)
 Artifacts: 100 written (100 names in the wikis)
 Former artifact names: 13 (for linking old text)

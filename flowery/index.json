@@ -470,7 +470,18 @@
       "file": "Flowery_voiceclip_great_style.wav",
       "title": "great style",
       "seconds": 1.5,
-      "use": []
+      "use": [
+        {
+          "on": "log",
+          "type": "CARD_EFFECT",
+          "status": "Bullseye",
+          "afterKill": true,
+          "who": "me",
+          "chance": 6,
+          "key": "bullseye",
+          "label": "Your monster's Bullseye triggers → \"great style\""
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_grown_like_a_turnip.wav",
@@ -484,6 +495,16 @@
           "chance": 3,
           "key": "buffed-play",
           "label": "A monster played at +4/+4 or more → \"grown like a turnip\""
+        },
+        {
+          "on": "play",
+          "card": "K-Round",
+          "id": 380,
+          "createdBy": 379,
+          "summoned": true,
+          "chance": 3,
+          "key": "k-round",
+          "label": "Crown summons K-Round → \"grown like a turnip\""
         }
       ]
     },
@@ -756,7 +777,16 @@
       "file": "Flowery_voiceclip_one_more_for_the_fans.wav",
       "title": "one more for the fans",
       "seconds": 2.41,
-      "use": []
+      "use": [
+        {
+          "on": "play",
+          "loopCopy": true,
+          "who": "me",
+          "chance": 3,
+          "key": "loop-copy",
+          "label": "You play a 0 Loop copy of a Loop card → \"one more for the fans\""
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_prism_blow.wav",
@@ -771,11 +801,20 @@
       "use": [
         {
           "on": "play",
-          "card": "Giga Balls",
+          "card": "GIGA Balls",
           "chance": 3,
           "who": "me",
           "key": "giga-balls",
-          "label": "You play Giga Balls → \"say that again\""
+          "label": "You play GIGA Balls → \"say that again\"",
+          "id": 799
+        },
+        {
+          "on": "generate",
+          "card": "GIGA Balls",
+          "id": 799,
+          "chance": 3,
+          "key": "giga-balls-made",
+          "label": "GIGA Balls made in your hand → \"say that again\""
         }
       ]
     },
@@ -815,7 +854,17 @@
       "file": "Flowery_voiceclip_take_that.wav",
       "title": "take that",
       "seconds": 1.75,
-      "use": []
+      "use": [
+        {
+          "on": "attack",
+          "target": "player",
+          "who": "me",
+          "status": "Charge",
+          "chance": 3,
+          "key": "charge-face",
+          "label": "Your Charge monster attacks the opponent → \"take that\""
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_that's_great.wav",
@@ -949,6 +998,25 @@
       ],
       "key": "enemy-kill",
       "label": "An enemy monster dies on your turn → Kill 1 or 8"
+    },
+    {
+      "on": "generate",
+      "card": "Flowery",
+      "id": 986,
+      "chance": 3,
+      "from": [
+        {
+          "sound": "flowerySummon1"
+        },
+        {
+          "sound": "flowerySummon2"
+        },
+        {
+          "sound": "flowerySummon3"
+        }
+      ],
+      "key": "flowery-made",
+      "label": "Flowery made in your hand → Summon 1–3"
     }
   ]
 }

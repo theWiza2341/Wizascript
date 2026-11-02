@@ -1,0 +1,18 @@
+{
+  "id": "10h",
+  "kind": "single",
+  "title": "Handsome Lancer",
+  "author": "ichihime-tanyao",
+  "postedAt": 1793653340845,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Handsome Lancer",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/10h-0-pic.png"
+    }
+  ]
+}

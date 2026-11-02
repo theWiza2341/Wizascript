@@ -19,6 +19,7 @@ import { fetchShop, parseShop } from "./shop.js";
 import { imageUrl, TYPE_INFO } from "./detect.js";
 import { matchesPage } from "../../core/page-match.js";
 import { toastClick } from "../../core/toast.js";
+import { emitWz } from "../../core/wz-events.js";
 
 export const FREQ_REFRESH = "After each shop refresh";
 export const FREQ_4H = "Every 4 hours";
@@ -120,6 +121,7 @@ function toast(plugin, opts) {
 
 export function showMatchesToast(plugin, matches) {
   const n = matches.length;
+  emitWz("wishlistInShop", { count: n }); // Flowery Mode may react
   return toast(plugin, {
     title: `${n} wishlist item${n === 1 ? "" : "s"} in the Cosmetics Shop!`,
     text: rowsHtml(matches),

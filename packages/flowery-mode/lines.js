@@ -36,6 +36,7 @@
 //   always      true = every time, ignoring Frequency, the gap and the budget
 //   budget      false = doesn't use up (or wait for) the per-match budget, still rolls its odds
 //   repeat      [min, max]: plays the clip that many times in a row
+//   stagger     with repeat: ms between the starts, so the repeats can overlap (default: one after another)
 //   alt         [{ file | sound, chance }]: 1 in `chance` of playing that clip instead
 //   summoned    play: also count monsters put on the board by an effect (not only from hand)
 //   nameWord    play: the card's name contains this word ("kid" matches "Monster Kid", not "Kidnap")
@@ -85,6 +86,7 @@ function cleanRule(r, secondsOf) {
     const a = clampN(r.repeat[0], 1, 10, 1);
     out.repeat = [a, clampN(r.repeat[1], a, 10, a)];
   }
+  if (r.stagger != null) out.stagger = clampN(r.stagger, 50, 3000, 300);
   if (Array.isArray(r.alt)) {
     out.alt = r.alt.map((x) => ({ clip: clipOf(x, secondsOf && x && secondsOf(x.file)), chance: clampN(x && x.chance, 1, 10000, 1) }))
       .filter((x) => x.clip);

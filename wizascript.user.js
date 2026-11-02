@@ -1090,7 +1090,7 @@ Share the cards you make. It's part of the Card Maker: use **Browse** and **Subm
 
 ### New: Flowery Mode
 Flowery's voice lines, even when Flowery isn't on the board. Turn it on in the **Plugins** list.
-- In matches and while spectating, Flowery reacts now and then to some cards being played or cast, some attacks and a few other moments, including her own friends' cards. She speaks up in a few places around the site too. Part of the fun is finding out where.
+- In matches and while spectating, Flowery reacts now and then to some cards being played or cast, some attacks and a few other moments, including Flowery's friends' cards. There are lines in a few places around the site too. Part of the fun is finding out where.
 - **Frequency** (on the Flowery Mode tab) sets how often: Normal is about 1-2 lines a match, and it goes up and down from there. **Opponent's Cards**, **While Spectating** and **Win/Loss Lines** turn those parts off, and **Every :Glue:** says "glue" for every Glue emote.
 - Lines follow the game's sound volume. With Flowery on the board, the game's own lines play as usual and nothing doubles up.
 - New lines and places can be added without a Wizascript update.
@@ -3335,7 +3335,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       pages: "every page (most lines are in matches and Spectate)",
       summary: "Flowery speaks up now and then: on some cards, attacks and moments in matches, and in a few places around the site.",
       points: () => [
-        "Her lines are rare on purpose. <b>Frequency</b> sets how often (Normal is about 1-2 lines a match).",
+        "The lines are rare on purpose. <b>Frequency</b> sets how often (Normal is about 1-2 lines a match).",
         "With Flowery on the board, the game's own lines play as usual and nothing doubles up.",
         `Lines follow the game's sound volume. <b>Opponent's Cards</b>, <b>While Spectating</b> and <b>Win/Loss Lines</b> turn those parts off; <b>Every :Glue:</b> says "glue" for every Glue emote.`,
         "<b>Advanced Settings</b> sets each line's exact chance (its default is shown; <b>Restore Defaults</b> undoes it). <b>Flowery Gold Icon</b> turns your gold icon into a Flowery coin."
@@ -13976,8 +13976,8 @@ ${CONTEST_CSS}
       saveDraft();
     }
     let viewAs = "";
-    const listeners5 = [];
-    const notify2 = () => listeners5.forEach((f) => f());
+    const listeners6 = [];
+    const notify2 = () => listeners6.forEach((f) => f());
     let browseCtl = null;
     let read2 = null;
     let readTimer = null;
@@ -15120,7 +15120,7 @@ ${CONTEST_CSS}
       view: () => open ? tab : "editor",
       setView,
       onChange(f) {
-        listeners5.push(f);
+        listeners6.push(f);
       },
       // Send queued votes now (the Card Maker is closing or being minimised).
       flush: () => voteQueue.flush(),
@@ -15672,6 +15672,173 @@ ${CONTEST_CSS}
     }
   }
 
+  // packages/core/wz-events.js
+  var listeners3 = /* @__PURE__ */ new Map();
+  function onWz(name, fn) {
+    if (!listeners3.has(name)) listeners3.set(name, []);
+    listeners3.get(name).push(fn);
+  }
+  function emitWz(name, data2) {
+    (listeners3.get(name) || []).slice().forEach((fn) => {
+      try {
+        fn(data2);
+      } catch (e) {
+      }
+    });
+  }
+
+  // packages/misc/wishlist/detect.js
+  var TYPE_INFO = {
+    avatar: { folder: "avatars", label: "Avatar" },
+    emote: { folder: "emotes", label: "Emote" },
+    "profile-skin": { folder: "profiles", label: "Profile Skin" }
+  };
+  var FOLDERS = Object.entries(TYPE_INFO).map(([type, info]) => [info.folder, type]);
+  var SKIP_FILES = /^(YourBubble|EnemyBubble)\./i;
+  function nameFromFile(file) {
+    return file.replace(/\.[a-z0-9]+$/i, "").replace(/_/g, " ");
+  }
+  function imageUrl(type, file) {
+    const info = TYPE_INFO[type];
+    return info ? `/images/${info.folder}/${encodeURIComponent(file)}` : "";
+  }
+  function fromSrc(src) {
+    if (!src) return null;
+    const hit = FOLDERS.find(([folder]) => src.includes(`images/${folder}/`));
+    if (!hit) return null;
+    let file = src.split("/").pop().split(/[?#]/)[0];
+    try {
+      file = decodeURIComponent(file);
+    } catch (e) {
+    }
+    if (!file || SKIP_FILES.test(file)) return null;
+    const type = hit[1];
+    return { key: `${type}:${file}`, type, file, name: nameFromFile(file) };
+  }
+  function srcOf(el3) {
+    if (!(el3 instanceof Element)) return "";
+    if (el3.tagName === "IMG") return el3.getAttribute("src") || "";
+    const bg = getComputedStyle(el3).backgroundImage || "";
+    const m = bg.match(/url\(["']?([^"')]+)/);
+    return m ? m[1] : "";
+  }
+  function detectElement(el3) {
+    return fromSrc(srcOf(el3));
+  }
+  function findCosmetic(target) {
+    if (!(target instanceof Element)) return null;
+    let found = null;
+    let el3 = null;
+    const profile = target.closest("table.profile");
+    if (profile) {
+      found = detectElement(profile);
+      el3 = profile;
+    }
+    for (let n = target, i = 0; !found && n && i < 5; n = n.parentElement, i++) {
+      found = detectElement(n);
+      el3 = n;
+    }
+    if (!found) return null;
+    found.rarity = rarityOf(el3);
+    found.own = isOwnEquipped(found, el3);
+    const box = target.closest(".col-sm-1, tr");
+    const form = box && box.querySelector("form.cosmetic-purchase[data-name]");
+    const boxImg = box && box.querySelector("img");
+    const boxItem = boxImg ? fromSrc(boxImg.getAttribute("src")) : null;
+    if (form && boxItem && boxItem.key === found.key) {
+      found.name = form.getAttribute("data-name") || found.name;
+    }
+    return found;
+  }
+  var RARITIES = ["COMMON", "BASE", "RARE", "EPIC", "LEGENDARY", "DETERMINATION", "MYTHIC", "TOKEN"];
+  function rarityOf(el3) {
+    if (!(el3 instanceof Element) || el3.tagName !== "IMG") return null;
+    return RARITIES.find((r) => el3.classList.contains(r)) || null;
+  }
+  function isOwnEquipped(item2, el3) {
+    if (!(el3 instanceof Element) || location.pathname.startsWith("/Spectate")) return false;
+    if (item2.type === "avatar") return el3.id === "yourAvatar";
+    if (item2.type === "profile-skin") {
+      try {
+        const selfId = getPageWindow().selfId;
+        return selfId != null && el3.id === `user${selfId}`;
+      } catch (e) {
+        return false;
+      }
+    }
+    return false;
+  }
+  function isFreeAvatar(item2) {
+    return item2.type === "avatar" && (item2.rarity === "COMMON" || item2.rarity === "BASE");
+  }
+  function isFreeEmote(file) {
+    try {
+      const list = getPageWindow().chatEmotes;
+      if (!Array.isArray(list)) return false;
+      const e = list.find((x) => x && `${x.image}.png` === file);
+      return !!(e && Number(e.ucpCost) === 0);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // packages/misc/wishlist/shop.js
+  var SECTIONS = { "cosmetics-daily": "Daily", "cosmetics-new": "New", "cosmetics-sales": "Sale" };
+  function i18nKey(el3) {
+    return (el3.getAttribute("data-i18n") || "").replace(/^\[[a-z]+\]/i, "");
+  }
+  function parseTimer(text) {
+    const t = String(text == null ? "" : text).trim();
+    if (/^\d+$/.test(t)) return Number(t);
+    const parts = t.split(":").map((p) => Number(p));
+    if (!parts.length || parts.some((p) => !Number.isFinite(p))) return null;
+    const [s = 0, m = 0, h2 = 0, d = 0] = parts.reverse();
+    return d * 86400 + h2 * 3600 + m * 60 + s;
+  }
+  function parseShop(doc) {
+    const heads = [...doc.querySelectorAll("span[data-i18n]")].filter((s) => SECTIONS[i18nKey(s)]);
+    if (!heads.length) throw new Error(`not the Cosmetics Shop (page title: "${doc.title || "none"}")`);
+    const timers = { Daily: null, New: null, Sale: null };
+    heads.forEach((h2) => {
+      const t = h2.parentElement && h2.parentElement.querySelector(".cosmetics-timer");
+      timers[SECTIONS[i18nKey(h2)]] = t ? parseTimer(t.textContent) : null;
+    });
+    const items = [];
+    const seen2 = /* @__PURE__ */ new Set();
+    doc.querySelectorAll("img").forEach((img) => {
+      const found = fromSrc(img.getAttribute("src"));
+      if (!found) return;
+      let section = null;
+      heads.forEach((h2) => {
+        if (h2.compareDocumentPosition(img) & 4) section = SECTIONS[i18nKey(h2)];
+      });
+      if (!section) return;
+      const box = img.closest(".col-sm-1") || img.closest("tr") || img.parentElement;
+      const form = box.querySelector("form.cosmetic-purchase");
+      const sale = (box.textContent.match(/\(-\s*(\d+)\s*%\)/) || [])[1];
+      const owned = [...box.querySelectorAll("[data-i18n]")].some((n) => i18nKey(n) === "cardskins-shop-owned");
+      const id = `${section}|${found.key}`;
+      if (seen2.has(id)) return;
+      seen2.add(id);
+      items.push({
+        ...found,
+        name: form && form.getAttribute("data-name") || found.name,
+        section,
+        cost: form ? Number(form.getAttribute("data-cost")) : null,
+        sale: sale ? Number(sale) : 0,
+        owned,
+        img
+      });
+    });
+    return { items, timers };
+  }
+  async function fetchShop() {
+    const res = await fetch("/CosmeticsShop", { credentials: "same-origin", cache: "no-store" });
+    if (!res.ok) throw new Error(`the shop answered with HTTP ${res.status}`);
+    const html = await res.text();
+    return parseShop(new DOMParser().parseFromString(html, "text/html"));
+  }
+
   // packages/flowery-mode/lines.js
   var norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
   var KINDS = /* @__PURE__ */ new Set(["play", "attack", "log", "animation", "overdraw", "kill", "victory", "defeat", "wizascript"]);
@@ -15712,6 +15879,7 @@ ${CONTEST_CSS}
       const a = clampN(r.repeat[0], 1, 10, 1);
       out.repeat = [a, clampN(r.repeat[1], a, 10, a)];
     }
+    if (r.stagger != null) out.stagger = clampN(r.stagger, 50, 3e3, 300);
     if (Array.isArray(r.alt)) {
       out.alt = r.alt.map((x) => ({ clip: clipOf(x, secondsOf && x && secondsOf(x.file)), chance: clampN(x && x.chance, 1, 1e4, 1) })).filter((x) => x.clip);
     }
@@ -16085,8 +16253,8 @@ ${CONTEST_CSS}
       return null;
     }
   }
-  function playClip(clip, times = 1) {
-    const gap = clipMs(clip) + 60;
+  function playClip(clip, times = 1, stagger = 0) {
+    const gap = stagger > 0 ? stagger : clipMs(clip) + 60;
     let via = null;
     for (let i = 0; i < times; i++) {
       if (i === 0) via = playOnce(clip);
@@ -16268,7 +16436,7 @@ ${CONTEST_CSS}
     const spectating = matchesPage({ prefix: "/Spectate" });
     const reactor = createReactor({
       rules: () => compiled,
-      play: (clip, times) => playClip(clip, times),
+      play: (clip, times, rule) => playClip(clip, times, rule && rule.stagger),
       isOwn: (id) => id != null && String(id) === String(pw.userId),
       settings: () => ({
         frequency: freqNow(),
@@ -16349,23 +16517,48 @@ ${CONTEST_CSS}
       const sw = document.getElementById("truehub-switch");
       if (show && sw && /classic/i.test(sw.textContent)) wiz("thbDeckLoad");
     }, true);
-    document.addEventListener("submit", (e) => {
-      const f = e.target;
-      if (f && f.querySelector && f.querySelector("input[type=password]")) {
-        try {
-          sessionStorage.setItem(LOGIN_KEY, String(Date.now()));
-        } catch (err) {
-        }
+    const loggedIn = () => {
+      try {
+        return !!sessionStorage.getItem("UserID");
+      } catch (e) {
+        return false;
       }
+    };
+    const markSignIn = () => GM_setValue(LOGIN_KEY, Date.now());
+    const signInForm = () => document.querySelector("form input[type=password]");
+    const checkSignInPage = () => {
+      if (!loggedIn() && signInForm()) markSignIn();
+    };
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", checkSignInPage, { once: true });
+    else checkSignInPage();
+    document.addEventListener("click", (e) => {
+      const b = e.target && e.target.closest && e.target.closest("input[type=submit], button");
+      if (b && !loggedIn() && b.form && b.form.querySelector("input[type=password]")) markSignIn();
     }, true);
-    try {
-      const pending = Number(sessionStorage.getItem(LOGIN_KEY));
-      if (pending) {
-        sessionStorage.removeItem(LOGIN_KEY);
-        if (Date.now() - pending < 6e4 && sessionStorage.getItem("UserID")) wiz("login");
-      }
-    } catch (e) {
+    let loginPlayed = false;
+    const tryLogin = () => {
+      const at = Number(GM_getValue(LOGIN_KEY, 0));
+      if (loginPlayed || !at || !loggedIn()) return;
+      loginPlayed = true;
+      GM_deleteValue(LOGIN_KEY);
+      if (Date.now() - at < 15 * 60 * 1e3) wiz("login");
+    };
+    tryLogin();
+    plugin.events.on("login", () => setTimeout(tryLogin, 0));
+    if (matchesPage("/CosmeticsShop")) {
+      const lookForGlue = () => {
+        try {
+          const { items } = parseShop(document);
+          const forSale = (it) => it.cost != null || it.owned;
+          if (items.some((it) => forSale(it) && it.type === "emote" && /^Glue(\.\w+)?$/i.test(String(it.file)))) wiz("shopGlue");
+        } catch (e) {
+          log2("couldn't read the shop page:", e.message);
+        }
+      };
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", lookForGlue, { once: true });
+      else lookForGlue();
     }
+    onWz("wishlistInShop", () => wiz("wishlistInShop"));
     document.addEventListener("contextmenu", (e) => {
       const img = e.target && e.target.closest && e.target.closest("img.tribe");
       if (img && /tribes\/PLANT\.png/i.test(img.getAttribute("src") || "")) wiz("plantTribe");
@@ -18357,106 +18550,11 @@ ${CONTEST_CSS}
     (document.head || document.documentElement).appendChild(style);
   }
 
-  // packages/misc/wishlist/detect.js
-  var TYPE_INFO = {
-    avatar: { folder: "avatars", label: "Avatar" },
-    emote: { folder: "emotes", label: "Emote" },
-    "profile-skin": { folder: "profiles", label: "Profile Skin" }
-  };
-  var FOLDERS = Object.entries(TYPE_INFO).map(([type, info]) => [info.folder, type]);
-  var SKIP_FILES = /^(YourBubble|EnemyBubble)\./i;
-  function nameFromFile(file) {
-    return file.replace(/\.[a-z0-9]+$/i, "").replace(/_/g, " ");
-  }
-  function imageUrl(type, file) {
-    const info = TYPE_INFO[type];
-    return info ? `/images/${info.folder}/${encodeURIComponent(file)}` : "";
-  }
-  function fromSrc(src) {
-    if (!src) return null;
-    const hit = FOLDERS.find(([folder]) => src.includes(`images/${folder}/`));
-    if (!hit) return null;
-    let file = src.split("/").pop().split(/[?#]/)[0];
-    try {
-      file = decodeURIComponent(file);
-    } catch (e) {
-    }
-    if (!file || SKIP_FILES.test(file)) return null;
-    const type = hit[1];
-    return { key: `${type}:${file}`, type, file, name: nameFromFile(file) };
-  }
-  function srcOf(el3) {
-    if (!(el3 instanceof Element)) return "";
-    if (el3.tagName === "IMG") return el3.getAttribute("src") || "";
-    const bg = getComputedStyle(el3).backgroundImage || "";
-    const m = bg.match(/url\(["']?([^"')]+)/);
-    return m ? m[1] : "";
-  }
-  function detectElement(el3) {
-    return fromSrc(srcOf(el3));
-  }
-  function findCosmetic(target) {
-    if (!(target instanceof Element)) return null;
-    let found = null;
-    let el3 = null;
-    const profile = target.closest("table.profile");
-    if (profile) {
-      found = detectElement(profile);
-      el3 = profile;
-    }
-    for (let n = target, i = 0; !found && n && i < 5; n = n.parentElement, i++) {
-      found = detectElement(n);
-      el3 = n;
-    }
-    if (!found) return null;
-    found.rarity = rarityOf(el3);
-    found.own = isOwnEquipped(found, el3);
-    const box = target.closest(".col-sm-1, tr");
-    const form = box && box.querySelector("form.cosmetic-purchase[data-name]");
-    const boxImg = box && box.querySelector("img");
-    const boxItem = boxImg ? fromSrc(boxImg.getAttribute("src")) : null;
-    if (form && boxItem && boxItem.key === found.key) {
-      found.name = form.getAttribute("data-name") || found.name;
-    }
-    return found;
-  }
-  var RARITIES = ["COMMON", "BASE", "RARE", "EPIC", "LEGENDARY", "DETERMINATION", "MYTHIC", "TOKEN"];
-  function rarityOf(el3) {
-    if (!(el3 instanceof Element) || el3.tagName !== "IMG") return null;
-    return RARITIES.find((r) => el3.classList.contains(r)) || null;
-  }
-  function isOwnEquipped(item2, el3) {
-    if (!(el3 instanceof Element) || location.pathname.startsWith("/Spectate")) return false;
-    if (item2.type === "avatar") return el3.id === "yourAvatar";
-    if (item2.type === "profile-skin") {
-      try {
-        const selfId = getPageWindow().selfId;
-        return selfId != null && el3.id === `user${selfId}`;
-      } catch (e) {
-        return false;
-      }
-    }
-    return false;
-  }
-  function isFreeAvatar(item2) {
-    return item2.type === "avatar" && (item2.rarity === "COMMON" || item2.rarity === "BASE");
-  }
-  function isFreeEmote(file) {
-    try {
-      const list = getPageWindow().chatEmotes;
-      if (!Array.isArray(list)) return false;
-      const e = list.find((x) => x && `${x.image}.png` === file);
-      return !!(e && Number(e.ucpCost) === 0);
-    } catch (e) {
-      return false;
-    }
-  }
-
   // packages/misc/wishlist/storage.js
   var ITEMS_KEY = "wizascript.wishlist.items";
   var STATE_KEY2 = "wizascript.wishlist.state";
   var OWNED_KEY = "wizascript.wishlist.owned";
-  var listeners3 = /* @__PURE__ */ new Set();
+  var listeners4 = /* @__PURE__ */ new Set();
   function read(key2, fallback) {
     try {
       const raw = GM_getValue(key2, null);
@@ -18471,7 +18569,7 @@ ${CONTEST_CSS}
     GM_setValue(key2, JSON.stringify(value));
   }
   function emit() {
-    listeners3.forEach((fn) => {
+    listeners4.forEach((fn) => {
       try {
         fn();
       } catch (e) {
@@ -18528,8 +18626,8 @@ ${CONTEST_CSS}
     emit();
   }
   function onItemsChange(fn) {
-    listeners3.add(fn);
-    return () => listeners3.delete(fn);
+    listeners4.add(fn);
+    return () => listeners4.delete(fn);
   }
   function getState() {
     return read(STATE_KEY2, {});
@@ -18624,63 +18722,6 @@ ${CONTEST_CSS}
     }, true);
   }
 
-  // packages/misc/wishlist/shop.js
-  var SECTIONS = { "cosmetics-daily": "Daily", "cosmetics-new": "New", "cosmetics-sales": "Sale" };
-  function i18nKey(el3) {
-    return (el3.getAttribute("data-i18n") || "").replace(/^\[[a-z]+\]/i, "");
-  }
-  function parseTimer(text) {
-    const t = String(text == null ? "" : text).trim();
-    if (/^\d+$/.test(t)) return Number(t);
-    const parts = t.split(":").map((p) => Number(p));
-    if (!parts.length || parts.some((p) => !Number.isFinite(p))) return null;
-    const [s = 0, m = 0, h2 = 0, d = 0] = parts.reverse();
-    return d * 86400 + h2 * 3600 + m * 60 + s;
-  }
-  function parseShop(doc) {
-    const heads = [...doc.querySelectorAll("span[data-i18n]")].filter((s) => SECTIONS[i18nKey(s)]);
-    if (!heads.length) throw new Error(`not the Cosmetics Shop (page title: "${doc.title || "none"}")`);
-    const timers = { Daily: null, New: null, Sale: null };
-    heads.forEach((h2) => {
-      const t = h2.parentElement && h2.parentElement.querySelector(".cosmetics-timer");
-      timers[SECTIONS[i18nKey(h2)]] = t ? parseTimer(t.textContent) : null;
-    });
-    const items = [];
-    const seen2 = /* @__PURE__ */ new Set();
-    doc.querySelectorAll("img").forEach((img) => {
-      const found = fromSrc(img.getAttribute("src"));
-      if (!found) return;
-      let section = null;
-      heads.forEach((h2) => {
-        if (h2.compareDocumentPosition(img) & 4) section = SECTIONS[i18nKey(h2)];
-      });
-      if (!section) return;
-      const box = img.closest(".col-sm-1") || img.closest("tr") || img.parentElement;
-      const form = box.querySelector("form.cosmetic-purchase");
-      const sale = (box.textContent.match(/\(-\s*(\d+)\s*%\)/) || [])[1];
-      const owned = [...box.querySelectorAll("[data-i18n]")].some((n) => i18nKey(n) === "cardskins-shop-owned");
-      const id = `${section}|${found.key}`;
-      if (seen2.has(id)) return;
-      seen2.add(id);
-      items.push({
-        ...found,
-        name: form && form.getAttribute("data-name") || found.name,
-        section,
-        cost: form ? Number(form.getAttribute("data-cost")) : null,
-        sale: sale ? Number(sale) : 0,
-        owned,
-        img
-      });
-    });
-    return { items, timers };
-  }
-  async function fetchShop() {
-    const res = await fetch("/CosmeticsShop", { credentials: "same-origin", cache: "no-store" });
-    if (!res.ok) throw new Error(`the shop answered with HTTP ${res.status}`);
-    const html = await res.text();
-    return parseShop(new DOMParser().parseFromString(html, "text/html"));
-  }
-
   // packages/misc/wishlist/check.js
   var FREQ_REFRESH = "After each shop refresh";
   var FREQ_4H = "Every 4 hours";
@@ -18763,6 +18804,7 @@ ${CONTEST_CSS}
   }
   function showMatchesToast(plugin, matches) {
     const n = matches.length;
+    emitWz("wishlistInShop", { count: n });
     return toast2(plugin, {
       title: `${n} wishlist item${n === 1 ? "" : "s"} in the Cosmetics Shop!`,
       text: rowsHtml(matches),
@@ -19522,13 +19564,13 @@ ${CONTEST_CSS}
     GM_setValue(STORE, JSON.stringify(list));
     changed();
   }
-  var listeners4 = /* @__PURE__ */ new Set();
+  var listeners5 = /* @__PURE__ */ new Set();
   var onReportsChanged = (fn) => {
-    listeners4.add(fn);
-    return () => listeners4.delete(fn);
+    listeners5.add(fn);
+    return () => listeners5.delete(fn);
   };
   function changed() {
-    listeners4.forEach((fn) => {
+    listeners5.forEach((fn) => {
       try {
         fn();
       } catch (e) {

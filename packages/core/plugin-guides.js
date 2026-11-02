@@ -140,7 +140,7 @@ const GUIDES = {
     pages: "every page (most lines are in matches and Spectate)",
     summary: "Flowery speaks up now and then: on some cards, attacks and moments in matches, and in a few places around the site.",
     points: () => [
-      'Her lines are rare on purpose. <b>Frequency</b> sets how often (Normal is about 1-2 lines a match).',
+      'The lines are rare on purpose. <b>Frequency</b> sets how often (Normal is about 1-2 lines a match).',
       'With Flowery on the board, the game\'s own lines play as usual and nothing doubles up.',
       'Lines follow the game\'s sound volume. <b>Opponent\'s Cards</b>, <b>While Spectating</b> and <b>Win/Loss Lines</b> turn those parts off; <b>Every :Glue:</b> says "glue" for every Glue emote.',
       '<b>Advanced Settings</b> sets each line\'s exact chance (its default is shown; <b>Restore Defaults</b> undoes it). <b>Flowery Gold Icon</b> turns your gold icon into a Flowery coin.'

@@ -1,6 +1,6 @@
 // packages/flowery-mode/index.js
 //
-// Flowery Mode: Flowery's voice lines on cards and moments she cares about.
+// Flowery Mode: Flowery's voice lines on cards and moments.
 // The engine is lines.js; the RULES (which clip, when, how rare) are
 // flowery/index.json on the repo's `sounds` branch, read here and cached.
 // Research and the interaction list: the project's claude/flowery-mode-scoping.md.
@@ -20,6 +20,8 @@ import { getPageWindow } from "../core/page-window.js";
 import { isDebugLogging } from "../core/debug.js";
 import { onAccountLinked } from "../core/account.js";
 import { registerSettingWidget, asButton } from "../core/setting-widgets.js";
+import { onWz } from "../core/wz-events.js";
+import { parseShop } from "../misc/wishlist/shop.js";
 import {
   FREQUENCIES, DEFAULT_FREQUENCY, EVERY_TIME, frequency, compileRules, clipName, createReactor, ruleDefaults
 } from "./lines.js";
@@ -29,7 +31,7 @@ const TAB = "Flowery Mode";
 const BRANCH = "https://raw.githubusercontent.com/theWiza2341/Wizascript/sounds/flowery/";
 const RULES_KEY = "wizascript.floweryMode.rules";        // { at, index }
 const EVERY_KEY = "wizascript.floweryMode.everyTime";    // the on-screen testing toggle
-const LOGIN_KEY = "wizascript.floweryMode.loginPending"; // sessionStorage
+const LOGIN_KEY = "wizascript.floweryMode.loginPending"; // GM: when a sign-in page was seen
 const REFRESH_MS = 15 * 60 * 1000;
 const PAGE_QUIET_MS = 3000; // chat history arrives on load: don't react to it
 
@@ -120,9 +122,10 @@ function playOnce(clip) {
     return null;
   }
 }
-// Plays a clip `times` times in a row; returns how long that takes (ms).
-export function playClip(clip, times = 1) {
-  const gap = clipMs(clip) + 60;
+// Plays a clip `times` times, each start `stagger` ms after the last (they can
+// overlap) or one after another; returns how long that takes (ms).
+export function playClip(clip, times = 1, stagger = 0) {
+  const gap = stagger > 0 ? stagger : clipMs(clip) + 60;
   let via = null;
   for (let i = 0; i < times; i++) {
     if (i === 0) via = playOnce(clip);
@@ -302,7 +305,7 @@ export function initFloweryMode(plugin) {
   const spectating = matchesPage({ prefix: "/Spectate" });
   const reactor = createReactor({
     rules: () => compiled,
-    play: (clip, times) => playClip(clip, times),
+    play: (clip, times, rule) => playClip(clip, times, rule && rule.stagger),
     isOwn: (id) => id != null && String(id) === String(pw.userId),
     settings: () => ({
       frequency: freqNow(),
@@ -389,20 +392,47 @@ export function initFloweryMode(plugin) {
     if (show && sw && /classic/i.test(sw.textContent)) wiz("thbDeckLoad");
   }, true);
 
-  // Logging in: remember the submit; the page after it plays the line.
-  document.addEventListener("submit", (e) => {
-    const f = e.target;
-    if (f && f.querySelector && f.querySelector("input[type=password]")) {
-      try { sessionStorage.setItem(LOGIN_KEY, String(Date.now())); } catch (err) { /* ignore */ }
-    }
+  // Logging in. The sign-in button can't be relied on (the form doesn't always
+  // fire a submit event), so: a page with a sign-in form while logged OUT marks
+  // "about to log in" (pressing Sign in refreshes it); the next page that loads
+  // logged IN plays the line. Stored in GM so it survives the page change.
+  const loggedIn = () => { try { return !!sessionStorage.getItem("UserID"); } catch (e) { return false; } };
+  const markSignIn = () => GM_setValue(LOGIN_KEY, Date.now());
+  const signInForm = () => document.querySelector("form input[type=password]");
+  const checkSignInPage = () => { if (!loggedIn() && signInForm()) markSignIn(); };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", checkSignInPage, { once: true });
+  else checkSignInPage();
+  document.addEventListener("click", (e) => {
+    const b = e.target && e.target.closest && e.target.closest("input[type=submit], button");
+    if (b && !loggedIn() && b.form && b.form.querySelector("input[type=password]")) markSignIn();
   }, true);
-  try {
-    const pending = Number(sessionStorage.getItem(LOGIN_KEY));
-    if (pending) {
-      sessionStorage.removeItem(LOGIN_KEY);
-      if (Date.now() - pending < 60000 && sessionStorage.getItem("UserID")) wiz("login");
-    }
-  } catch (e) { /* ignore */ }
+  let loginPlayed = false;
+  const tryLogin = () => {
+    const at = Number(GM_getValue(LOGIN_KEY, 0));
+    if (loginPlayed || !at || !loggedIn()) return;
+    loginPlayed = true;
+    GM_deleteValue(LOGIN_KEY);
+    if (Date.now() - at < 15 * 60 * 1000) wiz("login");
+  };
+  tryLogin();
+  plugin.events.on("login", () => setTimeout(tryLogin, 0)); // UnderScript, once the session is known
+
+  // A Glue emote for sale in the Cosmetics Shop (once per visit), and Cosmetic
+  // Wishlist's "in the Cosmetics Shop!" message.
+  if (matchesPage("/CosmeticsShop")) {
+    const lookForGlue = () => {
+      try {
+        const { items } = parseShop(document);
+        // Real shop items have a buy form (a cost) or an "owned" label; a :Glue: in
+        // chat below the shop has neither.
+        const forSale = (it) => it.cost != null || it.owned;
+        if (items.some((it) => forSale(it) && it.type === "emote" && /^Glue(\.\w+)?$/i.test(String(it.file)))) wiz("shopGlue");
+      } catch (e) { log("couldn't read the shop page:", e.message); }
+    };
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", lookForGlue, { once: true });
+    else lookForGlue();
+  }
+  onWz("wishlistInShop", () => wiz("wishlistInShop"));
 
   // The Plant tribe's member list (right-click the tribe icon).
   document.addEventListener("contextmenu", (e) => {

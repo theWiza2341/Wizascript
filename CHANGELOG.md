@@ -23,6 +23,13 @@ Share the cards you make. It's part of the Card Maker: use **Browse** and **Subm
 - **Undercards Account** (on the Wizascript tab): link Wizascript to your Undercards account once, for features that need to know who you are. The Card Gallery uses it, and you can link from there too.
 - **Contest** (★ in the title bar): themed card-design contests. Read the theme, rules and deadline, then press **Enter cards** to enter up to 3 designs (a set counts as one). You can withdraw an entry before the deadline to free its slot. There's no voting: the organizers judge the entries, and the results and every entry stay in the contest archive. Entries join the gallery once the results are out.
 
+### New: Flowery Mode
+Flowery's voice lines, even when Flowery isn't on the board. Turn it on in the **Plugins** list.
+- In matches and while spectating, Flowery reacts now and then to some cards being played or cast, some attacks and a few other moments, including her own friends' cards. She speaks up in a few places around the site too. Part of the fun is finding out where.
+- **Frequency** (on the Flowery Mode tab) sets how often: Normal is about 1-2 lines a match, and it goes up and down from there. **Opponent's Cards**, **While Spectating** and **Win/Loss Lines** turn those parts off, and **Every :Glue:** says "glue" for every Glue emote.
+- Lines follow the game's sound volume. With Flowery on the board, the game's own lines play as usual and nothing doubles up.
+- New lines and places can be added without a Wizascript update.
+
 ## 1.6.2
 
 ### Improvements

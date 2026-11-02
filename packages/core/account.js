@@ -100,13 +100,18 @@ const state = { name: null, cooldownUntil: null, known: false };
 const listeners = [];
 export const linkedAccount = () => state.name;
 export const onAccountChange = (fn) => { listeners.push(fn); return () => listeners.splice(listeners.indexOf(fn), 1); };
+// Only when the player has just linked (a link check succeeded), not when a page
+// load finds an existing link. Flowery Mode reacts to it.
+const linkListeners = [];
+export const onAccountLinked = (fn) => { linkListeners.push(fn); };
 // Call with what the server said (getMe / linkCheck): updates everyone showing it.
-export function accountChanged(name, cooldownUntil) {
+export function accountChanged(name, cooldownUntil, justLinked = false) {
   const was = state.name;
   state.name = name || null;
   state.cooldownUntil = cooldownUntil || null;
   state.known = true;
   if (was !== state.name) listeners.slice().forEach((f) => { try { f(state.name); } catch (e) { /* a listener's problem */ } });
+  if (justLinked && state.name) linkListeners.slice().forEach((f) => { try { f(state.name); } catch (e) { /* a listener's problem */ } });
 }
 export async function refreshAccount() {
   const me = await getMe();
@@ -132,7 +137,7 @@ export function watchForLink(onDone, { every = 5000, forMs = 180000 } = {}) {
       const r = await linkCheck();
       if (r && r.linked) {
         clearInterval(w.timer); if (watching === w) watching = null;
-        accountChanged(r.account, r.cooldownUntil);
+        accountChanged(r.account, r.cooldownUntil, true);
         onDone({ account: r.account });
       }
     } catch (e) {
@@ -205,7 +210,7 @@ function openAccountDialog(plugin) {
       show("Looking for your line in void…", true);
       try {
         const r = await linkCheck();
-        if (r.linked) { accountChanged(r.account, r.cooldownUntil); code = null; draw(); show(`Linked as ${r.account}.`, true); }
+        if (r.linked) { accountChanged(r.account, r.cooldownUntil, true); code = null; draw(); show(`Linked as ${r.account}.`, true); }
         else show(r.message || "Not seen yet. Send the line in void, then check again.", false);
       } catch (e) { show(e.message || "Couldn't check.", false); }
     });

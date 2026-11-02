@@ -16,6 +16,7 @@ import { initUcTv } from "./packages/uc-tv/index.js";
 // packages/misc/tier-list/ because it started out as a Misc feature.
 import { initTierList } from "./packages/misc/tier-list/index.js";
 import { initCardMaker } from "./packages/card-maker/index.js";
+import { initFloweryMode } from "./packages/flowery-mode/index.js";
 import { initMisc } from "./packages/misc/index.js";
 import { initWishlist } from "./packages/misc/wishlist/index.js";
 import { initCardHistory } from "./packages/misc/card-history/index.js";
@@ -59,6 +60,7 @@ bootstrap(plugin => {
   initUcTv(plugin);
   initTierList(plugin);
   initCardMaker(plugin);
+  initFloweryMode(plugin);
   const miscSettings = initMisc(plugin);
   initWishlist(plugin); // Miscellaneous, but with its own tab
   initCardHistory(plugin); // Miscellaneous, no tab

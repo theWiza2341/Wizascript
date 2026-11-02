@@ -360,14 +360,14 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
       const { category, page, hidden, ...rest } = config;
       const isHidden = () => (visible2 ? !visible2() : false) || resolve(hidden) === true;
       const dynamicCategory = categories && category ? { toString: () => isHidden() ? "N/A" : String(category), valueOf: () => isHidden() ? "N/A" : String(category) } : null;
-      const setting4 = settingsApi.add({
+      const setting5 = settingsApi.add({
         ...rest,
         ...dynamicCategory ? { category: dynamicCategory } : {},
         key: `${featureName}.${key2}`,
         hidden: isHidden
       });
-      registered[key2] = setting4;
-      return setting4;
+      registered[key2] = setting5;
+      return setting5;
     }
     function value(key2) {
       return registered[key2].value();
@@ -492,6 +492,13 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
       usesKeybinds: true
     },
     {
+      id: "floweryMode",
+      category: "Plugins",
+      name: "Flowery Mode",
+      key: "floweryMode.enabled",
+      note: "Hear Flowery's voice lines for her friends' cards, even without her."
+    },
+    {
       id: "controller",
       category: "Plugins",
       name: "Controller Support",
@@ -564,7 +571,15 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
         // Appends UnderScript's own "requires a page refresh" note.
         refresh: true,
         category: p.category,
-        onChange: (value) => applySubSettingVisibility(p.id, !!value)
+        onChange: (value) => {
+          applySubSettingVisibility(p.id, !!value);
+          (toggleListeners[p.id] || []).forEach((fn) => {
+            try {
+              fn(!!value);
+            } catch (e) {
+            }
+          });
+        }
       });
       if (p.id === "notepad") {
         notepadOpenOnLoad = settingsApi.add({
@@ -584,6 +599,10 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
         applySubSettingVisibility(pluginId);
       }));
     });
+  }
+  var toggleListeners = {};
+  function onPluginToggled(id, fn) {
+    (toggleListeners[id] = toggleListeners[id] || []).push(fn);
   }
   function getNotepadOpenOnLoadSetting() {
     return notepadOpenOnLoad;
@@ -1068,6 +1087,13 @@ Share the cards you make. It's part of the Card Maker: use **Browse** and **Subm
 - Uploads are reviewed before they appear: until then they show under **My posts** as awaiting approval, and as "not approved" (with the reason, on hover) if they're turned down. Posts that weren't approved can be deleted for good (**Delete** under the post). Likes and dislikes are saved as you go; you can change or take back a vote. **\u21BB** (bottom left of Browse) loads the latest posts and votes. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
 - **Undercards Account** (on the Wizascript tab): link Wizascript to your Undercards account once, for features that need to know who you are. The Card Gallery uses it, and you can link from there too.
 - **Contest** (\u2605 in the title bar): themed card-design contests. Read the theme, rules and deadline, then press **Enter cards** to enter up to 3 designs (a set counts as one). You can withdraw an entry before the deadline to free its slot. There's no voting: the organizers judge the entries, and the results and every entry stay in the contest archive. Entries join the gallery once the results are out.
+
+### New: Flowery Mode
+Flowery's voice lines, even when Flowery isn't on the board. Turn it on in the **Plugins** list.
+- In matches and while spectating, Flowery reacts now and then to some cards being played or cast, some attacks and a few other moments, including her own friends' cards. She speaks up in a few places around the site too. Part of the fun is finding out where.
+- **Frequency** (on the Flowery Mode tab) sets how often: Normal is about 1-2 lines a match, and it goes up and down from there. **Opponent's Cards**, **While Spectating** and **Win/Loss Lines** turn those parts off, and **Every :Glue:** says "glue" for every Glue emote.
+- Lines follow the game's sound volume. With Flowery on the board, the game's own lines play as usual and nothing doubles up.
+- New lines and places can be added without a Wizascript update.
 
 ## 1.6.2
 
@@ -1647,12 +1673,22 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     listeners.push(fn);
     return () => listeners.splice(listeners.indexOf(fn), 1);
   };
-  function accountChanged(name, cooldownUntil) {
+  var linkListeners = [];
+  var onAccountLinked = (fn) => {
+    linkListeners.push(fn);
+  };
+  function accountChanged(name, cooldownUntil, justLinked = false) {
     const was = state.name;
     state.name = name || null;
     state.cooldownUntil = cooldownUntil || null;
     state.known = true;
     if (was !== state.name) listeners.slice().forEach((f) => {
+      try {
+        f(state.name);
+      } catch (e) {
+      }
+    });
+    if (justLinked && state.name) linkListeners.slice().forEach((f) => {
       try {
         f(state.name);
       } catch (e) {
@@ -1683,7 +1719,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         if (r && r.linked) {
           clearInterval(w.timer);
           if (watching === w) watching = null;
-          accountChanged(r.account, r.cooldownUntil);
+          accountChanged(r.account, r.cooldownUntil, true);
           onDone({ account: r.account });
         }
       } catch (e) {
@@ -1775,7 +1811,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         try {
           const r = await linkCheck();
           if (r.linked) {
-            accountChanged(r.account, r.cooldownUntil);
+            accountChanged(r.account, r.cooldownUntil, true);
             code = null;
             draw();
             show(`Linked as ${r.account}.`, true);
@@ -1863,8 +1899,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       const hit = FEATURE_LABELS.find(([p]) => (GM_PREFIX2 + k).startsWith(GM_PREFIX2 + p));
       if (hit) found.add(hit[1]);
     });
-    const settings5 = Object.keys(backup.ls || {}).length;
-    const parts = [`${settings5} setting${settings5 === 1 ? "" : "s"}`];
+    const settings6 = Object.keys(backup.ls || {}).length;
+    const parts = [`${settings6} setting${settings6 === 1 ? "" : "s"}`];
     if (found.size) parts.push(`saved data for ${Array.from(found).join(", ")}`);
     return parts.join(", plus ");
   }
@@ -2120,8 +2156,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     const lv = dataView.getUint16(5, true);
     const rh = dataView.getUint16(7, true);
     const rv = dataView.getUint16(9, true);
-    const norm2 = (v) => Math.max(-1, Math.min(1, (v - 32768) / 32768));
-    hidState.axes = [norm2(lh), norm2(lv), norm2(rh), norm2(rv)];
+    const norm3 = (v) => Math.max(-1, Math.min(1, (v - 32768) / 32768));
+    hidState.axes = [norm3(lh), norm3(lv), norm3(rh), norm3(rv)];
     hidState.hat = hat;
     hidState.raw1 = raw1;
     hidState.raw2 = raw2;
@@ -3085,7 +3121,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key)
     );
     controllerEnabledSetting = controllerEnabledSettingIn;
-    const settings5 = createFeatureSettings(plugin, "controller", {
+    const settings6 = createFeatureSettings(plugin, "controller", {
       tab: "Controller Support",
       visible: () => isPluginEnabled("controller"),
       categories: true
@@ -3094,61 +3130,61 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     const GENERAL = "General";
     const IN_GAME = "In-Game Inputs";
     const hiddenUnless = (pluginId) => () => pluginId ? !isPluginEnabled(pluginId) : false;
-    settings5.add("detectController", {
+    settings6.add("detectController", {
       name: "Detect Controller",
       note: "Click if your controller isn't responding.",
       type: "text",
       default: "Click to Detect Controller (WebHID)",
       category: SETUP
     });
-    settings5.add("presetSelector", {
+    settings6.add("presetSelector", {
       name: "Settings Preset",
       note: "Click to switch presets.",
       type: "text",
       default: getPresetName(getActivePreset()),
       category: SETUP
     });
-    settings5.add("presetName", {
+    settings6.add("presetName", {
       name: "Preset Name",
       note: "Renames whichever preset is currently selected above.",
       type: "text",
       default: getPresetName(getActivePreset()),
       category: SETUP
     });
-    settings5.add("resetPreset", {
+    settings6.add("resetPreset", {
       name: "Restore Settings to Default",
       note: "Double Click to reset selected preset settings",
       type: "text",
       default: "Double Click to Reset",
       category: SETUP
     });
-    debugTextEnabledSetting = settings5.add("debugTextEnabled", {
+    debugTextEnabledSetting = settings6.add("debugTextEnabled", {
       name: "Enable Debug Text",
       type: "boolean",
       default: false,
       category: GENERAL
     });
-    highlightColorSetting = settings5.add("highlightColor", {
+    highlightColorSetting = settings6.add("highlightColor", {
       name: "Selection Outline Color",
       type: "select",
       data: HIGHLIGHT_COLOR_PRESETS,
       default: DEFAULT_HIGHLIGHT_COLOR,
       category: GENERAL
     });
-    settings5.add("controllerPrimary", {
+    settings6.add("controllerPrimary", {
       name: "Controller Primary",
       note: "Click to remap. Hold for combos below, same as Wizascript's own Primary Key.",
       type: "text",
       default: buttonToDisplay(DEFAULT_PRIMARY_BUTTON),
       category: GENERAL
     });
-    settings5.add("__info_openSettings", { name: "Double Tap Primary \u2192 Open Wizascript Settings", type: "text", default: "", category: GENERAL });
+    settings6.add("__info_openSettings", { name: "Double Tap Primary \u2192 Open Wizascript Settings", type: "text", default: "", category: GENERAL });
     const seenLabels = /* @__PURE__ */ new Set();
     CONTROLLER_ACTIONS.forEach((action) => {
       if (!seenLabels.has(action.packageLabel)) {
         seenLabels.add(action.packageLabel);
         if (action.packageLabel === "UC TV") {
-          settings5.add("channelGuide", {
+          settings6.add("channelGuide", {
             name: "Channel Guide (hold)",
             type: "text",
             default: buttonToDisplay(null),
@@ -3157,7 +3193,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
           });
         }
       }
-      settings5.add(action.key, {
+      settings6.add(action.key, {
         name: action.name + " - Primary + <btn>",
         type: "text",
         default: buttonToDisplay(action.defaultButton),
@@ -3166,7 +3202,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       });
     });
     TIER_LIST_PAD_ACTIONS.forEach((action) => {
-      settings5.add("tierlistPad_" + action.key, {
+      settings6.add("tierlistPad_" + action.key, {
         name: action.name,
         note: "While the tier list is open. The d-pad moves around it.",
         type: "text",
@@ -3176,7 +3212,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       });
     });
     HARDWARE_SHORTCUT_ACTIONS.forEach((action) => {
-      settings5.add("shortcut_" + action.key, {
+      settings6.add("shortcut_" + action.key, {
         name: action.name,
         type: "text",
         default: buttonToDisplay(HARDWARE_SHORTCUT_DEFAULTS[action.key]),
@@ -3292,6 +3328,16 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         `Controller: point the cursor at it, press ${pad(3)} to right-click, then ${pad(0)} on the menu. ${pad(1)} closes it.`
       ] : [])
     },
+    floweryMode: {
+      tab: "Flowery Mode",
+      pages: "every page (most lines are in matches and Spectate)",
+      summary: "Flowery speaks up now and then: on some cards, attacks and moments in matches, and in a few places around the site.",
+      points: () => [
+        "Her lines are rare on purpose. <b>Frequency</b> sets how often (Normal is about 1-2 lines a match).",
+        "With Flowery on the board, the game's own lines play as usual and nothing doubles up.",
+        `Lines follow the game's sound volume. <b>Opponent's Cards</b>, <b>While Spectating</b> and <b>Win/Loss Lines</b> turn those parts off; <b>Every :Glue:</b> says "glue" for every Glue emote.`
+      ]
+    },
     cardHistory: {
       tab: null,
       pages: "the Crafting, Decks and Artifacts pages",
@@ -3360,12 +3406,12 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     Object.entries(GUIDES).forEach(([id, g]) => {
       if (g.tab) {
         const categorised = g.tab === "Controller Support";
-        const settings5 = createFeatureSettings(plugin, "guide", {
+        const settings6 = createFeatureSettings(plugin, "guide", {
           tab: g.tab,
           visible: () => isPluginEnabled(id),
           categories: categorised
         });
-        settings5.add(id, {
+        settings6.add(id, {
           name: `How to use ${pluginName(id)}`,
           type: "text",
           default: "",
@@ -3610,26 +3656,26 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
 
   // packages/patch-maker/settings.js
   function registerPatchMakerSettings(plugin) {
-    const settings5 = createFeatureSettings(plugin, "patchmaker", {
+    const settings6 = createFeatureSettings(plugin, "patchmaker", {
       tab: "Patch Maker",
       visible: () => isPluginEnabled("patchMaker")
     });
     return {
-      settings: settings5,
+      settings: settings6,
       // The on/off switch itself now lives in the Plugins list (core/plugins.js).
       enabled: getPluginToggle("patchMaker"),
       // One suite-wide switch on the General tab since 1.5.0 (core/debug.js).
       debugLogging: debugLoggingSetting,
-      hideControls: settings5.add("hideControls", { name: "Hide Patch Maker controls", type: "boolean", default: false }),
-      cardHovers: settings5.add("enableCardHovers", { name: "Enable card hovers", type: "boolean", default: true }),
-      language: settings5.add("patchLanguage", {
+      hideControls: settings6.add("hideControls", { name: "Hide Patch Maker controls", type: "boolean", default: false }),
+      cardHovers: settings6.add("enableCardHovers", { name: "Enable card hovers", type: "boolean", default: true }),
+      language: settings6.add("patchLanguage", {
         name: "Select Language",
         type: "select",
         options: ["Auto / Default", "English", "French", "Spanish", "Portuguese", "Chinese", "Italian", "Polish", "German", "Russian"],
         default: "Auto / Default",
         onChange: () => location.reload()
       }),
-      openOnLoad: settings5.add("openPatchNotesOnPageLoad", { name: "Auto-Load Patch Maker", type: "boolean", default: false })
+      openOnLoad: settings6.add("openPatchNotesOnPageLoad", { name: "Auto-Load Patch Maker", type: "boolean", default: false })
     };
   }
 
@@ -5446,15 +5492,15 @@ Version: v${version}`;
     return matchesPage("/gameUpdates.jsp");
   }
   function initPatchMaker(plugin) {
-    const settings5 = registerPatchMakerSettings(plugin);
+    const settings6 = registerPatchMakerSettings(plugin);
     const logger4 = createLogger("PatchMaker");
     const originalWarn = logger4.warn.bind(logger4);
     const originalLog = logger4.log.bind(logger4);
     logger4.log = (...args) => {
-      if (settings5.debugLogging.value()) originalLog(...args);
+      if (settings6.debugLogging.value()) originalLog(...args);
     };
     logger4.warn = (...args) => {
-      if (settings5.debugLogging.value()) originalWarn(...args);
+      if (settings6.debugLogging.value()) originalWarn(...args);
     };
     let wordColors = { ...BASE_WORD_COLORS };
     let underlineTokens = [];
@@ -5465,16 +5511,16 @@ Version: v${version}`;
       version: FEATURE_VERSION,
       getWordColors: () => wordColors,
       getUnderlineTokens: () => underlineTokens,
-      getCardHoversEnabled: () => settings5.cardHovers.value(),
+      getCardHoversEnabled: () => settings6.cardHovers.value(),
       getCardNameMap: () => cardNameMap,
-      getHideControlsEnabled: () => settings5.hideControls.value(),
-      getOpenOnLoad: () => settings5.openOnLoad.value()
+      getHideControlsEnabled: () => settings6.hideControls.value(),
+      getOpenOnLoad: () => settings6.openOnLoad.value()
     });
-    settings5.hideControls.on((value) => overlay.setControlsHidden(value));
-    if (!settings5.enabled.value()) return;
+    settings6.hideControls.on((value) => overlay.setControlsHidden(value));
+    if (!settings6.enabled.value()) return;
     if (!isPatchNotesPage()) return;
     async function refreshLocalizedData() {
-      const languageLabel = settings5.language.value();
+      const languageLabel = settings6.language.value();
       const { tokens, localizedColors } = await buildLocalizedFormattingData(languageLabel, BASE_WORD_COLORS);
       underlineTokens = tokens;
       wordColors = { ...BASE_WORD_COLORS, ...localizedColors };
@@ -5488,22 +5534,22 @@ Version: v${version}`;
 
   // packages/true-hub-bridge/settings.js
   function registerTrueHubBridgeSettings(plugin) {
-    const settings5 = createFeatureSettings(plugin, "truehubbridge", {
+    const settings6 = createFeatureSettings(plugin, "truehubbridge", {
       tab: "True Hub Bridge",
       visible: () => isPluginEnabled("trueHub")
     });
     return {
-      settings: settings5,
+      settings: settings6,
       // The on/off switch itself now lives in the Plugins list (core/plugins.js).
       enabled: getPluginToggle("trueHub"),
       // One suite-wide switch on the General tab since 1.5.0 (core/debug.js).
       debugLogging: debugLoggingSetting,
-      autoOpen: settings5.add("autoOpenTrueHub", {
+      autoOpen: settings6.add("autoOpenTrueHub", {
         name: "Auto Open True Hub",
         type: "boolean",
         default: true
       }),
-      scrollPaging: settings5.add("enableScrollPaging", {
+      scrollPaging: settings6.add("enableScrollPaging", {
         name: "Enable Scroll Paging",
         type: "boolean",
         default: true
@@ -6580,22 +6626,22 @@ Version: v${version}`;
     return matchesPage("/Hub");
   }
   function initTrueHubBridge(plugin) {
-    const settings5 = registerTrueHubBridgeSettings(plugin);
-    if (!settings5.enabled.value()) return;
+    const settings6 = registerTrueHubBridgeSettings(plugin);
+    if (!settings6.enabled.value()) return;
     if (!isHubPage()) return;
     const logger4 = createLogger("TrueHubBridge");
     const originalWarn = logger4.warn.bind(logger4);
     const originalLog = logger4.log.bind(logger4);
     logger4.log = (...args) => {
-      if (settings5.debugLogging.value()) originalLog(...args);
+      if (settings6.debugLogging.value()) originalLog(...args);
     };
     logger4.warn = (...args) => {
-      if (settings5.debugLogging.value()) originalWarn(...args);
+      if (settings6.debugLogging.value()) originalWarn(...args);
     };
     const overlay = createTrueHubOverlay({
       logger: logger4,
-      getAutoOpen: () => settings5.autoOpen.value(),
-      getScrollPaging: () => settings5.scrollPaging.value()
+      getAutoOpen: () => settings6.autoOpen.value(),
+      getScrollPaging: () => settings6.scrollPaging.value()
     });
     loadDecks().then((decks) => {
       overlay.setDecks(decks);
@@ -6605,24 +6651,24 @@ Version: v${version}`;
 
   // packages/deck-tracker/settings.js
   function registerDeckTrackerSettings(plugin) {
-    const settings5 = createFeatureSettings(plugin, "decktracker", {
+    const settings6 = createFeatureSettings(plugin, "decktracker", {
       tab: "Card Tracker",
       visible: () => isPluginEnabled("cardTracker")
     });
     const enabled = getPluginToggle("cardTracker");
     const debugLogging = debugLoggingSetting;
-    const retainUnclosedPresets = settings5.add("retainUnclosedPresets", {
+    const retainUnclosedPresets = settings6.add("retainUnclosedPresets", {
       name: "Retain Unclosed Presets Between Matches",
       type: "boolean",
       default: false
     });
-    const allowFavoritedRetainedWhileSpectating = settings5.add("allowFavoritedRetainedWhileSpectating", {
+    const allowFavoritedRetainedWhileSpectating = settings6.add("allowFavoritedRetainedWhileSpectating", {
       name: "Auto-load Presets While Spectating",
       note: "Applies to your own favorited/retained tracker presets specifically.",
       type: "boolean",
       default: false
     });
-    const dimOpacity = settings5.add("dimOpacity", {
+    const dimOpacity = settings6.add("dimOpacity", {
       name: "Tracker Dim Opacity",
       type: "slider",
       default: 0.4,
@@ -6631,7 +6677,7 @@ Version: v${version}`;
       step: 0.05
     });
     return {
-      settings: settings5,
+      settings: settings6,
       enabled,
       debugLogging,
       retainUnclosedPresets,
@@ -7841,19 +7887,19 @@ Version: v${version}`;
     GM_deleteValue(BUTTON_POSITION_KEY);
   }
   function initDeckTracker(plugin) {
-    const settings5 = registerDeckTrackerSettings(plugin);
-    if (!settings5.enabled.value()) return;
+    const settings6 = registerDeckTrackerSettings(plugin);
+    if (!settings6.enabled.value()) return;
     if (!isGamePage()) return;
     const logger4 = createLogger("DeckTracker");
     const originalWarn = logger4.warn.bind(logger4);
     const originalLog = logger4.log.bind(logger4);
     logger4.log = (...args) => {
-      if (settings5.debugLogging.value()) originalLog(...args);
+      if (settings6.debugLogging.value()) originalLog(...args);
     };
     logger4.warn = (...args) => {
-      if (settings5.debugLogging.value()) originalWarn(...args);
+      if (settings6.debugLogging.value()) originalWarn(...args);
     };
-    setRetainEnabledGetter(() => settings5.retainUnclosedPresets.value());
+    setRetainEnabledGetter(() => settings6.retainUnclosedPresets.value());
     registerBuiltInPresets();
     function handleAddPreset(id) {
       spawnPreset(id);
@@ -7973,7 +8019,7 @@ Version: v${version}`;
         const shouldDim = isBlockingModalOpen();
         if (shouldDim !== isDimmed) {
           isDimmed = shouldDim;
-          btn.style.opacity = shouldDim ? String(settings5.dimOpacity.value()) : "1";
+          btn.style.opacity = shouldDim ? String(settings6.dimOpacity.value()) : "1";
           btn.style.pointerEvents = shouldDim ? "none" : "auto";
         }
       }, 250);
@@ -8055,7 +8101,7 @@ Version: v${version}`;
       }
     });
     function restoreFavoritedAndRetained() {
-      if (isSpectating() && !settings5.allowFavoritedRetainedWhileSpectating.value()) return;
+      if (isSpectating() && !settings6.allowFavoritedRetainedWhileSpectating.value()) return;
       const favoritedIds = getFavoritedPresetIds();
       const spawnedFavorites = favoritedIds.filter((id) => spawnPreset(id) !== null);
       if (spawnedFavorites.length) {
@@ -8068,7 +8114,7 @@ Version: v${version}`;
           favoritedIds.filter((id) => !spawnedFavorites.includes(id))
         );
       }
-      if (settings5.retainUnclosedPresets.value()) {
+      if (settings6.retainUnclosedPresets.value()) {
         const retainedIds = getRetainedPresetIds().filter((id) => !favoritedIds.includes(id));
         retainedIds.forEach((id) => spawnPreset(id));
         if (retainedIds.length) {
@@ -8131,18 +8177,18 @@ Version: v${version}`;
     settingsRef = ref;
   }
   function registerUcTvSettings(plugin, divisionTiers) {
-    const settings5 = createFeatureSettings(plugin, "ucTv", {
+    const settings6 = createFeatureSettings(plugin, "ucTv", {
       tab: "UC TV",
       visible: () => isPluginEnabled("ucTv")
     });
     const enabled = getPluginToggle("ucTv");
     const debugLogs = debugLoggingSetting;
-    const autoMode = settings5.add("autoMode", {
+    const autoMode = settings6.add("autoMode", {
       name: "Enable auto-mode when spectating",
       type: "boolean",
       default: false
     });
-    const countdownSeconds = settings5.add("countdownSeconds", {
+    const countdownSeconds = settings6.add("countdownSeconds", {
       name: "Auto-continue delay (seconds)",
       type: "select",
       data: Array.from({ length: 15 }, (_, i) => i + 1).map((n) => [`${n}`, n]),
@@ -8151,11 +8197,11 @@ Version: v${version}`;
     const filterDisabled = () => !filteringEnabled.value();
     const filterDependents = [];
     const addFilter = (key2, config) => {
-      const setting4 = settings5.add(key2, { ...config, disabled: filterDisabled });
-      filterDependents.push(setting4);
-      return setting4;
+      const setting5 = settings6.add(key2, { ...config, disabled: filterDisabled });
+      filterDependents.push(setting5);
+      return setting5;
     };
-    const filteringEnabled = settings5.add("filteringEnabled", {
+    const filteringEnabled = settings6.add("filteringEnabled", {
       name: "Enable Match Filtering",
       type: "boolean",
       default: true,
@@ -8890,8 +8936,8 @@ Version: v${version}`;
     return matchesPage({ prefix: "/Spectate" });
   }
   function initUcTv(plugin) {
-    const settings5 = registerUcTvSettings(plugin, DIVISION_TIERS);
-    setSettingsRef(settings5);
+    const settings6 = registerUcTvSettings(plugin, DIVISION_TIERS);
+    setSettingsRef(settings6);
     if (CONFIG.debugLogs) dumpSettingsState();
     window.__ucTVScope = scopeActiveGames;
     window.__ucTVSettings = dumpSettingsState;
@@ -14378,7 +14424,7 @@ ${CONTEST_CSS}
           linking = null;
           acct.account = r.account;
           acct.cooldownUntil = r.cooldownUntil || null;
-          accountChanged(r.account, r.cooldownUntil);
+          accountChanged(r.account, r.cooldownUntil, true);
           say(`Linked as ${r.account}.`);
           refreshMe(true);
           refreshGallery(true);
@@ -15621,6 +15667,570 @@ ${CONTEST_CSS}
       watch2.observe(document.documentElement, { childList: true, subtree: true });
       setTimeout(() => watch2.disconnect(), 1e4);
     }
+  }
+
+  // packages/flowery-mode/lines.js
+  var norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  var KINDS = /* @__PURE__ */ new Set(["play", "attack", "log", "animation", "overdraw", "victory", "defeat", "wizascript"]);
+  var FILE_RE = /^[A-Za-z0-9_\-']+\.wav$/;
+  var SOUND_RE = /^flowery[A-Za-z0-9]+$/;
+  var clampN = (v, lo, hi, d) => {
+    const n = Math.round(Number(v));
+    return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d;
+  };
+  function clipOf(x, seconds) {
+    if (x && x.sound != null && SOUND_RE.test(String(x.sound))) return { kind: "game", name: String(x.sound) };
+    if (x && x.file != null && FILE_RE.test(String(x.file))) return { kind: "file", file: String(x.file), seconds: Number(seconds) || 0 };
+    return null;
+  }
+  function cleanRule(r, secondsOf) {
+    if (!r || typeof r !== "object" || !KINDS.has(r.on)) return null;
+    const out = { on: r.on };
+    if (r.card != null) out.card = norm(r.card);
+    if (Number.isInteger(r.id)) out.id = r.id;
+    if (r.type != null) out.type = String(r.type).toUpperCase();
+    if (r.event != null) out.event = String(r.event);
+    out.who = r.who === "me" || r.who === "opponent" ? r.who : "any";
+    if (["player", "monster", "ally", "enemy"].includes(r.target)) out.target = r.target;
+    if (r.cardType === "monster" || r.cardType === "spell") out.cardType = r.cardType;
+    if (r.minBuff != null) out.minBuff = clampN(r.minBuff, 1, 99, 1);
+    out.chance = clampN(r.chance, 1, 1e4, 1);
+    out.always = r.always === true;
+    out.budget = r.budget !== false;
+    if (Array.isArray(r.repeat)) {
+      const a = clampN(r.repeat[0], 1, 10, 1);
+      out.repeat = [a, clampN(r.repeat[1], a, 10, a)];
+    }
+    if (Array.isArray(r.alt)) {
+      out.alt = r.alt.map((x) => ({ clip: clipOf(x, secondsOf && x && secondsOf(x.file)), chance: clampN(x && x.chance, 1, 1e4, 1) })).filter((x) => x.clip);
+    }
+    if ((out.on === "play" || out.on === "attack") && out.card == null && out.id == null && out.minBuff == null) return null;
+    if ((out.on === "log" || out.on === "animation") && !out.type) return null;
+    if (out.on === "wizascript" && !out.event) return null;
+    return out;
+  }
+  function compileRules(index) {
+    const rules = [];
+    const all = [];
+    if (!index || typeof index !== "object") return { rules, all };
+    const lines = Array.isArray(index.lines) ? index.lines : [];
+    const secondsOf = (file) => {
+      const l = lines.find((x) => x && x.file === file);
+      return l ? l.seconds : 0;
+    };
+    const add = (clip, uses) => {
+      if (!clip) return;
+      all.push(clip);
+      for (const r of Array.isArray(uses) ? uses : []) {
+        const rule = cleanRule(r, secondsOf);
+        if (rule) rules.push({ clip, rule });
+      }
+    };
+    for (const g of Array.isArray(index.game) ? index.game : []) add(clipOf(g && { sound: g.sound }), g && g.use);
+    for (const l of lines) add(clipOf(l && { file: l.file }, l && l.seconds), l && l.use);
+    for (const r of Array.isArray(index.random) ? index.random : []) {
+      const rule = cleanRule(r, secondsOf);
+      if (rule) rules.push({ clip: { kind: "random" }, rule });
+    }
+    return { rules, all };
+  }
+  var clipName = (clip) => clip.kind === "game" ? clip.name : clip.kind === "file" ? clip.file : "random";
+  var FREQUENCIES = [
+    { label: "Much less", odds: 4, budget: 1, gap: 30 },
+    { label: "Less", odds: 2, budget: 1, gap: 25 },
+    { label: "Normal", odds: 1, budget: 2, gap: 20 },
+    { label: "More", odds: 0.5, budget: 4, gap: 12 },
+    { label: "Much more", odds: 0.25, budget: 6, gap: 6 }
+  ];
+  var DEFAULT_FREQUENCY = "Normal";
+  var EVERY_TIME = { label: "Every time", odds: 0, budget: Infinity, gap: 0 };
+  function frequency(label2) {
+    return FREQUENCIES.find((f) => f.label === label2) || FREQUENCIES.find((f) => f.label === DEFAULT_FREQUENCY);
+  }
+  function parse(v) {
+    if (typeof v !== "string") return v;
+    try {
+      return JSON.parse(v);
+    } catch (e) {
+      return null;
+    }
+  }
+  var EFFECTS = /* @__PURE__ */ new Set(["getDoingEffect", "getSoulDoingEffect", "getArtifactDoingEffect"]);
+  var RESETS = /* @__PURE__ */ new Set([
+    "getTempCancel",
+    "getMonsterTemp",
+    "getSpellTemp",
+    "getTurnStart",
+    "getTurnEnd",
+    "getAttackDelock",
+    "getFight",
+    "getFightPlayer",
+    "getMonsterPlayed",
+    "getSpellPlayed"
+  ]);
+  var QUIET_MS = 1200;
+  var cardMatches = (rule, card) => !!card && (rule.id == null && rule.card == null || rule.id != null && rule.id === card.fixedId || rule.card != null && rule.card === norm(card.name));
+  var typeOk = (rule, card) => !rule.cardType || card && (rule.cardType === "spell" ? card.typeCard === 1 : card.typeCard === 0);
+  var buffOk = (rule, card) => rule.minBuff == null || card && card.attack - card.originalAttack >= rule.minBuff && (card.maxHp != null ? card.maxHp : card.hp) - card.originalHp >= rule.minBuff;
+  function createReactor({ rules, play, isOwn, settings: settings6, now = () => Date.now(), random = () => Math.random() }) {
+    let lastAction = null;
+    let lastAt = -Infinity;
+    let lastOursAt = -Infinity;
+    let used = 0;
+    const spellsSeen = /* @__PURE__ */ new Set();
+    const owners = /* @__PURE__ */ new Map();
+    const roll = (n) => n <= 1 || Math.floor(random() * n) === 0;
+    function whoOk(rule, playerId) {
+      const s = settings6();
+      const mine = isOwn(playerId);
+      if (!s.spectating && !mine && !s.opponent) return false;
+      if (rule.who === "me") return mine;
+      if (rule.who === "opponent") return !mine;
+      return true;
+    }
+    function fire(matches) {
+      if (!matches.length) return null;
+      const t = now();
+      if (t - lastAt < QUIET_MS) return null;
+      const f = settings6().frequency;
+      const every = f.odds === 0;
+      const scaled = (n) => every ? 1 : Math.max(1, Math.round(n * f.odds));
+      let pick = null;
+      const always = matches.filter((m) => m.rule.always);
+      if (always.length) {
+        pick = always[Math.floor(random() * always.length)];
+      } else {
+        const budgetFree = (m) => !m.rule.budget;
+        const roomy = used < f.budget && t - lastOursAt >= f.gap * 1e3;
+        const passed = matches.filter((m) => (roomy || budgetFree(m)) && roll(scaled(m.rule.chance)));
+        if (!passed.length) return null;
+        pick = passed[Math.floor(random() * passed.length)];
+        if (pick.rule.budget) {
+          used++;
+          lastOursAt = t;
+        }
+      }
+      let clip = pick.clip;
+      if (clip.kind === "random") {
+        const all = rules().all;
+        if (!all.length) return null;
+        clip = all[Math.floor(random() * all.length)];
+      }
+      for (const a of pick.rule.alt || []) {
+        if (roll(a.chance)) {
+          clip = a.clip;
+          break;
+        }
+      }
+      const r = pick.rule.repeat;
+      const times = r ? r[0] + Math.floor(random() * (r[1] - r[0] + 1)) : 1;
+      lastAt = t;
+      play(clip, times, pick.rule);
+      return clip;
+    }
+    const find = (pred) => rules().rules.filter((m) => pred(m.rule));
+    const remember = (card) => {
+      if (card && card.id != null && card.ownerId != null) owners.set(card.id, card.ownerId);
+    };
+    function onEvent(data2) {
+      if (!data2 || !data2.action) return null;
+      const a = data2.action;
+      let played = null;
+      if (a === "getPlaySound" && /^flowery/i.test(String(data2.sound || ""))) {
+        lastAt = now();
+      } else if (a === "getMonsterPlayed" || a === "getSpellPlayed") {
+        const card = parse(data2.card);
+        remember(card);
+        const pid = data2.idPlayer != null ? data2.idPlayer : card && card.ownerId;
+        let ok = !!card;
+        if (a === "getMonsterPlayed" && EFFECTS.has(lastAction)) ok = false;
+        if (a === "getSpellPlayed") {
+          if (card && spellsSeen.has(card.id)) ok = false;
+          else if (card) spellsSeen.add(card.id);
+        }
+        if (ok) played = fire(find((r) => r.on === "play" && cardMatches(r, card) && typeOk(r, card) && buffOk(r, card) && whoOk(r, pid)));
+      } else if (a === "updateCard" || a === "updateMonster") {
+        remember(parse(data2.monster || data2.card));
+      } else if (a === "getUpdateBoard") {
+        const board = parse(data2.board);
+        if (Array.isArray(board)) board.forEach(remember);
+      } else if (a === "getBattleLog") {
+        const log3 = parse(data2.battleLog);
+        if (log3 && log3.battleLogType) {
+          const type = String(log3.battleLogType).toUpperCase();
+          const actor = log3.cardActor;
+          remember(actor);
+          played = fire(find((r) => {
+            if (r.on === "attack") {
+              if (!/^ATTACK_(MONSTER|PLAYER)$/.test(type)) return false;
+              if (r.target === "player" && type !== "ATTACK_PLAYER") return false;
+              if (r.target === "monster" && type !== "ATTACK_MONSTER") return false;
+              return cardMatches(r, actor) && whoOk(r, log3.playerId);
+            }
+            if (r.on === "log") return r.type === type && cardMatches(r, actor) && whoOk(r, log3.playerId);
+            return false;
+          }));
+        }
+      } else if (a === "getAnimation") {
+        const type = String(data2.animation || "").toUpperCase();
+        const owner = data2.target === "MONSTER" ? owners.get(data2.idTarget) : void 0;
+        played = fire(find((r) => {
+          if (r.on !== "animation" || r.type !== type) return false;
+          if (r.target === "ally" || r.target === "enemy") {
+            if (settings6().spectating) return true;
+            if (owner == null) return false;
+            return r.target === "ally" ? isOwn(owner) : !isOwn(owner);
+          }
+          return true;
+        }));
+      } else if (a === "getCardDestroyedHandFull") {
+        const card = parse(data2.card);
+        const pid = data2.idPlayer != null ? data2.idPlayer : card && card.ownerId;
+        if (card) played = fire(find((r) => r.on === "overdraw" && cardMatches(r, card) && typeOk(r, card) && whoOk(r, pid)));
+      } else if ((a === "getVictory" || a === "getDefeat") && settings6().endLines && !settings6().spectating) {
+        const kind = a === "getVictory" ? "victory" : "defeat";
+        played = fire(find((r) => r.on === kind));
+      }
+      if (EFFECTS.has(a) || RESETS.has(a)) lastAction = a;
+      return played;
+    }
+    function onWizascript(event) {
+      return fire(find((r) => r.on === "wizascript" && r.event === event));
+    }
+    function reset() {
+      lastAction = null;
+      lastAt = -Infinity;
+      lastOursAt = -Infinity;
+      used = 0;
+      spellsSeen.clear();
+      owners.clear();
+    }
+    return { onEvent, onWizascript, reset };
+  }
+
+  // packages/flowery-mode/index.js
+  var TAB2 = "Flowery Mode";
+  var BRANCH = "https://raw.githubusercontent.com/theWiza2341/Wizascript/sounds/flowery/";
+  var RULES_KEY = "wizascript.floweryMode.rules";
+  var EVERY_KEY = "wizascript.floweryMode.everyTime";
+  var LOGIN_KEY = "wizascript.floweryMode.loginPending";
+  var REFRESH_MS = 15 * 60 * 1e3;
+  var PAGE_QUIET_MS = 3e3;
+  var settings4 = null;
+  var compiled = { rules: [], all: [] };
+  var rulesState = "none";
+  var chip = null;
+  var lastPlayed = "";
+  function setting3(key2, fallback) {
+    try {
+      return settings4 ? settings4.value(key2) : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+  function log2(...args) {
+    if (isDebugLogging()) console.log("[Wizascript Flowery Mode]", ...args);
+  }
+  var everyTime = () => GM_getValue(EVERY_KEY, false) === true;
+  function useIndex(index, state3) {
+    compiled = compileRules(index);
+    rulesState = state3;
+    log2(`rules ${state3}: ${compiled.rules.length} rules, ${compiled.all.length} clips`);
+    drawChip();
+  }
+  function loadRules({ force = false } = {}) {
+    let cached2 = null;
+    try {
+      cached2 = JSON.parse(GM_getValue(RULES_KEY, "null"));
+    } catch (e) {
+      cached2 = null;
+    }
+    if (cached2 && cached2.index && rulesState === "none") useIndex(cached2.index, "cached");
+    if (!force && cached2 && Date.now() - cached2.at < REFRESH_MS) return Promise.resolve(compiled);
+    return new Promise((resolve2) => {
+      GM_xmlhttpRequest({
+        method: "GET",
+        url: BRANCH + "index.json?t=" + Math.floor(Date.now() / 6e4),
+        timeout: 15e3,
+        onload: (r) => {
+          try {
+            if (r.status !== 200) throw new Error("HTTP " + r.status);
+            const index = JSON.parse(r.responseText);
+            GM_setValue(RULES_KEY, JSON.stringify({ at: Date.now(), index }));
+            useIndex(index, "fresh");
+          } catch (e) {
+            log2("couldn't read the rules:", e.message);
+            if (rulesState === "none") {
+              rulesState = "failed";
+              drawChip();
+            }
+          }
+          resolve2(compiled);
+        },
+        onerror: () => {
+          if (rulesState === "none") {
+            rulesState = "failed";
+            drawChip();
+          }
+          resolve2(compiled);
+        },
+        ontimeout: () => {
+          if (rulesState === "none") {
+            rulesState = "failed";
+            drawChip();
+          }
+          resolve2(compiled);
+        }
+      });
+    });
+  }
+  function effectsVolume() {
+    try {
+      const off = localStorage.getItem("gameSoundsDisabled");
+      if (off === "true" || off === "1") return 0;
+      const v = parseFloat(localStorage.getItem("gameSoundsVolume"));
+      if (Number.isFinite(v)) return Math.max(0, Math.min(1, v > 1 ? v / 100 : v));
+    } catch (e) {
+    }
+    return 0.5;
+  }
+  var GAME_CLIP_MS = 1600;
+  function clipMs(clip) {
+    return clip.kind === "file" && clip.seconds ? Math.round(clip.seconds * 1e3) : GAME_CLIP_MS;
+  }
+  function playOnce(clip) {
+    const pw = getPageWindow();
+    const vol = effectsVolume();
+    if (vol <= 0) return "muted";
+    try {
+      if (clip.kind === "game") {
+        if (typeof pw.playSound === "function") {
+          pw.playSound(clip.name);
+          return "game";
+        }
+        if (pw.UCAudio && typeof pw.UCAudio.playSound === "function") {
+          pw.UCAudio.playSound(clip.name, vol);
+          return "UCAudio";
+        }
+        const a2 = new Audio("/sounds/" + clip.name + ".wav");
+        a2.volume = vol;
+        a2.play().catch(() => {
+        });
+        return "file";
+      }
+      const a = new Audio(BRANCH + encodeURIComponent(clip.file));
+      a.volume = vol;
+      a.play().catch((e) => log2("couldn't play", clip.file, e && e.message));
+      return "branch";
+    } catch (e) {
+      log2("couldn't play", clipName(clip), e);
+      return null;
+    }
+  }
+  function playClip(clip, times = 1) {
+    const gap = clipMs(clip) + 60;
+    let via = null;
+    for (let i = 0; i < times; i++) {
+      if (i === 0) via = playOnce(clip);
+      else setTimeout(() => playOnce(clip), i * gap);
+    }
+    lastPlayed = clipTitle(clip) + (times > 1 ? ` \xD7${times}` : "");
+    log2("played", clipName(clip), times > 1 ? `\xD7${times}` : "", via ? `(${via})` : "(failed)");
+    drawChip();
+    return times * gap;
+  }
+  function clipTitle(clip) {
+    if (clip.kind === "game") return clip.name;
+    return clip.file.replace(/^Flowery_voiceclip_/i, "").replace(/\.wav$/i, "").replace(/_/g, " ");
+  }
+  function drawChip() {
+    if (!chip) return;
+    const on = everyTime();
+    const note = rulesState === "failed" ? " \xB7 rules didn't load" : rulesState === "none" ? " \xB7 loading rules\u2026" : "";
+    chip.innerHTML = `<b>\u{1F33C} Flowery: ${on ? "every time" : "normal odds"}</b>${note}` + (lastPlayed ? `<div style="opacity:.8">last: ${lastPlayed.replace(/[<>&]/g, "")}</div>` : "");
+    chip.style.borderColor = on ? "#ffd23f" : "#666";
+  }
+  function showChip() {
+    if (chip || !document.body) return;
+    chip = document.createElement("div");
+    chip.className = "wz-flowery-chip";
+    chip.title = "Flowery Mode testing toggle: click to switch between every time and normal odds.";
+    chip.style.cssText = "position:fixed;left:8px;bottom:48px;z-index:2147482500;background:#000d;color:#eee;font:12px/1.35 sans-serif;padding:4px 8px;border:1px solid #666;border-radius:4px;cursor:pointer;user-select:none;max-width:260px";
+    chip.addEventListener("click", () => {
+      GM_setValue(EVERY_KEY, !everyTime());
+      drawChip();
+    });
+    document.body.appendChild(chip);
+    drawChip();
+  }
+  function freqNow() {
+    return everyTime() && setting3("testToggle", true) ? EVERY_TIME : frequency(setting3("frequency", DEFAULT_FREQUENCY));
+  }
+  function initFloweryMode(plugin) {
+    settings4 = createFeatureSettings(plugin, "floweryMode", {
+      tab: TAB2,
+      visible: () => isPluginEnabled("floweryMode")
+    });
+    settings4.add("frequency", {
+      name: "Frequency",
+      note: "How often Flowery speaks up. Normal is about 1-2 lines a match.",
+      type: "select",
+      options: FREQUENCIES.map((f) => f.label),
+      default: DEFAULT_FREQUENCY
+    });
+    settings4.add("opponent", { name: "Opponent's Cards", note: "Also react to your opponent's cards.", type: "boolean", default: true });
+    settings4.add("spectate", { name: "While Spectating", note: "React in matches you're watching too.", type: "boolean", default: true });
+    settings4.add("endLines", { name: "Win/Loss Lines", note: "Flowery reacts when your match ends.", type: "boolean", default: true });
+    settings4.add("glueEvery", { name: "Every :Glue:", note: 'Say "glue" for every Glue emote, every time.', type: "boolean", default: false });
+    settings4.add("testToggle", {
+      name: "Testing Toggle",
+      note: "Show an on-screen switch that makes every line play every time.",
+      type: "boolean",
+      default: true,
+      // dev builds; off before release
+      onChange: (v) => {
+        if (v) showChip();
+        else if (chip) {
+          chip.remove();
+          chip = null;
+        }
+      }
+    });
+    const pw = getPageWindow();
+    const spectating = matchesPage({ prefix: "/Spectate" });
+    const reactor = createReactor({
+      rules: () => compiled,
+      play: (clip, times) => playClip(clip, times),
+      isOwn: (id) => id != null && String(id) === String(pw.userId),
+      settings: () => ({
+        frequency: freqNow(),
+        opponent: !!setting3("opponent", true),
+        endLines: !!setting3("endLines", true),
+        spectating
+      })
+    });
+    onPluginToggled("floweryMode", (on) => {
+      if (!on) return;
+      loadRules().then(() => reactor.onWizascript("floweryModeEnabled"));
+    });
+    if (!isPluginEnabled("floweryMode")) return;
+    loadRules();
+    const startedAt = Date.now();
+    const wiz = (event) => (rulesState === "none" ? loadRules() : Promise.resolve()).then(() => reactor.onWizascript(event));
+    const inMatch = matchesPage("/Game") || spectating;
+    if (inMatch && (!spectating || setting3("spectate", true))) {
+      plugin.events.on("GameStart", () => reactor.reset());
+      plugin.events.on("GameEvent", (data2) => {
+        try {
+          reactor.onEvent(data2);
+          if (data2 && data2.action === "getEmote" && /glue/i.test(JSON.stringify(data2))) glue(1);
+        } catch (e) {
+          log2("event error", e);
+        }
+      });
+    }
+    function glue(count) {
+      if (setting3("glueEvery", false)) {
+        const hit = compiled.rules.find((m) => m.rule.on === "wizascript" && m.rule.event === "chatGlue");
+        if (hit && hit.clip.kind !== "random") playClip(hit.clip, Math.min(count, 10));
+        return;
+      }
+      wiz("chatGlue");
+    }
+    plugin.events.on("ChatMessage", (data2) => {
+      if (!data2 || !/^get(Private)?Message$/.test(data2.action) || Date.now() - startedAt < PAGE_QUIET_MS) return;
+      let msg = data2.chatMessage;
+      if (typeof msg === "string") {
+        try {
+          msg = JSON.parse(msg);
+        } catch (e) {
+          msg = null;
+        }
+      }
+      const html = msg && typeof msg.message === "string" ? msg.message : "";
+      const count = (html.match(/emotes\/Glue\.png/gi) || []).length;
+      if (count) glue(count);
+    });
+    plugin.events.on("Settings:open", () => wiz("settingsOpened"));
+    onAccountLinked(() => wiz("accountLinked"));
+    const navEvent = (a) => {
+      const href = a.getAttribute("href");
+      if (href === "/" && a.querySelector(".glyphicon-home")) return "homeButton";
+      if (href === "Disconnect" || href === "/Disconnect") return "logout";
+      return null;
+    };
+    document.addEventListener("click", (e) => {
+      if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+      const t = e.target;
+      const a = t && t.closest && t.closest("a[href]");
+      const ev = a && a.target !== "_blank" ? navEvent(a) : null;
+      if (ev) {
+        if (rulesState === "none" || rulesState === "failed") return;
+        const clip = reactor.onWizascript(ev);
+        if (clip) {
+          e.preventDefault();
+          const to = a.href;
+          setTimeout(() => {
+            location.href = to;
+          }, Math.min(3e3, clipMs(clip) + 150));
+        }
+        return;
+      }
+      const show = t && t.closest && t.closest("#hubDecks .show-button");
+      const sw = document.getElementById("truehub-switch");
+      if (show && sw && /classic/i.test(sw.textContent)) wiz("thbDeckLoad");
+    }, true);
+    document.addEventListener("submit", (e) => {
+      const f = e.target;
+      if (f && f.querySelector && f.querySelector("input[type=password]")) {
+        try {
+          sessionStorage.setItem(LOGIN_KEY, String(Date.now()));
+        } catch (err) {
+        }
+      }
+    }, true);
+    try {
+      const pending = Number(sessionStorage.getItem(LOGIN_KEY));
+      if (pending) {
+        sessionStorage.removeItem(LOGIN_KEY);
+        if (Date.now() - pending < 6e4 && sessionStorage.getItem("UserID")) wiz("login");
+      }
+    } catch (e) {
+    }
+    document.addEventListener("contextmenu", (e) => {
+      const img = e.target && e.target.closest && e.target.closest("img.tribe");
+      if (img && /tribes\/PLANT\.png/i.test(img.getAttribute("src") || "")) wiz("plantTribe");
+    }, true);
+    let down = null;
+    const floweryTracker = (t) => {
+      const w = t && t.closest && t.closest(".dt-tracker-widget");
+      return w && [...w.querySelectorAll("img")].some((i) => /\/Flowery\.png$/i.test(i.getAttribute("src") || "")) ? w : null;
+    };
+    document.addEventListener("mousedown", (e) => {
+      down = { x: e.clientX, y: e.clientY };
+    }, true);
+    document.addEventListener("click", (e) => {
+      if (e.button === 0 && floweryTracker(e.target) && down && Math.abs(e.clientX - down.x) + Math.abs(e.clientY - down.y) < 6) wiz("floweryTracker");
+    }, true);
+    document.addEventListener("contextmenu", (e) => {
+      if (floweryTracker(e.target)) wiz("floweryTracker");
+    }, true);
+    let sktArmed = true;
+    document.addEventListener("input", (e) => {
+      if (!e.target || e.target.id !== "th-search") return;
+      const v = String(e.target.value || "").trim().toLowerCase();
+      const hit = v.length >= 3 && "sktima".startsWith(v);
+      if (hit && sktArmed) {
+        sktArmed = false;
+        wiz("thbSktima");
+      }
+      if (!hit) sktArmed = true;
+    }, true);
+    if (setting3("testToggle", true)) {
+      if (document.body) showChip();
+      else document.addEventListener("DOMContentLoaded", showChip, { once: true });
+    }
+    log2("on", spectating ? "(spectating)" : "");
   }
 
   // packages/misc/settings.js
@@ -17479,12 +18089,12 @@ ${CONTEST_CSS}
 
   // packages/misc/index.js
   function initMisc(plugin) {
-    const settings5 = registerMiscSettings(plugin);
-    initCardTags(plugin, settings5.enableCardTags);
+    const settings6 = registerMiscSettings(plugin);
+    initCardTags(plugin, settings6.enableCardTags);
     let shownThisPage = null;
     function syncNotepadVisibility() {
-      const wanted = shownThisPage !== null ? shownThisPage : settings5.notepadOpenOnLoad.value();
-      if (settings5.enableNotepad.value() && wanted) {
+      const wanted = shownThisPage !== null ? shownThisPage : settings6.notepadOpenOnLoad.value();
+      if (settings6.enableNotepad.value() && wanted) {
         showNotepad();
       } else {
         hideNotepad();
@@ -17529,7 +18139,7 @@ ${CONTEST_CSS}
       packageLabel: "Notepad",
       onMatch: () => redoNotepad()
     });
-    return settings5;
+    return settings6;
   }
 
   // packages/misc/wishlist/styles.js
@@ -17906,7 +18516,7 @@ ${CONTEST_CSS}
   var FREQ_4H = "Every 4 hours";
   var FREQ_12H = "Every 12 hours";
   var FREQ_VISIT = "Only when I visit the shop";
-  var FREQUENCIES = [FREQ_REFRESH, FREQ_4H, FREQ_12H, FREQ_VISIT];
+  var FREQUENCIES2 = [FREQ_REFRESH, FREQ_4H, FREQ_12H, FREQ_VISIT];
   var REMIND_ONCE = "Once per shop refresh";
   var REMIND_ALWAYS = "Every page load";
   var REMINDS = [REMIND_ONCE, REMIND_ALWAYS];
@@ -18073,13 +18683,13 @@ ${CONTEST_CSS}
   }
 
   // packages/misc/wishlist/index.js
-  var TAB2 = "Cosmetic Wishlist";
+  var TAB3 = "Cosmetic Wishlist";
   var BACKGROUND_DELAY_MS = 3e3;
-  var settings4 = null;
+  var settings5 = null;
   var pluginRef = null;
-  function setting3(key2, fallback) {
+  function setting4(key2, fallback) {
     try {
-      return settings4 ? settings4.value(key2) : fallback;
+      return settings5 ? settings5.value(key2) : fallback;
     } catch (e) {
       return fallback;
     }
@@ -18218,29 +18828,29 @@ ${CONTEST_CSS}
   }
   function initWishlist(plugin) {
     pluginRef = plugin;
-    settings4 = createFeatureSettings(plugin, "wishlist", {
-      tab: TAB2,
+    settings5 = createFeatureSettings(plugin, "wishlist", {
+      tab: TAB3,
       visible: () => isPluginEnabled("wishlist")
     });
-    settings4.add("list", {
+    settings5.add("list", {
       name: "Your Wishlist",
       type: "text",
       default: ""
     });
-    settings4.add("checkNow", {
+    settings5.add("checkNow", {
       name: "Check the Shop",
       note: "Read the Cosmetics Shop now and show what's on your wishlist.",
       type: "text",
       default: "Check Shop Now"
     });
-    settings4.add("frequency", {
+    settings5.add("frequency", {
       name: "Shop Check Frequency",
       note: "The shop only changes when it refreshes; that's checked by default.",
       type: "select",
-      options: FREQUENCIES,
+      options: FREQUENCIES2,
       default: FREQ_REFRESH
     });
-    settings4.add("remind", {
+    settings5.add("remind", {
       name: "Remind Me",
       note: "Show a match once per shop refresh, or on every page load.",
       type: "select",
@@ -18258,8 +18868,8 @@ ${CONTEST_CSS}
       }
       setTimeout(() => {
         backgroundCheck(plugin, {
-          freq: setting3("frequency", FREQ_REFRESH),
-          remind: setting3("remind", REMIND_ONCE)
+          freq: setting4("frequency", FREQ_REFRESH),
+          remind: setting4("remind", REMIND_ONCE)
         }).catch(() => {
         });
       }, BACKGROUND_DELAY_MS);
@@ -18350,8 +18960,8 @@ ${CONTEST_CSS}
     const list = allCards();
     const s = String(q);
     if (/^\d+$/.test(s)) return list.find((c) => String(c.id) === s || String(c.fixedId) === s) || null;
-    const n = norm(s);
-    return list.find((c) => norm(c.name) === n) || null;
+    const n = norm2(s);
+    return list.find((c) => norm2(c.name) === n) || null;
   }
   async function artifacts2() {
     if (artifactList) return artifactList;
@@ -18364,7 +18974,7 @@ ${CONTEST_CSS}
     }
     return artifactList;
   }
-  var norm = (s) => String(s || "").toLowerCase().replace(/&amp;/g, "&").replace(/[^a-z0-9]/g, "");
+  var norm2 = (s) => String(s || "").toLowerCase().replace(/&amp;/g, "&").replace(/[^a-z0-9]/g, "");
   function tr(key2, ...args) {
     try {
       const v = page$().i18n(key2, ...args);
@@ -18520,7 +19130,7 @@ ${CONTEST_CSS}
         const name = tr(`artifact-name-${a.id}`) || a.name;
         addExact(name, `{{ARTIFACT:${a.id}}}`);
         [name, a.name].forEach((n) => {
-          if (n) artIds.set(norm(n), a.id);
+          if (n) artIds.set(norm2(n), a.id);
         });
         codeNames.set(`a:${a.id}`, uniq([name, a.name].filter(Boolean)));
       });
@@ -18583,7 +19193,7 @@ ${CONTEST_CSS}
       if (!/s$/i.test(e.name)) push(byName, `${e.name}s`, { ident: `c:${e.id}`, code: `{{CARD:${e.id}|2}}`, ...era(e) });
     });
     arts.forEach((e) => {
-      const id = ok(e) && typeof e.current === "string" ? f.artIds.get(norm(e.current)) : void 0;
+      const id = ok(e) && typeof e.current === "string" ? f.artIds.get(norm2(e.current)) : void 0;
       if (id == null) return;
       push(byCode, `a:${id}`, { name: e.name, ...era(e) });
       if (!f.notLinks.has(e.name)) push(byName, e.name, { ident: `a:${id}`, code: `{{ARTIFACT:${id}}}`, ...era(e) });
@@ -19186,8 +19796,8 @@ ${note}` : "");
   function findArtifact(list, q) {
     const s = String(q);
     if (/^\d+$/.test(s)) return list.find((a) => String(a.id) === s) || null;
-    const n = norm(s);
-    return list.find((a) => norm(a.name) === n || norm(tr(`artifact-name-${a.id}`)) === n) || list.find((a) => norm(a.image) === n) || null;
+    const n = norm2(s);
+    return list.find((a) => norm2(a.name) === n || norm2(tr(`artifact-name-${a.id}`)) === n) || list.find((a) => norm2(a.image) === n) || null;
   }
   function row(ver, rarity, f, todayName, todayHtml, target) {
     const tr2 = document.createElement("tr");
@@ -19202,14 +19812,14 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     r.innerHTML = RARITIES2.includes(rarity) ? render(`{{RARITY:${rarity}}}`, rarity) : "?";
     const t = document.createElement("td");
     t.className = "wz-ch-art-txt";
-    const oldName = ver.name && norm(ver.name) !== norm(todayName) ? `<span class="wz-ch-art-oldname">(${escHtml(ver.name)})</span>` : "";
+    const oldName = ver.name && norm2(ver.name) !== norm2(todayName) ? `<span class="wz-ch-art-oldname">(${escHtml(ver.name)})</span>` : "";
     const body = todayHtml !== void 0 ? todayHtml : ver.textKnown && ver.text ? formatText2(ver.text, f, ver.version && ver.version.key) : "?";
     t.innerHTML = `<div class="cardDesc wz-ch-art-desc"><div>${oldName}${body}</div></div>`;
     tr2.append(v, r, t);
     if (target) {
       const d = document.createElement("div");
       d.innerHTML = body;
-      tagNode(tr2, { ...target, label: todayHtml !== void 0 ? "today" : label2.text, shown: `${rarity || "?"}: ${ver.name && norm(ver.name) !== norm(todayName) ? `(${ver.name}) ` : ""}${d.textContent.replace(/\s+/g, " ").trim()}`.slice(0, 140) });
+      tagNode(tr2, { ...target, label: todayHtml !== void 0 ? "today" : label2.text, shown: `${rarity || "?"}: ${ver.name && norm2(ver.name) !== norm2(todayName) ? `(${ver.name}) ` : ""}${d.textContent.replace(/\s+/g, " ").trim()}`.slice(0, 140) });
     }
     return tr2;
   }
@@ -22248,6 +22858,7 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
     initUcTv(plugin);
     initTierList(plugin);
     initCardMaker(plugin);
+    initFloweryMode(plugin);
     const miscSettings = initMisc(plugin);
     initWishlist(plugin);
     initCardHistory(plugin);

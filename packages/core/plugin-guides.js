@@ -135,6 +135,16 @@ const GUIDES = {
       `Controller: point the cursor at it, press ${pad(3)} to right-click, then ${pad(0)} on the menu. ${pad(1)} closes it.`
     ] : [])
   },
+  floweryMode: {
+    tab: "Flowery Mode",
+    pages: "every page (most lines are in matches and Spectate)",
+    summary: "Flowery speaks up now and then: on some cards, attacks and moments in matches, and in a few places around the site.",
+    points: () => [
+      'Her lines are rare on purpose. <b>Frequency</b> sets how often (Normal is about 1-2 lines a match).',
+      'With Flowery on the board, the game\'s own lines play as usual and nothing doubles up.',
+      'Lines follow the game\'s sound volume. <b>Opponent\'s Cards</b>, <b>While Spectating</b> and <b>Win/Loss Lines</b> turn those parts off; <b>Every :Glue:</b> says "glue" for every Glue emote.'
+    ]
+  },
   cardHistory: {
     tab: null,
     pages: "the Crafting, Decks and Artifacts pages",

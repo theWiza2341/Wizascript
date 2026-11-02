@@ -508,7 +508,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
         linking = null;
         acct.account = r.account;
         acct.cooldownUntil = r.cooldownUntil || null;
-        accountChanged(r.account, r.cooldownUntil);
+        accountChanged(r.account, r.cooldownUntil, true);
         say(`Linked as ${r.account}.`);
         refreshMe(true);
         refreshGallery(true);

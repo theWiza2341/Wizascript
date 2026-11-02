@@ -72,6 +72,13 @@ export const PLUGINS = [
     usesKeybinds: true
   },
   {
+    id: "floweryMode",
+    category: "Plugins",
+    name: "Flowery Mode",
+    key: "floweryMode.enabled",
+    note: "Hear Flowery's voice lines for her friends' cards, even without her."
+  },
+  {
     id: "controller",
     category: "Plugins",
     name: "Controller Support",
@@ -156,7 +163,10 @@ export function registerPluginToggles(plugin) {
       // Appends UnderScript's own "requires a page refresh" note.
       refresh: true,
       category: p.category,
-      onChange: (value) => applySubSettingVisibility(p.id, !!value)
+      onChange: (value) => {
+        applySubSettingVisibility(p.id, !!value);
+        (toggleListeners[p.id] || []).forEach((fn) => { try { fn(!!value); } catch (e) { /* a listener's problem */ } });
+      }
     });
 
     if (p.id === "notepad") {
@@ -179,6 +189,14 @@ export function registerPluginToggles(plugin) {
       applySubSettingVisibility(pluginId);
     }));
   });
+}
+
+// Runs fn(on) when the player ticks or unticks a plugin's toggle (the change
+// itself; the plugin starts or stops after the refresh). Flowery Mode plays a
+// line when it's turned on.
+const toggleListeners = {};
+export function onPluginToggled(id, fn) {
+  (toggleListeners[id] = toggleListeners[id] || []).push(fn);
 }
 
 export function getNotepadOpenOnLoadSetting() {

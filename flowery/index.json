@@ -1,44 +1,397 @@
 {
-  "version": 1,
+  "version": 2,
   "about": "Flowery's voice clips from the Undercards wiki, for Wizascript's Flowery Mode. Free to use for non-commercial purposes only.",
   "base": "https://raw.githubusercontent.com/theWiza2341/Wizascript/sounds/flowery/",
-  "note": "title comes from the wiki's file name. use lists the cards or moments a clip is meant for (empty = not used yet). Build URLs with base + encodeURIComponent(file). File names use only letters, digits, _ - ' (commas broke loading in browsers).",
+  "note": "Rules for Wizascript's Flowery Mode. 'game' = the game's own /sounds/<sound>.wav on undercards.net; 'lines' = the clips in this folder; 'random' = rules that play a random clip from both. Each 'use' entry is a rule (see packages/flowery-mode/lines.js for every field). chance = 1 in N before the player's Frequency setting. File names use only letters, digits, _ - ' (commas broke loading in browsers).",
+  "game": [
+    {
+      "sound": "floweryQuest1",
+      "use": [
+        {
+          "on": "wizascript",
+          "event": "login",
+          "chance": 3
+        }
+      ]
+    },
+    {
+      "sound": "floweryQuest2",
+      "use": []
+    },
+    {
+      "sound": "floweryQuest3",
+      "use": []
+    },
+    {
+      "sound": "flowerySummon1",
+      "use": []
+    },
+    {
+      "sound": "flowerySummon2",
+      "use": []
+    },
+    {
+      "sound": "flowerySummon3",
+      "use": []
+    },
+    {
+      "sound": "floweryAttack1",
+      "use": []
+    },
+    {
+      "sound": "floweryAttack2",
+      "use": []
+    },
+    {
+      "sound": "floweryAttack3",
+      "use": []
+    },
+    {
+      "sound": "floweryAttack4",
+      "use": []
+    },
+    {
+      "sound": "floweryKill1",
+      "use": []
+    },
+    {
+      "sound": "floweryKill2",
+      "use": [
+        {
+          "on": "overdraw",
+          "cardType": "monster",
+          "chance": 3
+        }
+      ]
+    },
+    {
+      "sound": "floweryKill3",
+      "use": []
+    },
+    {
+      "sound": "floweryKill4",
+      "use": [
+        {
+          "on": "wizascript",
+          "event": "thbSktima",
+          "always": true
+        },
+        {
+          "on": "wizascript",
+          "event": "thbDeckLoad",
+          "chance": 5
+        }
+      ]
+    },
+    {
+      "sound": "floweryKill5",
+      "use": []
+    },
+    {
+      "sound": "floweryKill6",
+      "use": []
+    },
+    {
+      "sound": "floweryKill7",
+      "use": [
+        {
+          "on": "wizascript",
+          "event": "homeButton",
+          "chance": 10
+        }
+      ]
+    },
+    {
+      "sound": "floweryKill8",
+      "use": []
+    },
+    {
+      "sound": "floweryDeath1",
+      "use": [
+        {
+          "on": "wizascript",
+          "event": "logout",
+          "chance": 3
+        }
+      ]
+    },
+    {
+      "sound": "floweryDeath2",
+      "use": []
+    },
+    {
+      "sound": "floweryDeath3",
+      "use": []
+    },
+    {
+      "sound": "floweryVictory",
+      "use": [
+        {
+          "on": "victory",
+          "chance": 5
+        }
+      ]
+    },
+    {
+      "sound": "floweryDefeat",
+      "use": [
+        {
+          "on": "defeat",
+          "chance": 5
+        }
+      ]
+    },
+    {
+      "sound": "floweryOmega",
+      "use": [
+        {
+          "on": "play",
+          "card": "Our OMEGA!",
+          "chance": 5,
+          "id": 983
+        }
+      ]
+    },
+    {
+      "sound": "floweryInteractionHelp",
+      "use": [
+        {
+          "on": "play",
+          "card": "Call for Help",
+          "chance": 5
+        }
+      ]
+    },
+    {
+      "sound": "floweryInteractionDream",
+      "use": [
+        {
+          "on": "play",
+          "card": "Dream",
+          "chance": 5,
+          "id": 536
+        },
+        {
+          "on": "play",
+          "card": "Last Dream",
+          "chance": 5
+        }
+      ]
+    },
+    {
+      "sound": "floweryInteractionFlowey",
+      "use": [
+        {
+          "on": "play",
+          "card": "Flowey",
+          "chance": 5,
+          "id": 54
+        }
+      ]
+    },
+    {
+      "sound": "floweryInteractionRalsei",
+      "use": [
+        {
+          "on": "play",
+          "card": "Ralsei",
+          "chance": 5,
+          "id": 264
+        }
+      ]
+    },
+    {
+      "sound": "floweryInteractionAsgore",
+      "use": [
+        {
+          "on": "play",
+          "card": "Asgore",
+          "chance": 5,
+          "id": 61
+        }
+      ]
+    },
+    {
+      "sound": "floweryInteractionKris",
+      "use": [
+        {
+          "on": "play",
+          "card": "Kris",
+          "chance": 5,
+          "id": 263
+        }
+      ]
+    },
+    {
+      "sound": "floweryInteractionSusie",
+      "use": [
+        {
+          "on": "play",
+          "card": "Susie",
+          "chance": 5,
+          "id": 280
+        }
+      ]
+    },
+    {
+      "sound": "floweryInteractionOrange",
+      "use": [
+        {
+          "on": "attack",
+          "card": "Orange",
+          "id": 981,
+          "chance": 5
+        }
+      ]
+    },
+    {
+      "sound": "floweryInteractionAsriel",
+      "use": [
+        {
+          "on": "play",
+          "card": "Asriel",
+          "chance": 5
+        }
+      ]
+    },
+    {
+      "sound": "floweryInteractionLancer",
+      "use": [
+        {
+          "on": "play",
+          "card": "Lancer",
+          "chance": 5
+        }
+      ]
+    },
+    {
+      "sound": "floweryInteractionPink",
+      "use": [
+        {
+          "on": "play",
+          "card": "Pink",
+          "chance": 5
+        }
+      ]
+    },
+    {
+      "sound": "floweryInteractionFrisk",
+      "use": [
+        {
+          "on": "play",
+          "card": "Frisk",
+          "chance": 5
+        }
+      ]
+    },
+    {
+      "sound": "floweryInteractionChara",
+      "use": [
+        {
+          "on": "play",
+          "card": "Chara",
+          "chance": 5
+        }
+      ]
+    }
+  ],
   "lines": [
     {
       "file": "Flowery_voiceclip_blingo_blizzard.wav",
       "title": "blingo blizzard",
       "seconds": 2.07,
-      "use": []
+      "use": [
+        {
+          "on": "play",
+          "card": "Cold Winter",
+          "chance": 3
+        },
+        {
+          "on": "play",
+          "card": "Oasis",
+          "chance": 3
+        },
+        {
+          "on": "play",
+          "card": "Snow Warning",
+          "chance": 3
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_flowers_blooms_in_your_heart.wav",
       "title": "flowers blooms in your heart",
       "seconds": 2.1,
-      "use": []
+      "use": [
+        {
+          "on": "wizascript",
+          "event": "plantTribe",
+          "chance": 3
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_Flowery_2.wav",
       "title": "Flowery 2",
       "seconds": 0.63,
-      "use": []
+      "use": [
+        {
+          "on": "wizascript",
+          "event": "floweryModeEnabled",
+          "always": true
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_get_a_chance_2.wav",
       "title": "get a chance 2",
       "seconds": 2.16,
-      "use": []
+      "use": [
+        {
+          "on": "play",
+          "card": "Another Chance",
+          "chance": 3
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_give_to_you.wav",
       "title": "give to you",
       "seconds": 0.94,
-      "use": []
+      "use": [
+        {
+          "on": "play",
+          "card": "Spamton NEO",
+          "chance": 3
+        },
+        {
+          "on": "play",
+          "card": "Sans Dog",
+          "chance": 3
+        },
+        {
+          "on": "play",
+          "card": "Rouxls Kaard",
+          "chance": 3
+        },
+        {
+          "on": "play",
+          "card": "Aesthetic Aaron",
+          "chance": 3
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_glue.wav",
       "title": "glue",
       "seconds": 0.51,
-      "use": []
+      "use": [
+        {
+          "on": "wizascript",
+          "event": "chatGlue",
+          "chance": 20
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_great_style.wav",
@@ -50,7 +403,14 @@
       "file": "Flowery_voiceclip_grown_like_a_turnip.wav",
       "title": "grown like a turnip",
       "seconds": 3.02,
-      "use": []
+      "use": [
+        {
+          "on": "play",
+          "minBuff": 4,
+          "cardType": "monster",
+          "chance": 3
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_heh_it's_my_Jarona.wav",
@@ -62,7 +422,13 @@
       "file": "Flowery_voiceclip_hey_boys.wav",
       "title": "hey boys",
       "seconds": 2.74,
-      "use": []
+      "use": [
+        {
+          "on": "play",
+          "card": "Mercenary Hire",
+          "chance": 3
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_hey_guys_I_think_I_found_a_glue.wav",
@@ -77,15 +443,15 @@
       "use": []
     },
     {
-      "file": "Flowery_voiceclip_huh_I'll_show_you.wav",
-      "title": "huh, I'll show you",
-      "seconds": 1.06,
-      "use": []
-    },
-    {
       "file": "Flowery_voiceclip_huh.wav",
       "title": "huh",
       "seconds": 0.38,
+      "use": []
+    },
+    {
+      "file": "Flowery_voiceclip_huh_I'll_show_you.wav",
+      "title": "huh, I'll show you",
+      "seconds": 1.06,
       "use": []
     },
     {
@@ -104,19 +470,57 @@
       "file": "Flowery_voiceclip_it's_all_in_a_name.wav",
       "title": "it's all in a name",
       "seconds": 1.5,
-      "use": []
+      "use": [
+        {
+          "on": "wizascript",
+          "event": "accountLinked",
+          "chance": 2
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_it's_all_yours.wav",
       "title": "it's all yours",
       "seconds": 1.22,
-      "use": []
+      "use": [
+        {
+          "on": "play",
+          "card": "Spamton NEO",
+          "chance": 3
+        },
+        {
+          "on": "play",
+          "card": "Sans Dog",
+          "chance": 3
+        },
+        {
+          "on": "play",
+          "card": "Rouxls Kaard",
+          "chance": 3
+        },
+        {
+          "on": "play",
+          "card": "Aesthetic Aaron",
+          "chance": 3
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_it's_me.wav",
       "title": "it's me",
       "seconds": 0.47,
-      "use": []
+      "use": [
+        {
+          "on": "play",
+          "card": "Golden Mascot",
+          "chance": 30,
+          "repeat": [
+            3,
+            5
+          ],
+          "budget": false
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_Ja-st_kidding.wav",
@@ -134,13 +538,25 @@
       "file": "Flowery_voiceclip_lend_me_your_power.wav",
       "title": "lend me your power",
       "seconds": 5.05,
-      "use": []
+      "use": [
+        {
+          "on": "play",
+          "card": "Casino Sans",
+          "chance": 3
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_mini_peppers.wav",
       "title": "mini peppers",
       "seconds": 1.66,
-      "use": []
+      "use": [
+        {
+          "on": "wizascript",
+          "event": "settingsOpened",
+          "chance": 100
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_mostlys.wav",
@@ -158,7 +574,19 @@
       "file": "Flowery_voiceclip_mysterious_wind.wav",
       "title": "mysterious wind",
       "seconds": 3.03,
-      "use": []
+      "use": [
+        {
+          "on": "play",
+          "card": "Change of Winds",
+          "chance": 3,
+          "alt": [
+            {
+              "file": "Flowery_voiceclip_mysterious_wind_JP.wav",
+              "chance": 10
+            }
+          ]
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_mysterious_wind_JP.wav",
@@ -170,7 +598,14 @@
       "file": "Flowery_voiceclip_no_no_no.wav",
       "title": "no, no, no",
       "seconds": 1.08,
-      "use": []
+      "use": [
+        {
+          "on": "animation",
+          "type": "SILENCE",
+          "target": "enemy",
+          "chance": 3
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_no_way_it's_your_children.wav",
@@ -224,7 +659,13 @@
       "file": "Flowery_voiceclip_suckle_it_up.wav",
       "title": "suckle it up",
       "seconds": 1.65,
-      "use": []
+      "use": [
+        {
+          "on": "play",
+          "card": "Drinki",
+          "chance": 3
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_take_that.wav",
@@ -260,7 +701,13 @@
       "file": "Flowery_voiceclip_try_my_flavor.wav",
       "title": "try my flavor",
       "seconds": 1.72,
-      "use": []
+      "use": [
+        {
+          "on": "play",
+          "card": "Vending Machine",
+          "chance": 3
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_wow.wav",
@@ -291,6 +738,13 @@
       "title": "your dad",
       "seconds": 1.1,
       "use": []
+    }
+  ],
+  "random": [
+    {
+      "on": "wizascript",
+      "event": "floweryTracker",
+      "chance": 2
     }
   ]
 }

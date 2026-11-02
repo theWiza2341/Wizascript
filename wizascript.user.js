@@ -496,7 +496,7 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
       category: "Plugins",
       name: "Flowery Mode",
       key: "floweryMode.enabled",
-      note: "Hear Flowery's voice lines for her friends' cards, even without her."
+      note: "Flowery's voice lines, even when Flowery isn't on the board."
     },
     {
       id: "controller",
@@ -1090,7 +1090,7 @@ Share the cards you make. It's part of the Card Maker: use **Browse** and **Subm
 
 ### New: Flowery Mode
 Flowery's voice lines, even when Flowery isn't on the board. Turn it on in the **Plugins** list.
-- In matches and while spectating, Flowery reacts now and then to some cards being played or cast, some attacks and a few other moments, including Flowery's friends' cards. There are lines in a few places around the site too. Part of the fun is finding out where.
+- In matches and while spectating, Flowery reacts now and then to some cards being played or cast, some attacks and a few other moments, including Flowery's normal interactions. There are lines in a few places around the site too. Part of the fun is finding out where.
 - **Frequency** (on the Flowery Mode tab) sets how often: Normal is about 1-2 lines a match, and it goes up and down from there. **Opponent's Cards**, **While Spectating** and **Win/Loss Lines** turn those parts off, and **Every :Glue:** says "glue" for every Glue emote.
 - Lines follow the game's sound volume. With Flowery on the board, the game's own lines play as usual and nothing doubles up.
 - New lines and places can be added without a Wizascript update.
@@ -16442,7 +16442,7 @@ ${CONTEST_CSS}
     });
   }
   function freqNow() {
-    return everyTime() && setting3("testToggle", true) ? EVERY_TIME : frequency(setting3("frequency", DEFAULT_FREQUENCY));
+    return everyTime() && setting3("testToggle", false) ? EVERY_TIME : frequency(setting3("frequency", DEFAULT_FREQUENCY));
   }
   function initFloweryMode(plugin) {
     settings4 = createFeatureSettings(plugin, "floweryMode", {
@@ -16464,8 +16464,8 @@ ${CONTEST_CSS}
       name: "Testing Toggle",
       note: "Show an on-screen switch that makes every line play every time.",
       type: "boolean",
-      default: true,
-      // dev builds; off before release
+      default: false,
+      // a testing aid: players can turn it on
       onChange: (v) => {
         if (v) showChip();
         else if (chip) {
@@ -16639,7 +16639,7 @@ ${CONTEST_CSS}
       if (!hit) sktArmed = true;
     }, true);
     if (setting3("goldIcon", true)) setGoldIcon(true);
-    if (setting3("testToggle", true)) {
+    if (setting3("testToggle", false)) {
       if (document.body) showChip();
       else document.addEventListener("DOMContentLoaded", showChip, { once: true });
     }

@@ -76,7 +76,7 @@ export const PLUGINS = [
     category: "Plugins",
     name: "Flowery Mode",
     key: "floweryMode.enabled",
-    note: "Hear Flowery's voice lines for her friends' cards, even without her."
+    note: "Flowery's voice lines, even when Flowery isn't on the board."
   },
   {
     id: "controller",

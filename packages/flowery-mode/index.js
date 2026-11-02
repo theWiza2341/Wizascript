@@ -266,7 +266,7 @@ function registerAdvanced() {
 
 // ---- settings ------------------------------------------------------------------------
 function freqNow() {
-  return everyTime() && setting("testToggle", true) ? EVERY_TIME : frequency(setting("frequency", DEFAULT_FREQUENCY));
+  return everyTime() && setting("testToggle", false) ? EVERY_TIME : frequency(setting("frequency", DEFAULT_FREQUENCY));
 }
 
 export function initFloweryMode(plugin) {
@@ -289,7 +289,7 @@ export function initFloweryMode(plugin) {
     name: "Testing Toggle",
     note: "Show an on-screen switch that makes every line play every time.",
     type: "boolean",
-    default: true, // dev builds; off before release
+    default: false, // a testing aid: players can turn it on
     onChange: (v) => { if (v) showChip(); else if (chip) { chip.remove(); chip = null; } }
   });
   settings.add("goldIcon", {
@@ -466,7 +466,7 @@ export function initFloweryMode(plugin) {
   if (setting("goldIcon", true)) setGoldIcon(true);
 
   // The testing toggle.
-  if (setting("testToggle", true)) {
+  if (setting("testToggle", false)) {
     if (document.body) showChip();
     else document.addEventListener("DOMContentLoaded", showChip, { once: true });
   }

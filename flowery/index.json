@@ -183,7 +183,7 @@
           "card": "Call for Help",
           "chance": 5,
           "key": "call-for-help",
-          "label": "Call for Help played → her Help line"
+          "label": "Call for Help played → Help line"
         }
       ]
     },
@@ -196,14 +196,14 @@
           "chance": 5,
           "id": 536,
           "key": "dream",
-          "label": "Dream played → her Dream line"
+          "label": "Dream played → Dream line"
         },
         {
           "on": "play",
           "card": "Last Dream",
           "chance": 5,
           "key": "last-dream",
-          "label": "Last Dream played → her Dream line"
+          "label": "Last Dream played → Dream line"
         }
       ]
     },
@@ -216,7 +216,7 @@
           "chance": 5,
           "id": 54,
           "key": "flowey",
-          "label": "Flowey played → her Flowey line"
+          "label": "Flowey played → Flowey line"
         }
       ]
     },
@@ -229,7 +229,7 @@
           "chance": 5,
           "id": 264,
           "key": "ralsei",
-          "label": "Ralsei played → her Ralsei line"
+          "label": "Ralsei played → Ralsei line"
         }
       ]
     },
@@ -242,7 +242,7 @@
           "chance": 5,
           "id": 61,
           "key": "asgore",
-          "label": "Asgore played → her Asgore line"
+          "label": "Asgore played → Asgore line"
         }
       ]
     },
@@ -255,7 +255,7 @@
           "chance": 5,
           "id": 263,
           "key": "kris",
-          "label": "Kris played → her Kris line"
+          "label": "Kris played → Kris line"
         }
       ]
     },
@@ -268,7 +268,7 @@
           "chance": 5,
           "id": 280,
           "key": "susie",
-          "label": "Susie played → her Susie line"
+          "label": "Susie played → Susie line"
         }
       ]
     },
@@ -281,7 +281,7 @@
           "id": 981,
           "chance": 5,
           "key": "orange",
-          "label": "Orange attacks → her Orange line"
+          "label": "Orange attacks → Orange line"
         }
       ]
     },
@@ -293,7 +293,7 @@
           "card": "Asriel",
           "chance": 5,
           "key": "asriel",
-          "label": "Asriel played → her Asriel line"
+          "label": "Asriel played → Asriel line"
         }
       ]
     },
@@ -305,7 +305,7 @@
           "card": "Lancer",
           "chance": 5,
           "key": "lancer",
-          "label": "Lancer played → her Lancer line"
+          "label": "Lancer played → Lancer line"
         }
       ]
     },
@@ -317,7 +317,7 @@
           "card": "Pink",
           "chance": 5,
           "key": "pink",
-          "label": "Pink played → her Pink line"
+          "label": "Pink played → Pink line"
         }
       ]
     },
@@ -329,7 +329,7 @@
           "card": "Frisk",
           "chance": 5,
           "key": "frisk",
-          "label": "Frisk played → her Frisk line"
+          "label": "Frisk played → Frisk line"
         }
       ]
     },
@@ -341,7 +341,7 @@
           "card": "Chara",
           "chance": 5,
           "key": "chara",
-          "label": "Chara played → her Chara line"
+          "label": "Chara played → Chara line"
         }
       ]
     }
@@ -511,7 +511,22 @@
       "file": "Flowery_voiceclip_hey_guys_I_think_I_found_a_glue.wav",
       "title": "hey guys, I think I found a glue",
       "seconds": 2.27,
-      "use": []
+      "use": [
+        {
+          "on": "wizascript",
+          "event": "shopGlue",
+          "always": true,
+          "key": "shop-glue",
+          "label": "A Glue emote in the Cosmetics Shop → \"hey guys, I think I found a glue\""
+        },
+        {
+          "on": "wizascript",
+          "event": "wishlistInShop",
+          "chance": 2,
+          "key": "wishlist-in-shop",
+          "label": "Cosmetic Wishlist: an item is in the shop → \"hey guys, I think I found a glue\""
+        }
+      ]
     },
     {
       "file": "Flowery_voiceclip_hey_there_little_guy.wav",
@@ -611,12 +626,13 @@
           "card": "Golden Mascot",
           "chance": 30,
           "repeat": [
-            3,
-            5
+            6,
+            6
           ],
           "budget": false,
           "key": "golden-mascot",
-          "label": "Golden Mascot played → \"it's me\" ×3–5"
+          "label": "Golden Mascot played → \"it's me\" ×6, overlapping",
+          "stagger": 180
         }
       ]
     },

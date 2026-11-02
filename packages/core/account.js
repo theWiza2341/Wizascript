@@ -16,7 +16,56 @@ import { registerSettingWidget, asButton } from "./setting-widgets.js";
 import { getPageWindow } from "./page-window.js";
 import { canOpenVoid, openVoid } from "./uc-report.js";
 
-export const WORKER = "https://wizascript-gallery.redstonewiza2341.workers.dev";
+// ---- which server ------------------------------------------------------------------
+// The Worker's address can be moved without a Wizascript update: it's read from
+// server.json on the repo's `sounds` branch ({ "worker": "https://….workers.dev" }),
+// cached in GM for 30 minutes, with this built-in address as the fallback. Only an
+// https *.workers.dev address is accepted (build.js has `@connect workers.dev`,
+// which Tampermonkey takes as every workers.dev subdomain). The `sounds` branch
+// is only ever edited by the maintainer; the Worker rewrites `gallery` itself.
+export const DEFAULT_WORKER = "https://wizascript-gallery.thewiza2341.workers.dev";
+const SERVER_FILE = "https://raw.githubusercontent.com/theWiza2341/Wizascript/sounds/server.json";
+const SERVER_KEY = "wizascript.account.server"; // GM: { at, url }
+const SERVER_TTL = 30 * 60 * 1000;
+const WORKER_RE = /^https:\/\/[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*\.workers\.dev$/i;
+export const isWorkerUrl = (u) => typeof u === "string" && WORKER_RE.test(u.replace(/\/+$/, ""));
+function cachedServer() {
+  try { const c = JSON.parse(GM_getValue(SERVER_KEY, "null")); return c && isWorkerUrl(c.url) ? c : null; } catch (e) { return null; }
+}
+let worker = (cachedServer() || {}).url || DEFAULT_WORKER;
+export const workerUrl = () => worker;
+let checking = null;
+function fetchServer() {
+  return new Promise((resolve) => {
+    const keep = () => resolve(worker);
+    try {
+      GM_xmlhttpRequest({
+        method: "GET",
+        url: SERVER_FILE + "?t=" + Math.floor(Date.now() / 60000),
+        timeout: 6000,
+        onload: (r) => {
+          try {
+            const u = r.status === 200 ? String(JSON.parse(r.responseText).worker || "").replace(/\/+$/, "") : "";
+            if (isWorkerUrl(u)) { worker = u; GM_setValue(SERVER_KEY, JSON.stringify({ at: Date.now(), url: u })); }
+          } catch (e) { /* keep the current one */ }
+          keep();
+        },
+        onerror: keep,
+        ontimeout: keep
+      });
+    } catch (e) { keep(); }
+  });
+}
+// Resolves to the server's address. Blocks only the very first time (no cache),
+// at most ~6 s; a stale cache is used at once and refreshed in the background.
+export function server() {
+  const c = cachedServer();
+  if (c && Date.now() - c.at < SERVER_TTL) return Promise.resolve(c.url);
+  if (!checking) checking = fetchServer().finally(() => { checking = null; });
+  return c ? Promise.resolve(c.url) : checking;
+}
+// A request to the server by path ("/v1/totals").
+export const call = (method, path, opts) => server().then((base) => request(method, base + path, opts));
 // The key keeps its Card Maker name so existing links carry on.
 const AUTH_KEY = "wizascript.cardMaker.galleryAuth";
 const CATEGORY = "Wizascript";
@@ -65,7 +114,7 @@ async function getAuth() {
   auth = loadAuth();
   if (auth) return auth;
   if (!making) {
-    making = request("POST", `${WORKER}/v1/install`).then((a) => {
+    making = call("POST", "/v1/install").then((a) => {
       GM_setValue(AUTH_KEY, JSON.stringify({ install: a.install, secret: a.secret }));
       auth = a;
       return a;
@@ -78,12 +127,12 @@ async function getAuth() {
 export async function authed(method, path, body) {
   const a = await getAuth();
   try {
-    return await request(method, WORKER + path, { body, auth: a });
+    return await call(method, path, { body, auth: a });
   } catch (e) {
     if (e.code === "bad_install" || e.code === "no_install") {
       GM_deleteValue(AUTH_KEY);
       auth = null;
-      return request(method, WORKER + path, { body, auth: await getAuth() });
+      return call(method, path, { body, auth: await getAuth() });
     }
     throw e;
   }

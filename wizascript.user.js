@@ -17,7 +17,7 @@
 // @grant        GM_listValues
 // @grant        GM_xmlhttpRequest
 // @connect      raw.githubusercontent.com
-// @connect      wizascript-gallery.redstonewiza2341.workers.dev
+// @connect      workers.dev
 // ==/UserScript==
 
 if (location.hostname === "undercard.feildmaster.com" || (location.hostname === "sernon158.github.io" && location.pathname.startsWith("/uc-editor"))) {
@@ -1583,7 +1583,58 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   }
 
   // packages/core/account.js
-  var WORKER = "https://wizascript-gallery.redstonewiza2341.workers.dev";
+  var DEFAULT_WORKER = "https://wizascript-gallery.thewiza2341.workers.dev";
+  var SERVER_FILE = "https://raw.githubusercontent.com/theWiza2341/Wizascript/sounds/server.json";
+  var SERVER_KEY = "wizascript.account.server";
+  var SERVER_TTL = 30 * 60 * 1e3;
+  var WORKER_RE = /^https:\/\/[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*\.workers\.dev$/i;
+  var isWorkerUrl = (u) => typeof u === "string" && WORKER_RE.test(u.replace(/\/+$/, ""));
+  function cachedServer() {
+    try {
+      const c = JSON.parse(GM_getValue(SERVER_KEY, "null"));
+      return c && isWorkerUrl(c.url) ? c : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  var worker = (cachedServer() || {}).url || DEFAULT_WORKER;
+  var checking = null;
+  function fetchServer() {
+    return new Promise((resolve2) => {
+      const keep = () => resolve2(worker);
+      try {
+        GM_xmlhttpRequest({
+          method: "GET",
+          url: SERVER_FILE + "?t=" + Math.floor(Date.now() / 6e4),
+          timeout: 6e3,
+          onload: (r) => {
+            try {
+              const u = r.status === 200 ? String(JSON.parse(r.responseText).worker || "").replace(/\/+$/, "") : "";
+              if (isWorkerUrl(u)) {
+                worker = u;
+                GM_setValue(SERVER_KEY, JSON.stringify({ at: Date.now(), url: u }));
+              }
+            } catch (e) {
+            }
+            keep();
+          },
+          onerror: keep,
+          ontimeout: keep
+        });
+      } catch (e) {
+        keep();
+      }
+    });
+  }
+  function server() {
+    const c = cachedServer();
+    if (c && Date.now() - c.at < SERVER_TTL) return Promise.resolve(c.url);
+    if (!checking) checking = fetchServer().finally(() => {
+      checking = null;
+    });
+    return c ? Promise.resolve(c.url) : checking;
+  }
+  var call = (method, path, opts) => server().then((base) => request(method, base + path, opts));
   var AUTH_KEY = "wizascript.cardMaker.galleryAuth";
   var CATEGORY2 = "Wizascript";
   var ApiError = class extends Error {
@@ -1643,7 +1694,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     auth = loadAuth();
     if (auth) return auth;
     if (!making) {
-      making = request("POST", `${WORKER}/v1/install`).then((a) => {
+      making = call("POST", "/v1/install").then((a) => {
         GM_setValue(AUTH_KEY, JSON.stringify({ install: a.install, secret: a.secret }));
         auth = a;
         return a;
@@ -1656,12 +1707,12 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   async function authed(method, path, body) {
     const a = await getAuth();
     try {
-      return await request(method, WORKER + path, { body, auth: a });
+      return await call(method, path, { body, auth: a });
     } catch (e) {
       if (e.code === "bad_install" || e.code === "no_install") {
         GM_deleteValue(AUTH_KEY);
         auth = null;
-        return request(method, WORKER + path, { body, auth: await getAuth() });
+        return call(method, path, { body, auth: await getAuth() });
       }
       throw e;
     }
@@ -12171,10 +12222,10 @@ Version: v${version}`;
   var rarityColor = (r) => SPECIAL[(r || "").split("_").pop()] || "#fff";
   var soulColor2 = (s) => SPECIAL[s] || (/^#[0-9a-f]{3,8}$/i.test(s || "") ? s : "");
   var frameImages = null;
-  var checking = null;
+  var checking2 = null;
   function checkFrameImages() {
     if (frameImages !== null) return Promise.resolve(frameImages);
-    if (checking) return checking;
+    if (checking2) return checking2;
     const tryBase = (i) => new Promise((ok) => {
       if (i >= ASSET_BASES.length) return ok(false);
       const img = new Image();
@@ -12185,8 +12236,8 @@ Version: v${version}`;
       img.onerror = () => tryBase(i + 1).then(ok);
       img.src = `${ASSET_BASES[i]}frameSkins/Undertale/frame_monster.png`;
     });
-    checking = tryBase(0).then((found) => frameImages = found);
-    return checking;
+    checking2 = tryBase(0).then((found) => frameImages = found);
+    return checking2;
   }
   function rarityImage(name) {
     if (!/^[A-Za-z0-9_]{1,40}$/.test(String(name || ""))) return null;
@@ -12750,9 +12801,9 @@ Version: v${version}`;
   var PICTURE_MAX_BYTES = 150 * 1024;
   var sendVotes = (votes) => authed("POST", "/v1/votes", { votes });
   var deleteOwnPost = (id) => authed("POST", "/v1/posts/delete", { id });
-  var getTotals = () => request("GET", `${WORKER}/v1/totals`);
-  var getHealth = () => request("GET", `${WORKER}/v1/health`);
-  var admin = (method, path, key2, body) => request(method, WORKER + path, { body, adminKey: key2 });
+  var getTotals = () => call("GET", "/v1/totals");
+  var getHealth = () => call("GET", "/v1/health");
+  var admin = (method, path, key2, body) => call(method, path, { body, adminKey: key2 });
   var reviewWhoami = (key2) => admin("GET", "/v1/admin/whoami", key2);
   var reviewLog = (key2) => admin("GET", "/v1/admin/log", key2);
   var reviewersList = (key2) => admin("GET", "/v1/admin/reviewers", key2);
@@ -12762,7 +12813,7 @@ Version: v${version}`;
   var reviewContest = (key2, id) => admin("GET", `/v1/admin/contest?id=${encodeURIComponent(id)}`, key2);
   var reviewScore = (key2, contest, post, score) => admin("POST", "/v1/admin/score", key2, { contest, post, score });
   var manageContest = (key2, body) => admin("POST", "/v1/admin/contests", key2, body);
-  var getContests = () => request("GET", `${WORKER}/v1/contests`);
+  var getContests = () => call("GET", "/v1/contests");
   var reviewPending = (key2) => admin("GET", "/v1/admin/pending", key2);
   var reviewPost = (key2, id) => admin("GET", `/v1/admin/post?id=${encodeURIComponent(id)}`, key2);
   var reviewDecide = (key2, id, approve, reason) => admin("POST", "/v1/admin/decide", key2, { id, approve: !!approve, reason: reason || "" });
@@ -12960,7 +13011,7 @@ Version: v${version}`;
   function allEntries({ approved, own, totals, baseVotes, current, account }) {
     const now = Date.now();
     const days = (t) => Math.max(0, Math.floor((now - (t || now)) / 864e5));
-    const server = approved.map((p) => {
+    const server2 = approved.map((p) => {
       const t = totals[p.id] || [0, 0];
       const vote = current[p.id] || 0;
       return {
@@ -12991,7 +13042,7 @@ Version: v${version}`;
       vote: 0,
       score: 0
     }));
-    return server.concat(waiting);
+    return server2.concat(waiting);
   }
   function filtered(entries2, { mineOnly, likedOnly }) {
     return entries2.filter((e) => (!mineOnly || e.mine) && (!likedOnly || e.vote === 1));
@@ -19026,11 +19077,11 @@ ${CONTEST_CSS}
         renderList2(box, label2);
       });
     });
-    let checking2 = false;
+    let checking3 = false;
     registerSettingWidget("wishlist.checkNow", (el3) => {
       asButton("Check Shop Now", async (input) => {
-        if (checking2) return;
-        checking2 = true;
+        if (checking3) return;
+        checking3 = true;
         input.value = "Checking\u2026";
         const row2 = input.closest(".flex-start");
         let status = row2 && row2.querySelector(".wz-wl-status");
@@ -19040,7 +19091,7 @@ ${CONTEST_CSS}
           row2.appendChild(status);
         }
         const result = await manualCheck(pluginRef);
-        checking2 = false;
+        checking3 = false;
         input.value = "Check Shop Now";
         if (!status) return;
         if (result.error) {

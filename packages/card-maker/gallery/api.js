@@ -12,8 +12,8 @@
 
 // The server, this install's credentials and account linking live in
 // core/account.js (any plugin can use them); re-exported here for the gallery.
-import { WORKER, ApiError, request, authed, getMe, linkStart, linkCheck } from "../../core/account.js";
-export { WORKER, ApiError, getMe, linkStart, linkCheck };
+import { workerUrl, ApiError, request, call, authed, getMe, linkStart, linkCheck } from "../../core/account.js";
+export { workerUrl, ApiError, getMe, linkStart, linkCheck };
 export const GALLERY_RAW = "https://raw.githubusercontent.com/theWiza2341/Wizascript/gallery/";
 
 // Upload limits (the Worker's, from Cloudflare's free plan): bigger
@@ -25,13 +25,13 @@ export const PICTURE_MAX_BYTES = 150 * 1024;
 
 export const sendVotes = (votes) => authed("POST", "/v1/votes", { votes });
 export const deleteOwnPost = (id) => authed("POST", "/v1/posts/delete", { id });
-export const getTotals = () => request("GET", `${WORKER}/v1/totals`);
+export const getTotals = () => call("GET", "/v1/totals");
 // The server's status, incl. how many days the GitHub key has left.
-export const getHealth = () => request("GET", `${WORKER}/v1/health`);
+export const getHealth = () => call("GET", "/v1/health");
 
 // ---- review (the owner's key, ADMIN_KEY, or a reviewer's key; turned on with
 // the console command, kept in GM "wizascript.cardMaker.galleryReview") ----
-const admin = (method, path, key, body) => request(method, WORKER + path, { body, adminKey: key });
+const admin = (method, path, key, body) => call(method, path, { body, adminKey: key });
 export const reviewWhoami = (key) => admin("GET", "/v1/admin/whoami", key);
 export const reviewLog = (key) => admin("GET", "/v1/admin/log", key);
 // owner only
@@ -44,7 +44,7 @@ export const reviewContest = (key, id) => admin("GET", `/v1/admin/contest?id=${e
 export const reviewScore = (key, contest, post, score) => admin("POST", "/v1/admin/score", key, { contest, post, score });
 export const manageContest = (key, body) => admin("POST", "/v1/admin/contests", key, body);
 // The contests, as the Worker has them now (status, deadline, entry counts).
-export const getContests = () => request("GET", `${WORKER}/v1/contests`);
+export const getContests = () => call("GET", "/v1/contests");
 export const reviewPending = (key) => admin("GET", "/v1/admin/pending", key);
 export const reviewPost = (key, id) => admin("GET", `/v1/admin/post?id=${encodeURIComponent(id)}`, key);
 export const reviewDecide = (key, id, approve, reason) => admin("POST", "/v1/admin/decide", key, { id, approve: !!approve, reason: reason || "" });

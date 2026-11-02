@@ -29,6 +29,8 @@ Flowery's voice lines, even when Flowery isn't on the board. Turn it on in the *
 - **Frequency** (on the Flowery Mode tab) sets how often: Normal is about 1-2 lines a match, and it goes up and down from there. **Opponent's Cards**, **While Spectating** and **Win/Loss Lines** turn those parts off, and **Every :Glue:** says "glue" for every Glue emote.
 - Lines follow the game's sound volume. With Flowery on the board, the game's own lines play as usual and nothing doubles up.
 - New lines and places can be added without a Wizascript update.
+- **Advanced Settings** (on the Flowery Mode tab) lets you set the exact chance of each line yourself, with each one's default shown and **Restore Defaults** to undo.
+- **Flowery Gold Icon:** your gold icon at the top of the page becomes a spinning Flowery coin.
 
 ## 1.6.2
 

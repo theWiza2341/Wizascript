@@ -40,7 +40,7 @@ async function bundle(options) {
     target: "es2019",
     write: false,
     logLevel: "info",
-    loader: { ".md": "text", ".png": "dataurl" },
+    loader: { ".md": "text", ".png": "dataurl", ".gif": "dataurl" },
     define: {
       __WIZASCRIPT_VERSION__: JSON.stringify(pkg.version)
     },
@@ -67,7 +67,7 @@ async function build() {
     // CHANGELOG.md is imported as a plain string, and assets/logo.png as
     // an embedded data: URL (both used by packages/core/about.js), so the
     // installed script needs no network request for either.
-    loader: { ".md": "text", ".png": "dataurl" },
+    loader: { ".md": "text", ".png": "dataurl", ".gif": "dataurl" },
     define: {
       __WIZASCRIPT_VERSION__: JSON.stringify(pkg.version)
     }

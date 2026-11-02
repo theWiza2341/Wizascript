@@ -37,9 +37,18 @@
 //   budget      false = doesn't use up (or wait for) the per-match budget, still rolls its odds
 //   repeat      [min, max]: plays the clip that many times in a row
 //   alt         [{ file | sound, chance }]: 1 in `chance` of playing that clip instead
+//   summoned    play: also count monsters put on the board by an effect (not only from hand)
+//   nameWord    play: the card's name contains this word ("kid" matches "Monster Kid", not "Kidnap")
+//   maxCost     play: the card costs at most this
+//   minAttack   attack: the attacker has at least this much ATK
+//   turn        kill: "me" | "opponent": whose turn it happened on
+//   from        random rules: pick from these [{ sound } | { file }] instead of all clips
+//   key, label  a stable id and a readable name: the Advanced Settings row for this rule
+//   kill        (on) a monster dies; target "ally" | "enemy" = whose monster
 
 const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-const KINDS = new Set(["play", "attack", "log", "animation", "overdraw", "victory", "defeat", "wizascript"]);
+const KINDS = new Set(["play", "attack", "log", "animation", "overdraw", "kill", "victory", "defeat", "wizascript"]);
+const KEY_RE = /^[a-z0-9][a-z0-9-]{0,47}$/;
 const FILE_RE = /^[A-Za-z0-9_\-']+\.wav$/; // no commas (they wouldn't load), no paths
 const SOUND_RE = /^flowery[A-Za-z0-9]+$/;
 const clampN = (v, lo, hi, d) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : d; };
@@ -62,6 +71,13 @@ function cleanRule(r, secondsOf) {
   if (["player", "monster", "ally", "enemy"].includes(r.target)) out.target = r.target;
   if (r.cardType === "monster" || r.cardType === "spell") out.cardType = r.cardType;
   if (r.minBuff != null) out.minBuff = clampN(r.minBuff, 1, 99, 1);
+  if (r.maxCost != null) out.maxCost = clampN(r.maxCost, 0, 99, 0);
+  if (r.minAttack != null) out.minAttack = clampN(r.minAttack, 0, 999, 0);
+  if (r.nameWord != null && String(r.nameWord).trim()) out.nameWord = String(r.nameWord).trim().toLowerCase().replace(/[^a-z0-9 ]/g, "");
+  out.summoned = r.summoned === true;
+  if (r.turn === "me" || r.turn === "opponent") out.turn = r.turn;
+  if (r.key != null && KEY_RE.test(String(r.key))) out.key = String(r.key);
+  if (r.label != null) out.label = String(r.label).slice(0, 80);
   out.chance = clampN(r.chance, 1, 10000, 1);
   out.always = r.always === true;
   out.budget = r.budget !== false;
@@ -73,7 +89,12 @@ function cleanRule(r, secondsOf) {
     out.alt = r.alt.map((x) => ({ clip: clipOf(x, secondsOf && x && secondsOf(x.file)), chance: clampN(x && x.chance, 1, 10000, 1) }))
       .filter((x) => x.clip);
   }
-  if ((out.on === "play" || out.on === "attack") && out.card == null && out.id == null && out.minBuff == null) return null;
+  if (Array.isArray(r.from)) {
+    out.from = r.from.map((x) => clipOf(x, secondsOf && x && secondsOf(x.file))).filter(Boolean);
+    if (!out.from.length) return null;
+  }
+  if (out.on === "play" && out.card == null && out.id == null && out.minBuff == null && out.nameWord == null && out.maxCost == null) return null;
+  if (out.on === "attack" && out.card == null && out.id == null && out.minAttack == null) return null;
   if ((out.on === "log" || out.on === "animation") && !out.type) return null;
   if (out.on === "wizascript" && !out.event) return null;
   return out;
@@ -146,6 +167,8 @@ const cardMatches = (rule, card) => !!card && (
   (rule.id == null && rule.card == null) ||
   (rule.id != null && rule.id === card.fixedId) || (rule.card != null && rule.card === norm(card.name)));
 const typeOk = (rule, card) => !rule.cardType || (card && (rule.cardType === "spell" ? card.typeCard === 1 : card.typeCard === 0));
+const wordOk = (rule, card) => rule.nameWord == null || (card && new RegExp("(^|[^a-z0-9])" + rule.nameWord.replace(/ /g, "[^a-z0-9]+") + "s?($|[^a-z0-9])", "i").test(String(card.name || "")));
+const costOk = (rule, card) => rule.maxCost == null || (card && Number(card.cost) <= rule.maxCost);
 const buffOk = (rule, card) => rule.minBuff == null || (card &&
   (card.attack - card.originalAttack) >= rule.minBuff && ((card.maxHp != null ? card.maxHp : card.hp) - card.originalHp) >= rule.minBuff);
 
@@ -153,7 +176,7 @@ const buffOk = (rule, card) => rule.minBuff == null || (card &&
 //   rules()           compileRules(index) result, read at each event
 //   play(clip, n)     play it n times in a row
 //   isOwn(playerId)   is this player the one at this screen
-//   settings()        { frequency: {odds,budget,gap}, opponent, endLines, spectating }
+//   settings()        { frequency: {odds,budget,gap}, opponent, endLines, spectating, percent(key) → exact % or null }
 //   now(), random()   injectable for tests
 export function createReactor({ rules, play, isOwn, settings, now = () => Date.now(), random = () => Math.random() }) {
   let lastAction = null;
@@ -162,6 +185,7 @@ export function createReactor({ rules, play, isOwn, settings, now = () => Date.n
   let used = 0;                 // our budgeted clips this match / page
   const spellsSeen = new Set();
   const owners = new Map();     // monster instance id → owner id (public: the board)
+  let turnOf = null;            // whose turn it is (getTurnStart)
 
   const roll = (n) => n <= 1 || Math.floor(random() * n) === 0;
 
@@ -189,16 +213,22 @@ export function createReactor({ rules, play, isOwn, settings, now = () => Date.n
     } else {
       const budgetFree = (m) => !m.rule.budget;
       const roomy = used < f.budget && t - lastOursAt >= f.gap * 1000;
-      const passed = matches.filter((m) => (roomy || budgetFree(m)) && roll(scaled(m.rule.chance)));
+      const exact = (m) => (m.rule.key && settings().percent ? settings().percent(m.rule.key) : null);
+      const passed = matches.filter((m) => {
+        if (!(roomy || budgetFree(m))) return false;
+        const pct = every ? null : exact(m);
+        if (pct != null) return pct > 0 && random() * 100 < pct; // Advanced Settings: exact, ignores Frequency
+        return roll(scaled(m.rule.chance));
+      });
       if (!passed.length) return null;
       pick = passed[Math.floor(random() * passed.length)];
       if (pick.rule.budget) { used++; lastOursAt = t; }
     }
     let clip = pick.clip;
     if (clip.kind === "random") {
-      const all = rules().all;
-      if (!all.length) return null;
-      clip = all[Math.floor(random() * all.length)];
+      const pool = pick.rule.from || rules().all;
+      if (!pool.length) return null;
+      clip = pool[Math.floor(random() * pool.length)];
     }
     // Variants keep their own odds even on the testing toggle (else the main clip never plays).
     for (const a of pick.rule.alt || []) {
@@ -227,12 +257,16 @@ export function createReactor({ rules, play, isOwn, settings, now = () => Date.n
       remember(card);
       const pid = data.idPlayer != null ? data.idPlayer : card && card.ownerId;
       let ok = !!card;
-      if (a === "getMonsterPlayed" && EFFECTS.has(lastAction)) ok = false; // summoned by an effect
-      if (a === "getSpellPlayed") { // the game can send the same spell twice
-        if (card && spellsSeen.has(card.id)) ok = false;
-        else if (card) spellsSeen.add(card.id);
+      // A MONSTER card in getSpellPlayed is the game showing a Dust effect after a
+      // death (or Flowery's quest card at the start), not a play: spells only.
+      if (a === "getSpellPlayed" && card && card.typeCard !== 1) ok = false;
+      const fromEffect = a === "getMonsterPlayed" && EFFECTS.has(lastAction); // summoned by an effect
+      if (ok && a === "getSpellPlayed") { // the game can send the same spell twice
+        if (spellsSeen.has(card.id)) ok = false;
+        else spellsSeen.add(card.id);
       }
-      if (ok) played = fire(find((r) => r.on === "play" && cardMatches(r, card) && typeOk(r, card) && buffOk(r, card) && whoOk(r, pid)));
+      if (ok) played = fire(find((r) => r.on === "play" && (!fromEffect || r.summoned) && cardMatches(r, card) && typeOk(r, card)
+        && buffOk(r, card) && wordOk(r, card) && costOk(r, card) && whoOk(r, pid)));
     } else if (a === "updateCard" || a === "updateMonster") {
       remember(parse(data.monster || data.card));
     } else if (a === "getUpdateBoard") {
@@ -249,6 +283,7 @@ export function createReactor({ rules, play, isOwn, settings, now = () => Date.n
             if (!/^ATTACK_(MONSTER|PLAYER)$/.test(type)) return false;
             if (r.target === "player" && type !== "ATTACK_PLAYER") return false;
             if (r.target === "monster" && type !== "ATTACK_MONSTER") return false;
+            if (r.minAttack != null && !(actor && Number(actor.attack) >= r.minAttack)) return false;
             return cardMatches(r, actor) && whoOk(r, log.playerId);
           }
           if (r.on === "log") return r.type === type && cardMatches(r, actor) && whoOk(r, log.playerId);
@@ -262,6 +297,21 @@ export function createReactor({ rules, play, isOwn, settings, now = () => Date.n
         if (r.on !== "animation" || r.type !== type) return false;
         if (r.target === "ally" || r.target === "enemy") {
           if (settings().spectating) return true; // no "your side" when watching
+          if (owner == null) return false;
+          return r.target === "ally" ? isOwn(owner) : !isOwn(owner);
+        }
+        return true;
+      }));
+    } else if (a === "getTurnStart") {
+      turnOf = data.idPlayer;
+    } else if (a === "getMonsterDestroyed") {
+      const owner = owners.get(data.monsterId);
+      const s = settings();
+      played = fire(find((r) => {
+        if (r.on !== "kill") return false;
+        if (s.spectating) return true; // no "your side" when watching
+        if (r.turn && (turnOf == null || (r.turn === "me") !== isOwn(turnOf))) return false;
+        if (r.target === "ally" || r.target === "enemy") {
           if (owner == null) return false;
           return r.target === "ally" ? isOwn(owner) : !isOwn(owner);
         }
@@ -292,7 +342,22 @@ export function createReactor({ rules, play, isOwn, settings, now = () => Date.n
     used = 0;
     spellsSeen.clear();
     owners.clear();
+    turnOf = null;
   }
 
   return { onEvent, onWizascript, reset };
+}
+
+// Advanced Settings rows: one per rule that has a key, with its default % (at Normal).
+export function ruleDefaults(compiled) {
+  const seen = new Set();
+  const out = [];
+  for (const m of compiled.rules) {
+    const r = m.rule;
+    if (!r.key || seen.has(r.key)) continue;
+    seen.add(r.key);
+    const pct = r.always ? 100 : Math.round(1000 / r.chance) / 10;
+    out.push({ key: r.key, label: r.label || r.key, pct, always: r.always });
+  }
+  return out;
 }

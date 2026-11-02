@@ -1094,6 +1094,8 @@ Flowery's voice lines, even when Flowery isn't on the board. Turn it on in the *
 - **Frequency** (on the Flowery Mode tab) sets how often: Normal is about 1-2 lines a match, and it goes up and down from there. **Opponent's Cards**, **While Spectating** and **Win/Loss Lines** turn those parts off, and **Every :Glue:** says "glue" for every Glue emote.
 - Lines follow the game's sound volume. With Flowery on the board, the game's own lines play as usual and nothing doubles up.
 - New lines and places can be added without a Wizascript update.
+- **Advanced Settings** (on the Flowery Mode tab) lets you set the exact chance of each line yourself, with each one's default shown and **Restore Defaults** to undo.
+- **Flowery Gold Icon:** your gold icon at the top of the page becomes a spinning Flowery coin.
 
 ## 1.6.2
 
@@ -3335,7 +3337,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       points: () => [
         "Her lines are rare on purpose. <b>Frequency</b> sets how often (Normal is about 1-2 lines a match).",
         "With Flowery on the board, the game's own lines play as usual and nothing doubles up.",
-        `Lines follow the game's sound volume. <b>Opponent's Cards</b>, <b>While Spectating</b> and <b>Win/Loss Lines</b> turn those parts off; <b>Every :Glue:</b> says "glue" for every Glue emote.`
+        `Lines follow the game's sound volume. <b>Opponent's Cards</b>, <b>While Spectating</b> and <b>Win/Loss Lines</b> turn those parts off; <b>Every :Glue:</b> says "glue" for every Glue emote.`,
+        "<b>Advanced Settings</b> sets each line's exact chance (its default is shown; <b>Restore Defaults</b> undoes it). <b>Flowery Gold Icon</b> turns your gold icon into a Flowery coin."
       ]
     },
     cardHistory: {
@@ -15671,7 +15674,8 @@ ${CONTEST_CSS}
 
   // packages/flowery-mode/lines.js
   var norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-  var KINDS = /* @__PURE__ */ new Set(["play", "attack", "log", "animation", "overdraw", "victory", "defeat", "wizascript"]);
+  var KINDS = /* @__PURE__ */ new Set(["play", "attack", "log", "animation", "overdraw", "kill", "victory", "defeat", "wizascript"]);
+  var KEY_RE = /^[a-z0-9][a-z0-9-]{0,47}$/;
   var FILE_RE = /^[A-Za-z0-9_\-']+\.wav$/;
   var SOUND_RE = /^flowery[A-Za-z0-9]+$/;
   var clampN = (v, lo, hi, d) => {
@@ -15694,6 +15698,13 @@ ${CONTEST_CSS}
     if (["player", "monster", "ally", "enemy"].includes(r.target)) out.target = r.target;
     if (r.cardType === "monster" || r.cardType === "spell") out.cardType = r.cardType;
     if (r.minBuff != null) out.minBuff = clampN(r.minBuff, 1, 99, 1);
+    if (r.maxCost != null) out.maxCost = clampN(r.maxCost, 0, 99, 0);
+    if (r.minAttack != null) out.minAttack = clampN(r.minAttack, 0, 999, 0);
+    if (r.nameWord != null && String(r.nameWord).trim()) out.nameWord = String(r.nameWord).trim().toLowerCase().replace(/[^a-z0-9 ]/g, "");
+    out.summoned = r.summoned === true;
+    if (r.turn === "me" || r.turn === "opponent") out.turn = r.turn;
+    if (r.key != null && KEY_RE.test(String(r.key))) out.key = String(r.key);
+    if (r.label != null) out.label = String(r.label).slice(0, 80);
     out.chance = clampN(r.chance, 1, 1e4, 1);
     out.always = r.always === true;
     out.budget = r.budget !== false;
@@ -15704,7 +15715,12 @@ ${CONTEST_CSS}
     if (Array.isArray(r.alt)) {
       out.alt = r.alt.map((x) => ({ clip: clipOf(x, secondsOf && x && secondsOf(x.file)), chance: clampN(x && x.chance, 1, 1e4, 1) })).filter((x) => x.clip);
     }
-    if ((out.on === "play" || out.on === "attack") && out.card == null && out.id == null && out.minBuff == null) return null;
+    if (Array.isArray(r.from)) {
+      out.from = r.from.map((x) => clipOf(x, secondsOf && x && secondsOf(x.file))).filter(Boolean);
+      if (!out.from.length) return null;
+    }
+    if (out.on === "play" && out.card == null && out.id == null && out.minBuff == null && out.nameWord == null && out.maxCost == null) return null;
+    if (out.on === "attack" && out.card == null && out.id == null && out.minAttack == null) return null;
     if ((out.on === "log" || out.on === "animation") && !out.type) return null;
     if (out.on === "wizascript" && !out.event) return null;
     return out;
@@ -15771,6 +15787,8 @@ ${CONTEST_CSS}
   var QUIET_MS = 1200;
   var cardMatches = (rule, card) => !!card && (rule.id == null && rule.card == null || rule.id != null && rule.id === card.fixedId || rule.card != null && rule.card === norm(card.name));
   var typeOk = (rule, card) => !rule.cardType || card && (rule.cardType === "spell" ? card.typeCard === 1 : card.typeCard === 0);
+  var wordOk = (rule, card) => rule.nameWord == null || card && new RegExp("(^|[^a-z0-9])" + rule.nameWord.replace(/ /g, "[^a-z0-9]+") + "s?($|[^a-z0-9])", "i").test(String(card.name || ""));
+  var costOk = (rule, card) => rule.maxCost == null || card && Number(card.cost) <= rule.maxCost;
   var buffOk = (rule, card) => rule.minBuff == null || card && card.attack - card.originalAttack >= rule.minBuff && (card.maxHp != null ? card.maxHp : card.hp) - card.originalHp >= rule.minBuff;
   function createReactor({ rules, play, isOwn, settings: settings6, now = () => Date.now(), random = () => Math.random() }) {
     let lastAction = null;
@@ -15779,6 +15797,7 @@ ${CONTEST_CSS}
     let used = 0;
     const spellsSeen = /* @__PURE__ */ new Set();
     const owners = /* @__PURE__ */ new Map();
+    let turnOf = null;
     const roll = (n) => n <= 1 || Math.floor(random() * n) === 0;
     function whoOk(rule, playerId) {
       const s = settings6();
@@ -15802,7 +15821,13 @@ ${CONTEST_CSS}
       } else {
         const budgetFree = (m) => !m.rule.budget;
         const roomy = used < f.budget && t - lastOursAt >= f.gap * 1e3;
-        const passed = matches.filter((m) => (roomy || budgetFree(m)) && roll(scaled(m.rule.chance)));
+        const exact = (m) => m.rule.key && settings6().percent ? settings6().percent(m.rule.key) : null;
+        const passed = matches.filter((m) => {
+          if (!(roomy || budgetFree(m))) return false;
+          const pct = every ? null : exact(m);
+          if (pct != null) return pct > 0 && random() * 100 < pct;
+          return roll(scaled(m.rule.chance));
+        });
         if (!passed.length) return null;
         pick = passed[Math.floor(random() * passed.length)];
         if (pick.rule.budget) {
@@ -15812,9 +15837,9 @@ ${CONTEST_CSS}
       }
       let clip = pick.clip;
       if (clip.kind === "random") {
-        const all = rules().all;
-        if (!all.length) return null;
-        clip = all[Math.floor(random() * all.length)];
+        const pool = pick.rule.from || rules().all;
+        if (!pool.length) return null;
+        clip = pool[Math.floor(random() * pool.length)];
       }
       for (const a of pick.rule.alt || []) {
         if (roll(a.chance)) {
@@ -15843,12 +15868,13 @@ ${CONTEST_CSS}
         remember(card);
         const pid = data2.idPlayer != null ? data2.idPlayer : card && card.ownerId;
         let ok = !!card;
-        if (a === "getMonsterPlayed" && EFFECTS.has(lastAction)) ok = false;
-        if (a === "getSpellPlayed") {
-          if (card && spellsSeen.has(card.id)) ok = false;
-          else if (card) spellsSeen.add(card.id);
+        if (a === "getSpellPlayed" && card && card.typeCard !== 1) ok = false;
+        const fromEffect = a === "getMonsterPlayed" && EFFECTS.has(lastAction);
+        if (ok && a === "getSpellPlayed") {
+          if (spellsSeen.has(card.id)) ok = false;
+          else spellsSeen.add(card.id);
         }
-        if (ok) played = fire(find((r) => r.on === "play" && cardMatches(r, card) && typeOk(r, card) && buffOk(r, card) && whoOk(r, pid)));
+        if (ok) played = fire(find((r) => r.on === "play" && (!fromEffect || r.summoned) && cardMatches(r, card) && typeOk(r, card) && buffOk(r, card) && wordOk(r, card) && costOk(r, card) && whoOk(r, pid)));
       } else if (a === "updateCard" || a === "updateMonster") {
         remember(parse(data2.monster || data2.card));
       } else if (a === "getUpdateBoard") {
@@ -15865,6 +15891,7 @@ ${CONTEST_CSS}
               if (!/^ATTACK_(MONSTER|PLAYER)$/.test(type)) return false;
               if (r.target === "player" && type !== "ATTACK_PLAYER") return false;
               if (r.target === "monster" && type !== "ATTACK_MONSTER") return false;
+              if (r.minAttack != null && !(actor && Number(actor.attack) >= r.minAttack)) return false;
               return cardMatches(r, actor) && whoOk(r, log3.playerId);
             }
             if (r.on === "log") return r.type === type && cardMatches(r, actor) && whoOk(r, log3.playerId);
@@ -15878,6 +15905,21 @@ ${CONTEST_CSS}
           if (r.on !== "animation" || r.type !== type) return false;
           if (r.target === "ally" || r.target === "enemy") {
             if (settings6().spectating) return true;
+            if (owner == null) return false;
+            return r.target === "ally" ? isOwn(owner) : !isOwn(owner);
+          }
+          return true;
+        }));
+      } else if (a === "getTurnStart") {
+        turnOf = data2.idPlayer;
+      } else if (a === "getMonsterDestroyed") {
+        const owner = owners.get(data2.monsterId);
+        const s = settings6();
+        played = fire(find((r) => {
+          if (r.on !== "kill") return false;
+          if (s.spectating) return true;
+          if (r.turn && (turnOf == null || r.turn === "me" !== isOwn(turnOf))) return false;
+          if (r.target === "ally" || r.target === "enemy") {
             if (owner == null) return false;
             return r.target === "ally" ? isOwn(owner) : !isOwn(owner);
           }
@@ -15904,9 +15946,25 @@ ${CONTEST_CSS}
       used = 0;
       spellsSeen.clear();
       owners.clear();
+      turnOf = null;
     }
     return { onEvent, onWizascript, reset };
   }
+  function ruleDefaults(compiled2) {
+    const seen2 = /* @__PURE__ */ new Set();
+    const out = [];
+    for (const m of compiled2.rules) {
+      const r = m.rule;
+      if (!r.key || seen2.has(r.key)) continue;
+      seen2.add(r.key);
+      const pct = r.always ? 100 : Math.round(1e3 / r.chance) / 10;
+      out.push({ key: r.key, label: r.label || r.key, pct, always: r.always });
+    }
+    return out;
+  }
+
+  // assets/flowery-gold.gif
+  var flowery_gold_default = "data:image/gif;base64,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";
 
   // packages/flowery-mode/index.js
   var TAB2 = "Flowery Mode";
@@ -16063,6 +16121,108 @@ ${CONTEST_CSS}
     document.body.appendChild(chip);
     drawChip();
   }
+  var GOLD_SEL = "img.header-profile-gold-icon";
+  var goldObserver = null;
+  function swapGold(img, on) {
+    if (on) {
+      if (img.dataset.wzFlowery) return;
+      img.dataset.wzFlowery = img.getAttribute("src") || "images/icons/gold.png";
+      img.setAttribute("src", flowery_gold_default);
+    } else if (img.dataset.wzFlowery) {
+      img.setAttribute("src", img.dataset.wzFlowery);
+      delete img.dataset.wzFlowery;
+    }
+  }
+  function setGoldIcon(on) {
+    const apply2 = () => document.querySelectorAll(GOLD_SEL).forEach((img) => swapGold(img, on));
+    if (!document.body) {
+      document.addEventListener("DOMContentLoaded", () => setGoldIcon(on), { once: true });
+      return;
+    }
+    apply2();
+    if (on && !goldObserver) {
+      goldObserver = new MutationObserver(() => {
+        if (document.querySelector(GOLD_SEL + ":not([data-wz-flowery])")) apply2();
+      });
+      goldObserver.observe(document.body, { childList: true, subtree: true });
+    } else if (!on && goldObserver) {
+      goldObserver.disconnect();
+      goldObserver = null;
+    }
+  }
+  var LS_PREFIX4 = "underscript.plugin.Wizascript.";
+  var PCTS = [0, 1, 2, 5, 10, 15, 20, 25, 33, 50, 75, 100];
+  var advancedSetting = null;
+  var advancedRows = [];
+  function advancedPercent(key2) {
+    if (!advancedSetting || !advancedSetting.value()) return null;
+    const row2 = advancedRows.find((r) => r.key === key2);
+    const v = row2 ? row2.setting.value() : "default";
+    if (v == null || v === "default") return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  }
+  function showAdvancedRows(on) {
+    const keys = advancedRows.map((r) => "floweryMode.odds." + r.key).concat(["floweryMode.oddsReset"]);
+    keys.forEach((k) => {
+      const el3 = document.getElementById(LS_PREFIX4 + k);
+      const row2 = el3 && el3.closest(".flex-start");
+      if (row2) row2.style.display = on ? "" : "none";
+    });
+  }
+  function cachedRules() {
+    try {
+      const c = JSON.parse(GM_getValue(RULES_KEY, "null"));
+      return c && c.index ? compileRules(c.index) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  var fmtPct = (p) => (p >= 1 ? String(Math.round(p)) : String(p)) + "%";
+  function registerAdvanced() {
+    advancedSetting = settings4.add("advanced", {
+      name: "Advanced Settings",
+      note: "Set the exact chance of each of Flowery's lines yourself.",
+      type: "boolean",
+      default: false,
+      onChange: (v) => showAdvancedRows(!!v)
+    });
+    const hideUnlessOn = (el3) => {
+      const row2 = el3.closest(".flex-start");
+      if (row2) row2.style.display = advancedSetting.value() ? "" : "none";
+    };
+    const compiledNow = cachedRules();
+    const defaults = compiledNow ? ruleDefaults(compiledNow) : [];
+    settings4.add("oddsReset", {
+      name: defaults.length ? "Restore Defaults" : "Restore Defaults (rules load after a refresh)",
+      note: "Put every chance below back to its default.",
+      type: "text",
+      default: ""
+    });
+    const resetButton = asButton("Restore Defaults", () => {
+      advancedRows.forEach((r) => {
+        r.setting.set("default");
+        const el3 = document.getElementById(LS_PREFIX4 + "floweryMode.odds." + r.key);
+        if (el3) el3.value = "default";
+      });
+    });
+    registerSettingWidget("floweryMode.oddsReset", (el3) => {
+      resetButton(el3);
+      hideUnlessOn(el3);
+    });
+    defaults.forEach((d) => {
+      const esc4 = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const setting5 = settings4.add("odds." + d.key, {
+        name: esc4(d.label),
+        note: `Default: ${fmtPct(d.pct)}${d.always ? " (always)" : ", before Frequency"}.`,
+        type: "select",
+        data: [[`Default (${fmtPct(d.pct)})`, "default"]].concat(PCTS.map((p) => [p === 0 ? "Off" : p + "%", String(p)])),
+        default: "default"
+      });
+      registerSettingWidget("floweryMode.odds." + d.key, hideUnlessOn);
+      advancedRows.push({ key: d.key, setting: setting5 });
+    });
+  }
   function freqNow() {
     return everyTime() && setting3("testToggle", true) ? EVERY_TIME : frequency(setting3("frequency", DEFAULT_FREQUENCY));
   }
@@ -16096,6 +16256,14 @@ ${CONTEST_CSS}
         }
       }
     });
+    settings4.add("goldIcon", {
+      name: "Flowery Gold Icon",
+      note: "Your gold icon (top of the page) becomes a spinning Flowery coin.",
+      type: "boolean",
+      default: true,
+      onChange: (v) => setGoldIcon(!!v)
+    });
+    registerAdvanced();
     const pw = getPageWindow();
     const spectating = matchesPage({ prefix: "/Spectate" });
     const reactor = createReactor({
@@ -16106,7 +16274,8 @@ ${CONTEST_CSS}
         frequency: freqNow(),
         opponent: !!setting3("opponent", true),
         endLines: !!setting3("endLines", true),
-        spectating
+        spectating,
+        percent: advancedPercent
       })
     });
     onPluginToggled("floweryMode", (on) => {
@@ -16226,6 +16395,7 @@ ${CONTEST_CSS}
       }
       if (!hit) sktArmed = true;
     }, true);
+    if (setting3("goldIcon", true)) setGoldIcon(true);
     if (setting3("testToggle", true)) {
       if (document.body) showChip();
       else document.addEventListener("DOMContentLoaded", showChip, { once: true });

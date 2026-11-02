@@ -19,9 +19,11 @@ import { matchesPage } from "../core/page-match.js";
 import { getPageWindow } from "../core/page-window.js";
 import { isDebugLogging } from "../core/debug.js";
 import { onAccountLinked } from "../core/account.js";
+import { registerSettingWidget, asButton } from "../core/setting-widgets.js";
 import {
-  FREQUENCIES, DEFAULT_FREQUENCY, EVERY_TIME, frequency, compileRules, clipName, createReactor
+  FREQUENCIES, DEFAULT_FREQUENCY, EVERY_TIME, frequency, compileRules, clipName, createReactor, ruleDefaults
 } from "./lines.js";
+import FLOWERY_GOLD from "../../assets/flowery-gold.gif";
 
 const TAB = "Flowery Mode";
 const BRANCH = "https://raw.githubusercontent.com/theWiza2341/Wizascript/sounds/flowery/";
@@ -157,6 +159,108 @@ function showChip() {
   drawChip();
 }
 
+// ---- the Flowery gold icon (purely visual) --------------------------------------------
+// The site's header gold icon (images/icons/gold.png, 64×64) → a 64×64 GIF of the
+// Flowery coin from DELTARUNE, built into the script. Watches for the header being
+// (re)drawn; turning the setting off puts the original back.
+const GOLD_SEL = "img.header-profile-gold-icon";
+let goldObserver = null;
+function swapGold(img, on) {
+  if (on) {
+    if (img.dataset.wzFlowery) return;
+    img.dataset.wzFlowery = img.getAttribute("src") || "images/icons/gold.png";
+    img.setAttribute("src", FLOWERY_GOLD);
+  } else if (img.dataset.wzFlowery) {
+    img.setAttribute("src", img.dataset.wzFlowery);
+    delete img.dataset.wzFlowery;
+  }
+}
+function setGoldIcon(on) {
+  const apply = () => document.querySelectorAll(GOLD_SEL).forEach((img) => swapGold(img, on));
+  if (!document.body) { document.addEventListener("DOMContentLoaded", () => setGoldIcon(on), { once: true }); return; }
+  apply();
+  if (on && !goldObserver) {
+    goldObserver = new MutationObserver(() => { if (document.querySelector(GOLD_SEL + ":not([data-wz-flowery])")) apply(); });
+    goldObserver.observe(document.body, { childList: true, subtree: true });
+  } else if (!on && goldObserver) {
+    goldObserver.disconnect();
+    goldObserver = null;
+  }
+}
+
+// ---- Advanced Settings: exact % per rule --------------------------------------------
+// Hidden until "Advanced Settings" is ticked (like Notepad's sub-setting: hidden
+// when Settings renders, shown/hidden live on the tick). One row per rule with a
+// `key` in the CACHED rules (new rules appear after a refresh). "Default (n%)" is
+// the rule's own odds and follows Frequency; any other choice is exact.
+const LS_PREFIX = "underscript.plugin.Wizascript.";
+const PCTS = [0, 1, 2, 5, 10, 15, 20, 25, 33, 50, 75, 100];
+let advancedSetting = null;
+const advancedRows = []; // { key, setting }
+function advancedPercent(key) {
+  if (!advancedSetting || !advancedSetting.value()) return null;
+  const row = advancedRows.find((r) => r.key === key);
+  const v = row ? row.setting.value() : "default";
+  if (v == null || v === "default") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+function showAdvancedRows(on) {
+  const keys = advancedRows.map((r) => "floweryMode.odds." + r.key).concat(["floweryMode.oddsReset"]);
+  keys.forEach((k) => {
+    const el = document.getElementById(LS_PREFIX + k);
+    const row = el && el.closest(".flex-start");
+    if (row) row.style.display = on ? "" : "none";
+  });
+}
+function cachedRules() {
+  try { const c = JSON.parse(GM_getValue(RULES_KEY, "null")); return c && c.index ? compileRules(c.index) : null; } catch (e) { return null; }
+}
+const fmtPct = (p) => (p >= 1 ? String(Math.round(p)) : String(p)) + "%";
+function registerAdvanced() {
+  advancedSetting = settings.add("advanced", {
+    name: "Advanced Settings",
+    note: "Set the exact chance of each of Flowery's lines yourself.",
+    type: "boolean",
+    default: false,
+    onChange: (v) => showAdvancedRows(!!v)
+  });
+  // Drawn always (UnderScript doesn't draw a `hidden` row, so it couldn't appear live),
+  // then hidden on the page while Advanced Settings is off.
+  const hideUnlessOn = (el) => {
+    const row = el.closest(".flex-start");
+    if (row) row.style.display = advancedSetting.value() ? "" : "none";
+  };
+  const compiledNow = cachedRules();
+  const defaults = compiledNow ? ruleDefaults(compiledNow) : [];
+  settings.add("oddsReset", {
+    name: defaults.length ? "Restore Defaults" : "Restore Defaults (rules load after a refresh)",
+    note: "Put every chance below back to its default.",
+    type: "text",
+    default: ""
+  });
+  const resetButton = asButton("Restore Defaults", () => {
+    advancedRows.forEach((r) => {
+      r.setting.set("default");
+      const el = document.getElementById(LS_PREFIX + "floweryMode.odds." + r.key);
+      if (el) el.value = "default";
+    });
+  });
+  registerSettingWidget("floweryMode.oddsReset", (el) => { resetButton(el); hideUnlessOn(el); });
+  defaults.forEach((d) => {
+    const esc = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const setting = settings.add("odds." + d.key, {
+      name: esc(d.label),
+      note: `Default: ${fmtPct(d.pct)}${d.always ? " (always)" : ", before Frequency"}.`,
+      type: "select",
+      data: [[`Default (${fmtPct(d.pct)})`, "default"]].concat(PCTS.map((p) => [p === 0 ? "Off" : p + "%", String(p)])),
+      default: "default"
+    });
+    registerSettingWidget("floweryMode.odds." + d.key, hideUnlessOn);
+    advancedRows.push({ key: d.key, setting });
+  });
+}
+
 // ---- settings ------------------------------------------------------------------------
 function freqNow() {
   return everyTime() && setting("testToggle", true) ? EVERY_TIME : frequency(setting("frequency", DEFAULT_FREQUENCY));
@@ -185,6 +289,14 @@ export function initFloweryMode(plugin) {
     default: true, // dev builds; off before release
     onChange: (v) => { if (v) showChip(); else if (chip) { chip.remove(); chip = null; } }
   });
+  settings.add("goldIcon", {
+    name: "Flowery Gold Icon",
+    note: "Your gold icon (top of the page) becomes a spinning Flowery coin.",
+    type: "boolean",
+    default: true,
+    onChange: (v) => setGoldIcon(!!v)
+  });
+  registerAdvanced();
 
   const pw = getPageWindow();
   const spectating = matchesPage({ prefix: "/Spectate" });
@@ -196,7 +308,8 @@ export function initFloweryMode(plugin) {
       frequency: freqNow(),
       opponent: !!setting("opponent", true),
       endLines: !!setting("endLines", true),
-      spectating
+      spectating,
+      percent: advancedPercent
     })
   });
 
@@ -318,6 +431,9 @@ export function initFloweryMode(plugin) {
     if (hit && sktArmed) { sktArmed = false; wiz("thbSktima"); }
     if (!hit) sktArmed = true;
   }, true);
+
+  // The gold icon.
+  if (setting("goldIcon", true)) setGoldIcon(true);
 
   // The testing toggle.
   if (setting("testToggle", true)) {

@@ -26,9 +26,12 @@ const KIND = "BACKUP";
 const CATEGORY = "Wizascript";
 
 // Bookkeeping that describes THIS install, not the player's setup.
-const SKIP_GM = new Set(["wizascript.migration.v150", "wizascript.lastSeenVersion"]);
+// Never in a backup: the Card Gallery's install secret. Anyone given the
+// file could post and vote as this player; a restored install links again.
+const SKIP_GM = new Set(["wizascript.migration.v150", "wizascript.lastSeenVersion", "wizascript.cardMaker.galleryAuth", "wizascript.cardMaker.galleryReview","wizascript.cardMaker.galleryReviewWho"]);
 // Display-only rows on the Wizascript section itself.
-const SKIP_LS_PREFIXES = ["about.", "backup."];
+// ...and dev11's reviewer key setting, if one is still lying around.
+const SKIP_LS_PREFIXES = ["about.", "backup.", "cardMaker.galleryReviewerKey"];
 
 function isBackedUpLsKey(key) {
   if (!key.startsWith(LS_PREFIX)) return false;

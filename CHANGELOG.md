@@ -2,6 +2,36 @@
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
 
+## 1.7.0
+
+### New: Card Maker
+Make your own custom cards without leaving Undercards, and keep chatting while you do. Turn it on in the **Plugins** list.
+- Click the new **Pack** button in the footer, left of Friends, or press **Primary + K** (Ctrl+K by default), to show or hide the Card Maker window. Move it by its title bar, resize it from any edge, or fill the screen with **□**. Chat windows stay on top of it, even when it fills the screen.
+- **_** shrinks it to its title bar and keeps the editor open. **×** closes the editor completely, so nothing keeps running in the background; the editors save your work as you go, so it's still there when you open it again.
+- It shows one of the community card editors: **feildmaster's Template Editor** (the default) or **UC Editor** by sernon158. Pick one in the window's title bar or on the Card Maker tab. Thanks to both of them for letting Wizascript show their editors.
+- The editors are their authors' own sites, loaded as they are. Cards you make in the Card Maker are saved separately from the same editor opened on its own site. **↗** opens the editor's site in a new tab.
+- If feildmaster's editor stays black inside the Card Maker, a note in the window offers a **hotfix** (also on the Card Maker tab). It's a stopgap until his editor is updated.
+
+### New: Card Gallery
+Share the cards you make. It's part of the Card Maker: use **Browse** and **Submit** in its title bar (**Editor** takes you back).
+- **Read from this editor** lists every group and card you've made in the editor that's open. Tick the ones to add, one by one or a whole group as a set. UC Editor group files (.uceditor) and PNG downloads can be added too.
+- Link parts into sets (A, B, C…) of up to 15 cards and rename them. **Review upload** shows exactly what will be sent; **Upload to Gallery** sends it and confirms what went. First press **Link my account**: it types a one-time line into void (chat room 0) for you to send, which proves which Undercards account you are. Your posts show that name, and one vote counts per player. **Browse** shows the gallery in four lists (**Newest**, This Week, This Month, All Time), a page at a time, and **My posts** / **Liked** narrow any list: sets show only their name, likes and dislikes sit under each card or set, and hovering a card shows it bigger with who posted it and when. Turn pages with ‹ › at the bottom right, or the scroll wheel (**Gallery: Scroll Wheel Pages**).
+- **Size** (Small / Medium / Large) zooms the cards. Large stretches them to the window's width.
+- Cards use the game's DTM-Mono font and card frames, and long names and text shrink to fit, the way UC Editor does it (thanks to sernon158).
+- Artifacts take the same space as a card (two cards' width when their text is very long), and enchantments get a plain outer frame.
+- Uploads are reviewed before they appear: until then they show under **My posts** as awaiting approval, and as "not approved" (with the reason, on hover) if they're turned down. Posts that weren't approved can be deleted for good (**Delete** under the post). Likes and dislikes are saved as you go; you can change or take back a vote. **↻** (bottom left of Browse) loads the latest posts and votes. Your draft is kept between visits. Don't want it? Turn off **Card Gallery** on the Card Maker tab.
+- **Undercards Account** (on the Wizascript tab): link Wizascript to your Undercards account once, for features that need to know who you are. The Card Gallery uses it, and you can link from there too.
+- **Contest** (★ in the title bar): themed card-design contests. Read the theme, rules and deadline, then press **Enter cards** to enter up to 3 designs (a set counts as one). You can withdraw an entry before the deadline to free its slot. There's no voting: the organizers judge the entries, and the results and every entry stay in the contest archive. Entries join the gallery once the results are out.
+
+### New: Flowery Mode
+Flowery's voice lines, even when Flowery isn't on the board. Turn it on in the **Plugins** list.
+- In matches and while spectating, Flowery reacts now and then to some cards being played or cast, some attacks and a few other moments, including Flowery's normal interactions. There are lines in a few places around the site too. Part of the fun is finding out where.
+- **Frequency** (on the Flowery Mode tab) sets how often: Normal is about 1-2 lines a match, and it goes up and down from there. **Opponent's Cards**, **While Spectating** and **Win/Loss Lines** turn those parts off, and **Every :Glue:** says "glue" for every Glue emote.
+- Lines follow the game's sound volume. With Flowery on the board, the game's own lines play as usual and nothing doubles up.
+- New lines and places can be added without a Wizascript update.
+- **Advanced Settings** (on the Flowery Mode tab) lets you set the exact chance of each line yourself, with each one's default shown and **Restore Defaults** to undo.
+- **Flowery Gold Icon:** your gold icon at the top of the page becomes a spinning Flowery coin.
+
 ## 1.6.2
 
 ### Improvements

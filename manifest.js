@@ -2,6 +2,7 @@ import { bootstrap } from "./packages/core/bootstrap.js";
 import { flushKeybindRegistrations, initKeybinds } from "./packages/core/keybinds.js";
 import { registerPluginToggles, runMigrations } from "./packages/core/plugins.js";
 import { registerAboutSection, showWhatsNew } from "./packages/core/about.js";
+import { registerAccountSetting } from "./packages/core/account.js";
 import { registerBackupSection } from "./packages/core/backup.js";
 import { registerDebugSetting } from "./packages/core/debug.js";
 import { registerPluginGuides } from "./packages/core/plugin-guides.js";
@@ -14,6 +15,8 @@ import { initUcTv } from "./packages/uc-tv/index.js";
 // Tier List Maker is a full plugin with its own tab; its files live in
 // packages/misc/tier-list/ because it started out as a Misc feature.
 import { initTierList } from "./packages/misc/tier-list/index.js";
+import { initCardMaker } from "./packages/card-maker/index.js";
+import { initFloweryMode } from "./packages/flowery-mode/index.js";
 import { initMisc } from "./packages/misc/index.js";
 import { initWishlist } from "./packages/misc/wishlist/index.js";
 import { initCardHistory } from "./packages/misc/card-history/index.js";
@@ -46,6 +49,7 @@ bootstrap(plugin => {
 
   registerPluginToggles(plugin);
   registerAboutSection(plugin);
+  registerAccountSetting(plugin);
   registerBackupSection(plugin);
   registerDebugSetting(plugin);
   initTabBar(plugin);
@@ -55,6 +59,8 @@ bootstrap(plugin => {
   initDeckTracker(plugin); // shown to players as "Card Tracker"
   initUcTv(plugin);
   initTierList(plugin);
+  initCardMaker(plugin);
+  initFloweryMode(plugin);
   const miscSettings = initMisc(plugin);
   initWishlist(plugin); // Miscellaneous, but with its own tab
   initCardHistory(plugin); // Miscellaneous, no tab

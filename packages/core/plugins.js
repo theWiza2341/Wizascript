@@ -64,6 +64,21 @@ export const PLUGINS = [
     usesKeybinds: true
   },
   {
+    id: "cardMaker",
+    category: "Plugins",
+    name: "Card Maker",
+    key: "cardMaker.enabled",
+    note: "Make custom cards in a community card editor without leaving the game.",
+    usesKeybinds: true
+  },
+  {
+    id: "floweryMode",
+    category: "Plugins",
+    name: "Flowery Mode",
+    key: "floweryMode.enabled",
+    note: "Flowery's voice lines, even when Flowery isn't on the board."
+  },
+  {
     id: "controller",
     category: "Plugins",
     name: "Controller Support",
@@ -148,7 +163,10 @@ export function registerPluginToggles(plugin) {
       // Appends UnderScript's own "requires a page refresh" note.
       refresh: true,
       category: p.category,
-      onChange: (value) => applySubSettingVisibility(p.id, !!value)
+      onChange: (value) => {
+        applySubSettingVisibility(p.id, !!value);
+        (toggleListeners[p.id] || []).forEach((fn) => { try { fn(!!value); } catch (e) { /* a listener's problem */ } });
+      }
     });
 
     if (p.id === "notepad") {
@@ -171,6 +189,14 @@ export function registerPluginToggles(plugin) {
       applySubSettingVisibility(pluginId);
     }));
   });
+}
+
+// Runs fn(on) when the player ticks or unticks a plugin's toggle (the change
+// itself; the plugin starts or stops after the refresh). Flowery Mode plays a
+// line when it's turned on.
+const toggleListeners = {};
+export function onPluginToggled(id, fn) {
+  (toggleListeners[id] = toggleListeners[id] || []).push(fn);
 }
 
 export function getNotepadOpenOnLoadSetting() {
@@ -203,7 +229,8 @@ const LABEL_TO_PLUGIN = {
   "UC TV": "ucTv",
   "Notepad": "notepad",
   "Card Tracker": "cardTracker",
-  "Tier List": "tierList"
+  "Tier List": "tierList",
+  "Card Maker": "cardMaker"
 };
 
 export function pluginIdForLabel(label) {

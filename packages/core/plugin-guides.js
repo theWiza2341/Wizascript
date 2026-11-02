@@ -38,6 +38,11 @@ const primary = () => `<b>${esc(getPrimaryKeyDisplay())}</b>`;
 const pad = (i) => `<b>${esc(bindingToDisplay(i))}</b>`;
 // A player's current controller binding (button or key).
 const ctl = (binding) => `<b>${esc(bindingToDisplay(binding))}</b>`;
+// A boolean setting's current value, straight from UnderScript's storage.
+function settingOn(key, fallback) {
+  const v = localStorage.getItem(`underscript.plugin.Wizascript.${key}`);
+  return v === null ? fallback : v === "1" || v === "true";
+}
 
 // tab: the plugin's settings tab, or null if it has none.
 const GUIDES = {
@@ -130,6 +135,17 @@ const GUIDES = {
       `Controller: point the cursor at it, press ${pad(3)} to right-click, then ${pad(0)} on the menu. ${pad(1)} closes it.`
     ] : [])
   },
+  floweryMode: {
+    tab: "Flowery Mode",
+    pages: "every page (most lines are in matches and Spectate)",
+    summary: "Flowery speaks up now and then: on some cards, attacks and moments in matches, and in a few places around the site.",
+    points: () => [
+      'The lines are rare on purpose. <b>Frequency</b> sets how often (Normal is about 1-2 lines a match).',
+      'With Flowery on the board, the game\'s own lines play as usual and nothing doubles up.',
+      'Lines follow the game\'s sound volume. <b>Opponent\'s Cards</b>, <b>While Spectating</b> and <b>Win/Loss Lines</b> turn those parts off; <b>Every :Glue:</b> says "glue" for every Glue emote.',
+      '<b>Advanced Settings</b> sets each line\'s exact chance (its default is shown; <b>Restore Defaults</b> undoes it). <b>Flowery Gold Icon</b> turns your gold icon into a Flowery coin.'
+    ]
+  },
   cardHistory: {
     tab: null,
     pages: "the Crafting, Decks and Artifacts pages",
@@ -154,6 +170,23 @@ const GUIDES = {
       '<b>Lists ▾</b> switches or adds lists, and <b>Share…</b> / <b>Import…</b> swaps them with friends as codes. Saves automatically; <b>↶</b> undoes.'
     ].concat(isPluginEnabled("controller") ? [
       `Controller: Primary + ${ctl(getBoundButton("toggleTierList"))} opens it. The d-pad moves around; ${ctl(getBoundTierListButton("tlSelect"))} picks up / places, ${ctl(getBoundTierListButton("tlQuickSend"))} sends to a tier, ${ctl(getBoundTierListButton("tlJump"))} jumps between tiers and items, ${ctl(getBoundTierListButton("tlBack"))} cancels. Primary + ${ctl(getBoundButton("tierListFillScreen"))} fills the screen.`
+    ] : [])
+  },
+  cardMaker: {
+    tab: "Card Maker",
+    pages: "every page",
+    summary: "Make custom cards in a community card editor, next to chat.",
+    points: () => [
+      `The <b>Pack</b> button in the footer (left of Friends) or ${key("toggleCardMaker", "KeyK")} shows/hides it. Drag its title bar to move it, its edges to resize it; <b>□</b> fills the screen. Chat stays on top, so you can keep talking.`,
+      '<b>_</b> shrinks it to its title bar and keeps the editor open. <b>×</b> closes the editor; it saves your work as you go, so it\'s there next time.',
+      'Pick <b>feildmaster\'s Template Editor</b> or <b>UC Editor</b> in its title bar. Both are their authors\' own sites; <b>↗</b> opens the one you\'re using in a new tab.',
+      'Cards you make here are saved separately from the editor\'s own site. Use the editor\'s download/upload to move them across.',
+      'If feildmaster\'s editor stays black, turn on the <b>hotfix</b> (on the Card Maker tab, or the note that appears in the window).'
+    ].concat(settingOn("cardMaker.gallery", true) ? [
+      '<b>Browse</b> / <b>Submit</b> (title bar) open the Card Gallery. First press <b>Link my account</b>: it types a one-time line into void (chat room 0) for you to send, so your posts and votes count as your Undercards account.',
+      'In Submit, <b>Read from this editor</b> lists the cards you\'ve made; tick the ones to add, link them into sets, then <b>Review upload</b> and <b>Upload to Gallery</b>. Uploads show to everyone once approved.',
+      '<b>Contest</b> shows the running contest (theme, rules, deadline) and past results. <b>Enter cards</b> takes you to Submit, to enter up to 3 designs.',
+      'Given a gallery key? Press <b>Redeem Key</b> on the Card Maker tab and enter it.'
     ] : [])
   }
 };

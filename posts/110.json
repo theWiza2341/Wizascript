@@ -1,0 +1,25 @@
+{
+  "id": "110",
+  "kind": "single",
+  "title": "Guardener",
+  "author": "Legacy_03",
+  "postedAt": 1793731258965,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Guardener",
+      "desc": "Armor. Taunt. Magic and Turn start: Switch: Give all [[Ally Plants +2 HP]] or [[Allies on enchanted slots +2 ATK]].",
+      "cost": 9,
+      "atk": 6,
+      "hp": 7,
+      "rarity": "UTY_LEGENDARY",
+      "tribes": [
+        {
+          "name": "",
+          "icon": "art/tribe-b0fea06b094f.png"
+        }
+      ],
+      "art": "art/110-0.png"
+    }
+  ]
+}

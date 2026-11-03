@@ -1,0 +1,20 @@
+{
+  "id": "10o",
+  "kind": "single",
+  "title": "Zenith Wing",
+  "author": "Sernon158",
+  "postedAt": 1793718494490,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Zenith Wing",
+      "desc": "Haste. Dust: Deal DMG to all enemy monsters equal to the excess DMG this received.",
+      "cost": 7,
+      "atk": 3,
+      "hp": 4,
+      "rarity": "UTY_EPIC",
+      "art": "art/10o-0.png"
+    }
+  ]
+}

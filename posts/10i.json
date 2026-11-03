@@ -1,0 +1,19 @@
+{
+  "id": "10i",
+  "kind": "single",
+  "title": "Shovels x999",
+  "author": "clpb",
+  "postedAt": 1793677296037,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Shovels x999",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/10i-0-pic.png"
+    }
+  ]
+}

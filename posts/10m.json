@@ -1,0 +1,20 @@
+{
+  "id": "10m",
+  "kind": "single",
+  "title": "Jail Handcuff",
+  "author": "Sernon158",
+  "postedAt": 1793718494490,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Jail Handcuff",
+      "desc": "Magic: Paralyze an enemy monster. Dust: Silence it.",
+      "cost": 3,
+      "atk": 2,
+      "hp": 5,
+      "rarity": "DELTARUNE_EPIC",
+      "art": "art/10m-0.png"
+    }
+  ]
+}

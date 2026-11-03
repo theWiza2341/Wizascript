@@ -180,8 +180,7 @@ const GUIDES = {
       `The <b>Pack</b> button in the footer (left of Friends) or ${key("toggleCardMaker", "KeyK")} shows/hides it. Drag its title bar to move it, its edges to resize it; <b>□</b> fills the screen. Chat stays on top, so you can keep talking.`,
       '<b>_</b> shrinks it to its title bar and keeps the editor open. <b>×</b> closes the editor; it saves your work as you go, so it\'s there next time.',
       'Pick <b>feildmaster\'s Template Editor</b> or <b>UC Editor</b> in its title bar. Both are their authors\' own sites; <b>↗</b> opens the one you\'re using in a new tab.',
-      'Cards you make here are saved separately from the editor\'s own site. Use the editor\'s download/upload to move them across.',
-      'If feildmaster\'s editor stays black, turn on the <b>hotfix</b> (on the Card Maker tab, or the note that appears in the window).'
+      'Cards you make here are saved separately from the editor\'s own site. Use the editor\'s download/upload to move them across.'
     ].concat(settingOn("cardMaker.gallery", true) ? [
       '<b>Browse</b> / <b>Submit</b> (title bar) open the Card Gallery. First press <b>Link my account</b>: it types a one-time line into void (chat room 0) for you to send, so your posts and votes count as your Undercards account.',
       'In Submit, <b>Read from this editor</b> lists the cards you\'ve made; tick the ones to add, link them into sets, then <b>Review upload</b> and <b>Upload to Gallery</b>. Uploads show to everyone once approved.',

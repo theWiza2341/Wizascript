@@ -8,10 +8,10 @@
 //   editors.js  which editors, their sites
 //   window.js   the window: move, resize, fill screen, shrink, saved place
 //   styles.js   CSS
-//   storage.js  GM storage (window, hotfix)
-//   frame.js    runs INSIDE feildmaster's editor (its own bundle, see
-//               build.js): reports whether the editor drew, and applies
-//               the hotfix when it's on
+//   storage.js  GM storage (window)
+//   frame.js    runs INSIDE the editors (its own bundle, see build.js):
+//               reads cards for the Card Gallery, and reports whether
+//               feildmaster's editor drew
 //
 // Each editor is the real site, loaded in a frame from its own server
 // with its author's permission; nothing here reads or changes what
@@ -36,7 +36,7 @@ import { debugLoggingSetting } from "../core/debug.js";
 import { injectCardMakerStyle } from "./styles.js";
 import { buildWindow } from "./window.js";
 import { EDITORS, EDITOR_LABELS, DEFAULT_EDITOR, editorForLabel, FRAME_MESSAGE } from "./editors.js";
-import { isHotfixOn, setHotfix } from "./storage.js";
+import { OLD_HOTFIX_KEY } from "./storage.js";
 import { buildGalleryPanel } from "./gallery/panel.js";
 import { reviewWhoami } from "./gallery/api.js";
 import { getPageWindow } from "../core/page-window.js";
@@ -55,7 +55,6 @@ const UNLOAD_MS = 400;
 
 let settings = null;
 let editorSetting = null;
-let hotfixSetting = null;
 let gallerySetting = null;
 let wheelSetting = null;
 // A review/judge key the player redeemed (Redeem Key on the Card Maker tab),
@@ -238,7 +237,7 @@ function mount() {
     if (!e.data.status) return;
     clearTimeout(f.noReport);
     f.status = e.data.status;
-    log(`${EDITORS[key].label}: ${e.data.status}${e.data.hotfixed ? " (hotfix applied)" : ""}`);
+    log(`${EDITORS[key].label}: ${e.data.status}`);
     updateNote();
   }, { signal });
 
@@ -296,8 +295,9 @@ function reloadEditor(key) {
   updateNote();
 }
 
-// The note across the top of the window when feildmaster's editor didn't
-// draw: offers the hotfix (or, with it on already, the editor's own site).
+// The note across the top of the window if feildmaster's editor didn't
+// draw (frame.js says so, or Wizascript never reported from inside it):
+// offers his site. (Before his 2026-11-02 fix this also offered a hotfix.)
 function updateNote() {
   if (!mounted) return;
   const { note } = mounted.win;
@@ -309,33 +309,21 @@ function updateNote() {
   if (key !== "feildmaster" || !["broken", "silent"].includes(status)) return;
 
   const text = document.createElement("span");
-  const button = (label, fn) => {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "wz-cm-btn";
-    b.textContent = label;
-    b.addEventListener("click", fn);
-    return b;
-  };
-  const site = button("Open its site ↗", () => window.open(EDITORS[key].url, "_blank", "noopener"));
-  if (status === "silent") {
-    text.textContent = "If the editor stays black, open it on its own site instead.";
-    note.append(text, site);
-  } else if (!isHotfixOn()) {
-    text.textContent = "Trouble loading? feildmaster's editor can't start inside the Card Maker yet. The hotfix lets it.";
-    note.append(text, button("Turn on the hotfix", () => setHotfixEverywhere(true)), site);
-  } else {
-    text.textContent = "feildmaster's editor still didn't start, even with the hotfix.";
-    note.append(text, site, button("Turn off the hotfix", () => setHotfixEverywhere(false)));
-  }
+  const site = document.createElement("button");
+  site.type = "button";
+  site.className = "wz-cm-btn";
+  site.textContent = "Open its site ↗";
+  site.addEventListener("click", () => window.open(EDITORS[key].url, "_blank", "noopener"));
+  text.textContent = status === "silent" ? "If the editor stays black, open it on its own site instead." : "feildmaster's editor didn't start here. Try ↻, or open it on its own site.";
+  note.append(text, site);
   note.hidden = false;
 }
 
-// The setting on the tab and the GM copy frame.js reads always agree.
-function setHotfixEverywhere(on) {
-  setHotfix(on);
-  if (hotfixSetting && hotfixSetting.value() !== on) hotfixSetting.set(on);
-  if (mounted && mounted.frames.feildmaster) reloadEditor("feildmaster");
+// 1.7.0-1.7.1 had a "Hotfix: feildmaster's Editor" setting (GM copy for
+// frame.js). His editor fixed it on 2026-11-02; clear what's left.
+function dropOldHotfix() {
+  try { GM_deleteValue(OLD_HOTFIX_KEY); } catch (e) { /* none */ }
+  try { localStorage.removeItem("underscript.plugin.Wizascript.cardMaker.feildHotfix"); } catch (e) { /* none */ }
 }
 
 // ---- the footer button ---------------------------------------------------------------
@@ -490,16 +478,6 @@ export function initCardMaker(plugin) {
     default: EDITORS[DEFAULT_EDITOR].label,
     onChange: () => { if (mounted) showEditor(currentEditor()); }
   });
-  hotfixSetting = settings.add("feildHotfix", {
-    name: "Hotfix: feildmaster's Editor",
-    note: "Turn on if his editor stays black in the Card Maker.",
-    type: "boolean",
-    default: false,
-    onChange: (value) => {
-      setHotfix(!!value);
-      if (mounted && mounted.frames.feildmaster) reloadEditor("feildmaster");
-    }
-  });
 
   gallerySetting = settings.add("gallery", {
     name: "Card Gallery",
@@ -535,11 +513,10 @@ export function initCardMaker(plugin) {
     onMatch: () => toggleCardMaker()
   });
 
+  dropOldHotfix();
   if (!isPluginEnabled("cardMaker")) return;
   dropOldReviewKey();
   setTimeout(recheckKey, 4000);
-  // GM copy follows the setting (e.g. after Restore).
-  if (isHotfixOn() !== !!hotfixSetting.value()) setHotfix(!!hotfixSetting.value());
 
   if (!addFooterButton()) {
     // Footer drawn later than us on some pages: watch briefly for it.

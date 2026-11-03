@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.7.1
+// @version      1.7.2
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -22,9 +22,6 @@
 
 if (location.hostname === "undercard.feildmaster.com" || (location.hostname === "sernon158.github.io" && location.pathname.startsWith("/uc-editor"))) {
 (() => {
-  // packages/card-maker/storage.js
-  var HOTFIX_KEY = "wizascript.cardMaker.hotfix";
-
   // packages/card-maker/editors.js
   var EDITORS = {
     feildmaster: {
@@ -217,59 +214,23 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
   }
 
   // packages/card-maker/frame.js
-  var TOAST_FILE = "/resources/vendor/simpletoast.core.js";
-  var FRAME_CHECK = "if (window !== window.top) return;";
   var GIVE_UP_MS = 15e3;
-  var page2 = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
+  var GALLERY_SITE = "https://thewiza2341.github.io";
   var sleep = (ms) => new Promise((ok) => setTimeout(ok, ms));
   var drawn = () => !!document.querySelector(".element");
   var started = () => !document.getElementById("loading");
-  function runInPage(code) {
-    const s = document.createElement("script");
-    s.textContent = code;
-    (document.head || document.documentElement).appendChild(s);
-    s.remove();
-  }
-  async function installToast() {
-    try {
-      const src = await (await fetch(location.origin + TOAST_FILE, { cache: "no-store" })).text();
-      if (!src.includes(FRAME_CHECK)) return false;
-      runInPage(src.replace(FRAME_CHECK, ""));
-      return typeof page2.SimpleToast === "function";
-    } catch (e) {
-      console.warn("[Wizascript Card Maker] hotfix couldn't load SimpleToast", e);
-      return false;
-    }
-  }
   function watchFeildmaster(report) {
-    const hotfix = (() => {
-      try {
-        return GM_getValue(HOTFIX_KEY, "") === "1";
-      } catch (e) {
-        return false;
-      }
-    })();
     (async () => {
-      let hotfixed = false;
-      if (hotfix && typeof page2.SimpleToast !== "function") hotfixed = await installToast();
       const t0 = Date.now();
-      let restarted = false;
       while (Date.now() - t0 < GIVE_UP_MS) {
-        if (drawn()) return report({ status: "ok", hotfixed });
+        if (drawn()) return report({ status: "ok" });
         if (started()) {
           await sleep(1500);
-          if (drawn()) return report({ status: "ok", hotfixed });
-          if (hotfixed && !restarted) {
-            restarted = true;
-            runInPage('import("/resources/modules/UndercardEditor.js").then((m) => m.default.init());');
-            await sleep(1500);
-            continue;
-          }
-          return report({ status: "broken", hotfixed, toast: typeof page2.SimpleToast === "function" });
+          return report({ status: drawn() ? "ok" : "broken" });
         }
         await sleep(250);
       }
-      report({ status: "broken", hotfixed, toast: typeof page2.SimpleToast === "function" });
+      report({ status: "broken" });
     })();
   }
   function runInsideEditor() {
@@ -283,7 +244,7 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
     } catch (e) {
       return;
     }
-    if (!/^https:\/\/([a-z0-9-]+\.)*undercards\.net$/.test(parentOrigin)) return;
+    if (!/^https:\/\/([a-z0-9-]+\.)*undercards\.net$/.test(parentOrigin) && parentOrigin !== GALLERY_SITE) return;
     const report = (data) => window.parent.postMessage({ tag: FRAME_MESSAGE, ...data }, parentOrigin);
     window.addEventListener("message", async (e) => {
       if (e.source !== window.parent || e.origin !== parentOrigin) return;
@@ -311,7 +272,7 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
   }
 
   // packages/core/version.js
-  var SUITE_VERSION = "1.7.1";
+  var SUITE_VERSION = "1.7.2";
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
@@ -1066,6 +1027,14 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
   var CHANGELOG_default = `# Changelog
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
+
+## 1.7.2
+
+### New
+- **Card Gallery website:** the Card Gallery now has its own page, for friends without Wizascript: https://thewiza2341.github.io/Wizascript-Gallery/. It's the same gallery (same posts, votes and contests). With Wizascript installed, **Read from this editor** works there too.
+
+### Changes
+- **Card Maker:** removed the hotfix for feildmaster's editor. His editor now starts inside the Card Maker on its own (thanks, feildmaster!), so the setting and its note are gone.
 
 ## 1.7.1
 
@@ -3436,8 +3405,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         `The <b>Pack</b> button in the footer (left of Friends) or ${key("toggleCardMaker", "KeyK")} shows/hides it. Drag its title bar to move it, its edges to resize it; <b>\u25A1</b> fills the screen. Chat stays on top, so you can keep talking.`,
         "<b>_</b> shrinks it to its title bar and keeps the editor open. <b>\xD7</b> closes the editor; it saves your work as you go, so it's there next time.",
         "Pick <b>feildmaster's Template Editor</b> or <b>UC Editor</b> in its title bar. Both are their authors' own sites; <b>\u2197</b> opens the one you're using in a new tab.",
-        "Cards you make here are saved separately from the editor's own site. Use the editor's download/upload to move them across.",
-        "If feildmaster's editor stays black, turn on the <b>hotfix</b> (on the Card Maker tab, or the note that appears in the window)."
+        "Cards you make here are saved separately from the editor's own site. Use the editor's download/upload to move them across."
       ].concat(settingOn("cardMaker.gallery", true) ? [
         "<b>Browse</b> / <b>Submit</b> (title bar) open the Card Gallery. First press <b>Link my account</b>: it types a one-time line into void (chat room 0) for you to send, so your posts and votes count as your Undercards account.",
         "In Submit, <b>Read from this editor</b> lists the cards you've made; tick the ones to add, link them into sets, then <b>Review upload</b> and <b>Upload to Gallery</b>. Uploads show to everyone once approved.",
@@ -11933,7 +11901,7 @@ Version: v${version}`;
 
   // packages/card-maker/storage.js
   var WINDOW_KEY2 = "wizascript.cardMaker.window";
-  var HOTFIX_KEY = "wizascript.cardMaker.hotfix";
+  var OLD_HOTFIX_KEY = "wizascript.cardMaker.hotfix";
   function loadWindowState2() {
     try {
       const raw = GM_getValue(WINDOW_KEY2, null);
@@ -11947,20 +11915,6 @@ Version: v${version}`;
       GM_setValue(WINDOW_KEY2, JSON.stringify(state3));
     } catch (e) {
       console.warn("[Card Maker] Failed to save the window", e);
-    }
-  }
-  function isHotfixOn() {
-    try {
-      return GM_getValue(HOTFIX_KEY, "") === "1";
-    } catch (e) {
-      return false;
-    }
-  }
-  function setHotfix(on) {
-    try {
-      GM_setValue(HOTFIX_KEY, on ? "1" : "");
-    } catch (e) {
-      console.warn("[Card Maker] Failed to save the hotfix setting", e);
     }
   }
 
@@ -12218,7 +12172,8 @@ Version: v${version}`;
   var CARD_W = 176;
   var CARD_H = 246;
   var UCE = "https://sernon158.github.io/uc-editor/";
-  var ASSET_BASES = ["/images/", `${UCE}images/`];
+  var UC = typeof globalThis !== "undefined" && typeof globalThis.WZ_ASSET_ORIGIN === "string" ? globalThis.WZ_ASSET_ORIGIN : "";
+  var ASSET_BASES = [`${UC}/images/`, `${UCE}images/`];
   var assetBase = null;
   var FRAME = (kind) => `${assetBase || ASSET_BASES[0]}frameSkins/Undertale/frame_${kind}.png`;
   var KEYWORDS = ["Flowery Power", "Turn start", "Turn end", "Magic", "Dust", "Charge", "Haste", "Armor", "Disarmed", "Candy", "Fatigue", "Turbo", "Support", "Paralyze", "Silence", "Transparency", "Invulnerable", "Taunt", "Dodge", "Burn", "Synergy", "Shock", "Delay", "Generated", "Need", "Loop", "Program", "Switch", "Catch", "Bullseye", "Wanted", "Erase", "Darkspawn", "Goal", "Reward", "Quest"];
@@ -12407,7 +12362,7 @@ Version: v${version}`;
   }
   var CARD_FONT = `"DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace`;
   var TILE_CSS = `
-@font-face { font-family: "WZ DTM Mono"; src: url("/fonts/DTM-Mono.otf") format("opentype"), url("${UCE}images/fonts/DTM-Mono.otf") format("opentype"); font-display: swap; }
+@font-face { font-family: "WZ DTM Mono"; src: ${UC ? "" : `url("/fonts/DTM-Mono.otf") format("opentype"), `}url("${UCE}images/fonts/DTM-Mono.otf") format("opentype"); font-display: swap; }
 .wz-gl-card, .wz-gl-artifact { font-family: ${CARD_FONT}; }
 /* Like the game (Bootstrap): sizes include padding and borders, inside or outside the window. */
 .wz-gl-card, .wz-gl-card *, .wz-gl-artifact, .wz-gl-artifact * { box-sizing: border-box; }
@@ -14022,7 +13977,7 @@ ${CONTEST_CSS}
   var setColor = (set) => COLORS[(set.letter.charCodeAt(0) - 65) % COLORS.length];
   var sameCard = (p, source, group, raw) => p.source === source && p.editorGroup === group && p.name === (raw.name || "") && p.type === raw.type;
   function buildGalleryPanel({ requestRead, editorLabel, wheelPages, reviewerKey: reviewerKey2 = () => "", onKeyRejected = () => {
-  } }) {
+  }, linkSteps = null, watchLink = false, submitNote = null }) {
     injectStyle2();
     const draft2 = getDraft();
     let tab = draft2.parts.length ? "browse" : "submit";
@@ -14353,7 +14308,7 @@ ${CONTEST_CSS}
               render2();
             })
           ),
-          h("div", { class: "dim", text: "Send it to them privately (a DM, not a channel). They enter it with Redeem Key, on the Card Maker tab of Wizascript's settings." })
+          h("div", { class: "dim", text: "Send it to them privately (a DM, not a channel). They enter it with Redeem Key: on the Card Maker tab of Wizascript's settings, or the key button at the bottom left of the gallery website." })
         ));
       }
       if (rev.sectionError) parts.push(h("div", { class: "wz-gl-issues", text: rev.sectionError }));
@@ -14470,36 +14425,61 @@ ${CONTEST_CSS}
         if (open) render2();
       }
     }
+    let linkWatch = null;
+    function stopWatch() {
+      clearInterval(linkWatch);
+      linkWatch = null;
+    }
     async function startLink() {
       say("Getting a link code\u2026");
       try {
         linking = await linkStart();
         say("");
+        if (watchLink) {
+          stopWatch();
+          const until = Math.min(Date.now() + 18e4, linking.expiresAt || Infinity);
+          linkWatch = setInterval(() => {
+            if (!linking || Date.now() > until) return stopWatch();
+            checkLink(true);
+          }, 5e3);
+        }
       } catch (e) {
         say(errText(e));
       }
       render2();
     }
-    async function checkLink() {
-      say("Looking for your line in void\u2026");
+    let checking3 = false;
+    async function checkLink(quiet) {
+      if (checking3) return;
+      checking3 = true;
+      if (!quiet) say("Looking for your line in void\u2026");
       try {
         const r = await linkCheck();
         if (r.linked) {
           linking = null;
+          stopWatch();
           acct.account = r.account;
           acct.cooldownUntil = r.cooldownUntil || null;
           accountChanged(r.account, r.cooldownUntil, true);
           say(`Linked as ${r.account}.`);
           refreshMe(true);
           refreshGallery(true);
-        } else say(r.message || "Not seen yet. Send the line in void, then check again.");
+        } else if (!quiet) say(r.message || "Not seen yet. Send the line in void, then check again.");
+        else {
+          checking3 = false;
+          return;
+        }
       } catch (e) {
-        if (e.code === "cooldown") say(`This install switched accounts less than 24 hours ago. You can switch again ${new Date(e.extra.cooldownUntil).toLocaleString()}.`);
-        else if (e.code === "code_expired") {
+        if (e.code === "cooldown") {
+          stopWatch();
+          say(`This install switched accounts less than 24 hours ago. You can switch again ${new Date(e.extra.cooldownUntil).toLocaleString()}.`);
+        } else if (e.code === "code_expired") {
           linking = null;
+          stopWatch();
           say("That code expired. Press Link my account again.");
-        } else say(errText(e));
+        } else if (!quiet) say(errText(e));
       }
+      checking3 = false;
       render2();
     }
     function accountBox() {
@@ -14530,6 +14510,15 @@ ${CONTEST_CSS}
         if (!openVoid(linking.line)) say("This page has no chat. Copy the line and send it in void from another page.");
       }, { primary: true, title: "Opens chat room 0 with the line filled in. You press Enter." });
       sendBtn.disabled = !canOpenVoid();
+      const steps = linkSteps ? linkSteps({ line: linking.line, say }) : [h(
+        "li",
+        {},
+        "Send this line in void (chat room 0) from the account you want to post and vote as: ",
+        line,
+        " ",
+        sendBtn,
+        canOpenVoid() ? null : h("span", { class: "dim", text: " (no chat on this page: send it from another page)" })
+      )];
       return h(
         "div",
         { class: "wz-gl-link" },
@@ -14537,20 +14526,13 @@ ${CONTEST_CSS}
         h(
           "ol",
           {},
-          h(
-            "li",
-            {},
-            "Send this line in void (chat room 0) from the account you want to post and vote as: ",
-            line,
-            " ",
-            sendBtn,
-            canOpenVoid() ? null : h("span", { class: "dim", text: " (no chat on this page: send it from another page)" })
-          ),
-          h("li", {}, "Then: ", button2("Check link", () => checkLink(), { primary: true }), h("span", { class: "dim", text: ` The code works for ${mins} more minute${mins === 1 ? "" : "s"}.` }))
+          ...steps,
+          h("li", {}, linkWatch ? "Then come back here: this page notices by itself, or press " : "Then: ", button2("Check link", () => checkLink(), { primary: true }), h("span", { class: "dim", text: ` The code works for ${mins} more minute${mins === 1 ? "" : "s"}.` }))
         ),
         acct.account ? h("div", { class: "dim", text: `Switching from ${acct.account}: an install can switch accounts once a day, and accounts that share an install count as one voter.` }) : null,
         button2("Cancel", () => {
           linking = null;
+          stopWatch();
           say("");
           render2();
         }, { cls: "wz-gl-small" })
@@ -14773,7 +14755,7 @@ ${CONTEST_CSS}
       bar.children[2].disabled = sel.length < 2 || sel.length > SET_CAP;
       if (sel.length > SET_CAP) bar.children[2].title = `Sets can have up to ${SET_CAP} cards`;
       bar.children[3].disabled = !sel.some((p) => p.group);
-      const note = h("p", { class: "wz-gl-note", text: draft2.parts.length ? "Click parts to select them, then Link selected to make a set. Anything not in a set is submitted on its own." : "Make cards in the editor, then Read from this editor and tick the ones to add. Files work too." });
+      const note = h("p", { class: "wz-gl-note", text: draft2.parts.length ? "Click parts to select them, then Link selected to make a set. Anything not in a set is submitted on its own." : submitNote || "Make cards in the editor, then Read from this editor and tick the ones to add. Files work too." });
       return h("div", {}, bar, note, lastUpload ? uploadedBox() : null, draft2.parts.length ? uploadBox() : null, read2 && !reviewing ? picker() : null, setsRow(), tray());
     }
     let removeArmed = false;
@@ -15251,7 +15233,6 @@ ${CONTEST_CSS}
   var UNLOAD_MS = 400;
   var settings3 = null;
   var editorSetting = null;
-  var hotfixSetting = null;
   var gallerySetting = null;
   var wheelSetting = null;
   var REVIEW_KEY = "wizascript.cardMaker.galleryReview";
@@ -15424,7 +15405,7 @@ ${CONTEST_CSS}
       if (!e.data.status) return;
       clearTimeout(f.noReport);
       f.status = e.data.status;
-      log(`${EDITORS[key2].label}: ${e.data.status}${e.data.hotfixed ? " (hotfix applied)" : ""}`);
+      log(`${EDITORS[key2].label}: ${e.data.status}`);
       updateNote();
     }, { signal });
     mounted2 = { controller, win, frames: {}, syncLayer, gallery };
@@ -15489,31 +15470,24 @@ ${CONTEST_CSS}
     note.hidden = true;
     if (key2 !== "feildmaster" || !["broken", "silent"].includes(status)) return;
     const text = document.createElement("span");
-    const button4 = (label2, fn) => {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "wz-cm-btn";
-      b.textContent = label2;
-      b.addEventListener("click", fn);
-      return b;
-    };
-    const site = button4("Open its site \u2197", () => window.open(EDITORS[key2].url, "_blank", "noopener"));
-    if (status === "silent") {
-      text.textContent = "If the editor stays black, open it on its own site instead.";
-      note.append(text, site);
-    } else if (!isHotfixOn()) {
-      text.textContent = "Trouble loading? feildmaster's editor can't start inside the Card Maker yet. The hotfix lets it.";
-      note.append(text, button4("Turn on the hotfix", () => setHotfixEverywhere(true)), site);
-    } else {
-      text.textContent = "feildmaster's editor still didn't start, even with the hotfix.";
-      note.append(text, site, button4("Turn off the hotfix", () => setHotfixEverywhere(false)));
-    }
+    const site = document.createElement("button");
+    site.type = "button";
+    site.className = "wz-cm-btn";
+    site.textContent = "Open its site \u2197";
+    site.addEventListener("click", () => window.open(EDITORS[key2].url, "_blank", "noopener"));
+    text.textContent = status === "silent" ? "If the editor stays black, open it on its own site instead." : "feildmaster's editor didn't start here. Try \u21BB, or open it on its own site.";
+    note.append(text, site);
     note.hidden = false;
   }
-  function setHotfixEverywhere(on) {
-    setHotfix(on);
-    if (hotfixSetting && hotfixSetting.value() !== on) hotfixSetting.set(on);
-    if (mounted2 && mounted2.frames.feildmaster) reloadEditor("feildmaster");
+  function dropOldHotfix() {
+    try {
+      GM_deleteValue(OLD_HOTFIX_KEY);
+    } catch (e) {
+    }
+    try {
+      localStorage.removeItem("underscript.plugin.Wizascript.cardMaker.feildHotfix");
+    } catch (e) {
+    }
   }
   function updateFooterButton() {
     if (!footerButton) return;
@@ -15678,16 +15652,6 @@ ${CONTEST_CSS}
         if (mounted2) showEditor(currentEditor());
       }
     });
-    hotfixSetting = settings3.add("feildHotfix", {
-      name: "Hotfix: feildmaster's Editor",
-      note: "Turn on if his editor stays black in the Card Maker.",
-      type: "boolean",
-      default: false,
-      onChange: (value) => {
-        setHotfix(!!value);
-        if (mounted2 && mounted2.frames.feildmaster) reloadEditor("feildmaster");
-      }
-    });
     gallerySetting = settings3.add("gallery", {
       name: "Card Gallery",
       note: "Adds the Card Gallery to the Card Maker, to share cards you make.",
@@ -15720,10 +15684,10 @@ ${CONTEST_CSS}
       packageLabel: "Card Maker",
       onMatch: () => toggleCardMaker()
     });
+    dropOldHotfix();
     if (!isPluginEnabled("cardMaker")) return;
     dropOldReviewKey();
     setTimeout(recheckKey, 4e3);
-    if (isHotfixOn() !== !!hotfixSetting.value()) setHotfix(!!hotfixSetting.value());
     if (!addFooterButton()) {
       const watch2 = new MutationObserver(() => {
         if (addFooterButton()) watch2.disconnect();

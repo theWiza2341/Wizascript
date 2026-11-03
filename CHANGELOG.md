@@ -2,6 +2,14 @@
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
 
+## 1.7.2
+
+### New
+- **Card Gallery website:** the Card Gallery now has its own page, for friends without Wizascript: https://thewiza2341.github.io/Wizascript-Gallery/. It's the same gallery (same posts, votes and contests). With Wizascript installed, **Read from this editor** works there too.
+
+### Changes
+- **Card Maker:** removed the hotfix for feildmaster's editor. His editor now starts inside the Card Maker on its own (thanks, feildmaster!), so the setting and its note are gone.
+
 ## 1.7.1
 
 ### Fixes

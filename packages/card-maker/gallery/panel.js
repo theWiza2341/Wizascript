@@ -167,7 +167,12 @@ const sameCard = (p, source, group, raw) => p.source === source && p.editorGroup
 // requestRead(): asks the editor in the Card Maker for its cards, or
 // returns a message saying why it can't. The answer comes back through
 // receiveCards().
-export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, reviewerKey = () => "", onKeyRejected = () => {} }) {
+// For hosts other than the Card Maker (the Card Gallery website):
+//   linkSteps({ line, say }): the <li> steps for sending the link line,
+//     instead of "Open void with it typed in" (the website has no chat);
+//   watchLink: check for the line every 5 s while linking (3 min at most);
+//   submitNote: Submit's note while the draft is empty.
+export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, reviewerKey = () => "", onKeyRejected = () => {}, linkSteps = null, watchLink = false, submitNote = null }) {
   injectStyle();
   const draft = getDraft();
   let tab = draft.parts.length ? "browse" : "submit";
@@ -395,7 +400,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
         h("div", { class: "wz-gl-bar" }, keyBox,
           button("Copy", () => copyText(rev.newKey.key).then((ok) => { if (ok) say("Copied."); else { keyBox.focus(); say("Press Ctrl+C to copy."); } })),
           button("Done", () => { rev.newKey = null; render(); })),
-        h("div", { class: "dim", text: "Send it to them privately (a DM, not a channel). They enter it with Redeem Key, on the Card Maker tab of Wizascript's settings." })));
+        h("div", { class: "dim", text: "Send it to them privately (a DM, not a channel). They enter it with Redeem Key: on the Card Maker tab of Wizascript's settings, or the key button at the bottom left of the gallery website." })));
     }
     if (rev.sectionError) parts.push(h("div", { class: "wz-gl-issues", text: rev.sectionError }));
     else if (!rev.reviewers) parts.push(h("p", { class: "wz-gl-note", text: "Loading…" }));
@@ -492,32 +497,49 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   }
 
   // ---- linking: prove which Undercards account this is, once ----
+  let linkWatch = null;
+  function stopWatch() { clearInterval(linkWatch); linkWatch = null; }
   async function startLink() {
     say("Getting a link code…");
     try {
       linking = await linkStart();
       say("");
+      if (watchLink) {
+        stopWatch();
+        const until = Math.min(Date.now() + 180e3, linking.expiresAt || Infinity);
+        linkWatch = setInterval(() => {
+          if (!linking || Date.now() > until) return stopWatch();
+          checkLink(true);
+        }, 5000);
+      }
     } catch (e) { say(errText(e)); }
     render();
   }
-  async function checkLink() {
-    say("Looking for your line in void…");
+  // quiet: the automatic check (watchLink) says nothing unless it worked.
+  let checking = false;
+  async function checkLink(quiet) {
+    if (checking) return;
+    checking = true;
+    if (!quiet) say("Looking for your line in void…");
     try {
       const r = await linkCheck();
       if (r.linked) {
         linking = null;
+        stopWatch();
         acct.account = r.account;
         acct.cooldownUntil = r.cooldownUntil || null;
         accountChanged(r.account, r.cooldownUntil, true);
         say(`Linked as ${r.account}.`);
         refreshMe(true);
         refreshGallery(true);
-      } else say(r.message || "Not seen yet. Send the line in void, then check again.");
+      } else if (!quiet) say(r.message || "Not seen yet. Send the line in void, then check again.");
+      else { checking = false; return; } // nothing new: no redraw
     } catch (e) {
-      if (e.code === "cooldown") say(`This install switched accounts less than 24 hours ago. You can switch again ${new Date(e.extra.cooldownUntil).toLocaleString()}.`);
-      else if (e.code === "code_expired") { linking = null; say("That code expired. Press Link my account again."); }
-      else say(errText(e));
+      if (e.code === "cooldown") { stopWatch(); say(`This install switched accounts less than 24 hours ago. You can switch again ${new Date(e.extra.cooldownUntil).toLocaleString()}.`); }
+      else if (e.code === "code_expired") { linking = null; stopWatch(); say("That code expired. Press Link my account again."); }
+      else if (!quiet) say(errText(e));
     }
+    checking = false;
     render();
   }
   function accountBox() {
@@ -540,14 +562,15 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
       if (!openVoid(linking.line)) say("This page has no chat. Copy the line and send it in void from another page.");
     }, { primary: true, title: "Opens chat room 0 with the line filled in. You press Enter." });
     sendBtn.disabled = !canOpenVoid();
+    const steps = linkSteps ? linkSteps({ line: linking.line, say })
+      : [h("li", {}, "Send this line in void (chat room 0) from the account you want to post and vote as: ", line, " ", sendBtn,
+        canOpenVoid() ? null : h("span", { class: "dim", text: " (no chat on this page: send it from another page)" }))];
     return h("div", { class: "wz-gl-link" },
       h("b", { text: "Link your Undercards account" }),
-      h("ol", {},
-        h("li", {}, "Send this line in void (chat room 0) from the account you want to post and vote as: ", line, " ", sendBtn,
-          canOpenVoid() ? null : h("span", { class: "dim", text: " (no chat on this page: send it from another page)" })),
-        h("li", {}, "Then: ", button("Check link", () => checkLink(), { primary: true }), h("span", { class: "dim", text: ` The code works for ${mins} more minute${mins === 1 ? "" : "s"}.` }))),
+      h("ol", {}, ...steps,
+        h("li", {}, linkWatch ? "Then come back here: this page notices by itself, or press " : "Then: ", button("Check link", () => checkLink(), { primary: true }), h("span", { class: "dim", text: ` The code works for ${mins} more minute${mins === 1 ? "" : "s"}.` }))),
       acct.account ? h("div", { class: "dim", text: `Switching from ${acct.account}: an install can switch accounts once a day, and accounts that share an install count as one voter.` }) : null,
-      button("Cancel", () => { linking = null; say(""); render(); }, { cls: "wz-gl-small" }));
+      button("Cancel", () => { linking = null; stopWatch(); say(""); render(); }, { cls: "wz-gl-small" }));
   }
 
   const status = h("span", { class: "wz-gl-status" });
@@ -703,7 +726,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     bar.children[3].disabled = !sel.some((p) => p.group);
     const note = h("p", { class: "wz-gl-note", text: draft.parts.length
       ? "Click parts to select them, then Link selected to make a set. Anything not in a set is submitted on its own."
-      : "Make cards in the editor, then Read from this editor and tick the ones to add. Files work too." });
+      : submitNote || "Make cards in the editor, then Read from this editor and tick the ones to add. Files work too." });
     return h("div", {}, bar, note, lastUpload ? uploadedBox() : null, draft.parts.length ? uploadBox() : null, read && !reviewing ? picker() : null, setsRow(), tray());
   }
 

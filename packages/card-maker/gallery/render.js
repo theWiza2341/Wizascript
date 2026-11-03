@@ -19,8 +19,15 @@ import { h, esc } from "./dom.js";
 export const CARD_W = 176;
 export const CARD_H = 246;
 const UCE = "https://sernon158.github.io/uc-editor/";
+// The game's own files are on the page's site (undercards.net) for Wizascript.
+// The Card Gallery website sets WZ_ASSET_ORIGIN ("https://undercards.net")
+// before this loads, so the same image paths point at the game from there.
+// Fonts are different: browsers only load a font from another site if that
+// site allows it (CORS), and undercards.net doesn't, so the website uses UC
+// Editor's copy of the font (GitHub Pages allows it) and skips the game's.
+const UC = (typeof globalThis !== "undefined" && typeof globalThis.WZ_ASSET_ORIGIN === "string") ? globalThis.WZ_ASSET_ORIGIN : "";
 // Where the game's card images are, in order of preference.
-const ASSET_BASES = ["/images/", `${UCE}images/`];
+const ASSET_BASES = [`${UC}/images/`, `${UCE}images/`];
 let assetBase = null; // set by checkFrameImages()
 export const FRAME = (kind) => `${assetBase || ASSET_BASES[0]}frameSkins/Undertale/frame_${kind}.png`;
 
@@ -211,7 +218,7 @@ export function fitText(root) {
 // otherwise this loads UC Editor's copy of the same font file.
 export const CARD_FONT = `"DTM-Mono", "DTM Mono", "WZ DTM Mono", monospace`;
 export const TILE_CSS = `
-@font-face { font-family: "WZ DTM Mono"; src: url("/fonts/DTM-Mono.otf") format("opentype"), url("${UCE}images/fonts/DTM-Mono.otf") format("opentype"); font-display: swap; }
+@font-face { font-family: "WZ DTM Mono"; src: ${UC ? "" : `url("/fonts/DTM-Mono.otf") format("opentype"), `}url("${UCE}images/fonts/DTM-Mono.otf") format("opentype"); font-display: swap; }
 .wz-gl-card, .wz-gl-artifact { font-family: ${CARD_FONT}; }
 /* Like the game (Bootstrap): sizes include padding and borders, inside or outside the window. */
 .wz-gl-card, .wz-gl-card *, .wz-gl-artifact, .wz-gl-artifact * { box-sizing: border-box; }

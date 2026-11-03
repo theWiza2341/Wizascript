@@ -1,0 +1,26 @@
+{
+  "id": "10p",
+  "kind": "set",
+  "title": "Signery",
+  "author": "gilzinPvP",
+  "postedAt": 1793722096566,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Signery",
+      "desc": "Magic: Enchant a random empty and unenchanted enemy slot with _Enchantery_.",
+      "cost": 4,
+      "atk": 3,
+      "hp": 3,
+      "rarity": "DELTARUNE_EPIC",
+      "art": "art/10p-0.png"
+    },
+    {
+      "type": "Enchantment",
+      "name": "Enchantery",
+      "desc": "After a monster is played here, Program (2): Enchant a random empty and unenchanted enemy slot with _Enchantery_ and this effect expires.\nTurn end: Deal DMG to you equal to the amount of turns this has been active.",
+      "art": "art/10p-1.png"
+    }
+  ]
+}

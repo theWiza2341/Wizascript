@@ -1,0 +1,19 @@
+{
+  "id": "10j",
+  "kind": "single",
+  "title": "Fortune Catti",
+  "author": "Pancakes",
+  "postedAt": 1793679653681,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Fortune Catti",
+      "desc": "Magic: Look at the top 3 cards of your deck and choose one. Erase it to draw 2 cards.",
+      "cost": 3,
+      "atk": 3,
+      "hp": 2,
+      "rarity": "DELTARUNE_RARE",
+      "art": "art/10j-0.png"
+    }
+  ]
+}

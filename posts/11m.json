@@ -1,0 +1,18 @@
+{
+  "id": "11m",
+  "kind": "single",
+  "title": "Armored Undyne",
+  "author": "clpb",
+  "postedAt": 1793788041333,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Armored Undyne",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/11m-0-pic.png"
+    }
+  ]
+}

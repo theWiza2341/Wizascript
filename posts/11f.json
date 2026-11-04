@@ -1,0 +1,19 @@
+{
+  "id": "11f",
+  "kind": "single",
+  "title": "Virus",
+  "author": "0pqmoxl",
+  "postedAt": 1793749014642,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Virus",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/11f-0-pic.png"
+    }
+  ]
+}

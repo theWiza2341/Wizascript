@@ -1,0 +1,18 @@
+{
+  "id": "11r",
+  "kind": "single",
+  "title": "Business Dude",
+  "author": "Enugie",
+  "postedAt": 1793816607120,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Business Dude",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/11r-0-pic.png"
+    }
+  ]
+}

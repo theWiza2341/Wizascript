@@ -1,0 +1,29 @@
+{
+  "id": "11o",
+  "kind": "set",
+  "title": "Aqua",
+  "author": "ichihime-tanyao",
+  "postedAt": 1793809062908,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Aqua's Danmaku",
+      "desc": "Loop (1). Magic: Deal 1 DMG to all enemies.",
+      "cost": 4,
+      "atk": 4,
+      "hp": 4,
+      "rarity": "DELTARUNE_RARE",
+      "art": "art/11o-0.png"
+    },
+    {
+      "type": "Monster",
+      "name": "Aqua Kris",
+      "desc": "Turn start: Add a {Knife} to your hand.",
+      "cost": 4,
+      "atk": 5,
+      "hp": 4,
+      "rarity": "DELTARUNE_EPIC",
+      "art": "art/11o-1.png"
+    }
+  ]
+}

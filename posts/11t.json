@@ -1,0 +1,18 @@
+{
+  "id": "11t",
+  "kind": "single",
+  "title": "John G. Takis",
+  "author": "Enugie",
+  "postedAt": 1793817163320,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "John G. Takis",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/11t-0-pic.png"
+    }
+  ]
+}

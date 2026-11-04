@@ -1,0 +1,18 @@
+{
+  "id": "11s",
+  "kind": "single",
+  "title": "[Pushed] Spawn Overseer",
+  "author": "Enugie",
+  "postedAt": 1793816785244,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "[Pushed] Spawn Overseer",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/11s-0-pic.png"
+    }
+  ]
+}

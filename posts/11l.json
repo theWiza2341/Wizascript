@@ -1,0 +1,25 @@
+{
+  "id": "11l",
+  "kind": "set",
+  "title": "Cycle Keyword",
+  "author": "Legacy_03",
+  "postedAt": 1793764254123,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Enchantment",
+      "name": "Cycle",
+      "desc": "",
+      "picture": "art/11l-0-pic.png"
+    },
+    {
+      "type": "Monster",
+      "name": "Cowboy Flowey",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/11l-1-pic.png"
+    }
+  ]
+}

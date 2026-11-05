@@ -1,0 +1,27 @@
+{
+  "id": "11x",
+  "kind": "set",
+  "title": "Rude Buster (Sprite Credit: sernon158)",
+  "author": "Legacy_03",
+  "postedAt": 1793829898097,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Spell",
+      "name": "Rude Buster",
+      "desc": "Loop (2). Silence a monster and deal 5 DMG to it. If this has no Loop, turn inro {Red Buster}.",
+      "cost": 5,
+      "rarity": "DELTARUNE_LEGENDARY",
+      "soul": "DETERMINATION",
+      "art": "art/11x-0.png"
+    },
+    {
+      "type": "Spell",
+      "name": "Red Buster",
+      "desc": "Choose an enemy monster, deal 8 DMG to it and Silence all other enemy monsters.",
+      "cost": 5,
+      "rarity": "DELTARUNE_TOKEN",
+      "art": "art/11x-1.png"
+    }
+  ]
+}

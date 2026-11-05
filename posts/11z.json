@@ -1,0 +1,35 @@
+{
+  "id": "11z",
+  "kind": "set",
+  "title": "Shop Rouxls",
+  "author": "Legacy_03",
+  "postedAt": 1793836640903,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Shop Rouxls",
+      "desc": "Magic: Add a {Jar of Worms} to your hand. Turn end: Switch: Add a [[{Dainty Scard}]] or [[{Brave Axe}]] to your hand.",
+      "cost": 8,
+      "atk": 6,
+      "hp": 9,
+      "rarity": "DELTARUNE_LEGENDARY",
+      "art": "art/11z-0.png"
+    },
+    {
+      "type": "Spell",
+      "name": "Dainty Scarf",
+      "desc": "Give a monster in your hand +3 HP.",
+      "cost": 1,
+      "rarity": "DELTARUNE_TOKEN",
+      "art": "art/11z-1.png"
+    },
+    {
+      "type": "Spell",
+      "name": "Brave Axe",
+      "desc": "Give a monster in your hand +2 ATK.",
+      "cost": 1,
+      "rarity": "DELTARUNE_TOKEN",
+      "art": "art/11z-2.png"
+    }
+  ]
+}

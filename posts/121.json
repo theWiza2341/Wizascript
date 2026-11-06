@@ -1,0 +1,19 @@
+{
+  "id": "121",
+  "kind": "single",
+  "title": "Caged Eyes",
+  "author": "Legacy_03",
+  "postedAt": 1793942260780,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Caged Eyes",
+      "desc": "Transparency. After an ally takes DMG, deal 1 DMG to the lowest HP enemy. If it's the opponent, deal 4 DMG and Silence this.",
+      "cost": 5,
+      "atk": 2,
+      "hp": 7,
+      "rarity": "DELTARUNE_RARE",
+      "art": "art/121-0.png"
+    }
+  ]
+}

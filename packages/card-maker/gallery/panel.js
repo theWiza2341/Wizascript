@@ -16,11 +16,11 @@
 //             (owner) contests and reviewers.
 // A size control (Small / Medium / Large) zooms the cards on both views.
 
-import { h, button } from "./dom.js";
+import { h, button, esc } from "./dom.js";
 import { tile, fitText, checkFrameImages, whenFontsReady, onFontsChange, TILE_CSS } from "./render.js";
 import { partFromRaw, readUcEditorFile, picturesFromPng, readFile } from "./parts.js";
 import { getDraft, saveDraft, nextId, makeSet, tidySets, entries, markUploaded, pruneUploads, SET_CAP } from "./draft.js";
-import { getMe, linkStart, linkCheck, getIndex, getTotals, uploadEntries, uploadProblems, createVoteQueue, ApiError, reviewPending, reviewPost, reviewDecide, reviewRemove, deleteOwnPost, reviewWhoami, reviewLog, reviewersList, reviewerAdd, reviewerRevoke, reviewerAddJudge, getHealth } from "./api.js";
+import { getMe, linkStart, linkCheck, getIndex, getTotals, uploadEntries, uploadProblems, createVoteQueue, ApiError, reviewPending, reviewPost, reviewDecide, reviewRemove, deleteOwnPost, reviewWhoami, reviewLog, reviewUndo, reviewContext, withArt, reviewersList, reviewerAdd, reviewerRevoke, reviewerAddJudge, getHealth, getGuidelines, parseGuidelines, DEFAULT_GUIDELINES } from "./api.js";
 import { openVoid, canOpenVoid } from "../../core/uc-report.js";
 import { accountChanged, onAccountChange } from "../../core/account.js";
 import { browseView, allEntries, BROWSE_CSS, removeButton } from "./browse.js";
@@ -122,6 +122,21 @@ const CSS = `
 .wz-gl-revlist { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; max-height: 360px; overflow: auto; }
 .wz-gl-rev { border: 1px solid #444; background: #111; padding: 4px 6px; }
 .wz-gl-revtabs { margin-bottom: 8px; }
+.wz-gl-ctx { margin-top: 10px; padding-top: 8px; border-top: 1px dashed #444; font-size: 13px; }
+.wz-gl-ctxhead { display: block; background: none; border: 0; color: #ddd; cursor: pointer; font: 13px Arial, sans-serif; padding: 0; text-align: left; }
+.wz-gl-ctxhead:hover b { text-decoration: underline; }
+.wz-gl-ctxsame { color: #ffb44a; font-weight: bold; }
+.wz-gl-ctxlist { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.wz-gl-ctxitem { border: 1px solid #333; background: #0b0b0b; padding: 6px; max-width: 100%; }
+.wz-gl-ctxitem.same { border-color: #ffb44a; }
+.wz-gl-ctxitem.gone .wz-gl-revcards { opacity: .75; }
+.wz-gl-ctxmeta { font-size: 12px; margin-bottom: 4px; }
+.wz-gl-loglist .undone { opacity: .55; }
+.wz-gl-loglist .wz-gl-remove { margin-left: 8px; }
+.wz-gl-guide { margin: 0 0 10px; padding: 8px 12px; border: 2px solid #4aa3df; background: #0c1620; font-size: 13px; line-height: 1.45; max-width: 980px; }
+.wz-gl-guide ul { margin: 4px 0 0; padding-left: 20px; }
+.wz-gl-guide li { margin: 3px 0; }
+.wz-gl-guide .head { display: flex; align-items: center; gap: 8px; }
 .wz-gl-revlog { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
 .wz-gl-newkey { margin: 8px 0; display: flex; flex-direction: column; gap: 6px; border-color: #ff0; }
 .wz-gl-key { flex: 1; min-width: 0; font-family: monospace; }
@@ -180,6 +195,8 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   if (draft.browseProto) { delete draft.browseProto; saveDraft(); } // the old sample-entries switch
   const browse = { list: "new", page: 0, dir: null, mineOnly: false, likedOnly: false };
   if (draft.proto) { delete draft.proto; saveDraft(); } // dev16/17's layout prototypes
+  // Posts deleted here (by their author or a reviewer), hidden until GitHub's copy catches up.
+  draft.gone = Object.fromEntries(Object.entries(draft.gone || {}).filter(([, at]) => Date.now() - at < 30 * 60e3));
   let viewAs = ""; // the owner's View as (Review's side menu); "" = themselves
   const listeners = [];
   const notify = () => listeners.forEach((f) => f());
@@ -203,7 +220,8 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
 
   // ---- review (turned on with the console command; the key is the owner's or a reviewer's) ----
   const blankRev = () => ({ list: [], posts: {}, at: 0, loading: false, error: "", busy: {}, reasons: {},
-    who: null, section: "uploads", log: null, reviewers: null, newKey: null, newName: "", newRole: "reviewer", adding: false, sectionError: "" });
+    who: null, section: "uploads", log: null, logOnly: "", reviewers: null, newKey: null, newName: "", newRole: "reviewer", adding: false, sectionError: "",
+    ctx: {}, ctxOpen: {} });
   let rev = blankRev();
   // View as (owner only, dev16): try the other roles' screens. Only what's
   // shown changes; the server still treats the key as the owner's.
@@ -217,6 +235,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     rev.loading = true;
     try {
       if (!rev.who) rev.who = await reviewWhoami(key);
+      if (force) rev.ctx = {}; // their other posts may have changed too
       // A judge key only scores its contest.
       if (realRole() === "judge") { rev.at = Date.now(); rev.error = ""; contests.loadJudging(force); return; }
       contests.refresh();
@@ -280,11 +299,61 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
           p.kind === "set" ? h("div", { class: "wz-gl-sethead" }, h("div", { class: "wz-gl-setname", text: post.title })) : null,
           h("div", { class: "wz-gl-row" }, post.parts.map((c) => hoverable(h("div", { class: "wz-gl-zoom" }, tile(c)), c, null))))
           : h("p", { class: "wz-gl-note", text: "Loading its cards…" }),
-        h("div", { class: "wz-gl-bar wz-gl-revactions" }, approveBtn, rejectBtn, reason));
+        h("div", { class: "wz-gl-bar wz-gl-revactions" }, approveBtn, rejectBtn, reason),
+        contextBox(p, post));
     };
     const note = h("p", { class: "wz-gl-note", text: "Each upload is shown exactly as it will look in Browse. Approving adds it to the gallery for everyone (contest entries: to the contest)." });
     return h("div", {}, head, note, h("div", { class: "wz-gl-revposts" }, list.map(one)));
   }
+  // ---- what else the uploader has posted (reposts, near copies) ----
+  // Every account in their voter group (alts that shared an install); for a
+  // contest entry, their other entries in that contest. Posts no longer in the
+  // gallery show as text only. Opens by itself when a card name matches.
+  const CTX_LABEL = { approved: "in the gallery", pending: "waiting", rejected: "rejected", removed: "taken down" };
+  const CTX_WAS = { approved: "it was in the gallery", pending: "it was waiting", rejected: "it was rejected", removed: "it was taken down" };
+  const daysAgo = (t) => (t ? Math.max(0, Math.floor((Date.now() - t) / 864e5)) : 0);
+  const nameKey = (x) => String(x || "").trim().toLowerCase();
+  function loadContext(id) {
+    if (rev.ctx[id]) return;
+    rev.ctx[id] = { loading: true };
+    reviewContext(reviewerKey(), id).then((d) => { rev.ctx[id] = { data: d || { posts: [] } }; }, (e) => { rev.ctx[id] = { error: errText(e) }; })
+      .then(() => { if (open && tab === "review") render(); });
+  }
+  function contextBox(p, post) {
+    loadContext(p.id);
+    const c = rev.ctx[p.id];
+    if (!c || c.loading) return h("div", { class: "wz-gl-ctx dim", text: "Looking for their other posts…" });
+    if (c.error) return h("div", { class: "wz-gl-ctx wz-gl-issues", text: `Their other posts couldn't be loaded: ${c.error}` });
+    const d = c.data;
+    const list = d.posts || [];
+    const where = d.contest ? `in ${d.contest.title || "this contest"}` : "in the gallery";
+    const alts = d.accounts && d.accounts.length > 1 ? ` Accounts: ${d.accounts.join(", ")}.` : "";
+    if (!list.length) return h("div", { class: "wz-gl-ctx dim", text: `No other posts ${where}.${alts}` });
+    const names = new Set([nameKey(p.title), ...((post && post.parts) || []).map((x) => nameKey(x.name))].filter(Boolean));
+    const same = (o) => names.has(nameKey(o.title)) || (o.parts || []).some((x) => names.has(nameKey(x.name)));
+    const nSame = list.filter(same).length;
+    const counts = {};
+    list.forEach((o) => { counts[o.status] = (counts[o.status] || 0) + 1; });
+    const summary = Object.entries(counts).map(([k, n]) => `${n} ${k === "deleted" ? "deleted" : CTX_LABEL[k] || k}`).join(", ");
+    const isOpen = rev.ctxOpen[p.id] !== undefined ? rev.ctxOpen[p.id] : nSame > 0;
+    const head = h("button", { type: "button", class: "wz-gl-ctxhead", title: "Everything this player (and any alt that shared their install) has posted here", onclick: () => { rev.ctxOpen[p.id] = !isOpen; render(); } },
+      h("b", { text: `${isOpen ? "▾" : "▸"} Their other posts ${where}: ${list.length}` }),
+      nSame ? h("span", { class: "wz-gl-ctxsame", text: ` · ${nSame} with a matching name` }) : null,
+      h("span", { class: "dim", text: ` (${summary}).${alts}` }));
+    if (!isOpen) return h("div", { class: "wz-gl-ctx" }, head);
+    const items = list.map((o) => {
+      const shown = o.status === "approved" && o.parts ? withArt(o) : o;
+      const label = o.status === "deleted" ? `deleted by them (${CTX_WAS[o.deletedFrom] || "earlier"})` : CTX_LABEL[o.status] || o.status;
+      const info = { author: o.author, days: daysAgo(o.postedAt), status: o.status === "rejected" ? "rejected" : "approved", reason: o.reason };
+      return h("div", { class: `wz-gl-ctxitem${same(o) ? " same" : ""}${o.status === "approved" ? "" : " gone"}` },
+        h("div", { class: "wz-gl-ctxmeta" }, h("b", { text: o.title || "(no name)" }),
+          h("span", { class: "dim", text: ` · ${label}${o.reason ? `: ${o.reason}` : ""} · #${o.id}${o.author !== d.author ? ` · ${o.author}` : ""}` })),
+        shown.parts ? h("div", { class: "wz-gl-revcards" }, shown.parts.map((x) => hoverable(h("div", { class: "wz-gl-zoom" }, tile(x)), x, info)))
+          : h("div", { class: "dim", text: "Its cards weren't kept." }));
+    });
+    return h("div", { class: "wz-gl-ctx open" }, head, h("div", { class: "wz-gl-ctxlist" }, items));
+  }
+
   // Review's sections: Uploads, Judging, Log, and (owner) Contests and Reviewers.
   // Laid out with a side menu (chosen 2026-10-28 from three prototypes).
   function reviewView() {
@@ -335,25 +404,52 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     return m < 1 ? "just now" : m < 60 ? `${m} min ago` : m < 48 * 60 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} days ago`;
   };
   async function loadLog() {
-    try { rev.log = (await reviewLog(reviewerKey())).log; rev.sectionError = ""; } catch (e) { rev.sectionError = errText(e); }
+    try { rev.log = (await reviewLog(reviewerKey(), realRole() === "owner" ? rev.logOnly : "")).log; rev.sectionError = ""; } catch (e) { rev.sectionError = errText(e); }
     if (open && tab === "review") render();
+  }
+  // The owner undoes a decision or a score (two clicks), straight from the log.
+  async function undoEntry(l) {
+    try {
+      const r = await reviewUndo(reviewerKey(), l.n);
+      say(l.action === "score" ? `Undid ${l.who}'s score on "${l.title || ""}".` : `Undid "${l.title || ""}" (${ACTIONS[l.action] || l.action} by ${l.who}). It's ${r && r.status === "approved" ? "back in the gallery" : "waiting for review again"}.`);
+      if (l.post) delete draft.gone[l.post];
+      gal.at = 0;
+      if (l.action === "score") contests.loadJudging(true); else { refreshReview(true); contests.refresh(true); }
+    } catch (err) { say(`Couldn't undo it: ${errText(err)}`); }
+    loadLog();
   }
   async function loadReviewers() {
     try { rev.reviewers = (await reviewersList(reviewerKey())).reviewers; rev.sectionError = ""; } catch (e) { rev.sectionError = errText(e); }
     if (open && tab === "review") render();
   }
   const ACTIONS = { approve: "approved", reject: "rejected", remove: "removed", add_reviewer: "added reviewer", add_judge: "added judge", revoke_reviewer: "revoked key of",
-    contest_create: "started contest", contest_edit: "edited contest", contest_archive: "published the results of", contest_delete: "deleted contest" };
+    contest_create: "started contest", contest_edit: "edited contest", contest_archive: "published the results of", contest_delete: "deleted contest",
+    undo: "undid", undo_score: "undid a score on", score: "scored" };
+  // One log line. A score reads "Judy scored "X" #10j 4.5 (was 3)"; a cleared one "cleared their score on".
+  function logLine(l) {
+    const canUndo = realRole() === "owner" && !viewAs && l.undo && l.undo.ok;
+    const what = l.action === "score" && !l.detail ? "cleared their score on" : ACTIONS[l.action] || l.action;
+    return h("div", { class: l.undoneAt ? "undone" : "" },
+      h("b", { text: l.who }), ` ${what} `,
+      l.post ? h("span", { text: `"${l.title || ""}" #${l.post}` }) : h("b", { text: l.detail || "" }),
+      l.action === "score" && l.detail ? [" ", h("b", { text: l.detail })] : null,
+      l.action === "score" && l.prev ? h("span", { class: "dim", text: ` (was ${l.prev})` }) : null,
+      l.post && l.detail && l.action !== "score" ? h("span", { class: "dim", text: ` (${l.detail})` }) : null,
+      h("span", { class: "dim", text: ` · ${ago(l.at)}` }),
+      l.undoneAt ? h("span", { class: "dim", text: ` · undone by ${l.undoneBy || "the owner"}` }) : null,
+      canUndo ? removeButton({ rerender: render }, l, { label: "Undo", confirm: "Undo it?", title: l.action === "approve" ? "Take it out of the gallery and put it back in Uploads" : l.action === "reject" ? "Put it back in Uploads" : l.action === "remove" ? "Put it back where it was" : "Give back the judge's score before this", run: undoEntry }) : null);
+  }
   function logView() {
-    const head = h("div", { class: "wz-gl-bar" }, h("b", { text: "Recent review actions" }), h("span", { class: "wz-gl-grow" }), button("↻ Refresh", loadLog));
+    const owner = realRole() === "owner" && !viewAs;
+    const pick = (k) => { rev.logOnly = k; rev.log = null; render(); loadLog(); };
+    const filters = owner ? h("span", { class: "wz-gl-sizes" }, [["", "All"], ["decisions", "Decisions"], ["scores", "Judge scores"]].map(([k, label]) =>
+      button(label, () => pick(k), { cls: (rev.logOnly || "") === k ? "wz-gl-on" : "", title: k === "scores" ? "Every score judges gave (only you see these)" : "" }))) : null;
+    const head = h("div", { class: "wz-gl-bar" }, h("b", { text: "Recent review actions" }), filters, h("span", { class: "wz-gl-grow" }), button("↻ Refresh", loadLog));
+    const note = owner ? h("p", { class: "wz-gl-note", text: "You can undo approvals, rejections, removals and judge scores: only the latest one for each post, and not after its author deleted it." }) : null;
     if (rev.sectionError) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: rev.sectionError }));
     if (!rev.log) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Loading…" }));
     if (!rev.log.length) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing yet." }));
-    return h("div", {}, head, h("div", { class: "wz-gl-revlog" }, rev.log.map((l) => h("div", {},
-      h("b", { text: l.who }), ` ${ACTIONS[l.action] || l.action} `,
-      l.post ? h("span", { text: `"${l.title || ""}" #${l.post}` }) : h("b", { text: l.detail || "" }),
-      l.post && l.detail ? h("span", { class: "dim", text: ` (${l.detail})` }) : null,
-      h("span", { class: "dim", text: ` · ${ago(l.at)}` })))));
+    return h("div", {}, head, note, h("div", { class: "wz-gl-revlog wz-gl-loglist" }, rev.log.map(logLine)));
   }
   async function addReviewer() {
     const name = rev.newName.trim();
@@ -412,22 +508,27 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
       removeButton({ rerender: render }, r, { label: "Revoke", confirm: "Revoke?", title: `Stop ${r.name}'s key working`, run: revokeReviewer })))));
     return h("div", {}, ...parts);
   }
+  // Your own post, taken back (Browse: Cancel / Delete; Contest: Withdraw).
   async function deleteMine(e) {
     try {
-      await deleteOwnPost(e.id);
+      const r = await deleteOwnPost(e.id);
+      const was = (r && r.was) || e.status;
       const wasEntry = acct.posts.some((p) => p.id === e.id && p.contest && (p.status === "pending" || p.status === "approved"));
       delete draft.uploads[e.id];
+      // GitHub's copy of the gallery lags a few minutes: keep it hidden here meanwhile.
+      if (was === "approved") { draft.gone[e.id] = Date.now(); gal.approved = gal.approved.filter((p) => p.id !== e.id); }
       saveDraft();
       acct.posts = acct.posts.filter((p) => p.id !== e.id);
-      say(wasEntry ? `Withdrew "${e.title}". Its slot is free again.` : `Deleted "${e.title}".`);
+      say(wasEntry ? `Withdrew "${e.title}". Its slot is free again.` : was === "pending" ? `Cancelled "${e.title}".` : was === "approved" ? `Deleted "${e.title}" from the gallery.` : `Deleted "${e.title}".`);
       if (wasEntry) { refreshMe(true); contests.refresh(true); }
       render();
-    } catch (err) { say(`Couldn't delete it: ${errText(err)}`); render(); }
+    } catch (err) { say(`Couldn't take it back: ${errText(err)}`); render(); }
   }
   async function removePost(e) {
     try {
       await reviewRemove(reviewerKey(), e.id);
       say(`Removed ${e.id} from the gallery.`);
+      draft.gone[e.id] = Date.now(); saveDraft();
       gal.approved = gal.approved.filter((p) => p.id !== e.id);
       render();
       refreshGallery(true);
@@ -705,6 +806,26 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   onFontsChange(() => { clearTimeout(fontTimer); fontTimer = setTimeout(() => { if (open) render(); }, 50); });
   const changed = () => { tidySets(); saveDraft(); lastUpload = null; render(); };
 
+  // ---- Guidelines: what's accepted (text from the sounds branch, api.js) ----
+  const guide = { text: null, loading: false };
+  function loadGuide() {
+    if (guide.text || guide.loading) return;
+    guide.loading = true;
+    getGuidelines().then((t) => { guide.text = t; guide.loading = false; if (open && tab === "submit") render(); });
+  }
+  const rich = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+  const setGuide = (show) => { draft.hideGuide = !show; saveDraft(); render(); };
+  function guideBox() {
+    loadGuide();
+    if (draft.hideGuide) return null;
+    const g = parseGuidelines(guide.text || DEFAULT_GUIDELINES);
+    return h("div", { class: "wz-gl-guide" },
+      h("div", { class: "head" }, h("b", { text: g.title || "Gallery guidelines" }), h("span", { class: "wz-gl-grow" }),
+        button("Hide", () => setGuide(false), { cls: "wz-gl-small", title: "Hide the guidelines (Guidelines, above, shows them again)" })),
+      g.intro.map((t) => h("div", { html: rich(t) })),
+      h("ul", {}, g.rules.map((t) => h("li", { html: rich(t) }))));
+  }
+
   // ---- Submit ----
   function submitView() {
     const sel = draft.parts.filter((p) => p.sel);
@@ -719,6 +840,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
       button("Add files…", () => fileInput.click(), { title: "A UC Editor group file (.uceditor) or PNG downloads" }),
       button("Link selected", () => { makeSet(draft.parts.filter((p) => p.sel)); changed(); }, { title: "Make the selected parts one set" }),
       button("Unlink selected", () => { draft.parts.filter((p) => p.sel).forEach((p) => { p.group = null; p.sel = false; }); changed(); }),
+      draft.hideGuide ? button("Guidelines", () => setGuide(true), { title: "What gets accepted into the gallery" }) : null,
       h("span", { class: "wz-gl-grow" }),
       removeAllButton());
     bar.children[2].disabled = sel.length < 2 || sel.length > SET_CAP;
@@ -727,7 +849,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     const note = h("p", { class: "wz-gl-note", text: draft.parts.length
       ? "Click parts to select them, then Link selected to make a set. Anything not in a set is submitted on its own."
       : submitNote || "Make cards in the editor, then Read from this editor and tick the ones to add. Files work too." });
-    return h("div", {}, bar, note, lastUpload ? uploadedBox() : null, draft.parts.length ? uploadBox() : null, read && !reviewing ? picker() : null, setsRow(), tray());
+    return h("div", {}, guideBox(), bar, note, lastUpload ? uploadedBox() : null, draft.parts.length ? uploadBox() : null, read && !reviewing ? picker() : null, setsRow(), tray());
   }
 
   // Asks once more on the button itself instead of a browser pop-up.
@@ -881,6 +1003,8 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
         h("span", { class: "wz-gl-by", text: author() ? `Posting as ${author()}` : "" })),
       h("div", { class: "wz-gl-revlist" }, rows),
       issues.length ? h("div", { class: "wz-gl-issues" }, issues.map((t) => h("div", { text: t }))) : null,
+      h("div", { class: "wz-gl-note", style: { margin: "6px 0 0" } }, "Before uploading, check it follows the guidelines. ",
+        draft.hideGuide ? button("Show guidelines", () => { setGuide(true); panel.scrollTop = 0; }, { cls: "wz-gl-small" }) : h("span", { text: "(They're at the top of this page.)" })),
       h("div", { class: "wz-gl-bar wz-gl-revfoot" },
         h("span", { class: "wz-gl-note", style: { margin: 0 }, text: into ? "Each set and single card is one entry, checked against the contest's rules. Approved entries show in the Contest tab, and join the gallery when the results are out." : "Each set and single card is sent as its own entry, for approval. Approved ones show in Browse for everyone." }),
         h("span", { class: "wz-gl-grow" }),
@@ -956,7 +1080,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     // Just approved, but not in the gallery's index yet: still show its copy.
     acct.posts.filter((p) => !p.contest && p.status === "approved" && draft.uploads[p.id] && !gal.approved.some((a) => a.id === p.id))
       .forEach((p) => own.push({ id: p.id, status: "pending", postedAt: p.postedAt, kind: draft.uploads[p.id].kind, title: draft.uploads[p.id].title, parts: draft.uploads[p.id].parts }));
-    const list = allEntries({ approved: gal.approved, own, totals: gal.totals, baseVotes: gal.base, current: currentVotes(), account: acct.account });
+    const list = allEntries({ approved: gal.approved.filter((p) => !draft.gone[p.id]), own, totals: gal.totals, baseVotes: gal.base, current: currentVotes(), account: acct.account });
     return browseView({
       state: browse,
       wheelPages: () => !wheelPages || wheelPages(),

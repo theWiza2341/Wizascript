@@ -1,0 +1,19 @@
+{
+  "id": "122",
+  "kind": "single",
+  "title": "Heart Locket",
+  "author": "Legacy_03",
+  "postedAt": 1793942260780,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Heart Locket",
+      "desc": "After you summon a monster, kill this to give it Armor and +2/+1.",
+      "cost": 4,
+      "atk": 2,
+      "hp": 3,
+      "rarity": "BASE_EPIC",
+      "art": "art/122-0.png"
+    }
+  ]
+}

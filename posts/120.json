@@ -1,0 +1,25 @@
+{
+  "id": "120",
+  "kind": "single",
+  "title": "Coder Dog",
+  "author": "PhantomFoxtrot",
+  "postedAt": 1793921090399,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Coder Dog",
+      "desc": "Magic: Choose a card in your hand. Cast {Dream} on it, then cast {Arcane Codes.}",
+      "cost": 3,
+      "atk": 3,
+      "hp": 3,
+      "rarity": "UTY_EPIC",
+      "tribes": [
+        {
+          "name": "DOG",
+          "icon": "art/tribe-fa1f1c6cf51f.png"
+        }
+      ],
+      "art": "art/120-0.png"
+    }
+  ]
+}

@@ -10,6 +10,8 @@
 // the game puts it; their names are typed by the player.
 
 import { CARD_W, CARD_H } from "./render.js";
+import { feildGroups, isUuid } from "./feild.js";
+import { server } from "../../core/account.js";
 
 export const ART = { Monster: [160, 90], Spell: [160, 90], Enchantment: [160, 183], Artifact: [64, 64] };
 const ARTIFACT_MAX_W = 704;
@@ -52,7 +54,8 @@ export async function partFromRaw(raw, { source, from, editorGroup }) {
   const [w, h] = ART[raw.type] || ART.Monster;
   let art = null;
   let note = "";
-  try { art = await fit(raw.image, w, h, raw.type === "Artifact" ? "contain" : "cover"); } catch (e) { note = "art didn't load"; }
+  try { art = await fit(raw.image, w, h, raw.type === "Artifact" ? "contain" : "cover"); } catch (e) { note = raw.artNote || "art didn't load"; }
+  if (!art && raw.artNote) note = raw.artNote; // e.g. feildmaster's built-in art his site didn't share
   if (art && raw.type !== "Artifact" && raw.type !== "Enchantment" && raw.imageType && raw.imageType !== "standard") note = `${raw.imageType} art cropped to 160x90`;
   return {
     type: raw.type,
@@ -73,6 +76,52 @@ export async function partFromRaw(raw, { source, from, editorGroup }) {
     editorGroup,
     group: null
   };
+}
+
+// feildmaster's editor's Export file (its archive -> Export -> Download):
+// { version: 1, assets: { <uuid>: { src, name, type } }, elements: [...] }.
+// The player's own pictures are in `assets`; his built-in art (a card's name,
+// see his avatars.json) and tribe icons aren't. Other sites can't read those
+// from his site directly (his hosting doesn't allow it), so they come through
+// the gallery server (Worker 1.7.1, /v1/feild/...), which passes on just those
+// pictures. If that fails, those cards come in without art, saying why.
+// Returns { name, groups: [{ name, parts: [raw] }] }, or null if it isn't one.
+export function isFeildmasterExport(text) {
+  try { const b = JSON.parse(text); return !!(b && b.version === 1 && Array.isArray(b.elements) && b.elements.length && typeof b.assets === "object"); } catch (e) { return false; }
+}
+const feildArt = async (kind, name) => urlToDataUrl(`${await server()}/v1/feild/${kind}/${encodeURIComponent(name)}`);
+async function urlToDataUrl(url) {
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    const blob = await r.blob();
+    return await new Promise((ok) => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.onerror = () => ok(null); fr.readAsDataURL(blob); });
+  } catch (e) { return null; }
+}
+export async function readFeildmasterFile(text) {
+  const b = JSON.parse(text);
+  const byId = new Map(b.elements.filter((e) => e && e.id).map((e) => [e.id, e]));
+  const assets = b.assets || {};
+  const contained = new Set();
+  b.elements.forEach((e) => (e && e.type === "group" ? e.content || [] : []).forEach((id) => contained.add(id)));
+  const groupIds = b.elements.filter((e) => e && e.type === "group" && !contained.has(e.id)).map((e) => e.id);
+  const notes = new Map(); // element image id -> why it has no art
+  const image = async (id) => {
+    if (!id) return null;
+    if (isUuid(id)) {
+      const a = assets[id];
+      if (a && typeof a.src === "string") return a.src.startsWith("data:") ? a.src : urlToDataUrl(a.src);
+      return null;
+    }
+    if (/^https?:/.test(id)) return urlToDataUrl(id);
+    const data = await feildArt("avatar", id);
+    if (!data) notes.set(id, "built-in art from feildmaster's editor couldn't be loaded");
+    return data;
+  };
+  const groups = await feildGroups({ el: (id) => byId.get(id), groupIds, allIds: [...byId.keys()] },
+    { image, tribeIcon: (t) => feildArt("tribe", String(t).toUpperCase().replace(/ /g, "_")), why: (id) => notes.get(id) });
+  const root = groupIds.length === 1 ? byId.get(groupIds[0]) : null;
+  return { name: (root && root.name) || "", groups };
 }
 
 // A UC Editor group file (its group menu -> Download File): hex-encoded JSON.

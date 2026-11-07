@@ -9,6 +9,10 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
 - **Guidelines** on Submit: what gets accepted into the gallery. Hide them once you know them; **Guidelines** brings them back.
 - **For reviewers:** each upload in Review shows the player's other posts (from any alt that shared their install too), including ones they deleted, so reposts and near copies stand out. Matching card names are highlighted.
 - **For the owner:** **Undo** in Review's Log takes back an approval, rejection or removal, and the Log can show every judge's scores.
+- **feildmaster's Export files:** **Add files…** in Submit now takes the `.json` file from his editor's new Export, with the cards' real names, text and art (not just a picture).
+
+### Fixes
+- **Artifact pictures were unreadable:** an artifact added as a picture (e.g. from UC Editor's group download) was squeezed into one card's space. It's now redrawn card-shaped with its text rewrapped: one card's space for short text, two for long. Posts already in the gallery are fixed too.
 
 ## 1.7.2
 

@@ -17,8 +17,8 @@
 // A size control (Small / Medium / Large) zooms the cards on both views.
 
 import { h, button, esc } from "./dom.js";
-import { tile, fitText, checkFrameImages, whenFontsReady, onFontsChange, TILE_CSS } from "./render.js";
-import { partFromRaw, readUcEditorFile, picturesFromPng, readFile } from "./parts.js";
+import { tile, fitText, checkFrameImages, whenFontsReady, onFontsChange, onArtPicsChange, TILE_CSS } from "./render.js";
+import { partFromRaw, readUcEditorFile, readFeildmasterFile, isFeildmasterExport, picturesFromPng, readFile } from "./parts.js";
 import { getDraft, saveDraft, nextId, makeSet, tidySets, entries, markUploaded, pruneUploads, SET_CAP } from "./draft.js";
 import { getMe, linkStart, linkCheck, getIndex, getTotals, uploadEntries, uploadProblems, createVoteQueue, ApiError, reviewPending, reviewPost, reviewDecide, reviewRemove, deleteOwnPost, reviewWhoami, reviewLog, reviewUndo, reviewContext, withArt, reviewersList, reviewerAdd, reviewerRevoke, reviewerAddJudge, getHealth, getGuidelines, parseGuidelines, DEFAULT_GUIDELINES } from "./api.js";
 import { openVoid, canOpenVoid } from "../../core/uc-report.js";
@@ -680,7 +680,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   const content = h("div", { class: "wz-gl-content" });
   const hover = h("div", { class: "wz-gl-hover" });
   const panel = h("div", { class: "wz-gl-panel" }, tabs, content, hover);
-  const fileInput = h("input", { type: "file", accept: ".uceditor,image/png", multiple: true, style: { display: "none" } });
+  const fileInput = h("input", { type: "file", accept: ".uceditor,.json,application/json,image/png", multiple: true, style: { display: "none" } });
   panel.appendChild(fileInput);
 
   // ---- Card size ----
@@ -804,6 +804,9 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   whenFontsReady().then(() => { if (open) render(); });
   let fontTimer = null;
   onFontsChange(() => { clearTimeout(fontTimer); fontTimer = setTimeout(() => { if (open) render(); }, 50); });
+  // An artifact picture was redrawn (artpic.js) and changed size: lay the pages
+  // out again without redrawing (keeps anything typed, e.g. a reject reason).
+  onArtPicsChange(() => { if (!open) return; if (tab === "browse" && browseCtl) browseCtl.layout(); else if (tab === "contest") contests.layout(); });
   const changed = () => { tidySets(); saveDraft(); lastUpload = null; render(); };
 
   // ---- Guidelines: what's accepted (text from the sounds branch, api.js) ----
@@ -837,7 +840,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
         readTimer = setTimeout(() => say("No answer from the editor. Wait for it to finish loading, then try again."), 4000);
         say(`Reading ${editorLabel()}…`);
       }, { primary: true, title: "List the cards you've made in the editor open here" }),
-      button("Add files…", () => fileInput.click(), { title: "A UC Editor group file (.uceditor) or PNG downloads" }),
+      button("Add files…", () => fileInput.click(), { title: "UC Editor's group file (.uceditor), feildmaster's editor's Export file (.json), or card PNGs" }),
       button("Link selected", () => { makeSet(draft.parts.filter((p) => p.sel)); changed(); }, { title: "Make the selected parts one set" }),
       button("Unlink selected", () => { draft.parts.filter((p) => p.sel).forEach((p) => { p.group = null; p.sel = false; }); changed(); }),
       draft.hideGuide ? button("Guidelines", () => setGuide(true), { title: "What gets accepted into the gallery" }) : null,
@@ -1051,7 +1054,23 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     fileInput.value = "";
     for (const f of files) {
       try {
-        if (/\.uceditor$/i.test(f.name)) {
+        const isJson = /\.json$/i.test(f.name) || f.type === "application/json";
+        const text = isJson ? await readFile(f, "readAsText") : null;
+        if (isJson && !isFeildmasterExport(text)) { say(`${f.name} isn't an Export file from feildmaster's editor.`); continue; }
+        if (isJson) {
+          say(`Reading ${f.name}…`);
+          const fx = await readFeildmasterFile(text);
+          const groups = fx.groups.map((g) => {
+            const fresh = g.parts.filter((r) => !draft.parts.some((p) => sameCard(p, "feildmaster", g.name, r)));
+            return { name: g.name, parts: g.parts.map((r) => ({ ...r, pick: fresh.includes(r) })) };
+          });
+          const n = groups.reduce((k, g) => k + g.parts.length, 0), nNew = groups.reduce((k, g) => k + g.parts.filter((r) => r.pick).length, 0);
+          const noArt = groups.reduce((k, g) => k + g.parts.filter((r) => r.artNote).length, 0);
+          read = { source: "feildmaster", label: `${f.name} (feildmaster's editor file)`, groups };
+          say(!n ? `${f.name}: no cards or artifacts in it.`
+            : nNew ? `${f.name}: ${nNew} new card(s), ticked.${noArt ? ` ${noArt} use his built-in art, which couldn't be loaded yet: add them as PNG pictures instead.` : ""} Untick any you don't want, then Add ticked.`
+            : `${f.name}: all ${n} card(s) are in your draft already.`);
+        } else if (/\.uceditor$/i.test(f.name)) {
           const g = readUcEditorFile(await readFile(f, "readAsText"));
           const fresh = g.parts.filter((r) => !draft.parts.some((p) => sameCard(p, "sernon", g.name, r)));
           read = { source: "sernon", label: `${f.name} (UC Editor file)`, groups: [{ name: g.name, parts: g.parts.map((r) => ({ ...r, pick: fresh.includes(r) })) }] };

@@ -17,6 +17,8 @@
 //    "undercards" / "images"; built-in card art is an avatar name
 //    (/resources/data/avatars.json -> /resources/images/avatars/<file>.png).
 
+import { feildGroups, tribePath } from "./feild.js";
+
 const page = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
 
 function blobToDataUrl(blob) {
@@ -79,10 +81,10 @@ async function readUcEditor() {
   return groups;
 }
 
-function idbImage(id) {
+function idbImage(factory, id) {
   return new Promise((ok) => {
     let req;
-    try { req = indexedDB.open("undercards", 1); } catch (e) { return ok(null); }
+    try { req = factory.open("undercards", 1); } catch (e) { return ok(null); }
     req.onupgradeneeded = (e) => e.target.result.createObjectStore("images", { keyPath: "id" });
     req.onerror = () => ok(null);
     req.onsuccess = (e) => {
@@ -101,65 +103,23 @@ function idbImage(id) {
 async function readFeildmaster() {
   let avatars = {};
   try { avatars = await (await fetch("/resources/data/avatars.json")).json(); } catch (e) { avatars = {}; }
-  const isId = (v) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v || "");
   const image = async (id) => {
     if (!id) return null;
     if (/^https?:/.test(id)) return toDataUrl(id);
     if (avatars[id]) return toDataUrl(`/resources/images/avatars/${avatars[id]}.png`);
-    const rec = await idbImage(id);
+    const rec = await idbImage(indexedDB, id);
     return rec ? toDataUrl(rec.file || rec.src) : null;
   };
-  const el = (id) => { try { return JSON.parse(localStorage.getItem("data:el:" + id)); } catch (e) { return null; } };
-  const toPart = async (e) => {
-    if (!e) return null;
-    const base = { name: e.name || "", desc: e.description || "", image: await image(e.image) };
-    if (e.type === "text") return { type: "Artifact", ...base, rarity: e.rarity || "COMMON" };
-    if (e.type !== "card") return null;
-    const spell = e.health === undefined || e.health === null;
-    return {
-      type: spell ? "Spell" : "Monster",
-      ...base,
-      cost: e.cost ?? 0,
-      atk: spell ? null : e.attack ?? 0,
-      hp: spell ? null : e.health ?? 0,
-      soul: e.soul || null,
-      rarity: isId(e.rarity) ? null : e.rarity || "COMMON",
-      rarityIcon: isId(e.rarity) ? await image(e.rarity) : null,
-      tribes: await Promise.all((e.tribes || []).filter((t) => t && t !== "none").map(async (t) => ({
-        name: isId(t) ? null : t,
-        icon: isId(t) ? await image(t) : await toDataUrl(`/resources/tribes/${String(t).toUpperCase().replace(/ /g, "_")}.png`)
-      }))),
-      imageType: "standard"
-    };
-  };
-  let ids = [];
-  try { ids = JSON.parse(localStorage.getItem("app:groups") || "[]"); } catch (e) { ids = []; }
-  const groups = [];
-  const seen = new Set();
-  for (const gid of ids) {
-    const g = el(gid);
-    if (!g) continue;
-    const parts = [];
-    for (const cid of g.content || []) {
-      seen.add(cid);
-      const p = await toPart(el(cid));
-      if (p) parts.push(p);
-    }
-    groups.push({ name: g.name || "Group", parts });
+  const ls = localStorage;
+  const el = (id) => { try { return JSON.parse(ls.getItem("data:el:" + id)); } catch (e) { return null; } };
+  let groupIds = [];
+  try { groupIds = JSON.parse(ls.getItem("app:groups") || "[]"); } catch (e) { groupIds = []; }
+  const allIds = [];
+  for (let i = 0; i < ls.length; i++) {
+    const k = ls.key(i);
+    if (k && k.startsWith("data:el:")) allIds.push(k.slice(8));
   }
-  const loose = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const k = localStorage.key(i);
-    if (!k || !k.startsWith("data:el:")) continue;
-    const id = k.slice(8);
-    const e = el(id);
-    if (!seen.has(id) && e && e.type !== "group") {
-      const p = await toPart(e);
-      if (p) loose.push(p);
-    }
-  }
-  if (loose.length) groups.push({ name: "Not in a group", parts: loose });
-  return groups;
+  return feildGroups({ el, groupIds, allIds }, { image, tribeIcon: (t) => toDataUrl(tribePath(t)) });
 }
 
 export function readEditorCards(source) {

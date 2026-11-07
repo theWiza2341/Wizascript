@@ -7,8 +7,6 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
 ### Card Gallery
 - **Take back your own posts:** in Browse, **Cancel** an upload that's still waiting, or **Delete** one of yours from the gallery (its votes go with it). Contest entries still use **Withdraw** in the Contest tab.
 - **Guidelines** on Submit: what gets accepted into the gallery. Hide them once you know them; **Guidelines** brings them back.
-- **For reviewers:** each upload in Review shows the player's other posts (from any alt that shared their install too), including ones they deleted, so reposts and near copies stand out. Matching card names are highlighted.
-- **For the owner:** **Undo** in Review's Log takes back an approval, rejection or removal, and the Log can show every judge's scores.
 - **feildmaster's Export files:** **Add files…** in Submit now takes the `.json` file from his editor's new Export, with the cards' real names, text and art (not just a picture).
 
 ### Fixes

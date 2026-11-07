@@ -1,0 +1,19 @@
+{
+  "id": "126",
+  "kind": "single",
+  "title": "Virus",
+  "author": "Legacy_03",
+  "postedAt": 1794007387801,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Virus",
+      "desc": "KR. After a monster dies, summon a _Silenced_ {Virus}.",
+      "cost": 3,
+      "atk": 2,
+      "hp": 2,
+      "rarity": "DELTARUNE_EPIC",
+      "art": "art/126-0.png"
+    }
+  ]
+}

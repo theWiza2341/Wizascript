@@ -2,7 +2,7 @@
 
 Wizascript is an all-in-one UnderScript plugin suite for [Undercards](https://undercards.net) — a single Tampermonkey userscript that combines several previously-separate plugins into one download, one plugin registration, and one settings tab.
 
-**Current version:** 1.7.2 (see [CHANGELOG.md](CHANGELOG.md))
+**Current version:** 1.7.3 (see [CHANGELOG.md](CHANGELOG.md))
 **Repository:** [theWiza2341/Wizascript](https://github.com/theWiza2341/Wizascript) (public)
 
 ## Compliance note
@@ -50,6 +50,10 @@ The community card editors, on undercards.net, in a window that works like Tier 
 Part of the Card Maker (its **Card Gallery** setting turns it off). **Editor / Browse / Submit** in the Card Maker's title bar switch between the editor and the gallery, a panel over the editor (`gallery/nav.js`).
 
 **Website.** The same gallery is also a website for players without Wizascript: https://thewiza2341.github.io/Wizascript-Gallery/ (repo `theWiza2341/Wizascript-Gallery`, GitHub Pages). It bundles this repo's `packages/card-maker/gallery/` code, so the two stay identical; `frame.js` also answers "Read from this editor" when the editor is framed by the website.
+
+**Guidelines.** Submit shows what's accepted, read from `gallery-guidelines.md` at the root of the `sounds` branch (a `# title` line, then one `- ` line per rule; `**bold**` works), so the rules can change without an update. A built-in copy is used if it can't be loaded.
+
+**Taking posts back, review context, undo (1.7.3, Worker 1.7.0).** Authors can cancel a waiting upload or delete their approved post (Browse, under the post). Nothing is erased on the server: deleted posts are kept as text, and each upload in Review lists the uploader's other posts (their voter group's), so reposts stand out. The owner can undo approvals, rejections, removals and judge scores from Review's Log.
 
 **Server.** The gallery's server is a Cloudflare Worker in its own repo. It's the only thing that writes to this repo. Approved posts live on the `gallery` branch: `posts/<id>.json`, art in `art/`, and an `index.json` the Worker keeps up to date. Wizascript reads them through raw.githubusercontent and talks to the Worker with GM_xmlhttpRequest (`gallery/api.js`).
 

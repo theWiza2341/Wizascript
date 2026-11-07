@@ -33,7 +33,11 @@ export const getHealth = () => call("GET", "/v1/health");
 // the console command, kept in GM "wizascript.cardMaker.galleryReview") ----
 const admin = (method, path, key, body) => call(method, path, { body, adminKey: key });
 export const reviewWhoami = (key) => admin("GET", "/v1/admin/whoami", key);
-export const reviewLog = (key) => admin("GET", "/v1/admin/log", key);
+// only: "scores" | "decisions" (the owner's filter; the owner also gets each entry's undo state)
+export const reviewLog = (key, only) => admin("GET", "/v1/admin/log" + (only ? `?only=${encodeURIComponent(only)}` : ""), key);
+export const reviewUndo = (key, n) => admin("POST", "/v1/admin/undo", key, { n });
+// The uploader's other posts (their voter group's; a contest entry: that contest's).
+export const reviewContext = (key, id) => admin("GET", `/v1/admin/context?id=${encodeURIComponent(id)}`, key);
 // owner only
 export const reviewersList = (key) => admin("GET", "/v1/admin/reviewers", key);
 export const reviewerAdd = (key, name) => admin("POST", "/v1/admin/reviewers/add", key, { name });
@@ -192,4 +196,60 @@ export function createVoteQueue({ onSent, onError }) {
     flush,
     pending: () => ({ ...queue })
   };
+}
+
+// ---- guidelines (Submit) ------------------------------------------------------------
+// What's accepted, shown on Submit. The text lives in gallery-guidelines.md on
+// the `sounds` branch (only the maintainer edits it), so it can change without
+// an update; this copy is used until it loads, or if it can't be reached.
+// Format: a "# title" line (optional), any intro lines, then one "- " line per
+// rule; **bold** works.
+export const GUIDELINES_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/sounds/gallery-guidelines.md";
+const GUIDE_KEY = "wizascript.cardMaker.guidelines"; // GM: { at, text }
+const GUIDE_TTL = 60 * 60 * 1000;
+export const DEFAULT_GUIDELINES = `# Gallery guidelines
+- **Explain it.** Using a custom keyword? Upload it as a set that includes its description. Existing UC cards and artifacts can just be named.
+- **Keep it codable.** Effects that would be very hard to build in UC (multi-selects, aura keywords) are usually turned down. Judged case by case.
+- **New ideas, not number tweaks.** No +1/-1 buffs or nerfs of existing cards. Reworks and big effect changes are fine.
+- **UT, UTY and Deltarune sprites only.** Art from other fangames gets rejected.
+- **Cardifacts rules apply.** Don't post anything you couldn't post in the channel.`;
+
+export function parseGuidelines(text) {
+  const out = { title: "", intro: [], rules: [] };
+  String(text || "").split(/\r?\n/).forEach((raw) => {
+    const line = raw.trim();
+    if (!line) return;
+    if (/^#\s+/.test(line)) { if (!out.title) out.title = line.replace(/^#+\s+/, ""); return; }
+    if (/^[-*]\s+/.test(line)) out.rules.push(line.replace(/^[-*]\s+/, ""));
+    else if (out.rules.length) out.rules[out.rules.length - 1] += " " + line;
+    else out.intro.push(line);
+  });
+  return out;
+}
+
+function cachedGuidelines() {
+  try { const c = JSON.parse(GM_getValue(GUIDE_KEY, "null")); return c && typeof c.text === "string" ? c : null; } catch (e) { return null; }
+}
+// Resolves to the guidelines' text: the cached copy (refreshed hourly), else the built-in one.
+export function getGuidelines() {
+  const c = cachedGuidelines();
+  if (c && Date.now() - c.at < GUIDE_TTL) return Promise.resolve(c.text);
+  return new Promise((resolve) => {
+    const fallback = () => resolve(c ? c.text : DEFAULT_GUIDELINES);
+    try {
+      GM_xmlhttpRequest({
+        method: "GET",
+        url: GUIDELINES_URL + "?t=" + Math.floor(Date.now() / 60000),
+        timeout: 8000,
+        onload: (r) => {
+          const text = r.status === 200 ? String(r.responseText || "") : "";
+          if (!parseGuidelines(text).rules.length) return fallback(); // missing or not a list: keep what we had
+          try { GM_setValue(GUIDE_KEY, JSON.stringify({ at: Date.now(), text })); } catch (e) { /* not cached */ }
+          resolve(text);
+        },
+        onerror: fallback,
+        ontimeout: fallback
+      });
+    } catch (e) { fallback(); }
+  });
 }

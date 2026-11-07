@@ -88,7 +88,7 @@ export function allEntries({ approved, own, totals, baseVotes, current, account 
   const server = approved.map((p) => {
     const t = totals[p.id] || [0, 0];
     const vote = current[p.id] || 0;
-    return { key: p.id, id: p.id, kind: p.kind, title: p.title, parts: p.parts, author: p.author, status: "approved",
+    return { key: p.id, id: p.id, kind: p.kind, title: p.title, parts: p.parts, author: p.author, status: "approved", ...(p.contest ? { contest: p.contest } : {}),
       mine: !!account && p.author === account, days: days(p.approvedAt || p.postedAt), vote, score: t[0] - t[1] - (baseVotes[p.id] || 0) + vote };
   });
   const waiting = own.map((p) => ({ key: p.id, id: p.id, kind: p.kind, title: p.title, parts: p.parts, author: account, status: p.status, reason: p.reason,
@@ -228,7 +228,7 @@ function segBar(ctx, dir) {
 }
 
 // A two-click button: click once to arm, again within 3 s. Used by the
-// reviewer to take a post down, and by authors to delete a rejected post.
+// reviewer to take a post down, and by authors to take back their own posts.
 export function removeButton(ctx, e, { label = "✕", confirm = "Remove?", title = "Remove from the gallery (reviewer)", run = ctx.onRemove } = {}) {
   const b = h("button", { type: "button", class: "wz-gl-remove", title, text: label });
   let armed = null;
@@ -267,7 +267,18 @@ function item(ctx, e, rank, listKey) {
         h("button", { type: "button", class: `wz-gl-vote down${e.vote === -1 ? " on" : ""}`, title: "Dislike", text: "▼", onclick: () => vote(-1) })
       ] : null,
       ctx.onRemove && e.status === "approved" ? removeButton(ctx, e) : null,
-      ctx.onDelete && e.mine && e.status === "rejected" ? removeButton(ctx, e, { label: "Delete", confirm: "Delete for good?", title: "Delete this post: it wasn't approved, so it's only taking up space", run: ctx.onDelete }) : null));
+      ctx.onDelete && e.mine ? ownButton(ctx, e) : null));
+}
+
+// Your own posts: take them back. Waiting: cancel the upload. In the gallery:
+// delete it for everyone (not contest entries: their results are final).
+// Not approved: clear it from My posts.
+function ownButton(ctx, e) {
+  const run = ctx.onDelete;
+  if (e.status === "pending") return removeButton(ctx, e, { label: "Cancel", confirm: "Cancel upload?", title: "Take this upload back before it's reviewed", run });
+  if (e.status === "approved" && !e.contest) return removeButton(ctx, e, { label: "Delete", confirm: "Delete for everyone?", title: "Take your post out of the gallery (its votes go with it)", run });
+  if (e.status === "rejected") return removeButton(ctx, e, { label: "Delete", confirm: "Delete for good?", title: "Delete this post: it wasn't approved, so it's only taking up space", run });
+  return null;
 }
 
 // Any list of items, a page at a time, like Browse: lays the items out in the

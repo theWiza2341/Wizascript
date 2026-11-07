@@ -15,6 +15,8 @@
 // cost/ATK/HP/DMG/KR/G, souls, rarities and TOKEN coloured.
 
 import { h, esc } from "./dom.js";
+import { artPicTile, onArtPicsChange } from "./artpic.js";
+export { onArtPicsChange };
 
 export const CARD_W = 176;
 export const CARD_H = 246;
@@ -82,7 +84,7 @@ function rarityImage(name) {
 }
 
 export function tile(p) {
-  if (p.picture && p.type === "Artifact") return h("img", { class: "wz-gl-artpic", src: p.picture, alt: "" });
+  if (p.picture && p.type === "Artifact") return artPicTile(h, p.picture); // redrawn card-shaped, see artpic.js
   if (p.picture) return h("div", { class: "wz-gl-card wz-gl-pic" }, h("img", { src: p.picture, alt: "" }));
   if (p.type === "Artifact") {
     const colour = rarityColor(p.rarity);
@@ -253,7 +255,8 @@ export const TILE_CSS = `
 .wz-gl-atk { left: 8px; color: #f0003c; } .wz-gl-hp { left: 128px; color: #0dd000; }
 .wz-gl-rar { left: 76px; top: 213px; width: 24px; height: 24px; z-index: 5; image-rendering: pixelated; }
 .wz-gl-pic img { left: 0; top: 0; width: 176px; height: 246px; }
-.wz-gl-artpic { display: block; width: 176px; height: auto; }
+.wz-gl-artpic { display: block; width: 176px; height: auto; flex: none; }
+.wz-gl-restacked { image-rendering: pixelated; }
 .wz-gl-artifact { width: ${CARD_W}px; height: ${CARD_H}px; border: 2px solid #fff; background: #000; padding: 8px; color: #fff; font-size: 12px; line-height: 1.42857; text-align: left; flex: none; display: flex; flex-direction: column; overflow: hidden; }
 .wz-gl-artifact.wz-gl-wide { width: ${CARD_W * 2 + 3}px; }
 .t-enchant i { display: none !important; }

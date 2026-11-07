@@ -2,6 +2,16 @@
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
 
+## 1.7.3
+
+### Card Gallery
+- **Take back your own posts:** in Browse, **Cancel** an upload that's still waiting, or **Delete** one of yours from the gallery (its votes go with it). Contest entries still use **Withdraw** in the Contest tab.
+- **Guidelines** on Submit: what gets accepted into the gallery. Hide them once you know them; **Guidelines** brings them back.
+- **feildmaster's Export files:** **Add files…** in Submit now takes the `.json` file from his editor's new Export, with the cards' real names, text and art (not just a picture).
+
+### Fixes
+- **Artifact pictures were unreadable:** an artifact added as a picture (e.g. from UC Editor's group download) was squeezed into one card's space. It's now redrawn card-shaped with its text rewrapped: one card's space for short text, two for long. Posts already in the gallery are fixed too.
+
 ## 1.7.2
 
 ### New

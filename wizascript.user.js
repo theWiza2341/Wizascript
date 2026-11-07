@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.7.2
+// @version      1.7.3
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -37,6 +37,58 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
   };
   var EDITOR_LABELS = Object.values(EDITORS).map((e) => e.label);
   var FRAME_MESSAGE = "wizascript-card-maker";
+
+  // packages/card-maker/gallery/feild.js
+  var isUuid = (v) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v || "");
+  async function feildPart(e, ctx) {
+    var _a, _b, _c;
+    if (!e) return null;
+    const base = { name: e.name || "", desc: e.description || "", image: await ctx.image(e.image) };
+    if (!base.image && ctx.why && ctx.why(e.image)) base.artNote = ctx.why(e.image);
+    if (e.type === "text") return { type: "Artifact", ...base, rarity: e.rarity || "COMMON" };
+    if (e.type !== "card") return null;
+    const spell = e.health === void 0 || e.health === null;
+    return {
+      type: spell ? "Spell" : "Monster",
+      ...base,
+      cost: (_a = e.cost) != null ? _a : 0,
+      atk: spell ? null : (_b = e.attack) != null ? _b : 0,
+      hp: spell ? null : (_c = e.health) != null ? _c : 0,
+      soul: e.soul || null,
+      rarity: isUuid(e.rarity) ? null : e.rarity || "COMMON",
+      rarityIcon: isUuid(e.rarity) ? await ctx.image(e.rarity) : null,
+      tribes: await Promise.all((e.tribes || []).filter((t) => t && t !== "none").map(async (t) => ({
+        name: isUuid(t) ? null : t,
+        icon: isUuid(t) ? await ctx.image(t) : await ctx.tribeIcon(t)
+      }))),
+      imageType: "standard"
+    };
+  }
+  var tribePath = (t) => `/resources/tribes/${String(t).toUpperCase().replace(/ /g, "_")}.png`;
+  async function feildGroups({ el, groupIds, allIds }, ctx, looseName = "Not in a group") {
+    const groups = [];
+    const seen = /* @__PURE__ */ new Set();
+    for (const gid of groupIds) {
+      const g = el(gid);
+      if (!g) continue;
+      const parts = [];
+      for (const cid of g.content || []) {
+        seen.add(cid);
+        const p = await feildPart(el(cid), ctx);
+        if (p) parts.push(p);
+      }
+      groups.push({ name: g.name || "Group", parts });
+    }
+    const loose = [];
+    for (const id of allIds) {
+      const e = el(id);
+      if (seen.has(id) || groupIds.includes(id) || !e || e.type === "group") continue;
+      const p = await feildPart(e, ctx);
+      if (p) loose.push(p);
+    }
+    if (loose.length) groups.push({ name: looseName, parts: loose });
+    return groups;
+  }
 
   // packages/card-maker/gallery/reader.js
   var page = typeof unsafeWindow !== "undefined" ? unsafeWindow : window;
@@ -103,11 +155,11 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
     }
     return groups;
   }
-  function idbImage(id) {
+  function idbImage(factory, id) {
     return new Promise((ok) => {
       let req;
       try {
-        req = indexedDB.open("undercards", 1);
+        req = factory.open("undercards", 1);
       } catch (e) {
         return ok(null);
       }
@@ -138,76 +190,33 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
     } catch (e) {
       avatars = {};
     }
-    const isId = (v) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v || "");
     const image = async (id) => {
       if (!id) return null;
       if (/^https?:/.test(id)) return toDataUrl(id);
       if (avatars[id]) return toDataUrl(`/resources/images/avatars/${avatars[id]}.png`);
-      const rec = await idbImage(id);
+      const rec = await idbImage(indexedDB, id);
       return rec ? toDataUrl(rec.file || rec.src) : null;
     };
+    const ls = localStorage;
     const el = (id) => {
       try {
-        return JSON.parse(localStorage.getItem("data:el:" + id));
+        return JSON.parse(ls.getItem("data:el:" + id));
       } catch (e) {
         return null;
       }
     };
-    const toPart = async (e) => {
-      var _a, _b, _c;
-      if (!e) return null;
-      const base = { name: e.name || "", desc: e.description || "", image: await image(e.image) };
-      if (e.type === "text") return { type: "Artifact", ...base, rarity: e.rarity || "COMMON" };
-      if (e.type !== "card") return null;
-      const spell = e.health === void 0 || e.health === null;
-      return {
-        type: spell ? "Spell" : "Monster",
-        ...base,
-        cost: (_a = e.cost) != null ? _a : 0,
-        atk: spell ? null : (_b = e.attack) != null ? _b : 0,
-        hp: spell ? null : (_c = e.health) != null ? _c : 0,
-        soul: e.soul || null,
-        rarity: isId(e.rarity) ? null : e.rarity || "COMMON",
-        rarityIcon: isId(e.rarity) ? await image(e.rarity) : null,
-        tribes: await Promise.all((e.tribes || []).filter((t) => t && t !== "none").map(async (t) => ({
-          name: isId(t) ? null : t,
-          icon: isId(t) ? await image(t) : await toDataUrl(`/resources/tribes/${String(t).toUpperCase().replace(/ /g, "_")}.png`)
-        }))),
-        imageType: "standard"
-      };
-    };
-    let ids = [];
+    let groupIds = [];
     try {
-      ids = JSON.parse(localStorage.getItem("app:groups") || "[]");
+      groupIds = JSON.parse(ls.getItem("app:groups") || "[]");
     } catch (e) {
-      ids = [];
+      groupIds = [];
     }
-    const groups = [];
-    const seen = /* @__PURE__ */ new Set();
-    for (const gid of ids) {
-      const g = el(gid);
-      if (!g) continue;
-      const parts = [];
-      for (const cid of g.content || []) {
-        seen.add(cid);
-        const p = await toPart(el(cid));
-        if (p) parts.push(p);
-      }
-      groups.push({ name: g.name || "Group", parts });
+    const allIds = [];
+    for (let i = 0; i < ls.length; i++) {
+      const k = ls.key(i);
+      if (k && k.startsWith("data:el:")) allIds.push(k.slice(8));
     }
-    const loose = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (!k || !k.startsWith("data:el:")) continue;
-      const id = k.slice(8);
-      const e = el(id);
-      if (!seen.has(id) && e && e.type !== "group") {
-        const p = await toPart(e);
-        if (p) loose.push(p);
-      }
-    }
-    if (loose.length) groups.push({ name: "Not in a group", parts: loose });
-    return groups;
+    return feildGroups({ el, groupIds, allIds }, { image, tribeIcon: (t) => toDataUrl(tribePath(t)) });
   }
   function readEditorCards(source) {
     return source === "feildmaster" ? readFeildmaster() : readUcEditor();
@@ -272,7 +281,7 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
   }
 
   // packages/core/version.js
-  var SUITE_VERSION = "1.7.2";
+  var SUITE_VERSION = "1.7.3";
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
@@ -1027,6 +1036,18 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
   var CHANGELOG_default = `# Changelog
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
+
+## 1.7.3
+
+### Card Gallery
+- **Take back your own posts:** in Browse, **Cancel** an upload that's still waiting, or **Delete** one of yours from the gallery (its votes go with it). Contest entries still use **Withdraw** in the Contest tab.
+- **Guidelines** on Submit: what gets accepted into the gallery. Hide them once you know them; **Guidelines** brings them back.
+- **For reviewers:** each upload in Review shows the player's other posts (from any alt that shared their install too), including ones they deleted, so reposts and near copies stand out. Matching card names are highlighted.
+- **For the owner:** **Undo** in Review's Log takes back an approval, rejection or removal, and the Log can show every judge's scores.
+- **feildmaster's Export files:** **Add files\u2026** in Submit now takes the \`.json\` file from his editor's new Export, with the cards' real names, text and art (not just a picture).
+
+### Fixes
+- **Artifact pictures were unreadable:** an artifact added as a picture (e.g. from UC Editor's group download) was squeezed into one card's space. It's now redrawn card-shaped with its text rewrapped: one card's space for short text, two for long. Posts already in the gallery are fixed too.
 
 ## 1.7.2
 
@@ -1799,9 +1820,9 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       } catch (e) {
         show(e.message || "Couldn't reach the Wizascript server.", false);
       }
-      draw();
+      draw2();
     };
-    function draw() {
+    function draw2() {
       wrap.replaceChildren();
       if (state.name && !code) {
         const sw = el3("button", { type: "button", className: "btn btn-sm btn-default", textContent: "Switch account" });
@@ -1845,7 +1866,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
           if (r.linked) {
             accountChanged(r.account, r.cooldownUntil, true);
             code = null;
-            draw();
+            draw2();
             show(`Linked as ${r.account}.`, true);
           } else show(r.message || "Not seen yet. Send the line in void, then check again.", false);
         } catch (e) {
@@ -1860,7 +1881,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         status
       );
     }
-    draw();
+    draw2();
     BD.show({ title: "Undercards Account", message: wrap, buttons: [{ label: "Close", action: (d) => d.close() }] });
   }
   function registerAccountSetting(plugin) {
@@ -3408,7 +3429,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         "Cards you make here are saved separately from the editor's own site. Use the editor's download/upload to move them across."
       ].concat(settingOn("cardMaker.gallery", true) ? [
         "<b>Browse</b> / <b>Submit</b> (title bar) open the Card Gallery. First press <b>Link my account</b>: it types a one-time line into void (chat room 0) for you to send, so your posts and votes count as your Undercards account.",
-        "In Submit, <b>Read from this editor</b> lists the cards you've made; tick the ones to add, link them into sets, then <b>Review upload</b> and <b>Upload to Gallery</b>. Uploads show to everyone once approved.",
+        "In Submit, <b>Read from this editor</b> lists the cards you've made; tick the ones to add, link them into sets, then <b>Review upload</b> and <b>Upload to Gallery</b>. Uploads show to everyone once approved. Check the <b>Guidelines</b> there first.",
+        "Changed your mind? In Browse, <b>Cancel</b> a waiting upload of yours or <b>Delete</b> one from the gallery.",
         "<b>Contest</b> shows the running contest (theme, rules, deadline) and past results. <b>Enter cards</b> takes you to Submit, to enter up to 3 designs.",
         "Given a gallery key? Press <b>Redeem Key</b> on the Card Maker tab and enter it."
       ] : [])
@@ -11036,7 +11058,7 @@ Version: v${version}`;
       });
       if (held) root.querySelectorAll(`.wz-tl-tile[data-key="${CSS.escape(held.key)}"]`).forEach((n) => n.classList.add("wz-tl-pad-held"));
     }
-    function draw(color) {
+    function draw2(color) {
       root.classList.add("wz-tl-pad");
       if (color) root.style.setProperty("--wz-tl-pad-color", color);
       if (!dirty && shown && highlighted && highlighted.isConnected && highlighted.dataset.padId === focusId) {
@@ -11269,7 +11291,7 @@ Version: v${version}`;
     }
     return {
       start,
-      draw,
+      draw: draw2,
       nav,
       press,
       back,
@@ -12168,6 +12190,320 @@ Version: v${version}`;
     return h("button", { type: "button", class: `wz-cm-btn${primary2 ? " wz-gl-primary" : ""}${cls ? " " + cls : ""}`, title, onclick }, label2);
   }
 
+  // packages/card-maker/gallery/artpic.js
+  var ONE = 176;
+  var TWO = 176 * 2 + 3;
+  var H = 246;
+  var BORDER = 2;
+  var PAD = 8;
+  var cache = /* @__PURE__ */ new Map();
+  var ready = /* @__PURE__ */ new Map();
+  var listeners3 = [];
+  var notifyTimer = 0;
+  function onArtPicsChange(f) {
+    listeners3.push(f);
+  }
+  function changed() {
+    clearTimeout(notifyTimer);
+    notifyTimer = setTimeout(() => listeners3.forEach((f) => {
+      try {
+        f();
+      } catch (e) {
+      }
+    }), 30);
+  }
+  function load(src) {
+    return new Promise((ok) => {
+      const img = new Image();
+      if (!/^(data|blob):/.test(src)) img.crossOrigin = "anonymous";
+      img.onload = () => ok(img);
+      img.onerror = () => ok(null);
+      img.src = src;
+    });
+  }
+  function stripPieces(px, w, h2) {
+    const at = (x, y) => (y * w + x) * 4;
+    const counts = /* @__PURE__ */ new Map();
+    for (let i = 0; i < px.length; i += 16) {
+      const k = px[i] >> 4 << 8 | px[i + 1] >> 4 << 4 | px[i + 2] >> 4;
+      counts.set(k, (counts.get(k) || 0) + 1);
+    }
+    let bk = 0, best = -1;
+    for (const [k, n] of counts) if (n > best) {
+      best = n;
+      bk = k;
+    }
+    let bg = [(bk >> 8 & 15) * 16 + 8, (bk >> 4 & 15) * 16 + 8, (bk & 15) * 16 + 8];
+    for (let i = 0; i < px.length; i += 16) {
+      if ((px[i] >> 4 << 8 | px[i + 1] >> 4 << 4 | px[i + 2] >> 4) === bk) {
+        bg = [px[i], px[i + 1], px[i + 2]];
+        break;
+      }
+    }
+    const ink = new Uint8Array(w * h2);
+    for (let p = 0, i = 0; p < ink.length; p++, i += 4) {
+      if (px[i + 3] >= 40 && Math.abs(px[i] - bg[0]) + Math.abs(px[i + 1] - bg[1]) + Math.abs(px[i + 2] - bg[2]) > 60) ink[p] = 1;
+    }
+    const colShare = (x, y0, y1) => {
+      let n = 0;
+      for (let y = y0; y <= y1; y++) n += ink[y * w + x];
+      return n / (y1 - y0 + 1);
+    };
+    const rowShare = (y, x0, x1) => {
+      let n = 0;
+      for (let x = x0; x <= x1; x++) n += ink[y * w + x];
+      return n / (x1 - x0 + 1);
+    };
+    if (w < 120 || h2 < 20 || w / h2 < 2.2) return null;
+    let l = 0, r = w - 1, t = 0, b = h2 - 1;
+    const midY0 = Math.floor(h2 * 0.2), midY1 = Math.ceil(h2 * 0.8);
+    while (l < 8 && colShare(l, midY0, midY1) > 0.9) l++;
+    while (r > w - 9 && colShare(r, midY0, midY1) > 0.9) r--;
+    while (t < 8 && rowShare(t, l, r) > 0.9) t++;
+    while (b > h2 - 9 && rowShare(b, l, r) > 0.9) b--;
+    if (l === 0 || t === 0) return null;
+    const border = [px[at(0, h2 >> 1)], px[at(0, h2 >> 1) + 1], px[at(0, h2 >> 1) + 2]];
+    const run = (x) => {
+      let best2 = 0, n = 0;
+      for (let y = t; y <= b; y++) {
+        n = ink[y * w + x] ? n + 1 : 0;
+        if (n > best2) best2 = n;
+      }
+      return best2;
+    };
+    const tall = Math.max(16, Math.round((b - t + 1) * 0.6));
+    let dividers = [];
+    for (let x = l + 3; x <= r - 3; x++) {
+      if (run(x) >= tall) {
+        const last = dividers[dividers.length - 1];
+        if (last && x - last[1] <= 1) last[1] = x;
+        else dividers.push([x, x]);
+      }
+    }
+    dividers = dividers.filter(([a, z]) => z - a >= 1);
+    if (!dividers.length || dividers.length > 3) return null;
+    const bounds = [l, ...dividers.flatMap(([a, z]) => [a - 1, z + 1]), r];
+    const trim = (x0, x1) => {
+      let y0 = t, y1 = b;
+      const rowHas = (y) => {
+        for (let x = x0; x <= x1; x++) if (ink[y * w + x]) return true;
+        return false;
+      };
+      const colHas = (x) => {
+        for (let y = y0; y <= y1; y++) if (ink[y * w + x]) return true;
+        return false;
+      };
+      while (y0 < y1 && !rowHas(y0)) y0++;
+      while (y1 > y0 && !rowHas(y1)) y1--;
+      while (x0 < x1 && !colHas(x0)) x0++;
+      while (x1 > x0 && !colHas(x1)) x1--;
+      return x1 - x0 < 2 || y1 - y0 < 2 ? null : { x0, y0, x1, y1 };
+    };
+    const pieces = [];
+    for (let i = 0; i < bounds.length; i += 2) pieces.push(trim(bounds[i], bounds[i + 1]));
+    const desc = pieces.pop();
+    const head = pieces.filter(Boolean);
+    if (!desc || !head.length) return null;
+    return { ink, border, bg, head, desc, lines: textLines(ink, w, desc) };
+  }
+  function textLines(ink, w, box) {
+    const rowHas = (y) => {
+      for (let x = box.x0; x <= box.x1; x++) if (ink[y * w + x]) return true;
+      return false;
+    };
+    const rows = [];
+    let s = -1;
+    for (let y = box.y0; y <= box.y1 + 1; y++) {
+      const on = y <= box.y1 && rowHas(y);
+      if (on && s < 0) s = y;
+      else if (!on && s >= 0) {
+        rows.push([s, y - 1]);
+        s = -1;
+      }
+    }
+    if (!rows.length) return null;
+    const heights = rows.map(([a, z]) => z - a + 1).sort((a, b) => a - b);
+    const lineH = heights[heights.length >> 1];
+    const gap = Math.max(5, Math.round(lineH * 0.38));
+    const lines = rows.map(([y0, y1]) => {
+      const colHas = (x) => {
+        for (let y = y0; y <= y1; y++) if (ink[y * w + x]) return true;
+        return false;
+      };
+      const words = [];
+      let ws = -1, empty = 0;
+      for (let x = box.x0; x <= box.x1 + gap; x++) {
+        if (x <= box.x1 && colHas(x)) {
+          if (ws < 0) ws = x;
+          empty = 0;
+        } else if (ws >= 0 && (++empty >= gap || x > box.x1)) {
+          words.push([ws, x - empty]);
+          ws = -1;
+          empty = 0;
+        }
+      }
+      const ends = /* @__PURE__ */ new Map();
+      for (let x = box.x0; x <= box.x1; x++) {
+        for (let y = y1; y >= y0; y--) if (ink[y * w + x]) {
+          ends.set(y, (ends.get(y) || 0) + 1);
+          break;
+        }
+      }
+      let base = y1, most = 0;
+      for (const [y, n] of ends) if (n > most || n === most && y < base) {
+        most = n;
+        base = y;
+      }
+      return { y0, y1, base, words };
+    });
+    const gaps = [];
+    lines.forEach((ln) => {
+      for (let i = 1; i < ln.words.length; i++) gaps.push(ln.words[i][0] - ln.words[i - 1][1] - 1);
+    });
+    gaps.sort((a, b) => a - b);
+    const space = gaps.length ? gaps[gaps.length >> 1] : gap + 2;
+    lines.forEach((ln, i) => {
+      const next = lines[i + 1];
+      ln.forced = !!next && next.words.length > 0 && ln.words.length > 0 && ln.words[ln.words.length - 1][1] + space + (next.words[0][1] - next.words[0][0] + 1) <= box.x1 - 2;
+    });
+    const pitches = [];
+    for (let i = 1; i < lines.length; i++) pitches.push(lines[i].y0 - lines[i - 1].y0);
+    pitches.sort((a, b) => a - b);
+    return { lines, space, pitch: pitches.length ? pitches[pitches.length >> 1] : lineH + 4 };
+  }
+  function flow(text, width) {
+    const out = [];
+    let x = 0, y = 0;
+    const asc = Math.max(...text.lines.map((ln) => ln.base - ln.y0));
+    const offset = (ln) => asc - (ln.base - ln.y0);
+    const wide = Math.max(...text.lines.flatMap((ln) => ln.words.map(([a, z]) => z - a + 1)), 0);
+    if (wide > width) return null;
+    text.lines.forEach((ln) => {
+      ln.words.forEach(([a, z]) => {
+        const ww = z - a + 1;
+        if (x > 0 && x + text.space + ww > width) {
+          x = 0;
+          y += text.pitch;
+        } else if (x > 0) x += text.space;
+        out.push({ src: [a, z, ln.y0, ln.y1], x, y: y + offset(ln) });
+        x += ww;
+      });
+      if (ln.forced) {
+        x = 0;
+        y += text.pitch;
+      }
+    });
+    if (text.lines[text.lines.length - 1].forced) y -= text.pitch;
+    const bottom = Math.max(0, ...out.map((o) => o.y + o.src[3] - o.src[2] + 1));
+    return { words: out, height: Math.max(bottom, y + text.pitch) };
+  }
+  function layoutStrip(p) {
+    if (!p.lines) return null;
+    for (const tw of [ONE, TWO]) {
+      const inner = tw - 2 * (BORDER + PAD);
+      const heads = [];
+      let x = 0, y = 0, rowH = 0, fits = true;
+      for (const b of p.head) {
+        const bw = b.x1 - b.x0 + 1, bh = b.y1 - b.y0 + 1;
+        if (bw > inner) {
+          fits = false;
+          break;
+        }
+        if (x > 0 && x + 10 + bw > inner) {
+          x = 0;
+          y += rowH + 6;
+          rowH = 0;
+        } else if (x > 0) x += 10;
+        heads.push({ b, x, y });
+        x += bw;
+        rowH = Math.max(rowH, bh);
+      }
+      if (!fits) continue;
+      heads.forEach((hd) => {
+        const rowItems = heads.filter((o) => o.y === hd.y);
+        const tall = Math.max(...rowItems.map((o) => o.b.y1 - o.b.y0 + 1));
+        hd.dy = Math.floor((tall - (hd.b.y1 - hd.b.y0 + 1)) / 2);
+      });
+      const headH = y + rowH;
+      const text = flow(p.lines, inner);
+      if (!text) continue;
+      const need = BORDER + PAD + headH + 9 + text.height + PAD + BORDER;
+      if (tw === ONE && need > H) continue;
+      return { w: tw, h: Math.max(H, need), heads, headH, text };
+    }
+    return null;
+  }
+  function draw(img, p, lay) {
+    const c = document.createElement("canvas");
+    c.width = lay.w;
+    c.height = lay.h;
+    const g = c.getContext("2d");
+    g.imageSmoothingEnabled = false;
+    g.fillStyle = `rgb(${p.bg.join(",")})`;
+    g.fillRect(0, 0, lay.w, lay.h);
+    g.fillStyle = `rgb(${p.border.join(",")})`;
+    g.fillRect(0, 0, lay.w, BORDER);
+    g.fillRect(0, lay.h - BORDER, lay.w, BORDER);
+    g.fillRect(0, 0, BORDER, lay.h);
+    g.fillRect(lay.w - BORDER, 0, BORDER, lay.h);
+    const ox = BORDER + PAD, oy = BORDER + PAD;
+    lay.heads.forEach(({ b, x, y, dy }) => {
+      const bw = b.x1 - b.x0 + 1, bh = b.y1 - b.y0 + 1;
+      g.drawImage(img, b.x0, b.y0, bw, bh, ox + x, oy + y + dy, bw, bh);
+    });
+    const ty = oy + lay.headH + 3;
+    g.fillRect(BORDER, ty, lay.w - 2 * BORDER, 1);
+    lay.text.words.forEach(({ src: [x0, x1, y0, y1], x, y }) => {
+      g.drawImage(img, x0, y0, x1 - x0 + 1, y1 - y0 + 1, ox + x, ty + 6 + y, x1 - x0 + 1, y1 - y0 + 1);
+    });
+    return c.toDataURL("image/png");
+  }
+  function restackArtifact(src) {
+    if (!src) return Promise.resolve(null);
+    if (!cache.has(src)) {
+      cache.set(src, load(src).then((img) => {
+        if (!img) return null;
+        const w = img.naturalWidth, h2 = img.naturalHeight;
+        let px;
+        try {
+          const c = document.createElement("canvas");
+          c.width = w;
+          c.height = h2;
+          const g = c.getContext("2d");
+          g.drawImage(img, 0, 0);
+          px = g.getImageData(0, 0, w, h2).data;
+        } catch (e) {
+          return { w, h: h2, url: null };
+        }
+        const pieces = stripPieces(px, w, h2);
+        const lay = pieces && layoutStrip(pieces);
+        return lay ? { url: draw(img, pieces, lay), w: lay.w, h: lay.h, restacked: true } : { w, h: h2, url: null };
+      }).catch(() => null).then((r) => {
+        ready.set(src, r);
+        return r;
+      }));
+    }
+    return cache.get(src);
+  }
+  var plainWidth = (w) => Math.min(w || ONE, w > ONE * 1.15 ? TWO : ONE);
+  function artPicTile(h2, src) {
+    const img = h2("img", { class: "wz-gl-artpic", src, alt: "", style: { width: ONE + "px" } });
+    const apply2 = (r) => {
+      if (!r) return false;
+      if (r.url) {
+        img.src = r.url;
+        img.style.width = r.w + "px";
+        img.classList.add("wz-gl-restacked");
+      } else img.style.width = plainWidth(r.w) + "px";
+      return true;
+    };
+    if (ready.has(src)) apply2(ready.get(src));
+    else restackArtifact(src).then((r) => {
+      if (apply2(r)) changed();
+    });
+    return img;
+  }
+
   // packages/card-maker/gallery/render.js
   var CARD_W = 176;
   var CARD_H = 246;
@@ -12218,7 +12554,7 @@ Version: v${version}`;
   }
   function tile(p) {
     var _a, _b, _c;
-    if (p.picture && p.type === "Artifact") return h("img", { class: "wz-gl-artpic", src: p.picture, alt: "" });
+    if (p.picture && p.type === "Artifact") return artPicTile(h, p.picture);
     if (p.picture) return h("div", { class: "wz-gl-card wz-gl-pic" }, h("img", { src: p.picture, alt: "" }));
     if (p.type === "Artifact") {
       const colour = rarityColor(p.rarity);
@@ -12397,7 +12733,8 @@ Version: v${version}`;
 .wz-gl-atk { left: 8px; color: #f0003c; } .wz-gl-hp { left: 128px; color: #0dd000; }
 .wz-gl-rar { left: 76px; top: 213px; width: 24px; height: 24px; z-index: 5; image-rendering: pixelated; }
 .wz-gl-pic img { left: 0; top: 0; width: 176px; height: 246px; }
-.wz-gl-artpic { display: block; width: 176px; height: auto; }
+.wz-gl-artpic { display: block; width: 176px; height: auto; flex: none; }
+.wz-gl-restacked { image-rendering: pixelated; }
 .wz-gl-artifact { width: ${CARD_W}px; height: ${CARD_H}px; border: 2px solid #fff; background: #000; padding: 8px; color: #fff; font-size: 12px; line-height: 1.42857; text-align: left; flex: none; display: flex; flex-direction: column; overflow: hidden; }
 .wz-gl-artifact.wz-gl-wide { width: ${CARD_W * 2 + 3}px; }
 .t-enchant i { display: none !important; }
@@ -12409,6 +12746,57 @@ Version: v${version}`;
 .wz-gl-rarity { flex: none; padding-bottom: 4px; margin-bottom: 5px; border-bottom: 2px solid currentColor; }
 .wz-gl-arttext { flex: 1 1 auto; min-height: 0; overflow: hidden; }
 `;
+
+  // packages/card-maker/gallery/feild.js
+  var isUuid = (v) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v || "");
+  async function feildPart(e, ctx) {
+    var _a, _b, _c;
+    if (!e) return null;
+    const base = { name: e.name || "", desc: e.description || "", image: await ctx.image(e.image) };
+    if (!base.image && ctx.why && ctx.why(e.image)) base.artNote = ctx.why(e.image);
+    if (e.type === "text") return { type: "Artifact", ...base, rarity: e.rarity || "COMMON" };
+    if (e.type !== "card") return null;
+    const spell = e.health === void 0 || e.health === null;
+    return {
+      type: spell ? "Spell" : "Monster",
+      ...base,
+      cost: (_a = e.cost) != null ? _a : 0,
+      atk: spell ? null : (_b = e.attack) != null ? _b : 0,
+      hp: spell ? null : (_c = e.health) != null ? _c : 0,
+      soul: e.soul || null,
+      rarity: isUuid(e.rarity) ? null : e.rarity || "COMMON",
+      rarityIcon: isUuid(e.rarity) ? await ctx.image(e.rarity) : null,
+      tribes: await Promise.all((e.tribes || []).filter((t) => t && t !== "none").map(async (t) => ({
+        name: isUuid(t) ? null : t,
+        icon: isUuid(t) ? await ctx.image(t) : await ctx.tribeIcon(t)
+      }))),
+      imageType: "standard"
+    };
+  }
+  async function feildGroups({ el: el3, groupIds, allIds }, ctx, looseName = "Not in a group") {
+    const groups = [];
+    const seen2 = /* @__PURE__ */ new Set();
+    for (const gid of groupIds) {
+      const g = el3(gid);
+      if (!g) continue;
+      const parts = [];
+      for (const cid of g.content || []) {
+        seen2.add(cid);
+        const p = await feildPart(el3(cid), ctx);
+        if (p) parts.push(p);
+      }
+      groups.push({ name: g.name || "Group", parts });
+    }
+    const loose = [];
+    for (const id of allIds) {
+      const e = el3(id);
+      if (seen2.has(id) || groupIds.includes(id) || !e || e.type === "group") continue;
+      const p = await feildPart(e, ctx);
+      if (p) loose.push(p);
+    }
+    if (loose.length) groups.push({ name: looseName, parts: loose });
+    return groups;
+  }
 
   // packages/card-maker/gallery/parts.js
   var ART = { Monster: [160, 90], Spell: [160, 90], Enchantment: [160, 183], Artifact: [64, 64] };
@@ -12453,8 +12841,9 @@ Version: v${version}`;
     try {
       art = await fit(raw.image, w, h2, raw.type === "Artifact" ? "contain" : "cover");
     } catch (e) {
-      note = "art didn't load";
+      note = raw.artNote || "art didn't load";
     }
+    if (!art && raw.artNote) note = raw.artNote;
     if (art && raw.type !== "Artifact" && raw.type !== "Enchantment" && raw.imageType && raw.imageType !== "standard") note = `${raw.imageType} art cropped to 160x90`;
     return {
       type: raw.type,
@@ -12475,6 +12864,57 @@ Version: v${version}`;
       editorGroup,
       group: null
     };
+  }
+  function isFeildmasterExport(text) {
+    try {
+      const b = JSON.parse(text);
+      return !!(b && b.version === 1 && Array.isArray(b.elements) && b.elements.length && typeof b.assets === "object");
+    } catch (e) {
+      return false;
+    }
+  }
+  var feildArt = async (kind, name) => urlToDataUrl(`${await server()}/v1/feild/${kind}/${encodeURIComponent(name)}`);
+  async function urlToDataUrl(url) {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) return null;
+      const blob = await r.blob();
+      return await new Promise((ok) => {
+        const fr = new FileReader();
+        fr.onload = () => ok(fr.result);
+        fr.onerror = () => ok(null);
+        fr.readAsDataURL(blob);
+      });
+    } catch (e) {
+      return null;
+    }
+  }
+  async function readFeildmasterFile(text) {
+    const b = JSON.parse(text);
+    const byId2 = new Map(b.elements.filter((e) => e && e.id).map((e) => [e.id, e]));
+    const assets = b.assets || {};
+    const contained = /* @__PURE__ */ new Set();
+    b.elements.forEach((e) => (e && e.type === "group" ? e.content || [] : []).forEach((id) => contained.add(id)));
+    const groupIds = b.elements.filter((e) => e && e.type === "group" && !contained.has(e.id)).map((e) => e.id);
+    const notes = /* @__PURE__ */ new Map();
+    const image = async (id) => {
+      if (!id) return null;
+      if (isUuid(id)) {
+        const a = assets[id];
+        if (a && typeof a.src === "string") return a.src.startsWith("data:") ? a.src : urlToDataUrl(a.src);
+        return null;
+      }
+      if (/^https?:/.test(id)) return urlToDataUrl(id);
+      const data2 = await feildArt("avatar", id);
+      if (!data2) notes.set(id, "built-in art from feildmaster's editor couldn't be loaded");
+      return data2;
+    };
+    const groups = await feildGroups(
+      { el: (id) => byId2.get(id), groupIds, allIds: [...byId2.keys()] },
+      { image, tribeIcon: (t) => feildArt("tribe", String(t).toUpperCase().replace(/ /g, "_")), why: (id) => notes.get(id) }
+    );
+    const root = groupIds.length === 1 ? byId2.get(groupIds[0]) : null;
+    return { name: root && root.name || "", groups };
   }
   function readUcEditorFile(text) {
     const json = JSON.parse(new TextDecoder().decode(Uint8Array.from(text.trim().match(/../g).map((b) => parseInt(b, 16)))));
@@ -12740,16 +13180,16 @@ Version: v${version}`;
   }
   function pruneUploads(statusById, inIndex) {
     const d = getDraft();
-    let changed2 = false;
+    let changed3 = false;
     Object.keys(d.uploads).forEach((id) => {
       const st = statusById[id];
       const old = Date.now() - d.uploads[id].postedAt > 14 * 864e5;
       if (st === "approved" && inIndex.has(id) || (st === "rejected" || st === "removed") && old || !st && old) {
         delete d.uploads[id];
-        changed2 = true;
+        changed3 = true;
       }
     });
-    if (changed2) saveDraft();
+    if (changed3) saveDraft();
   }
   function entries() {
     const d = getDraft();
@@ -12770,7 +13210,9 @@ Version: v${version}`;
   var getHealth = () => call("GET", "/v1/health");
   var admin = (method, path, key2, body) => call(method, path, { body, adminKey: key2 });
   var reviewWhoami = (key2) => admin("GET", "/v1/admin/whoami", key2);
-  var reviewLog = (key2) => admin("GET", "/v1/admin/log", key2);
+  var reviewLog = (key2, only) => admin("GET", "/v1/admin/log" + (only ? `?only=${encodeURIComponent(only)}` : ""), key2);
+  var reviewUndo = (key2, n) => admin("POST", "/v1/admin/undo", key2, { n });
+  var reviewContext = (key2, id) => admin("GET", `/v1/admin/context?id=${encodeURIComponent(id)}`, key2);
   var reviewersList = (key2) => admin("GET", "/v1/admin/reviewers", key2);
   var reviewerAdd = (key2, name) => admin("POST", "/v1/admin/reviewers/add", key2, { name });
   var reviewerRevoke = (key2, id) => admin("POST", "/v1/admin/reviewers/revoke", key2, { id });
@@ -12910,6 +13352,65 @@ Version: v${version}`;
       pending: () => ({ ...queue })
     };
   }
+  var GUIDELINES_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/sounds/gallery-guidelines.md";
+  var GUIDE_KEY = "wizascript.cardMaker.guidelines";
+  var GUIDE_TTL = 60 * 60 * 1e3;
+  var DEFAULT_GUIDELINES = `# Gallery guidelines
+- **Explain it.** Using a custom keyword? Upload it as a set that includes its description. Existing UC cards and artifacts can just be named.
+- **Keep it codable.** Effects that would be very hard to build in UC (multi-selects, aura keywords) are usually turned down. Judged case by case.
+- **New ideas, not number tweaks.** No +1/-1 buffs or nerfs of existing cards. Reworks and big effect changes are fine.
+- **UT, UTY and Deltarune sprites only.** Art from other fangames gets rejected.
+- **Cardifacts rules apply.** Don't post anything you couldn't post in the channel.`;
+  function parseGuidelines(text) {
+    const out = { title: "", intro: [], rules: [] };
+    String(text || "").split(/\r?\n/).forEach((raw) => {
+      const line = raw.trim();
+      if (!line) return;
+      if (/^#\s+/.test(line)) {
+        if (!out.title) out.title = line.replace(/^#+\s+/, "");
+        return;
+      }
+      if (/^[-*]\s+/.test(line)) out.rules.push(line.replace(/^[-*]\s+/, ""));
+      else if (out.rules.length) out.rules[out.rules.length - 1] += " " + line;
+      else out.intro.push(line);
+    });
+    return out;
+  }
+  function cachedGuidelines() {
+    try {
+      const c = JSON.parse(GM_getValue(GUIDE_KEY, "null"));
+      return c && typeof c.text === "string" ? c : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function getGuidelines() {
+    const c = cachedGuidelines();
+    if (c && Date.now() - c.at < GUIDE_TTL) return Promise.resolve(c.text);
+    return new Promise((resolve2) => {
+      const fallback = () => resolve2(c ? c.text : DEFAULT_GUIDELINES);
+      try {
+        GM_xmlhttpRequest({
+          method: "GET",
+          url: GUIDELINES_URL + "?t=" + Math.floor(Date.now() / 6e4),
+          timeout: 8e3,
+          onload: (r) => {
+            const text = r.status === 200 ? String(r.responseText || "") : "";
+            if (!parseGuidelines(text).rules.length) return fallback();
+            try {
+              GM_setValue(GUIDE_KEY, JSON.stringify({ at: Date.now(), text }));
+            } catch (e) {
+            }
+            resolve2(text);
+          },
+          onerror: fallback,
+          ontimeout: fallback
+        });
+      } catch (e) {
+        fallback();
+      }
+    });
+  }
 
   // packages/card-maker/gallery/browse.js
   var LISTS = [["new", "Newest"], ["week", "This Week"], ["month", "This Month"], ["all", "All Time"]];
@@ -12987,6 +13488,7 @@ Version: v${version}`;
         parts: p.parts,
         author: p.author,
         status: "approved",
+        ...p.contest ? { contest: p.contest } : {},
         mine: !!account && p.author === account,
         days: days(p.approvedAt || p.postedAt),
         vote,
@@ -13039,7 +13541,7 @@ Version: v${version}`;
     let pages = [[]];
     let animate = dir;
     function layout2() {
-      const H = area.clientHeight;
+      const H2 = area.clientHeight;
       const grid = h("div", { class: "wz-gl-grid" });
       area.replaceChildren(grid);
       if (!items.length) {
@@ -13066,7 +13568,7 @@ Version: v${version}`;
       pages = [];
       let page = null, pageTop = 0;
       rows.forEach((r) => {
-        if (!page || r.bottom - pageTop > H) {
+        if (!page || r.bottom - pageTop > H2) {
           page = [];
           pages.push(page);
           pageTop = r.top;
@@ -13197,9 +13699,16 @@ Version: v${version}`;
           h("button", { type: "button", class: `wz-gl-vote down${e.vote === -1 ? " on" : ""}`, title: "Dislike", text: "\u25BC", onclick: () => vote(-1) })
         ] : null,
         ctx.onRemove && e.status === "approved" ? removeButton(ctx, e) : null,
-        ctx.onDelete && e.mine && e.status === "rejected" ? removeButton(ctx, e, { label: "Delete", confirm: "Delete for good?", title: "Delete this post: it wasn't approved, so it's only taking up space", run: ctx.onDelete }) : null
+        ctx.onDelete && e.mine ? ownButton(ctx, e) : null
       )
     );
+  }
+  function ownButton(ctx, e) {
+    const run = ctx.onDelete;
+    if (e.status === "pending") return removeButton(ctx, e, { label: "Cancel", confirm: "Cancel upload?", title: "Take this upload back before it's reviewed", run });
+    if (e.status === "approved" && !e.contest) return removeButton(ctx, e, { label: "Delete", confirm: "Delete for everyone?", title: "Take your post out of the gallery (its votes go with it)", run });
+    if (e.status === "rejected") return removeButton(ctx, e, { label: "Delete", confirm: "Delete for good?", title: "Delete this post: it wasn't approved, so it's only taking up space", run });
+    return null;
   }
   function pagedGrid(items, { state: state3, wheelPages = () => true, onPage, empty = "* Nothing here yet." }) {
     const area = h("div", { class: "wz-gl-pagearea" });
@@ -13210,7 +13719,7 @@ Version: v${version}`;
     let pages = [[]];
     let animate = null;
     function layout2() {
-      const H = area.clientHeight;
+      const H2 = area.clientHeight;
       const grid = h("div", { class: "wz-gl-grid" });
       area.replaceChildren(grid);
       if (!items.length) {
@@ -13237,7 +13746,7 @@ Version: v${version}`;
       pages = [];
       let page = null, pageTop = 0;
       rows.forEach((r) => {
-        if (!page || r.bottom - pageTop > H) {
+        if (!page || r.bottom - pageTop > H2) {
           page = [];
           pages.push(page);
           pageTop = r.top;
@@ -13937,6 +14446,21 @@ Version: v${version}`;
 .wz-gl-revlist { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; max-height: 360px; overflow: auto; }
 .wz-gl-rev { border: 1px solid #444; background: #111; padding: 4px 6px; }
 .wz-gl-revtabs { margin-bottom: 8px; }
+.wz-gl-ctx { margin-top: 10px; padding-top: 8px; border-top: 1px dashed #444; font-size: 13px; }
+.wz-gl-ctxhead { display: block; background: none; border: 0; color: #ddd; cursor: pointer; font: 13px Arial, sans-serif; padding: 0; text-align: left; }
+.wz-gl-ctxhead:hover b { text-decoration: underline; }
+.wz-gl-ctxsame { color: #ffb44a; font-weight: bold; }
+.wz-gl-ctxlist { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.wz-gl-ctxitem { border: 1px solid #333; background: #0b0b0b; padding: 6px; max-width: 100%; }
+.wz-gl-ctxitem.same { border-color: #ffb44a; }
+.wz-gl-ctxitem.gone .wz-gl-revcards { opacity: .75; }
+.wz-gl-ctxmeta { font-size: 12px; margin-bottom: 4px; }
+.wz-gl-loglist .undone { opacity: .55; }
+.wz-gl-loglist .wz-gl-remove { margin-left: 8px; }
+.wz-gl-guide { margin: 0 0 10px; padding: 8px 12px; border: 2px solid #4aa3df; background: #0c1620; font-size: 13px; line-height: 1.45; max-width: 980px; }
+.wz-gl-guide ul { margin: 4px 0 0; padding-left: 20px; }
+.wz-gl-guide li { margin: 3px 0; }
+.wz-gl-guide .head { display: flex; align-items: center; gap: 8px; }
 .wz-gl-revlog { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
 .wz-gl-newkey { margin: 8px 0; display: flex; flex-direction: column; gap: 6px; border-color: #ff0; }
 .wz-gl-key { flex: 1; min-width: 0; font-family: monospace; }
@@ -13991,9 +14515,10 @@ ${CONTEST_CSS}
       delete draft2.proto;
       saveDraft();
     }
+    draft2.gone = Object.fromEntries(Object.entries(draft2.gone || {}).filter(([, at]) => Date.now() - at < 30 * 6e4));
     let viewAs = "";
-    const listeners6 = [];
-    const notify2 = () => listeners6.forEach((f) => f());
+    const listeners7 = [];
+    const notify2 = () => listeners7.forEach((f) => f());
     let browseCtl = null;
     let read2 = null;
     let readTimer = null;
@@ -14027,12 +14552,15 @@ ${CONTEST_CSS}
       who: null,
       section: "uploads",
       log: null,
+      logOnly: "",
       reviewers: null,
       newKey: null,
       newName: "",
       newRole: "reviewer",
       adding: false,
-      sectionError: ""
+      sectionError: "",
+      ctx: {},
+      ctxOpen: {}
     });
     let rev = blankRev();
     const realRole = () => rev.who ? rev.who.role : null;
@@ -14045,6 +14573,7 @@ ${CONTEST_CSS}
       rev.loading = true;
       try {
         if (!rev.who) rev.who = await reviewWhoami(key2);
+        if (force) rev.ctx = {};
         if (realRole() === "judge") {
           rev.at = Date.now();
           rev.error = "";
@@ -14128,11 +14657,75 @@ ${CONTEST_CSS}
             p.kind === "set" ? h("div", { class: "wz-gl-sethead" }, h("div", { class: "wz-gl-setname", text: post.title })) : null,
             h("div", { class: "wz-gl-row" }, post.parts.map((c) => hoverable(h("div", { class: "wz-gl-zoom" }, tile(c)), c, null)))
           ) : h("p", { class: "wz-gl-note", text: "Loading its cards\u2026" }),
-          h("div", { class: "wz-gl-bar wz-gl-revactions" }, approveBtn, rejectBtn, reason)
+          h("div", { class: "wz-gl-bar wz-gl-revactions" }, approveBtn, rejectBtn, reason),
+          contextBox(p, post)
         );
       };
       const note = h("p", { class: "wz-gl-note", text: "Each upload is shown exactly as it will look in Browse. Approving adds it to the gallery for everyone (contest entries: to the contest)." });
       return h("div", {}, head, note, h("div", { class: "wz-gl-revposts" }, list.map(one)));
+    }
+    const CTX_LABEL = { approved: "in the gallery", pending: "waiting", rejected: "rejected", removed: "taken down" };
+    const CTX_WAS = { approved: "it was in the gallery", pending: "it was waiting", rejected: "it was rejected", removed: "it was taken down" };
+    const daysAgo2 = (t) => t ? Math.max(0, Math.floor((Date.now() - t) / 864e5)) : 0;
+    const nameKey = (x) => String(x || "").trim().toLowerCase();
+    function loadContext(id) {
+      if (rev.ctx[id]) return;
+      rev.ctx[id] = { loading: true };
+      reviewContext(reviewerKey2(), id).then((d) => {
+        rev.ctx[id] = { data: d || { posts: [] } };
+      }, (e) => {
+        rev.ctx[id] = { error: errText(e) };
+      }).then(() => {
+        if (open && tab === "review") render2();
+      });
+    }
+    function contextBox(p, post) {
+      loadContext(p.id);
+      const c = rev.ctx[p.id];
+      if (!c || c.loading) return h("div", { class: "wz-gl-ctx dim", text: "Looking for their other posts\u2026" });
+      if (c.error) return h("div", { class: "wz-gl-ctx wz-gl-issues", text: `Their other posts couldn't be loaded: ${c.error}` });
+      const d = c.data;
+      const list = d.posts || [];
+      const where = d.contest ? `in ${d.contest.title || "this contest"}` : "in the gallery";
+      const alts = d.accounts && d.accounts.length > 1 ? ` Accounts: ${d.accounts.join(", ")}.` : "";
+      if (!list.length) return h("div", { class: "wz-gl-ctx dim", text: `No other posts ${where}.${alts}` });
+      const names = new Set([nameKey(p.title), ...(post && post.parts || []).map((x) => nameKey(x.name))].filter(Boolean));
+      const same = (o) => names.has(nameKey(o.title)) || (o.parts || []).some((x) => names.has(nameKey(x.name)));
+      const nSame = list.filter(same).length;
+      const counts = {};
+      list.forEach((o) => {
+        counts[o.status] = (counts[o.status] || 0) + 1;
+      });
+      const summary = Object.entries(counts).map(([k, n]) => `${n} ${k === "deleted" ? "deleted" : CTX_LABEL[k] || k}`).join(", ");
+      const isOpen = rev.ctxOpen[p.id] !== void 0 ? rev.ctxOpen[p.id] : nSame > 0;
+      const head = h(
+        "button",
+        { type: "button", class: "wz-gl-ctxhead", title: "Everything this player (and any alt that shared their install) has posted here", onclick: () => {
+          rev.ctxOpen[p.id] = !isOpen;
+          render2();
+        } },
+        h("b", { text: `${isOpen ? "\u25BE" : "\u25B8"} Their other posts ${where}: ${list.length}` }),
+        nSame ? h("span", { class: "wz-gl-ctxsame", text: ` \xB7 ${nSame} with a matching name` }) : null,
+        h("span", { class: "dim", text: ` (${summary}).${alts}` })
+      );
+      if (!isOpen) return h("div", { class: "wz-gl-ctx" }, head);
+      const items = list.map((o) => {
+        const shown = o.status === "approved" && o.parts ? withArt(o) : o;
+        const label2 = o.status === "deleted" ? `deleted by them (${CTX_WAS[o.deletedFrom] || "earlier"})` : CTX_LABEL[o.status] || o.status;
+        const info = { author: o.author, days: daysAgo2(o.postedAt), status: o.status === "rejected" ? "rejected" : "approved", reason: o.reason };
+        return h(
+          "div",
+          { class: `wz-gl-ctxitem${same(o) ? " same" : ""}${o.status === "approved" ? "" : " gone"}` },
+          h(
+            "div",
+            { class: "wz-gl-ctxmeta" },
+            h("b", { text: o.title || "(no name)" }),
+            h("span", { class: "dim", text: ` \xB7 ${label2}${o.reason ? `: ${o.reason}` : ""} \xB7 #${o.id}${o.author !== d.author ? ` \xB7 ${o.author}` : ""}` })
+          ),
+          shown.parts ? h("div", { class: "wz-gl-revcards" }, shown.parts.map((x) => hoverable(h("div", { class: "wz-gl-zoom" }, tile(x)), x, info))) : h("div", { class: "dim", text: "Its cards weren't kept." })
+        );
+      });
+      return h("div", { class: "wz-gl-ctx open" }, head, h("div", { class: "wz-gl-ctxlist" }, items));
     }
     function reviewView() {
       if (!reviewerKey2()) return h("p", { class: "wz-gl-note", text: "Review is off." });
@@ -14187,12 +14780,28 @@ ${CONTEST_CSS}
     };
     async function loadLog() {
       try {
-        rev.log = (await reviewLog(reviewerKey2())).log;
+        rev.log = (await reviewLog(reviewerKey2(), realRole() === "owner" ? rev.logOnly : "")).log;
         rev.sectionError = "";
       } catch (e) {
         rev.sectionError = errText(e);
       }
       if (open && tab === "review") render2();
+    }
+    async function undoEntry(l) {
+      try {
+        const r = await reviewUndo(reviewerKey2(), l.n);
+        say(l.action === "score" ? `Undid ${l.who}'s score on "${l.title || ""}".` : `Undid "${l.title || ""}" (${ACTIONS[l.action] || l.action} by ${l.who}). It's ${r && r.status === "approved" ? "back in the gallery" : "waiting for review again"}.`);
+        if (l.post) delete draft2.gone[l.post];
+        gal.at = 0;
+        if (l.action === "score") contests.loadJudging(true);
+        else {
+          refreshReview(true);
+          contests.refresh(true);
+        }
+      } catch (err) {
+        say(`Couldn't undo it: ${errText(err)}`);
+      }
+      loadLog();
     }
     async function loadReviewers() {
       try {
@@ -14213,22 +14822,43 @@ ${CONTEST_CSS}
       contest_create: "started contest",
       contest_edit: "edited contest",
       contest_archive: "published the results of",
-      contest_delete: "deleted contest"
+      contest_delete: "deleted contest",
+      undo: "undid",
+      undo_score: "undid a score on",
+      score: "scored"
     };
+    function logLine(l) {
+      const canUndo2 = realRole() === "owner" && !viewAs && l.undo && l.undo.ok;
+      const what = l.action === "score" && !l.detail ? "cleared their score on" : ACTIONS[l.action] || l.action;
+      return h(
+        "div",
+        { class: l.undoneAt ? "undone" : "" },
+        h("b", { text: l.who }),
+        ` ${what} `,
+        l.post ? h("span", { text: `"${l.title || ""}" #${l.post}` }) : h("b", { text: l.detail || "" }),
+        l.action === "score" && l.detail ? [" ", h("b", { text: l.detail })] : null,
+        l.action === "score" && l.prev ? h("span", { class: "dim", text: ` (was ${l.prev})` }) : null,
+        l.post && l.detail && l.action !== "score" ? h("span", { class: "dim", text: ` (${l.detail})` }) : null,
+        h("span", { class: "dim", text: ` \xB7 ${ago(l.at)}` }),
+        l.undoneAt ? h("span", { class: "dim", text: ` \xB7 undone by ${l.undoneBy || "the owner"}` }) : null,
+        canUndo2 ? removeButton({ rerender: render2 }, l, { label: "Undo", confirm: "Undo it?", title: l.action === "approve" ? "Take it out of the gallery and put it back in Uploads" : l.action === "reject" ? "Put it back in Uploads" : l.action === "remove" ? "Put it back where it was" : "Give back the judge's score before this", run: undoEntry }) : null
+      );
+    }
     function logView() {
-      const head = h("div", { class: "wz-gl-bar" }, h("b", { text: "Recent review actions" }), h("span", { class: "wz-gl-grow" }), button2("\u21BB Refresh", loadLog));
+      const owner = realRole() === "owner" && !viewAs;
+      const pick = (k) => {
+        rev.logOnly = k;
+        rev.log = null;
+        render2();
+        loadLog();
+      };
+      const filters = owner ? h("span", { class: "wz-gl-sizes" }, [["", "All"], ["decisions", "Decisions"], ["scores", "Judge scores"]].map(([k, label2]) => button2(label2, () => pick(k), { cls: (rev.logOnly || "") === k ? "wz-gl-on" : "", title: k === "scores" ? "Every score judges gave (only you see these)" : "" }))) : null;
+      const head = h("div", { class: "wz-gl-bar" }, h("b", { text: "Recent review actions" }), filters, h("span", { class: "wz-gl-grow" }), button2("\u21BB Refresh", loadLog));
+      const note = owner ? h("p", { class: "wz-gl-note", text: "You can undo approvals, rejections, removals and judge scores: only the latest one for each post, and not after its author deleted it." }) : null;
       if (rev.sectionError) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: rev.sectionError }));
       if (!rev.log) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Loading\u2026" }));
       if (!rev.log.length) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing yet." }));
-      return h("div", {}, head, h("div", { class: "wz-gl-revlog" }, rev.log.map((l) => h(
-        "div",
-        {},
-        h("b", { text: l.who }),
-        ` ${ACTIONS[l.action] || l.action} `,
-        l.post ? h("span", { text: `"${l.title || ""}" #${l.post}` }) : h("b", { text: l.detail || "" }),
-        l.post && l.detail ? h("span", { class: "dim", text: ` (${l.detail})` }) : null,
-        h("span", { class: "dim", text: ` \xB7 ${ago(l.at)}` })
-      ))));
+      return h("div", {}, head, note, h("div", { class: "wz-gl-revlog wz-gl-loglist" }, rev.log.map(logLine)));
     }
     async function addReviewer() {
       const name = rev.newName.trim();
@@ -14326,19 +14956,24 @@ ${CONTEST_CSS}
     }
     async function deleteMine(e) {
       try {
-        await deleteOwnPost(e.id);
+        const r = await deleteOwnPost(e.id);
+        const was = r && r.was || e.status;
         const wasEntry = acct.posts.some((p) => p.id === e.id && p.contest && (p.status === "pending" || p.status === "approved"));
         delete draft2.uploads[e.id];
+        if (was === "approved") {
+          draft2.gone[e.id] = Date.now();
+          gal.approved = gal.approved.filter((p) => p.id !== e.id);
+        }
         saveDraft();
         acct.posts = acct.posts.filter((p) => p.id !== e.id);
-        say(wasEntry ? `Withdrew "${e.title}". Its slot is free again.` : `Deleted "${e.title}".`);
+        say(wasEntry ? `Withdrew "${e.title}". Its slot is free again.` : was === "pending" ? `Cancelled "${e.title}".` : was === "approved" ? `Deleted "${e.title}" from the gallery.` : `Deleted "${e.title}".`);
         if (wasEntry) {
           refreshMe(true);
           contests.refresh(true);
         }
         render2();
       } catch (err) {
-        say(`Couldn't delete it: ${errText(err)}`);
+        say(`Couldn't take it back: ${errText(err)}`);
         render2();
       }
     }
@@ -14346,6 +14981,8 @@ ${CONTEST_CSS}
       try {
         await reviewRemove(reviewerKey2(), e.id);
         say(`Removed ${e.id} from the gallery.`);
+        draft2.gone[e.id] = Date.now();
+        saveDraft();
         gal.approved = gal.approved.filter((p) => p.id !== e.id);
         render2();
         refreshGallery(true);
@@ -14546,7 +15183,7 @@ ${CONTEST_CSS}
     const content = h("div", { class: "wz-gl-content" });
     const hover = h("div", { class: "wz-gl-hover" });
     const panel = h("div", { class: "wz-gl-panel" }, tabs, content, hover);
-    const fileInput = h("input", { type: "file", accept: ".uceditor,image/png", multiple: true, style: { display: "none" } });
+    const fileInput = h("input", { type: "file", accept: ".uceditor,.json,application/json,image/png", multiple: true, style: { display: "none" } });
     panel.appendChild(fileInput);
     const sizeOf = () => SIZES.find((x) => x[0] === draft2.cardSize) || SIZES[1];
     function applyZoom() {
@@ -14719,12 +15356,51 @@ ${CONTEST_CSS}
         if (open) render2();
       }, 50);
     });
-    const changed2 = () => {
+    onArtPicsChange(() => {
+      if (!open) return;
+      if (tab === "browse" && browseCtl) browseCtl.layout();
+      else if (tab === "contest") contests.layout();
+    });
+    const changed3 = () => {
       tidySets();
       saveDraft();
       lastUpload = null;
       render2();
     };
+    const guide = { text: null, loading: false };
+    function loadGuide() {
+      if (guide.text || guide.loading) return;
+      guide.loading = true;
+      getGuidelines().then((t) => {
+        guide.text = t;
+        guide.loading = false;
+        if (open && tab === "submit") render2();
+      });
+    }
+    const rich = (t) => esc2(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+    const setGuide = (show) => {
+      draft2.hideGuide = !show;
+      saveDraft();
+      render2();
+    };
+    function guideBox() {
+      loadGuide();
+      if (draft2.hideGuide) return null;
+      const g = parseGuidelines(guide.text || DEFAULT_GUIDELINES);
+      return h(
+        "div",
+        { class: "wz-gl-guide" },
+        h(
+          "div",
+          { class: "head" },
+          h("b", { text: g.title || "Gallery guidelines" }),
+          h("span", { class: "wz-gl-grow" }),
+          button2("Hide", () => setGuide(false), { cls: "wz-gl-small", title: "Hide the guidelines (Guidelines, above, shows them again)" })
+        ),
+        g.intro.map((t) => h("div", { html: rich(t) })),
+        h("ul", {}, g.rules.map((t) => h("li", { html: rich(t) })))
+      );
+    }
     function submitView() {
       const sel = draft2.parts.filter((p) => p.sel);
       const bar = h(
@@ -14737,18 +15413,19 @@ ${CONTEST_CSS}
           readTimer = setTimeout(() => say("No answer from the editor. Wait for it to finish loading, then try again."), 4e3);
           say(`Reading ${editorLabel()}\u2026`);
         }, { primary: true, title: "List the cards you've made in the editor open here" }),
-        button2("Add files\u2026", () => fileInput.click(), { title: "A UC Editor group file (.uceditor) or PNG downloads" }),
+        button2("Add files\u2026", () => fileInput.click(), { title: "UC Editor's group file (.uceditor), feildmaster's editor's Export file (.json), or card PNGs" }),
         button2("Link selected", () => {
           makeSet(draft2.parts.filter((p) => p.sel));
-          changed2();
+          changed3();
         }, { title: "Make the selected parts one set" }),
         button2("Unlink selected", () => {
           draft2.parts.filter((p) => p.sel).forEach((p) => {
             p.group = null;
             p.sel = false;
           });
-          changed2();
+          changed3();
         }),
+        draft2.hideGuide ? button2("Guidelines", () => setGuide(true), { title: "What gets accepted into the gallery" }) : null,
         h("span", { class: "wz-gl-grow" }),
         removeAllButton()
       );
@@ -14756,7 +15433,7 @@ ${CONTEST_CSS}
       if (sel.length > SET_CAP) bar.children[2].title = `Sets can have up to ${SET_CAP} cards`;
       bar.children[3].disabled = !sel.some((p) => p.group);
       const note = h("p", { class: "wz-gl-note", text: draft2.parts.length ? "Click parts to select them, then Link selected to make a set. Anything not in a set is submitted on its own." : submitNote || "Make cards in the editor, then Read from this editor and tick the ones to add. Files work too." });
-      return h("div", {}, bar, note, lastUpload ? uploadedBox() : null, draft2.parts.length ? uploadBox() : null, read2 && !reviewing ? picker() : null, setsRow(), tray());
+      return h("div", {}, guideBox(), bar, note, lastUpload ? uploadedBox() : null, draft2.parts.length ? uploadBox() : null, read2 && !reviewing ? picker() : null, setsRow(), tray());
     }
     let removeArmed = false;
     function removeAllButton() {
@@ -14777,7 +15454,7 @@ ${CONTEST_CSS}
         draft2.parts.length = 0;
         draft2.groups.length = 0;
         reviewing = false;
-        changed2();
+        changed3();
       }, { title: "Empty your gallery draft" });
       b.disabled = !draft2.parts.length;
       return b;
@@ -14872,7 +15549,7 @@ ${CONTEST_CSS}
         r.pick = false;
       }));
       say(`Added ${added.length} part${added.length === 1 ? "" : "s"}${asSet && added.length > 1 ? " as a set" : ""}.`);
-      changed2();
+      changed3();
     }
     function setsRow() {
       if (!draft2.groups.length) return null;
@@ -14904,7 +15581,7 @@ ${CONTEST_CSS}
         } });
         const type = p.source === "picture" ? h("select", { onchange: (e) => {
           p.type = e.target.value;
-          changed2();
+          changed3();
         } }, TYPES2.map((t) => h("option", { selected: t === p.type }, t))) : h("div", { style: { fontSize: "11px" }, text: p.type });
         return h(
           "div",
@@ -14912,7 +15589,7 @@ ${CONTEST_CSS}
           set ? h("span", { class: "wz-gl-badge", text: set.letter, style: { background: setColor(set) } }) : null,
           button2("\xD7", () => {
             draft2.parts.splice(draft2.parts.indexOf(p), 1);
-            changed2();
+            changed3();
           }, { title: "Remove this part", cls: "wz-gl-x" }),
           zoom,
           type,
@@ -15008,6 +15685,15 @@ ${CONTEST_CSS}
         issues.length ? h("div", { class: "wz-gl-issues" }, issues.map((t) => h("div", { text: t }))) : null,
         h(
           "div",
+          { class: "wz-gl-note", style: { margin: "6px 0 0" } },
+          "Before uploading, check it follows the guidelines. ",
+          draft2.hideGuide ? button2("Show guidelines", () => {
+            setGuide(true);
+            panel.scrollTop = 0;
+          }, { cls: "wz-gl-small" }) : h("span", { text: "(They're at the top of this page.)" })
+        ),
+        h(
+          "div",
           { class: "wz-gl-bar wz-gl-revfoot" },
           h("span", { class: "wz-gl-note", style: { margin: 0 }, text: into ? "Each set and single card is one entry, checked against the contest's rules. Approved entries show in the Contest tab, and join the gallery when the results are out." : "Each set and single card is sent as its own entry, for approval. Approved ones show in Browse for everyone." }),
           h("span", { class: "wz-gl-grow" }),
@@ -15086,7 +15772,24 @@ ${CONTEST_CSS}
       fileInput.value = "";
       for (const f of files) {
         try {
-          if (/\.uceditor$/i.test(f.name)) {
+          const isJson = /\.json$/i.test(f.name) || f.type === "application/json";
+          const text = isJson ? await readFile(f, "readAsText") : null;
+          if (isJson && !isFeildmasterExport(text)) {
+            say(`${f.name} isn't an Export file from feildmaster's editor.`);
+            continue;
+          }
+          if (isJson) {
+            say(`Reading ${f.name}\u2026`);
+            const fx = await readFeildmasterFile(text);
+            const groups = fx.groups.map((g) => {
+              const fresh = g.parts.filter((r) => !draft2.parts.some((p) => sameCard(p, "feildmaster", g.name, r)));
+              return { name: g.name, parts: g.parts.map((r) => ({ ...r, pick: fresh.includes(r) })) };
+            });
+            const n = groups.reduce((k, g) => k + g.parts.length, 0), nNew = groups.reduce((k, g) => k + g.parts.filter((r) => r.pick).length, 0);
+            const noArt = groups.reduce((k, g) => k + g.parts.filter((r) => r.artNote).length, 0);
+            read2 = { source: "feildmaster", label: `${f.name} (feildmaster's editor file)`, groups };
+            say(!n ? `${f.name}: no cards or artifacts in it.` : nNew ? `${f.name}: ${nNew} new card(s), ticked.${noArt ? ` ${noArt} use his built-in art, which couldn't be loaded yet: add them as PNG pictures instead.` : ""} Untick any you don't want, then Add ticked.` : `${f.name}: all ${n} card(s) are in your draft already.`);
+          } else if (/\.uceditor$/i.test(f.name)) {
             const g = readUcEditorFile(await readFile(f, "readAsText"));
             const fresh = g.parts.filter((r) => !draft2.parts.some((p) => sameCard(p, "sernon", g.name, r)));
             read2 = { source: "sernon", label: `${f.name} (UC Editor file)`, groups: [{ name: g.name, parts: g.parts.map((r) => ({ ...r, pick: fresh.includes(r) })) }] };
@@ -15104,12 +15807,12 @@ ${CONTEST_CSS}
           say(`Couldn't read ${f.name}.`);
         }
       }
-      changed2();
+      changed3();
     });
     function browseTab() {
       const own = acct.posts.filter((p) => !p.contest && (p.status === "pending" || p.status === "rejected") && draft2.uploads[p.id]).map((p) => ({ id: p.id, status: p.status, reason: p.reason, postedAt: p.postedAt, kind: draft2.uploads[p.id].kind, title: draft2.uploads[p.id].title, parts: draft2.uploads[p.id].parts }));
       acct.posts.filter((p) => !p.contest && p.status === "approved" && draft2.uploads[p.id] && !gal.approved.some((a) => a.id === p.id)).forEach((p) => own.push({ id: p.id, status: "pending", postedAt: p.postedAt, kind: draft2.uploads[p.id].kind, title: draft2.uploads[p.id].title, parts: draft2.uploads[p.id].parts }));
-      const list = allEntries({ approved: gal.approved, own, totals: gal.totals, baseVotes: gal.base, current: currentVotes(), account: acct.account });
+      const list = allEntries({ approved: gal.approved.filter((p) => !draft2.gone[p.id]), own, totals: gal.totals, baseVotes: gal.base, current: currentVotes(), account: acct.account });
       return browseView({
         state: browse,
         wheelPages: () => !wheelPages || wheelPages(),
@@ -15163,7 +15866,7 @@ ${CONTEST_CSS}
       view: () => open ? tab : "editor",
       setView,
       onChange(f) {
-        listeners6.push(f);
+        listeners7.push(f);
       },
       // Send queued votes now (the Card Maker is closing or being minimised).
       flush: () => voteQueue.flush(),
@@ -15562,14 +16265,14 @@ ${CONTEST_CSS}
       status.textContent = text;
       status.style.color = ok ? "#7f7" : "#f77";
     };
-    function draw() {
+    function draw2() {
       wrap.replaceChildren();
       const who = reviewerKey() && reviewerWho();
       if (who) {
         const remove = el3("button", { type: "button", className: "btn btn-sm btn-danger", textContent: "Remove key" });
         remove.addEventListener("click", () => {
           forgetKey();
-          draw();
+          draw2();
           show("Key removed.", true);
         });
         wrap.append(
@@ -15590,7 +16293,7 @@ ${CONTEST_CSS}
         show("Checking\u2026", true);
         try {
           const me = await redeemKey(input.value);
-          draw();
+          draw2();
           show(me.role === "judge" ? `Redeemed. You're judging as ${me.name}: open the Card Maker and press Review.` : `Redeemed. You're reviewing as ${me.name}.`, true);
         } catch (e) {
           show(e.message, false);
@@ -15613,7 +16316,7 @@ ${CONTEST_CSS}
       );
       setTimeout(() => input.focus(), 100);
     }
-    draw();
+    draw2();
     BD.show({
       title: "Redeem Key",
       message: wrap,
@@ -15698,13 +16401,13 @@ ${CONTEST_CSS}
   }
 
   // packages/core/wz-events.js
-  var listeners3 = /* @__PURE__ */ new Map();
+  var listeners4 = /* @__PURE__ */ new Map();
   function onWz(name, fn) {
-    if (!listeners3.has(name)) listeners3.set(name, []);
-    listeners3.get(name).push(fn);
+    if (!listeners4.has(name)) listeners4.set(name, []);
+    listeners4.get(name).push(fn);
   }
   function emitWz(name, data2) {
-    (listeners3.get(name) || []).slice().forEach((fn) => {
+    (listeners4.get(name) || []).slice().forEach((fn) => {
       try {
         fn(data2);
       } catch (e) {
@@ -17150,8 +17853,8 @@ ${CONTEST_CSS}
       const ctx = activeCtx();
       const fillRgb = resolveColorToRgb(strokeColor);
       const imageData = ctx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-      const changed2 = floodFillPixels(imageData.data, CANVAS_WIDTH, CANVAS_HEIGHT, x, y, fillRgb);
-      if (!changed2) {
+      const changed3 = floodFillPixels(imageData.data, CANVAS_WIDTH, CANVAS_HEIGHT, x, y, fillRgb);
+      if (!changed3) {
         undoStack2.pop();
         notifyHistoryChange();
         return;
@@ -18629,7 +19332,7 @@ ${CONTEST_CSS}
   var ITEMS_KEY = "wizascript.wishlist.items";
   var STATE_KEY2 = "wizascript.wishlist.state";
   var OWNED_KEY = "wizascript.wishlist.owned";
-  var listeners4 = /* @__PURE__ */ new Set();
+  var listeners5 = /* @__PURE__ */ new Set();
   function read(key2, fallback) {
     try {
       const raw = GM_getValue(key2, null);
@@ -18644,7 +19347,7 @@ ${CONTEST_CSS}
     GM_setValue(key2, JSON.stringify(value));
   }
   function emit() {
-    listeners4.forEach((fn) => {
+    listeners5.forEach((fn) => {
       try {
         fn();
       } catch (e) {
@@ -18665,17 +19368,17 @@ ${CONTEST_CSS}
   }
   function recordOwnership(shopItems, now = Date.now()) {
     const owned = read(OWNED_KEY, {});
-    let changed2 = false;
+    let changed3 = false;
     shopItems.forEach((i) => {
       if (i.owned && !owned[i.key]) {
         owned[i.key] = now;
-        changed2 = true;
+        changed3 = true;
       } else if (!i.owned && owned[i.key]) {
         delete owned[i.key];
-        changed2 = true;
+        changed3 = true;
       }
     });
-    if (changed2) write(OWNED_KEY, owned);
+    if (changed3) write(OWNED_KEY, owned);
   }
   function isPinned(key2) {
     return !!getItems()[key2];
@@ -18701,8 +19404,8 @@ ${CONTEST_CSS}
     emit();
   }
   function onItemsChange(fn) {
-    listeners4.add(fn);
-    return () => listeners4.delete(fn);
+    listeners5.add(fn);
+    return () => listeners5.delete(fn);
   }
   function getState() {
     return read(STATE_KEY2, {});
@@ -19627,7 +20330,7 @@ ${CONTEST_CSS}
 
   // packages/misc/card-history/reports.js
   var STORE = "wizascript.cardHistory.reports";
-  function load() {
+  function load2() {
     try {
       const v = JSON.parse(GM_getValue(STORE, "[]"));
       return Array.isArray(v) ? v : [];
@@ -19637,15 +20340,15 @@ ${CONTEST_CSS}
   }
   function save(list) {
     GM_setValue(STORE, JSON.stringify(list));
-    changed();
+    changed2();
   }
-  var listeners5 = /* @__PURE__ */ new Set();
+  var listeners6 = /* @__PURE__ */ new Set();
   var onReportsChanged = (fn) => {
-    listeners5.add(fn);
-    return () => listeners5.delete(fn);
+    listeners6.add(fn);
+    return () => listeners6.delete(fn);
   };
-  function changed() {
-    listeners5.forEach((fn) => {
+  function changed2() {
+    listeners6.forEach((fn) => {
       try {
         fn();
       } catch (e) {
@@ -19653,11 +20356,11 @@ ${CONTEST_CSS}
     });
   }
   var reportKey = (t) => `${t.kind}:${t.id}:${t.label}`;
-  var isReported = (t) => load().some((r) => r.key === reportKey(t));
-  var unsentCount = () => load().filter((r) => !r.sent).length;
+  var isReported = (t) => load2().some((r) => r.key === reportKey(t));
+  var unsentCount = () => load2().filter((r) => !r.sent).length;
   function toggleReport(t) {
     const key2 = reportKey(t);
-    const list = load();
+    const list = load2();
     const i = list.findIndex((r) => r.key === key2);
     if (i >= 0) list.splice(i, 1);
     else list.push({ key: key2, kind: t.kind, id: String(t.id), name: t.name, label: t.label, shown: String(t.shown || "").slice(0, 140), built: t.built || "", at: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) });
@@ -19665,7 +20368,7 @@ ${CONTEST_CSS}
     return i < 0;
   }
   function removeReport(key2) {
-    save(load().filter((r) => r.key !== key2));
+    save(load2().filter((r) => r.key !== key2));
   }
   var remote = null;
   async function remoteReports() {
@@ -19809,7 +20512,7 @@ ${CONTEST_CSS}
     return b;
   };
   function markSent(keys) {
-    save(load().map((r) => keys.has(r.key) ? { ...r, sent: true } : r));
+    save(load2().map((r) => keys.has(r.key) ? { ...r, sent: true } : r));
   }
   async function openMyReports() {
     const api = dialogApi();
@@ -19817,7 +20520,7 @@ ${CONTEST_CSS}
     const wrap = el2("div", "wz-ch-myreports");
     const chat = canOpenVoid();
     const render2 = () => {
-      const list = load().sort((a, b) => (a.sent ? 1 : 0) - (b.sent ? 1 : 0));
+      const list = load2().sort((a, b) => (a.sent ? 1 : 0) - (b.sent ? 1 : 0));
       wrap.replaceChildren();
       if (!list.length) {
         const p = el2("p");

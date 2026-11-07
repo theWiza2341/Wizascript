@@ -1,0 +1,19 @@
+{
+  "id": "127",
+  "kind": "single",
+  "title": "Handsome Lancer",
+  "author": "ichihime-tanyao",
+  "postedAt": 1794078157715,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Handsome Lancer",
+      "desc": "Magic: Switch: [[Summon two {Thrashing Machines} with 2/2]] or [[one with 4/4 and Taunt]].",
+      "cost": 8,
+      "atk": 5,
+      "hp": 6,
+      "rarity": "DELTARUNE_EPIC",
+      "art": "art/127-0.png"
+    }
+  ]
+}

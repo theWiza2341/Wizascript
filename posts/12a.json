@@ -1,0 +1,19 @@
+{
+  "id": "12a",
+  "kind": "single",
+  "title": "tree",
+  "author": "Lightswing",
+  "postedAt": 1794092340163,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "tree",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/12a-0-pic.png"
+    }
+  ]
+}

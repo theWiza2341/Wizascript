@@ -1,0 +1,19 @@
+{
+  "id": "12c",
+  "kind": "single",
+  "title": "chomp",
+  "author": "Lightswing",
+  "postedAt": 1794259658928,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "chomp",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/12c-0-pic.png"
+    }
+  ]
+}

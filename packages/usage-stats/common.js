@@ -66,15 +66,18 @@ onAccountChange((name) => {
 });
 
 // Is this page about the logged-in player (their own Profile/History)? Other
-// players' profiles carry their id or name in the address.
+// players' profiles carry their id or name in the address. A bare /Profile or
+// /History is always your own. (The chat globals selfId/selfUsername aren't
+// on every page, e.g. Profile, so they're only needed to compare an address
+// that names a player.)
+const PLAYER_KEYS = { id: "id", userid: "id", playerid: "id", username: "name", name: "name", user: "name" };
 export function ownPage() {
   const q = new URLSearchParams(location.search);
   const self = selfInfo();
-  if (!self.selfName && !self.selfId) return false;
   for (const [k, v] of q) {
-    const key = k.toLowerCase();
-    if ((key === "id" || key === "userid" || key === "playerid") && self.selfId && Number(v) !== self.selfId) return false;
-    if ((key === "username" || key === "name" || key === "user") && self.selfName && v.toLowerCase() !== self.selfName.toLowerCase()) return false;
+    const kind = PLAYER_KEYS[k.toLowerCase()];
+    if (kind === "id" && Number(v) !== self.selfId) return false;
+    if (kind === "name" && (!self.selfName || v.toLowerCase() !== self.selfName.toLowerCase())) return false;
   }
   return true;
 }

@@ -17797,14 +17797,14 @@ ${KEYBOX_CSS}
     } catch (e) {
     }
   });
+  var PLAYER_KEYS = { id: "id", userid: "id", playerid: "id", username: "name", name: "name", user: "name" };
   function ownPage() {
     const q = new URLSearchParams(location.search);
     const self = selfInfo();
-    if (!self.selfName && !self.selfId) return false;
     for (const [k, v] of q) {
-      const key2 = k.toLowerCase();
-      if ((key2 === "id" || key2 === "userid" || key2 === "playerid") && self.selfId && Number(v) !== self.selfId) return false;
-      if ((key2 === "username" || key2 === "name" || key2 === "user") && self.selfName && v.toLowerCase() !== self.selfName.toLowerCase()) return false;
+      const kind = PLAYER_KEYS[k.toLowerCase()];
+      if (kind === "id" && Number(v) !== self.selfId) return false;
+      if (kind === "name" && (!self.selfName || v.toLowerCase() !== self.selfName.toLowerCase())) return false;
     }
     return true;
   }

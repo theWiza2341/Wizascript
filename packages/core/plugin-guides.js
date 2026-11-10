@@ -146,6 +146,17 @@ const GUIDES = {
       '<b>Advanced Settings</b> sets each line\'s exact chance (its default is shown; <b>Restore Defaults</b> undoes it). <b>Flowery Gold Icon</b> turns your gold icon into a Flowery coin.'
     ]
   },
+  usageStats: {
+    tab: "Usage Statistics",
+    pages: "your Profile and History pages, every page's footer, and your matches",
+    summary: "An opt-in: your PvP games go to the Wizascript server, for everyone's card stats and your own extra stats.",
+    points: () => [
+      'Needs your Undercards account linked (Wizascript tab → <b>Undercards Account</b>). Each PvP game sends your soul, result, division, Elo, opponent and <b>starting deck</b>. CPU games never.',
+      '<b>📊</b> in the footer: the cards, artifacts and souls everyone plays, by time range and division. No one\'s deck is ever shown.',
+      '<b>Profile</b>: your stats per division and True Hub (1820+ Elo), earlier seasons with ◀ ▶, and the <b>Elo Graph</b>.',
+      '<b>History</b>: every PvP game this season, 20 a page. <b>Delete My Data</b> removes everything you\'ve sent.'
+    ]
+  },
   cardHistory: {
     tab: null,
     pages: "the Crafting, Decks and Artifacts pages",
@@ -186,7 +197,7 @@ const GUIDES = {
       'In Submit, <b>Read from this editor</b> lists the cards you\'ve made; tick the ones to add, link them into sets, then <b>Review upload</b> and <b>Upload to Gallery</b>. Uploads show to everyone once approved. Check the <b>Guidelines</b> there first.',
       'Changed your mind? In Browse, <b>Cancel</b> a waiting upload of yours or <b>Delete</b> one from the gallery.',
       '<b>Contest</b> shows the running contest (theme, rules, deadline) and past results. <b>Enter cards</b> takes you to Submit, to enter up to 3 designs.',
-      'Given a gallery key? Press <b>Redeem Key</b> on the Card Maker tab and enter it.'
+      'Given a gallery key? Press the <b>⚿</b> button at the bottom left of the gallery and enter it.'
     ] : [])
   }
 };

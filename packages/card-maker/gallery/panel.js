@@ -25,6 +25,7 @@ import { openVoid, canOpenVoid } from "../../core/uc-report.js";
 import { accountChanged, onAccountChange } from "../../core/account.js";
 import { browseView, allEntries, BROWSE_CSS, removeButton } from "./browse.js";
 import { createContests, CONTEST_CSS } from "./contest.js";
+import { KEYBOX_CSS } from "./keybox.js";
 
 const STYLE_ID = "wizascript-cardgallery-style";
 const TYPES = ["Monster", "Spell", "Enchantment", "Artifact"];
@@ -166,6 +167,7 @@ const CSS = `
 ${TILE_CSS}
 ${BROWSE_CSS}
 ${CONTEST_CSS}
+${KEYBOX_CSS}
 `;
 
 function injectStyle() {
@@ -496,7 +498,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
         h("div", { class: "wz-gl-bar" }, keyBox,
           button("Copy", () => copyText(rev.newKey.key).then((ok) => { if (ok) say("Copied."); else { keyBox.focus(); say("Press Ctrl+C to copy."); } })),
           button("Done", () => { rev.newKey = null; render(); })),
-        h("div", { class: "dim", text: "Send it to them privately (a DM, not a channel). They enter it with Redeem Key: on the Card Maker tab of Wizascript's settings, or the key button at the bottom left of the gallery website." })));
+        h("div", { class: "dim", text: "Send it to them privately (a DM, not a channel). They enter it with the key button (⚿) at the bottom left of the gallery, in the Card Maker or on the gallery website." })));
     }
     if (rev.sectionError) parts.push(h("div", { class: "wz-gl-issues", text: rev.sectionError }));
     else if (!rev.reviewers) parts.push(h("p", { class: "wz-gl-note", text: "Loading…" }));

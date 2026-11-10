@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.7.3
+// @version      1.8.0
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -281,7 +281,7 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
   }
 
   // packages/core/version.js
-  var SUITE_VERSION = "1.7.3";
+  var SUITE_VERSION = "1.8.0";
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
@@ -323,8 +323,8 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
   function resolve(v) {
     return typeof v === "function" ? v() : v;
   }
-  function createFeatureSettings(plugin, featureName, { tab, visible: visible2, categories = false } = {}) {
-    const settingsApi = tab ? plugin.settings().page(tab) : plugin.settings();
+  function createFeatureSettings(plugin2, featureName, { tab, visible: visible2, categories = false } = {}) {
+    const settingsApi = tab ? plugin2.settings().page(tab) : plugin2.settings();
     const registered = {};
     function add(key2, config) {
       const { category, page, hidden, ...rest } = config;
@@ -469,6 +469,14 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
       note: "Flowery's voice lines, even when Flowery isn't on the board."
     },
     {
+      id: "usageStats",
+      category: "Plugins",
+      name: "Usage Statistics",
+      key: "usageStats.enabled",
+      // Opt-in: turning it on asks once more, since it sends your games.
+      note: "Opt in: share your PvP games for card stats and more Profile/History."
+    },
+    {
       id: "controller",
       category: "Plugins",
       name: "Controller Support",
@@ -528,8 +536,8 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
     style.textContent = ".underscript-dialog .wizascript-subsetting { margin-left: 22px; }";
     (document.head || document.documentElement).appendChild(style);
   }
-  function registerPluginToggles(plugin) {
-    const settingsApi = plugin.settings();
+  function registerPluginToggles(plugin2) {
+    const settingsApi = plugin2.settings();
     injectSubSettingStyle();
     PLUGINS.forEach((p) => {
       toggles[p.id] = settingsApi.add({
@@ -847,12 +855,12 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
   }
   var primaryKeySetting = null;
   var generalHidden = () => !anyKeybindPluginEnabled();
-  function initKeybinds(plugin) {
-    ensureCore(plugin);
+  function initKeybinds(plugin2) {
+    ensureCore(plugin2);
   }
-  function ensureCore(plugin) {
+  function ensureCore(plugin2) {
     if (settings) return;
-    settings = createFeatureSettings(plugin, "keybinds", { tab: TAB, categories: true });
+    settings = createFeatureSettings(plugin2, "keybinds", { tab: TAB, categories: true });
     startObserver();
     bindGlobalListeners();
     primaryKeySetting = settings.add(PRIMARY_KEY, {
@@ -883,14 +891,14 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
       // real Primary double-tap).
       onPrimaryDoubleTap: () => {
         if (!anyKeybindPluginEnabled() && !isPluginEnabled("controller")) return;
-        plugin.settings().open();
+        plugin2.settings().open();
       }
     });
   }
   var pendingRegistrations = [];
   var autoFlushScheduled = false;
-  function registerKeybind(plugin, config) {
-    pendingRegistrations.push({ plugin, config });
+  function registerKeybind(plugin2, config) {
+    pendingRegistrations.push({ plugin: plugin2, config });
     if (!autoFlushScheduled) {
       autoFlushScheduled = true;
       setTimeout(() => {
@@ -899,10 +907,10 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
     }
   }
   function flushKeybindRegistrations() {
-    const queued = pendingRegistrations.splice(0);
-    queued.forEach(({ plugin, config }) => registerKeybindNow(plugin, config));
+    const queued2 = pendingRegistrations.splice(0);
+    queued2.forEach(({ plugin: plugin2, config }) => registerKeybindNow(plugin2, config));
   }
-  function registerKeybindNow(plugin, config) {
+  function registerKeybindNow(plugin2, config) {
     const {
       key: key2,
       name,
@@ -924,7 +932,7 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
       onPrimaryRelease,
       onPrimaryDoubleTap
     } = config;
-    ensureCore(plugin);
+    ensureCore(plugin2);
     const pluginId = pluginIdForLabel(packageLabel);
     const pluginHidden = () => pluginId ? !isPluginEnabled(pluginId) : false;
     if (onMatch) {
@@ -1036,6 +1044,22 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
   var CHANGELOG_default = `# Changelog
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
+
+## 1.8.0
+
+### New: Usage Statistics
+An **opt-in** plugin: share your PvP games, and see which cards, artifacts and souls everyone plays. Turn it on in the **Plugins** list; it asks once more before anything is sent, and it needs your Undercards account linked (Wizascript tab \u2192 **Undercards Account**).
+- Each of your PvP games sends your soul, the result, your division and Elo, your opponent's name and soul, and your **starting deck and artifacts**. CPU games are never sent.
+- **\u{1F4CA}** in the footer opens the statistics: cards, artifacts and souls by time range (Today, This Week, This Season, All Time) and division (including True Hub+, games started at 1820+ Elo). Search, sort, and an **Advanced** view.
+- No one's deck is ever shown: only totals, and today's ranked numbers leave out anything fewer than 3 players used.
+- Your **Profile** shows your stats per division, earlier seasons, and an **Elo Graph** you can move and resize.
+- Your **History** shows every PvP game this season, 20 a page (the mouse wheel turns pages).
+- **Delete My Data** on its tab removes everything you've sent.
+
+### Changes
+- **Link another device:** linked on your PC? Wizascript tab \u2192 **Undercards Account** \u2192 **Link another device** gives a one-time code to link your phone or another browser, no void needed.
+- **Redeem Key** moved from the Card Maker tab to a **\u26BF** button at the bottom left of the Card Gallery, like on the gallery website. It also takes device codes.
+- If you change your Undercards name, Wizascript unlinks the old name. Link again under the new one.
 
 ## 1.7.3
 
@@ -1393,8 +1417,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     file.addEventListener("change", () => {
       const f = file.files && file.files[0];
       if (!f) return;
-      f.text().then((t) => {
-        box.value = t.trim();
+      f.text().then((t2) => {
+        box.value = t2.trim();
         status.textContent = `Loaded ${f.name}.`;
         status.style.color = "";
       });
@@ -1511,8 +1535,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       buttons: [{ label: "Close", cssClass: "btn-primary", action: (d) => d.close() }]
     });
   }
-  function registerAboutSection(plugin) {
-    const settingsApi = plugin.settings();
+  function registerAboutSection(plugin2) {
+    const settingsApi = plugin2.settings();
     settingsApi.add({
       key: "about.version",
       name: "Version",
@@ -1552,7 +1576,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     }
     openVoid(`${HEADER}v${SUITE_VERSION}: ${BUG_PROMPT}`, BUG_PROMPT);
   }
-  function showWhatsNew(plugin, installState) {
+  function showWhatsNew(plugin2, installState) {
     const lastSeen = GM_getValue(LAST_SEEN_KEY, null);
     if (lastSeen === SUITE_VERSION) return;
     const markSeen = () => GM_setValue(LAST_SEEN_KEY, SUITE_VERSION);
@@ -1560,13 +1584,13 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     const toast3 = isFresh ? {
       title: "Welcome to Wizascript!",
       text: "Wizascript's features start switched off. Turn on the ones you want in the Plugins list.",
-      buttons: [{ text: "Open Wizascript settings", className: "dismiss", ...toastClick(() => plugin.settings().open()) }]
+      buttons: [{ text: "Open Wizascript settings", className: "dismiss", ...toastClick(() => plugin2.settings().open()) }]
     } : {
       title: `Wizascript updated to v${SUITE_VERSION}`,
       text: "See what's new in this version.",
       buttons: [{ text: "View changelog", className: "dismiss", ...toastClick(() => openChangelog()) }]
     };
-    plugin.toast({
+    plugin2.toast({
       ...toast3,
       className: "dismissable",
       onClose: () => {
@@ -1715,11 +1739,37 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       throw e;
     }
   }
+  function selfInfo() {
+    const w = getPageWindow();
+    const id = Number(w.selfId);
+    return { selfId: Number.isInteger(id) && id > 0 ? id : null, selfName: typeof w.selfUsername === "string" && w.selfUsername ? w.selfUsername : null };
+  }
   var getMe = () => authed("GET", "/v1/me");
   var linkStart = () => authed("POST", "/v1/link/start");
-  var linkCheck = () => authed("POST", "/v1/link/check");
+  var linkCheck = () => authed("POST", "/v1/link/check", selfInfo());
+  var linkShare = () => authed("POST", "/v1/link/share");
+  var unlinkAccount = () => authed("POST", "/v1/link/unlink");
+  var isDeviceCode = (raw) => /^\s*wzl[\s-]*[0-9a-z]{4}[\s-]*[0-9a-z]{4}\s*$/i.test(String(raw || ""));
+  async function redeemDeviceCode(raw) {
+    let r;
+    try {
+      r = await authed("POST", "/v1/link/redeem", { code: String(raw || "").trim(), ...selfInfo() });
+    } catch (e) {
+      const why = {
+        bad_code: "That code isn't valid. Codes work once.",
+        code_expired: "That code has expired. Make a new one on your linked device.",
+        wrong_account: e.message,
+        cooldown: "This install switched accounts less than a day ago. Try again later.",
+        rate_limited: "Too many wrong codes. Try again in an hour."
+      }[e && e.code];
+      throw new Error(why || e && e.message || "Couldn't reach the Wizascript server.");
+    }
+    accountChanged(r.account, r.cooldownUntil, true);
+    return r.account;
+  }
   var state = { name: null, cooldownUntil: null, known: false };
   var listeners = [];
+  var linkedAccount = () => state.name;
   var onAccountChange = (fn) => {
     listeners.push(fn);
     return () => listeners.splice(listeners.indexOf(fn), 1);
@@ -1746,8 +1796,19 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       }
     });
   }
+  var renameNoticed = false;
   async function refreshAccount() {
     const me = await getMe();
+    const self = selfInfo();
+    if (me.account && me.ucId && self.selfId === me.ucId && self.selfName && self.selfName !== me.account) {
+      await unlinkAccount().catch(() => null);
+      accountChanged(null, null);
+      if (!renameNoticed) {
+        renameNoticed = true;
+        toast(mainPlugin, "Wizascript", `Your account was linked as ${me.account}, and it's ${self.selfName} now, so it was unlinked. Link it again on the Wizascript tab (Undercards Account).`);
+      }
+      return { ...me, account: null };
+    }
     accountChanged(me.account, me.cooldownUntil);
     return me;
   }
@@ -1787,15 +1848,101 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     setTimeout(tick, Math.min(every, 2500));
   }
   var button = null;
+  var mainPlugin = null;
   var label = () => state.name ? `Linked as ${state.name}` : "Link my account";
-  function toast(plugin, title, text) {
+  function toast(plugin2, title, text) {
     try {
-      plugin.toast({ title, text, className: "dismissable" });
+      plugin2.toast({ title, text, className: "dismissable" });
     } catch (e) {
       console.log(`[Wizascript] ${title}: ${text}`);
     }
   }
-  function openAccountDialog(plugin) {
+  var fmtLeft = (ms) => {
+    const s = Math.max(0, Math.ceil(ms / 1e3));
+    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  };
+  function deviceCodeBox(el3, { onClose } = {}) {
+    const box = el3("div", { className: "wz-acct-device" });
+    const status = el3("p", { className: "wz-acct-status" });
+    let timer = null;
+    const stop = () => {
+      clearInterval(timer);
+      timer = null;
+    };
+    const make = async () => {
+      stop();
+      box.replaceChildren(el3("p", { textContent: "Making a code\u2026" }));
+      let r;
+      try {
+        r = await linkShare();
+      } catch (e) {
+        box.replaceChildren(el3("p", { textContent: e.code === "rate_limited" ? e.message || "Too many codes. Try again later." : e.message || "Couldn't reach the Wizascript server.", style: "color:#f77" }));
+        return;
+      }
+      const code = el3("code", { textContent: r.code, style: "user-select:all;font-size:20px;letter-spacing:2px;padding:2px 10px;background:#000;border:1px solid #666" });
+      const left = el3("span", {});
+      const again = el3("button", { type: "button", className: "btn btn-sm btn-default", textContent: "New code" });
+      again.addEventListener("click", make);
+      const tick = () => {
+        const ms = r.expiresAt - Date.now();
+        if (!box.isConnected) return stop();
+        if (ms <= 0) {
+          stop();
+          left.textContent = "Expired.";
+          code.style.opacity = ".35";
+          return;
+        }
+        left.textContent = `Expires in ${fmtLeft(ms)}. Works once.`;
+      };
+      timer = setInterval(tick, 1e3);
+      tick();
+      box.replaceChildren(
+        el3("p", {}, code),
+        el3("p", {}, left, " ", again),
+        el3("p", { textContent: "On the other device, while logged in as this account: Wizascript tab \u2192 Undercards Account, or the key button at the bottom left of the Card Gallery (Card Maker, or the gallery website)." }),
+        status
+      );
+    };
+    make();
+    if (onClose) onClose(stop);
+    return box;
+  }
+  function codeEntry(el3, onLinked) {
+    const input = el3("input", { type: "text", className: "form-control", placeholder: "WZL-XXXX-XXXX", autocomplete: "off", spellcheck: false, style: "display:inline-block;width:170px;text-transform:uppercase" });
+    const go = el3("button", { type: "button", className: "btn btn-sm btn-default", textContent: "Link with code" });
+    const status = el3("small", { style: "display:block;margin-top:4px" });
+    let busy2 = false;
+    const submit = async () => {
+      if (busy2) return;
+      if (!isDeviceCode(input.value)) {
+        status.textContent = "Codes look like WZL-XXXX-XXXX.";
+        status.style.color = "#f77";
+        return;
+      }
+      busy2 = true;
+      go.disabled = true;
+      status.textContent = "Checking\u2026";
+      status.style.color = "#7f7";
+      try {
+        const name = await redeemDeviceCode(input.value);
+        onLinked(name);
+      } catch (e) {
+        status.textContent = e.message;
+        status.style.color = "#f77";
+      }
+      busy2 = false;
+      go.disabled = false;
+    };
+    go.addEventListener("click", submit);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        submit();
+      }
+    });
+    return el3("div", {}, el3("p", { textContent: "Linked on another device? Make a code there (Link another device) and enter it here:" }), el3("p", {}, input, " ", go, status));
+  }
+  function openAccountDialog(plugin2) {
     const BD = getPageWindow().BootstrapDialog;
     if (!BD || typeof BD.show !== "function") return;
     const el3 = (tag, props = {}, ...kids) => {
@@ -1810,6 +1957,9 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       status.style.color = ok ? "#7f7" : "#f77";
     };
     let code = null;
+    let sharing = false;
+    let stopShare = () => {
+    };
     const startLink = async () => {
       show("Getting a link code\u2026", true);
       try {
@@ -1825,10 +1975,20 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       if (state.name && !code) {
         const sw = el3("button", { type: "button", className: "btn btn-sm btn-default", textContent: "Switch account" });
         sw.addEventListener("click", startLink);
+        const dev = el3("button", { type: "button", className: "btn btn-sm btn-primary", textContent: sharing ? "Hide code" : "Link another device" });
+        dev.addEventListener("click", () => {
+          sharing = !sharing;
+          stopShare();
+          draw2();
+        });
         wrap.append(
           el3("p", {}, "Linked as ", el3("b", { textContent: state.name }), "."),
           el3("p", { textContent: "Features that need your account (like posting to the Card Gallery) use this one." }),
           el3("p", {}, sw, " ", el3("small", { textContent: "An install can switch accounts once a day." })),
+          el3("p", {}, dev, " ", el3("small", { textContent: "A one-time code for a phone or another browser." })),
+          ...sharing ? [deviceCodeBox(el3, { onClose: (stop) => {
+            stopShare = stop;
+          } })] : [],
           status
         );
         return;
@@ -1840,6 +2000,10 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
           el3("p", { textContent: "Some features need to know which Undercards account you're on, like posting and voting in the Card Gallery." }),
           el3("p", { textContent: "You link once: Wizascript types a one-time line into void (chat room 0), and you press Enter to send it." }),
           el3("p", {}, go),
+          codeEntry(el3, (name) => {
+            draw2();
+            show(`Linked as ${name}.`, true);
+          }),
           status
         );
         return;
@@ -1849,10 +2013,10 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       open.disabled = !canOpenVoid();
       open.addEventListener("click", () => {
         watchForLink((r) => {
-          if (r.account) toast(plugin, "Wizascript", `Linked as ${r.account}.`);
-          else if (r.error === "cooldown") toast(plugin, "Wizascript", "This install switched accounts less than a day ago. Try again later.");
-          else if (r.error === "code_expired") toast(plugin, "Wizascript", "That link code expired. Press Link my account again.");
-          else toast(plugin, "Wizascript", "Your account isn't linked yet: the line wasn't seen in void. Open Undercards Account on the Wizascript tab to check again.");
+          if (r.account) toast(plugin2, "Wizascript", `Linked as ${r.account}.`);
+          else if (r.error === "cooldown") toast(plugin2, "Wizascript", "This install switched accounts less than a day ago. Try again later.");
+          else if (r.error === "code_expired") toast(plugin2, "Wizascript", "That link code expired. Press Link my account again.");
+          else toast(plugin2, "Wizascript", "Your account isn't linked yet: the line wasn't seen in void. Open Undercards Account on the Wizascript tab to check again.");
         });
         openVoid(code.line);
       });
@@ -1880,10 +2044,11 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       );
     }
     draw2();
-    BD.show({ title: "Undercards Account", message: wrap, buttons: [{ label: "Close", action: (d) => d.close() }] });
+    BD.show({ title: "Undercards Account", message: wrap, onhidden: () => stopShare(), buttons: [{ label: "Close", action: (d) => d.close() }] });
   }
-  function registerAccountSetting(plugin) {
-    const settingsApi = plugin.settings();
+  function registerAccountSetting(plugin2) {
+    mainPlugin = plugin2;
+    const settingsApi = plugin2.settings();
     settingsApi.add({
       key: "about.account",
       name: "Undercards Account",
@@ -1894,7 +2059,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     });
     registerSettingWidget("about.account", (el3) => {
       button = el3;
-      asButton(label, () => openAccountDialog(plugin))(el3);
+      asButton(label, () => openAccountDialog(plugin2))(el3);
       if (!state.known) refreshAccount().catch(() => null);
     });
     onAccountChange(() => {
@@ -1907,7 +2072,18 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   var GM_PREFIX2 = "wizascript.";
   var KIND = "BACKUP";
   var CATEGORY3 = "Wizascript";
-  var SKIP_GM = /* @__PURE__ */ new Set(["wizascript.migration.v150", "wizascript.lastSeenVersion", "wizascript.cardMaker.galleryAuth", "wizascript.cardMaker.galleryReview", "wizascript.cardMaker.galleryReviewWho"]);
+  var SKIP_GM = /* @__PURE__ */ new Set([
+    "wizascript.migration.v150",
+    "wizascript.lastSeenVersion",
+    "wizascript.cardMaker.galleryAuth",
+    "wizascript.cardMaker.galleryReview",
+    "wizascript.cardMaker.galleryReviewWho",
+    // 1.8.0 Usage Statistics: the send queue, cached server answers (opponents' names) and the account check stay on this device.
+    "wizascript.usageStats.queue",
+    "wizascript.usageStats.games",
+    "wizascript.usageStats.account",
+    "wizascript.account.server"
+  ]);
   var SKIP_LS_PREFIXES = ["about.", "backup.", "cardMaker.galleryReviewerKey"];
   function isBackedUpLsKey(key2) {
     if (!key2.startsWith(LS_PREFIX2)) return false;
@@ -2015,8 +2191,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       }
     });
   }
-  function registerBackupSection(plugin) {
-    const settingsApi = plugin.settings();
+  function registerBackupSection(plugin2) {
+    const settingsApi = plugin2.settings();
     settingsApi.add({
       key: "backup.export",
       name: "Back up settings",
@@ -2048,9 +2224,9 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     if (hadOne && localStorage.getItem(LS_PREFIX3 + KEY) === null) localStorage.setItem(LS_PREFIX3 + KEY, "1");
     OLD_KEYS.forEach((k) => localStorage.removeItem(LS_PREFIX3 + k));
   }
-  function registerDebugSetting(plugin) {
+  function registerDebugSetting(plugin2) {
     carryOverOldToggles();
-    setting = plugin.settings().add({
+    setting = plugin2.settings().add({
       key: KEY,
       name: "Debug logging",
       note: "Print extra details to the browser console, for bug reports.",
@@ -2313,7 +2489,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     if (pads.length === 1) return pads[0];
     const buttonCount = Math.max(...pads.map((p) => p.buttons.length));
     const axesCount = Math.max(...pads.map((p) => p.axes.length));
-    const buttons = [];
+    const buttons2 = [];
     for (let i = 0; i < buttonCount; i++) {
       let pressed = false, value = 0;
       for (const p of pads) {
@@ -2322,7 +2498,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         if (b.pressed) pressed = true;
         if (b.value > value) value = b.value;
       }
-      buttons.push({ pressed, value });
+      buttons2.push({ pressed, value });
     }
     const axes = [];
     for (let i = 0; i < axesCount; i++) {
@@ -2334,7 +2510,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       }
       axes.push(best);
     }
-    return { buttons, axes, _mergedFrom: pads.map((p) => p.id) };
+    return { buttons: buttons2, axes, _mergedFrom: pads.map((p) => p.id) };
   }
   var lastLoggedRawSnapshot = /* @__PURE__ */ new Map();
   function rawSnapshotsEqual(a, b) {
@@ -2841,13 +3017,13 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         closeMenu();
         return;
       }
-      const rect = el3.getBoundingClientRect();
+      const rect2 = el3.getBoundingClientRect();
       menuEl = document.createElement("div");
       Object.assign(menuEl.style, {
         position: "fixed",
-        left: rect.left + "px",
-        top: rect.bottom + 2 + "px",
-        width: Math.max(rect.width, 140) + "px",
+        left: rect2.left + "px",
+        top: rect2.bottom + 2 + "px",
+        width: Math.max(rect2.width, 140) + "px",
         background: "#111",
         border: "1px solid #40E0D0",
         borderRadius: "3px",
@@ -3166,13 +3342,13 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       }
     }, 15e3);
   }
-  function registerControllerSettings(plugin, controllerEnabledSettingIn) {
+  function registerControllerSettings(plugin2, controllerEnabledSettingIn) {
     migrateFlatBindingsToPresetOne(
       CONTROLLER_ACTIONS.map((a) => a.key),
       HARDWARE_SHORTCUT_ACTIONS.map((a) => a.key)
     );
     controllerEnabledSetting = controllerEnabledSettingIn;
-    const settings6 = createFeatureSettings(plugin, "controller", {
+    const settings6 = createFeatureSettings(plugin2, "controller", {
       tab: "Controller Support",
       visible: () => isPluginEnabled("controller"),
       categories: true
@@ -3390,6 +3566,17 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         "<b>Advanced Settings</b> sets each line's exact chance (its default is shown; <b>Restore Defaults</b> undoes it). <b>Flowery Gold Icon</b> turns your gold icon into a Flowery coin."
       ]
     },
+    usageStats: {
+      tab: "Usage Statistics",
+      pages: "your Profile and History pages, every page's footer, and your matches",
+      summary: "An opt-in: your PvP games go to the Wizascript server, for everyone's card stats and your own extra stats.",
+      points: () => [
+        "Needs your Undercards account linked (Wizascript tab \u2192 <b>Undercards Account</b>). Each PvP game sends your soul, result, division, Elo, opponent and <b>starting deck</b>. CPU games never.",
+        "<b>\u{1F4CA}</b> in the footer: the cards, artifacts and souls everyone plays, by time range and division. No one's deck is ever shown.",
+        "<b>Profile</b>: your stats per division and True Hub (1820+ Elo), earlier seasons with \u25C0 \u25B6, and the <b>Elo Graph</b>.",
+        "<b>History</b>: every PvP game this season, 20 a page. <b>Delete My Data</b> removes everything you've sent."
+      ]
+    },
     cardHistory: {
       tab: null,
       pages: "the Crafting, Decks and Artifacts pages",
@@ -3430,7 +3617,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         "In Submit, <b>Read from this editor</b> lists the cards you've made; tick the ones to add, link them into sets, then <b>Review upload</b> and <b>Upload to Gallery</b>. Uploads show to everyone once approved. Check the <b>Guidelines</b> there first.",
         "Changed your mind? In Browse, <b>Cancel</b> a waiting upload of yours or <b>Delete</b> one from the gallery.",
         "<b>Contest</b> shows the running contest (theme, rules, deadline) and past results. <b>Enter cards</b> takes you to Submit, to enter up to 3 designs.",
-        "Given a gallery key? Press <b>Redeem Key</b> on the Card Maker tab and enter it."
+        "Given a gallery key? Press the <b>\u26BF</b> button at the bottom left of the gallery and enter it."
       ] : [])
     }
   };
@@ -3454,11 +3641,11 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       buttons: [{ label: "Close", cssClass: "btn-primary", action: (d) => d.close() }]
     });
   }
-  function registerPluginGuides(plugin) {
+  function registerPluginGuides(plugin2) {
     Object.entries(GUIDES).forEach(([id, g]) => {
       if (g.tab) {
         const categorised = g.tab === "Controller Support";
-        const settings6 = createFeatureSettings(plugin, "guide", {
+        const settings6 = createFeatureSettings(plugin2, "guide", {
           tab: g.tab,
           visible: () => isPluginEnabled(id),
           categories: categorised
@@ -3671,10 +3858,10 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     watch(found.view);
     layout(found.view, { revealActive: true });
   }
-  function hasNativeTabs(plugin) {
+  function hasNativeTabs(plugin2) {
     var _a;
     try {
-      if (typeof plugin.settings().name !== "function") return false;
+      if (typeof plugin2.settings().name !== "function") return false;
       const semver = (_a = getPageWindow().underscript) == null ? void 0 : _a.semver;
       if (!semver) return true;
       const check = typeof semver.meets === "function" ? semver.meets : semver.isOlder;
@@ -3683,19 +3870,19 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       return false;
     }
   }
-  function initTabBar(plugin) {
-    if (hasNativeTabs(plugin)) {
+  function initTabBar(plugin2) {
+    if (hasNativeTabs(plugin2)) {
       try {
-        plugin.settings().name(MAIN_TAB_LABEL);
+        plugin2.settings().name(MAIN_TAB_LABEL);
         return;
       } catch (e) {
       }
     }
     injectStyle();
-    plugin.events.on("Settings:open", () => setTimeout(apply, 0));
+    plugin2.events.on("Settings:open", () => setTimeout(apply, 0));
     document.addEventListener("change", (e) => {
-      const t = e.target;
-      if (!t || !t.classList || !t.classList.contains("tabButton")) return;
+      const t2 = e.target;
+      if (!t2 || !t2.classList || !t2.classList.contains("tabButton")) return;
       setTimeout(() => {
         if (observedView && observedView.isConnected) layout(observedView, { revealActive: true });
         else apply();
@@ -3707,8 +3894,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   }
 
   // packages/patch-maker/settings.js
-  function registerPatchMakerSettings(plugin) {
-    const settings6 = createFeatureSettings(plugin, "patchmaker", {
+  function registerPatchMakerSettings(plugin2) {
+    const settings6 = createFeatureSettings(plugin2, "patchmaker", {
       tab: "Patch Maker",
       visible: () => isPluginEnabled("patchMaker")
     });
@@ -3794,9 +3981,9 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         fileInput.click();
       };
       fileInput.addEventListener("change", async (e) => {
-        const files = [...e.target.files || []];
-        if (!files.length) return;
-        for (const file of files) {
+        const files2 = [...e.target.files || []];
+        if (!files2.length) return;
+        for (const file of files2) {
           if (!file.type.startsWith("image/")) continue;
           const dataUrl = await readFileAsDataURL(file);
           const normalized = await normalizeCardImage(dataUrl);
@@ -4788,7 +4975,7 @@ Viewer Mode:
 Version: v${version}`;
   }
   function createPatchMakerOverlay({
-    plugin,
+    plugin: plugin2,
     logger: logger4,
     getWordColors,
     getUnderlineTokens,
@@ -4809,10 +4996,10 @@ Version: v${version}`;
     });
     function saveState() {
       try {
-        const state3 = collectState();
-        if (state3) {
-          GM_setValue(STATE_KEY, JSON.stringify(state3));
-          logger4.log("save", "State saved.", { sections: state3.sections.length });
+        const state4 = collectState();
+        if (state4) {
+          GM_setValue(STATE_KEY, JSON.stringify(state4));
+          logger4.log("save", "State saved.", { sections: state4.sections.length });
         }
       } catch (e) {
         logger4.error("save", "Failed to save state", e);
@@ -4845,9 +5032,9 @@ Version: v${version}`;
         enableInputBlocker();
       });
       el3.addEventListener("blur", () => {
-        let t = sanitizeText(el3.textContent);
-        if (!t) t = placeholder;
-        el3.textContent = t;
+        let t2 = sanitizeText(el3.textContent);
+        if (!t2) t2 = placeholder;
+        el3.textContent = t2;
         saveState();
         disableInputBlocker();
       });
@@ -4927,10 +5114,10 @@ Version: v${version}`;
         enableInputBlocker();
       });
       span.addEventListener("blur", () => {
-        let t = sanitizeText(span.textContent);
-        if (!t) t = "[New entry]";
-        span.textContent = t;
-        li.dataset.raw = t;
+        let t2 = sanitizeText(span.textContent);
+        if (!t2) t2 = "[New entry]";
+        span.textContent = t2;
+        li.dataset.raw = t2;
         saveState();
         disableInputBlocker();
       });
@@ -4973,9 +5160,9 @@ Version: v${version}`;
       });
       labelEl.addEventListener("blur", () => {
         if (isCustom) {
-          let t = sanitizeText(labelEl.textContent);
-          if (!t) t = "[New Balance Section]";
-          labelEl.textContent = t;
+          let t2 = sanitizeText(labelEl.textContent);
+          if (!t2) t2 = "[New Balance Section]";
+          labelEl.textContent = t2;
           saveState();
         }
         disableInputBlocker();
@@ -5093,7 +5280,7 @@ Version: v${version}`;
       li.classList.add(cycleOrder[newIdx]);
       saveState();
     }
-    const register = (config) => registerKeybind(plugin, { ...config, packageLabel: "Patch Maker", guardTypingContext: false });
+    const register = (config) => registerKeybind(plugin2, { ...config, packageLabel: "Patch Maker", guardTypingContext: false });
     register({
       key: "cycleCategoryUp",
       // Shortened from "Cycle Entry Category Up" - combined with the
@@ -5230,14 +5417,14 @@ Version: v${version}`;
     }
     function collectState() {
       if (!container) return null;
-      const state3 = { title: "", sections: [], newCards: newCards.collectState(container) };
+      const state4 = { title: "", sections: [], newCards: newCards.collectState(container) };
       const h2 = container.querySelector("h2");
-      if (h2) state3.title = h2.textContent.trim();
+      if (h2) state4.title = h2.textContent.trim();
       container.querySelectorAll("p.uc-section-header").forEach((p) => {
         const labelEl = p.querySelector(".uc-section-label");
         const ul = p.nextElementSibling;
         if (!ul) return;
-        state3.sections.push({
+        state4.sections.push({
           label: labelEl ? labelEl.textContent.trim() : "",
           custom: p.dataset.custom === "true",
           collapsed: ul.style.display === "none",
@@ -5247,7 +5434,7 @@ Version: v${version}`;
           }))
         });
       });
-      return state3;
+      return state4;
     }
     function restoreState(saved) {
       const h2 = container.querySelector("h2");
@@ -5543,8 +5730,8 @@ Version: v${version}`;
   function isPatchNotesPage() {
     return matchesPage("/gameUpdates.jsp");
   }
-  function initPatchMaker(plugin) {
-    const settings6 = registerPatchMakerSettings(plugin);
+  function initPatchMaker(plugin2) {
+    const settings6 = registerPatchMakerSettings(plugin2);
     const logger4 = createLogger("PatchMaker");
     const originalWarn = logger4.warn.bind(logger4);
     const originalLog = logger4.log.bind(logger4);
@@ -5558,7 +5745,7 @@ Version: v${version}`;
     let underlineTokens = [];
     let cardNameMap = /* @__PURE__ */ new Map();
     const overlay = createPatchMakerOverlay({
-      plugin,
+      plugin: plugin2,
       logger: logger4,
       version: FEATURE_VERSION,
       getWordColors: () => wordColors,
@@ -5585,8 +5772,8 @@ Version: v${version}`;
   }
 
   // packages/true-hub-bridge/settings.js
-  function registerTrueHubBridgeSettings(plugin) {
-    const settings6 = createFeatureSettings(plugin, "truehubbridge", {
+  function registerTrueHubBridgeSettings(plugin2) {
+    const settings6 = createFeatureSettings(plugin2, "truehubbridge", {
       tab: "True Hub Bridge",
       visible: () => isPluginEnabled("trueHub")
     });
@@ -5967,18 +6154,18 @@ Version: v${version}`;
   function determineImageFromDeck(deckCode) {
     const decoded = decodeDeck(deckCode);
     if (!decoded || !decoded.cardIds) return null;
-    const counts = /* @__PURE__ */ new Map();
+    const counts2 = /* @__PURE__ */ new Map();
     decoded.cardIds.forEach((cardId) => {
       const card = getCardById(cardId);
       if (!card || card.typeCard !== 0) return;
-      counts.set(cardId, (counts.get(cardId) || 0) + 1);
+      counts2.set(cardId, (counts2.get(cardId) || 0) + 1);
     });
     let winner = null;
     let highestCount = 0;
     decoded.cardIds.forEach((cardId) => {
       const card = getCardById(cardId);
       if (!card || card.typeCard !== 0) return;
-      const count = counts.get(cardId);
+      const count = counts2.get(cardId);
       if (count >= highestCount) {
         highestCount = count;
         winner = card;
@@ -6677,8 +6864,8 @@ Version: v${version}`;
   function isHubPage() {
     return matchesPage("/Hub");
   }
-  function initTrueHubBridge(plugin) {
-    const settings6 = registerTrueHubBridgeSettings(plugin);
+  function initTrueHubBridge(plugin2) {
+    const settings6 = registerTrueHubBridgeSettings(plugin2);
     if (!settings6.enabled.value()) return;
     if (!isHubPage()) return;
     const logger4 = createLogger("TrueHubBridge");
@@ -6702,8 +6889,8 @@ Version: v${version}`;
   }
 
   // packages/deck-tracker/settings.js
-  function registerDeckTrackerSettings(plugin) {
-    const settings6 = createFeatureSettings(plugin, "decktracker", {
+  function registerDeckTrackerSettings(plugin2) {
+    const settings6 = createFeatureSettings(plugin2, "decktracker", {
       tab: "Card Tracker",
       visible: () => isPluginEnabled("cardTracker")
     });
@@ -7264,9 +7451,9 @@ Version: v${version}`;
       if (e.button !== 0) return;
       dragging = true;
       dragMoved = false;
-      const rect = widget[0].getBoundingClientRect();
-      offsetX = e.clientX - rect.left;
-      offsetY = e.clientY - rect.top;
+      const rect2 = widget[0].getBoundingClientRect();
+      offsetX = e.clientX - rect2.left;
+      offsetY = e.clientY - rect2.top;
       startX = e.clientX;
       startY = e.clientY;
       widget.css("cursor", "grabbing");
@@ -7285,8 +7472,8 @@ Version: v${version}`;
       dragging = false;
       widget.css("cursor", "grab");
       if (dragMoved) {
-        const rect = widget[0].getBoundingClientRect();
-        const layout2 = { left: rect.left, top: rect.top, width: getWidth() };
+        const rect2 = widget[0].getBoundingClientRect();
+        const layout2 = { left: rect2.left, top: rect2.top, width: getWidth() };
         if (trackRetain) {
           setSavedPosition(id, layout2);
           markRetained(id);
@@ -7315,8 +7502,8 @@ Version: v${version}`;
     $(document).on("mouseup" + ns + "-resize", function() {
       if (!resizing) return;
       resizing = false;
-      const rect = widget[0].getBoundingClientRect();
-      const layout2 = { left: rect.left, top: rect.top, width: getWidth() };
+      const rect2 = widget[0].getBoundingClientRect();
+      const layout2 = { left: rect2.left, top: rect2.top, width: getWidth() };
       if (trackRetain) {
         setSavedPosition(id, layout2);
         markRetained(id);
@@ -7442,8 +7629,8 @@ Version: v${version}`;
       onRequestSaveAsPreset(name, sprite, (savedName, description) => {
         const definition = createCustomPreset({ name: savedName, description, sprite });
         activate(definition.id, { initialCount: count });
-        const rect = parts.widget[0].getBoundingClientRect();
-        setSavedPosition(definition.id, { left: rect.left, top: rect.top, width: parts.getWidth() });
+        const rect2 = parts.widget[0].getBoundingClientRect();
+        setSavedPosition(definition.id, { left: rect2.left, top: rect2.top, width: parts.getWidth() });
         parts.widget.attr("id", widgetElementId(definition.id));
         parts.closeBtn.off("click").on("click", (e2) => {
           e2.stopPropagation();
@@ -7667,7 +7854,7 @@ Version: v${version}`;
       title: "Card Tracker Help",
       message: content,
       cssClass: "mono",
-      buttons: [{ label: "Got it", cssClass: "btn-primary", action: (dialog) => dialog.close() }]
+      buttons: [{ label: "Got it", cssClass: "btn-primary", action: (dialog2) => dialog2.close() }]
     });
   }
   function openPresetPicker({ onAddPreset, onCreateAdHoc, onCloseWidget, onDeletePreset }) {
@@ -7706,7 +7893,7 @@ Version: v${version}`;
         // picker open underneath, since the user likely wants to keep
         // referring back to it while reading.
         { label: "Help", cssClass: "btn-default", action: () => openHelpDialog() },
-        { label: "Close", cssClass: "btn-primary", action: (dialog) => dialog.close() }
+        { label: "Close", cssClass: "btn-primary", action: (dialog2) => dialog2.close() }
       ]
     });
     return dialogRef;
@@ -7717,8 +7904,8 @@ Version: v${version}`;
   var SPRITE_RATIO2 = "160 / 90";
   function searchSpriteCards(term) {
     if (!term) return [];
-    const t = term.toLowerCase();
-    return getAllCards().filter((c) => c.name && c.image && c.name.toLowerCase().includes(t)).slice(0, 20);
+    const t2 = term.toLowerCase();
+    return getAllCards().filter((c) => c.name && c.image && c.name.toLowerCase().includes(t2)).slice(0, 20);
   }
   function buildSpriteResultRow(card, onPick) {
     const row2 = $("<div>").css({
@@ -7790,7 +7977,7 @@ Version: v${version}`;
       spriteResults.show();
     });
     wrapper.append(spriteSearch, spriteResults, selectedPreview, nameInput);
-    const dialog = BootstrapDialog.show({
+    const dialog2 = BootstrapDialog.show({
       title: "Create Custom Tracker",
       message: wrapper,
       cssClass: "mono",
@@ -7808,7 +7995,7 @@ Version: v${version}`;
       ]
     });
     setTimeout(() => spriteSearch.trigger("focus"), 100);
-    return dialog;
+    return dialog2;
   }
   function openSaveAsPresetPrompt(defaultName, onSaved) {
     const wrapper = $("<div>").css({ minWidth: "320px" });
@@ -7938,8 +8125,8 @@ Version: v${version}`;
   function clearSavedButtonPosition() {
     GM_deleteValue(BUTTON_POSITION_KEY);
   }
-  function initDeckTracker(plugin) {
-    const settings6 = registerDeckTrackerSettings(plugin);
+  function initDeckTracker(plugin2) {
+    const settings6 = registerDeckTrackerSettings(plugin2);
     if (!settings6.enabled.value()) return;
     if (!isGamePage()) return;
     const logger4 = createLogger("DeckTracker");
@@ -8009,11 +8196,11 @@ Version: v${version}`;
       let hasCustomPosition = false;
       function reposition() {
         if (hasCustomPosition) return true;
-        const rect = avatar.getBoundingClientRect();
-        if (rect.width === 0 && rect.height === 0) return false;
+        const rect2 = avatar.getBoundingClientRect();
+        if (rect2.width === 0 && rect2.height === 0) return false;
         const btnRect = btn.getBoundingClientRect();
-        btn.style.left = rect.left - btnRect.width - 16 + "px";
-        btn.style.top = rect.top + (rect.height - btnRect.height) / 2 + "px";
+        btn.style.left = rect2.left - btnRect.width - 16 + "px";
+        btn.style.top = rect2.top + (rect2.height - btnRect.height) / 2 + "px";
         return true;
       }
       function tryReveal() {
@@ -8026,12 +8213,12 @@ Version: v${version}`;
           return a && b && a.left === b.left && a.top === b.top && a.width === b.width && a.height === b.height;
         }
         function check() {
-          const rect = avatar.getBoundingClientRect();
+          const rect2 = avatar.getBoundingClientRect();
           const now = performance.now();
-          const hasSize = rect.width > 0 || rect.height > 0;
+          const hasSize = rect2.width > 0 || rect2.height > 0;
           if (hasSize) {
-            if (!ratsMatch(rect, lastRect)) {
-              lastRect = rect;
+            if (!ratsMatch(rect2, lastRect)) {
+              lastRect = rect2;
               lastChangeTime = now;
             }
             const stableFor = now - lastChangeTime;
@@ -8088,9 +8275,9 @@ Version: v${version}`;
         if (e.button !== 0) return;
         dragging = true;
         dragMoved = false;
-        const rect = btn.getBoundingClientRect();
-        dragOffsetX = e.clientX - rect.left;
-        dragOffsetY = e.clientY - rect.top;
+        const rect2 = btn.getBoundingClientRect();
+        dragOffsetX = e.clientX - rect2.left;
+        dragOffsetY = e.clientY - rect2.top;
         btn.style.cursor = "grabbing";
         e.preventDefault();
       });
@@ -8115,9 +8302,9 @@ Version: v${version}`;
         dragging = false;
         btn.style.cursor = "grab";
         if (dragMoved) {
-          const rect = btn.getBoundingClientRect();
-          setSavedButtonPosition({ left: rect.left, top: rect.top });
-          logger4.log("hud", "Add-tracker button repositioned by drag.", { left: rect.left, top: rect.top });
+          const rect2 = btn.getBoundingClientRect();
+          setSavedButtonPosition({ left: rect2.left, top: rect2.top });
+          logger4.log("hud", "Add-tracker button repositioned by drag.", { left: rect2.left, top: rect2.top });
         }
       });
       btn.addEventListener("mousedown", (e) => {
@@ -8145,7 +8332,7 @@ Version: v${version}`;
     waitForAvatar((avatar) => {
       trackerButton = createButton(avatar);
     });
-    plugin.events.on("GameEvent", (event) => {
+    plugin2.events.on("GameEvent", (event) => {
       dispatchGameEvent(event);
       if ((event == null ? void 0 : event.action) === "getVictory" || (event == null ? void 0 : event.action) === "getDefeat" || (event == null ? void 0 : event.action) === "getResult") {
         (trackerButton == null ? void 0 : trackerButton.style) && (trackerButton.style.display = "none");
@@ -8174,11 +8361,11 @@ Version: v${version}`;
         }
       }
     }
-    plugin.events.on("GameStart", () => {
+    plugin2.events.on("GameStart", () => {
       if (trackerButton == null ? void 0 : trackerButton.style) trackerButton.style.display = "";
       restoreFavoritedAndRetained();
     });
-    plugin.events.on("connect", (data2) => {
+    plugin2.events.on("connect", (data2) => {
       restoreFavoritedAndRetained();
     });
   }
@@ -8213,7 +8400,7 @@ Version: v${version}`;
     return rank && Object.prototype.hasOwnProperty.call(DIVISION_SCORES, rank) ? DIVISION_SCORES[rank] : null;
   }
   function minTierThresholdScore(tierName) {
-    const tier = DIVISION_TIERS.find((t) => t.name === tierName);
+    const tier = DIVISION_TIERS.find((t2) => t2.name === tierName);
     if (!tier) return null;
     return tier.subTiers ? DIVISION_SCORES[`${tierName}_III`] : DIVISION_SCORES[tierName];
   }
@@ -8228,8 +8415,8 @@ Version: v${version}`;
   function setSettingsRef(ref) {
     settingsRef = ref;
   }
-  function registerUcTvSettings(plugin, divisionTiers) {
-    const settings6 = createFeatureSettings(plugin, "ucTv", {
+  function registerUcTvSettings(plugin2, divisionTiers) {
+    const settings6 = createFeatureSettings(plugin2, "ucTv", {
       tab: "UC TV",
       visible: () => isPluginEnabled("ucTv")
     });
@@ -8293,7 +8480,7 @@ Version: v${version}`;
     const minRankTier = addFilter("minRankTier", {
       name: "Minimum Ranked Mode Level",
       type: "select",
-      data: divisionTiers.map((t) => [titleCase(t.name), t.name]),
+      data: divisionTiers.map((t2) => [titleCase(t2.name), t2.name]),
       default: "COPPER"
     });
     const rankFilterMode = addFilter("rankFilterMode", {
@@ -8529,9 +8716,9 @@ Version: v${version}`;
   function cancelActiveCountdown() {
     if (activeCancelFn) activeCancelFn();
   }
-  function showCountdown(plugin, seconds, onComplete) {
-    if (plugin && typeof plugin.toast === "function") {
-      showCountdownViaToast(plugin, seconds, onComplete);
+  function showCountdown(plugin2, seconds, onComplete) {
+    if (plugin2 && typeof plugin2.toast === "function") {
+      showCountdownViaToast(plugin2, seconds, onComplete);
     } else {
       console.warn(`${LOG} plugin.toast not available - falling back to a custom overlay.`);
       showCountdownOverlay(seconds, onComplete);
@@ -8540,9 +8727,9 @@ Version: v${version}`;
   function cancelHint() {
     return `Cancel by pressing ${getPrimaryKeyDisplay()}`;
   }
-  function showCountdownViaToast(plugin, seconds, onComplete) {
+  function showCountdownViaToast(plugin2, seconds, onComplete) {
     let remaining = seconds;
-    const toast3 = plugin.toast({
+    const toast3 = plugin2.toast({
       title: "UC TV",
       text: `Spectating a new match in ${remaining}s... (${cancelHint()})`
     });
@@ -8619,7 +8806,7 @@ Version: v${version}`;
   function isSpectatePage() {
     return matchesPage({ prefix: "/Spectate" });
   }
-  async function goToNextMatch(plugin) {
+  async function goToNextMatch(plugin2) {
     let games;
     try {
       games = await fetchLiveGames();
@@ -8644,12 +8831,12 @@ Version: v${version}`;
     });
     const next = sorted[0];
     logDebug(`Chose gameId=${next.gameId}, playerId=${next.playerId}, elapsed=${next.time} (levels: ${next.levels.join(", ")}). ${pool.length} candidate(s) considered.`);
-    showCountdown(plugin, CONFIG.countdownSeconds, () => {
+    showCountdown(plugin2, CONFIG.countdownSeconds, () => {
       location.href = `/Spectate?gameId=${next.gameId}&playerId=${next.playerId}`;
     });
   }
   var switching = false;
-  async function switchChannel(plugin, direction) {
+  async function switchChannel(plugin2, direction) {
     if (switching) return;
     if (!navigationReady()) return;
     switching = true;
@@ -8676,16 +8863,16 @@ Version: v${version}`;
       }
       const target = pool[targetIndex];
       logDebug(`[channel] Switching to gameId=${target.gameId} (slot ${targetIndex + 1}/${pool.length}).`);
-      if (plugin && typeof plugin.toast === "function") {
-        plugin.toast({ title: "UC TV", text: `Channel ${targetIndex + 1}/${pool.length}` });
+      if (plugin2 && typeof plugin2.toast === "function") {
+        plugin2.toast({ title: "UC TV", text: `Channel ${targetIndex + 1}/${pool.length}` });
       }
       location.href = `/Spectate?gameId=${target.gameId}&playerId=${target.playerId}`;
     } finally {
       switching = false;
     }
   }
-  function bindChannelKeybinds(plugin) {
-    registerKeybind(plugin, {
+  function bindChannelKeybinds(plugin2) {
+    registerKeybind(plugin2, {
       key: "previousChannel",
       name: "Previous Channel",
       defaultCode: "ArrowLeft",
@@ -8699,10 +8886,10 @@ Version: v${version}`;
       onMatch: () => {
         if (!isSpectatePage()) return;
         if (!CONFIG.masterEnabled) return;
-        switchChannel(plugin, -1);
+        switchChannel(plugin2, -1);
       }
     });
-    registerKeybind(plugin, {
+    registerKeybind(plugin2, {
       key: "nextChannel",
       name: "Next Channel",
       defaultCode: "ArrowRight",
@@ -8711,7 +8898,7 @@ Version: v${version}`;
       onMatch: () => {
         if (!isSpectatePage()) return;
         if (!CONFIG.masterEnabled) return;
-        switchChannel(plugin, 1);
+        switchChannel(plugin2, 1);
       }
     });
   }
@@ -8743,10 +8930,10 @@ Version: v${version}`;
   function modeColor(mode) {
     return MODE_COLORS[mode] || "#4dd9e8";
   }
-  function jumpTo(plugin, gameId, playerId) {
+  function jumpTo(plugin2, gameId, playerId) {
     if (!navigationReady()) {
-      if (plugin && typeof plugin.toast === "function") {
-        plugin.toast({ title: "UC TV", text: "Still loading - try again in a moment." });
+      if (plugin2 && typeof plugin2.toast === "function") {
+        plugin2.toast({ title: "UC TV", text: "Still loading - try again in a moment." });
       }
       return;
     }
@@ -8781,7 +8968,7 @@ Version: v${version}`;
   }
   var guideOverlay = null;
   var guideLoading = false;
-  async function showChannelGuide(plugin) {
+  async function showChannelGuide(plugin2) {
     if (guideOverlay || guideLoading) return;
     guideLoading = true;
     let entries2;
@@ -8887,7 +9074,7 @@ Version: v${version}`;
         });
         playerEl.addEventListener("click", () => {
           logDebug(`[guide] Jumping to gameId=${entry.gameId}, playerId=${p.playerId}.`);
-          jumpTo(plugin, entry.gameId, p.playerId);
+          jumpTo(plugin2, entry.gameId, p.playerId);
         });
         row2.appendChild(playerEl);
       });
@@ -8933,8 +9120,8 @@ Version: v${version}`;
       guideOverlay = null;
     }
   }
-  function bindChannelGuideKeybinds(plugin) {
-    registerKeybind(plugin, {
+  function bindChannelGuideKeybinds(plugin2) {
+    registerKeybind(plugin2, {
       key: "channelGuide",
       name: "Open Channel Guide",
       scope: "global",
@@ -8951,7 +9138,7 @@ Version: v${version}`;
       onPrimaryAlone: () => {
         if (!isSpectatePage2()) return;
         if (!CONFIG.masterEnabled) return;
-        showChannelGuide(plugin);
+        showChannelGuide(plugin2);
       },
       onPrimaryRelease: () => {
         if (!isSpectatePage2()) return;
@@ -8987,18 +9174,18 @@ Version: v${version}`;
   function isSpectatePage3() {
     return matchesPage({ prefix: "/Spectate" });
   }
-  function initUcTv(plugin) {
-    const settings6 = registerUcTvSettings(plugin, DIVISION_TIERS);
+  function initUcTv(plugin2) {
+    const settings6 = registerUcTvSettings(plugin2, DIVISION_TIERS);
     setSettingsRef(settings6);
     if (CONFIG.debugLogs) dumpSettingsState();
     window.__ucTVScope = scopeActiveGames;
     window.__ucTVSettings = dumpSettingsState;
-    bindChannelKeybinds(plugin);
-    bindChannelGuideKeybinds(plugin);
+    bindChannelKeybinds(plugin2);
+    bindChannelGuideKeybinds(plugin2);
     logDebug("Channel switching and channel guide keybinds registered (see the Keybinds settings category).");
     if (!isSpectatePage3()) return;
     let handled = false;
-    plugin.events.on("getResult", (data2) => {
+    plugin2.events.on("getResult", (data2) => {
       logDebug("getResult fired - match ended.", data2);
       if (handled) return;
       handled = true;
@@ -9010,7 +9197,7 @@ Version: v${version}`;
         logDebug("Auto-mode is off - staying put.");
         return;
       }
-      goToNextMatch(plugin);
+      goToNextMatch(plugin2);
     });
   }
 
@@ -9475,8 +9662,8 @@ Version: v${version}`;
   function loadWindowState() {
     return readJSON(WINDOW_KEY, null);
   }
-  function saveWindowState(state3) {
-    writeJSON(WINDOW_KEY, state3);
+  function saveWindowState(state4) {
+    writeJSON(WINDOW_KEY, state4);
   }
 
   // packages/misc/tier-list/model.js
@@ -9530,17 +9717,17 @@ Version: v${version}`;
       id: typeof l.id === "string" ? l.id : uid("l"),
       title: typeof l.title === "string" ? l.title.slice(0, MAX_TITLE) : DEFAULT_TITLE,
       texts: Object.fromEntries(Object.entries(l.texts && typeof l.texts === "object" ? l.texts : {}).filter(([, v]) => typeof v === "string").map(([k, v]) => [k, v.slice(0, MAX_TEXT)])),
-      tiers: (Array.isArray(l.tiers) ? l.tiers : []).map((t) => ({
-        id: typeof t.id === "string" ? t.id : uid("t"),
-        label: typeof t.label === "string" ? t.label.slice(0, MAX_LABEL) : "?",
-        color: /^#[0-9a-f]{6}$/i.test(t.color) ? t.color : "#cfcfcf",
-        items: (Array.isArray(t.items) ? t.items : []).filter((k) => typeof k === "string")
+      tiers: (Array.isArray(l.tiers) ? l.tiers : []).map((t2) => ({
+        id: typeof t2.id === "string" ? t2.id : uid("t"),
+        label: typeof t2.label === "string" ? t2.label.slice(0, MAX_LABEL) : "?",
+        color: /^#[0-9a-f]{6}$/i.test(t2.color) ? t2.color : "#cfcfcf",
+        items: (Array.isArray(t2.items) ? t2.items : []).filter((k) => typeof k === "string")
       }))
     }));
     lists.forEach((l) => {
       const seen2 = /* @__PURE__ */ new Set();
-      l.tiers.forEach((t) => {
-        t.items = t.items.filter((k) => seen2.has(k) ? false : (seen2.add(k), true));
+      l.tiers.forEach((t2) => {
+        t2.items = t2.items.filter((k) => seen2.has(k) ? false : (seen2.add(k), true));
       });
     });
     const active = lists.some((l) => l.id === raw.active) ? raw.active : lists[0].id;
@@ -9583,12 +9770,12 @@ Version: v${version}`;
     return state2.lists.find((l) => l.id === state2.active) || state2.lists[0];
   }
   function findTier(list, tierId) {
-    return list.tiers.find((t) => t.id === tierId) || null;
+    return list.tiers.find((t2) => t2.id === tierId) || null;
   }
   function removeEverywhere(list, key2) {
-    list.tiers.forEach((t) => {
-      const i = t.items.indexOf(key2);
-      if (i !== -1) t.items.splice(i, 1);
+    list.tiers.forEach((t2) => {
+      const i = t2.items.indexOf(key2);
+      if (i !== -1) t2.items.splice(i, 1);
     });
   }
   function subscribe(fn) {
@@ -9600,7 +9787,7 @@ Version: v${version}`;
     return activeList();
   }
   function isPlaced(key2) {
-    return getActiveList().tiers.some((t) => t.items.includes(key2));
+    return getActiveList().tiers.some((t2) => t2.items.includes(key2));
   }
   function canUndo() {
     return undoStack.length > 0;
@@ -9610,13 +9797,13 @@ Version: v${version}`;
     return state2.lists.map((l) => ({
       id: l.id,
       title: l.title,
-      count: l.tiers.reduce((n, t) => n + t.items.length, 0),
+      count: l.tiers.reduce((n, t2) => n + t2.items.length, 0),
       active: l.id === state2.active
     }));
   }
   function getTextLabel(textId) {
-    const t = getActiveList().texts[textId];
-    return typeof t === "string" ? t : null;
+    const t2 = getActiveList().texts[textId];
+    return typeof t2 === "string" ? t2 : null;
   }
   function getTextIds() {
     return Object.keys(getActiveList().texts);
@@ -9635,7 +9822,7 @@ Version: v${version}`;
   }
   function addTier(atIndex) {
     return change((list) => {
-      const used = new Set(list.tiers.map((t) => t.color));
+      const used = new Set(list.tiers.map((t2) => t2.color));
       const color = TIER_COLORS.find((c) => !used.has(c)) || "#cfcfcf";
       const at = typeof atIndex === "number" ? Math.max(0, Math.min(atIndex, list.tiers.length)) : list.tiers.length;
       list.tiers.splice(at, 0, makeTier("New", color));
@@ -9643,7 +9830,7 @@ Version: v${version}`;
   }
   function deleteTier(tierId) {
     return change((list) => {
-      const i = list.tiers.findIndex((t) => t.id === tierId);
+      const i = list.tiers.findIndex((t2) => t2.id === tierId);
       if (i === -1) return false;
       list.tiers.splice(i, 1);
     });
@@ -9665,7 +9852,7 @@ Version: v${version}`;
   }
   function moveTier(tierId, delta) {
     return change((list) => {
-      const i = list.tiers.findIndex((t) => t.id === tierId);
+      const i = list.tiers.findIndex((t2) => t2.id === tierId);
       const j = i + delta;
       if (i === -1 || j < 0 || j >= list.tiers.length) return false;
       const [tier] = list.tiers.splice(i, 1);
@@ -9735,8 +9922,8 @@ Version: v${version}`;
     const copy2 = JSON.parse(JSON.stringify(activeList()));
     copy2.id = uid("l");
     copy2.title = `${copy2.title} (copy)`.slice(0, MAX_TITLE);
-    copy2.tiers.forEach((t) => {
-      t.id = uid("t");
+    copy2.tiers.forEach((t2) => {
+      t2.id = uid("t");
     });
     state2.lists.push(copy2);
     return setActiveList(copy2.id);
@@ -9763,7 +9950,7 @@ Version: v${version}`;
       v: 1,
       title: list.title,
       texts: { ...list.texts },
-      tiers: list.tiers.map((t) => ({ label: t.label, color: t.color, items: t.items.slice() }))
+      tiers: list.tiers.map((t2) => ({ label: t2.label, color: t2.color, items: t2.items.slice() }))
     };
   }
   function importList(data2) {
@@ -9780,12 +9967,12 @@ Version: v${version}`;
     });
     let count = 0;
     const seen2 = /* @__PURE__ */ new Set();
-    list.tiers = data2.tiers.slice(0, MAX_TIERS).map((t) => {
+    list.tiers = data2.tiers.slice(0, MAX_TIERS).map((t2) => {
       const tier = makeTier(
-        typeof t.label === "string" ? t.label.slice(0, MAX_LABEL) : "?",
-        /^#[0-9a-f]{6}$/i.test(t && t.color) ? t.color.toLowerCase() : "#cfcfcf"
+        typeof t2.label === "string" ? t2.label.slice(0, MAX_LABEL) : "?",
+        /^#[0-9a-f]{6}$/i.test(t2 && t2.color) ? t2.color.toLowerCase() : "#cfcfcf"
       );
-      (Array.isArray(t.items) ? t.items : []).forEach((k) => {
+      (Array.isArray(t2.items) ? t2.items : []).forEach((k) => {
         if (typeof k !== "string" || !ITEM_KEY.test(k) || count >= MAX_ITEMS) return;
         let key2 = k;
         if (k.startsWith("text:")) {
@@ -9814,7 +10001,7 @@ Version: v${version}`;
     return title;
   }
   function listUsesKind(kind) {
-    return getActiveList().tiers.some((t) => t.items.some((k) => k.startsWith(kind + ":")));
+    return getActiveList().tiers.some((t2) => t2.items.some((k) => k.startsWith(kind + ":")));
   }
   function undo() {
     ensureLoaded();
@@ -9864,12 +10051,12 @@ Version: v${version}`;
       return null;
     }
   }
-  function initItemData(plugin) {
+  function initItemData(plugin2) {
     if (!setCards(getAllCards())) setCards(readCachedCards());
     const cachedArtifacts = readArtifactCache();
     if (cachedArtifacts) setArtifacts(cachedArtifacts.list);
-    if (plugin && plugin.events) {
-      plugin.events.on("allCardsReady", (list) => setCards(list));
+    if (plugin2 && plugin2.events) {
+      plugin2.events.on("allCardsReady", (list) => setCards(list));
     }
   }
   function onCardsReady(fn) {
@@ -10095,14 +10282,14 @@ Version: v${version}`;
     title.addEventListener("keydown", (e) => {
       if (e.key === "Enter") title.blur();
     }, { signal });
-    const buttons = document.createElement("span");
-    buttons.style.cssText = "display:flex;gap:4px;flex:none;";
+    const buttons2 = document.createElement("span");
+    buttons2.style.cssText = "display:flex;gap:4px;flex:none;";
     const body = document.createElement("div");
     body.className = "wz-tl-body";
     const grip = document.createElement("div");
     grip.className = "wz-tl-grip";
     grip.title = "Drag to move, double-click to fill the screen";
-    header.append(title, grip, buttons);
+    header.append(title, grip, buttons2);
     root.append(header, body);
     EDGES.forEach((edge) => {
       const h2 = document.createElement("div");
@@ -10202,7 +10389,7 @@ Version: v${version}`;
       root,
       header,
       body,
-      buttons,
+      buttons: buttons2,
       title,
       isMaximised: () => ui.maximised,
       setMaximised,
@@ -10251,7 +10438,7 @@ Version: v${version}`;
     function openEditor(tierId, anchor) {
       closeEditor();
       const list = getActiveList();
-      const index = list.tiers.findIndex((t) => t.id === tierId);
+      const index = list.tiers.findIndex((t2) => t2.id === tierId);
       const tier = list.tiers[index];
       if (!tier) return;
       const el3 = document.createElement("div");
@@ -10334,7 +10521,7 @@ Version: v${version}`;
       name.focus();
       name.select();
     }
-    function render2() {
+    function render3() {
       const list = getActiveList();
       const scroll = container.scrollTop;
       container.innerHTML = "";
@@ -10379,7 +10566,7 @@ Version: v${version}`;
       add.addEventListener("click", () => addTier());
       container.appendChild(add);
       container.scrollTop = scroll;
-      if (editor && !list.tiers.some((t) => t.id === editor.tierId)) closeEditor();
+      if (editor && !list.tiers.some((t2) => t2.id === editor.tierId)) closeEditor();
     }
     document.addEventListener("pointerdown", (e) => {
       if (!editor) return;
@@ -10387,7 +10574,7 @@ Version: v${version}`;
       if (e.target.closest(".wz-tl-row-label, .wz-tl-row-tools")) return;
       closeEditor();
     }, { signal, capture: true });
-    return { render: render2, closeEditor, element: container };
+    return { render: render3, closeEditor, element: container };
   }
 
   // packages/misc/tier-list/picker.js
@@ -10423,7 +10610,7 @@ Version: v${version}`;
     const panel = document.createElement("div");
     panel.className = "wz-tl-picker";
     let type = "cards";
-    const state3 = { rarities: /* @__PURE__ */ new Set(), sets: /* @__PURE__ */ new Set(), tribes: false, monster: false, spell: false };
+    const state4 = { rarities: /* @__PURE__ */ new Set(), sets: /* @__PURE__ */ new Set(), tribes: false, monster: false, spell: false };
     const toggles2 = [];
     const searchText = { cards: "", souls: "", artifacts: "", text: "" };
     const filters = document.createElement("div");
@@ -10467,7 +10654,7 @@ Version: v${version}`;
       b.appendChild(img);
       b.addEventListener("click", () => {
         flip(value);
-        render2();
+        render3();
       }, { signal });
       toggles2.push({ el: b, isOn: () => isOn2(value) });
       return b;
@@ -10482,11 +10669,11 @@ Version: v${version}`;
     const cardToggles = document.createElement("div");
     cardToggles.className = "wz-tl-card-toggles";
     cardToggles.append(
-      group(RARITY_TOGGLES, (v) => state3.rarities.has(v), flipSet(state3.rarities)),
-      group(KIND_TOGGLES, (v) => state3[v], (v) => {
-        state3[v] = !state3[v];
+      group(RARITY_TOGGLES, (v) => state4.rarities.has(v), flipSet(state4.rarities)),
+      group(KIND_TOGGLES, (v) => state4[v], (v) => {
+        state4[v] = !state4[v];
       }),
-      group(SET_TOGGLES, (v) => state3.sets.has(v), flipSet(state3.sets))
+      group(SET_TOGGLES, (v) => state4.sets.has(v), flipSet(state4.sets))
     );
     filters.append(tabs, searchRow, cardToggles);
     const hint = document.createElement("div");
@@ -10496,7 +10683,7 @@ Version: v${version}`;
     panel.append(filters, hint, results);
     body.appendChild(panel);
     function cardFilters() {
-      return { text: search.value, ...state3 };
+      return { text: search.value, ...state4 };
     }
     function setType(value) {
       searchText[type] = search.value;
@@ -10504,16 +10691,16 @@ Version: v${version}`;
       search.value = searchText[type];
       if (type === "artifacts" && !hasArtifacts()) {
         loadArtifacts().then(() => {
-          if (type === "artifacts") render2();
+          if (type === "artifacts") render3();
         });
       }
-      render2();
+      render3();
       search.focus();
     }
     function syncControls() {
       tabButtons.forEach((b) => b.classList.toggle("wz-tl-active", b.dataset.type === type));
       cardToggles.style.visibility = type === "cards" ? "" : "hidden";
-      toggles2.forEach((t) => t.el.classList.toggle("wz-tl-on", t.isOn()));
+      toggles2.forEach((t2) => t2.el.classList.toggle("wz-tl-on", t2.isOn()));
       if (type === "text") {
         search.placeholder = "New text item\u2026";
         search.maxLength = MAX_TEXT;
@@ -10594,7 +10781,7 @@ Version: v${version}`;
       hint.textContent = keys.length ? "Drag a text item into a tier. Double-click one to edit it." : all.length ? "All your text items are ranked. Type a label and press Add for a new one." : "Type a label (e.g. an archetype) and press Add to make a text item.";
       showKeys(keys, { deletable: true });
     }
-    function render2() {
+    function render3() {
       results.innerHTML = "";
       syncControls();
       if (type === "cards") renderCards();
@@ -10605,7 +10792,7 @@ Version: v${version}`;
     function addTextItem() {
       if (addText(search.value)) {
         search.value = "";
-        render2();
+        render3();
       }
     }
     let searchTimer = null;
@@ -10615,7 +10802,7 @@ Version: v${version}`;
         return;
       }
       clearTimeout(searchTimer);
-      searchTimer = setTimeout(render2, SEARCH_DELAY_MS);
+      searchTimer = setTimeout(render3, SEARCH_DELAY_MS);
     }, { signal });
     search.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && type === "text") {
@@ -10624,7 +10811,7 @@ Version: v${version}`;
       }
       if (e.key === "Escape" && search.value) {
         search.value = "";
-        render2();
+        render3();
       }
     }, { signal });
     clear.addEventListener("click", () => {
@@ -10634,20 +10821,20 @@ Version: v${version}`;
       }
       search.value = "";
       if (type === "cards") {
-        state3.rarities.clear();
-        state3.sets.clear();
-        state3.tribes = state3.monster = state3.spell = false;
+        state4.rarities.clear();
+        state4.sets.clear();
+        state4.tribes = state4.monster = state4.spell = false;
       }
-      render2();
+      render3();
     }, { signal });
     const stopListening = onCardsReady(() => {
-      if (type === "cards") render2();
+      if (type === "cards") render3();
     });
     signal.addEventListener("abort", stopListening);
-    render2();
+    render3();
     return {
       element: panel,
-      render: render2,
+      render: render3,
       setOpen(open) {
         panel.classList.toggle("wz-tl-hidden", !open);
       },
@@ -10689,20 +10876,20 @@ Version: v${version}`;
     function update(x, y) {
       active.ghost.style.left = x - active.offsetX + "px";
       active.ghost.style.top = y - active.offsetY + "px";
-      const t = targetAt(x, y);
+      const t2 = targetAt(x, y);
       clearHighlights();
-      active.target = t;
-      if (t.type === "tier") {
-        const tiles = [...t.rowItems.querySelectorAll(".wz-tl-tile")].filter((n) => n !== active.tile);
-        t.index = insertionIndex(tiles, x, y);
+      active.target = t2;
+      if (t2.type === "tier") {
+        const tiles = [...t2.rowItems.querySelectorAll(".wz-tl-tile")].filter((n) => n !== active.tile);
+        t2.index = insertionIndex(tiles, x, y);
         const marker = document.createElement("div");
         marker.className = "wz-tl-marker";
-        if (t.index < tiles.length) t.rowItems.insertBefore(marker, tiles[t.index]);
-        else t.rowItems.appendChild(marker);
+        if (t2.index < tiles.length) t2.rowItems.insertBefore(marker, tiles[t2.index]);
+        else t2.rowItems.appendChild(marker);
         active.marker = marker;
-      } else if ((t.type === "picker" || t.type === "outside") && active.from.type === "tier") {
+      } else if ((t2.type === "picker" || t2.type === "outside") && active.from.type === "tier") {
         active.ghost.classList.add("wz-tl-ghost-remove");
-        if (t.type === "picker") {
+        if (t2.type === "picker") {
           const picker = root.querySelector(".wz-tl-picker");
           if (picker) picker.classList.add("wz-tl-drop-in");
         }
@@ -10720,9 +10907,9 @@ Version: v${version}`;
         ghost.style.width = size;
         ghost.style.height = `calc(${size} * 0.8)`;
       } else {
-        const rect = tile2.getBoundingClientRect();
-        ghost.style.width = rect.width + "px";
-        ghost.style.height = rect.height + "px";
+        const rect2 = tile2.getBoundingClientRect();
+        ghost.style.width = rect2.width + "px";
+        ghost.style.height = rect2.height + "px";
       }
       ghost.style.zIndex = String(Z_FLOATING);
       if (root.classList.contains("wz-tl-nonames")) ghost.classList.add("wz-tl-nonames");
@@ -10776,15 +10963,15 @@ Version: v${version}`;
       if (!tile2 || !root.contains(tile2) || !tile2.dataset.key) return;
       e.preventDefault();
       const row2 = tile2.closest(".wz-tl-row");
-      const rect = tile2.getBoundingClientRect();
+      const rect2 = tile2.getBoundingClientRect();
       pending = {
         tile: tile2,
         key: tile2.dataset.key,
         from: row2 ? { type: "tier", tierId: row2.dataset.tierId } : { type: "picker" },
         startX: e.clientX,
         startY: e.clientY,
-        offsetX: e.clientX - rect.left,
-        offsetY: e.clientY - rect.top
+        offsetX: e.clientX - rect2.left,
+        offsetY: e.clientY - rect2.top
       };
     }, { signal });
     document.addEventListener("pointermove", (e) => {
@@ -10853,7 +11040,7 @@ Version: v${version}`;
       box.style.left = left + "px";
       box.style.top = top + "px";
     }
-    function render2(item2) {
+    function render3(item2) {
       const el3 = document.createElement("div");
       el3.className = "wz-tl-preview";
       const pageWindow2 = getPageWindow();
@@ -10889,7 +11076,7 @@ Version: v${version}`;
       timer = setTimeout(() => {
         if (pressed || isDragging() || !tile2.isConnected || overTile !== tile2) return;
         const item2 = resolveItem(tile2.dataset.key);
-        box = render2(item2);
+        box = render3(item2);
         box.dataset.key = tile2.dataset.key;
         document.body.appendChild(box);
         position();
@@ -10986,7 +11173,7 @@ Version: v${version}`;
       root.querySelectorAll(".wz-tl-row").forEach((row2) => {
         const tierId = row2.dataset.tierId;
         push(row2.querySelector(".wz-tl-row-label"), `l:${tierId}`);
-        row2.querySelectorAll(".wz-tl-row-items .wz-tl-tile").forEach((t) => push(t, `t:${t.dataset.key}`));
+        row2.querySelectorAll(".wz-tl-row-items .wz-tl-tile").forEach((t2) => push(t2, `t:${t2.dataset.key}`));
         if (held) push(row2.querySelector(".wz-tl-row-items"), `e:${tierId}`);
       });
       push(root.querySelector(".wz-tl-add-row"), "add");
@@ -10996,7 +11183,7 @@ Version: v${version}`;
         push(panel.querySelector(".wz-tl-search-row input"), "search");
         push(panel.querySelector(".wz-tl-search-row button"), "clear");
         panel.querySelectorAll(".wz-tl-toggle").forEach((el3, i) => push(el3, `f:${i}`));
-        panel.querySelectorAll(".wz-tl-results .wz-tl-tile").forEach((t) => push(t, `p:${t.dataset.key}`));
+        panel.querySelectorAll(".wz-tl-results .wz-tl-tile").forEach((t2) => push(t2, `p:${t2.dataset.key}`));
       }
       return out;
     }
@@ -11137,7 +11324,7 @@ Version: v${version}`;
       dirty = true;
     }
     function tierIndexOf(tierId, key2) {
-      const tier = getActiveList().tiers.find((t) => t.id === tierId);
+      const tier = getActiveList().tiers.find((t2) => t2.id === tierId);
       if (!tier) return -1;
       return tier.items.filter((k) => k !== held.key).indexOf(key2);
     }
@@ -11224,16 +11411,16 @@ Version: v${version}`;
       title.className = "wz-tl-send-title";
       title.textContent = "Send to tier";
       menu3.appendChild(title);
-      const currentTier = list.tiers.find((t) => t.items.includes(key2));
-      list.tiers.forEach((t) => {
+      const currentTier = list.tiers.find((t2) => t2.items.includes(key2));
+      list.tiers.forEach((t2) => {
         const b = document.createElement("button");
         b.type = "button";
         b.className = "wz-tl-send-tier";
-        b.style.background = t.color;
-        b.textContent = t.label;
-        if (currentTier && currentTier.id === t.id) b.classList.add("wz-tl-active");
+        b.style.background = t2.color;
+        b.textContent = t2.label;
+        if (currentTier && currentTier.id === t2.id) b.classList.add("wz-tl-active");
         b.addEventListener("click", () => {
-          placeItem(key2, t.id);
+          placeItem(key2, t2.id);
           held = null;
           closeSendMenu();
         });
@@ -11261,8 +11448,8 @@ Version: v${version}`;
       menu3.style.left = left + "px";
       menu3.style.top = Math.max(4, top) + "px";
       sendMenu = { el: menu3, key: key2, returnTo: focusId, returnRect: lastRect };
-      const buttons = [...menu3.querySelectorAll("button")];
-      const start2 = Math.max(0, buttons.findIndex((b) => b.classList.contains("wz-tl-active")));
+      const buttons2 = [...menu3.querySelectorAll("button")];
+      const start2 = Math.max(0, buttons2.findIndex((b) => b.classList.contains("wz-tl-active")));
       focusId = `qs:${start2}`;
       dirty = true;
     }
@@ -11376,7 +11563,7 @@ Version: v${version}`;
     return data.tags;
   }
   function findTag(id) {
-    return data.tags.find((t) => t.id === id) || null;
+    return data.tags.find((t2) => t2.id === id) || null;
   }
   function createTag(name, color) {
     const tag = {
@@ -11395,7 +11582,7 @@ Version: v${version}`;
     writeData(data);
   }
   function deleteTag(id) {
-    data.tags = data.tags.filter((t) => t.id !== id);
+    data.tags = data.tags.filter((t2) => t2.id !== id);
     Object.keys(data.cardTags).forEach((cardId) => {
       data.cardTags[cardId] = data.cardTags[cardId].filter((tagId) => tagId !== id);
       if (!data.cardTags[cardId].length) delete data.cardTags[cardId];
@@ -11414,7 +11601,7 @@ Version: v${version}`;
   function toggleCardTag(cardId, tagId) {
     const current = data.cardTags[cardId] || [];
     const has = current.includes(tagId);
-    const next = has ? current.filter((t) => t !== tagId) : [...current, tagId];
+    const next = has ? current.filter((t2) => t2 !== tagId) : [...current, tagId];
     if (next.length) {
       data.cardTags[cardId] = next;
     } else {
@@ -11429,10 +11616,10 @@ Version: v${version}`;
     const wanted = new Set(tagIds);
     return {
       format: 1,
-      tags: data.tags.filter((t) => wanted.has(t.id)).map((t) => ({
-        name: t.name,
-        color: t.color,
-        cards: Object.keys(data.cardTags).filter((cardId) => data.cardTags[cardId].includes(t.id))
+      tags: data.tags.filter((t2) => wanted.has(t2.id)).map((t2) => ({
+        name: t2.name,
+        color: t2.color,
+        cards: Object.keys(data.cardTags).filter((cardId) => data.cardTags[cardId].includes(t2.id))
       }))
     };
   }
@@ -11444,7 +11631,7 @@ Version: v${version}`;
     shared.tags.forEach((st) => {
       const name = String(st && st.name || "").trim();
       if (!name) return;
-      let tag = data.tags.find((t) => t.name.toLowerCase() === name.toLowerCase());
+      let tag = data.tags.find((t2) => t2.name.toLowerCase() === name.toLowerCase());
       if (tag) {
         summary.merged.push(tag.name);
       } else {
@@ -11494,8 +11681,8 @@ Version: v${version}`;
   function applyLook() {
     if (!mounted) return;
     const root = mounted.win.root;
-    const pct = parseInt(setting2("opacity", "100%"), 10);
-    root.style.setProperty("--wz-tl-opacity", String((Number.isFinite(pct) ? Math.min(100, Math.max(50, pct)) : 100) / 100));
+    const pct2 = parseInt(setting2("opacity", "100%"), 10);
+    root.style.setProperty("--wz-tl-opacity", String((Number.isFinite(pct2) ? Math.min(100, Math.max(50, pct2)) : 100) / 100));
     root.classList.toggle("wz-tl-nonames", !setting2("showNames", true));
   }
   function previewDelayMs() {
@@ -11505,7 +11692,7 @@ Version: v${version}`;
   function pickerOptions() {
     return {
       hideRanked: !!settings2 && settings2.value("rankedInPanel") === RANKED_HIDE,
-      tagsFor: isPluginEnabled("cardTags") ? (id) => tagObjectsForCard(id).map((t) => t.name) : null
+      tagsFor: isPluginEnabled("cardTags") ? (id) => tagObjectsForCard(id).map((t2) => t2.name) : null
     };
   }
   function headerButton(label2, title) {
@@ -11534,28 +11721,28 @@ Version: v${version}`;
     injectTierListStyle();
     const controller = new AbortController();
     const { signal } = controller;
-    const win = buildWindow({
+    const win2 = buildWindow({
       signal,
       getPreferredTile: preferredTile,
       onTitleChange: (value) => setTitle(value)
     });
     const listsBtn = headerButton("Lists \u25BE", "Switch, add, copy or delete tier lists");
-    win.title.after(listsBtn);
+    win2.title.after(listsBtn);
     const undoBtn = headerButton("\u21B6", "Undo");
     const resetBtn = headerButton("Reset", "Clear every tier back to S\u2013D (click twice)");
     const pickerBtn = headerButton("Items", "Show or hide the item panel");
     const maxBtn = headerButton("\u25A1", "Fill the screen");
     const closeBtn = headerButton("\xD7", "Close");
-    win.buttons.append(undoBtn, resetBtn, pickerBtn, maxBtn, closeBtn);
-    const tiers = createTiersView({ body: win.body, signal });
-    const picker = createPicker({ body: win.body, signal, getOptions: pickerOptions });
+    win2.buttons.append(undoBtn, resetBtn, pickerBtn, maxBtn, closeBtn);
+    const tiers = createTiersView({ body: win2.body, signal });
+    const picker = createPicker({ body: win2.body, signal, getOptions: pickerOptions });
     function syncHeader() {
       const list = getActiveList();
-      if (document.activeElement !== win.title) win.title.value = list.title;
+      if (document.activeElement !== win2.title) win2.title.value = list.title;
       undoBtn.disabled = !canUndo();
-      pickerBtn.classList.toggle("wz-tl-active", win.isPickerOpen());
-      maxBtn.textContent = win.isMaximised() ? "\u2750" : "\u25A1";
-      maxBtn.title = win.isMaximised() ? "Restore the window size" : "Fill the screen";
+      pickerBtn.classList.toggle("wz-tl-active", win2.isPickerOpen());
+      maxBtn.textContent = win2.isMaximised() ? "\u2750" : "\u25A1";
+      maxBtn.title = win2.isMaximised() ? "Restore the window size" : "Fill the screen";
     }
     function renderAll() {
       tiers.render();
@@ -11624,9 +11811,9 @@ Version: v${version}`;
         importListDialog();
       });
       menu3.appendChild(actions);
-      win.root.appendChild(menu3);
+      win2.root.appendChild(menu3);
       const r = listsBtn.getBoundingClientRect();
-      const rr = win.root.getBoundingClientRect();
+      const rr = win2.root.getBoundingClientRect();
       menu3.style.left = Math.max(4, r.left - rr.left) + "px";
       menu3.style.top = r.bottom - rr.top + 4 + "px";
       listsMenu = menu3;
@@ -11675,13 +11862,13 @@ Version: v${version}`;
       }
       const dialogOpen = document.body.classList.contains("modal-open") || !!document.querySelector(".bootstrap-dialog.in, .modal.in");
       const menuOpen = !!menuBackdrop && menuBackdrop.style.display === "block";
-      win.root.classList.toggle("wz-tl-under-modal", dialogOpen || menuOpen);
+      win2.root.classList.toggle("wz-tl-under-modal", dialogOpen || menuOpen);
     };
     const layerWatch = new MutationObserver(syncLayer);
     layerWatch.observe(document.body, { attributes: true, attributeFilter: ["class"], childList: true });
     syncLayer();
     signal.addEventListener("abort", () => layerWatch.disconnect());
-    win.root.addEventListener("dblclick", (e) => {
+    win2.root.addEventListener("dblclick", (e) => {
       const tile2 = e.target.closest(".wz-tl-tile.wz-tl-text");
       if (!tile2 || e.target.closest("input, .wz-tl-tile-del")) return;
       const textId = tile2.dataset.key.slice(5);
@@ -11729,24 +11916,24 @@ Version: v${version}`;
       }, 3e3);
     }, { signal });
     pickerBtn.addEventListener("click", () => {
-      const open = !win.isPickerOpen();
-      win.setPickerOpen(open);
+      const open = !win2.isPickerOpen();
+      win2.setPickerOpen(open);
       picker.setOpen(open);
       syncHeader();
       if (open) picker.focusSearch();
     }, { signal });
-    picker.setOpen(win.isPickerOpen());
-    maxBtn.addEventListener("click", () => win.setMaximised(!win.isMaximised()), { signal });
-    win.onMaximiseChange(syncHeader);
+    picker.setOpen(win2.isPickerOpen());
+    maxBtn.addEventListener("click", () => win2.setMaximised(!win2.isMaximised()), { signal });
+    win2.onMaximiseChange(syncHeader);
     closeBtn.addEventListener("click", () => hideTierList(), { signal });
     ["keydown", "keyup", "keypress"].forEach((type) => {
-      win.root.addEventListener(type, (e) => {
+      win2.root.addEventListener(type, (e) => {
         if (e.target.closest("input, select, textarea")) e.stopPropagation();
       }, { signal });
     });
     let preview = null;
     const drag = attachDrag({
-      root: win.root,
+      root: win2.root,
       signal,
       pageItemKey,
       buildGhost: (key2) => buildTile(key2),
@@ -11763,18 +11950,18 @@ Version: v${version}`;
         }
       }
     });
-    preview = attachPreview({ root: win.root, signal, isDragging: drag.isDragging, getDelayMs: previewDelayMs });
+    preview = attachPreview({ root: win2.root, signal, isDragging: drag.isDragging, getDelayMs: previewDelayMs });
     const unsubscribe = subscribe(() => {
       renderAll();
       ensureArtifacts();
     });
     signal.addEventListener("abort", unsubscribe);
     window.addEventListener("beforeunload", () => flushSave(), { signal });
-    document.body.appendChild(win.root);
+    document.body.appendChild(win2.root);
     renderAll();
     ensureArtifacts();
     const pad3 = createPad({
-      root: win.root,
+      root: win2.root,
       tiers,
       picker,
       preview,
@@ -11783,7 +11970,7 @@ Version: v${version}`;
       hide: () => hideTierList()
     });
     pad3.start();
-    mounted = { controller, win, picker, pad: pad3 };
+    mounted = { controller, win: win2, picker, pad: pad3 };
     applyLook();
   }
   function hideTierList() {
@@ -11794,8 +11981,8 @@ Version: v${version}`;
     mounted.win.root.remove();
     mounted = null;
   }
-  function initTierList(plugin) {
-    settings2 = createFeatureSettings(plugin, "tierlist", {
+  function initTierList(plugin2) {
+    settings2 = createFeatureSettings(plugin2, "tierlist", {
       tab: "Tier List",
       visible: () => isPluginEnabled("tierList")
     });
@@ -11856,7 +12043,7 @@ Version: v${version}`;
         if (blockedHere()) hideTierList();
       }
     });
-    registerKeybind(plugin, {
+    registerKeybind(plugin2, {
       key: "toggleTierList",
       name: "Toggle Tier List",
       defaultCode: "KeyL",
@@ -11864,7 +12051,7 @@ Version: v${version}`;
       onMatch: () => toggleTierList()
     });
     if (!isPluginEnabled("tierList")) return;
-    initItemData(plugin);
+    initItemData(plugin2);
   }
 
   // packages/card-maker/styles.js
@@ -11930,9 +12117,9 @@ Version: v${version}`;
       return null;
     }
   }
-  function saveWindowState2(state3) {
+  function saveWindowState2(state4) {
     try {
-      GM_setValue(WINDOW_KEY2, JSON.stringify(state3));
+      GM_setValue(WINDOW_KEY2, JSON.stringify(state4));
     } catch (e) {
       console.warn("[Card Maker] Failed to save the window", e);
     }
@@ -12006,14 +12193,14 @@ Version: v${version}`;
     pick.addEventListener("change", () => onPick(pick.value), { signal });
     const grip = document.createElement("div");
     grip.className = "wz-cm-grip";
-    const buttons = {
+    const buttons2 = {
       reload: headerButton2("reload", "\u21BB", "Reload the editor"),
       site: headerButton2("site", "\u2197", "Open the editor's own site in a new tab"),
       min: headerButton2("min", "_", "Shrink to the title bar (the editor stays open)"),
       max: headerButton2("max", "\u25A1", "Fill the screen"),
       close: headerButton2("close", "\xD7", "Close (the editor saves your work as you go)")
     };
-    header.append(img, title, pick, grip, ...Object.values(buttons));
+    header.append(img, title, pick, grip, ...Object.values(buttons2));
     const body = document.createElement("div");
     body.className = "wz-cm-body";
     const loading = document.createElement("div");
@@ -12040,10 +12227,10 @@ Version: v${version}`;
       root.style.height = g.height + "px";
       root.classList.toggle("wz-cm-max", ui.maximised);
       root.classList.toggle("wz-cm-min", ui.minimised && !ui.maximised);
-      buttons.max.textContent = ui.maximised ? "\u2750" : "\u25A1";
-      buttons.max.title = ui.maximised ? "Back to the window" : "Fill the screen";
-      buttons.min.textContent = ui.minimised ? "\u25AD" : "_";
-      buttons.min.title = ui.minimised ? "Show the editor again" : "Shrink to the title bar";
+      buttons2.max.textContent = ui.maximised ? "\u2750" : "\u25A1";
+      buttons2.max.title = ui.maximised ? "Back to the window" : "Fill the screen";
+      buttons2.min.textContent = ui.minimised ? "\u25AD" : "_";
+      buttons2.min.title = ui.minimised ? "Show the editor again" : "Shrink to the title bar";
     }
     function setMaximised(value) {
       ui.maximised = !!value;
@@ -12221,13 +12408,13 @@ Version: v${version}`;
   }
   function stripPieces(px, w, h2) {
     const at = (x, y) => (y * w + x) * 4;
-    const counts = /* @__PURE__ */ new Map();
+    const counts2 = /* @__PURE__ */ new Map();
     for (let i = 0; i < px.length; i += 16) {
       const k = px[i] >> 4 << 8 | px[i + 1] >> 4 << 4 | px[i + 2] >> 4;
-      counts.set(k, (counts.get(k) || 0) + 1);
+      counts2.set(k, (counts2.get(k) || 0) + 1);
     }
     let bk = 0, best = -1;
-    for (const [k, n] of counts) if (n > best) {
+    for (const [k, n] of counts2) if (n > best) {
       best = n;
       bk = k;
     }
@@ -12253,23 +12440,23 @@ Version: v${version}`;
       return n / (x1 - x0 + 1);
     };
     if (w < 120 || h2 < 20 || w / h2 < 2.2) return null;
-    let l = 0, r = w - 1, t = 0, b = h2 - 1;
+    let l = 0, r = w - 1, t2 = 0, b = h2 - 1;
     const midY0 = Math.floor(h2 * 0.2), midY1 = Math.ceil(h2 * 0.8);
     while (l < 8 && colShare(l, midY0, midY1) > 0.9) l++;
     while (r > w - 9 && colShare(r, midY0, midY1) > 0.9) r--;
-    while (t < 8 && rowShare(t, l, r) > 0.9) t++;
+    while (t2 < 8 && rowShare(t2, l, r) > 0.9) t2++;
     while (b > h2 - 9 && rowShare(b, l, r) > 0.9) b--;
-    if (l === 0 || t === 0) return null;
+    if (l === 0 || t2 === 0) return null;
     const border = [px[at(0, h2 >> 1)], px[at(0, h2 >> 1) + 1], px[at(0, h2 >> 1) + 2]];
     const run = (x) => {
       let best2 = 0, n = 0;
-      for (let y = t; y <= b; y++) {
+      for (let y = t2; y <= b; y++) {
         n = ink[y * w + x] ? n + 1 : 0;
         if (n > best2) best2 = n;
       }
       return best2;
     };
-    const tall = Math.max(16, Math.round((b - t + 1) * 0.6));
+    const tall = Math.max(16, Math.round((b - t2 + 1) * 0.6));
     let dividers = [];
     for (let x = l + 3; x <= r - 3; x++) {
       if (run(x) >= tall) {
@@ -12282,7 +12469,7 @@ Version: v${version}`;
     if (!dividers.length || dividers.length > 3) return null;
     const bounds = [l, ...dividers.flatMap(([a, z]) => [a - 1, z + 1]), r];
     const trim = (x0, x1) => {
-      let y0 = t, y1 = b;
+      let y0 = t2, y1 = b;
       const rowHas = (y) => {
         for (let x = x0; x <= x1; x++) if (ink[y * w + x]) return true;
         return false;
@@ -12515,8 +12702,8 @@ Version: v${version}`;
   var kwRe = new RegExp(`(^|[^\\w])(${KEYWORDS.map((k) => k.replace(/ /g, "\\s")).join("|")})(?=[^\\w]|$)`, "g");
   var spRe = new RegExp(`(^|[^\\w{"#])(${Object.keys(SPECIAL).join("|")})(?![\\w}])`, "g");
   function formatText(desc) {
-    const t = esc2(desc).replace(/\{\{stats:([^}]*)\}\}/gi, (_, a) => a.split("|").join("/")).replace(/\{\{[^}]*\}\}/g, "").replace(/\[\[([^\]]*)\]\]/g, "$1").replace(/(?<!\\)_([^_]+)_/g, "<u>$1</u>").replace(/\{(#?[\w]+)[;|]([^}]*)\}/g, '<span style="color:$1">$2</span>').replace(/\{([^{}]+)\}/g, '<span style="color:#41fcff">$1</span>').replace(/\\/g, "").replace(/\n/g, "<br>");
-    return t.split(/(<[^>]+>)/).map((seg, i) => i % 2 ? seg : seg.replace(kwRe, "$1<u>$2</u>").replace(spRe, (_, pre, k) => `${pre}<span style="color:${SPECIAL[k]}">${k}</span>`)).join("");
+    const t2 = esc2(desc).replace(/\{\{stats:([^}]*)\}\}/gi, (_, a) => a.split("|").join("/")).replace(/\{\{[^}]*\}\}/g, "").replace(/\[\[([^\]]*)\]\]/g, "$1").replace(/(?<!\\)_([^_]+)_/g, "<u>$1</u>").replace(/\{(#?[\w]+)[;|]([^}]*)\}/g, '<span style="color:$1">$2</span>').replace(/\{([^{}]+)\}/g, '<span style="color:#41fcff">$1</span>').replace(/\\/g, "").replace(/\n/g, "<br>");
+    return t2.split(/(<[^>]+>)/).map((seg, i) => i % 2 ? seg : seg.replace(kwRe, "$1<u>$2</u>").replace(spRe, (_, pre, k) => `${pre}<span style="color:${SPECIAL[k]}">${k}</span>`)).join("");
   }
   var rarityColor = (r) => SPECIAL[(r || "").split("_").pop()] || "#fff";
   var soulColor2 = (s) => SPECIAL[s] || (/^#[0-9a-f]{3,8}$/i.test(s || "") ? s : "");
@@ -12575,7 +12762,7 @@ Version: v${version}`;
     }
     const kind = p.type === "Enchantment" ? "enchant" : p.type.toLowerCase();
     const name = h("div", { class: "wz-gl-name" }, h("span", { text: p.name || "(no name)", style: { color: p.type === "Spell" ? soulColor2(p.soul) : "" } }));
-    const tribes = h("div", { class: "wz-gl-tribes" }, (p.tribes || []).map((t, i) => h("img", { src: t.icon, title: t.name || "", alt: "", style: { right: i * 17 + "px" } })));
+    const tribes = h("div", { class: "wz-gl-tribes" }, (p.tribes || []).map((t2, i) => h("img", { src: t2.icon, title: t2.name || "", alt: "", style: { right: i * 17 + "px" } })));
     let rarity = null;
     if (p.type !== "Enchantment") {
       if (p.rarityIcon) {
@@ -12653,8 +12840,8 @@ Version: v${version}`;
       r = {};
       const n = c.querySelector(".wz-gl-name");
       if (n) r.name = shrink(n, n.firstElementChild || n, 14, 25, n);
-      const t = c.querySelector(".wz-gl-text > div");
-      if (t) r.text = shrink(t, t, 12, card.classList.contains("t-enchant") ? 184 : 81);
+      const t2 = c.querySelector(".wz-gl-text > div");
+      if (t2) r.text = shrink(t2, t2, 12, card.classList.contains("t-enchant") ? 184 : 81);
       if (isArt) {
         const an = c.querySelector(".wz-gl-artname");
         r.artName = shrinkBox(an, 14, 8);
@@ -12764,9 +12951,9 @@ Version: v${version}`;
       soul: e.soul || null,
       rarity: isUuid(e.rarity) ? null : e.rarity || "COMMON",
       rarityIcon: isUuid(e.rarity) ? await ctx.image(e.rarity) : null,
-      tribes: await Promise.all((e.tribes || []).filter((t) => t && t !== "none").map(async (t) => ({
-        name: isUuid(t) ? null : t,
-        icon: isUuid(t) ? await ctx.image(t) : await ctx.tribeIcon(t)
+      tribes: await Promise.all((e.tribes || []).filter((t2) => t2 && t2 !== "none").map(async (t2) => ({
+        name: isUuid(t2) ? null : t2,
+        icon: isUuid(t2) ? await ctx.image(t2) : await ctx.tribeIcon(t2)
       }))),
       imageType: "standard"
     };
@@ -12853,7 +13040,7 @@ Version: v${version}`;
       soul: raw.soul || null,
       rarity: rarityKey(raw.type, raw.rarity),
       rarityIcon: raw.rarityIcon || null,
-      tribes: (raw.tribes || []).filter((t) => t && t.icon).slice(0, 4),
+      tribes: (raw.tribes || []).filter((t2) => t2 && t2.icon).slice(0, 4),
       art: art ? art.src : null,
       artFrom: art ? art.from : "",
       note,
@@ -12909,7 +13096,7 @@ Version: v${version}`;
     };
     const groups = await feildGroups(
       { el: (id) => byId2.get(id), groupIds, allIds: [...byId2.keys()] },
-      { image, tribeIcon: (t) => feildArt("tribe", String(t).toUpperCase().replace(/ /g, "_")), why: (id) => notes.get(id) }
+      { image, tribeIcon: (t2) => feildArt("tribe", String(t2).toUpperCase().replace(/ /g, "_")), why: (id) => notes.get(id) }
     );
     const root = groupIds.length === 1 ? byId2.get(groupIds[0]) : null;
     return { name: root && root.name || "", groups };
@@ -12935,7 +13122,7 @@ Version: v${version}`;
         soul: c.spellSoul || null,
         rarity: c.isRarityCustom ? null : rarityName(r),
         rarityIcon: c.isRarityCustom ? abs(r) : null,
-        tribes: (c.tribes || []).map((t) => ({ name: t.name || null, icon: abs(t.src) })),
+        tribes: (c.tribes || []).map((t2) => ({ name: t2.name || null, icon: abs(t2.src) })),
         imageType: c.imageType || "standard",
         image: abs(cssUrl(c.image))
       });
@@ -12969,14 +13156,14 @@ Version: v${version}`;
     const g = c.getContext("2d");
     g.drawImage(img, 0, 0);
     const px = g.getImageData(0, 0, w, h2).data;
-    const counts = /* @__PURE__ */ new Map();
+    const counts2 = /* @__PURE__ */ new Map();
     for (let i = 0; i < px.length; i += 16) {
       if (px[i + 3] < 40) continue;
       const k = px[i] >> 4 << 8 | px[i + 1] >> 4 << 4 | px[i + 2] >> 4;
-      counts.set(k, (counts.get(k) || 0) + 1);
+      counts2.set(k, (counts2.get(k) || 0) + 1);
     }
     let bgKey = 0, best = -1;
-    for (const [k, n] of counts) if (n > best) {
+    for (const [k, n] of counts2) if (n > best) {
       best = n;
       bgKey = k;
     }
@@ -13058,12 +13245,12 @@ Version: v${version}`;
       return [px[i], px[i + 1], px[i + 2], px[i + 3]];
     };
     const share = (b, test) => {
-      let n = 0, t = 0;
+      let n = 0, t2 = 0;
       for (let y = b.y0; y <= b.y1; y++) for (let x = b.x0; x <= b.x1; x++) {
-        t++;
+        t2++;
         if (test(pixel(x, y))) n++;
       }
-      return t ? n / t : 0;
+      return t2 ? n / t2 : 0;
     };
     const out = [];
     leaves.forEach((b, i) => {
@@ -13178,16 +13365,16 @@ Version: v${version}`;
   }
   function pruneUploads(statusById, inIndex) {
     const d = getDraft();
-    let changed3 = false;
+    let changed4 = false;
     Object.keys(d.uploads).forEach((id) => {
       const st = statusById[id];
       const old = Date.now() - d.uploads[id].postedAt > 14 * 864e5;
       if (st === "approved" && inIndex.has(id) || (st === "rejected" || st === "removed") && old || !st && old) {
         delete d.uploads[id];
-        changed3 = true;
+        changed4 = true;
       }
     });
-    if (changed3) saveDraft();
+    if (changed4) saveDraft();
   }
   function entries() {
     const d = getDraft();
@@ -13232,7 +13419,7 @@ Version: v${version}`;
         ...c,
         art: artUrl(c.art),
         picture: c.picture ? artUrl(c.picture) || void 0 : void 0,
-        tribes: (c.tribes || []).map((t) => ({ ...t, icon: artUrl(t.icon) }))
+        tribes: (c.tribes || []).map((t2) => ({ ...t2, icon: artUrl(t2.icon) }))
       }))
     };
   }
@@ -13257,11 +13444,11 @@ Version: v${version}`;
     if (p.soul) out.soul = p.soul;
     if (p.picture) out.picture = p.picture;
     else if (p.art) out.art = p.art;
-    const tribes = (p.tribes || []).filter((t) => t && typeof t.icon === "string" && t.icon.startsWith("data:image/png"));
-    if (tribes.length) out.tribes = tribes.map((t) => ({ name: t.name || "", icon: t.icon }));
+    const tribes = (p.tribes || []).filter((t2) => t2 && typeof t2.icon === "string" && t2.icon.startsWith("data:image/png"));
+    if (tribes.length) out.tribes = tribes.map((t2) => ({ name: t2.name || "", icon: t2.icon }));
     return out;
   }
-  var pictures = (u) => [u.art, u.picture, ...(u.tribes || []).map((t) => t.icon)].filter(Boolean);
+  var pictures = (u) => [u.art, u.picture, ...(u.tribes || []).map((t2) => t2.icon)].filter(Boolean);
   function uploadProblems(entries2) {
     const out = [];
     entries2.forEach((e) => e.parts.forEach((p) => {
@@ -13315,7 +13502,7 @@ Version: v${version}`;
     let queue = {};
     let timer = null;
     let sending = null;
-    const flush = async () => {
+    const flush2 = async () => {
       clearTimeout(timer);
       if (sending) await sending.catch(() => null);
       const batch = queue;
@@ -13344,9 +13531,9 @@ Version: v${version}`;
       add(id, v) {
         queue[id] = v;
         clearTimeout(timer);
-        timer = setTimeout(flush, 2e3);
+        timer = setTimeout(flush2, 2e3);
       },
-      flush,
+      flush: flush2,
       pending: () => ({ ...queue })
     };
   }
@@ -13474,9 +13661,9 @@ Version: v${version}`;
 `;
   function allEntries({ approved, own, totals, baseVotes, current, account }) {
     const now = Date.now();
-    const days = (t) => Math.max(0, Math.floor((now - (t || now)) / 864e5));
+    const days = (t2) => Math.max(0, Math.floor((now - (t2 || now)) / 864e5));
     const server2 = approved.map((p) => {
-      const t = totals[p.id] || [0, 0];
+      const t2 = totals[p.id] || [0, 0];
       const vote = current[p.id] || 0;
       return {
         key: p.id,
@@ -13490,7 +13677,7 @@ Version: v${version}`;
         mine: !!account && p.author === account,
         days: days(p.approvedAt || p.postedAt),
         vote,
-        score: t[0] - t[1] - (baseVotes[p.id] || 0) + vote
+        score: t2[0] - t2[1] - (baseVotes[p.id] || 0) + vote
       };
     });
     const waiting = own.map((p) => ({
@@ -13518,10 +13705,10 @@ Version: v${version}`;
     return entries2.filter((e) => e.days < max).sort((a, b) => b.score - a.score);
   }
   function browseView(ctx) {
-    const { state: state3 } = ctx;
-    const list = listFor(filtered(ctx.entries, state3), state3.list);
-    const dir = state3.dir;
-    state3.dir = null;
+    const { state: state4 } = ctx;
+    const list = listFor(filtered(ctx.entries, state4), state4.list);
+    const dir = state4.dir;
+    state4.dir = null;
     const area = h("div", { class: "wz-gl-pagearea" });
     const count = h("span", { class: "n" });
     const prev = h("button", { title: "Previous page", text: "\u2039", onclick: () => turn(-1) });
@@ -13535,7 +13722,7 @@ Version: v${version}`;
       h("div", { class: "wz-gl-pager" }, prev, count, next)
     );
     const el3 = h("div", { class: "wz-gl-browse" }, h("div", { class: "wz-gl-listbar" }, segBar(ctx, dir), filterButtons(ctx)), area, foot);
-    const items = list.map((e, i) => item(ctx, e, i + 1, state3.list));
+    const items = list.map((e, i) => item(ctx, e, i + 1, state4.list));
     let pages = [[]];
     let animate = dir;
     function layout2() {
@@ -13543,7 +13730,7 @@ Version: v${version}`;
       const grid = h("div", { class: "wz-gl-grid" });
       area.replaceChildren(grid);
       if (!items.length) {
-        area.replaceChildren(h("div", { class: "wz-gl-empty wz-gl-dt", text: ctx.emptyText ? ctx.emptyText : state3.mineOnly && !ctx.entries.some((e) => e.mine) ? "* You haven't uploaded anything yet." : state3.likedOnly ? "* Nothing you've liked here yet." : "* Nothing here yet." }));
+        area.replaceChildren(h("div", { class: "wz-gl-empty wz-gl-dt", text: ctx.emptyText ? ctx.emptyText : state4.mineOnly && !ctx.entries.some((e) => e.mine) ? "* You haven't uploaded anything yet." : state4.likedOnly ? "* Nothing you've liked here yet." : "* Nothing here yet." }));
         pages = [[]];
         return show();
       }
@@ -13555,13 +13742,13 @@ Version: v${version}`;
       const rows = [];
       let lastLeft = Infinity;
       items.forEach((it, i) => {
-        const t = it.offsetTop, l = it.offsetLeft;
-        if (!rows.length || l <= lastLeft) rows.push({ start: i, top: t, bottom: t + it.offsetHeight });
+        const t2 = it.offsetTop, l = it.offsetLeft;
+        if (!rows.length || l <= lastLeft) rows.push({ start: i, top: t2, bottom: t2 + it.offsetHeight });
         lastLeft = l;
         const r = rows[rows.length - 1];
         r.end = i;
-        r.top = Math.min(r.top, t);
-        r.bottom = Math.max(r.bottom, t + it.offsetHeight);
+        r.top = Math.min(r.top, t2);
+        r.bottom = Math.max(r.bottom, t2 + it.offsetHeight);
       });
       pages = [];
       let page = null, pageTop = 0;
@@ -13573,13 +13760,13 @@ Version: v${version}`;
         }
         for (let i = r.start; i <= r.end; i++) page.push(i);
       });
-      state3.page = Math.max(0, Math.min(state3.page || 0, pages.length - 1));
+      state4.page = Math.max(0, Math.min(state4.page || 0, pages.length - 1));
       show();
     }
     function show() {
       const grid = area.querySelector(".wz-gl-grid");
       if (grid) {
-        const on = new Set(pages[state3.page] || []);
+        const on = new Set(pages[state4.page] || []);
         items.forEach((it, i) => {
           it.style.display = on.has(i) ? "" : "none";
         });
@@ -13590,14 +13777,14 @@ Version: v${version}`;
           animate = null;
         }
       }
-      count.textContent = `${pages.length ? state3.page + 1 : 0} / ${pages.length}`;
-      prev.disabled = state3.page <= 0;
-      next.disabled = state3.page >= pages.length - 1;
+      count.textContent = `${pages.length ? state4.page + 1 : 0} / ${pages.length}`;
+      prev.disabled = state4.page <= 0;
+      next.disabled = state4.page >= pages.length - 1;
     }
     function turn(d) {
-      const to = state3.page + d;
+      const to = state4.page + d;
       if (to < 0 || to >= pages.length) return false;
-      state3.page = to;
+      state4.page = to;
       animate = d > 0 ? "r" : "l";
       ctx.onPage && ctx.onPage();
       show();
@@ -13614,18 +13801,18 @@ Version: v${version}`;
     return { el: el3, layout: layout2 };
   }
   function filterButtons(ctx) {
-    const { state: state3 } = ctx;
+    const { state: state4 } = ctx;
     const toggle = (key2, label2, title) => h("button", {
       type: "button",
-      class: `wz-gl-filter${state3[key2] ? " on" : ""}`,
+      class: `wz-gl-filter${state4[key2] ? " on" : ""}`,
       title,
-      "aria-pressed": state3[key2] ? "true" : "false",
+      "aria-pressed": state4[key2] ? "true" : "false",
       onclick: () => {
-        state3[key2] = !state3[key2];
-        state3.page = 0;
+        state4[key2] = !state4[key2];
+        state4.page = 0;
         ctx.rerender();
       }
-    }, h("span", { class: "box", text: state3[key2] ? "\u2713" : "" }), label2);
+    }, h("span", { class: "box", text: state4[key2] ? "\u2713" : "" }), label2);
     return h(
       "div",
       { class: "wz-gl-filters" },
@@ -13634,21 +13821,21 @@ Version: v${version}`;
     );
   }
   function segBar(ctx, dir) {
-    const { state: state3 } = ctx;
-    const i = LISTS.findIndex((l) => l[0] === state3.list);
+    const { state: state4 } = ctx;
+    const i = LISTS.findIndex((l) => l[0] === state4.list);
     const pill = h("span", { class: "pill", style: { left: (dir ? (i + (dir === "r" ? -1 : 1)) * 25 : i * 25) + "%" } });
     if (dir) requestAnimationFrame(() => requestAnimationFrame(() => {
       pill.style.left = i * 25 + "%";
     }));
     const go = (key2) => {
-      if (key2 === state3.list) return;
+      if (key2 === state4.list) return;
       const to = LISTS.findIndex((l) => l[0] === key2);
-      state3.dir = to > i ? "r" : "l";
-      state3.list = key2;
-      state3.page = 0;
+      state4.dir = to > i ? "r" : "l";
+      state4.list = key2;
+      state4.page = 0;
       ctx.rerender();
     };
-    return h("div", { class: "wz-gl-seg" }, pill, LISTS.map(([k, l]) => h("button", { type: "button", class: k === state3.list ? "on" : "", text: l, onclick: () => go(k) })));
+    return h("div", { class: "wz-gl-seg" }, pill, LISTS.map(([k, l]) => h("button", { type: "button", class: k === state4.list ? "on" : "", text: l, onclick: () => go(k) })));
   }
   function removeButton(ctx, e, { label: label2 = "\u2715", confirm = "Remove?", title = "Remove from the gallery (reviewer)", run = ctx.onRemove } = {}) {
     const b = h("button", { type: "button", class: "wz-gl-remove", title, text: label2 });
@@ -13708,7 +13895,7 @@ Version: v${version}`;
     if (e.status === "rejected") return removeButton(ctx, e, { label: "Delete", confirm: "Delete for good?", title: "Delete this post: it wasn't approved, so it's only taking up space", run });
     return null;
   }
-  function pagedGrid(items, { state: state3, wheelPages = () => true, onPage, empty = "* Nothing here yet." }) {
+  function pagedGrid(items, { state: state4, wheelPages = () => true, onPage, empty = "* Nothing here yet." }) {
     const area = h("div", { class: "wz-gl-pagearea" });
     const count = h("span", { class: "n" });
     const prev = h("button", { type: "button", title: "Previous page", text: "\u2039", onclick: () => turn(-1) });
@@ -13733,13 +13920,13 @@ Version: v${version}`;
       const rows = [];
       let lastLeft = Infinity;
       items.forEach((it, i) => {
-        const t = it.offsetTop, l = it.offsetLeft;
-        if (!rows.length || l <= lastLeft) rows.push({ start: i, top: t, bottom: t + it.offsetHeight });
+        const t2 = it.offsetTop, l = it.offsetLeft;
+        if (!rows.length || l <= lastLeft) rows.push({ start: i, top: t2, bottom: t2 + it.offsetHeight });
         lastLeft = l;
         const r = rows[rows.length - 1];
         r.end = i;
-        r.top = Math.min(r.top, t);
-        r.bottom = Math.max(r.bottom, t + it.offsetHeight);
+        r.top = Math.min(r.top, t2);
+        r.bottom = Math.max(r.bottom, t2 + it.offsetHeight);
       });
       pages = [];
       let page = null, pageTop = 0;
@@ -13751,13 +13938,13 @@ Version: v${version}`;
         }
         for (let i = r.start; i <= r.end; i++) page.push(i);
       });
-      state3.page = Math.max(0, Math.min(state3.page || 0, pages.length - 1));
+      state4.page = Math.max(0, Math.min(state4.page || 0, pages.length - 1));
       show();
     }
     function show() {
       const grid = area.querySelector(".wz-gl-grid");
       if (grid) {
-        const on = new Set(pages[state3.page] || []);
+        const on = new Set(pages[state4.page] || []);
         items.forEach((it, i) => {
           it.style.display = on.has(i) ? "" : "none";
         });
@@ -13768,14 +13955,14 @@ Version: v${version}`;
           animate = null;
         }
       }
-      count.textContent = `${pages.length ? (state3.page || 0) + 1 : 0} / ${pages.length}`;
-      prev.disabled = (state3.page || 0) <= 0;
-      next.disabled = (state3.page || 0) >= pages.length - 1;
+      count.textContent = `${pages.length ? (state4.page || 0) + 1 : 0} / ${pages.length}`;
+      prev.disabled = (state4.page || 0) <= 0;
+      next.disabled = (state4.page || 0) >= pages.length - 1;
     }
     function turn(d) {
-      const to = (state3.page || 0) + d;
+      const to = (state4.page || 0) + d;
       if (to < 0 || to >= pages.length) return false;
-      state3.page = to;
+      state4.page = to;
       animate = d > 0 ? "r" : "l";
       if (onPage) onPage();
       show();
@@ -13877,8 +14064,8 @@ Version: v${version}`;
     return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
   };
   var fromLocalInput = (v) => {
-    const t = new Date(v).getTime();
-    return Number.isFinite(t) ? t : null;
+    const t2 = new Date(v).getTime();
+    return Number.isFinite(t2) ? t2 : null;
   };
   var when = (ms) => new Date(ms).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
   function inTime(ms) {
@@ -13890,7 +14077,7 @@ Version: v${version}`;
     return `in ${Math.floor(hrs / 24)} days`;
   }
   var plural = (n) => `${n} entr${n === 1 ? "y" : "ies"}`;
-  var daysAgo = (t) => Math.max(0, Math.floor((Date.now() - (t || Date.now())) / 864e5));
+  var daysAgo = (t2) => Math.max(0, Math.floor((Date.now() - (t2 || Date.now())) / 864e5));
   function createContests(ctx) {
     const cs = { list: null, file: null, at: 0, loading: false, error: "", pick: null, sort: "rank", drop: false, pages: {} };
     const js = { id: null, data: null, at: 0, loading: false, error: "", top: null };
@@ -13929,7 +14116,7 @@ Version: v${version}`;
     function ownEntries(c) {
       return ctx.acct.posts.filter((p) => p.contest === c.id && ctx.draft.uploads[p.id]).map((p) => ({ ...ctx.draft.uploads[p.id], id: p.id, status: p.status, reason: p.reason, author: ctx.acct.account, postedAt: p.postedAt }));
     }
-    function ranked(f) {
+    function ranked2(f) {
       const res = f.results || { order: [], scores: {} };
       const byId2 = new Map(f.entries.map((e) => [e.id, e]));
       const out = res.order.map((id) => byId2.get(id)).filter(Boolean);
@@ -14096,7 +14283,7 @@ Version: v${version}`;
       const ended = `Ended ${when(c.closesAt)}`;
       if (!f) return h("div", { class: "wz-gl-chero" }, h("div", { class: "t", text: c.title }), h("div", { class: "m", text: `${ended}. Loading the results\u2026` }));
       if (!f.entries.length) return h("div", { class: "wz-gl-chero" }, h("div", { class: "t", text: c.title }), h("div", { class: "m", text: `${ended} \xB7 no entries.` }));
-      const { res, list: rank } = ranked(f);
+      const { res, list: rank } = ranked2(f);
       const how = res.manualTop ? "The organizers picked the top places; the rest are by average score (1 to 5)." : "Places are by average score (1 to 5).";
       const sortBtns = h(
         "span",
@@ -14351,6 +14538,192 @@ Version: v${version}`;
     return { state: cs, refresh, active, shownActive, slots, view, layout: layout2, judgingView, manageView, loadJudging, unscored, judgeContestId };
   }
 
+  // packages/card-maker/gallery/keybox.js
+  var REVIEW_KEY = "wizascript.cardMaker.galleryReview";
+  var REVIEW_WHO = "wizascript.cardMaker.galleryReviewWho";
+  var ROLE_NAMES = { owner: "owner", reviewer: "reviewer", judge: "judge" };
+  var reviewerKey = () => {
+    try {
+      return String(GM_getValue(REVIEW_KEY, "") || "");
+    } catch (e) {
+      return "";
+    }
+  };
+  var reviewerWho = () => {
+    try {
+      return JSON.parse(GM_getValue(REVIEW_WHO, "null"));
+    } catch (e) {
+      return null;
+    }
+  };
+  var keyLabel = () => {
+    const who = reviewerKey() && reviewerWho();
+    return who ? `Key: ${who.name} (${ROLE_NAMES[who.role] || "reviewer"})` : "Redeem Key";
+  };
+  var listeners4 = [];
+  var onKeyChange = (fn) => {
+    listeners4.push(fn);
+  };
+  var changed2 = () => listeners4.slice().forEach((f) => {
+    try {
+      f();
+    } catch (e) {
+    }
+  });
+  function forgetKey() {
+    if (!reviewerKey()) return false;
+    GM_deleteValue(REVIEW_KEY);
+    GM_deleteValue(REVIEW_WHO);
+    changed2();
+    return true;
+  }
+  async function redeemKey(raw) {
+    const k = typeof raw === "string" ? raw.trim() : "";
+    if (!k) throw new Error("Enter the key or code you were given.");
+    let me;
+    try {
+      me = await reviewWhoami(k);
+    } catch (e) {
+      throw new Error(e && e.code === "not_admin" ? "That key isn't valid." : e && e.code === "key_expired" ? "That key has expired." : e && e.code === "rate_limited" ? "Too many wrong keys. Try again in an hour." : e && e.message || "Couldn't check the key.");
+    }
+    GM_setValue(REVIEW_KEY, k);
+    GM_setValue(REVIEW_WHO, JSON.stringify({ name: me.name, role: me.role }));
+    changed2();
+    return me;
+  }
+  function recheckKey(onGone) {
+    const k = reviewerKey();
+    if (!k) return;
+    reviewWhoami(k).then((me) => {
+      GM_setValue(REVIEW_WHO, JSON.stringify({ name: me.name, role: me.role }));
+      changed2();
+    }, (e) => {
+      if (e && (e.code === "key_expired" || e.code === "not_admin") && forgetKey()) {
+        onGone(e.code === "key_expired" ? "Your gallery key has expired, so it was removed." : "Your gallery key was revoked, so it was removed.");
+      }
+    });
+  }
+  function keyBox({ reviewWhere = "in the title bar" } = {}) {
+    const wrap = h("div", { class: "wz-key-box" });
+    const status = h("p", { class: "wz-key-status" });
+    const show = (text, ok) => {
+      status.textContent = text;
+      status.style.color = ok ? "#7f7" : "#f77";
+    };
+    function draw2() {
+      wrap.replaceChildren();
+      const who = reviewerKey() && reviewerWho();
+      const input = h("input", { type: "password", placeholder: "Key or code", autocomplete: "off", spellcheck: false });
+      let busy2 = false;
+      const submit = async () => {
+        if (busy2) return;
+        busy2 = true;
+        go.disabled = true;
+        show("Checking\u2026", true);
+        try {
+          if (isDeviceCode(input.value)) {
+            const name = await redeemDeviceCode(input.value);
+            draw2();
+            show(`Linked as ${name}.`, true);
+          } else {
+            const me = await redeemKey(input.value);
+            draw2();
+            show(me.role === "judge" ? `Redeemed. You're judging as ${me.name}: press Review ${reviewWhere}.` : `Redeemed. You're reviewing as ${me.name}.`, true);
+          }
+        } catch (e) {
+          show(e.message, false);
+        }
+        busy2 = false;
+        go.disabled = false;
+      };
+      const go = button2("Redeem", submit, { primary: true });
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          submit();
+        }
+      });
+      if (who) {
+        wrap.append(
+          h("p", {}, "Active key: ", h("b", { text: who.name }), ` (${ROLE_NAMES[who.role] || "reviewer"}).`),
+          h("p", { class: "dim", text: `Review is ${reviewWhere}.` }),
+          h("p", {}, button2("Remove key", () => {
+            forgetKey();
+            draw2();
+            show("Key removed.", true);
+          }, { cls: "wz-key-danger" }))
+        );
+      } else {
+        wrap.append(h("p", { text: "Enter a key you were given to review gallery uploads or judge a contest." }));
+      }
+      const acct = linkedAccount();
+      wrap.append(
+        h("p", { class: "dim", text: acct ? `Linked as ${acct}. A device code (WZL-\u2026) from another device would switch to its account.` : "Or a device code (WZL-XXXX-XXXX) from a device where your account is linked: Wizascript tab \u2192 Undercards Account \u2192 Link another device." }),
+        h("div", { class: "wz-key-row" }, input, go),
+        status
+      );
+      if (!who) setTimeout(() => input.focus(), 50);
+    }
+    draw2();
+    return wrap;
+  }
+  function openKeyOverlay(host2, { reviewWhere } = {}) {
+    host2.querySelectorAll(":scope > .wz-key-back").forEach((n) => n.remove());
+    const close = () => {
+      back.remove();
+      document.removeEventListener("keydown", esc5, true);
+    };
+    const esc5 = (e) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        close();
+      }
+    };
+    const box = h(
+      "div",
+      { class: "wz-key-dialog", role: "dialog", "aria-label": "Redeem Key" },
+      h("div", { class: "wz-key-dhead" }, h("b", { text: "Redeem Key" })),
+      keyBox({ reviewWhere }),
+      h("div", { class: "wz-key-dfoot" }, button2("Close", close))
+    );
+    const back = h("div", { class: "wz-key-back", onclick: (e) => {
+      if (e.target === back) close();
+    } }, box);
+    host2.appendChild(back);
+    document.addEventListener("keydown", esc5, true);
+    return close;
+  }
+  function keyButton(onClick) {
+    const b = h("button", { type: "button", class: "wz-key-btn", "aria-label": "Redeem Key", onclick: onClick }, h("span", { text: "\u26BF" }));
+    const sync = () => {
+      const who = reviewerKey() && reviewerWho();
+      b.title = keyLabel();
+      b.classList.toggle("on", !!who);
+    };
+    onKeyChange(sync);
+    sync();
+    return b;
+  }
+  var KEYBOX_CSS = `
+.wz-key-btn { position: absolute; left: 8px; bottom: 8px; z-index: 30; width: 30px; height: 30px; border-radius: 15px; padding: 0;
+  background: #000; color: #bbb; border: 1px solid #666; font-size: 16px; line-height: 28px; cursor: pointer; opacity: .55; }
+.wz-key-btn:hover, .wz-key-btn:focus-visible { opacity: 1; color: #fff; border-color: #fff; }
+.wz-key-btn.on { color: #ffd84a; border-color: #ffd84a; opacity: .9; }
+.wz-key-back { position: absolute; inset: 0; z-index: 40; background: rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.wz-key-dialog { width: min(440px, 100%); background: #0d0d0d; border: 2px solid #fff; border-radius: 4px; box-shadow: 0 6px 24px rgba(0,0,0,.8); font-size: 14px; color: #fff; }
+.wz-key-dhead { padding: 10px 14px; border-bottom: 1px solid #444; font-size: 18px; }
+.wz-key-dialog > .wz-key-box { padding: 12px 14px; }
+.wz-key-dfoot { display: flex; justify-content: flex-end; padding: 8px 14px; border-top: 1px solid #444; }
+.wz-key-box p { margin: 0 0 10px; }
+.wz-key-box .dim { color: #aaa; font-size: 13px; }
+.wz-key-row { display: flex; gap: 6px; }
+.wz-key-row input { flex: 1; min-width: 0; height: 28px; background: #222; color: #fff; border: 1px solid #666; border-radius: 3px; padding: 0 8px; font: 14px Arial, sans-serif; }
+.wz-key-row input:focus { border-color: #8ea6e8; outline: none; }
+.wz-key-box .wz-cm-btn, .wz-key-dfoot .wz-cm-btn { height: 28px; padding: 0 14px; }
+.wz-key-status { min-height: 1.2em; margin-top: 8px !important; }
+.wz-cm-btn.wz-key-danger { background: #6b2f2f; border-color: #bf6f6f; }
+`;
+
   // packages/card-maker/gallery/panel.js
   var STYLE_ID3 = "wizascript-cardgallery-style";
   var TYPES2 = ["Monster", "Spell", "Enchantment", "Artifact"];
@@ -14488,6 +14861,7 @@ Version: v${version}`;
 ${TILE_CSS}
 ${BROWSE_CSS}
 ${CONTEST_CSS}
+${KEYBOX_CSS}
 `;
   function injectStyle2() {
     if (document.getElementById(STYLE_ID3)) return;
@@ -14515,10 +14889,10 @@ ${CONTEST_CSS}
     }
     draft2.gone = Object.fromEntries(Object.entries(draft2.gone || {}).filter(([, at]) => Date.now() - at < 30 * 6e4));
     let viewAs = "";
-    const listeners7 = [];
-    const notify2 = () => listeners7.forEach((f) => f());
+    const listeners8 = [];
+    const notify2 = () => listeners8.forEach((f) => f());
     let browseCtl = null;
-    let read2 = null;
+    let read3 = null;
     let readTimer = null;
     let reviewing = false;
     let lastUpload = null;
@@ -14597,12 +14971,12 @@ ${CONTEST_CSS}
       } finally {
         rev.loading = false;
         notify2();
-        if (open && tab === "review") render2();
+        if (open && tab === "review") render3();
       }
     }
     async function decide(id, approve) {
       rev.busy[id] = approve ? "Approving\u2026" : "Rejecting\u2026";
-      render2();
+      render3();
       try {
         await reviewDecide(reviewerKey2(), id, approve, rev.reasons[id]);
         rev.list = rev.list.filter((p) => p.id !== id);
@@ -14614,7 +14988,7 @@ ${CONTEST_CSS}
       }
       delete rev.busy[id];
       notify2();
-      render2();
+      render3();
     }
     const uploadList = () => rev.list;
     const uploadPost = (p) => rev.posts[p.id];
@@ -14664,7 +15038,7 @@ ${CONTEST_CSS}
     }
     const CTX_LABEL = { approved: "in the gallery", pending: "waiting", rejected: "rejected", removed: "taken down" };
     const CTX_WAS = { approved: "it was in the gallery", pending: "it was waiting", rejected: "it was rejected", removed: "it was taken down" };
-    const daysAgo2 = (t) => t ? Math.max(0, Math.floor((Date.now() - t) / 864e5)) : 0;
+    const daysAgo2 = (t2) => t2 ? Math.max(0, Math.floor((Date.now() - t2) / 864e5)) : 0;
     const nameKey = (x) => String(x || "").trim().toLowerCase();
     function loadContext(id) {
       if (rev.ctx[id]) return;
@@ -14674,7 +15048,7 @@ ${CONTEST_CSS}
       }, (e) => {
         rev.ctx[id] = { error: errText(e) };
       }).then(() => {
-        if (open && tab === "review") render2();
+        if (open && tab === "review") render3();
       });
     }
     function contextBox(p, post) {
@@ -14690,17 +15064,17 @@ ${CONTEST_CSS}
       const names = new Set([nameKey(p.title), ...(post && post.parts || []).map((x) => nameKey(x.name))].filter(Boolean));
       const same = (o) => names.has(nameKey(o.title)) || (o.parts || []).some((x) => names.has(nameKey(x.name)));
       const nSame = list.filter(same).length;
-      const counts = {};
+      const counts2 = {};
       list.forEach((o) => {
-        counts[o.status] = (counts[o.status] || 0) + 1;
+        counts2[o.status] = (counts2[o.status] || 0) + 1;
       });
-      const summary = Object.entries(counts).map(([k, n]) => `${n} ${k === "deleted" ? "deleted" : CTX_LABEL[k] || k}`).join(", ");
+      const summary = Object.entries(counts2).map(([k, n]) => `${n} ${k === "deleted" ? "deleted" : CTX_LABEL[k] || k}`).join(", ");
       const isOpen = rev.ctxOpen[p.id] !== void 0 ? rev.ctxOpen[p.id] : nSame > 0;
       const head = h(
         "button",
         { type: "button", class: "wz-gl-ctxhead", title: "Everything this player (and any alt that shared their install) has posted here", onclick: () => {
           rev.ctxOpen[p.id] = !isOpen;
-          render2();
+          render3();
         } },
         h("b", { text: `${isOpen ? "\u25BE" : "\u25B8"} Their other posts ${where}: ${list.length}` }),
         nSame ? h("span", { class: "wz-gl-ctxsame", text: ` \xB7 ${nSame} with a matching name` }) : null,
@@ -14769,11 +15143,11 @@ ${CONTEST_CSS}
       }
       if (k === "judging") contests.loadJudging(true);
       if (k === "contests") contests.refresh(true);
-      render2();
+      render3();
     }
-    const ago = (t) => {
-      if (!t) return "never";
-      const m = Math.max(0, Math.round((Date.now() - t) / 6e4));
+    const ago = (t2) => {
+      if (!t2) return "never";
+      const m = Math.max(0, Math.round((Date.now() - t2) / 6e4));
       return m < 1 ? "just now" : m < 60 ? `${m} min ago` : m < 48 * 60 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} days ago`;
     };
     async function loadLog() {
@@ -14783,7 +15157,7 @@ ${CONTEST_CSS}
       } catch (e) {
         rev.sectionError = errText(e);
       }
-      if (open && tab === "review") render2();
+      if (open && tab === "review") render3();
     }
     async function undoEntry(l) {
       try {
@@ -14808,7 +15182,7 @@ ${CONTEST_CSS}
       } catch (e) {
         rev.sectionError = errText(e);
       }
-      if (open && tab === "review") render2();
+      if (open && tab === "review") render3();
     }
     const ACTIONS = {
       approve: "approved",
@@ -14839,7 +15213,7 @@ ${CONTEST_CSS}
         l.post && l.detail && l.action !== "score" ? h("span", { class: "dim", text: ` (${l.detail})` }) : null,
         h("span", { class: "dim", text: ` \xB7 ${ago(l.at)}` }),
         l.undoneAt ? h("span", { class: "dim", text: ` \xB7 undone by ${l.undoneBy || "the owner"}` }) : null,
-        canUndo2 ? removeButton({ rerender: render2 }, l, { label: "Undo", confirm: "Undo it?", title: l.action === "approve" ? "Take it out of the gallery and put it back in Uploads" : l.action === "reject" ? "Put it back in Uploads" : l.action === "remove" ? "Put it back where it was" : "Give back the judge's score before this", run: undoEntry }) : null
+        canUndo2 ? removeButton({ rerender: render3 }, l, { label: "Undo", confirm: "Undo it?", title: l.action === "approve" ? "Take it out of the gallery and put it back in Uploads" : l.action === "reject" ? "Put it back in Uploads" : l.action === "remove" ? "Put it back where it was" : "Give back the judge's score before this", run: undoEntry }) : null
       );
     }
     function logView() {
@@ -14847,7 +15221,7 @@ ${CONTEST_CSS}
       const pick = (k) => {
         rev.logOnly = k;
         rev.log = null;
-        render2();
+        render3();
         loadLog();
       };
       const filters = owner ? h("span", { class: "wz-gl-sizes" }, [["", "All"], ["decisions", "Decisions"], ["scores", "Judge scores"]].map(([k, label2]) => button2(label2, () => pick(k), { cls: (rev.logOnly || "") === k ? "wz-gl-on" : "", title: k === "scores" ? "Every score judges gave (only you see these)" : "" }))) : null;
@@ -14862,7 +15236,7 @@ ${CONTEST_CSS}
       const name = rev.newName.trim();
       if (!name) return say("Type the reviewer's name first.");
       rev.adding = true;
-      render2();
+      render3();
       try {
         const judge = rev.newRole === "judge" && contests.active();
         const r = judge ? await reviewerAddJudge(reviewerKey2(), name) : await reviewerAdd(reviewerKey2(), name);
@@ -14873,7 +15247,7 @@ ${CONTEST_CSS}
         say(`Couldn't add ${name}: ${errText(e)}`);
       }
       rev.adding = false;
-      render2();
+      render3();
     }
     async function revokeReviewer(r) {
       try {
@@ -14882,7 +15256,7 @@ ${CONTEST_CSS}
         await loadReviewers();
       } catch (e) {
         say(`Couldn't revoke ${r.name}: ${errText(e)}`);
-        render2();
+        render3();
       }
     }
     function copyText2(text) {
@@ -14903,11 +15277,11 @@ ${CONTEST_CSS}
       const roleBtns = running ? [
         button2("Reviewer", () => {
           rev.newRole = "reviewer";
-          render2();
+          render3();
         }, { cls: !judge ? "wz-gl-on" : "", title: "Reviews uploads and can remove posts. Can also score contests." }),
         button2(`Judge: ${running.title}`, () => {
           rev.newRole = "judge";
-          render2();
+          render3();
         }, { cls: judge ? "wz-gl-on" : "", title: "Only scores this contest's entries; stops working when its results are published" })
       ] : null;
       const parts = [
@@ -14915,7 +15289,7 @@ ${CONTEST_CSS}
         h("div", { class: "wz-gl-bar" }, roleBtns, nameBox, addBtn)
       ];
       if (rev.newKey) {
-        const keyBox = h("input", { type: "text", readOnly: true, value: rev.newKey.key, class: "wz-gl-key", onfocus: (e) => e.target.select() });
+        const keyBox2 = h("input", { type: "text", readOnly: true, value: rev.newKey.key, class: "wz-gl-key", onfocus: (e) => e.target.select() });
         parts.push(h(
           "div",
           { class: "wz-gl-rev wz-gl-newkey" },
@@ -14923,20 +15297,20 @@ ${CONTEST_CSS}
           h(
             "div",
             { class: "wz-gl-bar" },
-            keyBox,
+            keyBox2,
             button2("Copy", () => copyText2(rev.newKey.key).then((ok) => {
               if (ok) say("Copied.");
               else {
-                keyBox.focus();
+                keyBox2.focus();
                 say("Press Ctrl+C to copy.");
               }
             })),
             button2("Done", () => {
               rev.newKey = null;
-              render2();
+              render3();
             })
           ),
-          h("div", { class: "dim", text: "Send it to them privately (a DM, not a channel). They enter it with Redeem Key: on the Card Maker tab of Wizascript's settings, or the key button at the bottom left of the gallery website." })
+          h("div", { class: "dim", text: "Send it to them privately (a DM, not a channel). They enter it with the key button (\u26BF) at the bottom left of the gallery, in the Card Maker or on the gallery website." })
         ));
       }
       if (rev.sectionError) parts.push(h("div", { class: "wz-gl-issues", text: rev.sectionError }));
@@ -14948,7 +15322,7 @@ ${CONTEST_CSS}
         h("b", { text: r.name }),
         h("span", { class: "dim", text: `${r.role === "judge" ? `judge${running && running.id === r.contest ? ` (${running.title})` : ""}` : "reviewer"} \xB7 added ${ago(r.addedAt)} \xB7 last used ${ago(r.lastUsedAt)}` }),
         h("span", { class: "wz-gl-grow" }),
-        removeButton({ rerender: render2 }, r, { label: "Revoke", confirm: "Revoke?", title: `Stop ${r.name}'s key working`, run: revokeReviewer })
+        removeButton({ rerender: render3 }, r, { label: "Revoke", confirm: "Revoke?", title: `Stop ${r.name}'s key working`, run: revokeReviewer })
       ))));
       return h("div", {}, ...parts);
     }
@@ -14969,10 +15343,10 @@ ${CONTEST_CSS}
           refreshMe(true);
           contests.refresh(true);
         }
-        render2();
+        render3();
       } catch (err) {
         say(`Couldn't take it back: ${errText(err)}`);
-        render2();
+        render3();
       }
     }
     async function removePost(e) {
@@ -14982,7 +15356,7 @@ ${CONTEST_CSS}
         draft2.gone[e.id] = Date.now();
         saveDraft();
         gal.approved = gal.approved.filter((p) => p.id !== e.id);
-        render2();
+        render3();
         refreshGallery(true);
       } catch (err) {
         say(`Couldn't remove ${e.id}: ${errText(err)}`);
@@ -15004,11 +15378,11 @@ ${CONTEST_CSS}
       }
     });
     const contests = createContests({
-      say: (t) => say(t),
-      render: () => render2(),
+      say: (t2) => say(t2),
+      render: () => render3(),
       changed: () => {
         notify2();
-        if (open && (tab === "contest" || tab === "review" || tab === "submit")) render2();
+        if (open && (tab === "contest" || tab === "review" || tab === "submit")) render3();
       },
       errText,
       hoverable: (el3, p, e) => hoverable(el3, p, e),
@@ -15039,13 +15413,13 @@ ${CONTEST_CSS}
         acct.error = errText(e);
       } finally {
         acct.loading = false;
-        if (open) render2();
+        if (open) render3();
       }
     }
     async function refreshGallery(force) {
       if (gal.loading || !force && gal.at && Date.now() - gal.at < 6e4) return;
       gal.loading = true;
-      if (open && tab === "browse") render2();
+      if (open && tab === "browse") render3();
       try {
         const [approved, totals] = await Promise.all([getIndex(), getTotals()]);
         gal.approved = approved;
@@ -15057,7 +15431,7 @@ ${CONTEST_CSS}
         gal.error = errText(e);
       } finally {
         gal.loading = false;
-        if (open) render2();
+        if (open) render3();
       }
     }
     let linkWatch = null;
@@ -15081,12 +15455,12 @@ ${CONTEST_CSS}
       } catch (e) {
         say(errText(e));
       }
-      render2();
+      render3();
     }
-    let checking3 = false;
+    let checking4 = false;
     async function checkLink(quiet) {
-      if (checking3) return;
-      checking3 = true;
+      if (checking4) return;
+      checking4 = true;
       if (!quiet) say("Looking for your line in void\u2026");
       try {
         const r = await linkCheck();
@@ -15101,7 +15475,7 @@ ${CONTEST_CSS}
           refreshGallery(true);
         } else if (!quiet) say(r.message || "Not seen yet. Send the line in void, then check again.");
         else {
-          checking3 = false;
+          checking4 = false;
           return;
         }
       } catch (e) {
@@ -15114,8 +15488,8 @@ ${CONTEST_CSS}
           say("That code expired. Press Link my account again.");
         } else if (!quiet) say(errText(e));
       }
-      checking3 = false;
-      render2();
+      checking4 = false;
+      render3();
     }
     function accountBox() {
       if (acct.error && !acct.loaded) {
@@ -15169,13 +15543,13 @@ ${CONTEST_CSS}
           linking = null;
           stopWatch();
           say("");
-          render2();
+          render3();
         }, { cls: "wz-gl-small" })
       );
     }
     const status = h("span", { class: "wz-gl-status" });
-    const say = (t) => {
-      status.textContent = t;
+    const say = (t2) => {
+      status.textContent = t2;
     };
     const tabs = h("div", { class: "wz-gl-bar wz-gl-tabs" });
     const content = h("div", { class: "wz-gl-content" });
@@ -15221,7 +15595,7 @@ ${CONTEST_CSS}
           draft2.cardSize = key2;
           browse.page = 0;
           saveDraft();
-          render2();
+          render3();
         }, { title, cls: sizeOf()[0] === key2 ? "wz-gl-on" : "" }))
       );
     }
@@ -15275,7 +15649,7 @@ ${CONTEST_CSS}
       viewAs = v === "owner" ? "" : v;
       rev.section = "";
       notify2();
-      render2();
+      render3();
     }
     function viewAsControl() {
       if (realRole() !== "owner") return null;
@@ -15291,7 +15665,7 @@ ${CONTEST_CSS}
       );
     }
     const viewAsBadge = () => viewAs ? h("span", { class: "wz-gl-preview-as" }, `Viewing as ${viewAs} `, button2("Stop", () => setViewAs("owner"), { cls: "wz-gl-small", title: "Back to your own view" })) : null;
-    function render2() {
+    function render3() {
       hideHover();
       browseCtl = null;
       if (!open) return;
@@ -15333,7 +15707,7 @@ ${CONTEST_CSS}
         tab = v;
         open = true;
         panel.classList.add("on");
-        render2();
+        render3();
         refreshMe();
         if (v === "browse") refreshGallery();
         if (v === "review") refreshReview(true);
@@ -15342,16 +15716,16 @@ ${CONTEST_CSS}
       notify2();
     }
     checkFrameImages().then(() => {
-      if (open) render2();
+      if (open) render3();
     });
     whenFontsReady().then(() => {
-      if (open) render2();
+      if (open) render3();
     });
     let fontTimer = null;
     onFontsChange(() => {
       clearTimeout(fontTimer);
       fontTimer = setTimeout(() => {
-        if (open) render2();
+        if (open) render3();
       }, 50);
     });
     onArtPicsChange(() => {
@@ -15359,27 +15733,27 @@ ${CONTEST_CSS}
       if (tab === "browse" && browseCtl) browseCtl.layout();
       else if (tab === "contest") contests.layout();
     });
-    const changed3 = () => {
+    const changed4 = () => {
       tidySets();
       saveDraft();
       lastUpload = null;
-      render2();
+      render3();
     };
     const guide = { text: null, loading: false };
     function loadGuide() {
       if (guide.text || guide.loading) return;
       guide.loading = true;
-      getGuidelines().then((t) => {
-        guide.text = t;
+      getGuidelines().then((t2) => {
+        guide.text = t2;
         guide.loading = false;
-        if (open && tab === "submit") render2();
+        if (open && tab === "submit") render3();
       });
     }
-    const rich = (t) => esc2(t).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+    const rich = (t2) => esc2(t2).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
     const setGuide = (show) => {
       draft2.hideGuide = !show;
       saveDraft();
-      render2();
+      render3();
     };
     function guideBox() {
       loadGuide();
@@ -15395,8 +15769,8 @@ ${CONTEST_CSS}
           h("span", { class: "wz-gl-grow" }),
           button2("Hide", () => setGuide(false), { cls: "wz-gl-small", title: "Hide the guidelines (Guidelines, above, shows them again)" })
         ),
-        g.intro.map((t) => h("div", { html: rich(t) })),
-        h("ul", {}, g.rules.map((t) => h("li", { html: rich(t) })))
+        g.intro.map((t2) => h("div", { html: rich(t2) })),
+        h("ul", {}, g.rules.map((t2) => h("li", { html: rich(t2) })))
       );
     }
     function submitView() {
@@ -15414,14 +15788,14 @@ ${CONTEST_CSS}
         button2("Add files\u2026", () => fileInput.click(), { title: "UC Editor's group file (.uceditor), feildmaster's editor's Export file (.json), or card PNGs" }),
         button2("Link selected", () => {
           makeSet(draft2.parts.filter((p) => p.sel));
-          changed3();
+          changed4();
         }, { title: "Make the selected parts one set" }),
         button2("Unlink selected", () => {
           draft2.parts.filter((p) => p.sel).forEach((p) => {
             p.group = null;
             p.sel = false;
           });
-          changed3();
+          changed4();
         }),
         draft2.hideGuide ? button2("Guidelines", () => setGuide(true), { title: "What gets accepted into the gallery" }) : null,
         h("span", { class: "wz-gl-grow" }),
@@ -15431,7 +15805,7 @@ ${CONTEST_CSS}
       if (sel.length > SET_CAP) bar.children[2].title = `Sets can have up to ${SET_CAP} cards`;
       bar.children[3].disabled = !sel.some((p) => p.group);
       const note = h("p", { class: "wz-gl-note", text: draft2.parts.length ? "Click parts to select them, then Link selected to make a set. Anything not in a set is submitted on its own." : submitNote || "Make cards in the editor, then Read from this editor and tick the ones to add. Files work too." });
-      return h("div", {}, guideBox(), bar, note, lastUpload ? uploadedBox() : null, draft2.parts.length ? uploadBox() : null, read2 && !reviewing ? picker() : null, setsRow(), tray());
+      return h("div", {}, guideBox(), bar, note, lastUpload ? uploadedBox() : null, draft2.parts.length ? uploadBox() : null, read3 && !reviewing ? picker() : null, setsRow(), tray());
     }
     let removeArmed = false;
     function removeAllButton() {
@@ -15439,11 +15813,11 @@ ${CONTEST_CSS}
         if (!draft2.parts.length) return;
         if (!removeArmed) {
           removeArmed = true;
-          render2();
+          render3();
           setTimeout(() => {
             if (removeArmed) {
               removeArmed = false;
-              render2();
+              render3();
             }
           }, 3e3);
           return;
@@ -15452,14 +15826,14 @@ ${CONTEST_CSS}
         draft2.parts.length = 0;
         draft2.groups.length = 0;
         reviewing = false;
-        changed3();
+        changed4();
       }, { title: "Empty your gallery draft" });
       b.disabled = !draft2.parts.length;
       return b;
     }
     function picker() {
-      const n = read2.groups.reduce((s, g) => s + g.parts.length, 0);
-      const added = (g, raw) => draft2.parts.some((p) => sameCard(p, read2.source, g.name, raw));
+      const n = read3.groups.reduce((s, g) => s + g.parts.length, 0);
+      const added = (g, raw) => draft2.parts.some((p) => sameCard(p, read3.source, g.name, raw));
       const free = (g) => g.parts.filter((raw) => !added(g, raw));
       const box = h(
         "div",
@@ -15467,18 +15841,18 @@ ${CONTEST_CSS}
         h(
           "div",
           { class: "wz-gl-bar" },
-          h("b", { text: `In ${read2.label}: ${n} card${n === 1 ? "" : "s"} in ${read2.groups.length} group${read2.groups.length === 1 ? "" : "s"}` }),
+          h("b", { text: `In ${read3.label}: ${n} card${n === 1 ? "" : "s"} in ${read3.groups.length} group${read3.groups.length === 1 ? "" : "s"}` }),
           button2("Add ticked", () => addTicked(false), { primary: true }),
           button2("Add ticked as one set", () => addTicked(true)),
           h("span", { class: "wz-gl-grow" }),
           button2("Close list", () => {
-            read2 = null;
-            render2();
+            read3 = null;
+            render3();
           })
         )
       );
       if (!n) box.appendChild(h("p", { class: "wz-gl-note", text: "Nothing saved in this editor yet." }));
-      read2.groups.forEach((g) => {
+      read3.groups.forEach((g) => {
         const open2 = free(g);
         const all = h("input", {
           type: "checkbox",
@@ -15488,7 +15862,7 @@ ${CONTEST_CSS}
             open2.forEach((r) => {
               r.pick = e.target.checked;
             });
-            render2();
+            render3();
           }
         });
         box.appendChild(h(
@@ -15502,7 +15876,7 @@ ${CONTEST_CSS}
             }
             return b;
           })(button2("Add this group as a set", () => {
-            read2.groups.forEach((x) => x.parts.forEach((r) => {
+            read3.groups.forEach((x) => x.parts.forEach((r) => {
               r.pick = x === g && !added(g, r);
             }));
             addTicked(g.name);
@@ -15514,7 +15888,7 @@ ${CONTEST_CSS}
               { class: done ? "done" : "" },
               h("input", { type: "checkbox", checked: !!raw.pick && !done, disabled: done, onchange: (e) => {
                 raw.pick = e.target.checked;
-                render2();
+                render3();
               } }),
               " ",
               h("span", { class: "wz-gl-type", text: raw.type, style: { color: TYPE_COLOR[raw.type] || "#fff" } }),
@@ -15529,25 +15903,25 @@ ${CONTEST_CSS}
     }
     async function addTicked(asSet) {
       const picked = [];
-      read2.groups.forEach((g) => g.parts.forEach((raw) => {
-        if (raw.pick && !draft2.parts.some((p) => sameCard(p, read2.source, g.name, raw))) picked.push({ raw, group: g.name });
+      read3.groups.forEach((g) => g.parts.forEach((raw) => {
+        if (raw.pick && !draft2.parts.some((p) => sameCard(p, read3.source, g.name, raw))) picked.push({ raw, group: g.name });
       }));
       if (!picked.length) return say("Tick some cards first.");
       if (asSet && picked.length > SET_CAP) return say(`Sets can have up to ${SET_CAP} cards. Untick some, or add them on their own.`);
       say(`Adding ${picked.length}\u2026`);
       const added = [];
       for (const { raw, group } of picked) {
-        const part = await partFromRaw(raw, { source: read2.source, from: read2.label, editorGroup: group });
+        const part = await partFromRaw(raw, { source: read3.source, from: read3.label, editorGroup: group });
         part.id = nextId();
         draft2.parts.push(part);
         added.push(part);
       }
       if (asSet && added.length > 1) makeSet(added, typeof asSet === "string" ? asSet : "");
-      read2.groups.forEach((g) => g.parts.forEach((r) => {
+      read3.groups.forEach((g) => g.parts.forEach((r) => {
         r.pick = false;
       }));
       say(`Added ${added.length} part${added.length === 1 ? "" : "s"}${asSet && added.length > 1 ? " as a set" : ""}.`);
-      changed3();
+      changed4();
     }
     function setsRow() {
       if (!draft2.groups.length) return null;
@@ -15567,7 +15941,7 @@ ${CONTEST_CSS}
         const set = draft2.groups.find((g) => g.id === p.group);
         const zoom = h("div", { class: "wz-gl-zoom", title: "Click to select", onclick: () => {
           p.sel = !p.sel;
-          render2();
+          render3();
         } }, tile(p));
         const name = h("input", { type: "text", placeholder: "Name", maxLength: 40, value: p.name, oninput: (e) => {
           p.name = e.target.value;
@@ -15579,15 +15953,15 @@ ${CONTEST_CSS}
         } });
         const type = p.source === "picture" ? h("select", { onchange: (e) => {
           p.type = e.target.value;
-          changed3();
-        } }, TYPES2.map((t) => h("option", { selected: t === p.type }, t))) : h("div", { style: { fontSize: "11px" }, text: p.type });
+          changed4();
+        } }, TYPES2.map((t2) => h("option", { selected: t2 === p.type }, t2))) : h("div", { style: { fontSize: "11px" }, text: p.type });
         return h(
           "div",
           { class: `wz-gl-part${p.sel ? " sel" : ""}` },
           set ? h("span", { class: "wz-gl-badge", text: set.letter, style: { background: setColor(set) } }) : null,
           button2("\xD7", () => {
             draft2.parts.splice(draft2.parts.indexOf(p), 1);
-            changed3();
+            changed4();
           }, { title: "Remove this part", cls: "wz-gl-x" }),
           zoom,
           type,
@@ -15627,11 +16001,11 @@ ${CONTEST_CSS}
         h("span", { text: "Upload to:" }),
         button2("Gallery", () => {
           submitTo = null;
-          render2();
+          render3();
         }, { cls: !submitTo ? "wz-gl-on" : "", title: "The main gallery, voted on by everyone" }),
         button2(`Contest: ${s.contest.title} (${s.left} of ${s.max} left)`, () => {
           submitTo = s.contest.id;
-          render2();
+          render3();
         }, { cls: submitTo ? "wz-gl-on" : "", title: `Enter these in the contest. Entries close ${new Date(s.contest.closesAt).toLocaleString()}.` })
       );
     }
@@ -15648,7 +16022,7 @@ ${CONTEST_CSS}
           h("span", { class: "wz-gl-grow" }),
           button2("Review upload", () => {
             reviewing = true;
-            render2();
+            render3();
             panel.scrollTop = 0;
           }, { primary: true, title: "See exactly what will be sent before uploading" })
         );
@@ -15680,7 +16054,7 @@ ${CONTEST_CSS}
           h("span", { class: "wz-gl-by", text: author() ? `Posting as ${author()}` : "" })
         ),
         h("div", { class: "wz-gl-revlist" }, rows),
-        issues.length ? h("div", { class: "wz-gl-issues" }, issues.map((t) => h("div", { text: t }))) : null,
+        issues.length ? h("div", { class: "wz-gl-issues" }, issues.map((t2) => h("div", { text: t2 }))) : null,
         h(
           "div",
           { class: "wz-gl-note", style: { margin: "6px 0 0" } },
@@ -15697,16 +16071,16 @@ ${CONTEST_CSS}
           h("span", { class: "wz-gl-grow" }),
           button2("Back", () => {
             reviewing = false;
-            render2();
+            render3();
           }),
           go
         )
       );
     }
     async function doUpload() {
-      if (problems().length || uploading) return render2();
+      if (problems().length || uploading) return render3();
       uploading = true;
-      render2();
+      render3();
       let sent = [], error = "";
       try {
         sent = await uploadEntries(entries(), (i, n) => {
@@ -15719,7 +16093,7 @@ ${CONTEST_CSS}
       uploading = false;
       if (sent.length) markUploaded(sent);
       reviewing = !!error && !sent.length;
-      read2 = null;
+      read3 = null;
       lastUpload = sent.length || error ? { posts: sent, error, contest: sent.length && sent[0].contest ? contests.active() : null } : null;
       say(error ? sent.length ? `Uploaded ${sent.length}; the rest didn't go: ${error}` : `Upload failed: ${error}` : `Uploaded ${sent.length} entr${sent.length === 1 ? "y" : "ies"}.`);
       if (sent.length) {
@@ -15729,14 +16103,14 @@ ${CONTEST_CSS}
           contests.refresh(true);
         }
       }
-      render2();
+      render3();
     }
     function uploadedBox() {
       const posts = lastUpload.posts;
       if (!posts.length) {
         return h("div", { class: "wz-gl-done failed" }, h("b", { text: "Nothing was uploaded." }), " ", lastUpload.error, " ", button2("Dismiss", () => {
           lastUpload = null;
-          render2();
+          render3();
         }));
       }
       const cards2 = posts.reduce((n, e) => n + e.local.parts.length, 0);
@@ -15761,14 +16135,14 @@ ${CONTEST_CSS}
         " ",
         button2("Dismiss", () => {
           lastUpload = null;
-          render2();
+          render3();
         })
       );
     }
     fileInput.addEventListener("change", async () => {
-      const files = [...fileInput.files];
+      const files2 = [...fileInput.files];
       fileInput.value = "";
-      for (const f of files) {
+      for (const f of files2) {
         try {
           const isJson = /\.json$/i.test(f.name) || f.type === "application/json";
           const text = isJson ? await readFile(f, "readAsText") : null;
@@ -15785,12 +16159,12 @@ ${CONTEST_CSS}
             });
             const n = groups.reduce((k, g) => k + g.parts.length, 0), nNew = groups.reduce((k, g) => k + g.parts.filter((r) => r.pick).length, 0);
             const noArt = groups.reduce((k, g) => k + g.parts.filter((r) => r.artNote).length, 0);
-            read2 = { source: "feildmaster", label: `${f.name} (feildmaster's editor file)`, groups };
+            read3 = { source: "feildmaster", label: `${f.name} (feildmaster's editor file)`, groups };
             say(!n ? `${f.name}: no cards or artifacts in it.` : nNew ? `${f.name}: ${nNew} new card(s), ticked.${noArt ? ` ${noArt} use his built-in art, which couldn't be loaded yet: add them as PNG pictures instead.` : ""} Untick any you don't want, then Add ticked.` : `${f.name}: all ${n} card(s) are in your draft already.`);
           } else if (/\.uceditor$/i.test(f.name)) {
             const g = readUcEditorFile(await readFile(f, "readAsText"));
             const fresh = g.parts.filter((r) => !draft2.parts.some((p) => sameCard(p, "sernon", g.name, r)));
-            read2 = { source: "sernon", label: `${f.name} (UC Editor file)`, groups: [{ name: g.name, parts: g.parts.map((r) => ({ ...r, pick: fresh.includes(r) })) }] };
+            read3 = { source: "sernon", label: `${f.name} (UC Editor file)`, groups: [{ name: g.name, parts: g.parts.map((r) => ({ ...r, pick: fresh.includes(r) })) }] };
             say(fresh.length ? `${f.name}: ${fresh.length} new card(s), ticked. Untick any you don't want, then Add ticked.` : `${f.name}: all ${g.parts.length} card(s) are in your draft already.`);
           } else {
             const stem = f.name.replace(/\.[^.]+$/, "").replace(/\s*\(\d+\)$/, "").trim();
@@ -15805,7 +16179,7 @@ ${CONTEST_CSS}
           say(`Couldn't read ${f.name}.`);
         }
       }
-      changed3();
+      changed4();
     });
     function browseTab() {
       const own = acct.posts.filter((p) => !p.contest && (p.status === "pending" || p.status === "rejected") && draft2.uploads[p.id]).map((p) => ({ id: p.id, status: p.status, reason: p.reason, postedAt: p.postedAt, kind: draft2.uploads[p.id].kind, title: draft2.uploads[p.id].title, parts: draft2.uploads[p.id].parts }));
@@ -15819,7 +16193,7 @@ ${CONTEST_CSS}
         note: gal.error ? `Couldn't load the gallery: ${gal.error}` : acct.account ? "" : "Link your account to vote.",
         emptyText: gal.loading && !gal.at ? "* Loading the gallery\u2026" : gal.error && !gal.at ? "* Couldn't load the gallery. Try again in a moment." : "",
         hoverable,
-        rerender: render2,
+        rerender: render3,
         onRefresh: () => {
           voteQueue.flush();
           refreshMe(true);
@@ -15834,7 +16208,7 @@ ${CONTEST_CSS}
           }
           const cur = currentVotes()[e.id] || 0;
           voteQueue.add(e.id, cur === dir ? 0 : dir);
-          render2();
+          render3();
         }
       });
     }
@@ -15856,7 +16230,7 @@ ${CONTEST_CSS}
           return;
         }
         notify2();
-        if (open) render2();
+        if (open) render3();
       },
       setOpen(on) {
         setView(on ? tab : "editor");
@@ -15864,17 +16238,17 @@ ${CONTEST_CSS}
       view: () => open ? tab : "editor",
       setView,
       onChange(f) {
-        listeners7.push(f);
+        listeners8.push(f);
       },
       // Send queued votes now (the Card Maker is closing or being minimised).
       flush: () => voteQueue.flush(),
       receiveCards(data2) {
         clearTimeout(readTimer);
-        read2 = { source: data2.source, label: editorLabel(data2.source), groups: (data2.groups || []).map((g) => ({ name: g.name, parts: (g.parts || []).map((p) => ({ ...p, pick: false })) })) };
-        const n = read2.groups.reduce((s, g) => s + g.parts.length, 0);
+        read3 = { source: data2.source, label: editorLabel(data2.source), groups: (data2.groups || []).map((g) => ({ name: g.name, parts: (g.parts || []).map((p) => ({ ...p, pick: false })) })) };
+        const n = read3.groups.reduce((s, g) => s + g.parts.length, 0);
         say(`Found ${n} card${n === 1 ? "" : "s"}. Tick what to add.`);
         tab = "submit";
-        if (open) render2();
+        if (open) render3();
       }
     };
   }
@@ -15900,9 +16274,9 @@ ${CONTEST_CSS}
     s.textContent = CSS5;
     (document.head || document.documentElement).appendChild(s);
   }
-  function mountGalleryNav({ win, gallery }) {
+  function mountGalleryNav({ win: win2, gallery }) {
     injectStyle3();
-    const header = win.root.querySelector(".wz-cm-header");
+    const header = win2.root.querySelector(".wz-cm-header");
     const seg = h("div", { class: "wz-gn-seg" }, VIEWS.map(([v, label2, icon]) => h(
       "button",
       { type: "button", "data-view": v, title: v === "editor" ? "Back to the editor" : v === "review" ? "Uploads waiting for your review, and contest judging" : v === "contest" ? "Card Gallery: contests (the running one, and past results)" : `Card Gallery: ${label2}`, onclick: () => gallery.setView(v) },
@@ -15936,23 +16310,6 @@ ${CONTEST_CSS}
   var editorSetting = null;
   var gallerySetting = null;
   var wheelSetting = null;
-  var REVIEW_KEY = "wizascript.cardMaker.galleryReview";
-  var REVIEW_WHO = "wizascript.cardMaker.galleryReviewWho";
-  var reviewerKey = () => {
-    try {
-      return String(GM_getValue(REVIEW_KEY, "") || "");
-    } catch (e) {
-      return "";
-    }
-  };
-  var reviewerWho = () => {
-    try {
-      return JSON.parse(GM_getValue(REVIEW_WHO, "null"));
-    } catch (e) {
-      return null;
-    }
-  };
-  var ROLE_NAMES = { owner: "owner", reviewer: "reviewer", judge: "judge" };
   var mounted2 = null;
   var footerButton = null;
   var log = (...a) => {
@@ -16040,7 +16397,7 @@ ${CONTEST_CSS}
     injectCardMakerStyle();
     const controller = new AbortController();
     const { signal } = controller;
-    const win = buildWindow2({
+    const win2 = buildWindow2({
       signal,
       icon: pack_default,
       editors: EDITORS,
@@ -16057,7 +16414,7 @@ ${CONTEST_CSS}
         else if (action === "site") window.open(EDITORS[key2].url, "_blank", "noopener");
       }
     });
-    document.body.appendChild(win.root);
+    document.body.appendChild(win2.root);
     let gallery = null;
     if (!gallerySetting || gallerySetting.value()) {
       gallery = buildGalleryPanel({
@@ -16072,10 +16429,17 @@ ${CONTEST_CSS}
         editorLabel: (key2) => EDITORS[key2 || currentEditor()].label,
         wheelPages: () => !wheelSetting || !!wheelSetting.value(),
         reviewerKey,
-        onKeyRejected: (code) => forgetKey(code === "key_expired" ? "Your gallery key has expired, so it was removed." : "Your gallery key was revoked, so it was removed.")
+        onKeyRejected: (code) => forgetKey2(code === "key_expired" ? "Your gallery key has expired, so it was removed." : "Your gallery key was revoked, so it was removed.")
       });
-      win.body.appendChild(gallery.el);
-      mountGalleryNav({ win, gallery });
+      win2.body.appendChild(gallery.el);
+      const kb = keyButton(() => openKeyOverlay(win2.body, { reviewWhere: "in the title bar" }));
+      const syncKb = () => {
+        kb.style.display = gallery.view() === "editor" ? "none" : "";
+      };
+      win2.body.appendChild(kb);
+      gallery.onChange(syncKb);
+      syncKb();
+      mountGalleryNav({ win: win2, gallery });
       gallery.opened();
     }
     let menuBackdrop = null;
@@ -16087,8 +16451,8 @@ ${CONTEST_CSS}
       }
       const dialogOpen = document.body.classList.contains("modal-open") || !!document.querySelector(".bootstrap-dialog.in, .modal.in");
       const menuOpen = !!menuBackdrop && menuBackdrop.style.display === "block";
-      win.root.classList.toggle("wz-cm-under-modal", dialogOpen || menuOpen);
-      placeUnderChat(win.root);
+      win2.root.classList.toggle("wz-cm-under-modal", dialogOpen || menuOpen);
+      placeUnderChat(win2.root);
     }
     layerWatch.observe(document.body, { attributes: true, attributeFilter: ["class"], childList: true });
     document.addEventListener("pointerdown", () => setTimeout(syncLayer, 0), { capture: true, signal });
@@ -16109,12 +16473,12 @@ ${CONTEST_CSS}
       log(`${EDITORS[key2].label}: ${e.data.status}`);
       updateNote();
     }, { signal });
-    mounted2 = { controller, win, frames: {}, syncLayer, gallery };
+    mounted2 = { controller, win: win2, frames: {}, syncLayer, gallery };
     syncLayer();
   }
   function showEditor(key2) {
-    const { win, frames } = mounted2;
-    win.pick.value = key2;
+    const { win: win2, frames } = mounted2;
+    win2.pick.value = key2;
     Object.keys(frames).forEach((k) => {
       if (k === key2) return;
       clearTimeout(frames[k].noReport);
@@ -16127,23 +16491,23 @@ ${CONTEST_CSS}
       el3.title = EDITORS[key2].label;
       el3.allow = "clipboard-read; clipboard-write";
       frames[key2] = { el: el3, status: "loading", noReport: null };
-      win.body.insertBefore(el3, win.loading);
+      win2.body.insertBefore(el3, win2.loading);
       loadEditor(key2);
     }
     updateNote();
   }
   function loadEditor(key2) {
     const f = mounted2.frames[key2];
-    const { win } = mounted2;
+    const { win: win2 } = mounted2;
     const started = performance.now();
     f.status = "loading";
     clearTimeout(f.noReport);
-    win.loading.textContent = `Loading ${EDITORS[key2].label}\u2026`;
-    win.loading.style.display = "";
+    win2.loading.textContent = `Loading ${EDITORS[key2].label}\u2026`;
+    win2.loading.style.display = "";
     f.el.onload = () => {
       if (!mounted2 || mounted2.frames[key2] !== f) return;
       if (f.status === "loading") f.status = key2 === "feildmaster" ? "waiting" : "ok";
-      win.loading.style.display = "none";
+      win2.loading.style.display = "none";
       log(`${EDITORS[key2].label} loaded in ${Math.round(performance.now() - started)} ms`);
       if (key2 === "feildmaster") {
         f.noReport = setTimeout(() => {
@@ -16219,127 +16583,24 @@ ${CONTEST_CSS}
     item2.parentNode.insertBefore(footerButton, item2);
     return true;
   }
-  var keyButton = null;
-  var keyLabel = () => {
-    const who = reviewerKey() && reviewerWho();
-    return who ? `Key: ${who.name} (${ROLE_NAMES[who.role] || "reviewer"})` : "Redeem Key";
-  };
-  function keyChanged() {
-    if (keyButton && keyButton.isConnected) keyButton.value = keyLabel();
+  function forgetKey2(message) {
+    if (forgetKey() && message) console.log(`[Wizascript] ${message}`);
+  }
+  onKeyChange(() => {
     if (mounted2 && mounted2.gallery) mounted2.gallery.reviewerChanged();
-  }
-  function forgetKey(message) {
-    if (!reviewerKey()) return;
-    GM_deleteValue(REVIEW_KEY);
-    GM_deleteValue(REVIEW_WHO);
-    keyChanged();
-    if (message) console.log(`[Wizascript] ${message}`);
-  }
-  async function redeemKey(raw) {
-    const k = typeof raw === "string" ? raw.trim() : "";
-    if (!k) throw new Error("Enter the key you were given.");
-    let me;
-    try {
-      me = await reviewWhoami(k);
-    } catch (e) {
-      throw new Error(e && e.code === "not_admin" ? "That key isn't valid." : e && e.code === "key_expired" ? "That key has expired." : e && e.code === "rate_limited" ? "Too many wrong keys. Try again in an hour." : e && e.message || "Couldn't check the key.");
-    }
-    GM_setValue(REVIEW_KEY, k);
-    GM_setValue(REVIEW_WHO, JSON.stringify({ name: me.name, role: me.role }));
-    keyChanged();
-    return me;
-  }
-  function openKeyDialog() {
-    const BD = getPageWindow().BootstrapDialog;
-    if (!BD || typeof BD.show !== "function") return;
-    const el3 = (tag, props = {}, ...kids) => {
-      const n = Object.assign(document.createElement(tag), props);
-      kids.forEach((k) => n.append(k));
-      return n;
-    };
-    const wrap = el3("div", { className: "wz-key-dialog" });
-    const status = el3("p", { className: "wz-key-status" });
-    const show = (text, ok) => {
-      status.textContent = text;
-      status.style.color = ok ? "#7f7" : "#f77";
-    };
-    function draw2() {
-      wrap.replaceChildren();
-      const who = reviewerKey() && reviewerWho();
-      if (who) {
-        const remove = el3("button", { type: "button", className: "btn btn-sm btn-danger", textContent: "Remove key" });
-        remove.addEventListener("click", () => {
-          forgetKey();
-          draw2();
-          show("Key removed.", true);
-        });
-        wrap.append(
-          el3("p", {}, "Active key: ", el3("b", { textContent: who.name }), ` (${ROLE_NAMES[who.role] || "reviewer"}).`),
-          el3("p", { textContent: "Review is in the Card Maker's title bar." }),
-          el3("p", {}, remove),
-          status
-        );
-        return;
-      }
-      const input = el3("input", { type: "password", className: "form-control", placeholder: "Key", autocomplete: "off", spellcheck: false });
-      const go = el3("button", { type: "button", className: "btn btn-sm btn-success", title: "Redeem" }, el3("span", { className: "glyphicon glyphicon-import" }));
-      let busy2 = false;
-      const submit = async () => {
-        if (busy2) return;
-        busy2 = true;
-        go.disabled = true;
-        show("Checking\u2026", true);
-        try {
-          const me = await redeemKey(input.value);
-          draw2();
-          show(me.role === "judge" ? `Redeemed. You're judging as ${me.name}: open the Card Maker and press Review.` : `Redeemed. You're reviewing as ${me.name}.`, true);
-        } catch (e) {
-          show(e.message, false);
-        }
-        busy2 = false;
-        go.disabled = false;
-      };
-      go.addEventListener("click", submit);
-      input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          submit();
-        }
-      });
-      wrap.append(
-        el3("p", { textContent: "Enter a key you were given to review gallery uploads or judge a contest." }),
-        el3("p", {}, go, " Redeem"),
-        input,
-        status
-      );
-      setTimeout(() => input.focus(), 100);
-    }
-    draw2();
-    BD.show({
-      title: "Redeem Key",
-      message: wrap,
-      buttons: [{ label: "Close", cssClass: "btn-danger", action: (d) => d.close() }]
-    });
-  }
+  });
   function dropOldReviewKey() {
     try {
       localStorage.removeItem("underscript.plugin.Wizascript.cardMaker.galleryReviewerKey");
     } catch (e) {
     }
+    try {
+      localStorage.removeItem("underscript.plugin.Wizascript.cardMaker.galleryKey");
+    } catch (e) {
+    }
   }
-  function recheckKey() {
-    const k = reviewerKey();
-    if (!k) return;
-    reviewWhoami(k).then((me) => {
-      GM_setValue(REVIEW_WHO, JSON.stringify({ name: me.name, role: me.role }));
-      if (keyButton && keyButton.isConnected) keyButton.value = keyLabel();
-    }, (e) => {
-      if (e && e.code === "key_expired") forgetKey("Your gallery key has expired, so it was removed.");
-      else if (e && e.code === "not_admin") forgetKey("Your gallery key was revoked, so it was removed.");
-    });
-  }
-  function initCardMaker(plugin) {
-    settings3 = createFeatureSettings(plugin, "cardMaker", {
+  function initCardMaker(plugin2) {
+    settings3 = createFeatureSettings(plugin2, "cardMaker", {
       tab: "Card Maker",
       visible: () => isPluginEnabled("cardMaker")
     });
@@ -16367,18 +16628,7 @@ ${CONTEST_CSS}
       default: true,
       hidden: () => !!gallerySetting && !gallerySetting.value()
     });
-    settings3.add("galleryKey", {
-      name: "Gallery Key",
-      note: "For gallery reviewers and contest judges: enter the key you were given.",
-      type: "text",
-      default: "Redeem Key",
-      hidden: () => !!gallerySetting && !gallerySetting.value()
-    });
-    registerSettingWidget("cardMaker.galleryKey", (el3) => {
-      keyButton = el3;
-      asButton(keyLabel, () => openKeyDialog())(el3);
-    });
-    registerKeybind(plugin, {
+    registerKeybind(plugin2, {
       key: "toggleCardMaker",
       name: "Toggle Card Maker",
       defaultCode: "KeyK",
@@ -16388,7 +16638,7 @@ ${CONTEST_CSS}
     dropOldHotfix();
     if (!isPluginEnabled("cardMaker")) return;
     dropOldReviewKey();
-    setTimeout(recheckKey, 4e3);
+    setTimeout(() => recheckKey((m) => console.log(`[Wizascript] ${m}`)), 4e3);
     if (!addFooterButton()) {
       const watch2 = new MutationObserver(() => {
         if (addFooterButton()) watch2.disconnect();
@@ -16399,13 +16649,13 @@ ${CONTEST_CSS}
   }
 
   // packages/core/wz-events.js
-  var listeners4 = /* @__PURE__ */ new Map();
+  var listeners5 = /* @__PURE__ */ new Map();
   function onWz(name, fn) {
-    if (!listeners4.has(name)) listeners4.set(name, []);
-    listeners4.get(name).push(fn);
+    if (!listeners5.has(name)) listeners5.set(name, []);
+    listeners5.get(name).push(fn);
   }
   function emitWz(name, data2) {
-    (listeners4.get(name) || []).slice().forEach((fn) => {
+    (listeners5.get(name) || []).slice().forEach((fn) => {
       try {
         fn(data2);
       } catch (e) {
@@ -16514,9 +16764,9 @@ ${CONTEST_CSS}
     return (el3.getAttribute("data-i18n") || "").replace(/^\[[a-z]+\]/i, "");
   }
   function parseTimer(text) {
-    const t = String(text == null ? "" : text).trim();
-    if (/^\d+$/.test(t)) return Number(t);
-    const parts = t.split(":").map((p) => Number(p));
+    const t2 = String(text == null ? "" : text).trim();
+    if (/^\d+$/.test(t2)) return Number(t2);
+    const parts = t2.split(":").map((p) => Number(p));
     if (!parts.length || parts.some((p) => !Number.isFinite(p))) return null;
     const [s = 0, m = 0, h2 = 0, d = 0] = parts.reverse();
     return d * 86400 + h2 * 3600 + m * 60 + s;
@@ -16526,8 +16776,8 @@ ${CONTEST_CSS}
     if (!heads.length) throw new Error(`not the Cosmetics Shop (page title: "${doc.title || "none"}")`);
     const timers = { Daily: null, New: null, Sale: null };
     heads.forEach((h2) => {
-      const t = h2.parentElement && h2.parentElement.querySelector(".cosmetics-timer");
-      timers[SECTIONS[i18nKey(h2)]] = t ? parseTimer(t.textContent) : null;
+      const t2 = h2.parentElement && h2.parentElement.querySelector(".cosmetics-timer");
+      timers[SECTIONS[i18nKey(h2)]] = t2 ? parseTimer(t2.textContent) : null;
     });
     const items = [];
     const seen2 = /* @__PURE__ */ new Set();
@@ -16726,8 +16976,8 @@ ${CONTEST_CSS}
     }
     function fire(matches) {
       if (!matches.length) return null;
-      const t = now();
-      if (t - lastAt < QUIET_MS) return null;
+      const t2 = now();
+      if (t2 - lastAt < QUIET_MS) return null;
       const f = settings6().frequency;
       const every = f.odds === 0;
       const scaled = (n) => every ? 1 : Math.max(1, Math.round(n * f.odds));
@@ -16737,19 +16987,19 @@ ${CONTEST_CSS}
         pick = always[Math.floor(random() * always.length)];
       } else {
         const budgetFree = (m) => !m.rule.budget;
-        const roomy = used < f.budget && t - lastOursAt >= f.gap * 1e3;
+        const roomy = used < f.budget && t2 - lastOursAt >= f.gap * 1e3;
         const exact = (m) => m.rule.key && settings6().percent ? settings6().percent(m.rule.key) : null;
         const passed = matches.filter((m) => {
           if (!(roomy || budgetFree(m))) return false;
-          const pct = every ? null : exact(m);
-          if (pct != null) return pct > 0 && random() * 100 < pct;
+          const pct2 = every ? null : exact(m);
+          if (pct2 != null) return pct2 > 0 && random() * 100 < pct2;
           return roll(scaled(m.rule.chance));
         });
         if (!passed.length) return null;
         pick = passed[Math.floor(random() * passed.length)];
         if (pick.rule.budget) {
           used++;
-          lastOursAt = t;
+          lastOursAt = t2;
         }
       }
       let clip = pick.clip;
@@ -16766,7 +17016,7 @@ ${CONTEST_CSS}
       }
       const r = pick.rule.repeat;
       const times = r ? r[0] + Math.floor(random() * (r[1] - r[0] + 1)) : 1;
-      lastAt = t;
+      lastAt = t2;
       play(clip, times, pick.rule);
       return clip;
     }
@@ -16811,10 +17061,10 @@ ${CONTEST_CSS}
         const board = parse(data2.board);
         if (Array.isArray(board)) board.forEach(remember);
       } else if (a === "getBattleLog") {
-        const log3 = parse(data2.battleLog);
-        if (log3 && log3.battleLogType) {
-          const type = String(log3.battleLogType).toUpperCase();
-          const actor = log3.cardActor;
+        const log4 = parse(data2.battleLog);
+        if (log4 && log4.battleLogType) {
+          const type = String(log4.battleLogType).toUpperCase();
+          const actor = log4.cardActor;
           remember(actor);
           noteStatuses(actor);
           const aKey = actor && actor.id != null ? boardId(actor.id) : null;
@@ -16828,10 +17078,10 @@ ${CONTEST_CSS}
               if (r.target === "monster" && type !== "ATTACK_MONSTER") return false;
               if (r.minAttack != null && !(actor && Number(actor.attack) >= r.minAttack)) return false;
               if (r.status && !hadStatus(actor, r.status)) return false;
-              return cardMatches(r, actor) && whoOk(r, log3.playerId);
+              return cardMatches(r, actor) && whoOk(r, log4.playerId);
             }
             if (r.on === "log") {
-              if (r.type !== type || !cardMatches(r, actor) || !whoOk(r, log3.playerId)) return false;
+              if (r.type !== type || !cardMatches(r, actor) || !whoOk(r, log4.playerId)) return false;
               if (r.status && !hadStatus(actor, r.status)) return false;
               return !r.afterKill || afterKill;
             }
@@ -16901,8 +17151,8 @@ ${CONTEST_CSS}
       const r = m.rule;
       if (!r.key || seen2.has(r.key)) continue;
       seen2.add(r.key);
-      const pct = r.always ? 100 : Math.round(1e3 / r.chance) / 10;
-      out.push({ key: r.key, label: r.label || r.key, pct, always: r.always });
+      const pct2 = r.always ? 100 : Math.round(1e3 / r.chance) / 10;
+      out.push({ key: r.key, label: r.label || r.key, pct: pct2, always: r.always });
     }
     return out;
   }
@@ -16934,10 +17184,10 @@ ${CONTEST_CSS}
     if (isDebugLogging()) console.log("[Wizascript Flowery Mode]", ...args);
   }
   var everyTime = () => GM_getValue(EVERY_KEY, false) === true;
-  function useIndex(index, state3) {
+  function useIndex(index, state4) {
     compiled = compileRules(index);
-    rulesState = state3;
-    log2(`rules ${state3}: ${compiled.rules.length} rules, ${compiled.all.length} clips`);
+    rulesState = state4;
+    log2(`rules ${state4}: ${compiled.rules.length} rules, ${compiled.all.length} clips`);
     drawChip();
   }
   function loadRules({ force = false } = {}) {
@@ -17155,9 +17405,9 @@ ${CONTEST_CSS}
       hideUnlessOn(el3);
     });
     defaults.forEach((d) => {
-      const esc4 = (t) => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const esc5 = (t2) => String(t2).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       const setting5 = settings4.add("odds." + d.key, {
-        name: esc4(d.label),
+        name: esc5(d.label),
         note: `Default: ${fmtPct(d.pct)}${d.always ? " (always)" : ", before Frequency"}.`,
         type: "select",
         data: [[`Default (${fmtPct(d.pct)})`, "default"]].concat(PCTS.map((p) => [p === 0 ? "Off" : p + "%", String(p)])),
@@ -17170,8 +17420,8 @@ ${CONTEST_CSS}
   function freqNow() {
     return everyTime() && setting3("testToggle", false) ? EVERY_TIME : frequency(setting3("frequency", DEFAULT_FREQUENCY));
   }
-  function initFloweryMode(plugin) {
-    settings4 = createFeatureSettings(plugin, "floweryMode", {
+  function initFloweryMode(plugin2) {
+    settings4 = createFeatureSettings(plugin2, "floweryMode", {
       tab: TAB2,
       visible: () => isPluginEnabled("floweryMode")
     });
@@ -17232,8 +17482,8 @@ ${CONTEST_CSS}
     const wiz = (event) => (rulesState === "none" ? loadRules() : Promise.resolve()).then(() => reactor.onWizascript(event));
     const inMatch = matchesPage("/Game") || spectating;
     if (inMatch && (!spectating || setting3("spectate", true))) {
-      plugin.events.on("GameStart", () => reactor.reset());
-      plugin.events.on("GameEvent", (data2) => {
+      plugin2.events.on("GameStart", () => reactor.reset());
+      plugin2.events.on("GameEvent", (data2) => {
         try {
           reactor.onEvent(data2);
           if (data2 && data2.action === "getEmote" && /glue/i.test(JSON.stringify(data2))) glue(1);
@@ -17250,7 +17500,7 @@ ${CONTEST_CSS}
       }
       wiz("chatGlue");
     }
-    plugin.events.on("ChatMessage", (data2) => {
+    plugin2.events.on("ChatMessage", (data2) => {
       if (!data2 || !/^get(Private)?Message$/.test(data2.action) || Date.now() - startedAt < PAGE_QUIET_MS) return;
       let msg = data2.chatMessage;
       if (typeof msg === "string") {
@@ -17264,7 +17514,7 @@ ${CONTEST_CSS}
       const count = (html.match(/emotes\/Glue\.png/gi) || []).length;
       if (count) glue(count);
     });
-    plugin.events.on("Settings:open", () => wiz("settingsOpened"));
+    plugin2.events.on("Settings:open", () => wiz("settingsOpened"));
     onAccountLinked(() => wiz("accountLinked"));
     const navEvent = (a) => {
       const href = a.getAttribute("href");
@@ -17274,8 +17524,8 @@ ${CONTEST_CSS}
     };
     document.addEventListener("click", (e) => {
       if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
-      const t = e.target;
-      const a = t && t.closest && t.closest("a[href]");
+      const t2 = e.target;
+      const a = t2 && t2.closest && t2.closest("a[href]");
       const ev = a && a.target !== "_blank" ? navEvent(a) : null;
       if (ev) {
         if (rulesState === "none" || rulesState === "failed") return;
@@ -17289,7 +17539,7 @@ ${CONTEST_CSS}
         }
         return;
       }
-      const show = t && t.closest && t.closest("#hubDecks .show-button");
+      const show = t2 && t2.closest && t2.closest("#hubDecks .show-button");
       const sw = document.getElementById("truehub-switch");
       if (show && sw && /classic/i.test(sw.textContent)) wiz("thbDeckLoad");
     }, true);
@@ -17320,7 +17570,7 @@ ${CONTEST_CSS}
       if (Date.now() - at < 15 * 60 * 1e3) wiz("login");
     };
     tryLogin();
-    plugin.events.on("login", () => setTimeout(tryLogin, 0));
+    plugin2.events.on("login", () => setTimeout(tryLogin, 0));
     if (matchesPage("/CosmeticsShop")) {
       const lookForGlue = () => {
         try {
@@ -17340,8 +17590,8 @@ ${CONTEST_CSS}
       if (img && /tribes\/PLANT\.png/i.test(img.getAttribute("src") || "")) wiz("plantTribe");
     }, true);
     let down = null;
-    const floweryTracker = (t) => {
-      const w = t && t.closest && t.closest(".dt-tracker-widget");
+    const floweryTracker = (t2) => {
+      const w = t2 && t2.closest && t2.closest(".dt-tracker-widget");
       return w && [...w.querySelectorAll("img")].some((i) => /\/Flowery\.png$/i.test(i.getAttribute("src") || "")) ? w : null;
     };
     document.addEventListener("mousedown", (e) => {
@@ -17370,6 +17620,1377 @@ ${CONTEST_CSS}
       else document.addEventListener("DOMContentLoaded", showChip, { once: true });
     }
     log2("on", spectating ? "(spectating)" : "");
+  }
+
+  // packages/usage-stats/common.js
+  var PLUGIN_ID = "usageStats";
+  var SOULS2 = ["DETERMINATION", "BRAVERY", "INTEGRITY", "JUSTICE", "KINDNESS", "PATIENCE", "PERSEVERANCE"];
+  var LADDER = ["LEGEND", "ULTIMATE_MASTER", "HIGH_MASTER", "MASTER"];
+  var TRUE_HUB_ELO = 1820;
+  var DIV_NAMES = { TOTAL: "Total", LEGEND: "LEGEND", ULTIMATE_MASTER: "Ultimate Master", HIGH_MASTER: "High Master", MASTER: "Master", UNRANKED: "Unranked", TRUEHUB: "True Hub" };
+  var minElos = () => {
+    const m = getPageWindow().divisionMinElos;
+    return m && typeof m === "object" && m.MASTER ? m : { MASTER: 1e3, HIGH_MASTER: 1650, ULTIMATE_MASTER: 1800, LEGEND: 2e3 };
+  };
+  var log3 = (...a) => {
+    if (debugLoggingSetting.value()) console.log("[Usage Statistics]", ...a);
+  };
+  function t(key2, fallback, ...args) {
+    try {
+      const $2 = getPageWindow().$;
+      const v = $2 && $2.i18n ? $2.i18n(key2, ...args) : "";
+      return v && v !== key2 ? v : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+  var esc3 = (x) => String(x != null ? x : "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  var soulHtml = (s) => t(`{{SOUL:${s}}}`, `<span class="${esc3(s)}">${esc3(s)}</span>`);
+  var divHtml = (d) => LADDER.includes(d) ? t(`{{DIVISION:${d}}}`, DIV_NAMES[d]) : d === "UNRANKED" ? t("pvp-unranked", "Unranked") : DIV_NAMES[d];
+  var seasonOf = (t2) => new Date(t2).toISOString().slice(0, 7);
+  var shiftSeason = (s, n) => {
+    const d = new Date(Date.UTC(Number(s.slice(0, 4)), Number(s.slice(5, 7)) - 1 + n, 1));
+    return d.toISOString().slice(0, 7);
+  };
+  var MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  var seasonLabel = (s) => `${MONTHS[Number(s.slice(5, 7)) - 1]} ${s.slice(0, 4)}`;
+  var ACCOUNT_CACHE = "wizascript.usageStats.account";
+  var ACCOUNT_TTL = 30 * 60 * 1e3;
+  var optedIn = () => isPluginEnabled(PLUGIN_ID);
+  var checking3 = null;
+  function ensureAccount({ fresh = false } = {}) {
+    if (!optedIn()) return Promise.resolve(null);
+    if (linkedAccount()) return Promise.resolve(linkedAccount());
+    let c = null;
+    try {
+      c = JSON.parse(GM_getValue(ACCOUNT_CACHE, "null"));
+    } catch (e) {
+    }
+    const self = selfInfo();
+    if (!fresh && c && c.name && Date.now() - c.at < ACCOUNT_TTL && (!self.selfName || c.self === self.selfName)) return Promise.resolve(c.name);
+    if (!checking3) {
+      checking3 = refreshAccount().then((me) => me.account || null, () => c && c.name || null).finally(() => {
+        checking3 = null;
+      });
+    }
+    return checking3;
+  }
+  onAccountChange((name) => {
+    try {
+      GM_setValue(ACCOUNT_CACHE, JSON.stringify({ name: name || null, at: Date.now(), self: selfInfo().selfName }));
+    } catch (e) {
+    }
+  });
+  function ownPage() {
+    const q = new URLSearchParams(location.search);
+    const self = selfInfo();
+    if (!self.selfName && !self.selfId) return false;
+    for (const [k, v] of q) {
+      const key2 = k.toLowerCase();
+      if ((key2 === "id" || key2 === "userid" || key2 === "playerid") && self.selfId && Number(v) !== self.selfId) return false;
+      if ((key2 === "username" || key2 === "name" || key2 === "user") && self.selfName && v.toLowerCase() !== self.selfName.toLowerCase()) return false;
+    }
+    return true;
+  }
+
+  // packages/usage-stats/api.js
+  var QUEUE = "wizascript.usageStats.queue";
+  var GAMES_CACHE = "wizascript.usageStats.games";
+  var MAX_QUEUE = 200;
+  var MAX_AGE = 29 * 24 * 36e5;
+  var GAMES_TTL = 10 * 6e4;
+  var read = (k, d) => {
+    try {
+      return JSON.parse(GM_getValue(k, "null")) || d;
+    } catch (e) {
+      return d;
+    }
+  };
+  var write = (k, v) => {
+    try {
+      GM_setValue(k, JSON.stringify(v));
+    } catch (e) {
+    }
+  };
+  var queued = () => read(QUEUE, []);
+  function enqueue(game) {
+    const self = selfInfo();
+    const q = queued().filter((x) => x.game && Date.now() - x.game.at < MAX_AGE);
+    if (q.some((x) => x.game.gameId === game.gameId)) return;
+    q.push({ player: self.selfName, playerId: self.selfId, game });
+    write(QUEUE, q.slice(-MAX_QUEUE));
+  }
+  var flushing = null;
+  function flush() {
+    if (!flushing) flushing = doFlush().finally(() => {
+      flushing = null;
+    });
+    return flushing;
+  }
+  async function doFlush() {
+    let q = queued();
+    if (!q.length) return 0;
+    if (!await ensureAccount()) return 0;
+    let sent = 0;
+    while (q.length) {
+      const who = q[0];
+      const batch = q.filter((x) => x.player === who.player && x.playerId === who.playerId).slice(0, 20);
+      try {
+        const r = await authed("POST", "/v1/games", { player: who.player, playerId: who.playerId, games: batch.map((x) => x.game) });
+        sent += r.saved || 0;
+      } catch (e) {
+        if (e.code === "renamed") {
+          accountChanged(null, null);
+          log3("account renamed: unlinked; games kept until it's linked again");
+          return sent;
+        }
+        if (e.code === "bad_games") {
+        } else {
+          log3("couldn't send games:", e.message);
+          return sent;
+        }
+      }
+      const done = new Set(batch.map((x) => x.game.gameId));
+      q = queued().filter((x) => !done.has(x.game.gameId));
+      write(QUEUE, q);
+      batch.forEach((x) => dropGamesCache(seasonOf(x.game.at)));
+    }
+    log3(`sent ${sent} game(s)`);
+    return sent;
+  }
+  function dropGamesCache(season) {
+    const c = read(GAMES_CACHE, {});
+    if (c[season]) {
+      delete c[season];
+      write(GAMES_CACHE, c);
+    }
+  }
+  async function myGames(season, { fresh = false } = {}) {
+    const c = read(GAMES_CACHE, {});
+    const hit = c[season];
+    if (!fresh && hit && Date.now() - hit.at < GAMES_TTL) return hit.data;
+    const data2 = await authed("GET", `/v1/games?season=${encodeURIComponent(season)}`);
+    const keep = {};
+    Object.entries(c).sort((a, b) => b[1].at - a[1].at).slice(0, 3).forEach(([k, v]) => {
+      keep[k] = v;
+    });
+    keep[season] = { at: Date.now(), data: data2 };
+    write(GAMES_CACHE, keep);
+    return data2;
+  }
+  async function optOut() {
+    const r = await authed("POST", "/v1/games/optout");
+    write(QUEUE, []);
+    write(GAMES_CACHE, {});
+    return r.deleted || 0;
+  }
+  var clearLocal = () => {
+    write(QUEUE, []);
+    write(GAMES_CACHE, {});
+  };
+  var statsCache = {};
+  function getStats(w) {
+    const hit = statsCache[w];
+    if (hit && Date.now() - hit.at < 5 * 6e4) return hit.p;
+    const p = call("GET", `/v1/stats?w=${w}`).catch((e) => {
+      delete statsCache[w];
+      throw e;
+    });
+    statsCache[w] = { at: Date.now(), p };
+    return p;
+  }
+
+  // packages/usage-stats/recorder.js
+  var nameOf = (s) => {
+    if (typeof s === "string" && s.trim().startsWith("{")) {
+      try {
+        s = JSON.parse(s);
+      } catch (e) {
+        return null;
+      }
+    }
+    return s && typeof s === "object" ? s.name || null : typeof s === "string" && /^[A-Z]+$/.test(s) ? s : null;
+  };
+  var parse2 = (v) => {
+    try {
+      return typeof v === "string" ? JSON.parse(v) : v || {};
+    } catch (e) {
+      return {};
+    }
+  };
+  function startRecorder(plugin2) {
+    let match = null;
+    plugin2.events.on("connect", (data2) => {
+      try {
+        const w = getPageWindow();
+        if (!data2 || data2.gameType !== "RANKED") {
+          match = null;
+          return;
+        }
+        const enemy = parse2(data2.enemy), you = parse2(data2.you);
+        const soul = nameOf(w.yourSoul) || nameOf(data2.yourSoul) || nameOf(you.soul);
+        const prev = match && match.gameId === data2.gameId ? match : null;
+        match = {
+          gameId: data2.gameId !== void 0 && data2.gameId !== null ? String(data2.gameId) : null,
+          soul,
+          enemyName: enemy.username || null,
+          enemySoul: nameOf(w.enemySoul) || nameOf(data2.enemySoul) || nameOf(enemy.soul),
+          deck: prev ? prev.deck : null,
+          artifacts: prev ? prev.artifacts : null
+        };
+        if (match.deck) return;
+        const us = w.underscript;
+        if (!us || !us.user || typeof us.user.getDecks !== "function") {
+          log3("no getDecks (UnderScript 0.65+): the deck isn't sent");
+          return;
+        }
+        const m = match;
+        Promise.resolve(us.user.getDecks()).then((decks) => {
+          const d = decks && decks[soul];
+          if (!d) return;
+          const counts2 = {};
+          for (const c of d.cards || []) if (c && Number.isInteger(c.id)) counts2[c.id] = (counts2[c.id] || 0) + 1;
+          m.deck = Object.entries(counts2).map(([id, n]) => [Number(id), Math.min(3, n)]);
+          m.artifacts = (d.artifacts || []).map((a) => a && a.id).filter(Number.isInteger);
+          log3(`deck read: ${(d.cards || []).length} cards, ${m.artifacts.length} artifact(s)`);
+        }).catch((e) => log3("deck read failed:", e && e.message));
+      } catch (e) {
+        log3("connect:", e);
+      }
+    });
+    const onEnd = (win2) => (data2) => {
+      var _a, _b;
+      try {
+        if (!data2 || data2.gameType !== "RANKED") return;
+        const at = Date.now();
+        const self = selfInfo();
+        const m = match || {};
+        const game = {
+          gameId: m.gameId || `${self.selfId || "x"}-${Math.floor(at / 1e3)}`,
+          at,
+          soul: data2.soul || m.soul,
+          win: win2,
+          rankedUnlocked: !!data2.rankedUnlocked,
+          oldDivision: data2.oldDivision || null,
+          newDivision: data2.newDivision || null,
+          oldElo: Number.isInteger(data2.oldElo) ? data2.oldElo : null,
+          newElo: Number.isInteger(data2.newElo) ? data2.newElo : null,
+          enemyName: m.enemyName || null,
+          enemySoul: m.enemySoul || null,
+          deck: m.deck || [],
+          artifacts: m.artifacts || []
+        };
+        match = null;
+        if (!game.soul) return;
+        ensureAccount().then((name) => {
+          if (!name) {
+            log3("not linked: game not kept");
+            return;
+          }
+          enqueue(game);
+          setTimeout(() => flush(), 1500);
+        });
+        log3(`recorded: ${win2 ? "win" : "loss"} ${game.soul} vs ${game.enemyName} (${game.oldDivision || "Unranked"} ${(_a = game.oldElo) != null ? _a : ""}\u2192${(_b = game.newElo) != null ? _b : ""})`);
+      } catch (e) {
+        log3("end:", e);
+      }
+    };
+    plugin2.events.on("getVictory", onEnd(true));
+    plugin2.events.on("getDefeat", onEnd(false));
+  }
+
+  // packages/usage-stats/profile.js
+  var GRAPH_KEY = "wizascript.usageStats.graph";
+  var STYLE_ID5 = "wz-us-profile-style";
+  var CSS6 = `
+#wz-season-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:10px 0 6px; position:relative; }
+#wz-season-bar .wz-divs { display:flex; gap:6px; flex-wrap:wrap; }
+#wz-season-bar .wz-div { background:transparent; color:#fff; border:1px solid #fff; padding:3px 10px; font:inherit; font-size:14px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+#wz-season-bar .wz-div img, #wz-season-bar .wz-div .divisionIcon { height:18px !important; width:auto !important; max-height:18px !important; margin:0 !important; }
+#wz-season-bar .wz-div:hover { background:rgba(255,255,255,.12); }
+#wz-season-bar .wz-div.on { background:#fff; color:#000; }
+#wz-season-bar .wz-div.th { border-color:#ffd700; color:#ffd700; }
+#wz-season-bar .wz-div.th.on { background:#ffd700; color:#000; }
+#wz-season-bar .wz-right { display:flex; align-items:center; gap:14px; }
+#wz-season-bar .wz-graph-btn { background:transparent; color:#fff; border:1px solid #fff; padding:3px 10px; font:inherit; font-size:14px; cursor:pointer; white-space:nowrap; }
+#wz-season-bar .wz-graph-btn.on { background:#fff; color:#000; }
+#wz-season-bar .wz-season { display:flex; align-items:center; gap:10px; margin:0; white-space:nowrap; }
+#wz-season-bar .wz-arrow { background:none; border:none; color:#fff; font:inherit; font-size:1em; cursor:pointer; padding:0 4px; }
+#wz-season-bar .wz-arrow:disabled { opacity:.25; cursor:default; }
+#wz-season-bar .wz-msg { width:100%; color:#aaa; font-size:13px; }
+#wz-elo-win { position:fixed; z-index:1000; min-width:260px; min-height:130px; display:flex; flex-direction:column; background:rgba(10,5,15,.92); border:1px solid #fff; box-shadow:0 4px 16px rgba(0,0,0,.6); font-family:inherit; color:#fff; box-sizing:border-box; }
+#wz-elo-win .wz-title { display:flex; align-items:center; justify-content:space-between; padding:3px 6px 3px 8px; border-bottom:1px solid rgba(255,255,255,.4); cursor:move; user-select:none; font-size:13px; }
+#wz-elo-win .wz-x { background:none; border:none; color:#fff; font:inherit; font-size:16px; line-height:1; cursor:pointer; padding:0 4px; }
+#wz-elo-win .wz-chart { position:relative; flex:1; padding:18px 48px 8px 8px; box-sizing:border-box; min-height:0; }
+#wz-elo-win .wz-chart svg { width:100%; height:100%; display:block; overflow:visible; }
+#wz-elo-win .wz-chart .tip { position:absolute; top:3px; left:8px; right:8px; font-size:11px; color:#ddd; white-space:nowrap; overflow:hidden; pointer-events:none; }
+#wz-elo-win .wz-chart .lbl { position:absolute; right:5px; font-size:10px; line-height:10px; transform:translateY(-50%); pointer-events:none; color:rgba(255,255,255,.7); }
+#wz-elo-win .wz-chart .lbl.th { color:#ffd700; }
+#wz-elo-win .wz-chart .dot { position:absolute; width:7px; height:7px; border-radius:50%; background:#fff; transform:translate(-50%,-50%); pointer-events:none; display:none; }
+#wz-elo-win .wz-grip { position:absolute; right:0; bottom:0; width:14px; height:14px; cursor:nwse-resize; background:linear-gradient(135deg, transparent 50%, rgba(255,255,255,.7) 50%); }
+tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
+`;
+  var ranked = (g) => g.rankedUnlocked && g.oldElo !== null && g.oldElo !== void 0 && !!g.oldDivision;
+  var bucketsOf = (g) => [ranked(g) ? g.oldDivision : "UNRANKED", ...ranked(g) && g.oldElo >= TRUE_HUB_ELO ? ["TRUEHUB"] : []];
+  function findStatsTable() {
+    return [...document.querySelectorAll("table.table")].find((tb) => tb.querySelector('[data-i18n*="profile-win-rate"]')) || null;
+  }
+  function startProfile({ showGraph }) {
+    const table = findStatsTable();
+    if (!table) return null;
+    if (!document.getElementById(STYLE_ID5)) {
+      const st = document.createElement("style");
+      st.id = STYLE_ID5;
+      st.textContent = CSS6;
+      document.head.appendChild(st);
+    }
+    const rows = [...table.querySelectorAll("tr")].slice(1);
+    const original = rows.map((r) => [...r.children].slice(1).map((td) => ({ html: td.innerHTML, cls: td.className })));
+    const rowSouls = rows.slice(1).map((r) => {
+      const el3 = r.querySelector('[data-i18n*="SOUL:"]');
+      const m = el3 && el3.getAttribute("data-i18n").match(/SOUL:(\w+)/);
+      return m ? m[1] : r.children[0].textContent.trim().toUpperCase();
+    });
+    let heading = null;
+    for (let el3 = table; el3 && !heading; el3 = el3.parentElement) {
+      for (let s = el3.previousElementSibling; s; s = s.previousElementSibling) {
+        if (/^H[1-6]$/.test(s.tagName) || /season/i.test(s.textContent)) {
+          heading = s;
+          break;
+        }
+      }
+      if (el3.parentElement === document.body) break;
+    }
+    const bar = document.createElement("div");
+    bar.id = "wz-season-bar";
+    const divsBox = document.createElement("div");
+    divsBox.className = "wz-divs";
+    const graphBtn = document.createElement("button");
+    graphBtn.type = "button";
+    graphBtn.className = "wz-graph-btn";
+    graphBtn.textContent = "Elo Graph";
+    const seasonBox = document.createElement(heading && /^H[1-6]$/.test(heading.tagName) ? heading.tagName : "h2");
+    if (heading) seasonBox.className = heading.className;
+    seasonBox.classList.add("wz-season");
+    seasonBox.innerHTML = '<button type="button" class="wz-arrow" data-d="-1" title="Earlier season">\u25C0</button><span class="wz-label"></span><button type="button" class="wz-arrow" data-d="1" title="Later season">\u25B6</button>';
+    seasonBox.title = "A season is a calendar month";
+    const right = document.createElement("div");
+    right.className = "wz-right";
+    right.append(graphBtn, seasonBox);
+    const msg = document.createElement("div");
+    msg.className = "wz-msg";
+    bar.append(divsBox, right, msg);
+    if (heading) heading.style.display = "none";
+    (heading || table).parentNode.insertBefore(bar, heading ? heading.nextSibling : table);
+    const win2 = document.createElement("div");
+    win2.id = "wz-elo-win";
+    win2.style.display = "none";
+    win2.innerHTML = '<div class="wz-title"><span class="wz-wtitle">Elo Graph</span><button type="button" class="wz-x" title="Close">\xD7</button></div><div class="wz-chart"></div><div class="wz-grip"></div>';
+    document.body.appendChild(win2);
+    const chart = win2.querySelector(".wz-chart");
+    let rect2 = { x: null, y: null, w: 460, h: 200, open: false };
+    try {
+      rect2 = { ...rect2, ...JSON.parse(GM_getValue(GRAPH_KEY, "null")) };
+    } catch (e) {
+    }
+    const saveRect2 = () => {
+      try {
+        GM_setValue(GRAPH_KEY, JSON.stringify(rect2));
+      } catch (e) {
+      }
+    };
+    const keepOnScreen3 = () => {
+      const m = 8;
+      rect2.w = Math.min(rect2.w, innerWidth - 2 * m);
+      rect2.h = Math.min(rect2.h, innerHeight - 2 * m);
+      rect2.x = Math.max(m, Math.min(rect2.x, innerWidth - rect2.w - m));
+      rect2.y = Math.max(m, Math.min(rect2.y, innerHeight - rect2.h - m));
+      Object.assign(win2.style, { left: rect2.x + "px", top: rect2.y + "px", width: rect2.w + "px", height: rect2.h + "px" });
+    };
+    function setOpen2(open, save2 = true) {
+      if (open && rect2.x === null) {
+        const b = bar.getBoundingClientRect();
+        rect2.x = b.right - rect2.w;
+        rect2.y = b.top - rect2.h - 10;
+      }
+      win2.style.display = open ? "flex" : "none";
+      graphBtn.classList.toggle("on", open);
+      rect2.open = open;
+      if (save2) saveRect2();
+      if (open) {
+        keepOnScreen3();
+        drawChart();
+      }
+    }
+    graphBtn.addEventListener("click", () => setOpen2(win2.style.display === "none"));
+    win2.querySelector(".wz-x").addEventListener("click", () => setOpen2(false));
+    const follow = (e0, apply2) => {
+      e0.preventDefault();
+      const start = { ...rect2, px: e0.clientX, py: e0.clientY };
+      const move = (e) => {
+        apply2(start, e.clientX - start.px, e.clientY - start.py);
+        keepOnScreen3();
+      };
+      const up = () => {
+        document.removeEventListener("pointermove", move, true);
+        document.removeEventListener("pointerup", up, true);
+        saveRect2();
+      };
+      document.addEventListener("pointermove", move, true);
+      document.addEventListener("pointerup", up, true);
+    };
+    win2.querySelector(".wz-title").addEventListener("pointerdown", (e) => {
+      if (!e.target.closest(".wz-x")) follow(e, (s, dx, dy) => {
+        rect2.x = s.x + dx;
+        rect2.y = s.y + dy;
+      });
+    });
+    win2.querySelector(".wz-grip").addEventListener("pointerdown", (e) => follow(e, (s, dx, dy) => {
+      rect2.w = Math.max(260, s.w + dx);
+      rect2.h = Math.max(130, s.h + dy);
+    }));
+    win2.querySelector(".wz-title").addEventListener("dblclick", () => {
+      rect2.w = 460;
+      rect2.h = 200;
+      keepOnScreen3();
+      saveRect2();
+      drawChart();
+    });
+    addEventListener("resize", () => {
+      if (win2.style.display !== "none") {
+        keepOnScreen3();
+        drawChart();
+      }
+    });
+    new ResizeObserver(() => {
+      if (win2.style.display !== "none") drawChart();
+    }).observe(win2);
+    const current = seasonOf(Date.now());
+    const state4 = { season: current, div: "TOTAL", earliest: current, data: {}, loading: false, error: "" };
+    async function load4(season) {
+      if (state4.data[season]) return;
+      state4.loading = true;
+      render3();
+      try {
+        const d = await myGames(season);
+        state4.data[season] = d.games || [];
+        const first = (d.seasons || [])[0];
+        if (first && first.season < state4.earliest) state4.earliest = first.season;
+        state4.error = "";
+      } catch (e) {
+        state4.error = e.message || "Couldn't reach the Wizascript server.";
+        log3("profile:", e);
+      }
+      state4.loading = false;
+      render3();
+    }
+    const fmtRate = (w, l) => {
+      const n = w + l;
+      if (!n) return { text: "-", cls: "" };
+      const r = Math.round(w / n * 1e4) / 100;
+      return { text: `${r}%`, cls: r >= 50 ? "green" : "red" };
+    };
+    const setRow = (i, w, l) => {
+      const c = rows[i].children;
+      const rate2 = fmtRate(w, l);
+      c[1].textContent = w;
+      c[1].className = "green";
+      c[2].textContent = l;
+      c[2].className = "red";
+      c[3].textContent = rate2.text;
+      c[3].className = rate2.cls;
+    };
+    const restoreRows = () => rows.forEach((r, i) => [...r.children].slice(1).forEach((td, j) => {
+      td.innerHTML = original[i][j].html;
+      td.className = original[i][j].cls;
+    }));
+    let emptyRow = null;
+    const SVGNS = "http://www.w3.org/2000/svg";
+    function drawChart() {
+      const games = state4.data[state4.season] || [];
+      const bucket = state4.div;
+      win2.querySelector(".wz-wtitle").textContent = `Elo Graph \xB7 ${seasonLabel(state4.season)}` + (bucket !== "TOTAL" ? ` \xB7 ${DIV_NAMES[bucket]}` : "");
+      if (win2.style.display === "none") return;
+      chart.innerHTML = "";
+      const pts = games.filter(ranked).filter((g) => g.newElo !== null && g.newElo !== void 0);
+      if (pts.length < 2) {
+        chart.innerHTML = '<div class="tip">Not enough ranked games recorded this season.</div>';
+        return;
+      }
+      const MIN_ELOS = minElos();
+      const W2 = 600, H2 = 100;
+      const elos = pts.flatMap((g) => [g.oldElo, g.newElo]);
+      const lo = Math.min(...elos) - 20, hi = Math.max(...elos) + 20;
+      const x = (i) => i / pts.length * W2, y = (e) => H2 - (e - lo) / (hi - lo) * H2;
+      const svg = document.createElementNS(SVGNS, "svg");
+      svg.setAttribute("viewBox", `0 0 ${W2} ${H2}`);
+      svg.setAttribute("preserveAspectRatio", "none");
+      const add = (tag, attrs) => {
+        const el3 = document.createElementNS(SVGNS, tag);
+        for (const k in attrs) el3.setAttribute(k, attrs[k]);
+        svg.appendChild(el3);
+        return el3;
+      };
+      const band = bucket === "TRUEHUB" ? [TRUE_HUB_ELO, Infinity] : MIN_ELOS[bucket] !== void 0 ? [MIN_ELOS[bucket], Math.min(...Object.values(MIN_ELOS).filter((v) => v > MIN_ELOS[bucket]), Infinity)] : null;
+      if (band) {
+        const top = y(Math.min(band[1], hi)), bot = y(Math.max(band[0], lo));
+        if (bot > top) add("rect", { x: 0, y: top, width: W2, height: bot - top, fill: bucket === "TRUEHUB" ? "rgba(255,215,0,.15)" : "rgba(255,255,255,.1)" });
+      }
+      for (const e of Object.values(MIN_ELOS)) if (e > lo && e < hi) add("line", { x1: 0, x2: W2, y1: y(e), y2: y(e), stroke: "rgba(255,255,255,.35)", "stroke-dasharray": "3 3", "vector-effect": "non-scaling-stroke" });
+      if (TRUE_HUB_ELO > lo && TRUE_HUB_ELO < hi) add("line", { x1: 0, x2: W2, y1: y(TRUE_HUB_ELO), y2: y(TRUE_HUB_ELO), stroke: "rgba(255,215,0,.6)", "stroke-dasharray": "2 2", "vector-effect": "non-scaling-stroke" });
+      const pct2 = (e) => `calc(18px + ${(y(e) / H2).toFixed(4)} * (100% - 26px))`;
+      const SHORT = { MASTER: "M", HIGH_MASTER: "HM", ULTIMATE_MASTER: "UM", LEGEND: "L" };
+      const labels = Object.entries(MIN_ELOS).filter(([, e]) => e > lo && e < hi).map(([d, e]) => [`${SHORT[d] || d} ${e}`, e, ""]);
+      if (TRUE_HUB_ELO > lo && TRUE_HUB_ELO < hi) labels.push([`TH ${TRUE_HUB_ELO}`, TRUE_HUB_ELO, "th"]);
+      labels.sort((a, b) => (b[2] === "th") - (a[2] === "th"));
+      const placed = [];
+      for (const [text, e, cls] of labels) {
+        const yy = y(e);
+        if (placed.some((p) => Math.abs(p - yy) < 11)) continue;
+        placed.push(yy);
+        const l = document.createElement("div");
+        l.className = "lbl " + cls;
+        l.textContent = text;
+        l.style.top = pct2(e);
+        chart.appendChild(l);
+      }
+      add("polyline", { points: [`0,${y(pts[0].oldElo)}`, ...pts.map((g, i) => `${x(i + 1)},${y(g.newElo)}`)].join(" "), fill: "none", stroke: "#fff", "stroke-width": 1.5, "vector-effect": "non-scaling-stroke" });
+      chart.appendChild(svg);
+      const dot = document.createElement("div");
+      dot.className = "dot";
+      chart.appendChild(dot);
+      const tip = document.createElement("div");
+      tip.className = "tip";
+      tip.textContent = `Elo ${pts[0].oldElo} \u2192 ${pts[pts.length - 1].newElo} \xB7 ${pts.length} ranked games`;
+      const idle = tip.textContent;
+      chart.appendChild(tip);
+      svg.addEventListener("mousemove", (e) => {
+        const r = svg.getBoundingClientRect();
+        const i = Math.max(0, Math.min(pts.length - 1, Math.round((e.clientX - r.left) / r.width * pts.length) - 1));
+        const g = pts[i];
+        dot.style.left = `calc(8px + ${(x(i + 1) / W2).toFixed(4)} * (100% - 56px))`;
+        dot.style.top = pct2(g.newElo);
+        dot.style.display = "block";
+        tip.textContent = `Game ${i + 1}: ${g.win ? "Win" : "Loss"} \xB7 ${g.oldElo} \u2192 ${g.newElo}${g.oldElo >= TRUE_HUB_ELO ? " \xB7 True Hub" : ""}`;
+      });
+      svg.addEventListener("mouseleave", () => {
+        dot.style.display = "none";
+        tip.textContent = idle;
+      });
+    }
+    function render3() {
+      const games = state4.data[state4.season] || [];
+      const seen2 = new Set(games.flatMap(bucketsOf));
+      const buckets = [...[...LADDER, "UNRANKED"].filter((d) => seen2.has(d)), ...seen2.has("TRUEHUB") ? ["TRUEHUB"] : []];
+      if (state4.div !== "TOTAL" && !buckets.includes(state4.div)) state4.div = "TOTAL";
+      divsBox.replaceChildren();
+      for (const d of ["TOTAL", ...buckets]) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "wz-div" + (d === "TRUEHUB" ? " th" : "") + (state4.div === d ? " on" : "");
+        b.innerHTML = divHtml(d);
+        b.title = d === "TRUEHUB" ? `Games started at ${TRUE_HUB_ELO}+ Elo (True Hub decks can be posted)` : d === "TOTAL" ? state4.season === current ? "Every PvP game this season (the site's own numbers)" : "Every recorded game that season" : DIV_NAMES[d];
+        b.addEventListener("click", () => {
+          state4.div = d;
+          render3();
+        });
+        divsBox.appendChild(b);
+      }
+      seasonBox.querySelector(".wz-label").textContent = `${seasonLabel(state4.season)} Season`;
+      const [prev, next] = seasonBox.querySelectorAll(".wz-arrow");
+      prev.disabled = state4.season <= state4.earliest;
+      next.disabled = state4.season >= current;
+      graphBtn.style.display = showGraph() ? "" : "none";
+      if (!showGraph() && win2.style.display !== "none") setOpen2(false, false);
+      if (emptyRow) {
+        emptyRow.remove();
+        emptyRow = null;
+      }
+      if (state4.season === current && state4.div === "TOTAL") restoreRows();
+      else {
+        const per = Object.fromEntries(SOULS2.map((s) => [s, { w: 0, l: 0 }]));
+        for (const g of games) if ((state4.div === "TOTAL" || bucketsOf(g).includes(state4.div)) && per[g.soul]) per[g.soul][g.win ? "w" : "l"]++;
+        const all = Object.values(per).reduce((a, x) => ({ w: a.w + x.w, l: a.l + x.l }), { w: 0, l: 0 });
+        setRow(0, all.w, all.l);
+        rowSouls.forEach((s, i) => {
+          const v = per[s] || { w: 0, l: 0 };
+          setRow(i + 1, v.w, v.l);
+        });
+        if (!games.length && !state4.loading) {
+          emptyRow = document.createElement("tr");
+          emptyRow.className = "wz-empty";
+          emptyRow.innerHTML = `<td colspan="4">No games recorded for ${seasonLabel(state4.season)}.</td>`;
+          rows[rows.length - 1].after(emptyRow);
+        }
+      }
+      msg.textContent = state4.loading ? "Loading recorded games\u2026" : state4.error ? `Wizascript: ${state4.error}` : "";
+      msg.style.display = msg.textContent ? "" : "none";
+      drawChart();
+    }
+    seasonBox.querySelectorAll(".wz-arrow").forEach((a) => a.addEventListener("click", () => {
+      state4.season = shiftSeason(state4.season, Number(a.dataset.d));
+      render3();
+      load4(state4.season);
+    }));
+    render3();
+    load4(current).then(() => {
+      if (rect2.open && showGraph()) setOpen2(true, false);
+    });
+    return { refresh: render3 };
+  }
+
+  // packages/usage-stats/history.js
+  var PER_PAGE = 20;
+  var STYLE_ID6 = "wz-us-history-style";
+  var CSS7 = `
+.wz-hist-row .wz-div-cell img, .wz-hist-row .wz-div-cell .divisionIcon { height:16px !important; width:auto !important; max-height:16px !important; margin:0 4px 0 0 !important; vertical-align:middle; }
+.wz-hist-row .wz-div-cell { white-space:nowrap; }
+#wz-hist-pager { display:flex; align-items:center; justify-content:flex-end; gap:6px; margin:8px 0; }
+#wz-hist-pager select, #wz-hist-pager option { color:#fff; background:#222; border:1px solid #fff; }
+#wz-hist-pager .wz-note { margin-right:auto; color:#aaa; font-size:13px; }
+`;
+  function findHistoryTable() {
+    return [...document.querySelectorAll("table.table")].find((tb) => tb.querySelector('[data-i18n*="history-result"]')) || null;
+  }
+  var ageOf = (row2) => {
+    const d = row2.querySelector("[data-i18n-args]");
+    if (!d) return 0;
+    const [dd, hh, mm] = d.getAttribute("data-i18n-args").split(",").map((n) => parseInt(n, 10) || 0);
+    return dd * 1440 + hh * 60 + mm;
+  };
+  function startHistory({ wheelPaging }) {
+    const table = findHistoryTable();
+    if (!table) return null;
+    if (!document.getElementById(STYLE_ID6)) {
+      const st = document.createElement("style");
+      st.id = STYLE_ID6;
+      st.textContent = CSS7;
+      document.head.appendChild(st);
+    }
+    const allRows = [...table.querySelectorAll("tr")];
+    const header = allRows[0];
+    const siteRows = allRows.slice(1);
+    const eloHead = document.createElement(header.children[0] ? header.children[0].tagName : "td");
+    eloHead.textContent = "Elo";
+    const boundary = siteRows.length >= PER_PAGE ? Date.now() - (Math.max(0, ...siteRows.map(ageOf)) + 1) * 6e4 : Infinity;
+    let games = [];
+    const timeText = (at) => {
+      const min = Math.max(0, Math.floor((Date.now() - at) / 6e4));
+      const d = Math.floor(min / 1440), hh = Math.floor(min % 1440 / 60), m = min % 60;
+      return t("history-time", `${d} days ${hh} hours ${m} minutes`, d, hh, m);
+    };
+    const divIcon = (d) => t(`{{DIVISION:${d}}}`, "");
+    const rowFor = (g) => {
+      const tr2 = document.createElement("tr");
+      tr2.className = "wz-hist-row";
+      const ranked2 = g.rankedUnlocked && g.oldElo !== null && g.oldElo !== void 0;
+      const delta = ranked2 ? g.newElo - g.oldElo : 0;
+      const moved = ranked2 && g.oldDivision !== g.newDivision;
+      tr2.innerHTML = `
+      <td class="${g.win ? "green" : "red"}">${g.win ? t("history-victory", "VICTORY") : t("history-defeat", "DEFEAT")}</td>
+      <td>${soulHtml(g.soul)}</td>
+      <td>${g.enemyName ? `<span class="${esc3(g.enemySoul || "")}">${esc3(g.enemyName)}</span>` : '<span style="color:#888">\u2014</span>'}</td>
+      <td>${t("game-type-pvp", "PvP")}</td>
+      <td>${timeText(g.at)}</td>
+      ${!ranked2 ? `<td class="wz-div-cell">${t("pvp-unranked", "Unranked")}</td>` : `<td class="wz-div-cell" title="${esc3(DIV_NAMES[g.oldDivision] || g.oldDivision)}${moved ? " \u2192 " + esc3(DIV_NAMES[g.newDivision] || g.newDivision) : ""}">${divIcon(g.oldDivision)}<span>${g.oldElo} \u2192 ${g.newElo}</span> <span class="${delta >= 0 ? "green" : "red"}">(${delta >= 0 ? "+" : ""}${delta})</span></td>`}`;
+      return tr2;
+    };
+    const pager = document.createElement("div");
+    pager.id = "wz-hist-pager";
+    pager.innerHTML = '<span class="wz-note"></span><button type="button" class="btn btn-primary" data-d="-1">&#10094;</button><select></select><span>/</span><span class="wz-max"></span><button type="button" class="btn btn-primary" data-d="1">&#10095;</button>';
+    table.before(pager);
+    const note = pager.querySelector(".wz-note");
+    const sel = pager.querySelector("select");
+    const [prevBtn, nextBtn] = pager.querySelectorAll("button");
+    let page = 1, added = [], status = "";
+    const pages = () => 1 + Math.ceil(games.length / PER_PAGE);
+    function render3() {
+      added.forEach((r) => r.remove());
+      added = [];
+      siteRows.forEach((r) => {
+        r.style.display = page === 1 ? "" : "none";
+      });
+      if (page === 1) eloHead.remove();
+      else header.appendChild(eloHead);
+      if (page > 1) {
+        added = games.slice((page - 2) * PER_PAGE, (page - 1) * PER_PAGE).map(rowFor);
+        (table.tBodies[0] || table).append(...added);
+      }
+      const n = pages();
+      sel.innerHTML = Array.from({ length: n }, (_, i) => `<option value="${i + 1}"${i + 1 === page ? " selected" : ""}>${i + 1}</option>`).join("");
+      pager.querySelector(".wz-max").textContent = n;
+      prevBtn.disabled = page <= 1;
+      nextBtn.disabled = page >= n;
+      note.textContent = page > 1 ? "Older PvP games this season, recorded by Wizascript" : status;
+    }
+    const go = (p) => {
+      const n = Math.min(pages(), Math.max(1, p));
+      if (n !== page) {
+        page = n;
+        render3();
+      }
+    };
+    pager.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => go(page + Number(b.dataset.d))));
+    sel.addEventListener("change", () => go(Number(sel.value)));
+    let wheelLock = 0;
+    table.addEventListener("wheel", (e) => {
+      if (!wheelPaging() || !e.deltaY || pages() <= 1) return;
+      const next = Math.min(pages(), Math.max(1, page + (e.deltaY > 0 ? 1 : -1)));
+      if (next === page) return;
+      e.preventDefault();
+      const now = Date.now();
+      if (now < wheelLock) return;
+      wheelLock = now + 250;
+      go(next);
+    }, { passive: false });
+    render3();
+    myGames(seasonOf(Date.now())).then((d) => {
+      games = (d.games || []).filter((g) => g.at < boundary).sort((a, b) => b.at - a.at);
+      render3();
+    }, (e) => {
+      status = `Wizascript: ${e.message || "couldn't load recorded games"}`;
+      log3("history:", e);
+      render3();
+    });
+    return { render: render3 };
+  }
+
+  // packages/misc/card-history/game.js
+  var W = () => getPageWindow();
+  var cardFile = null;
+  var artifactList = null;
+  var page$ = () => W().$;
+  var hasI18n = () => {
+    const $2 = page$();
+    return !!($2 && $2.i18n);
+  };
+  function allCards() {
+    const w = W();
+    if (Array.isArray(w.allCards) && w.allCards.length) return w.allCards;
+    if (cardFile && cardFile.length) return cardFile;
+    try {
+      const ls = JSON.parse(w.localStorage.getItem("allCards") || "[]");
+      if (Array.isArray(ls) && ls.length) return ls;
+    } catch (e) {
+    }
+    return [];
+  }
+  async function ensureCards() {
+    if (allCards().length) return;
+    const cfg = W().cardsClientConfig;
+    if (!cfg || !cfg.url) return;
+    try {
+      const d = await (await fetch(cfg.url, { credentials: "same-origin" })).json();
+      const list = Array.isArray(d) ? d : d && (d.cards || d.allCards) || [];
+      cardFile = typeof list === "string" ? JSON.parse(list) : list;
+    } catch (e) {
+    }
+  }
+  function findCard(q) {
+    const list = allCards();
+    const s = String(q);
+    if (/^\d+$/.test(s)) return list.find((c) => String(c.id) === s || String(c.fixedId) === s) || null;
+    const n = norm2(s);
+    return list.find((c) => norm2(c.name) === n) || null;
+  }
+  async function artifacts2() {
+    if (artifactList) return artifactList;
+    try {
+      const data2 = await (await fetch("/DecksConfig", { credentials: "same-origin" })).json();
+      const raw = data2 && data2.allArtifacts;
+      artifactList = (typeof raw === "string" ? JSON.parse(raw) : raw) || [];
+    } catch (e) {
+      artifactList = [];
+    }
+    return artifactList;
+  }
+  var norm2 = (s) => String(s || "").toLowerCase().replace(/&amp;/g, "&").replace(/[^a-z0-9]/g, "");
+  function tr(key2, ...args) {
+    try {
+      const v = page$().i18n(key2, ...args);
+      if (!v || v === key2) return "";
+      const d = document.createElement("div");
+      d.innerHTML = v;
+      return d.textContent.trim();
+    } catch (e) {
+      return "";
+    }
+  }
+  var INTERNAL_KEY = /\b(?:kw|rarity|tribe|soul|enchant|status)-([a-z0-9]+(?:-[a-z0-9]+)*)\b/g;
+  var unkey = (html) => String(html).replace(/(^|>)([^<]*)/g, (m, gt, text) => gt + text.replace(INTERNAL_KEY, (k, id) => id.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())));
+  function trHtml(key2) {
+    try {
+      const v = page$().i18n(key2);
+      return v && v !== key2 ? unkey(v) : "";
+    } catch (e) {
+      return "";
+    }
+  }
+  var escHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  function prettyCode(raw) {
+    const s = String(raw || "");
+    const ov = s.match(/override=([^|}]+)/);
+    if (ov) return ov[1];
+    const m = s.match(/^[A-Z_]+:([^|}]+)/);
+    return m ? m[1].toLowerCase().replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : s;
+  }
+  function render(code, fallback) {
+    try {
+      const v = page$().i18n(code);
+      if (!v || v === code || /^\s*[a-z]+(?:-[a-z0-9]+)+\s*$/.test(v)) return escHtml(prettyCode(fallback));
+      return unkey(v);
+    } catch (e) {
+      return escHtml(prettyCode(fallback));
+    }
+  }
+  function knownKeys(prefix) {
+    try {
+      const i = page$().i18n();
+      const store = i.messageStore;
+      const msgs = Object.assign({}, store.messages.en || {}, store.messages[i.locale] || {});
+      return Object.keys(msgs).filter((k) => k.startsWith(prefix) && !/-desc$/.test(k)).map((k) => k.slice(prefix.length));
+    } catch (e) {
+      return [];
+    }
+  }
+  function appendCard(card) {
+    const fn = W().appendCard;
+    if (typeof fn !== "function") return null;
+    try {
+      const r = fn(card, null);
+      return r && (r[0] || r) || null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function gameFontSize(div, maxHeight) {
+    try {
+      const w = W();
+      if (typeof w.getResizedFontSize === "function" && w.$) {
+        div.style.fontSize = "";
+        div.style.fontSize = `${w.getResizedFontSize(w.$(div), maxHeight)}px`;
+      }
+    } catch (e) {
+    }
+  }
+  function dialogApi() {
+    const w = W();
+    return w.BootstrapDialog && w.BootstrapDialog.show ? { BD: w.BootstrapDialog, $: w.$ } : null;
+  }
+
+  // packages/usage-stats/usage.js
+  var WIN_KEY = "wizascript.usageStats.window";
+  var STYLE_ID7 = "wz-us-usage-style";
+  var TOP = 40;
+  var PRIVATE = [...LADDER, "TRUEHUB"];
+  var TIMES = [["TODAY", "Today"], ["WEEK", "This Week"], ["SEASON", "This Season"], ["ALL", "All Time"]];
+  var TIME_NAMES = Object.fromEntries(TIMES);
+  var DIVS = ["TOTAL", ...LADDER, "UNRANKED", "TRUEHUB"];
+  var NAMES = { TOTAL: "Total", LEGEND: "LEGEND", ULTIMATE_MASTER: "Ultimate Master", HIGH_MASTER: "High Master", MASTER: "Master", UNRANKED: "Unranked", TRUEHUB: "True Hub+" };
+  var VIEWS2 = [["CARDS", "Cards"], ["ARTIFACTS", "Artifacts"], ["SOULS", "Souls"]];
+  var SORTS = [["USAGE", "Most used"], ["WINRATE", "Win rate"], ["NAME", "Name"], ["ID", "ID"]];
+  var CATALOG_RARITIES = ["COMMON", "RARE", "EPIC", "LEGENDARY", "DETERMINATION"];
+  var ICON = `<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#000"/>
+<rect x="4" y="9" width="3" height="7" fill="#43b05c"/><rect x="8.5" y="12" width="3" height="4" fill="#e04848"/><rect x="13" y="5" width="3" height="11" fill="#3b82f6"/>
+<rect x="3" y="16" width="14" height="1" fill="#888"/></svg>`;
+  var CSS8 = `
+#wz-usage-btn a { display:flex; align-items:center; }
+#wz-usage-btn svg { vertical-align:-5px; }
+#wz-usage-btn a[aria-pressed="true"] svg { filter: drop-shadow(0 0 3px #fff); }
+#wz-usage-win { position:fixed; z-index:1000; min-width:560px; min-height:360px; display:flex; flex-direction:column; background:rgba(8,4,12,.96); border:1px solid #fff; box-shadow:0 6px 24px rgba(0,0,0,.7); color:#fff; font-size:14px; box-sizing:border-box; }
+#wz-usage-win .uw-title { display:flex; align-items:center; gap:8px; padding:4px 6px 4px 10px; border-bottom:1px solid rgba(255,255,255,.4); cursor:move; user-select:none; }
+#wz-usage-win .uw-title b { flex:1; font-weight:normal; }
+#wz-usage-win .uw-x { background:none; border:none; color:#fff; font-size:18px; line-height:1; cursor:pointer; }
+#wz-usage-win .uw-bar { display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:6px 10px 0; }
+#wz-usage-win .uw-btn { background:transparent; color:#fff; border:1px solid #fff; padding:3px 9px; font:inherit; font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+#wz-usage-win .uw-btn:hover { background:rgba(255,255,255,.12); }
+#wz-usage-win .uw-btn.on { background:#fff; color:#000; }
+#wz-usage-win .uw-btn.th { border-color:#ffd700; color:#ffd700; } #wz-usage-win .uw-btn.th.on { background:#ffd700; color:#000; }
+#wz-usage-win .uw-btn img, #wz-usage-win .uw-btn .divisionIcon { height:16px !important; width:auto !important; max-height:16px !important; margin:0 !important; }
+#wz-usage-win .uw-sep { flex:1; }
+#wz-usage-win .uw-meta { color:#aaa; font-size:12px; }
+#wz-usage-win label.uw-adv { font-size:12px; color:#ccc; display:flex; align-items:center; gap:4px; cursor:pointer; margin:0; font-weight:normal; }
+#wz-usage-win .uw-body { flex:1; overflow-y:auto; margin:8px 10px 10px; border-top:1px solid rgba(255,255,255,.25); }
+#wz-usage-win table { width:100%; border-collapse:collapse; }
+#wz-usage-win th { text-align:left; font-weight:normal; color:#aaa; font-size:12px; padding:4px 6px; position:sticky; top:0; background:rgba(8,4,12,1); }
+#wz-usage-win td { padding:3px 6px; border-bottom:1px solid rgba(255,255,255,.08); vertical-align:middle; }
+#wz-usage-win .uw-rank { color:#888; width:26px; text-align:right; }
+#wz-usage-win .uw-thumb { height:26px; width:26px; object-fit:cover; object-position:top; vertical-align:middle; margin-right:6px; border:1px solid rgba(255,255,255,.3); background:#111; }
+#wz-usage-win .uw-meter { position:relative; height:14px; width:120px; background:rgba(255,255,255,.08); display:inline-block; vertical-align:middle; margin-right:6px; }
+#wz-usage-win .uw-meter i { position:absolute; left:0; top:0; bottom:0; background:#4a8; }
+#wz-usage-win .uw-meter.art i { background:#c9a227; } #wz-usage-win .uw-meter.soul i { background:#58f; }
+#wz-usage-win .uw-empty { color:#999; text-align:center; padding:24px; }
+#wz-usage-win .uw-hidden { color:#888; font-size:12px; padding:6px; }
+#wz-usage-win .uw-note { color:#aaa; font-size:12px; padding:4px 10px 0; }
+#wz-usage-win .uw-right { display:flex; flex-direction:column; align-items:flex-end; gap:2px; }
+#wz-usage-win .uw-recorded { color:#ccc; font-size:12px; }
+#wz-usage-win .uw-btn.off, #wz-usage-win .uw-btn.off:hover { opacity:.35; cursor:not-allowed; background:transparent; }
+#wz-usage-win .uw-tools { gap:8px; font-size:12px; color:#ccc; }
+#wz-usage-win .uw-search { flex:1; max-width:280px; background:#111; color:#fff; border:1px solid #888; padding:3px 6px; font:inherit; font-size:13px; }
+#wz-usage-win .uw-sort, #wz-usage-win .uw-sort option { background:#222; color:#fff; border:1px solid #888; font:inherit; font-size:13px; }
+#wz-usage-win .uw-id { color:#777; font-size:11px; }
+#wz-usage-win tr.uw-unused-head td { color:#999; font-size:12px; cursor:pointer; padding:6px; user-select:none; }
+#wz-usage-win tr.uw-unused-head:hover td { color:#fff; }
+#wz-usage-win tr.uw-unused td { opacity:.55; }
+#wz-usage-win .uw-grip { position:absolute; right:0; bottom:0; width:14px; height:14px; cursor:nwse-resize; background:linear-gradient(135deg, transparent 50%, rgba(255,255,255,.7) 50%); }
+`;
+  var footerItem = null;
+  var toggleWindow = () => {
+  };
+  function addUsageButton() {
+    if (document.getElementById("wz-usage-btn")) return true;
+    const cm = document.getElementById("wz-cardmaker-btn");
+    const friends = document.querySelector("a span.nbFriends");
+    const before = cm || friends && friends.closest("li");
+    if (!before) return false;
+    injectStyle4();
+    footerItem = document.createElement("li");
+    footerItem.id = "wz-usage-btn";
+    footerItem.innerHTML = `<a href="#" title="Usage Statistics" aria-label="Usage Statistics" role="button" aria-pressed="false">${ICON}</a>`;
+    footerItem.querySelector("a").addEventListener("click", (e) => {
+      e.preventDefault();
+      toggleWindow();
+    });
+    before.parentNode.insertBefore(footerItem, before);
+    return true;
+  }
+  function injectStyle4() {
+    if (document.getElementById(STYLE_ID7)) return;
+    const st = document.createElement("style");
+    st.id = STYLE_ID7;
+    st.textContent = CSS8;
+    document.head.appendChild(st);
+  }
+  var win = null;
+  var state3 = { time: "SEASON", div: "TOTAL", view: "CARDS", adv: false, perPlayer: false, sort: "USAGE", q: "", showUnused: false };
+  var files = {};
+  var loadError = "";
+  toggleWindow = () => {
+    if (win && win.style.display !== "none") setOpen(false);
+    else setOpen(true);
+  };
+  var rect = { x: null, y: null, w: 720, h: 520 };
+  var saveRect = () => {
+    try {
+      GM_setValue(WIN_KEY, JSON.stringify(rect));
+    } catch (e) {
+    }
+  };
+  function keepOnScreen2() {
+    const m = 8;
+    rect.w = Math.min(rect.w, innerWidth - 2 * m);
+    rect.h = Math.min(rect.h, innerHeight - 2 * m);
+    rect.x = Math.max(m, Math.min(rect.x, innerWidth - rect.w - m));
+    rect.y = Math.max(m, Math.min(rect.y, innerHeight - rect.h - m));
+    Object.assign(win.style, { left: rect.x + "px", top: rect.y + "px", width: rect.w + "px", height: rect.h + "px" });
+  }
+  function build() {
+    injectStyle4();
+    try {
+      rect = { ...rect, ...JSON.parse(GM_getValue(WIN_KEY, "null")) };
+    } catch (e) {
+    }
+    win = document.createElement("div");
+    win.id = "wz-usage-win";
+    win.style.display = "none";
+    win.innerHTML = `
+    <div class="uw-title">${ICON}<b>Usage Statistics</b><span class="uw-meta uw-count"></span><button type="button" class="uw-x" title="Close">\xD7</button></div>
+    <div class="uw-bar uw-time"></div>
+    <div class="uw-bar uw-div"></div>
+    <div class="uw-bar uw-view"></div>
+    <div class="uw-bar uw-tools"></div>
+    <div class="uw-note"></div>
+    <div class="uw-body"></div><div class="uw-grip"></div>`;
+    document.body.appendChild(win);
+    win.querySelector(".uw-x").addEventListener("click", () => setOpen(false));
+    const follow = (e0, apply2) => {
+      e0.preventDefault();
+      const s = { ...rect, px: e0.clientX, py: e0.clientY };
+      const mv = (e) => {
+        apply2(s, e.clientX - s.px, e.clientY - s.py);
+        keepOnScreen2();
+      };
+      const up = () => {
+        document.removeEventListener("pointermove", mv, true);
+        document.removeEventListener("pointerup", up, true);
+        saveRect();
+      };
+      document.addEventListener("pointermove", mv, true);
+      document.addEventListener("pointerup", up, true);
+    };
+    win.querySelector(".uw-title").addEventListener("pointerdown", (e) => {
+      if (!e.target.closest(".uw-x")) follow(e, (s, dx, dy) => {
+        rect.x = s.x + dx;
+        rect.y = s.y + dy;
+      });
+    });
+    win.querySelector(".uw-grip").addEventListener("pointerdown", (e) => follow(e, (s, dx, dy) => {
+      rect.w = Math.max(560, s.w + dx);
+      rect.h = Math.max(360, s.h + dy);
+    }));
+    addEventListener("resize", () => {
+      if (win.style.display !== "none") keepOnScreen2();
+    });
+    const tools = win.querySelector(".uw-tools");
+    tools.innerHTML = `<input type="search" class="uw-search" placeholder="Search by name or ID\u2026"><span>Sort:</span><select class="uw-sort">${SORTS.map(([id, txt]) => `<option value="${id}">${txt}</option>`).join("")}</select>`;
+    tools.querySelector(".uw-search").addEventListener("input", (e) => {
+      state3.q = e.target.value;
+      renderBody();
+    });
+    tools.querySelector(".uw-sort").addEventListener("change", (e) => {
+      state3.sort = e.target.value;
+      renderBody();
+    });
+    win.addEventListener("keydown", (e) => e.stopPropagation());
+    win.addEventListener("keyup", (e) => e.stopPropagation());
+  }
+  function setOpen(open) {
+    if (open && !win) build();
+    if (!win) return;
+    if (open && rect.x === null) {
+      rect.x = (innerWidth - rect.w) / 2;
+      rect.y = (innerHeight - rect.h) / 2;
+    }
+    win.style.display = open ? "flex" : "none";
+    if (footerItem) footerItem.querySelector("a").setAttribute("aria-pressed", String(open));
+    if (open) {
+      keepOnScreen2();
+      render2();
+      load2();
+    }
+  }
+  var catalog = { cards: [], arts: [], cardById: /* @__PURE__ */ new Map(), artById: /* @__PURE__ */ new Map() };
+  async function loadCatalog() {
+    if (catalog.cards.length) return;
+    await ensureCards();
+    const cards2 = allCards();
+    let arts = [];
+    try {
+      arts = (await artifacts2()).filter((a) => !a.unavailable && !a.custom && !a.disabled);
+    } catch (e) {
+    }
+    catalog = {
+      cards: cards2.filter((c) => CATALOG_RARITIES.includes(c.rarity) && c.name),
+      arts,
+      cardById: new Map(cards2.map((c) => [c.id, c])),
+      artById: new Map(arts.map((a) => [a.id, a]))
+    };
+  }
+  async function fetchWindow(w) {
+    try {
+      files[w] = await getStats(w);
+      loadError = "";
+    } catch (e) {
+      loadError = e.message || "Couldn't reach the Wizascript server.";
+    }
+  }
+  async function load2() {
+    await Promise.all([fetchWindow("SEASON"), fetchWindow("ALL"), loadCatalog()]);
+    if (!files[state3.time]) await fetchWindow(state3.time);
+    render2();
+  }
+  function counts() {
+    const c = {};
+    for (const f of Object.values(files)) if (f && f.counts) Object.assign(c, Object.fromEntries(Object.entries(f.counts).filter(([k]) => k !== "ALL")));
+    if (files.ALL && files.ALL.counts) c.ALL = files.ALL.counts.ALL;
+    return c;
+  }
+  var utcDay = (t2) => {
+    const d = new Date(t2);
+    return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  };
+  var utcMonth = (t2) => {
+    const d = new Date(t2);
+    return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
+  };
+  function timeTabs() {
+    const n = counts(), now = Date.now();
+    const starts = { TODAY: utcDay(now), WEEK: now - 7 * 864e5, SEASON: utcMonth(now), ALL: 0 };
+    const order = ["TODAY", "WEEK", "SEASON", "ALL"].map((id) => ({ id, start: starts[id], n: n[id] })).sort((a, b) => b.start - a.start);
+    const info = {};
+    order.forEach((w, i) => {
+      if (w.n === void 0) {
+        info[w.id] = { off: false };
+        return;
+      }
+      const same = order.slice(0, i).find((o) => o.n === w.n && o.n > 0);
+      info[w.id] = !w.n ? { off: true, why: "No games in this time range yet" } : same ? { off: true, why: `Same games as ${TIME_NAMES[same.id]}`, same: same.id } : { off: false };
+    });
+    return info;
+  }
+  var pct = (x) => `${(Math.round((x || 0) * 1e3) / 10).toFixed(1)}%`;
+  var meter = (x, cls = "") => `<span class="uw-meter ${cls}"><i style="width:${Math.min(100, (x || 0) * 100)}%"></i></span>${pct(x)}`;
+  var rate = (w, n) => n ? `<span class="${w / n >= 0.5 ? "green" : "red"}">${pct(w / n)}</span>` : "-";
+  function buttons(box, list, key2, labelFn, info = {}, extra) {
+    box.replaceChildren();
+    for (const [id, text] of list) {
+      const b = document.createElement("button");
+      b.type = "button";
+      const off = info[id] && info[id].off;
+      b.className = "uw-btn" + (state3[key2] === id ? " on" : "") + (id === "TRUEHUB" ? " th" : "") + (off ? " off" : "");
+      b.innerHTML = labelFn ? labelFn(id) : esc3(text);
+      b.title = off ? info[id].why : id === "TRUEHUB" ? `Games started at ${TRUE_HUB_ELO}+ Elo` : id === "WEEK" ? "The last 7 days" : id === "SEASON" ? "This calendar month" : labelFn ? NAMES[id] : "";
+      b.disabled = !!off;
+      b.addEventListener("click", () => {
+        state3[key2] = id;
+        if (key2 === "time" && !files[id]) fetchWindow(id).then(render2);
+        render2();
+      });
+      box.appendChild(b);
+    }
+    if (extra) box.append(...extra());
+  }
+  function render2() {
+    if (!win || win.style.display === "none") return;
+    const ti = timeTabs();
+    if (ti[state3.time] && ti[state3.time].off) {
+      const order = ["TODAY", "WEEK", "SEASON", "ALL"];
+      state3.time = ti[state3.time].same || order.slice(order.indexOf(state3.time)).find((id) => !ti[id].off) || order.find((id) => !ti[id].off) || "ALL";
+      if (!files[state3.time]) fetchWindow(state3.time).then(render2);
+    }
+    const f = files[state3.time];
+    const di = {};
+    for (const d of DIVS) di[d] = d === "TOTAL" || !f || f.sel && f.sel[d] && f.sel[d].games ? { off: false } : { off: true, why: "No games in this division for this time range" };
+    if (di[state3.div].off) state3.div = "TOTAL";
+    buttons(win.querySelector(".uw-time"), TIMES, "time", null, ti);
+    buttons(win.querySelector(".uw-div"), DIVS.map((d) => [d]), "div", (d) => d === "TRUEHUB" ? NAMES[d] : divHtml(d), di);
+    buttons(win.querySelector(".uw-view"), VIEWS2, "view", null, {}, () => {
+      const sep = document.createElement("span");
+      sep.className = "uw-sep";
+      const right = document.createElement("div");
+      right.className = "uw-right";
+      const n = f && f.sel && f.sel.TOTAL ? f.sel.TOTAL.games : 0;
+      right.innerHTML = `<span class="uw-recorded" title="All PvP games recorded in this time range, every division incl. Unranked">${n} PvP game${n === 1 ? "" : "s"} recorded</span>`;
+      const adv = document.createElement("label");
+      adv.className = "uw-adv";
+      adv.innerHTML = `<input type="checkbox" ${state3.adv ? "checked" : ""}> Advanced`;
+      adv.querySelector("input").addEventListener("change", (e) => {
+        state3.adv = e.target.checked;
+        if (!state3.adv) state3.perPlayer = false;
+        render2();
+      });
+      right.appendChild(adv);
+      if (state3.adv) {
+        const pp = document.createElement("label");
+        pp.className = "uw-adv";
+        pp.title = "Off: every game counts. On: each player counts once, however many games they played.";
+        pp.innerHTML = `<input type="checkbox" ${state3.perPlayer ? "checked" : ""}> Count each player once`;
+        pp.querySelector("input").addEventListener("change", (e) => {
+          state3.perPlayer = e.target.checked;
+          render2();
+        });
+        right.appendChild(pp);
+      }
+      return [sep, right];
+    });
+    const tools = win.querySelector(".uw-tools");
+    tools.style.display = state3.view === "SOULS" ? "none" : "";
+    tools.querySelector(".uw-search").placeholder = `Search ${state3.view === "CARDS" ? "cards" : "artifacts"} by name or ID\u2026`;
+    renderBody();
+  }
+  function renderBody() {
+    const body = win.querySelector(".uw-body");
+    const noteEl = win.querySelector(".uw-note");
+    const countEl = win.querySelector(".uw-count");
+    const f = files[state3.time];
+    if (!f) {
+      countEl.textContent = "";
+      noteEl.textContent = "";
+      body.innerHTML = `<div class="uw-empty">${loadError ? esc3(`Couldn't load the statistics: ${loadError}`) : "Loading\u2026"}</div>`;
+      return;
+    }
+    const s = f.sel && f.sel[state3.div] || { games: 0, players: 0, souls: [], cards: [], arts: [] };
+    const priv = !!f.private && PRIVATE.includes(state3.div);
+    const pp = state3.perPlayer;
+    const built = f.built ? Math.max(0, Math.round((Date.now() - f.built) / 6e4)) : null;
+    countEl.textContent = `${s.games} game${s.games === 1 ? "" : "s"} \xB7 ${s.players} player${s.players === 1 ? "" : "s"}` + (built === null ? "" : ` \xB7 updated ${built < 1 ? "just now" : built < 60 ? `${built} min ago` : `${Math.round(built / 60)} h ago`}`);
+    const notes = [];
+    const others = (s.group || []).filter((d) => d !== state3.div);
+    if (others.length) notes.push(`Not enough players in ${NAMES[state3.div]} ${state3.time === "TODAY" ? "today" : "yet"}, so this includes ${others.map((d) => NAMES[d]).join(" and ")}.`);
+    if (priv) notes.push(`Today, cards and artifacts seen in fewer than ${f.minPlayers || 3} players' decks aren't shown in ranked divisions, for privacy and to avoid skew.`);
+    notes.push(pp ? "Counting each player once." : "Counting every game.");
+    noteEl.textContent = notes.join(" ");
+    if (!s.games) {
+      body.innerHTML = '<div class="uw-empty">No games recorded for this time and division yet.</div>';
+      return;
+    }
+    const total = pp ? s.players : s.games;
+    const advHead = state3.adv ? "<th>Games</th><th>Players</th>" : "";
+    if (state3.view === "SOULS") {
+      const by = new Map(s.souls.map((r) => [r[0], r]));
+      const all = SOULS2.map((soul) => {
+        const r = by.get(soul) || [soul, 0, 0, 0, 0, 0];
+        return { soul, use: (pp ? r[4] : r[1]) / total, w: pp ? r[5] : r[2], n: pp ? r[4] : r[1], g: r[1], p: r[3] };
+      }).sort((a, b) => b.use - a.use);
+      body.innerHTML = `<table><tr><th>Soul</th><th>Played</th><th>Win rate</th>${advHead}</tr>` + all.map((x) => `<tr><td><img class="uw-thumb" style="border:none;background:none" src="/images/souls/${x.soul}.png" onerror="this.style.visibility='hidden'">${soulHtml(x.soul)}</td>
+        <td>${meter(x.use, "soul")}</td><td>${rate(x.w, x.n)}</td>${state3.adv ? `<td>${x.g}</td><td>${x.p}</td>` : ""}</tr>`).join("") + "</table>";
+      return;
+    }
+    const isCards = state3.view === "CARDS";
+    const rows = isCards ? s.cards : s.arts;
+    const byId2 = isCards ? catalog.cardById : catalog.artById;
+    const used = rows.map((r) => {
+      const st = isCards ? { g: r[1], w: pp ? r[6] : r[2], n: pp ? r[5] : r[1], copies: pp ? r[7] : r[3], p: r[4] } : { g: r[1], w: pp ? r[5] : r[2], n: pp ? r[4] : r[1], p: r[3] };
+      return { id: r[0], st, use: st.n / total, item: byId2.get(r[0]) || { id: r[0], name: `#${r[0]}` } };
+    }).sort((a, b) => b.use - a.use || b.st.w - a.st.w).map((r, i) => ({ ...r, rank: i + 1 }));
+    const hiddenCount = priv && s.hidden ? isCards ? s.hidden.cards : s.hidden.arts : 0;
+    const usedIds = new Set(rows.map((r) => r[0]));
+    const unused = priv ? [] : (isCards ? catalog.cards : catalog.arts).filter((c) => !usedIds.has(c.id)).map((item2) => ({ id: item2.id, item: item2 }));
+    const q = state3.q.trim().toLowerCase();
+    const match = (r) => !q || String(r.item.name || "").toLowerCase().includes(q) || String(r.id) === q || String(r.id).startsWith(q);
+    const cmp = {
+      USAGE: (x, y) => x.rank - y.rank,
+      WINRATE: (x, y) => (y.st.n ? y.st.w / y.st.n : 0) - (x.st.n ? x.st.w / x.st.n : 0) || x.rank - y.rank,
+      NAME: (x, y) => String(x.item.name).localeCompare(String(y.item.name)),
+      ID: (x, y) => x.id - y.id
+    }[state3.sort];
+    const shown = used.filter(match).sort(cmp);
+    const unusedShown = unused.filter(match).sort(state3.sort === "ID" ? (x, y) => x.id - y.id : (x, y) => String(x.item.name).localeCompare(String(y.item.name)));
+    const limit = q || state3.sort !== "USAGE" ? Infinity : TOP;
+    const img = (r) => isCards ? `/images/cards/${esc3(r.item.image || r.item.baseImage || "")}.png` : `/images/artifacts/${esc3(r.item.image || "")}.png`;
+    const nameCell = (r) => `<img class="uw-thumb" src="${img(r)}" onerror="this.style.visibility='hidden'"><span class="${isCards ? esc3(r.item.rarity || "") : r.item.legendary ? "yellow" : ""}">${esc3(r.item.name)}</span>${state3.sort === "ID" || state3.adv ? ` <span class="uw-id">#${r.id}</span>` : ""}`;
+    const cols = isCards ? "<th>In decks</th><th>Avg copies</th><th>Win rate</th>" : "<th>In decks</th><th>Win rate</th>";
+    const ncols = 2 + (isCards ? 3 : 2) + (state3.adv ? 2 : 0);
+    let html = `<table><tr><th>#</th><th>${isCards ? "Card" : "Artifact"}</th>${cols}${advHead}</tr>`;
+    html += shown.slice(0, limit).map((r) => `<tr><td class="uw-rank">${r.rank}</td><td>${nameCell(r)}</td><td>${meter(r.use, isCards ? "" : "art")}</td>` + (isCards ? `<td>${r.st.n ? (r.st.copies / r.st.n).toFixed(1) : "-"}</td>` : "") + `<td>${rate(r.st.w, r.st.n)}</td>${state3.adv ? `<td>${r.st.g}</td><td>${r.st.p}</td>` : ""}</tr>`).join("");
+    if (shown.length > limit) html += `<tr><td colspan="${ncols}" class="uw-hidden">${shown.length - limit} more used ${isCards ? "cards" : "artifacts"}: search or pick a sort to see them all.</td></tr>`;
+    if (q && !shown.length && !unusedShown.length) html += `<tr><td colspan="${ncols}" class="uw-hidden">Nothing matches \u201C${esc3(state3.q)}\u201D${priv ? ` (or it was seen in fewer than ${f.minPlayers || 3} players' decks today)` : ""}.</td></tr>`;
+    if (unusedShown.length) {
+      const open = state3.showUnused || q && !shown.length;
+      html += `<tr class="uw-unused-head"><td colspan="${ncols}">${open ? "\u25BE" : "\u25B8"} Not used ${TIME_NAMES[state3.time].toLowerCase()} in ${NAMES[state3.div]}: ${unusedShown.length} ${isCards ? "card" : "artifact"}${unusedShown.length === 1 ? "" : "s"}</td></tr>`;
+      if (open) html += unusedShown.map((r) => `<tr class="uw-unused"><td class="uw-rank">\u2013</td><td>${nameCell(r)}</td><td>0.0%</td>${isCards ? "<td>\u2013</td>" : ""}<td>\u2013</td>${state3.adv ? "<td>0</td><td>0</td>" : ""}</tr>`).join("");
+    }
+    html += "</table>";
+    if (priv) html += `<div class="uw-hidden">${hiddenCount ? `${hiddenCount} more ${isCards ? "card" : "artifact"}${hiddenCount === 1 ? "" : "s"} not shown (fewer than ${f.minPlayers || 3} players). ` : ""}Unused ${isCards ? "cards" : "artifacts"} aren't listed today in ranked divisions.</div>`;
+    body.innerHTML = html;
+    const head = body.querySelector(".uw-unused-head");
+    if (head) head.addEventListener("click", () => {
+      state3.showUnused = !(state3.showUnused || q && !shown.length);
+      renderBody();
+    });
+  }
+
+  // packages/usage-stats/index.js
+  var graphSetting = null;
+  var wheelSetting2 = null;
+  function dialog(title, html, buttons2) {
+    const BD = getPageWindow().BootstrapDialog;
+    if (!BD || typeof BD.show !== "function") return false;
+    const wrap = document.createElement("div");
+    wrap.innerHTML = html;
+    BD.show({ title, message: wrap, closable: false, buttons: buttons2 });
+    return true;
+  }
+  var undoing = false;
+  function confirmOptIn() {
+    const toggle = getPluginToggle(PLUGIN_ID);
+    const undo2 = () => {
+      undoing = true;
+      try {
+        if (toggle) toggle.set(false);
+      } finally {
+        setTimeout(() => {
+          undoing = false;
+        }, 0);
+      }
+      const box = document.getElementById(`underscript.plugin.Wizascript.${"usageStats.enabled"}`);
+      if (box) box.checked = false;
+    };
+    const linked = linkedAccount();
+    const shown = dialog("Usage Statistics: opt in?", `
+    <p>While this is on, <b>each of your PvP games</b> is sent to the Wizascript server: your soul, the result, your division and Elo, your opponent's name and soul (kept for your History until the season ends), and <b>your starting deck and artifacts</b>.</p>
+    <p>Everyone's games together make the Usage Statistics (which cards, artifacts and souls are played). <b>No one can see your deck</b>: only totals are shown, and today's ranked numbers leave out anything fewer than 3 players used.</p>
+    <p>You also get your stats per division and an Elo Graph on your Profile, and every game this season on your History page.</p>
+    <p>${linked ? `Games are sent under your linked account, <b>${linked}</b>.` : "<b>It needs your Undercards account linked</b> (Wizascript tab \u2192 Undercards Account). Until then it does nothing."}</p>
+    <p>Turning it off later can delete everything you've sent.</p>`, [
+      { label: "Cancel", action: (d) => {
+        undo2();
+        d.close();
+      } },
+      { label: "Opt in", cssClass: "btn-success", action: (d) => d.close() }
+    ]);
+    if (!shown && !window.confirm("Usage Statistics sends each of your PvP games, including your starting deck, to the Wizascript server. Opt in?")) undo2();
+  }
+  function offerDelete(fromButton = false) {
+    const run = async (d) => {
+      d.close();
+      try {
+        if (!await ensureAccount({ fresh: true })) {
+          clearLocal();
+          toastMsg("No linked account, so there was nothing on the server to delete. Local copies are cleared.");
+          return;
+        }
+        const n = await optOut();
+        toastMsg(`Deleted ${n} game${n === 1 ? "" : "s"} from the Wizascript server.`);
+      } catch (e) {
+        toastMsg(`Couldn't delete: ${e.message || "the Wizascript server didn't answer"}. Try again with Delete My Data.`);
+      }
+    };
+    dialog(fromButton ? "Delete my data?" : "Usage Statistics: off", `
+    <p>${fromButton ? "This deletes every game you've sent" : "Nothing more will be sent. Do you also want to delete every game you've sent"} (all seasons, including your Profile and History extras) from the Wizascript server?</p>
+    <p>Totals already published stay as they were until they're rebuilt; your games no longer count after that.</p>`, [
+      { label: fromButton ? "Cancel" : "Keep them", action: (d) => d.close() },
+      { label: "Delete my data", cssClass: "btn-danger", action: run }
+    ]);
+  }
+  var plugin = null;
+  var toastMsg = (text) => {
+    try {
+      plugin.toast({ title: "Usage Statistics", text, className: "dismissable" });
+    } catch (e) {
+      console.log(`[Usage Statistics] ${text}`);
+    }
+  };
+  function initUsageStats(p) {
+    plugin = p;
+    const settings6 = createFeatureSettings(plugin, "usageStats", {
+      tab: "Usage Statistics",
+      visible: () => isPluginEnabled(PLUGIN_ID)
+    });
+    graphSetting = settings6.add("eloGraph", {
+      name: "Elo Graph Button",
+      note: "Shows the Elo Graph button on your Profile page.",
+      type: "boolean",
+      default: true
+    });
+    wheelSetting2 = settings6.add("historyWheel", {
+      name: "History: Scroll Wheel Pages",
+      note: "Scroll the mouse wheel over your History to turn its pages.",
+      type: "boolean",
+      default: true
+    });
+    settings6.add("deleteData", {
+      name: "Delete My Data",
+      note: "Deletes every game you've sent from the Wizascript server.",
+      type: "text",
+      default: "Delete My Data"
+    });
+    registerSettingWidget("usageStats.deleteData", (el3) => asButton(() => "Delete My Data", () => offerDelete(true))(el3));
+    onPluginToggled(PLUGIN_ID, (on) => {
+      if (undoing) return;
+      if (on) confirmOptIn();
+      else offerDelete(false);
+    });
+    if (!isPluginEnabled(PLUGIN_ID)) return;
+    const onGame = matchesPage("/Game");
+    if (onGame) startRecorder(plugin);
+    ensureAccount().then((name) => {
+      if (!name) {
+        log3("no linked account: Usage Statistics does nothing");
+        return;
+      }
+      if (queued().length) flush();
+      if (onGame) return;
+      if (matchesPage("/Profile") && ownPage()) startProfile({ showGraph: () => !graphSetting || !!graphSetting.value() });
+      if (matchesPage("/History") && ownPage()) startHistory({ wheelPaging: () => !wheelSetting2 || !!wheelSetting2.value() });
+      if (!addUsageButton()) {
+        const watch2 = new MutationObserver(() => {
+          if (addUsageButton()) watch2.disconnect();
+        });
+        watch2.observe(document.documentElement, { childList: true, subtree: true });
+        setTimeout(() => watch2.disconnect(), 1e4);
+      }
+    });
   }
 
   // packages/misc/settings.js
@@ -17431,8 +19052,8 @@ ${CONTEST_CSS}
   function getSavedPenColor() {
     return readJSON2(PEN_COLOR_KEY, null);
   }
-  function setSavedPenColor(state3) {
-    writeJSON2(PEN_COLOR_KEY, state3);
+  function setSavedPenColor(state4) {
+    writeJSON2(PEN_COLOR_KEY, state4);
   }
   function clearSavedPenColor() {
     try {
@@ -17509,9 +19130,9 @@ ${CONTEST_CSS}
     header.addEventListener("mousedown", (e) => {
       if (e.button !== 0) return;
       dragging = true;
-      const rect = root.getBoundingClientRect();
-      offsetX = e.clientX - rect.left;
-      offsetY = e.clientY - rect.top;
+      const rect2 = root.getBoundingClientRect();
+      offsetX = e.clientX - rect2.left;
+      offsetY = e.clientY - rect2.top;
       header.style.cursor = "grabbing";
       e.preventDefault();
     }, { signal });
@@ -17527,8 +19148,8 @@ ${CONTEST_CSS}
       if (!dragging) return;
       dragging = false;
       header.style.cursor = "grab";
-      const rect = root.getBoundingClientRect();
-      setSavedPosition2({ left: rect.left, top: rect.top });
+      const rect2 = root.getBoundingClientRect();
+      setSavedPosition2({ left: rect2.left, top: rect2.top });
     }, { signal });
     return { root, header, body, headerButtons, titleInput };
   }
@@ -17753,17 +19374,17 @@ ${CONTEST_CSS}
     function notifyHistoryChange() {
       if (onHistoryChange) onHistoryChange(undoStack2.length > 0, redoStack.length > 0);
     }
-    async function restoreState(state3) {
+    async function restoreState(state4) {
       const myGeneration = ++restoreGeneration;
-      paintBackground(state3.backgroundColor);
-      while (layers.length < state3.layers.length) addLayerInternal();
-      while (layers.length > state3.layers.length) {
+      paintBackground(state4.backgroundColor);
+      while (layers.length < state4.layers.length) addLayerInternal();
+      while (layers.length > state4.layers.length) {
         const removed = layers.pop();
         removed.canvas.remove();
       }
       if (activeLayerIndex > layers.length) activeLayerIndex = layers.length || 1;
       layers.forEach((l) => l.ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT));
-      await Promise.all(layers.map((l, i) => loadLayerContent(l.ctx, state3.layers[i])));
+      await Promise.all(layers.map((l, i) => loadLayerContent(l.ctx, state4.layers[i])));
       if (myGeneration !== restoreGeneration) return;
       scheduleSave2();
       notifyLayersChange();
@@ -17851,8 +19472,8 @@ ${CONTEST_CSS}
       const ctx = activeCtx();
       const fillRgb = resolveColorToRgb(strokeColor);
       const imageData = ctx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-      const changed3 = floodFillPixels(imageData.data, CANVAS_WIDTH, CANVAS_HEIGHT, x, y, fillRgb);
-      if (!changed3) {
+      const changed4 = floodFillPixels(imageData.data, CANVAS_WIDTH, CANVAS_HEIGHT, x, y, fillRgb);
+      if (!changed4) {
         undoStack2.pop();
         notifyHistoryChange();
         return;
@@ -17873,8 +19494,8 @@ ${CONTEST_CSS}
       link.click();
     }
     function getPointFromEvent(e) {
-      const rect = interactionCanvas.getBoundingClientRect();
-      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      const rect2 = interactionCanvas.getBoundingClientRect();
+      return { x: e.clientX - rect2.left, y: e.clientY - rect2.top };
     }
     return {
       wrapper,
@@ -18015,9 +19636,9 @@ ${CONTEST_CSS}
       onChange(color);
     }
     function pickFromEvent(e) {
-      const rect = wheelCanvas.getBoundingClientRect();
-      const dx = e.clientX - rect.left - WHEEL_RADIUS;
-      const dy = e.clientY - rect.top - WHEEL_RADIUS;
+      const rect2 = wheelCanvas.getBoundingClientRect();
+      const dx = e.clientX - rect2.left - WHEEL_RADIUS;
+      const dy = e.clientY - rect2.top - WHEEL_RADIUS;
       const dist = Math.sqrt(dx * dx + dy * dy);
       if (dist > WHEEL_RADIUS) return;
       let angle = Math.atan2(dy, dx) * 180 / Math.PI;
@@ -18066,7 +19687,7 @@ ${CONTEST_CSS}
     const row2 = document.createElement("div");
     row2.className = "wizascript-notepad-recent-colors";
     wrap.append(label2, row2);
-    function render2(colors) {
+    function render3(colors) {
       row2.innerHTML = "";
       colors.forEach((entry) => {
         const swatch = document.createElement("span");
@@ -18078,7 +19699,7 @@ ${CONTEST_CSS}
         row2.appendChild(swatch);
       });
     }
-    return { element: wrap, render: render2 };
+    return { element: wrap, render: render3 };
   }
 
   // packages/misc/notepad/index.js
@@ -18091,7 +19712,7 @@ ${CONTEST_CSS}
   function showNotepad() {
     var _a;
     if (mounted3) return;
-    injectStyle4();
+    injectStyle5();
     const controller = new AbortController();
     const { signal } = controller;
     const { root, body, headerButtons, titleInput } = buildNotepadShell(signal);
@@ -18343,7 +19964,7 @@ ${CONTEST_CSS}
     clearSavedTitle();
     console.log("[Wizascript] Notepad forcibly reset - drawing, position, colors, and title cleared.");
   }
-  function injectStyle4() {
+  function injectStyle5() {
     if (document.getElementById("wizascript-notepad-style")) return;
     const style = document.createElement("style");
     style.id = "wizascript-notepad-style";
@@ -18646,10 +20267,10 @@ ${CONTEST_CSS}
   }
   function fillDots(holder, tags) {
     holder.innerHTML = "";
-    holder.title = tags.map((t) => t.name).join(", ");
-    tags.forEach((t) => {
+    holder.title = tags.map((t2) => t2.name).join(", ");
+    tags.forEach((t2) => {
       const dot = document.createElement("span");
-      dot.style.cssText = "width:8px;height:8px;border-radius:50%;background:" + (t.color || DEFAULT_COLORS[0]) + ";border:1px solid rgba(0,0,0,0.4);";
+      dot.style.cssText = "width:8px;height:8px;border-radius:50%;background:" + (t2.color || DEFAULT_COLORS[0]) + ";border:1px solid rgba(0,0,0,0.4);";
       holder.appendChild(dot);
     });
   }
@@ -18802,7 +20423,7 @@ ${CONTEST_CSS}
             const payload = exportTags(ids);
             const code = await encodeCode(KIND2, payload);
             d.close();
-            const names = payload.tags.map((t) => t.name).join(", ");
+            const names = payload.tags.map((t2) => t2.name).join(", ");
             showExportDialog({
               title: "Share Tags",
               intro: `Send this code to anyone with Wizascript. They can add these tags (${names}) with "Import\u2026" in their own Manage Tags.`,
@@ -18955,7 +20576,7 @@ ${CONTEST_CSS}
     function renderRows(filterTerm) {
       rowsWrap.innerHTML = "";
       const term = (filterTerm || "").trim().toLowerCase();
-      const tags = allTags().filter((t) => !term || t.name.toLowerCase().includes(term));
+      const tags = allTags().filter((t2) => !term || t2.name.toLowerCase().includes(term));
       if (!tags.length) {
         const empty = document.createElement("div");
         empty.style.cssText = "padding:10px 12px;color:#999;";
@@ -19002,9 +20623,9 @@ ${CONTEST_CSS}
     menu3.addEventListener("click", (ev) => ev.stopPropagation());
     document.body.appendChild(menu3);
     openMenuEl = menu3;
-    const rect = menu3.getBoundingClientRect();
-    if (rect.right > window.innerWidth) menu3.style.left = Math.max(0, window.innerWidth - rect.width - 8) + "px";
-    if (rect.bottom > window.innerHeight) menu3.style.top = Math.max(0, window.innerHeight - rect.height - 8) + "px";
+    const rect2 = menu3.getBoundingClientRect();
+    if (rect2.right > window.innerWidth) menu3.style.left = Math.max(0, window.innerWidth - rect2.width - 8) + "px";
+    if (rect2.bottom > window.innerHeight) menu3.style.top = Math.max(0, window.innerHeight - rect2.height - 8) + "px";
     filterInput.focus();
     const openedAt = performance.now();
     function outsideCloser(e) {
@@ -19179,12 +20800,12 @@ ${CONTEST_CSS}
   }
 
   // packages/misc/card-tags/search-filter.js
-  function wireSearchFilter(plugin, logger4) {
-    if (typeof plugin.addFilter !== "function") {
+  function wireSearchFilter(plugin2, logger4) {
+    if (typeof plugin2.addFilter !== "function") {
       logger4.warn(null, "plugin.addFilter is not available - Card Tags search integration disabled.");
       return;
     }
-    plugin.addFilter(function cardTagsFilter(card, removed, results) {
+    plugin2.addFilter(function cardTagsFilter(card, removed, results) {
       if (!removed || !results || !results.search) return removed;
       if (!card || card.id == null) return removed;
       const searchEl = document.getElementById("searchInput");
@@ -19192,7 +20813,7 @@ ${CONTEST_CSS}
       if (!term) return removed;
       const tags = tagObjectsForCard(card.id);
       if (!tags.length) return removed;
-      const matched = tags.some((t) => t.name.toLowerCase().includes(term));
+      const matched = tags.some((t2) => t2.name.toLowerCase().includes(term));
       return matched ? false : removed;
     });
   }
@@ -19214,12 +20835,12 @@ ${CONTEST_CSS}
     }
     setTimeout(() => waitForCards(callback, attempt + 1), 250);
   }
-  function initCardTags(plugin, enableCardTagsSetting) {
+  function initCardTags(plugin2, enableCardTagsSetting) {
     if (!enableCardTagsSetting.value()) return;
     if (!isCardTagsPage()) return;
     setMenuLogger(logger3);
     waitForCards((cards2) => {
-      wireSearchFilter(plugin, logger3);
+      wireSearchFilter(plugin2, logger3);
       wireRightClick(cards2);
       initIndicators(logger3);
       decorateAllCards();
@@ -19227,9 +20848,9 @@ ${CONTEST_CSS}
   }
 
   // packages/misc/index.js
-  function initMisc(plugin) {
-    const settings6 = registerMiscSettings(plugin);
-    initCardTags(plugin, settings6.enableCardTags);
+  function initMisc(plugin2) {
+    const settings6 = registerMiscSettings(plugin2);
+    initCardTags(plugin2, settings6.enableCardTags);
     let shownThisPage = null;
     function syncNotepadVisibility() {
       const wanted = shownThisPage !== null ? shownThisPage : settings6.notepadOpenOnLoad.value();
@@ -19240,10 +20861,10 @@ ${CONTEST_CSS}
       }
     }
     syncNotepadVisibility();
-    plugin.events.on("connect", () => {
+    plugin2.events.on("connect", () => {
       syncNotepadVisibility();
     });
-    registerKeybind(plugin, {
+    registerKeybind(plugin2, {
       key: "toggleNotepad",
       name: "Toggle Notepad",
       defaultCode: "KeyO",
@@ -19253,7 +20874,7 @@ ${CONTEST_CSS}
         syncNotepadVisibility();
       }
     });
-    registerKeybind(plugin, {
+    registerKeybind(plugin2, {
       key: "resetNotepad",
       name: "Reset Notepad",
       defaultCode: "KeyN",
@@ -19264,14 +20885,14 @@ ${CONTEST_CSS}
         if (wasOpen) showNotepad();
       }
     });
-    registerKeybind(plugin, {
+    registerKeybind(plugin2, {
       key: "undoNotepad",
       name: "Undo Drawing",
       defaultCode: "KeyZ",
       packageLabel: "Notepad",
       onMatch: () => undoNotepad()
     });
-    registerKeybind(plugin, {
+    registerKeybind(plugin2, {
       key: "redoNotepad",
       name: "Redo Drawing",
       defaultCode: "KeyY",
@@ -19282,8 +20903,8 @@ ${CONTEST_CSS}
   }
 
   // packages/misc/wishlist/styles.js
-  var STYLE_ID5 = "wizascript-wishlist-style";
-  var CSS6 = `
+  var STYLE_ID8 = "wizascript-wishlist-style";
+  var CSS9 = `
 .wz-wl-menu { position: fixed; z-index: 2147483000; min-width: 170px; max-width: 280px; background: #000; color: #fff;
   border: 1px solid #fff; font-size: 14px; user-select: none; box-shadow: 0 2px 8px rgba(0,0,0,.6); margin: 0; padding: 0; }
 .wz-wl-menu header { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-bottom: 1px solid #555; }
@@ -19319,10 +20940,10 @@ ${CONTEST_CSS}
 .wz-wl-status { flex-basis: 100%; color: #ccc; margin-top: 4px; white-space: normal; }
 `;
   function injectWishlistStyle() {
-    if (document.getElementById(STYLE_ID5)) return;
+    if (document.getElementById(STYLE_ID8)) return;
     const style = document.createElement("style");
-    style.id = STYLE_ID5;
-    style.textContent = CSS6;
+    style.id = STYLE_ID8;
+    style.textContent = CSS9;
     (document.head || document.documentElement).appendChild(style);
   }
 
@@ -19330,8 +20951,8 @@ ${CONTEST_CSS}
   var ITEMS_KEY = "wizascript.wishlist.items";
   var STATE_KEY2 = "wizascript.wishlist.state";
   var OWNED_KEY = "wizascript.wishlist.owned";
-  var listeners5 = /* @__PURE__ */ new Set();
-  function read(key2, fallback) {
+  var listeners6 = /* @__PURE__ */ new Set();
+  function read2(key2, fallback) {
     try {
       const raw = GM_getValue(key2, null);
       if (!raw) return fallback;
@@ -19341,11 +20962,11 @@ ${CONTEST_CSS}
       return fallback;
     }
   }
-  function write(key2, value) {
+  function write2(key2, value) {
     GM_setValue(key2, JSON.stringify(value));
   }
   function emit() {
-    listeners5.forEach((fn) => {
+    listeners6.forEach((fn) => {
       try {
         fn();
       } catch (e) {
@@ -19353,7 +20974,7 @@ ${CONTEST_CSS}
     });
   }
   function getItems() {
-    return read(ITEMS_KEY, {});
+    return read2(ITEMS_KEY, {});
   }
   function getItemList() {
     return Object.entries(getItems()).map(([key2, v]) => ({ key: key2, ...v })).sort((a, b) => (a.added || 0) - (b.added || 0));
@@ -19362,21 +20983,21 @@ ${CONTEST_CSS}
     return Object.keys(getItems()).length > 0;
   }
   function isKnownOwned(key2) {
-    return !!read(OWNED_KEY, {})[key2];
+    return !!read2(OWNED_KEY, {})[key2];
   }
   function recordOwnership(shopItems, now = Date.now()) {
-    const owned = read(OWNED_KEY, {});
-    let changed3 = false;
+    const owned = read2(OWNED_KEY, {});
+    let changed4 = false;
     shopItems.forEach((i) => {
       if (i.owned && !owned[i.key]) {
         owned[i.key] = now;
-        changed3 = true;
+        changed4 = true;
       } else if (!i.owned && owned[i.key]) {
         delete owned[i.key];
-        changed3 = true;
+        changed4 = true;
       }
     });
-    if (changed3) write(OWNED_KEY, owned);
+    if (changed4) write2(OWNED_KEY, owned);
   }
   function isPinned(key2) {
     return !!getItems()[key2];
@@ -19385,31 +21006,31 @@ ${CONTEST_CSS}
     const items = getItems();
     if (items[key2]) return;
     items[key2] = { type, file, name, added: Date.now() };
-    write(ITEMS_KEY, items);
+    write2(ITEMS_KEY, items);
     emit();
   }
   function removeItem2(key2) {
     const items = getItems();
     if (!items[key2]) return;
     delete items[key2];
-    write(ITEMS_KEY, items);
+    write2(ITEMS_KEY, items);
     emit();
   }
   function updateItems(fn) {
     const items = getItems();
     fn(items);
-    write(ITEMS_KEY, items);
+    write2(ITEMS_KEY, items);
     emit();
   }
   function onItemsChange(fn) {
-    listeners5.add(fn);
-    return () => listeners5.delete(fn);
+    listeners6.add(fn);
+    return () => listeners6.delete(fn);
   }
   function getState() {
-    return read(STATE_KEY2, {});
+    return read2(STATE_KEY2, {});
   }
   function setState(patch) {
-    write(STATE_KEY2, { ...getState(), ...patch });
+    write2(STATE_KEY2, { ...getState(), ...patch });
   }
 
   // packages/misc/wishlist/menu.js
@@ -19514,21 +21135,21 @@ ${CONTEST_CSS}
   var LOCK_MS = 30 * 1e3;
   var SAME_REFRESH = 5 * 60 * 1e3;
   var AFTER_REFRESH = 60 * 1e3;
-  var esc3 = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  var esc4 = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   function noBackgroundHere() {
     return matchesPage(["/Game", { prefix: "/Spectate" }]);
   }
-  function isDue(freq, now = Date.now(), state3 = getState()) {
+  function isDue(freq, now = Date.now(), state4 = getState()) {
     if (freq === FREQ_VISIT || !hasItems()) return false;
-    if (state3.checkingUntil && state3.checkingUntil > now) return false;
-    if (state3.retryAt && state3.retryAt > now) return false;
-    if (!state3.lastCheckAt) return true;
-    if (now - state3.lastCheckAt < MIN_GAP) return false;
-    if (!state3.nextDailyAt && !state3.nextWeeklyAt) return true;
-    if (state3.nextDailyAt && now >= state3.nextDailyAt) return true;
-    if (state3.nextWeeklyAt && now >= state3.nextWeeklyAt) return true;
+    if (state4.checkingUntil && state4.checkingUntil > now) return false;
+    if (state4.retryAt && state4.retryAt > now) return false;
+    if (!state4.lastCheckAt) return true;
+    if (now - state4.lastCheckAt < MIN_GAP) return false;
+    if (!state4.nextDailyAt && !state4.nextWeeklyAt) return true;
+    if (state4.nextDailyAt && now >= state4.nextDailyAt) return true;
+    if (state4.nextWeeklyAt && now >= state4.nextWeeklyAt) return true;
     const interval = INTERVALS[freq];
-    return !!(interval && now - state3.lastCheckAt >= interval);
+    return !!(interval && now - state4.lastCheckAt >= interval);
   }
   function nextAt(prev, seconds, now) {
     if (seconds == null) return null;
@@ -19536,10 +21157,10 @@ ${CONTEST_CSS}
     return prev && Math.abs(prev - at) < SAME_REFRESH ? prev : at;
   }
   function applyShop(shop, now = Date.now()) {
-    const state3 = getState();
-    const nextDailyAt = nextAt(state3.nextDailyAt, shop.timers.Daily, now);
+    const state4 = getState();
+    const nextDailyAt = nextAt(state4.nextDailyAt, shop.timers.Daily, now);
     const weeklySecs = [shop.timers.New, shop.timers.Sale].filter((s) => s != null);
-    const nextWeeklyAt = nextAt(state3.nextWeeklyAt, weeklySecs.length ? Math.min(...weeklySecs) : null, now);
+    const nextWeeklyAt = nextAt(state4.nextWeeklyAt, weeklySecs.length ? Math.min(...weeklySecs) : null, now);
     setState({ lastCheckAt: now, nextDailyAt, nextWeeklyAt, retryAt: 0, checkingUntil: 0 });
     recordOwnership(shop.items, now);
     const removed = [];
@@ -19568,30 +21189,30 @@ ${CONTEST_CSS}
     return matches.map((m) => {
       const wide = m.type === "profile-skin" ? ' class="wz-wl-wide"' : "";
       const price = m.cost != null ? `${m.cost} UCP${m.sale ? ` (-${m.sale}%)` : ""}` : "";
-      return `<div class="wz-wl-toast-row"><img src="${esc3(imageUrl(m.type, m.file))}"${wide} alt=""><span><b>${esc3(m.name)}</b> <small>${TYPE_INFO[m.type].label}</small><br><small>${m.section === "Sale" ? "On sale" : m.section}${price ? ` \xB7 ${esc3(price)}` : ""}</small></span></div>`;
+      return `<div class="wz-wl-toast-row"><img src="${esc4(imageUrl(m.type, m.file))}"${wide} alt=""><span><b>${esc4(m.name)}</b> <small>${TYPE_INFO[m.type].label}</small><br><small>${m.section === "Sale" ? "On sale" : m.section}${price ? ` \xB7 ${esc4(price)}` : ""}</small></span></div>`;
     }).join("");
   }
   function goToShop(key2) {
     location.href = "/CosmeticsShop" + (key2 ? `#wz=${encodeURIComponent(key2)}` : "");
   }
-  function toast2(plugin, opts) {
-    if (!plugin || typeof plugin.toast !== "function") return null;
-    return plugin.toast({ className: "dismissable", ...opts });
+  function toast2(plugin2, opts) {
+    if (!plugin2 || typeof plugin2.toast !== "function") return null;
+    return plugin2.toast({ className: "dismissable", ...opts });
   }
-  function showMatchesToast(plugin, matches) {
+  function showMatchesToast(plugin2, matches) {
     const n = matches.length;
     emitWz("wishlistInShop", { count: n });
-    return toast2(plugin, {
+    return toast2(plugin2, {
       title: `${n} wishlist item${n === 1 ? "" : "s"} in the Cosmetics Shop!`,
       text: rowsHtml(matches),
       buttons: [{ text: "Take me there!", className: "dismiss", ...toastClick(() => goToShop(matches[0].key)) }]
     });
   }
-  function showRemovedToast(plugin, names) {
+  function showRemovedToast(plugin2, names) {
     if (!names.length) return null;
-    return toast2(plugin, {
+    return toast2(plugin2, {
       title: "Cosmetic Wishlist",
-      text: `Removed from your wishlist (you own ${names.length === 1 ? "it" : "them"} now): ${names.map(esc3).join(", ")}`
+      text: `Removed from your wishlist (you own ${names.length === 1 ? "it" : "them"} now): ${names.map(esc4).join(", ")}`
     });
   }
   function formatIn(ms) {
@@ -19600,7 +21221,7 @@ ${CONTEST_CSS}
     const d = Math.floor(mins / 1440), h2 = Math.floor(mins % 1440 / 60), m = mins % 60;
     return [d ? `${d}d` : "", h2 ? `${h2}h` : "", !d && m ? `${m}m` : ""].filter(Boolean).join(" ") || "under a minute";
   }
-  async function backgroundCheck(plugin, { freq, remind }) {
+  async function backgroundCheck(plugin2, { freq, remind }) {
     if (noBackgroundHere() || !isDue(freq)) return null;
     const now = Date.now();
     setState({ checkingUntil: now + LOCK_MS });
@@ -19612,9 +21233,9 @@ ${CONTEST_CSS}
       return { error: e };
     }
     const result = applyShop(shop, Date.now());
-    showRemovedToast(plugin, result.removed);
-    const state3 = getState();
-    const notified = { ...state3.notified || {} };
+    showRemovedToast(plugin2, result.removed);
+    const state4 = getState();
+    const notified = { ...state4.notified || {} };
     const fresh = remind === REMIND_ALWAYS ? result.matches : result.matches.filter((m) => notified[m.key] !== result.cycle(m.section));
     result.matches.forEach((m) => {
       notified[m.key] = result.cycle(m.section);
@@ -19624,36 +21245,36 @@ ${CONTEST_CSS}
       if (!pins[k]) delete notified[k];
     });
     setState({ notified });
-    if (fresh.length) showMatchesToast(plugin, fresh);
+    if (fresh.length) showMatchesToast(plugin2, fresh);
     return { ...result, shown: fresh };
   }
-  async function manualCheck(plugin) {
+  async function manualCheck(plugin2) {
     let shop;
     try {
       shop = await fetchShop();
     } catch (e) {
-      toast2(plugin, { title: "Cosmetic Wishlist", text: `Couldn't read the Cosmetics Shop: ${esc3(e.message)}` });
+      toast2(plugin2, { title: "Cosmetic Wishlist", text: `Couldn't read the Cosmetics Shop: ${esc4(e.message)}` });
       return { error: e };
     }
     const result = applyShop(shop, Date.now());
-    showRemovedToast(plugin, result.removed);
+    showRemovedToast(plugin2, result.removed);
     const notified = { ...getState().notified || {} };
     result.matches.forEach((m) => {
       notified[m.key] = result.cycle(m.section);
     });
     setState({ notified });
     if (result.matches.length) {
-      showMatchesToast(plugin, result.matches);
+      showMatchesToast(plugin2, result.matches);
     } else {
-      const state3 = getState();
-      toast2(plugin, {
+      const state4 = getState();
+      toast2(plugin2, {
         title: "Cosmetic Wishlist",
-        text: `Nothing from your wishlist is in the Cosmetics Shop right now.` + (state3.nextDailyAt ? `<br><small>Next daily refresh in ${formatIn(state3.nextDailyAt - Date.now())}.</small>` : "")
+        text: `Nothing from your wishlist is in the Cosmetics Shop right now.` + (state4.nextDailyAt ? `<br><small>Next daily refresh in ${formatIn(state4.nextDailyAt - Date.now())}.</small>` : "")
       });
     }
     return result;
   }
-  function readLiveShop(plugin) {
+  function readLiveShop(plugin2) {
     let shop;
     try {
       shop = parseShop(document);
@@ -19661,7 +21282,7 @@ ${CONTEST_CSS}
       return null;
     }
     const result = applyShop(shop, Date.now());
-    showRemovedToast(plugin, result.removed);
+    showRemovedToast(plugin2, result.removed);
     const notified = { ...getState().notified || {} };
     result.matches.forEach((m) => {
       notified[m.key] = result.cycle(m.section);
@@ -19752,11 +21373,11 @@ ${CONTEST_CSS}
         renderList2(box, label2);
       });
     });
-    let checking3 = false;
+    let checking4 = false;
     registerSettingWidget("wishlist.checkNow", (el3) => {
       asButton("Check Shop Now", async (input) => {
-        if (checking3) return;
-        checking3 = true;
+        if (checking4) return;
+        checking4 = true;
         input.value = "Checking\u2026";
         const row2 = input.closest(".flex-start");
         let status = row2 && row2.querySelector(".wz-wl-status");
@@ -19766,7 +21387,7 @@ ${CONTEST_CSS}
           row2.appendChild(status);
         }
         const result = await manualCheck(pluginRef);
-        checking3 = false;
+        checking4 = false;
         input.value = "Check Shop Now";
         if (!status) return;
         if (result.error) {
@@ -19814,9 +21435,9 @@ ${CONTEST_CSS}
     }
     onItemsChange(() => decorateShop(shop));
   }
-  function initWishlist(plugin) {
-    pluginRef = plugin;
-    settings5 = createFeatureSettings(plugin, "wishlist", {
+  function initWishlist(plugin2) {
+    pluginRef = plugin2;
+    settings5 = createFeatureSettings(plugin2, "wishlist", {
       tab: TAB3,
       visible: () => isPluginEnabled("wishlist")
     });
@@ -19855,7 +21476,7 @@ ${CONTEST_CSS}
         return;
       }
       setTimeout(() => {
-        backgroundCheck(plugin, {
+        backgroundCheck(plugin2, {
           freq: setting4("frequency", FREQ_REFRESH),
           remind: setting4("remind", REMIND_ONCE)
         }).catch(() => {
@@ -19912,129 +21533,6 @@ ${CONTEST_CSS}
   var getRules = () => cached("rules.json").catch(() => null);
   var getReports = () => cached("reports.json");
   var spriteUrl = (file) => `${BASE}assets/sprites/${encodeURIComponent(file)}.png`;
-
-  // packages/misc/card-history/game.js
-  var W = () => getPageWindow();
-  var cardFile = null;
-  var artifactList = null;
-  var page$ = () => W().$;
-  var hasI18n = () => {
-    const $2 = page$();
-    return !!($2 && $2.i18n);
-  };
-  function allCards() {
-    const w = W();
-    if (Array.isArray(w.allCards) && w.allCards.length) return w.allCards;
-    if (cardFile && cardFile.length) return cardFile;
-    try {
-      const ls = JSON.parse(w.localStorage.getItem("allCards") || "[]");
-      if (Array.isArray(ls) && ls.length) return ls;
-    } catch (e) {
-    }
-    return [];
-  }
-  async function ensureCards() {
-    if (allCards().length) return;
-    const cfg = W().cardsClientConfig;
-    if (!cfg || !cfg.url) return;
-    try {
-      const d = await (await fetch(cfg.url, { credentials: "same-origin" })).json();
-      const list = Array.isArray(d) ? d : d && (d.cards || d.allCards) || [];
-      cardFile = typeof list === "string" ? JSON.parse(list) : list;
-    } catch (e) {
-    }
-  }
-  function findCard(q) {
-    const list = allCards();
-    const s = String(q);
-    if (/^\d+$/.test(s)) return list.find((c) => String(c.id) === s || String(c.fixedId) === s) || null;
-    const n = norm2(s);
-    return list.find((c) => norm2(c.name) === n) || null;
-  }
-  async function artifacts2() {
-    if (artifactList) return artifactList;
-    try {
-      const data2 = await (await fetch("/DecksConfig", { credentials: "same-origin" })).json();
-      const raw = data2 && data2.allArtifacts;
-      artifactList = (typeof raw === "string" ? JSON.parse(raw) : raw) || [];
-    } catch (e) {
-      artifactList = [];
-    }
-    return artifactList;
-  }
-  var norm2 = (s) => String(s || "").toLowerCase().replace(/&amp;/g, "&").replace(/[^a-z0-9]/g, "");
-  function tr(key2, ...args) {
-    try {
-      const v = page$().i18n(key2, ...args);
-      if (!v || v === key2) return "";
-      const d = document.createElement("div");
-      d.innerHTML = v;
-      return d.textContent.trim();
-    } catch (e) {
-      return "";
-    }
-  }
-  var INTERNAL_KEY = /\b(?:kw|rarity|tribe|soul|enchant|status)-([a-z0-9]+(?:-[a-z0-9]+)*)\b/g;
-  var unkey = (html) => String(html).replace(/(^|>)([^<]*)/g, (m, gt, text) => gt + text.replace(INTERNAL_KEY, (k, id) => id.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())));
-  function trHtml(key2) {
-    try {
-      const v = page$().i18n(key2);
-      return v && v !== key2 ? unkey(v) : "";
-    } catch (e) {
-      return "";
-    }
-  }
-  var escHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-  function prettyCode(raw) {
-    const s = String(raw || "");
-    const ov = s.match(/override=([^|}]+)/);
-    if (ov) return ov[1];
-    const m = s.match(/^[A-Z_]+:([^|}]+)/);
-    return m ? m[1].toLowerCase().replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : s;
-  }
-  function render(code, fallback) {
-    try {
-      const v = page$().i18n(code);
-      if (!v || v === code || /^\s*[a-z]+(?:-[a-z0-9]+)+\s*$/.test(v)) return escHtml(prettyCode(fallback));
-      return unkey(v);
-    } catch (e) {
-      return escHtml(prettyCode(fallback));
-    }
-  }
-  function knownKeys(prefix) {
-    try {
-      const i = page$().i18n();
-      const store = i.messageStore;
-      const msgs = Object.assign({}, store.messages.en || {}, store.messages[i.locale] || {});
-      return Object.keys(msgs).filter((k) => k.startsWith(prefix) && !/-desc$/.test(k)).map((k) => k.slice(prefix.length));
-    } catch (e) {
-      return [];
-    }
-  }
-  function appendCard(card) {
-    const fn = W().appendCard;
-    if (typeof fn !== "function") return null;
-    try {
-      const r = fn(card, null);
-      return r && (r[0] || r) || null;
-    } catch (e) {
-      return null;
-    }
-  }
-  function gameFontSize(div, maxHeight) {
-    try {
-      const w = W();
-      if (typeof w.getResizedFontSize === "function" && w.$) {
-        div.style.fontSize = "";
-        div.style.fontSize = `${w.getResizedFontSize(w.$(div), maxHeight)}px`;
-      }
-    } catch (e) {
-    }
-  }
-  function dialogApi() {
-    const w = W();
-    return w.BootstrapDialog && w.BootstrapDialog.show ? { BD: w.BootstrapDialog, $: w.$ } : null;
-  }
 
   // packages/misc/card-history/format.js
   var DEFAULTS = {
@@ -20260,9 +21758,9 @@ ${CONTEST_CSS}
     return work.split(/(\u0001\d+\u0002)/).map((part) => {
       const m = part.match(/^\u0001(\d+)\u0002$/);
       if (m) {
-        const t = tokens[+m[1]];
-        if (t.code.startsWith("<")) return t.code;
-        return t.shown ? withShownText(render(t.code, t.raw), t.shown) : render(t.code, t.raw);
+        const t2 = tokens[+m[1]];
+        if (t2.code.startsWith("<")) return t2.code;
+        return t2.shown ? withShownText(render(t2.code, t2.raw), t2.shown) : render(t2.code, t2.raw);
       }
       let html = escHtml(part);
       COLOUR_WORDS.forEach(([re, cls]) => {
@@ -20292,12 +21790,12 @@ ${CONTEST_CSS}
     byDate.forEach((list, d) => {
       let cur = { line: `${HEAD} ${d}`, reports: [] };
       list.forEach((r) => {
-        const t = token(r);
-        if (cur.reports.length && cur.line.length + 1 + t.length > MAX_MESSAGE) {
+        const t2 = token(r);
+        if (cur.reports.length && cur.line.length + 1 + t2.length > MAX_MESSAGE) {
           out.push(cur);
           cur = { line: `${HEAD} ${d}`, reports: [] };
         }
-        cur.line += ` ${t}`;
+        cur.line += ` ${t2}`;
         cur.reports.push(r);
       });
       out.push(cur);
@@ -20308,10 +21806,10 @@ ${CONTEST_CSS}
   function parseCodes(text) {
     const out = [];
     String(text || "").replace(CODE_RE, (line, date, rest) => {
-      const items = rest.trim().split(" ").map((t) => {
-        const at = t.lastIndexOf("@");
-        const who = t.slice(0, at);
-        const label2 = decLabel(t.slice(at + 1));
+      const items = rest.trim().split(" ").map((t2) => {
+        const at = t2.lastIndexOf("@");
+        const who = t2.slice(0, at);
+        const label2 = decLabel(t2.slice(at + 1));
         const kind = who[0] === "A" ? "a" : "c";
         const id = kind === "a" ? who.slice(1) : who;
         return { key: `${kind}:${id}:${label2}`, kind, id, label: label2 };
@@ -20328,7 +21826,7 @@ ${CONTEST_CSS}
 
   // packages/misc/card-history/reports.js
   var STORE = "wizascript.cardHistory.reports";
-  function load2() {
+  function load3() {
     try {
       const v = JSON.parse(GM_getValue(STORE, "[]"));
       return Array.isArray(v) ? v : [];
@@ -20338,35 +21836,35 @@ ${CONTEST_CSS}
   }
   function save(list) {
     GM_setValue(STORE, JSON.stringify(list));
-    changed2();
+    changed3();
   }
-  var listeners6 = /* @__PURE__ */ new Set();
+  var listeners7 = /* @__PURE__ */ new Set();
   var onReportsChanged = (fn) => {
-    listeners6.add(fn);
-    return () => listeners6.delete(fn);
+    listeners7.add(fn);
+    return () => listeners7.delete(fn);
   };
-  function changed2() {
-    listeners6.forEach((fn) => {
+  function changed3() {
+    listeners7.forEach((fn) => {
       try {
         fn();
       } catch (e) {
       }
     });
   }
-  var reportKey = (t) => `${t.kind}:${t.id}:${t.label}`;
-  var isReported = (t) => load2().some((r) => r.key === reportKey(t));
-  var unsentCount = () => load2().filter((r) => !r.sent).length;
-  function toggleReport(t) {
-    const key2 = reportKey(t);
-    const list = load2();
+  var reportKey = (t2) => `${t2.kind}:${t2.id}:${t2.label}`;
+  var isReported = (t2) => load3().some((r) => r.key === reportKey(t2));
+  var unsentCount = () => load3().filter((r) => !r.sent).length;
+  function toggleReport(t2) {
+    const key2 = reportKey(t2);
+    const list = load3();
     const i = list.findIndex((r) => r.key === key2);
     if (i >= 0) list.splice(i, 1);
-    else list.push({ key: key2, kind: t.kind, id: String(t.id), name: t.name, label: t.label, shown: String(t.shown || "").slice(0, 140), built: t.built || "", at: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) });
+    else list.push({ key: key2, kind: t2.kind, id: String(t2.id), name: t2.name, label: t2.label, shown: String(t2.shown || "").slice(0, 140), built: t2.built || "", at: (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) });
     save(list);
     return i < 0;
   }
   function removeReport(key2) {
-    save(load2().filter((r) => r.key !== key2));
+    save(load3().filter((r) => r.key !== key2));
   }
   var remote = null;
   async function remoteReports() {
@@ -20375,22 +21873,22 @@ ${CONTEST_CSS}
     remote = data2 && data2.items || {};
     return remote;
   }
-  var remoteCount = (t) => remote && remote[reportKey(t)] ? remote[reportKey(t)].n || 1 : 0;
+  var remoteCount = (t2) => remote && remote[reportKey(t2)] ? remote[reportKey(t2)].n || 1 : 0;
   function tagNode(node, target) {
     node.dataset.wzChReport = JSON.stringify(target);
     node.classList.add("wz-ch-reportable");
     paintNode(node);
   }
   function paintNode(node) {
-    let t;
+    let t2;
     try {
-      t = JSON.parse(node.dataset.wzChReport);
+      t2 = JSON.parse(node.dataset.wzChReport);
     } catch (e) {
       return;
     }
     let badge = node.querySelector(":scope > .wz-ch-badge, :scope .wz-ch-badge");
-    const mine = isReported(t);
-    const others = remoteCount(t);
+    const mine = isReported(t2);
+    const others = remoteCount(t2);
     if (!mine && !others) {
       if (badge) badge.remove();
       return;
@@ -20424,22 +21922,22 @@ ${CONTEST_CSS}
   }
   function openMenu2(node, x, y) {
     closeReportMenu();
-    const t = JSON.parse(node.dataset.wzChReport);
-    const mine = isReported(t);
+    const t2 = JSON.parse(node.dataset.wzChReport);
+    const mine = isReported(t2);
     menu2 = document.createElement("ul");
     menu2.className = "wz-ch-menu";
     const head = document.createElement("header");
-    head.textContent = `${t.name} - ${t.label === "today" ? "today" : t.label}`;
+    head.textContent = `${t2.name} - ${t2.label === "today" ? "today" : t2.label}`;
     const li = document.createElement("li");
     li.textContent = mine ? "\u2691 Undo my report" : "\u2691 Report as Bugged/Inaccurate";
     li.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      toggleReport(t);
+      toggleReport(t2);
       closeReportMenu();
     });
     menu2.append(head, li);
-    const others = remoteCount(t);
+    const others = remoteCount(t2);
     if (others) {
       const note = document.createElement("li");
       note.className = "wz-ch-menu-off";
@@ -20510,15 +22008,15 @@ ${CONTEST_CSS}
     return b;
   };
   function markSent(keys) {
-    save(load2().map((r) => keys.has(r.key) ? { ...r, sent: true } : r));
+    save(load3().map((r) => keys.has(r.key) ? { ...r, sent: true } : r));
   }
   async function openMyReports() {
     const api = dialogApi();
     if (!api) return;
     const wrap = el2("div", "wz-ch-myreports");
     const chat = canOpenVoid();
-    const render2 = () => {
-      const list = load2().sort((a, b) => (a.sent ? 1 : 0) - (b.sent ? 1 : 0));
+    const render3 = () => {
+      const list = load3().sort((a, b) => (a.sent ? 1 : 0) - (b.sent ? 1 : 0));
       wrap.replaceChildren();
       if (!list.length) {
         const p = el2("p");
@@ -20532,7 +22030,7 @@ ${CONTEST_CSS}
         tr2.innerHTML = `<td>${escHtml(r.name)}</td><td>${escHtml(r.label)}</td><td class="wz-ch-dim">${r.sent ? "sent" : "not sent"}</td><td></td>`;
         tr2.lastChild.appendChild(button3("\xD7", "btn-xs btn-default", () => {
           removeReport(r.key);
-          render2();
+          render3();
         }));
         table.appendChild(tr2);
       });
@@ -20566,7 +22064,7 @@ ${CONTEST_CSS}
       });
       wrap.append(intro, table, lines, status);
     };
-    render2();
+    render3();
     api.BD.show({
       title: "My Card History Reports",
       message: api.$(wrap),
@@ -20705,7 +22203,7 @@ ${note}` : "");
     setQuantity(el3, versionLabel(ver.version), ver.note);
     return el3;
   }
-  var plain = (t) => String(t || "").replace(/\{\{[A-Z_]+:([^}]*)\}\}/g, "$1").replace(/\{\{([A-Z_]+)\}\}/g, "$1").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+  var plain = (t2) => String(t2 || "").replace(/\{\{[A-Z_]+:([^}]*)\}\}/g, "$1").replace(/\{\{([A-Z_]+)\}\}/g, "$1").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
   function seen(card, ver) {
     var _a, _b, _c, _d;
     const stats = card.typeCard === 0 ? `${(_a = ver.cost) != null ? _a : "?"}/${(_b = ver.atk) != null ? _b : "?"}/${(_c = ver.hp) != null ? _c : "?"}` : `${(_d = ver.cost) != null ? _d : "?"}`;
@@ -20798,12 +22296,12 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     const r = document.createElement("td");
     r.className = "wz-ch-art-rar";
     r.innerHTML = RARITIES2.includes(rarity) ? render(`{{RARITY:${rarity}}}`, rarity) : "?";
-    const t = document.createElement("td");
-    t.className = "wz-ch-art-txt";
+    const t2 = document.createElement("td");
+    t2.className = "wz-ch-art-txt";
     const oldName = ver.name && norm2(ver.name) !== norm2(todayName) ? `<span class="wz-ch-art-oldname">(${escHtml(ver.name)})</span>` : "";
     const body = todayHtml !== void 0 ? todayHtml : ver.textKnown && ver.text ? formatText2(ver.text, f, ver.version && ver.version.key) : "?";
-    t.innerHTML = `<div class="cardDesc wz-ch-art-desc"><div>${oldName}${body}</div></div>`;
-    tr2.append(v, r, t);
+    t2.innerHTML = `<div class="cardDesc wz-ch-art-desc"><div>${oldName}${body}</div></div>`;
+    tr2.append(v, r, t2);
     if (target) {
       const d = document.createElement("div");
       d.innerHTML = body;
@@ -20871,7 +22369,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     const box = document.createElement("div");
     box.className = "wz-ch-loading";
     box.innerHTML = '<div class="wz-ch-loading-title">Loading...</div><div class="wz-ch-step"></div>';
-    const state3 = { url: wikiUrl, shown: false, onShown: null };
+    const state4 = { url: wikiUrl, shown: false, onShown: null };
     const api = dialogApi();
     let off = null;
     if (api) {
@@ -20880,8 +22378,8 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         size: api.BD.SIZE_WIDE,
         message: api.$(box),
         onshown: () => {
-          state3.shown = true;
-          if (state3.onShown) state3.onShown();
+          state4.shown = true;
+          if (state4.onShown) state4.onShown();
         },
         onhidden: () => {
           if (off) off();
@@ -20889,13 +22387,13 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         },
         buttons: [
           { id: "wz-ch-myreports-btn", label: reportsLabel(), action: () => openMyReports() },
-          { label: "Open on the wiki", action: () => window.open(state3.url, "_blank", "noopener") },
+          { label: "Open on the wiki", action: () => window.open(state4.url, "_blank", "noopener") },
           { label: "Close", cssClass: "btn-primary", action: (d) => d.close() }
         ]
       });
     } else {
       document.body.appendChild(box);
-      state3.shown = true;
+      state4.shown = true;
     }
     off = onReportsChanged(() => {
       repaintAll(box);
@@ -20908,7 +22406,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         if (el3) el3.textContent = text;
       },
       fill(node, fit2, url) {
-        if (url) state3.url = url;
+        if (url) state4.url = url;
         box.className = "";
         box.replaceChildren(node);
         if (!fit2) return;
@@ -20917,20 +22415,20 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
           if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit2);
           setTimeout(fit2, 400);
         };
-        if (state3.shown) run();
-        else state3.onShown = run;
+        if (state4.shown) run();
+        else state4.onShown = run;
       },
       fail(err) {
-        const t = box.querySelector(".wz-ch-loading-title");
-        if (t) t.textContent = "Couldn't load the history.";
+        const t2 = box.querySelector(".wz-ch-loading-title");
+        if (t2) t2.textContent = "Couldn't load the history.";
         this.step(String(err && err.message ? err.message : err));
       }
     };
   }
 
   // packages/misc/card-history/styles.js
-  var STYLE_ID6 = "wizascript-card-history-style";
-  var CSS7 = `
+  var STYLE_ID9 = "wizascript-card-history-style";
+  var CSS10 = `
 .wz-ch-loading { min-height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
 .wz-ch-loading-title { font-size: 20px; }
 .wz-ch-step { font-size: 13px; opacity: .75; }
@@ -20977,10 +22475,10 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
 .wz-ch-art-list .cardDesc.wz-ch-art-desc > div { font-size: 14px !important; }
 `;
   function injectCardHistoryStyle() {
-    if (document.getElementById(STYLE_ID6)) return;
+    if (document.getElementById(STYLE_ID9)) return;
     const st = document.createElement("style");
-    st.id = STYLE_ID6;
-    st.textContent = CSS7;
+    st.id = STYLE_ID9;
+    st.textContent = CSS10;
     (document.head || document.documentElement).appendChild(st);
   }
 
@@ -21083,7 +22581,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     }
     return null;
   }
-  function initCardHistory(plugin) {
+  function initCardHistory(plugin2) {
     if (!isPluginEnabled("cardHistory")) return;
     injectCardHistoryStyle();
     initChatCodes();
@@ -21112,10 +22610,10 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
   function isTabArrow(el3) {
     return !!(el3 && el3.classList && (el3.classList.contains("wizascript-tab-arrow") || el3.classList.contains("tabArrow")));
   }
-  function initController(plugin, controllerEnabledSetting2) {
+  function initController(plugin2, controllerEnabledSetting2) {
     const pageWindow2 = getPageWindow();
     if (!isPluginEnabled("controller")) {
-      registerControllerSettings(plugin, controllerEnabledSetting2);
+      registerControllerSettings(plugin2, controllerEnabledSetting2);
       return;
     }
     startGamepadWatchers();
@@ -21155,14 +22653,14 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       return { code: "", keyCode: ch.charCodeAt(0) };
     }
     function positionPanelNear(panel, target) {
-      const rect = target.getBoundingClientRect();
+      const rect2 = target.getBoundingClientRect();
       const w = panel.offsetWidth, h2 = panel.offsetHeight;
-      let left = rect.left;
-      let top = rect.bottom + 8;
+      let left = rect2.left;
+      let top = rect2.bottom + 8;
       if (left + w > pageWindow2.innerWidth - 8) left = pageWindow2.innerWidth - w - 8;
       if (left < 8) left = 8;
       if (top + h2 > pageWindow2.innerHeight - 8) {
-        top = rect.top - h2 - 8;
+        top = rect2.top - h2 - 8;
         if (top < 8) top = 8;
       }
       panel.style.left = left + "px";
@@ -21212,16 +22710,16 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       hud.addEventListener("mousedown", (e) => {
         dragging = true;
         dragMoved = false;
-        const rect = hud.getBoundingClientRect();
-        offsetX = e.clientX - rect.left;
-        offsetY = e.clientY - rect.top;
+        const rect2 = hud.getBoundingClientRect();
+        offsetX = e.clientX - rect2.left;
+        offsetY = e.clientY - rect2.top;
         e.preventDefault();
       });
       pageWindow2.addEventListener("mousemove", (e) => {
         if (!dragging) return;
-        const rect = hud.getBoundingClientRect();
+        const rect2 = hud.getBoundingClientRect();
         const newLeft = e.clientX - offsetX, newTop = e.clientY - offsetY;
-        if (!dragMoved && (Math.abs(newLeft - rect.left) > DRAG_THRESHOLD_PX || Math.abs(newTop - rect.top) > DRAG_THRESHOLD_PX)) {
+        if (!dragMoved && (Math.abs(newLeft - rect2.left) > DRAG_THRESHOLD_PX || Math.abs(newTop - rect2.top) > DRAG_THRESHOLD_PX)) {
           dragMoved = true;
         }
         if (!dragMoved) return;
@@ -21233,8 +22731,8 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         if (!dragging) return;
         dragging = false;
         if (dragMoved) {
-          const rect = hud.getBoundingClientRect();
-          setHudPosition(rect.left, rect.top);
+          const rect2 = hud.getBoundingClientRect();
+          setHudPosition(rect2.left, rect2.top);
         }
       });
     })();
@@ -21474,7 +22972,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       document.body.appendChild(cursor);
     }
     mount2();
-    registerControllerSettings(plugin, controllerEnabledSetting2);
+    registerControllerSettings(plugin2, controllerEnabledSetting2);
     let navInputMethod = "stick";
     const GROUP_DEFS = [
       { name: "navbar", containerSelectors: ["nav", ".navbar", ".navbar-nav", "header nav"], itemSelector: "a" },
@@ -21607,10 +23105,10 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     const MODAL_ITEM_SELECTOR = 'button, input:not([type="hidden"]):not(.tabButton), select, a[href], .card, li[role="button"], .tabLabel, .wz-ch-reportable';
     function queryModalRoot() {
       const visibleDialogs = Array.from(document.querySelectorAll(".bootstrap-dialog")).filter((d) => getComputedStyle(d).display !== "none");
-      const dialog = visibleDialogs[visibleDialogs.length - 1] || null;
-      if (dialog && !document.querySelector(".mulligan")) {
-        const tabbedRoot = dialog.querySelector(".tabbedView.left");
-        return tabbedRoot ? { root: dialog, kind: "tabbed", tabbedRoot } : { root: dialog, kind: "plain" };
+      const dialog2 = visibleDialogs[visibleDialogs.length - 1] || null;
+      if (dialog2 && !document.querySelector(".mulligan")) {
+        const tabbedRoot = dialog2.querySelector(".tabbedView.left");
+        return tabbedRoot ? { root: dialog2, kind: "tabbed", tabbedRoot } : { root: dialog2, kind: "plain" };
       }
       const menu3 = document.querySelector(".menu-backdrop");
       if (menu3 && getComputedStyle(menu3).display !== "none") return { root: menu3, kind: "menu" };
@@ -21749,8 +23247,8 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     function findModalDismissButton(root) {
       const byAttr = root.querySelector('[data-dismiss="modal"], .close');
       if (byAttr) return byAttr;
-      const buttons = Array.from(root.querySelectorAll("button"));
-      return buttons.find((b) => /close|cancel|^no$/i.test((b.textContent || "").trim())) || null;
+      const buttons2 = Array.from(root.querySelectorAll("button"));
+      return buttons2.find((b) => /close|cancel|^no$/i.test((b.textContent || "").trim())) || null;
     }
     function isWizascriptSettingsOpen() {
       const m = queryModalRoot();
@@ -21788,9 +23286,9 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         return handItems[handIndex] || null;
       }
       if (activeSubmenu) return activeSubmenu.items[activeSubmenu.index] || null;
-      const state3 = chromeStates[chromeIndex];
-      if (!state3 || state3.type !== "group") return null;
-      const g = state3.group;
+      const state4 = chromeStates[chromeIndex];
+      if (!state4 || state4.type !== "group") return null;
+      const g = state4.group;
       const idx = itemIndexByGroupName[g.name] || 0;
       return g.items[idx] || null;
     }
@@ -22039,12 +23537,12 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       el3.dispatchEvent(new Event("change", { bubbles: true }));
     }
     function setSliderValueFromPointer(el3, clientX) {
-      const rect = el3.getBoundingClientRect();
-      if (!rect.width) return;
+      const rect2 = el3.getBoundingClientRect();
+      if (!rect2.width) return;
       const min = el3.min !== "" ? parseFloat(el3.min) : 0;
       const max = el3.max !== "" ? parseFloat(el3.max) : 100;
       const step = parseFloat(el3.step) || 1;
-      let frac = (clientX - rect.left) / rect.width;
+      let frac = (clientX - rect2.left) / rect2.width;
       frac = Math.max(0, Math.min(1, frac));
       let val = min + frac * (max - min);
       val = Math.round(val / step) * step;
@@ -22089,8 +23587,8 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     function activateHighlighted(button4) {
       const el3 = currentFocusedEl();
       if (!el3) return;
-      const rect = el3.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+      const rect2 = el3.getBoundingClientRect();
+      const cx = rect2.left + rect2.width / 2, cy = rect2.top + rect2.height / 2;
       if (isPatchMakerResetButton(el3)) {
         activatePatchMakerResetButton(el3, cx, cy);
         return;
@@ -22142,8 +23640,8 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       if (!activeSubmenu) return;
       const toggle = activeSubmenu.toggle;
       activeSubmenu = null;
-      const rect = toggle.getBoundingClientRect();
-      dispatchClick(toggle, rect.left + rect.width / 2, rect.top + rect.height / 2, 0);
+      const rect2 = toggle.getBoundingClientRect();
+      dispatchClick(toggle, rect2.left + rect2.width / 2, rect2.top + rect2.height / 2, 0);
       refreshHighlight();
     }
     let x = pageWindow2.innerWidth / 2, y = pageWindow2.innerHeight / 2;
@@ -22210,7 +23708,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       }
       return rowEls.length - 1;
     }
-    function fire(el3, type, ctor, clientX, clientY, button4, buttons) {
+    function fire(el3, type, ctor, clientX, clientY, button4, buttons2) {
       const opts = {
         bubbles: true,
         cancelable: true,
@@ -22218,7 +23716,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
         clientX,
         clientY,
         button: button4 || 0,
-        buttons: buttons || 0
+        buttons: buttons2 || 0
       };
       if (ctor === PointerEvent) {
         opts.pointerId = 1;
@@ -22359,9 +23857,9 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       }
     }
     function endPress(side, button4) {
-      const state3 = drag[side];
+      const state4 = drag[side];
       drag[side] = null;
-      if (!state3) return;
+      if (!state4) return;
       cursor.style.display = "none";
       const hitEl = document.elementFromPoint(x, y);
       cursor.style.display = "block";
@@ -22369,11 +23867,11 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
       if (button4 === 2) {
         fire(hitEl, "pointerup", PointerEvent, x, y, 2, 0);
         fire(hitEl, "mouseup", MouseEvent, x, y, 2, 0);
-        if (hitEl === state3.downEl) fire(hitEl, "contextmenu", MouseEvent, x, y, 2, 0);
+        if (hitEl === state4.downEl) fire(hitEl, "contextmenu", MouseEvent, x, y, 2, 0);
       } else {
         fire(hitEl, "pointerup", PointerEvent, x, y, 0, 0);
         fire(hitEl, "mouseup", MouseEvent, x, y, 0, 0);
-        if (hitEl === state3.downEl) fire(hitEl, "click", MouseEvent, x, y, 0, 0);
+        if (hitEl === state4.downEl) fire(hitEl, "click", MouseEvent, x, y, 0, 0);
       }
     }
     function collectHoverRules() {
@@ -22515,7 +24013,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     let leftHeldSince = 0, rightHeldSince = 0, lastPageTurnTime = 0;
     let dpadText = "";
     function openWizascriptSettings() {
-      plugin.settings().open();
+      plugin2.settings().open();
       if (isDebugTextEnabled()) console.log("[Wizascript Controller] opened Wizascript settings");
     }
     function frame() {
@@ -23424,9 +24922,9 @@ ${btnLabel(0)} activate   ${btnLabel(3)} alt-activate   ${btnLabel(1)} close`;
             dpadHeld = { up, down, left, right };
             btnHeld = { 0: btn(0), 1: btn(1), 2: btn(2), 3: btn(3) };
             const label2 = (key2) => bindingToDisplay(getBoundTierListButton(key2));
-            const state4 = tlPad.state();
-            hud.textContent = state4 === "send" ? `tier list: send to tier
-d-pad pick   ${label2("tlSelect")} send   ${label2("tlBack")} cancel` : state4 === "holding" ? `tier list: holding an item
+            const state5 = tlPad.state();
+            hud.textContent = state5 === "send" ? `tier list: send to tier
+d-pad pick   ${label2("tlSelect")} send   ${label2("tlBack")} cancel` : state5 === "holding" ? `tier list: holding an item
 d-pad move   ${label2("tlSelect")} place   ${label2("tlJump")} jump   ${label2("tlBack")} cancel` : `tier list
 d-pad move   ${label2("tlSelect")} pick up / press   ${label2("tlQuickSend")} send   ${label2("tlJump")} jump   ${label2("tlBack")} back`;
             return;
@@ -23697,7 +25195,7 @@ ${btnLabel(0)} select attacker   \u2193/${btnLabel(1)} hand`;
             refreshHighlight();
           }
         }
-        const state3 = chromeStates[chromeIndex];
+        const state4 = chromeStates[chromeIndex];
         if (activeSubmenu) {
           if (up && !dpadHeld.up) {
             activeSubmenu.index = (activeSubmenu.index - 1 + activeSubmenu.items.length) % activeSubmenu.items.length;
@@ -23708,7 +25206,7 @@ ${btnLabel(0)} select attacker   \u2193/${btnLabel(1)} hand`;
             refreshHighlight();
           }
           dpadText = `submenu (${activeSubmenu.index + 1}/${activeSubmenu.items.length})`;
-        } else if (state3 && state3.type === "group") {
+        } else if (state4 && state4.type === "group") {
           if (up && !dpadHeld.up) {
             chromeIndex = Math.max(0, chromeIndex - 1);
             refreshHighlight();
@@ -23717,7 +25215,7 @@ ${btnLabel(0)} select attacker   \u2193/${btnLabel(1)} hand`;
             chromeIndex = Math.min(chromeStates.length - 1, chromeIndex + 1);
             refreshHighlight();
           }
-          const g = state3.group;
+          const g = state4.group;
           if (left && !dpadHeld.left) {
             itemIndexByGroupName[g.name] = ((itemIndexByGroupName[g.name] || 0) - 1 + g.items.length) % g.items.length;
             refreshHighlight();
@@ -23832,29 +25330,30 @@ chrome: ${chromeStates[chromeIndex] ? chromeStates[chromeIndex].type : "?"}`;
   }
 
   // manifest.js
-  bootstrap((plugin) => {
+  bootstrap((plugin2) => {
     const installState = runMigrations();
-    registerPluginToggles(plugin);
-    registerAboutSection(plugin);
-    registerAccountSetting(plugin);
-    registerBackupSection(plugin);
-    registerDebugSetting(plugin);
-    initTabBar(plugin);
-    initPatchMaker(plugin);
-    initTrueHubBridge(plugin);
-    initDeckTracker(plugin);
-    initUcTv(plugin);
-    initTierList(plugin);
-    initCardMaker(plugin);
-    initFloweryMode(plugin);
-    const miscSettings = initMisc(plugin);
-    initWishlist(plugin);
-    initCardHistory(plugin);
-    initKeybinds(plugin);
-    initController(plugin, miscSettings.enableController);
-    registerPluginGuides(plugin);
+    registerPluginToggles(plugin2);
+    registerAboutSection(plugin2);
+    registerAccountSetting(plugin2);
+    registerBackupSection(plugin2);
+    registerDebugSetting(plugin2);
+    initTabBar(plugin2);
+    initPatchMaker(plugin2);
+    initTrueHubBridge(plugin2);
+    initDeckTracker(plugin2);
+    initUcTv(plugin2);
+    initTierList(plugin2);
+    initCardMaker(plugin2);
+    initFloweryMode(plugin2);
+    initUsageStats(plugin2);
+    const miscSettings = initMisc(plugin2);
+    initWishlist(plugin2);
+    initCardHistory(plugin2);
+    initKeybinds(plugin2);
+    initController(plugin2, miscSettings.enableController);
+    registerPluginGuides(plugin2);
     flushKeybindRegistrations();
-    showWhatsNew(plugin, installState);
+    showWhatsNew(plugin2, installState);
   });
 })();
 }

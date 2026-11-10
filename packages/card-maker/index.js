@@ -38,9 +38,7 @@ import { buildWindow } from "./window.js";
 import { EDITORS, EDITOR_LABELS, DEFAULT_EDITOR, editorForLabel, FRAME_MESSAGE } from "./editors.js";
 import { OLD_HOTFIX_KEY } from "./storage.js";
 import { buildGalleryPanel } from "./gallery/panel.js";
-import { reviewWhoami } from "./gallery/api.js";
-import { getPageWindow } from "../core/page-window.js";
-import { registerSettingWidget, asButton } from "../core/setting-widgets.js";
+import { reviewerKey, forgetKey as dropKey, recheckKey, keyButton, openKeyOverlay, onKeyChange } from "./gallery/keybox.js";
 import { mountGalleryNav } from "./gallery/nav.js";
 import PACK_ICON from "../../assets/pack.png";
 
@@ -57,14 +55,8 @@ let settings = null;
 let editorSetting = null;
 let gallerySetting = null;
 let wheelSetting = null;
-// A review/judge key the player redeemed (Redeem Key on the Card Maker tab),
-// and who the server says it belongs to. GM storage,
-// so page scripts can't read it; never in backups.
-const REVIEW_KEY = "wizascript.cardMaker.galleryReview";
-const REVIEW_WHO = "wizascript.cardMaker.galleryReviewWho";
-const reviewerKey = () => { try { return String(GM_getValue(REVIEW_KEY, "") || ""); } catch (e) { return ""; } };
-const reviewerWho = () => { try { return JSON.parse(GM_getValue(REVIEW_WHO, "null")); } catch (e) { return null; } };
-const ROLE_NAMES = { owner: "owner", reviewer: "reviewer", judge: "judge" };
+// A review/judge key the player redeemed (the ⚿ button at the bottom left of
+// the gallery, gallery/keybox.js; GM storage, never in backups).
 let mounted = null; // { controller, win, frames, ... } | null - built on each open
 let footerButton = null;
 
@@ -197,6 +189,12 @@ function mount() {
       onKeyRejected: (code) => forgetKey(code === "key_expired" ? "Your gallery key has expired, so it was removed." : "Your gallery key was revoked, so it was removed.")
     });
     win.body.appendChild(gallery.el);
+    // The key button, while a gallery view is open (not over the editor).
+    const kb = keyButton(() => openKeyOverlay(win.body, { reviewWhere: "in the title bar" }));
+    const syncKb = () => { kb.style.display = gallery.view() === "editor" ? "none" : ""; };
+    win.body.appendChild(kb);
+    gallery.onChange(syncKb);
+    syncKb();
     mountGalleryNav({ win, gallery });
     gallery.opened();
   }
@@ -355,113 +353,22 @@ function addFooterButton() {
   return true;
 }
 
-// ---- gallery keys (review, and later contest judging) ---------------------------------
+// ---- gallery keys (review and contest judging) ------------------------------------
 // The owner makes keys in Review -> Reviewers and gives them out. A player
-// redeems one with Redeem Key on the Card Maker tab (or the console command).
-// The server checks every request against the key, so a revoked or expired
-// key stops working at once; Wizascript then forgets it.
-
-let keyButton = null; // the Redeem Key button on the settings screen, while shown
-const keyLabel = () => {
-  const who = reviewerKey() && reviewerWho();
-  return who ? `Key: ${who.name} (${ROLE_NAMES[who.role] || "reviewer"})` : "Redeem Key";
-};
-function keyChanged() {
-  if (keyButton && keyButton.isConnected) keyButton.value = keyLabel();
-  if (mounted && mounted.gallery) mounted.gallery.reviewerChanged();
-}
+// redeems one with the ⚿ button at the bottom left of the gallery (1.8.0; it
+// was Redeem Key on the Card Maker tab), which also takes device codes
+// (WZL-…). The server checks every request against the key, so a revoked or
+// expired key stops working at once; Wizascript then forgets it.
 function forgetKey(message) {
-  if (!reviewerKey()) return;
-  GM_deleteValue(REVIEW_KEY);
-  GM_deleteValue(REVIEW_WHO);
-  keyChanged();
-  if (message) console.log(`[Wizascript] ${message}`);
+  if (dropKey() && message) console.log(`[Wizascript] ${message}`);
 }
-// Checks a key with the server and keeps it. Resolves to who it belongs to;
-// rejects with a short reason for the player.
-async function redeemKey(raw) {
-  const k = typeof raw === "string" ? raw.trim() : "";
-  if (!k) throw new Error("Enter the key you were given.");
-  let me;
-  try { me = await reviewWhoami(k); } catch (e) {
-    throw new Error(e && e.code === "not_admin" ? "That key isn't valid." : e && e.code === "key_expired" ? "That key has expired." : e && e.code === "rate_limited" ? "Too many wrong keys. Try again in an hour." : (e && e.message) || "Couldn't check the key.");
-  }
-  GM_setValue(REVIEW_KEY, k);
-  GM_setValue(REVIEW_WHO, JSON.stringify({ name: me.name, role: me.role }));
-  keyChanged();
-  return me;
-}
-
-// The Redeem Key dialog, laid out like the game's Import deck code dialog.
-function openKeyDialog() {
-  const BD = getPageWindow().BootstrapDialog;
-  if (!BD || typeof BD.show !== "function") return;
-  const el = (tag, props = {}, ...kids) => { const n = Object.assign(document.createElement(tag), props); kids.forEach((k) => n.append(k)); return n; };
-  const wrap = el("div", { className: "wz-key-dialog" });
-  const status = el("p", { className: "wz-key-status" });
-  const show = (text, ok) => { status.textContent = text; status.style.color = ok ? "#7f7" : "#f77"; };
-  function draw() {
-    wrap.replaceChildren();
-    const who = reviewerKey() && reviewerWho();
-    if (who) {
-      const remove = el("button", { type: "button", className: "btn btn-sm btn-danger", textContent: "Remove key" });
-      remove.addEventListener("click", () => { forgetKey(); draw(); show("Key removed.", true); });
-      wrap.append(
-        el("p", {}, "Active key: ", el("b", { textContent: who.name }), ` (${ROLE_NAMES[who.role] || "reviewer"}).`),
-        el("p", { textContent: "Review is in the Card Maker's title bar." }),
-        el("p", {}, remove), status);
-      return;
-    }
-    const input = el("input", { type: "password", className: "form-control", placeholder: "Key", autocomplete: "off", spellcheck: false });
-    const go = el("button", { type: "button", className: "btn btn-sm btn-success", title: "Redeem" }, el("span", { className: "glyphicon glyphicon-import" }));
-    let busy = false;
-    const submit = async () => {
-      if (busy) return;
-      busy = true; go.disabled = true; show("Checking…", true);
-      try {
-        const me = await redeemKey(input.value);
-        draw();
-        show(me.role === "judge" ? `Redeemed. You're judging as ${me.name}: open the Card Maker and press Review.` : `Redeemed. You're reviewing as ${me.name}.`, true);
-      } catch (e) {
-        show(e.message, false);
-      }
-      busy = false; go.disabled = false;
-    };
-    go.addEventListener("click", submit);
-    input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } });
-    wrap.append(
-      el("p", { textContent: "Enter a key you were given to review gallery uploads or judge a contest." }),
-      el("p", {}, go, " Redeem"),
-      input, status);
-    setTimeout(() => input.focus(), 100);
-  }
-  draw();
-  BD.show({
-    title: "Redeem Key",
-    message: wrap,
-    buttons: [{ label: "Close", cssClass: "btn-danger", action: (d) => d.close() }]
-  });
-}
+onKeyChange(() => { if (mounted && mounted.gallery) mounted.gallery.reviewerChanged(); });
 
 // dev11 kept the review key in a setting (localStorage, readable by page
-// scripts), and dev12-18 also had a console command for it (retired in dev19:
-// Redeem Key does the same). Drop dev11's leftover.
+// scripts). Drop that, and 1.7's Redeem Key setting row (only ever held its label).
 function dropOldReviewKey() {
   try { localStorage.removeItem("underscript.plugin.Wizascript.cardMaker.galleryReviewerKey"); } catch (e) { /* none */ }
-}
-
-// Once per page load, a stored key is checked, so one that was revoked or has
-// expired is forgotten even if the Card Maker is never opened.
-function recheckKey() {
-  const k = reviewerKey();
-  if (!k) return;
-  reviewWhoami(k).then((me) => {
-    GM_setValue(REVIEW_WHO, JSON.stringify({ name: me.name, role: me.role }));
-    if (keyButton && keyButton.isConnected) keyButton.value = keyLabel();
-  }, (e) => {
-    if (e && e.code === "key_expired") forgetKey("Your gallery key has expired, so it was removed.");
-    else if (e && e.code === "not_admin") forgetKey("Your gallery key was revoked, so it was removed.");
-  });
+  try { localStorage.removeItem("underscript.plugin.Wizascript.cardMaker.galleryKey"); } catch (e) { /* none */ }
 }
 
 // ---- settings ----------------------------------------------------------------------------
@@ -493,17 +400,6 @@ export function initCardMaker(plugin) {
     default: true,
     hidden: () => !!gallerySetting && !gallerySetting.value()
   });
-  settings.add("galleryKey", {
-    name: "Gallery Key",
-    note: "For gallery reviewers and contest judges: enter the key you were given.",
-    type: "text",
-    default: "Redeem Key",
-    hidden: () => !!gallerySetting && !gallerySetting.value()
-  });
-  registerSettingWidget("cardMaker.galleryKey", (el) => {
-    keyButton = el;
-    asButton(keyLabel, () => openKeyDialog())(el);
-  });
 
   registerKeybind(plugin, {
     key: "toggleCardMaker",
@@ -516,7 +412,7 @@ export function initCardMaker(plugin) {
   dropOldHotfix();
   if (!isPluginEnabled("cardMaker")) return;
   dropOldReviewKey();
-  setTimeout(recheckKey, 4000);
+  setTimeout(() => recheckKey((m) => console.log(`[Wizascript] ${m}`)), 4000);
 
   if (!addFooterButton()) {
     // Footer drawn later than us on some pages: watch briefly for it.

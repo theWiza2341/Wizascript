@@ -2,6 +2,22 @@
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
 
+## 1.8.0
+
+### New: Usage Statistics
+An **opt-in** plugin: share your PvP games, and see which cards, artifacts and souls everyone plays. Turn it on in the **Plugins** list; it asks once more before anything is sent, and it needs your Undercards account linked (Wizascript tab → **Undercards Account**).
+- Each of your PvP games sends your soul, the result, your division and Elo, your opponent's name and soul, and your **starting deck and artifacts**. CPU games are never sent.
+- **📊** in the footer opens the statistics: cards, artifacts and souls by time range (Today, This Week, This Season, All Time) and division (including True Hub+, games started at 1820+ Elo). Search, sort, and an **Advanced** view.
+- No one's deck is ever shown: only totals, and today's ranked numbers leave out anything fewer than 3 players used.
+- Your **Profile** shows your stats per division, earlier seasons, and an **Elo Graph** you can move and resize.
+- Your **History** shows every PvP game this season, 20 a page (the mouse wheel turns pages).
+- **Delete My Data** on its tab removes everything you've sent.
+
+### Changes
+- **Link another device:** linked on your PC? Wizascript tab → **Undercards Account** → **Link another device** gives a one-time code to link your phone or another browser, no void needed.
+- **Redeem Key** moved from the Card Maker tab to a **⚿** button at the bottom left of the Card Gallery, like on the gallery website. It also takes device codes.
+- If you change your Undercards name, Wizascript unlinks the old name. Link again under the new one.
+
 ## 1.7.3
 
 ### Card Gallery

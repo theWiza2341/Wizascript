@@ -28,7 +28,9 @@ const CATEGORY = "Wizascript";
 // Bookkeeping that describes THIS install, not the player's setup.
 // Never in a backup: the Card Gallery's install secret. Anyone given the
 // file could post and vote as this player; a restored install links again.
-const SKIP_GM = new Set(["wizascript.migration.v150", "wizascript.lastSeenVersion", "wizascript.cardMaker.galleryAuth", "wizascript.cardMaker.galleryReview","wizascript.cardMaker.galleryReviewWho"]);
+const SKIP_GM = new Set(["wizascript.migration.v150", "wizascript.lastSeenVersion", "wizascript.cardMaker.galleryAuth", "wizascript.cardMaker.galleryReview","wizascript.cardMaker.galleryReviewWho",
+  // 1.8.0 Usage Statistics: the send queue, cached server answers (opponents' names) and the account check stay on this device.
+  "wizascript.usageStats.queue", "wizascript.usageStats.games", "wizascript.usageStats.account", "wizascript.account.server"]);
 // Display-only rows on the Wizascript section itself.
 // ...and dev11's reviewer key setting, if one is still lying around.
 const SKIP_LS_PREFIXES = ["about.", "backup.", "cardMaker.galleryReviewerKey"];

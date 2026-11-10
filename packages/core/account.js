@@ -292,7 +292,7 @@ export function deviceCodeBox(el, { onClose } = {}) {
     box.replaceChildren(
       el("p", {}, code),
       el("p", {}, left, " ", again),
-      el("p", { textContent: "On the other device, while logged in as this account: Wizascript tab → Undercards Account, or the key button at the bottom left of the Card Gallery (Card Maker, or the gallery website)." }),
+      el("p", { textContent: "On the other device, while logged in as this account: Wizascript tab → Undercards Account, or the 📱 button at the bottom left of the Card Gallery (Card Maker, or the gallery website) → Redeem a code." }),
       status);
   };
   make();

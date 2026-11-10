@@ -14,8 +14,8 @@ An **opt-in** plugin: share your PvP games, and see which cards, artifacts and s
 - **Delete My Data** on its tab removes everything you've sent.
 
 ### Changes
-- **Link another device:** linked on your PC? Wizascript tab → **Undercards Account** → **Link another device** gives a one-time code to link your phone or another browser, no void needed.
-- **Redeem Key** moved from the Card Maker tab to a **⚿** button at the bottom left of the Card Gallery, like on the gallery website. It also takes device codes.
+- **Link a Mobile Account:** the new **📱** button at the bottom left of the Card Gallery (in Card Maker and on the gallery website). On a linked device, **Generate a code**; on your phone or another browser, **Redeem a code** to link the same account, no void needed. (Also in Wizascript tab → **Undercards Account**.)
+- **Redeem Key** moved from the Card Maker tab to a **⚿** button at the bottom left of the Card Gallery, like on the gallery website.
 - If you change your Undercards name, Wizascript unlinks the old name. Link again under the new one.
 
 ## 1.7.3

@@ -38,7 +38,7 @@ import { buildWindow } from "./window.js";
 import { EDITORS, EDITOR_LABELS, DEFAULT_EDITOR, editorForLabel, FRAME_MESSAGE } from "./editors.js";
 import { OLD_HOTFIX_KEY } from "./storage.js";
 import { buildGalleryPanel } from "./gallery/panel.js";
-import { reviewerKey, forgetKey as dropKey, recheckKey, keyButton, openKeyOverlay, onKeyChange } from "./gallery/keybox.js";
+import { reviewerKey, forgetKey as dropKey, recheckKey, keyButton, openKeyOverlay, onKeyChange, deviceButton, openDeviceOverlay } from "./gallery/keybox.js";
 import { mountGalleryNav } from "./gallery/nav.js";
 import PACK_ICON from "../../assets/pack.png";
 
@@ -189,10 +189,11 @@ function mount() {
       onKeyRejected: (code) => forgetKey(code === "key_expired" ? "Your gallery key has expired, so it was removed." : "Your gallery key was revoked, so it was removed.")
     });
     win.body.appendChild(gallery.el);
-    // The key button, while a gallery view is open (not over the editor).
+    // The key and 📱 buttons, while a gallery view is open (not over the editor).
     const kb = keyButton(() => openKeyOverlay(win.body, { reviewWhere: "in the title bar" }));
-    const syncKb = () => { kb.style.display = gallery.view() === "editor" ? "none" : ""; };
-    win.body.appendChild(kb);
+    const db = deviceButton(() => openDeviceOverlay(win.body, { notLinked: "Link your account first (Link my account, or Wizascript tab → Undercards Account), then make the code here." }));
+    const syncKb = () => { kb.style.display = db.style.display = gallery.view() === "editor" ? "none" : ""; };
+    win.body.append(kb, db);
     gallery.onChange(syncKb);
     syncKb();
     mountGalleryNav({ win, gallery });

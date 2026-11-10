@@ -28,8 +28,8 @@ import { linkedAccount } from "../core/account.js";
 import { PLUGIN_ID, ensureAccount, ownPage, log } from "./common.js";
 import { flush, optOut, clearLocal, queued } from "./api.js";
 import { startRecorder } from "./recorder.js";
-import { startProfile } from "./profile.js";
-import { startHistory } from "./history.js";
+import { startProfile, findStatsTable } from "./profile.js";
+import { startHistory, findHistoryTable } from "./history.js";
 import { addUsageButton } from "./usage.js";
 
 let graphSetting = null;
@@ -87,6 +87,20 @@ function offerDelete(fromButton = false) {
 let plugin = null;
 const toastMsg = (text) => { try { plugin.toast({ title: "Usage Statistics", text, className: "dismissable" }); } catch (e) { console.log(`[Usage Statistics] ${text}`); } };
 
+// Profile/History: only on your own page, once its table is there (it may be
+// drawn after Wizascript starts). Every step is logged with Debug logging on.
+function startOnTable(what, find, start) {
+  if (!ownPage()) { log(`${what}: not your own page, skipped`); return; }
+  const run = () => {
+    try { log(`${what}: ${start() ? "started" : "table found, but it didn't start"}`); } catch (e) { console.error(`[Usage Statistics] ${what} failed:`, e); }
+  };
+  if (find()) return run();
+  log(`${what}: waiting for the table`);
+  const watch = new MutationObserver(() => { if (find()) { watch.disconnect(); clearTimeout(stop); run(); } });
+  watch.observe(document.documentElement, { childList: true, subtree: true });
+  const stop = setTimeout(() => { watch.disconnect(); log(`${what}: no table found after 10 s (tables on the page: ${document.querySelectorAll("table").length})`); }, 10000);
+}
+
 export function initUsageStats(p) {
   plugin = p;
   const settings = createFeatureSettings(plugin, "usageStats", {
@@ -114,7 +128,7 @@ export function initUsageStats(p) {
   registerSettingWidget("usageStats.deleteData", (el) => asButton(() => "Delete My Data", () => offerDelete(true))(el));
   onPluginToggled(PLUGIN_ID, (on) => { if (undoing) return; if (on) confirmOptIn(); else offerDelete(false); });
 
-  if (!isPluginEnabled(PLUGIN_ID)) return;
+  if (!isPluginEnabled(PLUGIN_ID)) { log("turned off (Plugins list)"); return; }
 
   // The recorder listens from the start (the match begins before the server
   // answers), but only keeps a game when the account is linked.
@@ -125,8 +139,9 @@ export function initUsageStats(p) {
     if (!name) { log("no linked account: Usage Statistics does nothing"); return; }
     if (queued().length) flush();
     if (onGame) return;
-    if (matchesPage("/Profile") && ownPage()) startProfile({ showGraph: () => !graphSetting || !!graphSetting.value() });
-    if (matchesPage("/History") && ownPage()) startHistory({ wheelPaging: () => !wheelSetting || !!wheelSetting.value() });
+    log(`linked as ${name}; page ${location.pathname}${location.search}`);
+    if (matchesPage("/Profile")) startOnTable("Profile", findStatsTable, () => startProfile({ showGraph: () => !graphSetting || !!graphSetting.value() }));
+    if (matchesPage("/History")) startOnTable("History", findHistoryTable, () => startHistory({ wheelPaging: () => !wheelSetting || !!wheelSetting.value() }));
     if (!addUsageButton()) {
       const watch = new MutationObserver(() => { if (addUsageButton()) watch.disconnect(); });
       watch.observe(document.documentElement, { childList: true, subtree: true });

@@ -4,15 +4,16 @@
 // (1.8.0; before that, Redeem Key was a setting on the Card Maker tab). The
 // same module is bundled into the gallery website, so both are 1:1.
 //
-// The box takes either:
-//  - a gallery key (review or contest judging), checked with the server and
-//    kept in GM storage (not readable by the page, never in backups), or
-//  - a device code (WZL-XXXX-XXXX) made on a linked device with "Link another
-//    device", which links this install to the same Undercards account.
+// The box takes a gallery key (review or contest judging), checked with the
+// server and kept in GM storage (not readable by the page, never in backups).
+//
+// Next to it, the 📱 button (1.8.0) links another device to the same
+// Undercards account: Generate a code on a linked device, or Redeem a code
+// (WZL-XXXX-XXXX) on the new one.
 
 import { h, button } from "./dom.js";
 import { reviewWhoami } from "./api.js";
-import { isDeviceCode, redeemDeviceCode, linkedAccount } from "../../core/account.js";
+import { isDeviceCode, redeemDeviceCode, linkedAccount, linkShare } from "../../core/account.js";
 
 export const REVIEW_KEY = "wizascript.cardMaker.galleryReview";
 export const REVIEW_WHO = "wizascript.cardMaker.galleryReviewWho";
@@ -36,7 +37,7 @@ export function forgetKey() {
 // Checks a key with the server and keeps it. Resolves to who it belongs to.
 export async function redeemKey(raw) {
   const k = typeof raw === "string" ? raw.trim() : "";
-  if (!k) throw new Error("Enter the key or code you were given.");
+  if (!k) throw new Error("Enter the key you were given.");
   let me;
   try { me = await reviewWhoami(k); } catch (e) {
     throw new Error(e && e.code === "not_admin" ? "That key isn't valid." : e && e.code === "key_expired" ? "That key has expired." : e && e.code === "rate_limited" ? "Too many wrong keys. Try again in an hour." : (e && e.message) || "Couldn't check the key.");
@@ -69,21 +70,16 @@ export function keyBox({ reviewWhere = "in the title bar" } = {}) {
   function draw() {
     wrap.replaceChildren();
     const who = reviewerKey() && reviewerWho();
-    const input = h("input", { type: "password", placeholder: "Key or code", autocomplete: "off", spellcheck: false });
+    const input = h("input", { type: "password", placeholder: "Key", autocomplete: "off", spellcheck: false });
     let busy = false;
     const submit = async () => {
       if (busy) return;
       busy = true; go.disabled = true; show("Checking…", true);
       try {
-        if (isDeviceCode(input.value)) {
-          const name = await redeemDeviceCode(input.value);
-          draw();
-          show(`Linked as ${name}.`, true);
-        } else {
-          const me = await redeemKey(input.value);
-          draw();
-          show(me.role === "judge" ? `Redeemed. You're judging as ${me.name}: press Review ${reviewWhere}.` : `Redeemed. You're reviewing as ${me.name}.`, true);
-        }
+        if (isDeviceCode(input.value)) throw new Error("That's a device code: use the 📱 button next to this one.");
+        const me = await redeemKey(input.value);
+        draw();
+        show(me.role === "judge" ? `Redeemed. You're judging as ${me.name}: press Review ${reviewWhere}.` : `Redeemed. You're reviewing as ${me.name}.`, true);
       } catch (e) { show(e.message, false); }
       busy = false; go.disabled = false;
     };
@@ -97,10 +93,7 @@ export function keyBox({ reviewWhere = "in the title bar" } = {}) {
     } else {
       wrap.append(h("p", { text: "Enter a key you were given to review gallery uploads or judge a contest." }));
     }
-    const acct = linkedAccount();
-    wrap.append(
-      h("p", { class: "dim", text: acct ? `Linked as ${acct}. A device code (WZL-…) from another device would switch to its account.` : "Or a device code (WZL-XXXX-XXXX) from a device where your account is linked: Wizascript tab → Undercards Account → Link another device." }),
-      h("div", { class: "wz-key-row" }, input, go), status);
+    wrap.append(h("div", { class: "wz-key-row" }, input, go), status);
     if (!who) setTimeout(() => input.focus(), 50);
   }
   draw();
@@ -109,18 +102,105 @@ export function keyBox({ reviewWhere = "in the title bar" } = {}) {
 
 // A small box over `host` (the Card Maker window), styled like the website's
 // dialogs. Returns close().
-export function openKeyOverlay(host, { reviewWhere } = {}) {
+export function openOverlay(host, title, content) {
   host.querySelectorAll(":scope > .wz-key-back").forEach((n) => n.remove());
   const close = () => { back.remove(); document.removeEventListener("keydown", esc, true); };
   const esc = (e) => { if (e.key === "Escape") { e.stopPropagation(); close(); } };
-  const box = h("div", { class: "wz-key-dialog", role: "dialog", "aria-label": "Redeem Key" },
-    h("div", { class: "wz-key-dhead" }, h("b", { text: "Redeem Key" })),
-    keyBox({ reviewWhere }),
+  const box = h("div", { class: "wz-key-dialog", role: "dialog", "aria-label": title },
+    h("div", { class: "wz-key-dhead" }, h("b", { text: title })),
+    content,
     h("div", { class: "wz-key-dfoot" }, button("Close", close)));
   const back = h("div", { class: "wz-key-back", onclick: (e) => { if (e.target === back) close(); } }, box);
   host.appendChild(back);
   document.addEventListener("keydown", esc, true);
   return close;
+}
+export const openKeyOverlay = (host, { reviewWhere } = {}) => openOverlay(host, "Redeem Key", keyBox({ reviewWhere }));
+export const DEVICE_TITLE = "Link a Mobile Account";
+export const openDeviceOverlay = (host, opts) => openOverlay(host, DEVICE_TITLE, deviceBox(opts));
+
+// ---- 📱 Link a Mobile Account -------------------------------------------------------
+// Two choices: Generate a code (this device is linked; the code links another
+// one to the same account) or Redeem a code (made on a linked device).
+// notLinked: what to tell an unlinked device that wants to generate a code.
+const fmtLeft = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+export function deviceBox({ notLinked = "Link your account first (Link my account), then make the code here." } = {}) {
+  const wrap = h("div", { class: "wz-key-box wz-dev-box" });
+  let timer = null;
+  const stop = () => { clearInterval(timer); timer = null; };
+  const back = () => button("Back", () => { stop(); choose(); });
+
+  function choose() {
+    const acct = linkedAccount();
+    wrap.replaceChildren(
+      h("p", { text: "Use the Card Gallery on your phone or another computer with the same Undercards account." }),
+      h("div", { class: "wz-dev-choices" },
+        button("Generate a code", generate, { primary: true, title: "On a device where your account is linked" }),
+        button("Redeem a code", redeem, { title: "On the new device" })),
+      h("p", { class: "dim", text: acct ? `This device is linked as ${acct}.` : "This device isn't linked yet." }));
+  }
+
+  async function generate() {
+    stop();
+    if (!linkedAccount()) {
+      wrap.replaceChildren(h("p", { class: "wz-key-status", style: "color:#f77", text: `This device isn't linked. ${notLinked}` }), h("p", {}, back()));
+      return;
+    }
+    wrap.replaceChildren(h("p", { text: "Making a code…" }));
+    let r;
+    try { r = await linkShare(); } catch (e) {
+      wrap.replaceChildren(h("p", { class: "wz-key-status", style: "color:#f77", text: (e && e.message) || "Couldn't reach the Wizascript server." }), h("p", {}, back()));
+      return;
+    }
+    if (!wrap.isConnected) return;
+    const code = h("div", { class: "wz-dev-code", text: r.code, title: "Select to copy" });
+    const left = h("span", { class: "dim" });
+    const tick = () => {
+      if (!wrap.isConnected) return stop();
+      const ms = r.expiresAt - Date.now();
+      if (ms <= 0) { stop(); left.textContent = "Expired. Make a new one."; code.style.opacity = ".35"; return; }
+      left.textContent = `Expires in ${fmtLeft(ms)}. Works once.`;
+    };
+    timer = setInterval(tick, 1000);
+    tick();
+    wrap.replaceChildren(
+      h("p", { text: `A code for ${linkedAccount() || r.account}:` }),
+      code,
+      h("p", {}, left),
+      h("p", { class: "dim", text: "On the other device, open the Card Gallery (the website, or Card Maker in Wizascript), press 📱, then Redeem a code." }),
+      h("div", { class: "wz-key-row" }, back(), button("New code", generate)));
+  }
+
+  function redeem() {
+    stop();
+    const acct = linkedAccount();
+    const input = h("input", { type: "text", placeholder: "WZL-XXXX-XXXX", autocomplete: "off", spellcheck: false, class: "wz-dev-input" });
+    const status = h("p", { class: "wz-key-status" });
+    const show = (text, ok) => { status.textContent = text; status.style.color = ok ? "#7f7" : "#f77"; };
+    let busy = false;
+    const submit = async () => {
+      if (busy) return;
+      if (!isDeviceCode(input.value)) { show("Codes look like WZL-XXXX-XXXX.", false); return; }
+      busy = true; go.disabled = true; show("Checking…", true);
+      try { const name = await redeemDeviceCode(input.value); input.value = ""; show(`Linked as ${name}.`, true); } catch (e) { show(e.message, false); }
+      busy = false; go.disabled = false;
+    };
+    const go = button("Redeem", submit, { primary: true });
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } });
+    wrap.replaceChildren(
+      h("p", { text: "Enter the code from a device where your account is linked (📱 → Generate a code there)." }),
+      ...(acct ? [h("p", { class: "dim", text: `This device is linked as ${acct}; a code switches it to the code's account.` })] : []),
+      h("div", { class: "wz-key-row" }, input, go), status,
+      h("p", {}, back()));
+    setTimeout(() => input.focus(), 50);
+  }
+
+  choose();
+  return wrap;
+}
+// The 📱 button, next to ⚿.
+export function deviceButton(onClick) {
+  return h("button", { type: "button", class: "wz-key-btn wz-dev-btn", title: DEVICE_TITLE, "aria-label": DEVICE_TITLE, onclick: onClick }, h("span", { text: "📱" }));
 }
 
 // The ⚿ button. Its title says the active key.
@@ -150,4 +230,9 @@ export const KEYBOX_CSS = `
 .wz-key-box .wz-cm-btn, .wz-key-dfoot .wz-cm-btn { height: 28px; padding: 0 14px; }
 .wz-key-status { min-height: 1.2em; margin-top: 8px !important; }
 .wz-cm-btn.wz-key-danger { background: #6b2f2f; border-color: #bf6f6f; }
+.wz-key-btn.wz-dev-btn { left: 44px; font-size: 15px; }
+.wz-dev-choices { display: flex; gap: 8px; margin: 0 0 10px; }
+.wz-key-box .wz-dev-choices .wz-cm-btn { flex: 1; height: 40px; font-size: 15px; }
+.wz-dev-code { font: 24px "DTM-Mono", "DTM Mono", monospace; letter-spacing: 2px; text-align: center; padding: 8px; margin: 0 0 8px; background: #000; border: 1px solid #666; user-select: all; }
+.wz-key-row input.wz-dev-input { text-transform: uppercase; }
 `;

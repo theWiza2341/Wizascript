@@ -1,0 +1,20 @@
+{
+  "id": "12l",
+  "kind": "single",
+  "title": "Virus",
+  "author": "gilzinPvP",
+  "postedAt": 1794418194039,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Virus",
+      "desc": "Turbo: Take Fatigue damage. This gains ATK and HP equal to the damage dealt.\nDust: Add 2 {Virus} to your deck.",
+      "cost": 2,
+      "atk": 1,
+      "hp": 3,
+      "rarity": "DELTARUNE_RARE",
+      "art": "art/12l-0.png"
+    }
+  ]
+}

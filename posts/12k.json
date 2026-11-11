@@ -1,0 +1,17 @@
+{
+  "id": "12k",
+  "kind": "single",
+  "title": "The SOUL",
+  "author": "gilzinPvP",
+  "postedAt": 1794415305610,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Artifact",
+      "name": "The SOUL",
+      "desc": "At the start of the game, add a 0 Loop {Act Button} to your hand. If your starting deck only has only odd or even cost cards, disable your SOUL and gain an _upgraded version_ of it.",
+      "rarity": "LEGENDARY",
+      "art": "art/12k-0.png"
+    }
+  ]
+}

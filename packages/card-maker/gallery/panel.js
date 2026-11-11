@@ -20,11 +20,13 @@ import { h, button, esc } from "./dom.js";
 import { tile, fitText, checkFrameImages, whenFontsReady, onFontsChange, onArtPicsChange, TILE_CSS } from "./render.js";
 import { partFromRaw, readUcEditorFile, readFeildmasterFile, isFeildmasterExport, picturesFromPng, readFile } from "./parts.js";
 import { getDraft, saveDraft, nextId, makeSet, tidySets, entries, markUploaded, pruneUploads, SET_CAP } from "./draft.js";
+import { createNotes, NOTES_CSS } from "./notes.js";
 import { getMe, linkStart, linkCheck, getIndex, getTotals, uploadEntries, uploadProblems, createVoteQueue, ApiError, reviewPending, reviewPost, reviewDecide, reviewRemove, deleteOwnPost, reviewWhoami, reviewLog, reviewUndo, reviewContext, withArt, reviewersList, reviewerAdd, reviewerRevoke, reviewerAddJudge, getHealth, getGuidelines, parseGuidelines, DEFAULT_GUIDELINES } from "./api.js";
 import { openVoid, canOpenVoid } from "../../core/uc-report.js";
 import { accountChanged, onAccountChange } from "../../core/account.js";
 import { browseView, allEntries, BROWSE_CSS, removeButton } from "./browse.js";
 import { createContests, CONTEST_CSS } from "./contest.js";
+import { KEYBOX_CSS } from "./keybox.js";
 
 const STYLE_ID = "wizascript-cardgallery-style";
 const TYPES = ["Monster", "Spell", "Enchantment", "Artifact"];
@@ -166,6 +168,8 @@ const CSS = `
 ${TILE_CSS}
 ${BROWSE_CSS}
 ${CONTEST_CSS}
+${KEYBOX_CSS}
+${NOTES_CSS}
 `;
 
 function injectStyle() {
@@ -239,6 +243,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
       // A judge key only scores its contest.
       if (realRole() === "judge") { rev.at = Date.now(); rev.error = ""; contests.loadJudging(force); return; }
       contests.refresh();
+      notes.refreshStaff(force);
       if (realRole() === "owner" && !rev.health) rev.health = await getHealth().catch(() => null);
       const r = await reviewPending(key);
       rev.list = (r && r.posts) || [];
@@ -264,7 +269,8 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
       await reviewDecide(reviewerKey(), id, approve, rev.reasons[id]);
       rev.list = rev.list.filter((p) => p.id !== id);
       delete rev.posts[id];
-      say(approve ? `Approved ${id}. It's in the gallery now.` : `Rejected ${id}.`);
+      say(approve ? `Approved ${id}. It's in the gallery now.` : rev.reasons[id] ? `Rejected ${id}. The reason went to them as a note (Review → Notes).` : `Rejected ${id}.`);
+      notes.refreshStaff(true);
       if (approve) gal.at = 0; // Browse loads it fresh
     } catch (e) {
       say(`Couldn't ${approve ? "approve" : "reject"} ${id}: ${errText(e)}`);
@@ -285,7 +291,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     if (!list.length && rev.at) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing to review. New uploads appear here." }));
     const one = (p) => {
       const post = uploadPost(p);
-      const reason = h("input", { type: "text", placeholder: "Reason (optional, shown to them if rejected)", maxLength: 300, value: rev.reasons[p.id] || "", oninput: (e) => { rev.reasons[p.id] = e.target.value; } });
+      const reason = h("input", { type: "text", placeholder: "Reason (optional; sent to them as a note they can answer)", maxLength: 300, value: rev.reasons[p.id] || "", oninput: (e) => { rev.reasons[p.id] = e.target.value; } });
       const approveBtn = button(rev.busy[p.id] || "Approve", () => decide(p.id, true), { primary: true, title: p.contest ? "Accept it into the contest" : "Add it to the gallery (one commit on the gallery branch)" });
       const rejectBtn = button("Reject", () => decide(p.id, false), { title: "Don't add it; the author sees it as not approved" });
       approveBtn.disabled = rejectBtn.disabled = !!rev.busy[p.id] || !post;
@@ -299,7 +305,8 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
           p.kind === "set" ? h("div", { class: "wz-gl-sethead" }, h("div", { class: "wz-gl-setname", text: post.title })) : null,
           h("div", { class: "wz-gl-row" }, post.parts.map((c) => hoverable(h("div", { class: "wz-gl-zoom" }, tile(c)), c, null))))
           : h("p", { class: "wz-gl-note", text: "Loading its cards…" }),
-        h("div", { class: "wz-gl-bar wz-gl-revactions" }, approveBtn, rejectBtn, reason),
+        h("div", { class: "wz-gl-bar wz-gl-revactions" }, approveBtn, rejectBtn, reason,
+          button("Note…", () => noteOn({ id: p.id, title: p.title }), { title: "Ask the author something before deciding (they can answer)" })),
         contextBox(p, post));
     };
     const note = h("p", { class: "wz-gl-note", text: "Each upload is shown exactly as it will look in Browse. Approving adds it to the gallery for everyone (contest entries: to the contest)." });
@@ -364,12 +371,13 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     const sections = isJudge() ? [judging] : [["uploads", "Uploads", nUp]];
     if (!isJudge()) {
       if (running) sections.push(judging);
+      if (staffNotes()) sections.push(["notes", "Notes", notes.staffUnread()]);
       sections.push(["log", "Log", 0]);
     }
     if (isOwner()) sections.push(["contests", "Contests", 0], ["reviewers", "Reviewers", 0]);
     if (!sections.some(([k]) => k === rev.section)) { rev.section = sections[0][0]; if (rev.section === "judging") contests.loadJudging(true); }
     const who = rev.who ? `${isJudge() ? "Judging" : "Reviewing"} as ${rev.who.name}${realRole() === "owner" ? " (owner)" : ""}${viewAs ? `, previewing ${viewAs}` : ""}` : "";
-    const body = rev.section === "log" ? logView() : rev.section === "reviewers" ? reviewersView() : rev.section === "judging" ? contests.judgingView()
+    const body = rev.section === "notes" ? notes.staffView() : rev.section === "log" ? logView() : rev.section === "reviewers" ? reviewersView() : rev.section === "judging" ? contests.judgingView()
       : rev.section === "contests" ? contests.manageView() : uploadsView();
     const count = (n) => (n ? h("span", { class: "n", text: String(n) }) : null);
     const menu = h("div", { class: "wz-gl-rmenu wz-gl-revtabs" },
@@ -393,6 +401,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     rev.sectionError = "";
     if (k !== "reviewers") rev.newKey = null; // a new key is shown once, then gone
     if (k === "log") loadLog();
+    if (k === "notes") { notes.reset(); notes.refreshStaff(true); }
     if (k === "reviewers") { loadReviewers(); contests.refresh(); }
     if (k === "judging") contests.loadJudging(true);
     if (k === "contests") contests.refresh(true);
@@ -424,7 +433,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
   }
   const ACTIONS = { approve: "approved", reject: "rejected", remove: "removed", add_reviewer: "added reviewer", add_judge: "added judge", revoke_reviewer: "revoked key of",
     contest_create: "started contest", contest_edit: "edited contest", contest_archive: "published the results of", contest_delete: "deleted contest",
-    undo: "undid", undo_score: "undid a score on", score: "scored" };
+    undo: "undid", undo_score: "undid a score on", score: "scored", note_open: "started a note on", note_close: "closed the note on" };
   // One log line. A score reads "Judy scored "X" #10j 4.5 (was 3)"; a cleared one "cleared their score on".
   function logLine(l) {
     const canUndo = realRole() === "owner" && !viewAs && l.undo && l.undo.ok;
@@ -434,7 +443,9 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
       l.post ? h("span", { text: `"${l.title || ""}" #${l.post}` }) : h("b", { text: l.detail || "" }),
       l.action === "score" && l.detail ? [" ", h("b", { text: l.detail })] : null,
       l.action === "score" && l.prev ? h("span", { class: "dim", text: ` (was ${l.prev})` }) : null,
-      l.post && l.detail && l.action !== "score" ? h("span", { class: "dim", text: ` (${l.detail})` }) : null,
+      l.post && l.detail && l.action !== "score" && !/^note_/.test(l.action) ? h("span", { class: "dim", text: ` (${l.detail})` }) : null,
+      /^note_/.test(l.action) && l.detail && staffNotes() ? [" ", h("button", { type: "button", class: "wz-nt-btn", text: "View", title: "Read this note", onclick: () => { rev.section = "notes"; notes.openThread(l.detail, "staff"); } })] : null,
+      l.post && !/^note_/.test(l.action) && staffNotes() ? [" ", h("button", { type: "button", class: "wz-nt-btn", text: "✉", title: "Start a note with the post's author", onclick: () => noteOn({ id: l.post, title: l.title }) })] : null,
       h("span", { class: "dim", text: ` · ${ago(l.at)}` }),
       l.undoneAt ? h("span", { class: "dim", text: ` · undone by ${l.undoneBy || "the owner"}` }) : null,
       canUndo ? removeButton({ rerender: render }, l, { label: "Undo", confirm: "Undo it?", title: l.action === "approve" ? "Take it out of the gallery and put it back in Uploads" : l.action === "reject" ? "Put it back in Uploads" : l.action === "remove" ? "Put it back where it was" : "Give back the judge's score before this", run: undoEntry }) : null);
@@ -496,7 +507,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
         h("div", { class: "wz-gl-bar" }, keyBox,
           button("Copy", () => copyText(rev.newKey.key).then((ok) => { if (ok) say("Copied."); else { keyBox.focus(); say("Press Ctrl+C to copy."); } })),
           button("Done", () => { rev.newKey = null; render(); })),
-        h("div", { class: "dim", text: "Send it to them privately (a DM, not a channel). They enter it with Redeem Key: on the Card Maker tab of Wizascript's settings, or the key button at the bottom left of the gallery website." })));
+        h("div", { class: "dim", text: "Send it to them privately (a DM, not a channel). They enter it with the key button (⚿) at the bottom left of the gallery, in the Card Maker or on the gallery website." })));
     }
     if (rev.sectionError) parts.push(h("div", { class: "wz-gl-issues", text: rev.sectionError }));
     else if (!rev.reviewers) parts.push(h("p", { class: "wz-gl-note", text: "Loading…" }));
@@ -563,6 +574,18 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     startEntry(id) { submitTo = id; setView("submit"); say("Add the cards to enter, then Review upload."); }
   });
 
+  // ---- post notes (notes.js) ----
+  const notes = createNotes({
+    reviewerKey,
+    isStaff: () => !!reviewerKey() && (realRole() === "owner" || realRole() === "reviewer"),
+    say: (t) => say(t),
+    render: () => { if (open) render(); },
+    errText,
+    changed: () => { notify(); if (open && (tab === "notes" || tab === "review" || tab === "browse")) render(); }
+  });
+  const staffNotes = () => !!reviewerKey() && !isJudge() && role() !== "player" && (realRole() === "owner" || realRole() === "reviewer");
+  function noteOn(post) { tab = "review"; rev.section = "notes"; notes.startNote(post); setView("review"); }
+
   async function refreshMe(force) {
     if (acct.loading || (!force && acct.loaded && Date.now() - acct.at < 30e3)) return;
     acct.loading = true;
@@ -570,6 +593,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
       const me = await getMe();
       Object.assign(acct, { loaded: true, account: me.account || null, cooldownUntil: me.cooldownUntil || null, votes: me.votes || {}, posts: me.posts || [], contest: me.contest || null, error: "", at: Date.now() });
       accountChanged(acct.account, acct.cooldownUntil);
+      if (acct.account) notes.refreshMine(force);
       pruneUploads(Object.fromEntries(acct.posts.map((p) => [p.id, p.status])), new Set(gal.approved.map((p) => p.id)));
     } catch (e) {
       acct.error = errText(e);
@@ -766,7 +790,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     browseCtl = null;
     if (!open) return;
     if (tab === "review" && !(reviewerKey() && role() !== "player")) { tab = "browse"; notify(); }
-    tabs.replaceChildren(...[accountBox(), viewAsBadge(), status, h("span", { class: "wz-gl-grow" }), sizeButtons()].filter(Boolean));
+    tabs.replaceChildren(...[accountBox(), notesButton(), viewAsBadge(), status, h("span", { class: "wz-gl-grow" }), sizeButtons()].filter(Boolean));
     // Browse and Contest fill the panel and turn pages instead of scrolling.
     panel.classList.toggle("browse", tab === "browse" || tab === "contest");
     applyZoom();
@@ -779,6 +803,9 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     } else if (tab === "review") {
       content.replaceChildren(reviewView());
       requestAnimationFrame(refit);
+    } else if (tab === "notes") {
+      content.replaceChildren(...[linkBox(), notes.mineView()].filter(Boolean));
+      requestAnimationFrame(refit);
     } else if (tab === "contest") {
       content.replaceChildren(...[linkBox(), contests.view()].filter(Boolean));
       contests.layout();
@@ -788,6 +815,12 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
       requestAnimationFrame(refit);
     }
   }
+  // Authors: Notes (with the unread count) once the staff have written to them.
+  function notesButton() {
+    if (!acct.account || !notes.hasMine()) return null;
+    const n = notes.mineUnread();
+    return button(n ? `Notes (${n} new)` : "Notes", () => { notes.reset(); setView("notes"); }, { cls: `${tab === "notes" ? "wz-gl-on" : ""}${n ? " wz-gl-primary" : ""}`, title: "Notes from the gallery staff about your posts" });
+  }
   function setView(v) {
     if (tab === "browse" && v !== "browse") voteQueue.flush();
     if (v === "editor") { open = false; panel.classList.remove("on"); hideHover(); }
@@ -796,6 +829,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
       refreshMe();
       if (v === "browse") refreshGallery();
       if (v === "review") refreshReview(true);
+      if (v === "notes") notes.refreshMine(true);
       if (v === "contest" || v === "submit") contests.refresh();
     }
     notify();
@@ -1112,6 +1146,10 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
       onRefresh: () => { voteQueue.flush(); refreshMe(true); refreshGallery(true); },
       onRemove: reviewerKey() && (role() === "owner" || role() === "reviewer") ? removePost : null,
       onDelete: deleteMine,
+      // ✉: staff start a note on a post; authors open the note on theirs.
+      onNote: staffNotes() ? (e) => noteOn({ id: e.id, title: e.title }) : null,
+      noteFor: (e) => (e.mine ? notes.mineFor(e.id) : null),
+      openNote: (t) => { notes.reset(); setView("notes"); notes.openThread(t.id, "author"); },
       vote(e, dir) {
         if (!acct.account) { say("Link your Undercards account to vote: press Link my account at the top."); return; }
         const cur = currentVotes()[e.id] || 0;
@@ -1125,7 +1163,9 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
     el: panel,
     isOpen: () => open,
     isReviewer: () => !!reviewerKey() && role() !== "player",
-    pendingCount: () => (!reviewerKey() ? 0 : isJudge() ? contests.unscored() : rev.list.length),
+    pendingCount: () => (!reviewerKey() ? 0 : isJudge() ? contests.unscored() : rev.list.length + (staffNotes() ? notes.staffUnread() : 0)),
+    // A "new message" popup was clicked: open that note.
+    openNote(id) { notes.reset(); setView("notes"); notes.openThread(id, "author"); },
     // The Card Maker opened: the reviewer's count of uploads waiting.
     opened() { if (reviewerKey()) refreshReview(); },
     // ___ucReviewList turned review on or off.

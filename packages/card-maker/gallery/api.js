@@ -53,6 +53,18 @@ export const reviewPending = (key) => admin("GET", "/v1/admin/pending", key);
 export const reviewPost = (key, id) => admin("GET", `/v1/admin/post?id=${encodeURIComponent(id)}`, key);
 export const reviewDecide = (key, id, approve, reason) => admin("POST", "/v1/admin/decide", key, { id, approve: !!approve, reason: reason || "" });
 export const reviewRemove = (key, id) => admin("POST", "/v1/admin/remove", key, { id });
+// 1.9 post notes (Worker 1.9): staff side ...
+export const notesList = (key, closed) => admin("GET", "/v1/admin/threads" + (closed ? "?status=closed" : ""), key);
+export const noteGet = (key, id) => admin("GET", `/v1/admin/thread?id=${encodeURIComponent(id)}`, key);
+export const noteOpen = (key, post, text) => admin("POST", "/v1/admin/thread/open", key, { post, text });
+export const noteReply = (key, id, text) => admin("POST", "/v1/admin/thread/reply", key, { id, text });
+export const noteClose = (key, id) => admin("POST", "/v1/admin/thread/close", key, { id });
+// ... and the author's side.
+export const myNotes = () => authed("GET", "/v1/threads");
+export const myNote = (id) => authed("GET", `/v1/thread?id=${encodeURIComponent(id)}`);
+export const myNoteReply = (id, text) => authed("POST", "/v1/thread/reply", { id, text });
+export const myNoteClose = (id) => authed("POST", "/v1/thread/close", { id });
+export const NOTE_MAX = 500;
 
 // Only paths the Worker writes (art/<id>-<n>.png, art/tribe-<hash>.png) become
 // addresses, so nothing in the gallery's files can point a card's art elsewhere.

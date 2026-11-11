@@ -11,6 +11,11 @@
 // void (room 0): Wizascript types it in and they press Enter (the mods' OK,
 // 2026-10-08; nothing is ever sent for them). That's on the Wizascript tab
 // ("Undercards Account") and in the Card Maker's gallery.
+//
+// 1.7.4 (Worker 1.8+): links also carry the account's Undercards id (selfId), so
+// a renamed account (same id, new name) unlinks itself instead of being taken
+// for an alt; and a linked install can make a one-time code (WZL-XXXX-XXXX,
+// 10 minutes) to link another device (a phone) without typing in void there.
 
 import { registerSettingWidget, asButton } from "./setting-widgets.js";
 import { getPageWindow } from "./page-window.js";
@@ -131,15 +136,15 @@ async function getAuth() {
 }
 // A server that no longer knows this install (e.g. its database was reset):
 // start over with a new one.
-export async function authed(method, path, body) {
+export async function authed(method, path, body, extra = {}) {
   const a = await getAuth();
   try {
-    return await call(method, path, { body, auth: a });
+    return await call(method, path, { body, auth: a, ...extra });
   } catch (e) {
     if (e.code === "bad_install" || e.code === "no_install") {
       GM_deleteValue(AUTH_KEY);
       auth = null;
-      return call(method, path, { body, auth: await getAuth() });
+      return call(method, path, { body, auth: await getAuth(), ...extra });
     }
     throw e;
   }
@@ -147,9 +152,56 @@ export async function authed(method, path, body) {
 
 // ---- endpoints --------------------------------------------------------------------
 
+// Who's logged in on this page (chat.js globals, on every page with chat).
+export function selfInfo() {
+  const w = getPageWindow();
+  const id = Number(w.selfId);
+  return { selfId: Number.isInteger(id) && id > 0 ? id : null, selfName: typeof w.selfUsername === "string" && w.selfUsername ? w.selfUsername : null };
+}
 export const getMe = () => authed("GET", "/v1/me");
 export const linkStart = () => authed("POST", "/v1/link/start");
-export const linkCheck = () => authed("POST", "/v1/link/check");
+export const linkCheck = () => authed("POST", "/v1/link/check", selfInfo());
+// A device code also carries this device's gallery key (review / judging), if
+// it has one: the Card Gallery's key box (gallery/keybox.js) says where the key
+// lives (get) and how to keep one that arrives (put -> { name, role }).
+let keyBridge = { get: () => "", put: async () => null };
+export const setGalleryKeyBridge = (b) => { keyBridge = { ...keyBridge, ...b }; };
+export const galleryKeyHere = () => { try { return keyBridge.get() || ""; } catch (e) { return ""; } };
+// withKey: carry this device's key. A key the server no longer accepts is left
+// out (r.keyDropped) rather than stopping the code.
+export async function linkShare(withKey = true) {
+  const k = withKey ? galleryKeyHere() : "";
+  if (!k) return authed("POST", "/v1/link/share");
+  try { return await authed("POST", "/v1/link/share", undefined, { adminKey: k }); } catch (e) {
+    if (e.code !== "not_admin" && e.code !== "key_expired") throw e;
+    const r = await authed("POST", "/v1/link/share");
+    return { ...r, keyDropped: true };
+  }
+}
+export const unlinkAccount = () => authed("POST", "/v1/link/unlink");
+// Device codes: WZL-XXXX-XXXX (case, spaces and dashes don't matter).
+export const isDeviceCode = (raw) => /^\s*wzl[\s-]*[0-9a-z]{4}[\s-]*[0-9a-z]{4}\s*$/i.test(String(raw || ""));
+// Links this install with a code made on a linked device. Resolves to
+// { account, key } (key: { name, role } of a gallery key that came with it);
+// rejects with a short reason for the player.
+export async function redeemDeviceCode(raw) {
+  let r;
+  try { r = await authed("POST", "/v1/link/redeem", { code: String(raw || "").trim(), ...selfInfo() }); } catch (e) {
+    const why = {
+      bad_code: "That code isn't valid. Codes work once.",
+      code_expired: "That code has expired. Make a new one on your linked device.",
+      wrong_account: e.message,
+      cooldown: "This install switched accounts less than a day ago. Try again later.",
+      rate_limited: "Too many wrong codes. Try again in an hour."
+    }[e && e.code];
+    throw new Error(why || (e && e.message) || "Couldn't reach the Wizascript server.");
+  }
+  accountChanged(r.account, r.cooldownUntil, true);
+  // A gallery key that came with the code is kept like a redeemed one.
+  let key = null;
+  if (r.galleryKey) { try { key = await keyBridge.put(r.galleryKey); } catch (e) { key = null; } }
+  return { account: r.account, key };
+}
 
 // ---- who's linked, shared by everything that shows it ---------------------------
 const state = { name: null, cooldownUntil: null, known: false };
@@ -169,8 +221,22 @@ export function accountChanged(name, cooldownUntil, justLinked = false) {
   if (was !== state.name) listeners.slice().forEach((f) => { try { f(state.name); } catch (e) { /* a listener's problem */ } });
   if (justLinked && state.name) linkListeners.slice().forEach((f) => { try { f(state.name); } catch (e) { /* a listener's problem */ } });
 }
+// A rename: the server knows the linked account's id, and the player logged in
+// with that id now has another name. Links are by name, so this one ends; the
+// player links again under the new name (their voter group carries over).
+let renameNoticed = false;
 export async function refreshAccount() {
   const me = await getMe();
+  const self = selfInfo();
+  if (me.account && me.ucId && self.selfId === me.ucId && self.selfName && self.selfName !== me.account) {
+    await unlinkAccount().catch(() => null);
+    accountChanged(null, null);
+    if (!renameNoticed) {
+      renameNoticed = true;
+      toast(mainPlugin, "Wizascript", `Your account was linked as ${me.account}, and it's ${self.selfName} now, so it was unlinked. Link it again on the Wizascript tab (Undercards Account).`);
+    }
+    return { ...me, account: null };
+  }
   accountChanged(me.account, me.cooldownUntil);
   return me;
 }
@@ -209,10 +275,69 @@ export function watchForLink(onDone, { every = 5000, forMs = 180000 } = {}) {
 
 // ---- the Wizascript tab: "Undercards Account" ------------------------------------------
 let button = null;
+let mainPlugin = null;
 const label = () => (state.name ? `Linked as ${state.name}` : "Link my account");
 
 function toast(plugin, title, text) {
   try { plugin.toast({ title, text, className: "dismissable" }); } catch (e) { console.log(`[Wizascript] ${title}: ${text}`); }
+}
+
+// "Link another device": a one-time code shown with a countdown. Returns the box.
+const fmtLeft = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; };
+export function deviceCodeBox(el, { onClose } = {}) {
+  const box = el("div", { className: "wz-acct-device" });
+  const status = el("p", { className: "wz-acct-status" });
+  let timer = null;
+  const stop = () => { clearInterval(timer); timer = null; };
+  const make = async () => {
+    stop();
+    box.replaceChildren(el("p", { textContent: "Making a code…" }));
+    let r;
+    try { r = await linkShare(); } catch (e) {
+      box.replaceChildren(el("p", { textContent: e.code === "rate_limited" ? (e.message || "Too many codes. Try again later.") : (e.message || "Couldn't reach the Wizascript server."), style: "color:#f77" }));
+      return;
+    }
+    const code = el("code", { textContent: r.code, style: "user-select:all;font-size:20px;letter-spacing:2px;padding:2px 10px;background:#000;border:1px solid #666" });
+    const left = el("span", {});
+    const again = el("button", { type: "button", className: "btn btn-sm btn-default", textContent: "New code" });
+    again.addEventListener("click", make);
+    const tick = () => {
+      const ms = r.expiresAt - Date.now();
+      if (!box.isConnected) return stop();
+      if (ms <= 0) { stop(); left.textContent = "Expired."; code.style.opacity = ".35"; return; }
+      left.textContent = `Expires in ${fmtLeft(ms)}. Works once.`;
+    };
+    timer = setInterval(tick, 1000);
+    tick();
+    box.replaceChildren(
+      el("p", {}, code),
+      r.carries ? el("p", { textContent: `It also brings your gallery key (${r.carries.name}, ${r.carries.role}) to that device.` }) : null,
+      r.keyDropped ? el("p", { textContent: "Your gallery key isn't valid anymore, so the code doesn't bring it.", style: "color:#f77" }) : null,
+      el("p", {}, left, " ", again),
+      el("p", { textContent: "On the other device, while logged in as this account: Wizascript tab → Undercards Account, or the 📱 button at the bottom left of the Card Gallery (Card Maker, or the gallery website) → Redeem a code." }),
+      status);
+  };
+  make();
+  if (onClose) onClose(stop);
+  return box;
+}
+
+// "Have a code?": links this install with a device code.
+function codeEntry(el, onLinked) {
+  const input = el("input", { type: "text", className: "form-control", placeholder: "WZL-XXXX-XXXX", autocomplete: "off", spellcheck: false, style: "display:inline-block;width:170px;text-transform:uppercase" });
+  const go = el("button", { type: "button", className: "btn btn-sm btn-default", textContent: "Link with code" });
+  const status = el("small", { style: "display:block;margin-top:4px" });
+  let busy = false;
+  const submit = async () => {
+    if (busy) return;
+    if (!isDeviceCode(input.value)) { status.textContent = "Codes look like WZL-XXXX-XXXX."; status.style.color = "#f77"; return; }
+    busy = true; go.disabled = true; status.textContent = "Checking…"; status.style.color = "#7f7";
+    try { const r = await redeemDeviceCode(input.value); onLinked(r.account, r.key); } catch (e) { status.textContent = e.message; status.style.color = "#f77"; }
+    busy = false; go.disabled = false;
+  };
+  go.addEventListener("click", submit);
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); submit(); } });
+  return el("div", {}, el("p", { textContent: "Linked on another device? Make a code there (Link another device) and enter it here:" }), el("p", {}, input, " ", go, status));
 }
 
 function openAccountDialog(plugin) {
@@ -223,6 +348,8 @@ function openAccountDialog(plugin) {
   const status = el("p", { className: "wz-acct-status" });
   const show = (text, ok) => { status.textContent = text; status.style.color = ok ? "#7f7" : "#f77"; };
   let code = null;
+  let sharing = false;
+  let stopShare = () => {};
   const startLink = async () => {
     show("Getting a link code…", true);
     try { code = await linkStart(); show("", true); } catch (e) { show(e.message || "Couldn't reach the Wizascript server.", false); }
@@ -233,10 +360,15 @@ function openAccountDialog(plugin) {
     if (state.name && !code) {
       const sw = el("button", { type: "button", className: "btn btn-sm btn-default", textContent: "Switch account" });
       sw.addEventListener("click", startLink);
+      const dev = el("button", { type: "button", className: "btn btn-sm btn-primary", textContent: sharing ? "Hide code" : "Link another device" });
+      dev.addEventListener("click", () => { sharing = !sharing; stopShare(); draw(); });
       wrap.append(
         el("p", {}, "Linked as ", el("b", { textContent: state.name }), "."),
         el("p", { textContent: "Features that need your account (like posting to the Card Gallery) use this one." }),
-        el("p", {}, sw, " ", el("small", { textContent: "An install can switch accounts once a day." })), status);
+        el("p", {}, sw, " ", el("small", { textContent: "An install can switch accounts once a day." })),
+        el("p", {}, dev, " ", el("small", { textContent: "A one-time code for a phone or another browser." })),
+        ...(sharing ? [deviceCodeBox(el, { onClose: (stop) => { stopShare = stop; } })] : []),
+        status);
       return;
     }
     if (!code) {
@@ -245,7 +377,9 @@ function openAccountDialog(plugin) {
       wrap.append(
         el("p", { textContent: "Some features need to know which Undercards account you're on, like posting and voting in the Card Gallery." }),
         el("p", { textContent: "You link once: Wizascript types a one-time line into void (chat room 0), and you press Enter to send it." }),
-        el("p", {}, go), status);
+        el("p", {}, go),
+        codeEntry(el, (name, key) => { draw(); show(`Linked as ${name}.${key ? ` Your gallery key came too (${key.name}, ${key.role}).` : ""}`, true); }),
+        status);
       return;
     }
     const line = el("code", { textContent: code.line, style: "user-select:all;padding:1px 6px;background:#000;border:1px solid #666" });
@@ -277,10 +411,11 @@ function openAccountDialog(plugin) {
       el("p", {}, check), status);
   }
   draw();
-  BD.show({ title: "Undercards Account", message: wrap, buttons: [{ label: "Close", action: (d) => d.close() }] });
+  BD.show({ title: "Undercards Account", message: wrap, onhidden: () => stopShare(), buttons: [{ label: "Close", action: (d) => d.close() }] });
 }
 
 export function registerAccountSetting(plugin) {
+  mainPlugin = plugin;
   const settingsApi = plugin.settings();
   settingsApi.add({
     key: "about.account",

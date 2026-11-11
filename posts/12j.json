@@ -1,0 +1,19 @@
+{
+  "id": "12j",
+  "kind": "single",
+  "title": "Queenriel",
+  "author": "0pqmoxl",
+  "postedAt": 1794372001093,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Queenriel",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/12j-0-pic.png"
+    }
+  ]
+}

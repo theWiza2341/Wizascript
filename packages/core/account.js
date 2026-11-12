@@ -12,7 +12,7 @@
 // 2026-10-08; nothing is ever sent for them). That's on the Wizascript tab
 // ("Undercards Account") and in the Card Maker's gallery.
 //
-// 1.8.0 (Worker 1.8): links also carry the account's Undercards id (selfId), so
+// 1.7.4 (Worker 1.8+): links also carry the account's Undercards id (selfId), so
 // a renamed account (same id, new name) unlinks itself instead of being taken
 // for an alt; and a linked install can make a one-time code (WZL-XXXX-XXXX,
 // 10 minutes) to link another device (a phone) without typing in void there.
@@ -136,15 +136,15 @@ async function getAuth() {
 }
 // A server that no longer knows this install (e.g. its database was reset):
 // start over with a new one.
-export async function authed(method, path, body) {
+export async function authed(method, path, body, extra = {}) {
   const a = await getAuth();
   try {
-    return await call(method, path, { body, auth: a });
+    return await call(method, path, { body, auth: a, ...extra });
   } catch (e) {
     if (e.code === "bad_install" || e.code === "no_install") {
       GM_deleteValue(AUTH_KEY);
       auth = null;
-      return call(method, path, { body, auth: await getAuth() });
+      return call(method, path, { body, auth: await getAuth(), ...extra });
     }
     throw e;
   }
@@ -161,12 +161,29 @@ export function selfInfo() {
 export const getMe = () => authed("GET", "/v1/me");
 export const linkStart = () => authed("POST", "/v1/link/start");
 export const linkCheck = () => authed("POST", "/v1/link/check", selfInfo());
-export const linkShare = () => authed("POST", "/v1/link/share");
+// A device code also carries this device's gallery key (review / judging), if
+// it has one: the Card Gallery's key box (gallery/keybox.js) says where the key
+// lives (get) and how to keep one that arrives (put -> { name, role }).
+let keyBridge = { get: () => "", put: async () => null };
+export const setGalleryKeyBridge = (b) => { keyBridge = { ...keyBridge, ...b }; };
+export const galleryKeyHere = () => { try { return keyBridge.get() || ""; } catch (e) { return ""; } };
+// withKey: carry this device's key. A key the server no longer accepts is left
+// out (r.keyDropped) rather than stopping the code.
+export async function linkShare(withKey = true) {
+  const k = withKey ? galleryKeyHere() : "";
+  if (!k) return authed("POST", "/v1/link/share");
+  try { return await authed("POST", "/v1/link/share", undefined, { adminKey: k }); } catch (e) {
+    if (e.code !== "not_admin" && e.code !== "key_expired") throw e;
+    const r = await authed("POST", "/v1/link/share");
+    return { ...r, keyDropped: true };
+  }
+}
 export const unlinkAccount = () => authed("POST", "/v1/link/unlink");
 // Device codes: WZL-XXXX-XXXX (case, spaces and dashes don't matter).
 export const isDeviceCode = (raw) => /^\s*wzl[\s-]*[0-9a-z]{4}[\s-]*[0-9a-z]{4}\s*$/i.test(String(raw || ""));
-// Links this install with a code made on a linked device. Resolves to the
-// account; rejects with a short reason for the player.
+// Links this install with a code made on a linked device. Resolves to
+// { account, key } (key: { name, role } of a gallery key that came with it);
+// rejects with a short reason for the player.
 export async function redeemDeviceCode(raw) {
   let r;
   try { r = await authed("POST", "/v1/link/redeem", { code: String(raw || "").trim(), ...selfInfo() }); } catch (e) {
@@ -180,7 +197,10 @@ export async function redeemDeviceCode(raw) {
     throw new Error(why || (e && e.message) || "Couldn't reach the Wizascript server.");
   }
   accountChanged(r.account, r.cooldownUntil, true);
-  return r.account;
+  // A gallery key that came with the code is kept like a redeemed one.
+  let key = null;
+  if (r.galleryKey) { try { key = await keyBridge.put(r.galleryKey); } catch (e) { key = null; } }
+  return { account: r.account, key };
 }
 
 // ---- who's linked, shared by everything that shows it ---------------------------
@@ -291,6 +311,8 @@ export function deviceCodeBox(el, { onClose } = {}) {
     tick();
     box.replaceChildren(
       el("p", {}, code),
+      r.carries ? el("p", { textContent: `It also brings your gallery key (${r.carries.name}, ${r.carries.role}) to that device.` }) : null,
+      r.keyDropped ? el("p", { textContent: "Your gallery key isn't valid anymore, so the code doesn't bring it.", style: "color:#f77" }) : null,
       el("p", {}, left, " ", again),
       el("p", { textContent: "On the other device, while logged in as this account: Wizascript tab → Undercards Account, or the 📱 button at the bottom left of the Card Gallery (Card Maker, or the gallery website) → Redeem a code." }),
       status);
@@ -310,7 +332,7 @@ function codeEntry(el, onLinked) {
     if (busy) return;
     if (!isDeviceCode(input.value)) { status.textContent = "Codes look like WZL-XXXX-XXXX."; status.style.color = "#f77"; return; }
     busy = true; go.disabled = true; status.textContent = "Checking…"; status.style.color = "#7f7";
-    try { const name = await redeemDeviceCode(input.value); onLinked(name); } catch (e) { status.textContent = e.message; status.style.color = "#f77"; }
+    try { const r = await redeemDeviceCode(input.value); onLinked(r.account, r.key); } catch (e) { status.textContent = e.message; status.style.color = "#f77"; }
     busy = false; go.disabled = false;
   };
   go.addEventListener("click", submit);
@@ -356,7 +378,7 @@ function openAccountDialog(plugin) {
         el("p", { textContent: "Some features need to know which Undercards account you're on, like posting and voting in the Card Gallery." }),
         el("p", { textContent: "You link once: Wizascript types a one-time line into void (chat room 0), and you press Enter to send it." }),
         el("p", {}, go),
-        codeEntry(el, (name) => { draw(); show(`Linked as ${name}.`, true); }),
+        codeEntry(el, (name, key) => { draw(); show(`Linked as ${name}.${key ? ` Your gallery key came too (${key.name}, ${key.role}).` : ""}`, true); }),
         status);
       return;
     }

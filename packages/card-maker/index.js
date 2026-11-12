@@ -40,6 +40,8 @@ import { OLD_HOTFIX_KEY } from "./storage.js";
 import { buildGalleryPanel } from "./gallery/panel.js";
 import { reviewerKey, forgetKey as dropKey, recheckKey, keyButton, openKeyOverlay, onKeyChange, deviceButton, openDeviceOverlay } from "./gallery/keybox.js";
 import { mountGalleryNav } from "./gallery/nav.js";
+import { newNoteAlerts, alertText } from "./gallery/notes.js";
+import { toastClick } from "../core/toast.js";
 import PACK_ICON from "../../assets/pack.png";
 
 // No word from Wizascript inside feildmaster's editor this long after it
@@ -356,7 +358,7 @@ function addFooterButton() {
 
 // ---- gallery keys (review and contest judging) ------------------------------------
 // The owner makes keys in Review -> Reviewers and gives them out. A player
-// redeems one with the ⚿ button at the bottom left of the gallery (1.8.0; it
+// redeems one with the ⚿ button at the bottom left of the gallery (1.7.4; it
 // was Redeem Key on the Card Maker tab), which also takes device codes
 // (WZL-…). The server checks every request against the key, so a revoked or
 // expired key stops working at once; Wizascript then forgets it.
@@ -373,6 +375,26 @@ function dropOldReviewKey() {
 }
 
 // ---- settings ----------------------------------------------------------------------------
+async function announceNotes(plugin) {
+  if (/^\/(Game|Spectate)/.test(location.pathname)) return;
+  const fresh = await newNoteAlerts().catch(() => []);
+  if (!fresh.length) return;
+  try {
+    plugin.toast({
+      title: "Card Gallery",
+      text: alertText(fresh),
+      className: "dismissable",
+      buttons: [{ text: "Open", className: "dismiss", ...toastClick(() => openNote(fresh[0].id)) }]
+    });
+  } catch (e) { log("notes toast", e); }
+}
+// Opens the Card Maker on a note (the toast's Open).
+export function openNote(id) {
+  if (!isPluginEnabled("cardMaker")) return;
+  if (!mounted) showCardMaker();
+  if (mounted && mounted.gallery) mounted.gallery.openNote(id);
+}
+
 export function initCardMaker(plugin) {
   settings = createFeatureSettings(plugin, "cardMaker", {
     tab: "Card Maker",
@@ -414,6 +436,9 @@ export function initCardMaker(plugin) {
   if (!isPluginEnabled("cardMaker")) return;
   dropOldReviewKey();
   setTimeout(() => recheckKey((m) => console.log(`[Wizascript] ${m}`)), 4000);
+  // Post notes: a staff message about one of your posts shows as a toast
+  // (not during a match), at most one check every 5 minutes.
+  if (!gallerySetting || gallerySetting.value()) setTimeout(() => announceNotes(plugin), 5000);
 
   if (!addFooterButton()) {
     // Footer drawn later than us on some pages: watch briefly for it.

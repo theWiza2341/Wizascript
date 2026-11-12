@@ -1056,8 +1056,17 @@ An **opt-in** plugin: share your PvP games, and see which cards, artifacts and s
 - Your **History** shows every PvP game this season, 20 a page (the mouse wheel turns pages).
 - **Delete My Data** on its tab removes everything you've sent.
 
+## 1.7.4
+
+### Card Gallery: notes
+The gallery staff can now write to you about one of your posts, and you can answer, right in the gallery (Card Maker or the website).
+- A **\u2709** on your post in Browse, and **Notes** at the top of the gallery, open the conversation. Text only, no links.
+- When you come back and there's a new message, a popup tells you; click it to open the note.
+- If an upload isn't approved, the reason now arrives as a note, so you can ask about it.
+- Either side can close a note when it's settled. It also closes when the post is approved, or when you cancel, withdraw or delete it.
+
 ### Changes
-- **Link a Mobile Account:** the new **\u{1F4F1}** button at the bottom left of the Card Gallery (in Card Maker and on the gallery website). On a linked device, **Generate a code**; on your phone or another browser, **Redeem a code** to link the same account, no void needed. (Also in Wizascript tab \u2192 **Undercards Account**.)
+- **Link a Mobile Account:** the new **\u{1F4F1}** button at the bottom left of the Card Gallery (in Card Maker and on the gallery website). On a linked device, **Generate a code**; on your phone or another browser, **Redeem a code** to link the same account, no void needed. If you have a gallery key, the code brings it along too. (Also in Wizascript tab \u2192 **Undercards Account**.)
 - **Redeem Key** moved from the Card Maker tab to a **\u26BF** button at the bottom left of the Card Gallery, like on the gallery website.
 - If you change your Undercards name, Wizascript unlinks the old name. Link again under the new one.
 
@@ -1726,15 +1735,15 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     }
     return making;
   }
-  async function authed(method, path, body) {
+  async function authed(method, path, body, extra = {}) {
     const a = await getAuth();
     try {
-      return await call(method, path, { body, auth: a });
+      return await call(method, path, { body, auth: a, ...extra });
     } catch (e) {
       if (e.code === "bad_install" || e.code === "no_install") {
         GM_deleteValue(AUTH_KEY);
         auth = null;
-        return call(method, path, { body, auth: await getAuth() });
+        return call(method, path, { body, auth: await getAuth(), ...extra });
       }
       throw e;
     }
@@ -1747,7 +1756,28 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   var getMe = () => authed("GET", "/v1/me");
   var linkStart = () => authed("POST", "/v1/link/start");
   var linkCheck = () => authed("POST", "/v1/link/check", selfInfo());
-  var linkShare = () => authed("POST", "/v1/link/share");
+  var keyBridge = { get: () => "", put: async () => null };
+  var setGalleryKeyBridge = (b) => {
+    keyBridge = { ...keyBridge, ...b };
+  };
+  var galleryKeyHere = () => {
+    try {
+      return keyBridge.get() || "";
+    } catch (e) {
+      return "";
+    }
+  };
+  async function linkShare(withKey = true) {
+    const k = withKey ? galleryKeyHere() : "";
+    if (!k) return authed("POST", "/v1/link/share");
+    try {
+      return await authed("POST", "/v1/link/share", void 0, { adminKey: k });
+    } catch (e) {
+      if (e.code !== "not_admin" && e.code !== "key_expired") throw e;
+      const r = await authed("POST", "/v1/link/share");
+      return { ...r, keyDropped: true };
+    }
+  }
   var unlinkAccount = () => authed("POST", "/v1/link/unlink");
   var isDeviceCode = (raw) => /^\s*wzl[\s-]*[0-9a-z]{4}[\s-]*[0-9a-z]{4}\s*$/i.test(String(raw || ""));
   async function redeemDeviceCode(raw) {
@@ -1765,7 +1795,15 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       throw new Error(why || e && e.message || "Couldn't reach the Wizascript server.");
     }
     accountChanged(r.account, r.cooldownUntil, true);
-    return r.account;
+    let key2 = null;
+    if (r.galleryKey) {
+      try {
+        key2 = await keyBridge.put(r.galleryKey);
+      } catch (e) {
+        key2 = null;
+      }
+    }
+    return { account: r.account, key: key2 };
   }
   var state = { name: null, cooldownUntil: null, known: false };
   var listeners = [];
@@ -1898,6 +1936,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       tick();
       box.replaceChildren(
         el3("p", {}, code),
+        r.carries ? el3("p", { textContent: `It also brings your gallery key (${r.carries.name}, ${r.carries.role}) to that device.` }) : null,
+        r.keyDropped ? el3("p", { textContent: "Your gallery key isn't valid anymore, so the code doesn't bring it.", style: "color:#f77" }) : null,
         el3("p", {}, left, " ", again),
         el3("p", { textContent: "On the other device, while logged in as this account: Wizascript tab \u2192 Undercards Account, or the \u{1F4F1} button at the bottom left of the Card Gallery (Card Maker, or the gallery website) \u2192 Redeem a code." }),
         status
@@ -1924,8 +1964,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       status.textContent = "Checking\u2026";
       status.style.color = "#7f7";
       try {
-        const name = await redeemDeviceCode(input.value);
-        onLinked(name);
+        const r = await redeemDeviceCode(input.value);
+        onLinked(r.account, r.key);
       } catch (e) {
         status.textContent = e.message;
         status.style.color = "#f77";
@@ -2000,9 +2040,9 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
           el3("p", { textContent: "Some features need to know which Undercards account you're on, like posting and voting in the Card Gallery." }),
           el3("p", { textContent: "You link once: Wizascript types a one-time line into void (chat room 0), and you press Enter to send it." }),
           el3("p", {}, go),
-          codeEntry(el3, (name) => {
+          codeEntry(el3, (name, key2) => {
             draw2();
-            show(`Linked as ${name}.`, true);
+            show(`Linked as ${name}.${key2 ? ` Your gallery key came too (${key2.name}, ${key2.role}).` : ""}`, true);
           }),
           status
         );
@@ -2082,7 +2122,10 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     "wizascript.usageStats.queue",
     "wizascript.usageStats.games",
     "wizascript.usageStats.account",
-    "wizascript.account.server"
+    "wizascript.account.server",
+    // 1.7.4 post notes: when this device last asked, and which new messages it already announced.
+    "wizascript.cardMaker.notesCheck",
+    "wizascript.cardMaker.notesShown"
   ]);
   var SKIP_LS_PREFIXES = ["about.", "backup.", "cardMaker.galleryReviewerKey"];
   function isBackedUpLsKey(key2) {
@@ -13410,6 +13453,16 @@ Version: v${version}`;
   var reviewPost = (key2, id) => admin("GET", `/v1/admin/post?id=${encodeURIComponent(id)}`, key2);
   var reviewDecide = (key2, id, approve, reason) => admin("POST", "/v1/admin/decide", key2, { id, approve: !!approve, reason: reason || "" });
   var reviewRemove = (key2, id) => admin("POST", "/v1/admin/remove", key2, { id });
+  var notesList = (key2, closed) => admin("GET", "/v1/admin/threads" + (closed ? "?status=closed" : ""), key2);
+  var noteGet = (key2, id) => admin("GET", `/v1/admin/thread?id=${encodeURIComponent(id)}`, key2);
+  var noteOpen = (key2, post, text) => admin("POST", "/v1/admin/thread/open", key2, { post, text });
+  var noteReply = (key2, id, text) => admin("POST", "/v1/admin/thread/reply", key2, { id, text });
+  var noteClose = (key2, id) => admin("POST", "/v1/admin/thread/close", key2, { id });
+  var myNotes = () => authed("GET", "/v1/threads");
+  var myNote = (id) => authed("GET", `/v1/thread?id=${encodeURIComponent(id)}`);
+  var myNoteReply = (id, text) => authed("POST", "/v1/thread/reply", { id, text });
+  var myNoteClose = (id) => authed("POST", "/v1/thread/close", { id });
+  var NOTE_MAX = 500;
   var artUrl = (p) => typeof p === "string" && /^art\/[a-z0-9-]{1,40}\.png$/.test(p) ? GALLERY_RAW + p : "";
   var validId = (p) => p && /^[0-9a-z]{3,8}$/.test(p.id);
   function withArt(p) {
@@ -13596,6 +13649,338 @@ Version: v${version}`;
       }
     });
   }
+
+  // packages/card-maker/gallery/notes.js
+  var NOTES_CSS = `
+.wz-nt-list { display: flex; flex-direction: column; gap: 6px; }
+.wz-nt-row { display: flex; align-items: center; gap: 8px; text-align: left; background: #111; border: 1px solid #444; border-radius: 3px; color: #ddd; padding: 8px 10px; font: 13px Arial, sans-serif; cursor: pointer; }
+.wz-nt-row:hover { border-color: #aaa; color: #fff; }
+.wz-nt-row.unread { border-color: #ffd84a; }
+.wz-nt-row .t { font-weight: bold; color: #fff; }
+.wz-nt-row .grow { flex: 1 1 auto; }
+.wz-nt-dot { display: inline-block; width: 8px; height: 8px; border-radius: 4px; background: #ffd84a; flex: none; }
+.wz-nt-thread { display: flex; flex-direction: column; gap: 8px; max-width: 760px; }
+.wz-nt-msgs { display: flex; flex-direction: column; gap: 6px; }
+.wz-nt-msg { max-width: 85%; padding: 6px 10px; border-radius: 6px; background: #1d1d1d; border: 1px solid #444; font: 13px/1.4 Arial, sans-serif; white-space: pre-wrap; overflow-wrap: anywhere; }
+.wz-nt-msg.me { align-self: flex-end; background: #1d2a44; border-color: #4464bd; }
+.wz-nt-msg .who { display: block; font-size: 11px; opacity: .7; margin-bottom: 2px; white-space: normal; }
+.wz-nt-compose textarea { width: 100%; min-height: 64px; resize: vertical; box-sizing: border-box; background: #222; color: #fff; border: 1px solid #666; border-radius: 3px; padding: 6px 8px; font: 13px Arial, sans-serif; }
+.wz-nt-compose textarea:focus { border-color: #8ea6e8; outline: none; }
+.wz-nt-closed { padding: 6px 10px; border: 1px dashed #666; border-radius: 3px; color: #aaa; font-size: 12px; }
+.wz-nt-btn { background: none; border: 1px solid #888; border-radius: 3px; color: #ddd; font: 11px Arial, sans-serif; padding: 0 5px; height: 18px; cursor: pointer; }
+.wz-nt-btn:hover { color: #fff; border-color: #fff; }
+.wz-nt-btn.unread { border-color: #ffd84a; color: #ffd84a; }
+`;
+  var ago = (t2) => {
+    const m = Math.max(0, Math.round((Date.now() - t2) / 6e4));
+    return m < 1 ? "just now" : m < 60 ? `${m} min ago` : m < 48 * 60 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} days ago`;
+  };
+  var WHY = { closed: "closed", approved: "the post was approved", cancelled: "the upload was cancelled", withdrawn: "the entry was withdrawn", deleted: "the post was deleted" };
+  function createNotes(ctx) {
+    const staff = { open: null, closed: null, archive: false, loading: false, error: "", at: 0 };
+    const mine = { list: null, loading: false, error: "", at: 0 };
+    let cur = null;
+    let compose = null;
+    async function refreshStaff(force) {
+      const key2 = ctx.reviewerKey();
+      if (!key2 || !ctx.isStaff() || staff.loading || !force && staff.at && Date.now() - staff.at < 3e4) return;
+      staff.loading = true;
+      try {
+        const [o, c] = await Promise.all([notesList(key2, false), staff.archive ? notesList(key2, true) : Promise.resolve(null)]);
+        staff.open = o.threads;
+        if (c) staff.closed = c.threads;
+        staff.error = "";
+        staff.at = Date.now();
+      } catch (e) {
+        staff.error = ctx.errText(e);
+      }
+      staff.loading = false;
+      ctx.changed();
+    }
+    async function refreshMine(force) {
+      if (mine.loading || !force && mine.at && Date.now() - mine.at < 3e4) return;
+      mine.loading = true;
+      try {
+        mine.list = (await myNotes()).threads;
+        mine.error = "";
+        mine.at = Date.now();
+      } catch (e) {
+        mine.list = e && e.code === "not_linked" ? [] : mine.list;
+        mine.error = e && e.code === "not_linked" ? "" : ctx.errText(e);
+      }
+      mine.loading = false;
+      ctx.changed();
+    }
+    const staffUnread = () => (staff.open || []).filter((t2) => t2.unread).length;
+    const mineUnread = () => (mine.list || []).filter((t2) => t2.unread).length;
+    const hasMine = () => !!(mine.list && mine.list.length);
+    const mineFor = (postId) => (mine.list || []).find((t2) => t2.post === postId && t2.status === "open") || null;
+    async function openThread(id, side) {
+      compose = null;
+      cur = { id, side, thread: null, messages: [], error: "", draft: cur && cur.id === id ? cur.draft : "", sending: false };
+      ctx.render();
+      try {
+        const r = side === "staff" ? await noteGet(ctx.reviewerKey(), id) : await myNote(id);
+        if (!cur || cur.id !== id) return;
+        cur.thread = r.thread;
+        cur.messages = r.messages;
+        const list = side === "staff" ? [...staff.open || [], ...staff.closed || []] : mine.list || [];
+        list.filter((t2) => t2.id === id).forEach((t2) => {
+          t2.unread = false;
+        });
+      } catch (e) {
+        if (cur && cur.id === id) cur.error = ctx.errText(e);
+      }
+      ctx.changed();
+      ctx.render();
+    }
+    function closeThreadView() {
+      cur = null;
+      compose = null;
+      ctx.render();
+    }
+    function startNote(post) {
+      cur = null;
+      compose = { post: post.id, title: post.title || "", draft: "", sending: false, error: "" };
+      ctx.render();
+    }
+    async function send() {
+      if (!cur || cur.sending) return;
+      const text = cur.draft.trim();
+      if (!text) return;
+      cur.sending = true;
+      cur.error = "";
+      ctx.render();
+      try {
+        if (cur.side === "staff") await noteReply(ctx.reviewerKey(), cur.id, text);
+        else await myNoteReply(cur.id, text);
+        cur.draft = "";
+        cur.sending = false;
+        await openThread(cur.id, cur.side);
+        if (cur.side === "staff") refreshStaff(true);
+        else refreshMine(true);
+        return;
+      } catch (e) {
+        cur.error = ctx.errText(e);
+      }
+      cur.sending = false;
+      ctx.render();
+    }
+    async function closeIt() {
+      if (!cur) return;
+      try {
+        if (cur.side === "staff") await noteClose(ctx.reviewerKey(), cur.id);
+        else await myNoteClose(cur.id);
+        ctx.say("Note closed. It's kept in the log.");
+        const { id, side } = cur;
+        await openThread(id, side);
+        if (side === "staff") refreshStaff(true);
+        else refreshMine(true);
+      } catch (e) {
+        cur.error = ctx.errText(e);
+        ctx.render();
+      }
+    }
+    async function sendNew() {
+      if (!compose || compose.sending) return;
+      const text = compose.draft.trim();
+      if (!text) return;
+      compose.sending = true;
+      compose.error = "";
+      ctx.render();
+      try {
+        const r = await noteOpen(ctx.reviewerKey(), compose.post, text);
+        compose = null;
+        refreshStaff(true);
+        await openThread(r.id, "staff");
+      } catch (e) {
+        compose.error = ctx.errText(e);
+        compose.sending = false;
+        ctx.render();
+      }
+    }
+    const textBox = (state4, onEnter) => {
+      const counter = h("span", { class: "dim", text: `${state4.draft.length}/${NOTE_MAX}` });
+      const ta = h("textarea", {
+        maxLength: NOTE_MAX,
+        placeholder: "Write a note (text only, no links)",
+        oninput: (e) => {
+          state4.draft = e.target.value;
+          counter.textContent = `${state4.draft.length}/${NOTE_MAX}`;
+        },
+        onkeydown: (e) => {
+          if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            onEnter();
+          }
+          e.stopPropagation();
+        }
+      });
+      ta.value = state4.draft;
+      return { ta, counter };
+    };
+    function closeButton() {
+      const b = button2("Close note", () => {
+      }, { title: "End this conversation. It stays in the log." });
+      let armed = null;
+      b.onclick = () => {
+        if (!armed) {
+          b.textContent = "Close it?";
+          b.classList.add("wz-key-danger");
+          armed = setTimeout(() => {
+            armed = null;
+            b.textContent = "Close note";
+            b.classList.remove("wz-key-danger");
+          }, 3e3);
+          return;
+        }
+        clearTimeout(armed);
+        b.disabled = true;
+        closeIt();
+      };
+      return b;
+    }
+    function threadView() {
+      const t2 = cur.thread;
+      const back = button2("\u2190 Back", closeThreadView);
+      if (!t2) return h("div", { class: "wz-nt-thread" }, h("div", { class: "wz-gl-bar" }, back), cur.error ? h("div", { class: "wz-gl-issues", text: cur.error }) : h("p", { class: "wz-gl-note", text: "Loading\u2026" }));
+      const meSide = cur.side;
+      const head = h("div", { class: "wz-gl-bar" }, back, h("b", { text: ` "${t2.title}"` }), h("span", { class: "dim", text: ` #${t2.post}${meSide === "staff" ? ` \xB7 by ${t2.author}` : ""}` }));
+      const msgs = h("div", { class: "wz-nt-msgs" }, cur.messages.map((m) => h(
+        "div",
+        { class: `wz-nt-msg${m.side === meSide ? " me" : ""}` },
+        h("span", { class: "who", text: `${m.side === "staff" ? meSide === "author" ? `${m.who} (gallery staff)` : m.who : m.who} \xB7 ${ago(m.at)}` }),
+        m.text
+      )));
+      const parts = [head, msgs];
+      if (t2.status === "open") {
+        const { ta, counter } = textBox(cur, send);
+        parts.push(
+          h("div", { class: "wz-nt-compose" }, ta),
+          h("div", { class: "wz-gl-bar" }, button2(cur.sending ? "Sending\u2026" : "Send", send, { primary: true, title: "Ctrl+Enter sends" }), counter, h("span", { class: "wz-gl-grow" }), closeButton())
+        );
+        setTimeout(() => {
+          if (ta.isConnected && !cur.draft) ta.focus();
+        }, 30);
+      } else {
+        parts.push(h("div", { class: "wz-nt-closed", text: `Closed by ${t2.closedBy}${t2.closeWhy && t2.closeWhy !== "closed" ? ` (${WHY[t2.closeWhy] || t2.closeWhy})` : ""} \xB7 ${ago(t2.closedAt)}.${meSide === "author" ? " Kept for the gallery's records." : ""}` }));
+      }
+      if (cur.error) parts.push(h("div", { class: "wz-gl-issues", text: cur.error }));
+      return h("div", { class: "wz-nt-thread" }, parts);
+    }
+    function row2(t2, side) {
+      const other = side === "staff" ? t2.author : "gallery staff";
+      return h(
+        "button",
+        { type: "button", class: `wz-nt-row${t2.unread ? " unread" : ""}`, onclick: () => openThread(t2.id, side) },
+        t2.unread ? h("span", { class: "wz-nt-dot", title: "New message" }) : null,
+        h("span", { class: "t", text: t2.title }),
+        h("span", { class: "dim", text: `#${t2.post} \xB7 ${other}` }),
+        h("span", { class: "grow" }),
+        h("span", { class: "dim", text: t2.status === "open" ? `${t2.msgs} message${t2.msgs === 1 ? "" : "s"} \xB7 last from ${t2.lastFrom === "staff" ? "staff" : side === "staff" ? t2.author : "you"} ${ago(t2.lastAt)}` : `closed ${ago(t2.closedAt)}` })
+      );
+    }
+    function staffView() {
+      if (compose) {
+        const { ta, counter } = textBox(compose, sendNew);
+        setTimeout(() => {
+          if (ta.isConnected) ta.focus();
+        }, 30);
+        return h(
+          "div",
+          { class: "wz-nt-thread" },
+          h("div", { class: "wz-gl-bar" }, button2("\u2190 Back", closeThreadView), h("b", { text: ` New note on "${compose.title}"` }), h("span", { class: "dim", text: ` #${compose.post}` })),
+          h("p", { class: "wz-gl-note", text: "The post's author sees it in the gallery and can answer. If the post already has an open note, this adds to it." }),
+          h("div", { class: "wz-nt-compose" }, ta),
+          h("div", { class: "wz-gl-bar" }, button2(compose.sending ? "Sending\u2026" : "Send", sendNew, { primary: true }), counter),
+          compose.error ? h("div", { class: "wz-gl-issues", text: compose.error }) : null
+        );
+      }
+      if (cur && cur.side === "staff") return threadView();
+      const pick = (archive) => {
+        staff.archive = archive;
+        refreshStaff(true);
+        ctx.render();
+      };
+      const head = h(
+        "div",
+        { class: "wz-gl-bar" },
+        h("span", { class: "wz-gl-sizes" }, button2("Open", () => pick(false), { cls: staff.archive ? "" : "wz-gl-on" }), button2("Archive", () => pick(true), { cls: staff.archive ? "wz-gl-on" : "", title: "Closed notes, with every message" })),
+        h("span", { class: "wz-gl-grow" }),
+        button2("\u21BB Refresh", () => refreshStaff(true))
+      );
+      if (staff.error) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: staff.error }));
+      const list = staff.archive ? staff.closed : staff.open;
+      if (!list) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Loading\u2026" }));
+      const sorted = staff.archive ? list : list.slice().sort((a, b) => b.unread - a.unread || b.lastAt - a.lastAt);
+      const note = h("p", { class: "wz-gl-note", text: staff.archive ? "Closed notes, newest first." : "Notes with each post's author. Start one with Note\u2026 on an upload, \u2709 on a post in Browse, or \u2709 in the Log." });
+      if (!sorted.length) return h("div", {}, head, note, h("p", { class: "wz-gl-note", text: staff.archive ? "Nothing closed yet." : "No open notes." }));
+      return h("div", {}, head, note, h("div", { class: "wz-nt-list" }, sorted.map((t2) => row2(t2, "staff"))));
+    }
+    function mineView() {
+      if (cur && cur.side === "author") return threadView();
+      const head = h("div", { class: "wz-gl-bar" }, h("b", { text: "Notes from the gallery staff" }), h("span", { class: "wz-gl-grow" }), button2("\u21BB Refresh", () => refreshMine(true)));
+      if (mine.error) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: mine.error }));
+      if (!mine.list) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Loading\u2026" }));
+      if (!mine.list.length) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "No notes. When the gallery staff write about one of your posts, it shows here." }));
+      return h(
+        "div",
+        {},
+        head,
+        h("p", { class: "wz-gl-note", text: "About your posts. Answer here; either side can close a note when it's settled." }),
+        h("div", { class: "wz-nt-list" }, mine.list.map((t2) => row2(t2, "author")))
+      );
+    }
+    return { refreshStaff, refreshMine, staffUnread, mineUnread, hasMine, mineFor, openThread, startNote, staffView, mineView, inThread: () => !!(cur || compose), reset() {
+      cur = null;
+      compose = null;
+    } };
+  }
+  var AUTH_KEY2 = "wizascript.cardMaker.galleryAuth";
+  var NOTES_CHECK_KEY = "wizascript.cardMaker.notesCheck";
+  var NOTES_SHOWN_KEY = "wizascript.cardMaker.notesShown";
+  async function newNoteAlerts({ every = 5 * 6e4 } = {}) {
+    let auth2 = null;
+    try {
+      auth2 = GM_getValue(AUTH_KEY2, null);
+    } catch (e) {
+      return [];
+    }
+    if (!auth2) return [];
+    let check = {};
+    try {
+      check = JSON.parse(GM_getValue(NOTES_CHECK_KEY, "{}")) || {};
+    } catch (e) {
+      check = {};
+    }
+    const wait = check.notLinked ? 6 * 36e5 : every;
+    if (check.at && Date.now() - check.at < wait) return [];
+    let threads;
+    try {
+      threads = (await myNotes()).threads || [];
+      GM_setValue(NOTES_CHECK_KEY, JSON.stringify({ at: Date.now() }));
+    } catch (e) {
+      GM_setValue(NOTES_CHECK_KEY, JSON.stringify({ at: Date.now(), notLinked: e && e.code === "not_linked" }));
+      return [];
+    }
+    let shown = {};
+    try {
+      shown = JSON.parse(GM_getValue(NOTES_SHOWN_KEY, "{}")) || {};
+    } catch (e) {
+      shown = {};
+    }
+    const fresh = threads.filter((t2) => t2.unread && t2.status === "open" && shown[t2.id] !== t2.lastAt);
+    const keep = {};
+    threads.forEach((t2) => {
+      if (shown[t2.id]) keep[t2.id] = shown[t2.id];
+    });
+    fresh.forEach((t2) => {
+      keep[t2.id] = t2.lastAt;
+    });
+    GM_setValue(NOTES_SHOWN_KEY, JSON.stringify(keep));
+    return fresh;
+  }
+  var alertText = (fresh) => fresh.length === 1 ? `New message on "${fresh[0].title}"` : `New messages on ${fresh.length} of your posts`;
 
   // packages/card-maker/gallery/browse.js
   var LISTS = [["new", "Newest"], ["week", "This Week"], ["month", "This Month"], ["all", "All Time"]];
@@ -13884,9 +14269,16 @@ Version: v${version}`;
           h("button", { type: "button", class: `wz-gl-vote down${e.vote === -1 ? " on" : ""}`, title: "Dislike", text: "\u25BC", onclick: () => vote(-1) })
         ] : null,
         ctx.onRemove && e.status === "approved" ? removeButton(ctx, e) : null,
+        noteButton(ctx, e),
         ctx.onDelete && e.mine ? ownButton(ctx, e) : null
       )
     );
+  }
+  function noteButton(ctx, e) {
+    const mineNote = ctx.noteFor ? ctx.noteFor(e) : null;
+    if (mineNote) return h("button", { type: "button", class: `wz-nt-btn${mineNote.unread ? " unread" : ""}`, text: "\u2709", title: mineNote.unread ? "New message from the gallery staff" : "Your note with the gallery staff", onclick: () => ctx.openNote(mineNote) });
+    if (ctx.onNote && e.status === "approved" && !e.sample) return h("button", { type: "button", class: "wz-nt-btn", text: "\u2709", title: "Start a note with this post's author", onclick: () => ctx.onNote(e) });
+    return null;
   }
   function ownButton(ctx, e) {
     const run = ctx.onDelete;
@@ -14560,6 +14952,7 @@ Version: v${version}`;
     const who = reviewerKey() && reviewerWho();
     return who ? `Key: ${who.name} (${ROLE_NAMES[who.role] || "reviewer"})` : "Redeem Key";
   };
+  setGalleryKeyBridge({ get: () => reviewerKey(), put: (k) => redeemKey(k) });
   var listeners4 = [];
   var onKeyChange = (fn) => {
     listeners4.push(fn);
@@ -14595,7 +14988,9 @@ Version: v${version}`;
     const k = reviewerKey();
     if (!k) return;
     reviewWhoami(k).then((me) => {
-      GM_setValue(REVIEW_WHO, JSON.stringify({ name: me.name, role: me.role }));
+      const who = JSON.stringify({ name: me.name, role: me.role });
+      if (GM_getValue(REVIEW_WHO, "") === who) return;
+      GM_setValue(REVIEW_WHO, who);
       changed2();
     }, (e) => {
       if (e && (e.code === "key_expired" || e.code === "not_admin") && forgetKey()) {
@@ -14701,8 +15096,18 @@ Version: v${version}`;
       stop();
       choose();
     });
+    let carry = true;
     function choose() {
       const acct = linkedAccount();
+      const who = reviewerKey() && reviewerWho();
+      const box = who ? h(
+        "label",
+        { class: "wz-dev-carry" },
+        h("input", { type: "checkbox", checked: carry, onchange: (e) => {
+          carry = e.target.checked;
+        } }),
+        ` Bring my gallery key (${who.name}, ${ROLE_NAMES[who.role] || "reviewer"}) too`
+      ) : null;
       wrap.replaceChildren(
         h("p", { text: "Use the Card Gallery on your phone or another computer with the same Undercards account." }),
         h(
@@ -14711,6 +15116,7 @@ Version: v${version}`;
           button2("Generate a code", generate, { primary: true, title: "On a device where your account is linked" }),
           button2("Redeem a code", redeem, { title: "On the new device" })
         ),
+        box,
         h("p", { class: "dim", text: acct ? `This device is linked as ${acct}.` : "This device isn't linked yet." })
       );
     }
@@ -14723,7 +15129,7 @@ Version: v${version}`;
       wrap.replaceChildren(h("p", { text: "Making a code\u2026" }));
       let r;
       try {
-        r = await linkShare();
+        r = await linkShare(carry);
       } catch (e) {
         wrap.replaceChildren(h("p", { class: "wz-key-status", style: "color:#f77", text: e && e.message || "Couldn't reach the Wizascript server." }), h("p", {}, back()));
         return;
@@ -14748,6 +15154,8 @@ Version: v${version}`;
         h("p", { text: `A code for ${linkedAccount() || r.account}:` }),
         code,
         h("p", {}, left),
+        r.carries ? h("p", { text: `It also brings your gallery key (${r.carries.name}, ${ROLE_NAMES[r.carries.role] || r.carries.role}). Keep the code to yourself.` }) : null,
+        r.keyDropped ? h("p", { class: "wz-key-status", style: "color:#f77", text: "Your gallery key isn't valid anymore, so the code doesn't bring it." }) : null,
         h("p", { class: "dim", text: "On the other device, open the Card Gallery (the website, or Card Maker in Wizascript), press \u{1F4F1}, then Redeem a code." }),
         h("div", { class: "wz-key-row" }, back(), button2("New code", generate))
       );
@@ -14772,9 +15180,9 @@ Version: v${version}`;
         go.disabled = true;
         show("Checking\u2026", true);
         try {
-          const name = await redeemDeviceCode(input.value);
+          const r = await redeemDeviceCode(input.value);
           input.value = "";
-          show(`Linked as ${name}.`, true);
+          show(`Linked as ${r.account}.${r.key ? ` Your gallery key came too (${r.key.name}, ${ROLE_NAMES[r.key.role] || r.key.role}).` : ""}`, true);
         } catch (e) {
           show(e.message, false);
         }
@@ -14837,6 +15245,7 @@ Version: v${version}`;
 .wz-key-box .wz-dev-choices .wz-cm-btn { flex: 1; height: 40px; font-size: 15px; }
 .wz-dev-code { font: 24px "DTM-Mono", "DTM Mono", monospace; letter-spacing: 2px; text-align: center; padding: 8px; margin: 0 0 8px; background: #000; border: 1px solid #666; user-select: all; }
 .wz-key-row input.wz-dev-input { text-transform: uppercase; }
+.wz-dev-carry { display: block; margin: 0 0 10px; font-size: 13px; cursor: pointer; }
 `;
 
   // packages/card-maker/gallery/panel.js
@@ -14977,6 +15386,7 @@ ${TILE_CSS}
 ${BROWSE_CSS}
 ${CONTEST_CSS}
 ${KEYBOX_CSS}
+${NOTES_CSS}
 `;
   function injectStyle2() {
     if (document.getElementById(STYLE_ID3)) return;
@@ -15068,6 +15478,7 @@ ${KEYBOX_CSS}
           return;
         }
         contests.refresh();
+        notes.refreshStaff(force);
         if (realRole() === "owner" && !rev.health) rev.health = await getHealth().catch(() => null);
         const r = await reviewPending(key2);
         rev.list = r && r.posts || [];
@@ -15096,7 +15507,8 @@ ${KEYBOX_CSS}
         await reviewDecide(reviewerKey2(), id, approve, rev.reasons[id]);
         rev.list = rev.list.filter((p) => p.id !== id);
         delete rev.posts[id];
-        say(approve ? `Approved ${id}. It's in the gallery now.` : `Rejected ${id}.`);
+        say(approve ? `Approved ${id}. It's in the gallery now.` : rev.reasons[id] ? `Rejected ${id}. The reason went to them as a note (Review \u2192 Notes).` : `Rejected ${id}.`);
+        notes.refreshStaff(true);
         if (approve) gal.at = 0;
       } catch (e) {
         say(`Couldn't ${approve ? "approve" : "reject"} ${id}: ${errText(e)}`);
@@ -15120,7 +15532,7 @@ ${KEYBOX_CSS}
       if (!list.length && rev.at) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Nothing to review. New uploads appear here." }));
       const one = (p) => {
         const post = uploadPost(p);
-        const reason = h("input", { type: "text", placeholder: "Reason (optional, shown to them if rejected)", maxLength: 300, value: rev.reasons[p.id] || "", oninput: (e) => {
+        const reason = h("input", { type: "text", placeholder: "Reason (optional; sent to them as a note they can answer)", maxLength: 300, value: rev.reasons[p.id] || "", oninput: (e) => {
           rev.reasons[p.id] = e.target.value;
         } });
         const approveBtn = button2(rev.busy[p.id] || "Approve", () => decide(p.id, true), { primary: true, title: p.contest ? "Accept it into the contest" : "Add it to the gallery (one commit on the gallery branch)" });
@@ -15144,7 +15556,14 @@ ${KEYBOX_CSS}
             p.kind === "set" ? h("div", { class: "wz-gl-sethead" }, h("div", { class: "wz-gl-setname", text: post.title })) : null,
             h("div", { class: "wz-gl-row" }, post.parts.map((c) => hoverable(h("div", { class: "wz-gl-zoom" }, tile(c)), c, null)))
           ) : h("p", { class: "wz-gl-note", text: "Loading its cards\u2026" }),
-          h("div", { class: "wz-gl-bar wz-gl-revactions" }, approveBtn, rejectBtn, reason),
+          h(
+            "div",
+            { class: "wz-gl-bar wz-gl-revactions" },
+            approveBtn,
+            rejectBtn,
+            reason,
+            button2("Note\u2026", () => noteOn({ id: p.id, title: p.title }), { title: "Ask the author something before deciding (they can answer)" })
+          ),
           contextBox(p, post)
         );
       };
@@ -15222,6 +15641,7 @@ ${KEYBOX_CSS}
       const sections = isJudge() ? [judging] : [["uploads", "Uploads", nUp]];
       if (!isJudge()) {
         if (running) sections.push(judging);
+        if (staffNotes()) sections.push(["notes", "Notes", notes.staffUnread()]);
         sections.push(["log", "Log", 0]);
       }
       if (isOwner()) sections.push(["contests", "Contests", 0], ["reviewers", "Reviewers", 0]);
@@ -15230,7 +15650,7 @@ ${KEYBOX_CSS}
         if (rev.section === "judging") contests.loadJudging(true);
       }
       const who = rev.who ? `${isJudge() ? "Judging" : "Reviewing"} as ${rev.who.name}${realRole() === "owner" ? " (owner)" : ""}${viewAs ? `, previewing ${viewAs}` : ""}` : "";
-      const body = rev.section === "log" ? logView() : rev.section === "reviewers" ? reviewersView() : rev.section === "judging" ? contests.judgingView() : rev.section === "contests" ? contests.manageView() : uploadsView();
+      const body = rev.section === "notes" ? notes.staffView() : rev.section === "log" ? logView() : rev.section === "reviewers" ? reviewersView() : rev.section === "judging" ? contests.judgingView() : rev.section === "contests" ? contests.manageView() : uploadsView();
       const count = (n) => n ? h("span", { class: "n", text: String(n) }) : null;
       const menu3 = h(
         "div",
@@ -15252,6 +15672,10 @@ ${KEYBOX_CSS}
       rev.sectionError = "";
       if (k !== "reviewers") rev.newKey = null;
       if (k === "log") loadLog();
+      if (k === "notes") {
+        notes.reset();
+        notes.refreshStaff(true);
+      }
       if (k === "reviewers") {
         loadReviewers();
         contests.refresh();
@@ -15260,7 +15684,7 @@ ${KEYBOX_CSS}
       if (k === "contests") contests.refresh(true);
       render3();
     }
-    const ago = (t2) => {
+    const ago2 = (t2) => {
       if (!t2) return "never";
       const m = Math.max(0, Math.round((Date.now() - t2) / 6e4));
       return m < 1 ? "just now" : m < 60 ? `${m} min ago` : m < 48 * 60 ? `${Math.round(m / 60)} h ago` : `${Math.round(m / 1440)} days ago`;
@@ -15312,7 +15736,9 @@ ${KEYBOX_CSS}
       contest_delete: "deleted contest",
       undo: "undid",
       undo_score: "undid a score on",
-      score: "scored"
+      score: "scored",
+      note_open: "started a note on",
+      note_close: "closed the note on"
     };
     function logLine(l) {
       const canUndo2 = realRole() === "owner" && !viewAs && l.undo && l.undo.ok;
@@ -15325,8 +15751,13 @@ ${KEYBOX_CSS}
         l.post ? h("span", { text: `"${l.title || ""}" #${l.post}` }) : h("b", { text: l.detail || "" }),
         l.action === "score" && l.detail ? [" ", h("b", { text: l.detail })] : null,
         l.action === "score" && l.prev ? h("span", { class: "dim", text: ` (was ${l.prev})` }) : null,
-        l.post && l.detail && l.action !== "score" ? h("span", { class: "dim", text: ` (${l.detail})` }) : null,
-        h("span", { class: "dim", text: ` \xB7 ${ago(l.at)}` }),
+        l.post && l.detail && l.action !== "score" && !/^note_/.test(l.action) ? h("span", { class: "dim", text: ` (${l.detail})` }) : null,
+        /^note_/.test(l.action) && l.detail && staffNotes() ? [" ", h("button", { type: "button", class: "wz-nt-btn", text: "View", title: "Read this note", onclick: () => {
+          rev.section = "notes";
+          notes.openThread(l.detail, "staff");
+        } })] : null,
+        l.post && !/^note_/.test(l.action) && staffNotes() ? [" ", h("button", { type: "button", class: "wz-nt-btn", text: "\u2709", title: "Start a note with the post's author", onclick: () => noteOn({ id: l.post, title: l.title }) })] : null,
+        h("span", { class: "dim", text: ` \xB7 ${ago2(l.at)}` }),
         l.undoneAt ? h("span", { class: "dim", text: ` \xB7 undone by ${l.undoneBy || "the owner"}` }) : null,
         canUndo2 ? removeButton({ rerender: render3 }, l, { label: "Undo", confirm: "Undo it?", title: l.action === "approve" ? "Take it out of the gallery and put it back in Uploads" : l.action === "reject" ? "Put it back in Uploads" : l.action === "remove" ? "Put it back where it was" : "Give back the judge's score before this", run: undoEntry }) : null
       );
@@ -15435,7 +15866,7 @@ ${KEYBOX_CSS}
         "div",
         { class: "wz-gl-bar" },
         h("b", { text: r.name }),
-        h("span", { class: "dim", text: `${r.role === "judge" ? `judge${running && running.id === r.contest ? ` (${running.title})` : ""}` : "reviewer"} \xB7 added ${ago(r.addedAt)} \xB7 last used ${ago(r.lastUsedAt)}` }),
+        h("span", { class: "dim", text: `${r.role === "judge" ? `judge${running && running.id === r.contest ? ` (${running.title})` : ""}` : "reviewer"} \xB7 added ${ago2(r.addedAt)} \xB7 last used ${ago2(r.lastUsedAt)}` }),
         h("span", { class: "wz-gl-grow" }),
         removeButton({ rerender: render3 }, r, { label: "Revoke", confirm: "Revoke?", title: `Stop ${r.name}'s key working`, run: revokeReviewer })
       ))));
@@ -15516,6 +15947,26 @@ ${KEYBOX_CSS}
         say("Add the cards to enter, then Review upload.");
       }
     });
+    const notes = createNotes({
+      reviewerKey: reviewerKey2,
+      isStaff: () => !!reviewerKey2() && (realRole() === "owner" || realRole() === "reviewer"),
+      say: (t2) => say(t2),
+      render: () => {
+        if (open) render3();
+      },
+      errText,
+      changed: () => {
+        notify2();
+        if (open && (tab === "notes" || tab === "review" || tab === "browse")) render3();
+      }
+    });
+    const staffNotes = () => !!reviewerKey2() && !isJudge() && role() !== "player" && (realRole() === "owner" || realRole() === "reviewer");
+    function noteOn(post) {
+      tab = "review";
+      rev.section = "notes";
+      notes.startNote(post);
+      setView("review");
+    }
     async function refreshMe(force) {
       if (acct.loading || !force && acct.loaded && Date.now() - acct.at < 3e4) return;
       acct.loading = true;
@@ -15523,6 +15974,7 @@ ${KEYBOX_CSS}
         const me = await getMe();
         Object.assign(acct, { loaded: true, account: me.account || null, cooldownUntil: me.cooldownUntil || null, votes: me.votes || {}, posts: me.posts || [], contest: me.contest || null, error: "", at: Date.now() });
         accountChanged(acct.account, acct.cooldownUntil);
+        if (acct.account) notes.refreshMine(force);
         pruneUploads(Object.fromEntries(acct.posts.map((p) => [p.id, p.status])), new Set(gal.approved.map((p) => p.id)));
       } catch (e) {
         acct.error = errText(e);
@@ -15788,7 +16240,7 @@ ${KEYBOX_CSS}
         tab = "browse";
         notify2();
       }
-      tabs.replaceChildren(...[accountBox(), viewAsBadge(), status, h("span", { class: "wz-gl-grow" }), sizeButtons()].filter(Boolean));
+      tabs.replaceChildren(...[accountBox(), notesButton(), viewAsBadge(), status, h("span", { class: "wz-gl-grow" }), sizeButtons()].filter(Boolean));
       panel.classList.toggle("browse", tab === "browse" || tab === "contest");
       applyZoom();
       if (tab === "browse") {
@@ -15801,6 +16253,9 @@ ${KEYBOX_CSS}
       } else if (tab === "review") {
         content.replaceChildren(reviewView());
         requestAnimationFrame(refit);
+      } else if (tab === "notes") {
+        content.replaceChildren(...[linkBox(), notes.mineView()].filter(Boolean));
+        requestAnimationFrame(refit);
       } else if (tab === "contest") {
         content.replaceChildren(...[linkBox(), contests.view()].filter(Boolean));
         contests.layout();
@@ -15811,6 +16266,14 @@ ${KEYBOX_CSS}
         content.replaceChildren(...[linkBox(), submitView()].filter(Boolean));
         requestAnimationFrame(refit);
       }
+    }
+    function notesButton() {
+      if (!acct.account || !notes.hasMine()) return null;
+      const n = notes.mineUnread();
+      return button2(n ? `Notes (${n} new)` : "Notes", () => {
+        notes.reset();
+        setView("notes");
+      }, { cls: `${tab === "notes" ? "wz-gl-on" : ""}${n ? " wz-gl-primary" : ""}`, title: "Notes from the gallery staff about your posts" });
     }
     function setView(v) {
       if (tab === "browse" && v !== "browse") voteQueue.flush();
@@ -15826,6 +16289,7 @@ ${KEYBOX_CSS}
         refreshMe();
         if (v === "browse") refreshGallery();
         if (v === "review") refreshReview(true);
+        if (v === "notes") notes.refreshMine(true);
         if (v === "contest" || v === "submit") contests.refresh();
       }
       notify2();
@@ -16316,6 +16780,14 @@ ${KEYBOX_CSS}
         },
         onRemove: reviewerKey2() && (role() === "owner" || role() === "reviewer") ? removePost : null,
         onDelete: deleteMine,
+        // ✉: staff start a note on a post; authors open the note on theirs.
+        onNote: staffNotes() ? (e) => noteOn({ id: e.id, title: e.title }) : null,
+        noteFor: (e) => e.mine ? notes.mineFor(e.id) : null,
+        openNote: (t2) => {
+          notes.reset();
+          setView("notes");
+          notes.openThread(t2.id, "author");
+        },
         vote(e, dir) {
           if (!acct.account) {
             say("Link your Undercards account to vote: press Link my account at the top.");
@@ -16331,7 +16803,13 @@ ${KEYBOX_CSS}
       el: panel,
       isOpen: () => open,
       isReviewer: () => !!reviewerKey2() && role() !== "player",
-      pendingCount: () => !reviewerKey2() ? 0 : isJudge() ? contests.unscored() : rev.list.length,
+      pendingCount: () => !reviewerKey2() ? 0 : isJudge() ? contests.unscored() : rev.list.length + (staffNotes() ? notes.staffUnread() : 0),
+      // A "new message" popup was clicked: open that note.
+      openNote(id) {
+        notes.reset();
+        setView("notes");
+        notes.openThread(id, "author");
+      },
       // The Card Maker opened: the reviewer's count of uploads waiting.
       opened() {
         if (reviewerKey2()) refreshReview();
@@ -16715,6 +17193,26 @@ ${KEYBOX_CSS}
     } catch (e) {
     }
   }
+  async function announceNotes(plugin2) {
+    if (/^\/(Game|Spectate)/.test(location.pathname)) return;
+    const fresh = await newNoteAlerts().catch(() => []);
+    if (!fresh.length) return;
+    try {
+      plugin2.toast({
+        title: "Card Gallery",
+        text: alertText(fresh),
+        className: "dismissable",
+        buttons: [{ text: "Open", className: "dismiss", ...toastClick(() => openNote(fresh[0].id)) }]
+      });
+    } catch (e) {
+      log("notes toast", e);
+    }
+  }
+  function openNote(id) {
+    if (!isPluginEnabled("cardMaker")) return;
+    if (!mounted2) showCardMaker();
+    if (mounted2 && mounted2.gallery) mounted2.gallery.openNote(id);
+  }
   function initCardMaker(plugin2) {
     settings3 = createFeatureSettings(plugin2, "cardMaker", {
       tab: "Card Maker",
@@ -16755,6 +17253,7 @@ ${KEYBOX_CSS}
     if (!isPluginEnabled("cardMaker")) return;
     dropOldReviewKey();
     setTimeout(() => recheckKey((m) => console.log(`[Wizascript] ${m}`)), 4e3);
+    if (!gallerySetting || gallerySetting.value()) setTimeout(() => announceNotes(plugin2), 5e3);
     if (!addFooterButton()) {
       const watch2 = new MutationObserver(() => {
         if (addFooterButton()) watch2.disconnect();

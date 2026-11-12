@@ -1,19 +1,19 @@
 // packages/card-maker/gallery/keybox.js
 //
 // The key button (⚿) at the bottom left of the Card Gallery, and its box
-// (1.8.0; before that, Redeem Key was a setting on the Card Maker tab). The
+// (1.7.4; before that, Redeem Key was a setting on the Card Maker tab). The
 // same module is bundled into the gallery website, so both are 1:1.
 //
 // The box takes a gallery key (review or contest judging), checked with the
 // server and kept in GM storage (not readable by the page, never in backups).
 //
-// Next to it, the 📱 button (1.8.0) links another device to the same
+// Next to it, the 📱 button (1.7.4) links another device to the same
 // Undercards account: Generate a code on a linked device, or Redeem a code
 // (WZL-XXXX-XXXX) on the new one.
 
 import { h, button } from "./dom.js";
 import { reviewWhoami } from "./api.js";
-import { isDeviceCode, redeemDeviceCode, linkedAccount, linkShare } from "../../core/account.js";
+import { isDeviceCode, redeemDeviceCode, linkedAccount, linkShare, setGalleryKeyBridge } from "../../core/account.js";
 
 export const REVIEW_KEY = "wizascript.cardMaker.galleryReview";
 export const REVIEW_WHO = "wizascript.cardMaker.galleryReviewWho";
@@ -21,6 +21,9 @@ export const ROLE_NAMES = { owner: "owner", reviewer: "reviewer", judge: "judge"
 export const reviewerKey = () => { try { return String(GM_getValue(REVIEW_KEY, "") || ""); } catch (e) { return ""; } };
 export const reviewerWho = () => { try { return JSON.parse(GM_getValue(REVIEW_WHO, "null")); } catch (e) { return null; } };
 export const keyLabel = () => { const who = reviewerKey() && reviewerWho(); return who ? `Key: ${who.name} (${ROLE_NAMES[who.role] || "reviewer"})` : "Redeem Key"; };
+
+// Device codes carry the key along (core/account.js asks here).
+setGalleryKeyBridge({ get: () => reviewerKey(), put: (k) => redeemKey(k) });
 
 // Who to tell when the stored key changes (the panel, the button, the site's nav).
 const listeners = [];
@@ -53,7 +56,11 @@ export function recheckKey(onGone) {
   const k = reviewerKey();
   if (!k) return;
   reviewWhoami(k).then((me) => {
-    GM_setValue(REVIEW_WHO, JSON.stringify({ name: me.name, role: me.role }));
+    // Only a real change (renamed key, new role) redraws: an unchanged key
+    // must not reset Review (e.g. the section the reviewer just opened).
+    const who = JSON.stringify({ name: me.name, role: me.role });
+    if (GM_getValue(REVIEW_WHO, "") === who) return;
+    GM_setValue(REVIEW_WHO, who);
     changed();
   }, (e) => {
     if (e && (e.code === "key_expired" || e.code === "not_admin") && forgetKey()) {
@@ -129,14 +136,20 @@ export function deviceBox({ notLinked = "Link your account first (Link my accoun
   let timer = null;
   const stop = () => { clearInterval(timer); timer = null; };
   const back = () => button("Back", () => { stop(); choose(); });
+  let carry = true; // bring this device's gallery key along (when it has one)
 
   function choose() {
     const acct = linkedAccount();
+    const who = reviewerKey() && reviewerWho();
+    const box = who ? h("label", { class: "wz-dev-carry" },
+      h("input", { type: "checkbox", checked: carry, onchange: (e) => { carry = e.target.checked; } }),
+      ` Bring my gallery key (${who.name}, ${ROLE_NAMES[who.role] || "reviewer"}) too`) : null;
     wrap.replaceChildren(
       h("p", { text: "Use the Card Gallery on your phone or another computer with the same Undercards account." }),
       h("div", { class: "wz-dev-choices" },
         button("Generate a code", generate, { primary: true, title: "On a device where your account is linked" }),
         button("Redeem a code", redeem, { title: "On the new device" })),
+      box,
       h("p", { class: "dim", text: acct ? `This device is linked as ${acct}.` : "This device isn't linked yet." }));
   }
 
@@ -148,7 +161,7 @@ export function deviceBox({ notLinked = "Link your account first (Link my accoun
     }
     wrap.replaceChildren(h("p", { text: "Making a code…" }));
     let r;
-    try { r = await linkShare(); } catch (e) {
+    try { r = await linkShare(carry); } catch (e) {
       wrap.replaceChildren(h("p", { class: "wz-key-status", style: "color:#f77", text: (e && e.message) || "Couldn't reach the Wizascript server." }), h("p", {}, back()));
       return;
     }
@@ -167,6 +180,8 @@ export function deviceBox({ notLinked = "Link your account first (Link my accoun
       h("p", { text: `A code for ${linkedAccount() || r.account}:` }),
       code,
       h("p", {}, left),
+      r.carries ? h("p", { text: `It also brings your gallery key (${r.carries.name}, ${ROLE_NAMES[r.carries.role] || r.carries.role}). Keep the code to yourself.` }) : null,
+      r.keyDropped ? h("p", { class: "wz-key-status", style: "color:#f77", text: "Your gallery key isn't valid anymore, so the code doesn't bring it." }) : null,
       h("p", { class: "dim", text: "On the other device, open the Card Gallery (the website, or Card Maker in Wizascript), press 📱, then Redeem a code." }),
       h("div", { class: "wz-key-row" }, back(), button("New code", generate)));
   }
@@ -182,7 +197,11 @@ export function deviceBox({ notLinked = "Link your account first (Link my accoun
       if (busy) return;
       if (!isDeviceCode(input.value)) { show("Codes look like WZL-XXXX-XXXX.", false); return; }
       busy = true; go.disabled = true; show("Checking…", true);
-      try { const name = await redeemDeviceCode(input.value); input.value = ""; show(`Linked as ${name}.`, true); } catch (e) { show(e.message, false); }
+      try {
+        const r = await redeemDeviceCode(input.value);
+        input.value = "";
+        show(`Linked as ${r.account}.${r.key ? ` Your gallery key came too (${r.key.name}, ${ROLE_NAMES[r.key.role] || r.key.role}).` : ""}`, true);
+      } catch (e) { show(e.message, false); }
       busy = false; go.disabled = false;
     };
     const go = button("Redeem", submit, { primary: true });
@@ -235,4 +254,5 @@ export const KEYBOX_CSS = `
 .wz-key-box .wz-dev-choices .wz-cm-btn { flex: 1; height: 40px; font-size: 15px; }
 .wz-dev-code { font: 24px "DTM-Mono", "DTM Mono", monospace; letter-spacing: 2px; text-align: center; padding: 8px; margin: 0 0 8px; background: #000; border: 1px solid #666; user-select: all; }
 .wz-key-row input.wz-dev-input { text-transform: uppercase; }
+.wz-dev-carry { display: block; margin: 0 0 10px; font-size: 13px; cursor: pointer; }
 `;

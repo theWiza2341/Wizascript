@@ -13,8 +13,17 @@ An **opt-in** plugin: share your PvP games, and see which cards, artifacts and s
 - Your **History** shows every PvP game this season, 20 a page (the mouse wheel turns pages).
 - **Delete My Data** on its tab removes everything you've sent.
 
+## 1.7.4
+
+### Card Gallery: notes
+The gallery staff can now write to you about one of your posts, and you can answer, right in the gallery (Card Maker or the website).
+- A **✉** on your post in Browse, and **Notes** at the top of the gallery, open the conversation. Text only, no links.
+- When you come back and there's a new message, a popup tells you; click it to open the note.
+- If an upload isn't approved, the reason now arrives as a note, so you can ask about it.
+- Either side can close a note when it's settled. It also closes when the post is approved, or when you cancel, withdraw or delete it.
+
 ### Changes
-- **Link a Mobile Account:** the new **📱** button at the bottom left of the Card Gallery (in Card Maker and on the gallery website). On a linked device, **Generate a code**; on your phone or another browser, **Redeem a code** to link the same account, no void needed. (Also in Wizascript tab → **Undercards Account**.)
+- **Link a Mobile Account:** the new **📱** button at the bottom left of the Card Gallery (in Card Maker and on the gallery website). On a linked device, **Generate a code**; on your phone or another browser, **Redeem a code** to link the same account, no void needed. If you have a gallery key, the code brings it along too. (Also in Wizascript tab → **Undercards Account**.)
 - **Redeem Key** moved from the Card Maker tab to a **⚿** button at the bottom left of the Card Gallery, like on the gallery website.
 - If you change your Undercards name, Wizascript unlinks the old name. Link again under the new one.
 

@@ -267,7 +267,17 @@ function item(ctx, e, rank, listKey) {
         h("button", { type: "button", class: `wz-gl-vote down${e.vote === -1 ? " on" : ""}`, title: "Dislike", text: "▼", onclick: () => vote(-1) })
       ] : null,
       ctx.onRemove && e.status === "approved" ? removeButton(ctx, e) : null,
+      noteButton(ctx, e),
       ctx.onDelete && e.mine ? ownButton(ctx, e) : null));
+}
+
+// ✉ (1.7.4 post notes): the staff start a note with a post's author; an author
+// whose post has an open note opens it (gold when it has a new message).
+function noteButton(ctx, e) {
+  const mineNote = ctx.noteFor ? ctx.noteFor(e) : null;
+  if (mineNote) return h("button", { type: "button", class: `wz-nt-btn${mineNote.unread ? " unread" : ""}`, text: "✉", title: mineNote.unread ? "New message from the gallery staff" : "Your note with the gallery staff", onclick: () => ctx.openNote(mineNote) });
+  if (ctx.onNote && e.status === "approved" && !e.sample) return h("button", { type: "button", class: "wz-nt-btn", text: "✉", title: "Start a note with this post's author", onclick: () => ctx.onNote(e) });
+  return null;
 }
 
 // Your own posts: take them back. Waiting: cancel the upload. In the gallery:

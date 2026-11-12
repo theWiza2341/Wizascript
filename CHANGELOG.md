@@ -16,6 +16,9 @@ The gallery staff can now write to you about one of your posts, and you can answ
 - **Redeem Key** moved from the Card Maker tab to a **⚿** button at the bottom left of the Card Gallery, like on the gallery website.
 - If you change your Undercards name, Wizascript unlinks the old name. Link again under the new one.
 
+### Fixes
+- **Downloads without Tampermonkey's request function:** True Hub Bridge's deck list had no fallback, and the fallbacks elsewhere (Card History, the Card Gallery, Flowery Mode) sent headers that GitHub refuses from a web page. Every request now goes one shared way that works either way. Thanks, feildmaster.
+
 ## 1.7.3
 
 ### Card Gallery

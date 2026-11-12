@@ -16,6 +16,7 @@
 import { createFeatureSettings } from "../core/settings.js";
 import { isPluginEnabled, onPluginToggled } from "../core/plugins.js";
 import { matchesPage } from "../core/page-match.js";
+import { http } from "../core/http.js";
 import { getPageWindow } from "../core/page-window.js";
 import { isDebugLogging } from "../core/debug.js";
 import { onAccountLinked } from "../core/account.js";
@@ -61,27 +62,19 @@ function loadRules({ force = false } = {}) {
   try { cached = JSON.parse(GM_getValue(RULES_KEY, "null")); } catch (e) { cached = null; }
   if (cached && cached.index && rulesState === "none") useIndex(cached.index, "cached");
   if (!force && cached && Date.now() - cached.at < REFRESH_MS) return Promise.resolve(compiled);
-  return new Promise((resolve) => {
-    GM_xmlhttpRequest({
-      method: "GET",
-      url: BRANCH + "index.json?t=" + Math.floor(Date.now() / 60000),
-      timeout: 15000,
-      onload: (r) => {
-        try {
-          if (r.status !== 200) throw new Error("HTTP " + r.status);
-          const index = JSON.parse(r.responseText);
-          GM_setValue(RULES_KEY, JSON.stringify({ at: Date.now(), index }));
-          useIndex(index, "fresh");
-        } catch (e) {
-          log("couldn't read the rules:", e.message);
-          if (rulesState === "none") { rulesState = "failed"; drawChip(); }
-        }
-        resolve(compiled);
-      },
-      onerror: () => { if (rulesState === "none") { rulesState = "failed"; drawChip(); } resolve(compiled); },
-      ontimeout: () => { if (rulesState === "none") { rulesState = "failed"; drawChip(); } resolve(compiled); }
-    });
-  });
+  const failed = () => { if (rulesState === "none") { rulesState = "failed"; drawChip(); } return compiled; };
+  return http("GET", BRANCH + "index.json?t=" + Math.floor(Date.now() / 60000), { timeout: 15000 }).then((r) => {
+    try {
+      if (r.status !== 200) throw new Error("HTTP " + r.status);
+      const index = JSON.parse(r.text);
+      GM_setValue(RULES_KEY, JSON.stringify({ at: Date.now(), index }));
+      useIndex(index, "fresh");
+      return compiled;
+    } catch (e) {
+      log("couldn't read the rules:", e.message);
+      return failed();
+    }
+  }, failed);
 }
 
 // ---- playing -----------------------------------------------------------------------

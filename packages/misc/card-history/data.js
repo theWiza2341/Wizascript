@@ -12,32 +12,14 @@
 //   reports.json                versions players reported as wrong (written by the bot)
 //   assets/sprites/<Name>.png   old card art for reworked cards
 
+import { getJson as fetchJson } from "../../core/http.js";
+
 export const BASE = "https://raw.githubusercontent.com/theWiza2341/Wizascript/card-history/card-history/";
 
 const memo = new Map();
 
-function getJson(url) {
-  return new Promise((resolve, reject) => {
-    const fail = (msg) => reject(new Error(msg));
-    if (typeof GM_xmlhttpRequest === "function") {
-      GM_xmlhttpRequest({
-        method: "GET",
-        url,
-        headers: { "Cache-Control": "no-cache" },
-        onload(res) {
-          if (res.status === 404) return resolve(null);
-          if (res.status !== 200) return fail(`HTTP ${res.status}`);
-          try { resolve(JSON.parse(res.responseText)); } catch (e) { fail("bad JSON"); }
-        },
-        onerror: () => fail("network error"),
-        ontimeout: () => fail("timed out"),
-        timeout: 20000
-      });
-      return;
-    }
-    fetch(url).then((r) => (r.status === 404 ? null : r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))).then(resolve, reject);
-  });
-}
+// Through core/http.js (no extra headers, so a plain fetch works too).
+const getJson = (url) => fetchJson(url, { timeout: 20000 }).catch((e) => { throw new Error(e.kind === "timeout" ? "timed out" : e.message); });
 
 function cached(path) {
   if (!memo.has(path)) {

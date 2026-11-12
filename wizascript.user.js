@@ -1070,6 +1070,9 @@ The gallery staff can now write to you about one of your posts, and you can answ
 - **Redeem Key** moved from the Card Maker tab to a **\u26BF** button at the bottom left of the Card Gallery, like on the gallery website.
 - If you change your Undercards name, Wizascript unlinks the old name. Link again under the new one.
 
+### Fixes
+- **Downloads without Tampermonkey's request function:** True Hub Bridge's deck list had no fallback, and the fallbacks elsewhere (Card History, the Card Gallery, Flowery Mode) sent headers that GitHub refuses from a web page. Every request now goes one shared way that works either way. Thanks, feildmaster.
+
 ## 1.7.3
 
 ### Card Gallery
@@ -1608,6 +1611,58 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     });
   }
 
+  // packages/core/http.js
+  function gmRequest() {
+    if (typeof GM_xmlhttpRequest === "function") return GM_xmlhttpRequest;
+    if (typeof GM !== "undefined" && GM && typeof GM.xmlHttpRequest === "function") return GM.xmlHttpRequest.bind(GM);
+    return null;
+  }
+  var failure = (kind, message) => Object.assign(new Error(message), { kind });
+  function http(method, url, { headers = {}, body, timeout = 2e4 } = {}) {
+    const h2 = { ...headers };
+    if (body === void 0 || body === null) Object.keys(h2).forEach((k) => {
+      if (k.toLowerCase() === "content-type") delete h2[k];
+    });
+    const gm = gmRequest();
+    if (gm) {
+      return new Promise((resolve2, reject) => {
+        try {
+          gm({
+            method,
+            url,
+            headers: h2,
+            data: body,
+            timeout,
+            onload: (r) => resolve2({ status: r.status, text: r.responseText || "" }),
+            onerror: () => reject(failure("network", "network error")),
+            ontimeout: () => reject(failure("timeout", "timed out"))
+          });
+        } catch (e) {
+          reject(failure("network", e && e.message || "network error"));
+        }
+      });
+    }
+    const ctl2 = typeof AbortController === "function" ? new AbortController() : null;
+    let timedOut = false;
+    const timer = ctl2 && timeout ? setTimeout(() => {
+      timedOut = true;
+      ctl2.abort();
+    }, timeout) : null;
+    return fetch(url, { method, headers: h2, body: body === null ? void 0 : body, signal: ctl2 ? ctl2.signal : void 0, credentials: "omit" }).then(async (r) => ({ status: r.status, text: await r.text() })).catch(() => {
+      throw timedOut ? failure("timeout", "timed out") : failure("network", "network error");
+    }).finally(() => clearTimeout(timer));
+  }
+  async function getJson(url, { timeout } = {}) {
+    const r = await http("GET", url, { timeout });
+    if (r.status === 404) return null;
+    if (r.status !== 200) throw failure("http", `HTTP ${r.status}`);
+    try {
+      return JSON.parse(r.text);
+    } catch (e) {
+      throw failure("json", "bad JSON");
+    }
+  }
+
   // packages/core/account.js
   var DEFAULT_WORKER = "https://wizascript-gallery.thewiza2341.workers.dev";
   var WORKER_HOSTS = ["wizascript-gallery.thewiza2341.workers.dev"];
@@ -1631,31 +1686,17 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   var worker = (cachedServer() || {}).url || DEFAULT_WORKER;
   var checking = null;
   function fetchServer() {
-    return new Promise((resolve2) => {
-      const keep = () => resolve2(worker);
+    return http("GET", SERVER_FILE + "?t=" + Math.floor(Date.now() / 6e4), { timeout: 6e3 }).then((r) => {
       try {
-        GM_xmlhttpRequest({
-          method: "GET",
-          url: SERVER_FILE + "?t=" + Math.floor(Date.now() / 6e4),
-          timeout: 6e3,
-          onload: (r) => {
-            try {
-              const u = r.status === 200 ? String(JSON.parse(r.responseText).worker || "").replace(/\/+$/, "") : "";
-              if (isWorkerUrl(u)) {
-                worker = u;
-                GM_setValue(SERVER_KEY, JSON.stringify({ at: Date.now(), url: u }));
-              }
-            } catch (e) {
-            }
-            keep();
-          },
-          onerror: keep,
-          ontimeout: keep
-        });
+        const u = r.status === 200 ? String(JSON.parse(r.text).worker || "").replace(/\/+$/, "") : "";
+        if (isWorkerUrl(u)) {
+          worker = u;
+          GM_setValue(SERVER_KEY, JSON.stringify({ at: Date.now(), url: u }));
+        }
       } catch (e) {
-        keep();
       }
-    });
+      return worker;
+    }, () => worker);
   }
   function server() {
     const c = cachedServer();
@@ -1677,37 +1718,24 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     }
   };
   function request(method, url, { body, auth: auth2, adminKey } = {}) {
-    return new Promise((resolve2, reject) => {
-      const headers = { "Content-Type": "application/json" };
-      if (auth2) {
-        headers["X-WZ-Install"] = auth2.install;
-        headers["X-WZ-Secret"] = auth2.secret;
+    const headers = {};
+    if (body) headers["Content-Type"] = "application/json";
+    if (auth2) {
+      headers["X-WZ-Install"] = auth2.install;
+      headers["X-WZ-Secret"] = auth2.secret;
+    }
+    if (adminKey) headers["X-WZ-Admin"] = adminKey;
+    return http(method, url, { headers, body: body ? JSON.stringify(body) : void 0, timeout: 3e4 }).then((r) => {
+      let data2 = null;
+      try {
+        data2 = r.text ? JSON.parse(r.text) : null;
+      } catch (e) {
       }
-      if (adminKey) headers["X-WZ-Admin"] = adminKey;
-      const done = (status, text) => {
-        let data2 = null;
-        try {
-          data2 = text ? JSON.parse(text) : null;
-        } catch (e) {
-        }
-        if (status >= 200 && status < 300) return resolve2(data2);
-        if (status === 404 && !data2) return resolve2(null);
-        reject(new ApiError(status, data2 && data2.error || "http", data2 && data2.message || `The gallery server answered ${status}.`, data2));
-      };
-      if (typeof GM_xmlhttpRequest === "function") {
-        GM_xmlhttpRequest({
-          method,
-          url,
-          headers,
-          data: body ? JSON.stringify(body) : void 0,
-          timeout: 3e4,
-          onload: (r) => done(r.status, r.responseText),
-          onerror: () => reject(new ApiError(0, "network", "Couldn't reach the gallery server.")),
-          ontimeout: () => reject(new ApiError(0, "timeout", "The gallery server took too long to answer."))
-        });
-        return;
-      }
-      fetch(url, { method, headers, body: body ? JSON.stringify(body) : void 0 }).then(async (r) => done(r.status, await r.text()), () => reject(new ApiError(0, "network", "Couldn't reach the gallery server.")));
+      if (r.status >= 200 && r.status < 300) return data2;
+      if (r.status === 404 && !data2) return null;
+      throw new ApiError(r.status, data2 && data2.error || "http", data2 && data2.message || `The gallery server answered ${r.status}.`, data2);
+    }, (e) => {
+      throw e && e.kind === "timeout" ? new ApiError(0, "timeout", "The gallery server took too long to answer.") : new ApiError(0, "network", "Couldn't reach the gallery server.");
     });
   }
   function loadAuth() {
@@ -6877,30 +6905,13 @@ Version: v${version}`;
 
   // packages/true-hub-bridge/decks-api.js
   var DECKS_URL = "https://raw.githubusercontent.com/theWiza2341/Wizascript/refs/heads/main/bot/decks.json";
-  function loadDecks() {
-    return new Promise((resolve2, reject) => {
-      GM_xmlhttpRequest({
-        method: "GET",
-        url: DECKS_URL,
-        onload(res) {
-          if (res.status !== 200) {
-            reject(new Error(
-              `Failed to fetch decks.json (HTTP ${res.status}). Check that the repo is public and bot/decks.json exists on main.`
-            ));
-            return;
-          }
-          try {
-            const raw = JSON.parse(res.responseText);
-            resolve2(Array.isArray(raw) ? raw : raw.decks || []);
-          } catch (e) {
-            reject(e);
-          }
-        },
-        onerror(err) {
-          reject(err);
-        }
-      });
-    });
+  async function loadDecks() {
+    const res = await http("GET", DECKS_URL);
+    if (res.status !== 200) {
+      throw new Error(`Failed to fetch decks.json (HTTP ${res.status}). Check that the repo is public and bot/decks.json exists on main.`);
+    }
+    const raw = JSON.parse(res.text);
+    return Array.isArray(raw) ? raw : raw.decks || [];
   }
 
   // packages/true-hub-bridge/index.js
@@ -13625,29 +13636,16 @@ Version: v${version}`;
   function getGuidelines() {
     const c = cachedGuidelines();
     if (c && Date.now() - c.at < GUIDE_TTL) return Promise.resolve(c.text);
-    return new Promise((resolve2) => {
-      const fallback = () => resolve2(c ? c.text : DEFAULT_GUIDELINES);
+    const fallback = () => c ? c.text : DEFAULT_GUIDELINES;
+    return http("GET", GUIDELINES_URL + "?t=" + Math.floor(Date.now() / 6e4), { timeout: 8e3 }).then((r) => {
+      const text = r.status === 200 ? String(r.text || "") : "";
+      if (!parseGuidelines(text).rules.length) return fallback();
       try {
-        GM_xmlhttpRequest({
-          method: "GET",
-          url: GUIDELINES_URL + "?t=" + Math.floor(Date.now() / 6e4),
-          timeout: 8e3,
-          onload: (r) => {
-            const text = r.status === 200 ? String(r.responseText || "") : "";
-            if (!parseGuidelines(text).rules.length) return fallback();
-            try {
-              GM_setValue(GUIDE_KEY, JSON.stringify({ at: Date.now(), text }));
-            } catch (e) {
-            }
-            resolve2(text);
-          },
-          onerror: fallback,
-          ontimeout: fallback
-        });
+        GM_setValue(GUIDE_KEY, JSON.stringify({ at: Date.now(), text }));
       } catch (e) {
-        fallback();
       }
-    });
+      return text;
+    }, fallback);
   }
 
   // packages/card-maker/gallery/notes.js
@@ -17814,42 +17812,25 @@ ${NOTES_CSS}
     }
     if (cached2 && cached2.index && rulesState === "none") useIndex(cached2.index, "cached");
     if (!force && cached2 && Date.now() - cached2.at < REFRESH_MS) return Promise.resolve(compiled);
-    return new Promise((resolve2) => {
-      GM_xmlhttpRequest({
-        method: "GET",
-        url: BRANCH + "index.json?t=" + Math.floor(Date.now() / 6e4),
-        timeout: 15e3,
-        onload: (r) => {
-          try {
-            if (r.status !== 200) throw new Error("HTTP " + r.status);
-            const index = JSON.parse(r.responseText);
-            GM_setValue(RULES_KEY, JSON.stringify({ at: Date.now(), index }));
-            useIndex(index, "fresh");
-          } catch (e) {
-            log2("couldn't read the rules:", e.message);
-            if (rulesState === "none") {
-              rulesState = "failed";
-              drawChip();
-            }
-          }
-          resolve2(compiled);
-        },
-        onerror: () => {
-          if (rulesState === "none") {
-            rulesState = "failed";
-            drawChip();
-          }
-          resolve2(compiled);
-        },
-        ontimeout: () => {
-          if (rulesState === "none") {
-            rulesState = "failed";
-            drawChip();
-          }
-          resolve2(compiled);
-        }
-      });
-    });
+    const failed = () => {
+      if (rulesState === "none") {
+        rulesState = "failed";
+        drawChip();
+      }
+      return compiled;
+    };
+    return http("GET", BRANCH + "index.json?t=" + Math.floor(Date.now() / 6e4), { timeout: 15e3 }).then((r) => {
+      try {
+        if (r.status !== 200) throw new Error("HTTP " + r.status);
+        const index = JSON.parse(r.text);
+        GM_setValue(RULES_KEY, JSON.stringify({ at: Date.now(), index }));
+        useIndex(index, "fresh");
+        return compiled;
+      } catch (e) {
+        log2("couldn't read the rules:", e.message);
+        return failed();
+      }
+    }, failed);
   }
   function effectsVolume() {
     try {
@@ -22136,35 +22117,12 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
   // packages/misc/card-history/data.js
   var BASE = "https://raw.githubusercontent.com/theWiza2341/Wizascript/card-history/card-history/";
   var memo = /* @__PURE__ */ new Map();
-  function getJson(url) {
-    return new Promise((resolve2, reject) => {
-      const fail = (msg) => reject(new Error(msg));
-      if (typeof GM_xmlhttpRequest === "function") {
-        GM_xmlhttpRequest({
-          method: "GET",
-          url,
-          headers: { "Cache-Control": "no-cache" },
-          onload(res) {
-            if (res.status === 404) return resolve2(null);
-            if (res.status !== 200) return fail(`HTTP ${res.status}`);
-            try {
-              resolve2(JSON.parse(res.responseText));
-            } catch (e) {
-              fail("bad JSON");
-            }
-          },
-          onerror: () => fail("network error"),
-          ontimeout: () => fail("timed out"),
-          timeout: 2e4
-        });
-        return;
-      }
-      fetch(url).then((r) => r.status === 404 ? null : r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))).then(resolve2, reject);
-    });
-  }
+  var getJson2 = (url) => getJson(url, { timeout: 2e4 }).catch((e) => {
+    throw new Error(e.kind === "timeout" ? "timed out" : e.message);
+  });
   function cached(path) {
     if (!memo.has(path)) {
-      const p = getJson(BASE + path).catch((e) => {
+      const p = getJson2(BASE + path).catch((e) => {
         memo.delete(path);
         throw e;
       });

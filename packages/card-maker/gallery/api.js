@@ -13,6 +13,7 @@
 // The server, this install's credentials and account linking live in
 // core/account.js (any plugin can use them); re-exported here for the gallery.
 import { workerUrl, ApiError, request, call, authed, getMe, linkStart, linkCheck } from "../../core/account.js";
+import { http } from "../../core/http.js";
 export { workerUrl, ApiError, getMe, linkStart, linkCheck };
 export const GALLERY_RAW = "https://raw.githubusercontent.com/theWiza2341/Wizascript/gallery/";
 
@@ -246,22 +247,11 @@ function cachedGuidelines() {
 export function getGuidelines() {
   const c = cachedGuidelines();
   if (c && Date.now() - c.at < GUIDE_TTL) return Promise.resolve(c.text);
-  return new Promise((resolve) => {
-    const fallback = () => resolve(c ? c.text : DEFAULT_GUIDELINES);
-    try {
-      GM_xmlhttpRequest({
-        method: "GET",
-        url: GUIDELINES_URL + "?t=" + Math.floor(Date.now() / 60000),
-        timeout: 8000,
-        onload: (r) => {
-          const text = r.status === 200 ? String(r.responseText || "") : "";
-          if (!parseGuidelines(text).rules.length) return fallback(); // missing or not a list: keep what we had
-          try { GM_setValue(GUIDE_KEY, JSON.stringify({ at: Date.now(), text })); } catch (e) { /* not cached */ }
-          resolve(text);
-        },
-        onerror: fallback,
-        ontimeout: fallback
-      });
-    } catch (e) { fallback(); }
-  });
+  const fallback = () => (c ? c.text : DEFAULT_GUIDELINES);
+  return http("GET", GUIDELINES_URL + "?t=" + Math.floor(Date.now() / 60000), { timeout: 8000 }).then((r) => {
+    const text = r.status === 200 ? String(r.text || "") : "";
+    if (!parseGuidelines(text).rules.length) return fallback(); // missing or not a list: keep what we had
+    try { GM_setValue(GUIDE_KEY, JSON.stringify({ at: Date.now(), text })); } catch (e) { /* not cached */ }
+    return text;
+  }, fallback);
 }

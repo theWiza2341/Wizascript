@@ -20,6 +20,7 @@
 import { registerSettingWidget, asButton } from "./setting-widgets.js";
 import { getPageWindow } from "./page-window.js";
 import { canOpenVoid, openVoid } from "./uc-report.js";
+import { http } from "./http.js";
 
 // ---- which server ------------------------------------------------------------------
 // The Worker's address is read from server.json on the repo's `sounds` branch
@@ -48,25 +49,13 @@ let worker = (cachedServer() || {}).url || DEFAULT_WORKER;
 export const workerUrl = () => worker;
 let checking = null;
 function fetchServer() {
-  return new Promise((resolve) => {
-    const keep = () => resolve(worker);
+  return http("GET", SERVER_FILE + "?t=" + Math.floor(Date.now() / 60000), { timeout: 6000 }).then((r) => {
     try {
-      GM_xmlhttpRequest({
-        method: "GET",
-        url: SERVER_FILE + "?t=" + Math.floor(Date.now() / 60000),
-        timeout: 6000,
-        onload: (r) => {
-          try {
-            const u = r.status === 200 ? String(JSON.parse(r.responseText).worker || "").replace(/\/+$/, "") : "";
-            if (isWorkerUrl(u)) { worker = u; GM_setValue(SERVER_KEY, JSON.stringify({ at: Date.now(), url: u })); }
-          } catch (e) { /* keep the current one */ }
-          keep();
-        },
-        onerror: keep,
-        ontimeout: keep
-      });
-    } catch (e) { keep(); }
-  });
+      const u = r.status === 200 ? String(JSON.parse(r.text).worker || "").replace(/\/+$/, "") : "";
+      if (isWorkerUrl(u)) { worker = u; GM_setValue(SERVER_KEY, JSON.stringify({ at: Date.now(), url: u })); }
+    } catch (e) { /* keep the current one */ }
+    return worker;
+  }, () => worker);
 }
 // Resolves to the server's address. Blocks only the very first time (no cache),
 // at most ~6 s; a stale cache is used at once and refreshed in the background.
@@ -86,31 +75,21 @@ export class ApiError extends Error {
   constructor(status, code, message, extra) { super(message); this.status = status; this.code = code; this.extra = extra || {}; }
 }
 
+// Content-Type only goes with a body, and the x-wz-* headers only with auth or
+// a key, so a GET to raw.githubusercontent stays a simple request (core/http.js).
 export function request(method, url, { body, auth, adminKey } = {}) {
-  return new Promise((resolve, reject) => {
-    const headers = { "Content-Type": "application/json" };
-    if (auth) { headers["X-WZ-Install"] = auth.install; headers["X-WZ-Secret"] = auth.secret; }
-    if (adminKey) headers["X-WZ-Admin"] = adminKey;
-    const done = (status, text) => {
-      let data = null;
-      try { data = text ? JSON.parse(text) : null; } catch (e) { /* not JSON */ }
-      if (status >= 200 && status < 300) return resolve(data);
-      if (status === 404 && !data) return resolve(null);
-      reject(new ApiError(status, (data && data.error) || "http", (data && data.message) || `The gallery server answered ${status}.`, data));
-    };
-    if (typeof GM_xmlhttpRequest === "function") {
-      GM_xmlhttpRequest({
-        method, url, headers,
-        data: body ? JSON.stringify(body) : undefined,
-        timeout: 30000,
-        onload: (r) => done(r.status, r.responseText),
-        onerror: () => reject(new ApiError(0, "network", "Couldn't reach the gallery server.")),
-        ontimeout: () => reject(new ApiError(0, "timeout", "The gallery server took too long to answer."))
-      });
-      return;
-    }
-    fetch(url, { method, headers, body: body ? JSON.stringify(body) : undefined })
-      .then(async (r) => done(r.status, await r.text()), () => reject(new ApiError(0, "network", "Couldn't reach the gallery server.")));
+  const headers = {};
+  if (body) headers["Content-Type"] = "application/json";
+  if (auth) { headers["X-WZ-Install"] = auth.install; headers["X-WZ-Secret"] = auth.secret; }
+  if (adminKey) headers["X-WZ-Admin"] = adminKey;
+  return http(method, url, { headers, body: body ? JSON.stringify(body) : undefined, timeout: 30000 }).then((r) => {
+    let data = null;
+    try { data = r.text ? JSON.parse(r.text) : null; } catch (e) { /* not JSON */ }
+    if (r.status >= 200 && r.status < 300) return data;
+    if (r.status === 404 && !data) return null;
+    throw new ApiError(r.status, (data && data.error) || "http", (data && data.message) || `The gallery server answered ${r.status}.`, data);
+  }, (e) => {
+    throw e && e.kind === "timeout" ? new ApiError(0, "timeout", "The gallery server took too long to answer.") : new ApiError(0, "network", "Couldn't reach the gallery server.");
   });
 }
 

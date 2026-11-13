@@ -1,0 +1,19 @@
+{
+  "id": "131",
+  "kind": "single",
+  "title": "Mr. Cursor",
+  "author": "Sernon158",
+  "postedAt": 1794509466034,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Mr. Cursor",
+      "desc": "Dodge (4). Whenever you draw a card, lose 1 Dodge.",
+      "cost": 6,
+      "atk": 3,
+      "hp": 4,
+      "rarity": "UTY_COMMON",
+      "art": "art/131-0.png"
+    }
+  ]
+}

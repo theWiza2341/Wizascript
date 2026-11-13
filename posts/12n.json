@@ -1,0 +1,27 @@
+{
+  "id": "12n",
+  "kind": "set",
+  "title": "Chapter 5 Kindness Spell",
+  "author": "TheLudicrousLuv",
+  "postedAt": 1794502444007,
+  "parts": [
+    {
+      "type": "Spell",
+      "name": "First Aid",
+      "desc": "Give a damaged ally monster at 1 HP Dodge (1) and Candy.",
+      "cost": 3,
+      "rarity": "DELTARUNE_RARE",
+      "soul": "KINDNESS",
+      "art": "art/12n-0.png"
+    },
+    {
+      "type": "Spell",
+      "name": "First Aid",
+      "desc": "Give a damaged ally monster at 2 HP or less Dodge (1) and Candy.",
+      "cost": 3,
+      "rarity": "DELTARUNE_RARE",
+      "soul": "KINDNESS",
+      "art": "art/12n-1.png"
+    }
+  ]
+}

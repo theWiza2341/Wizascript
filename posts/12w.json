@@ -1,0 +1,19 @@
+{
+  "id": "12w",
+  "kind": "single",
+  "title": "Sound of Justice",
+  "author": "Sernon158",
+  "postedAt": 1794509466034,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Sound of Justice",
+      "desc": "Darkspawn. Whenever an enemy monster is summoned, attack it.",
+      "cost": 6,
+      "atk": 3,
+      "hp": 7,
+      "rarity": "DELTARUNE_EPIC",
+      "art": "art/12w-0.png"
+    }
+  ]
+}

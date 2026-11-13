@@ -1,0 +1,18 @@
+{
+  "id": "12m",
+  "kind": "single",
+  "title": "Arcade Queen",
+  "author": "Legacy_03",
+  "postedAt": 1794445315166,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Arcade Queen",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/12m-0-pic.png"
+    }
+  ]
+}

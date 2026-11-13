@@ -1,0 +1,18 @@
+{
+  "id": "13a",
+  "kind": "single",
+  "title": "Fire Extinguisher",
+  "author": "bagels5899",
+  "postedAt": 1794526179030,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Fire Extinguisher",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/13a-0-pic.png"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "12p",
+  "kind": "set",
+  "title": "Chapter 5 Patience Spell",
+  "author": "TheLudicrousLuv",
+  "postedAt": 1794503685872,
+  "parts": [
+    {
+      "type": "Spell",
+      "name": "Twirl",
+      "desc": "Shuffle the most expensive card in both hands to the bottom of the owners deck. Add a {Change of Winds} to both hands.",
+      "cost": 3,
+      "rarity": "DELTARUNE_EPIC",
+      "soul": "PATIENCE",
+      "art": "art/12p-0.png"
+    },
+    {
+      "type": "Spell",
+      "name": "Twirl",
+      "desc": "Shuffle a card in the enemy hand to the bottom of their deck. Add 2 {Change of Winds} to their hand.",
+      "cost": 2,
+      "rarity": "DELTARUNE_EPIC",
+      "soul": "PATIENCE",
+      "art": "art/12p-1.png"
+    }
+  ]
+}

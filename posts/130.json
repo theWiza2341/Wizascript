@@ -1,0 +1,19 @@
+{
+  "id": "130",
+  "kind": "single",
+  "title": "Kanako",
+  "author": "Sernon158",
+  "postedAt": 1794509466034,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Kanako",
+      "desc": "Magic: Turn all non-DT monsters in your hand into {Golden Mirrors} that Catch them.",
+      "cost": 12,
+      "atk": 4,
+      "hp": 4,
+      "rarity": "UTY_EPIC",
+      "art": "art/130-0.png"
+    }
+  ]
+}

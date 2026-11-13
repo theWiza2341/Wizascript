@@ -1,0 +1,24 @@
+{
+  "id": "139",
+  "kind": "set",
+  "title": "Gerson Statue",
+  "author": "bagels5899",
+  "postedAt": 1794526179030,
+  "parts": [
+    {
+      "type": "Artifact",
+      "name": "Echo",
+      "desc": "",
+      "picture": "art/139-0-pic.png"
+    },
+    {
+      "type": "Monster",
+      "name": "Gerson Statue",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/139-1-pic.png"
+    }
+  ]
+}

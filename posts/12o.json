@@ -1,0 +1,27 @@
+{
+  "id": "12o",
+  "kind": "set",
+  "title": "Chapter 5 Determination Spell",
+  "author": "TheLudicrousLuv",
+  "postedAt": 1794502884194,
+  "parts": [
+    {
+      "type": "Spell",
+      "name": "Indominable Hope",
+      "desc": "Add 2 {Dreams} to your hand.",
+      "cost": 4,
+      "rarity": "DELTARUNE_RARE",
+      "soul": "DETERMINATION",
+      "art": "art/12o-0.png"
+    },
+    {
+      "type": "Spell",
+      "name": "Indominable Hope",
+      "desc": "Add a {Dream} to your hand and the top of your deck.",
+      "cost": 3,
+      "rarity": "DELTARUNE_RARE",
+      "soul": "DETERMINATION",
+      "art": "art/12o-1.png"
+    }
+  ]
+}

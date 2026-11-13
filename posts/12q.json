@@ -1,0 +1,18 @@
+{
+  "id": "12q",
+  "kind": "single",
+  "title": "Rushdown",
+  "author": "TheLudicrousLuv",
+  "postedAt": 1794505983046,
+  "parts": [
+    {
+      "type": "Spell",
+      "name": "Rushdown",
+      "desc": "Choose an ally monster. It attacks the monster in front of it twice. If the target dies, attack the opponent instead.",
+      "cost": 5,
+      "rarity": "DELTARUNE_EPIC",
+      "soul": "BRAVERY",
+      "art": "art/12q-0.png"
+    }
+  ]
+}

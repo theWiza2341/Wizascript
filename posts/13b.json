@@ -1,0 +1,29 @@
+{
+  "id": "13b",
+  "kind": "set",
+  "title": "undyne house",
+  "author": "ichihime-tanyao",
+  "postedAt": 1794543937344,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Undyne's House",
+      "desc": "Taunt. Dust: Erase 5 cards from your dustpile to summon {Burning House}.",
+      "cost": 7,
+      "atk": 6,
+      "hp": 6,
+      "rarity": "BASE_EPIC",
+      "art": "art/13b-0.png"
+    },
+    {
+      "type": "Monster",
+      "name": "Burning House",
+      "desc": "Haste. Dust: Erase 5 cards from your dustpile to enchant this slot with _The Flame_.",
+      "cost": 6,
+      "atk": 5,
+      "hp": 4,
+      "rarity": "BASE_TOKEN",
+      "art": "art/13b-1.png"
+    }
+  ]
+}

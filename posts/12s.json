@@ -1,0 +1,43 @@
+{
+  "id": "12s",
+  "kind": "set",
+  "title": "Chapter 5 Perseverance Spell",
+  "author": "TheLudicrousLuv",
+  "postedAt": 1794506609829,
+  "parts": [
+    {
+      "type": "Spell",
+      "name": "Exploit",
+      "desc": "Summon a {Red Flower} for every enemy monster with KR.",
+      "cost": 3,
+      "rarity": "DELTARUNE_RARE",
+      "soul": "PERSEVERANCE",
+      "art": "art/12s-0.png"
+    },
+    {
+      "type": "Spell",
+      "name": "Exploit",
+      "desc": "Summon a {Purple Flower} for every enemy monster with KR.",
+      "cost": 3,
+      "rarity": "DELTARUNE_RARE",
+      "soul": "PERSEVERANCE",
+      "art": "art/12s-1.png"
+    },
+    {
+      "type": "Monster",
+      "name": "Purple Flower",
+      "desc": "KR. ITS PURPLE.",
+      "cost": 3,
+      "atk": 4,
+      "hp": 3,
+      "rarity": "DELTARUNE_TOKEN",
+      "tribes": [
+        {
+          "name": "PLANT",
+          "icon": "art/tribe-61e089bd19d6.png"
+        }
+      ],
+      "art": "art/12s-2.png"
+    }
+  ]
+}

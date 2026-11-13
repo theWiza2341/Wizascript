@@ -1,0 +1,19 @@
+{
+  "id": "12y",
+  "kind": "single",
+  "title": "Castle Poster",
+  "author": "Sernon158",
+  "postedAt": 1794509466034,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Castle Poster",
+      "desc": "Need: 3+ damaged monsters in the board. Magic: Add 2 {Drafts} to your hand.",
+      "cost": 3,
+      "atk": 4,
+      "hp": 3,
+      "rarity": "UTY_RARE",
+      "art": "art/12y-0.png"
+    }
+  ]
+}

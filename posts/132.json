@@ -1,0 +1,19 @@
+{
+  "id": "132",
+  "kind": "single",
+  "title": "Steamworks Clock",
+  "author": "Sernon158",
+  "postedAt": 1794509466034,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Steamworks Clock",
+      "desc": "Haste. This has ATK equal to the current turn count. Bullseye: Gain Taunt and +2 HP.",
+      "cost": 8,
+      "atk": 0,
+      "hp": 8,
+      "rarity": "UTY_RARE",
+      "art": "art/132-0.png"
+    }
+  ]
+}

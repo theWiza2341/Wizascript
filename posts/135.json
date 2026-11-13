@@ -1,0 +1,19 @@
+{
+  "id": "135",
+  "kind": "single",
+  "title": "Kangarufus",
+  "author": "Sernon158",
+  "postedAt": 1794509468378,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Kangarufus",
+      "desc": "Magic: Steal 2 G from the opponent. Delay: Your opponent earns 4 G.",
+      "cost": 4,
+      "atk": 5,
+      "hp": 5,
+      "rarity": "UTY_COMMON",
+      "art": "art/135-0.png"
+    }
+  ]
+}

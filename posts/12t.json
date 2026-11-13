@@ -1,0 +1,27 @@
+{
+  "id": "12t",
+  "kind": "set",
+  "title": "Chapter 5 Justice Spell",
+  "author": "TheLudicrousLuv",
+  "postedAt": 1794506935275,
+  "parts": [
+    {
+      "type": "Spell",
+      "name": "Stop, Criminell!!",
+      "desc": "Paralyze an enemy monster. If it's damaged, give it Wanted and deal 2 DMG to it.",
+      "cost": 2,
+      "rarity": "DELTARUNE_RARE",
+      "soul": "JUSTICE",
+      "art": "art/12t-0.png"
+    },
+    {
+      "type": "Spell",
+      "name": "Stop, Criminell!!",
+      "desc": "Both players draw a card. If the enemy drew a monster, Paralyze it and give it Wanted.",
+      "cost": 2,
+      "rarity": "DELTARUNE_RARE",
+      "soul": "JUSTICE",
+      "art": "art/12t-1.png"
+    }
+  ]
+}

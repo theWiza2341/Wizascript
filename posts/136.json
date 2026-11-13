@@ -1,0 +1,19 @@
+{
+  "id": "136",
+  "kind": "single",
+  "title": "Old Man",
+  "author": "Sernon158",
+  "postedAt": 1794509468378,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Old Man",
+      "desc": "Magic: Give a monster in your hand +2 cost. Delay: Give its adjacent monsters +1/+3/+2.",
+      "cost": 4,
+      "atk": 2,
+      "hp": 4,
+      "rarity": "DELTARUNE_LEGENDARY",
+      "art": "art/136-0.png"
+    }
+  ]
+}

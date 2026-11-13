@@ -1,0 +1,19 @@
+{
+  "id": "12x",
+  "kind": "single",
+  "title": "Furnace",
+  "author": "Sernon158",
+  "postedAt": 1794509466034,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Furnace",
+      "desc": "Whenever you summon a monster adjacent to this, kill it and gain +1 base ATK. Dust: Draw a card for each base ATK buff this had.",
+      "cost": 6,
+      "atk": 4,
+      "hp": 7,
+      "rarity": "UTY_EPIC",
+      "art": "art/12x-0.png"
+    }
+  ]
+}

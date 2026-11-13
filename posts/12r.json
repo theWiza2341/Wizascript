@@ -1,0 +1,18 @@
+{
+  "id": "12r",
+  "kind": "single",
+  "title": "Fair Play",
+  "author": "TheLudicrousLuv",
+  "postedAt": 1794506228883,
+  "parts": [
+    {
+      "type": "Spell",
+      "name": "Fair Play",
+      "desc": "Summon an enemy {Blue Rose} to give all cards in your hand -1 cost.",
+      "cost": 2,
+      "rarity": "DELTARUNE_RARE",
+      "soul": "INTEGRITY",
+      "art": "art/12r-0.png"
+    }
+  ]
+}

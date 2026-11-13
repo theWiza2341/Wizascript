@@ -1,0 +1,19 @@
+{
+  "id": "134",
+  "kind": "single",
+  "title": "Bubble Lad",
+  "author": "Sernon158",
+  "postedAt": 1794509466034,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Bubble Lad",
+      "desc": "Candy. Excess healing to this is converted to HP buffs.",
+      "cost": 4,
+      "atk": 4,
+      "hp": 1,
+      "rarity": "UTY_RARE",
+      "art": "art/134-0.png"
+    }
+  ]
+}

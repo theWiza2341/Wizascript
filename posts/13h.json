@@ -1,0 +1,18 @@
+{
+  "id": "13h",
+  "kind": "single",
+  "title": "Jitterbuggerer",
+  "author": "Legacy_03",
+  "postedAt": 1794606285956,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Jitterbuggerer",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/13h-0-pic.png"
+    }
+  ]
+}

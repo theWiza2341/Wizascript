@@ -1,0 +1,18 @@
+{
+  "id": "13f",
+  "kind": "single",
+  "title": "Glass Container",
+  "author": "Legacy_03",
+  "postedAt": 1794606277784,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Glass Container",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/13f-0-pic.png"
+    }
+  ]
+}

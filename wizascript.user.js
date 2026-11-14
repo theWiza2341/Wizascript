@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.8.0
+// @version      1.8.1
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -281,7 +281,7 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
   }
 
   // packages/core/version.js
-  var SUITE_VERSION = "1.8.0";
+  var SUITE_VERSION = "1.8.1";
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
@@ -1044,6 +1044,11 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
   var CHANGELOG_default = `# Changelog
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
+
+## 1.8.1
+
+### Fixes
+- **Usage Statistics:** **All Time** is greyed out until the first season is over (1 December). With a single season it only repeated This Season, and it could show a lone player's cards from before the 3-player rule applied everywhere.
 
 ## 1.8.0
 
@@ -19456,6 +19461,12 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       const same = order.slice(0, i).find((o) => o.n === w.n && o.n > 0);
       info[w.id] = !w.n ? { off: true, why: "No games in this time range yet" } : same ? { off: true, why: `Same games as ${TIME_NAMES[same.id]}`, same: same.id } : { off: false };
     });
+    const loaded = Object.values(files).filter(Boolean);
+    if (!loaded.some((f) => f.allReady === true) || files.ALL && files.ALL.locked) {
+      const at = files.ALL && files.ALL.opensAt || (loaded.find((f) => f.allOpensAt) || {}).allOpensAt;
+      const when2 = at ? ` (${new Date(at).toLocaleDateString(void 0, { month: "long", day: "numeric", timeZone: "UTC" })})` : "";
+      info.ALL = { off: true, why: `Starts after the first full season${when2}` };
+    }
     return info;
   }
   var pct = (x) => `${(Math.round((x || 0) * 1e3) / 10).toFixed(1)}%`;

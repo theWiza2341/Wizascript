@@ -2,6 +2,11 @@
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
 
+## 1.8.1
+
+### Fixes
+- **Usage Statistics:** **All Time** is greyed out until the first season is over (1 December). With a single season it only repeated This Season, and it could show a lone player's cards from before the 3-player rule applied everywhere.
+
 ## 1.8.0
 
 ### New: Usage Statistics

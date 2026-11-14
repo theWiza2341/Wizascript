@@ -194,6 +194,14 @@ function timeTabs() {
     const same = order.slice(0, i).find((o) => o.n === w.n && o.n > 0);
     info[w.id] = !w.n ? { off: true, why: "No games in this time range yet" } : same ? { off: true, why: `Same games as ${TIME_NAMES[same.id]}`, same: same.id } : { off: false };
   });
+  // 1.8.1: All Time opens once a season has finished (Worker 1.13 says so in every
+  // window; servers that don't say count as not ready).
+  const loaded = Object.values(files).filter(Boolean);
+  if (!loaded.some((f) => f.allReady === true) || (files.ALL && files.ALL.locked)) {
+    const at = (files.ALL && files.ALL.opensAt) || (loaded.find((f) => f.allOpensAt) || {}).allOpensAt;
+    const when = at ? ` (${new Date(at).toLocaleDateString(undefined, { month: "long", day: "numeric", timeZone: "UTC" })})` : "";
+    info.ALL = { off: true, why: `Starts after the first full season${when}` };
+  }
   return info;
 }
 

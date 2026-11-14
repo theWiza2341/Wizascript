@@ -1,0 +1,18 @@
+{
+  "id": "13e",
+  "kind": "single",
+  "title": "Dancing Santa",
+  "author": "Legacy_03",
+  "postedAt": 1794606277784,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Dancing Santa",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/13e-0-pic.png"
+    }
+  ]
+}

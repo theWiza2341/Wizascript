@@ -14,6 +14,7 @@ on:
       - 'card-history/**'
       - 'README.md'
       - 'CHANGELOG.md'
+      - 'legal/**'
   workflow_dispatch:
 
 permissions:

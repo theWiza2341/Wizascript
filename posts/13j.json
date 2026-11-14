@@ -1,0 +1,18 @@
+{
+  "id": "13j",
+  "kind": "single",
+  "title": "Sound of Justice",
+  "author": "Legacy_03",
+  "postedAt": 1794609689719,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Sound of Justice",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/13j-0-pic.png"
+    }
+  ]
+}

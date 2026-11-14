@@ -3,8 +3,8 @@
 // Usage Statistics (1.8.0): an OPT-IN plugin. While it's on and Wizascript is
 // linked to your Undercards account, each of your PvP games (never CPU) is sent
 // to the Wizascript server: your soul, result, division and Elo before/after,
-// the opponent's name and soul (for your History only), and your own starting
-// deck and artifacts. In return:
+// the opponent's soul, and your own starting deck and artifacts. The opponent's
+// NAME stays on this device (History), never sent (1.8.0 privacy). In return:
 //  - Profile: your season stats split by division and True Hub, earlier seasons,
 //    and an Elo Graph (profile.js);
 //  - History: every PvP game this season, not just the last 20 (history.js);
@@ -26,7 +26,8 @@ import { getPageWindow } from "../core/page-window.js";
 import { matchesPage } from "../core/page-match.js";
 import { linkedAccount } from "../core/account.js";
 import { PLUGIN_ID, ensureAccount, ownPage, log } from "./common.js";
-import { flush, optOut, clearLocal, queued } from "./api.js";
+import { flush, optOut, clearLocal, queued, exportMine, pruneOpponents } from "./api.js";
+import { PRIVACY_URL } from "../core/privacy.js";
 import { startRecorder } from "./recorder.js";
 import { startProfile, findStatsTable } from "./profile.js";
 import { startHistory, findHistoryTable } from "./history.js";
@@ -56,11 +57,10 @@ function confirmOptIn() {
   };
   const linked = linkedAccount();
   const shown = dialog("Usage Statistics: opt in?", `
-    <p>While this is on, <b>each of your PvP games</b> is sent to the Wizascript server: your soul, the result, your division and Elo, your opponent's name and soul (kept for your History until the season ends), and <b>your starting deck and artifacts</b>.</p>
-    <p>Everyone's games together make the Usage Statistics (which cards, artifacts and souls are played). <b>No one can see your deck</b>: only totals are shown, and today's ranked numbers leave out anything fewer than 3 players used.</p>
-    <p>You also get your stats per division and an Elo Graph on your Profile, and every game this season on your History page.</p>
-    <p>${linked ? `Games are sent under your linked account, <b>${linked}</b>.` : "<b>It needs your Undercards account linked</b> (Wizascript tab → Undercards Account). Until then it does nothing."}</p>
-    <p>Turning it off later can delete everything you've sent.</p>`, [
+    <p>Sends <b>your own PvP games</b> (soul, result, division, Elo, <b>starting deck</b>) to the Wizascript server for statistics. <b>Opponents' names aren't sent.</b></p>
+    <p>Only totals are published; no one can see your deck.</p>
+    <p>${linked ? `Sent under your linked account, <b>${linked}</b>.` : "<b>Needs your Undercards account linked</b> (Wizascript tab → Undercards Account)."} Delete it any time with <b>Delete My Data</b>.</p>
+    <p><b>Under 15?</b> Ask a parent first. <a href="${PRIVACY_URL}" target="_blank" rel="noopener">Privacy</a></p>`, [
     { label: "Cancel", action: (d) => { undo(); d.close(); } },
     { label: "Opt in", cssClass: "btn-success", action: (d) => d.close() }
   ]);
@@ -83,6 +83,18 @@ function offerDelete(fromButton = false) {
     { label: fromButton ? "Cancel" : "Keep them", action: (d) => d.close() },
     { label: "Delete my data", cssClass: "btn-danger", action: run }
   ]);
+}
+// Download My Data: the server's copy for the linked account, plus this device's.
+async function downloadData() {
+  try {
+    if (!(await ensureAccount({ fresh: true }))) { toastMsg("Link your Undercards account first: the server only knows linked accounts."); return; }
+    const data = await exportMine();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+    a.download = `wizascript-data-${data.account || "account"}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  } catch (e) { toastMsg(`Couldn't download: ${e.message || "the Wizascript server didn't answer"}.`); }
 }
 let plugin = null;
 const toastMsg = (text) => { try { plugin.toast({ title: "Usage Statistics", text, className: "dismissable" }); } catch (e) { console.log(`[Usage Statistics] ${text}`); } };
@@ -126,8 +138,16 @@ export function initUsageStats(p) {
     default: "Delete My Data"
   });
   registerSettingWidget("usageStats.deleteData", (el) => asButton(() => "Delete My Data", () => offerDelete(true))(el));
+  settings.add("downloadData", {
+    name: "Download My Data",
+    note: "Saves everything the Wizascript server keeps about you as a file.",
+    type: "text",
+    default: "Download My Data"
+  });
+  registerSettingWidget("usageStats.downloadData", (el) => asButton(() => "Download My Data", () => downloadData())(el));
   onPluginToggled(PLUGIN_ID, (on) => { if (undoing) return; if (on) confirmOptIn(); else offerDelete(false); });
 
+  try { pruneOpponents(); } catch (e) { /* no GM */ }
   if (!isPluginEnabled(PLUGIN_ID)) { log("turned off (Plugins list)"); return; }
 
   // The recorder listens from the start (the match begins before the server

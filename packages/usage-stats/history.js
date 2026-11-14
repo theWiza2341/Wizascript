@@ -3,11 +3,12 @@
 // Your History page: page 1 is the site's own 20 rows, untouched. Pages 2+ are
 // this season's older PvP games that Wizascript recorded (20 a page, newest
 // first, back to the 1st of the month), in the site's own row style, with the
-// opponent in their soul's colour and an extra Elo column. The pager sits above
+// opponent in their soul's colour (the name only for games this device
+// recorded: names never leave it, 1.8.0) and an extra Elo column. The pager sits above
 // the table (True Hub Bridge's style); the mouse wheel over the table turns
 // pages (setting).
 
-import { myGames } from "./api.js";
+import { myGames, opponentOf } from "./api.js";
 import { DIV_NAMES, t, esc, soulHtml, seasonOf, log } from "./common.js";
 
 const PER_PAGE = 20;
@@ -62,7 +63,7 @@ export function startHistory({ wheelPaging }) {
     tr.innerHTML = `
       <td class="${g.win ? "green" : "red"}">${g.win ? t("history-victory", "VICTORY") : t("history-defeat", "DEFEAT")}</td>
       <td>${soulHtml(g.soul)}</td>
-      <td>${g.enemyName ? `<span class="${esc(g.enemySoul || "")}">${esc(g.enemyName)}</span>` : '<span style="color:#888">—</span>'}</td>
+      <td>${(() => { const n = opponentOf(g.gameId); return n ? `<span class="${esc(g.enemySoul || "")}">${esc(n)}</span>` : `<span style="color:#888" title="Opponents' names stay on the device that recorded the game">${g.enemySoul ? `<span class="${esc(g.enemySoul)}">?</span>` : "—"}</span>`; })()}</td>
       <td>${t("game-type-pvp", "PvP")}</td>
       <td>${timeText(g.at)}</td>
       ${!ranked ? `<td class="wz-div-cell">${t("pvp-unranked", "Unranked")}</td>`

@@ -2,7 +2,8 @@
 //
 // Records the player's own PvP games on /Game (never CPU games, never while
 // spectating). Everything comes from what the game already shows the player:
-//  - match start (`connect`): the opponent's name and soul, and the player's
+//  - match start (`connect`): the opponent's name (kept on this device only,
+//    for History; never sent) and soul, and the player's
 //    own STARTING deck + artifacts, read from their saved deck for this soul
 //    (UnderScript's user.getDecks(); start-of-game effects can't be in it);
 //  - the end message (`getVictory` / `getDefeat`): soul, division and Elo
@@ -11,7 +12,7 @@
 
 import { getPageWindow } from "../core/page-window.js";
 import { selfInfo } from "../core/account.js";
-import { enqueue, flush } from "./api.js";
+import { enqueue, flush, rememberOpponent } from "./api.js";
 import { log, ensureAccount } from "./common.js";
 
 // Souls arrive as { id, name } objects, or as that object JSON-stringified on the
@@ -71,7 +72,6 @@ export function startRecorder(plugin) {
         newDivision: data.newDivision || null,
         oldElo: Number.isInteger(data.oldElo) ? data.oldElo : null,
         newElo: Number.isInteger(data.newElo) ? data.newElo : null,
-        enemyName: m.enemyName || null,
         enemySoul: m.enemySoul || null,
         deck: m.deck || [],
         artifacts: m.artifacts || []
@@ -80,10 +80,11 @@ export function startRecorder(plugin) {
       if (!game.soul) return;
       ensureAccount().then((name) => {
         if (!name) { log("not linked: game not kept"); return; }
+        rememberOpponent(game.gameId, m.enemyName, at); // this device only
         enqueue(game);
         setTimeout(() => flush(), 1500);
       });
-      log(`recorded: ${win ? "win" : "loss"} ${game.soul} vs ${game.enemyName} (${game.oldDivision || "Unranked"} ${game.oldElo ?? ""}→${game.newElo ?? ""})`);
+      log(`recorded: ${win ? "win" : "loss"} ${game.soul} vs ${m.enemyName || "?"} (${game.oldDivision || "Unranked"} ${game.oldElo ?? ""}→${game.newElo ?? ""})`);
     } catch (e) { log("end:", e); }
   };
   plugin.events.on("getVictory", onEnd(true));

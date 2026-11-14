@@ -16,6 +16,7 @@
 //             (owner) contests and reviewers.
 // A size control (Small / Medium / Large) zooms the cards on both views.
 
+import { PRIVACY_URL } from "../../core/privacy.js";
 import { h, button, esc } from "./dom.js";
 import { tile, fitText, checkFrameImages, whenFontsReady, onFontsChange, onArtPicsChange, TILE_CSS } from "./render.js";
 import { partFromRaw, readUcEditorFile, readFeildmasterFile, isFeildmasterExport, picturesFromPng, readFile } from "./parts.js";
@@ -191,6 +192,10 @@ const sameCard = (p, source, group, raw) => p.source === source && p.editorGroup
 //     instead of "Open void with it typed in" (the website has no chat);
 //   watchLink: check for the line every 5 s while linking (3 min at most);
 //   submitNote: Submit's note while the draft is empty.
+// 1.8.0: one line saying what's kept, with the privacy notice.
+const privacyLine = (text) => h("div", { class: "dim wz-gl-privacy", style: { margin: "4px 0 0", fontSize: "12px" } }, text + " ",
+  h("a", { href: PRIVACY_URL, target: "_blank", rel: "noopener", text: "Privacy" }));
+
 export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, reviewerKey = () => "", onKeyRejected = () => {}, linkSteps = null, watchLink = false, submitNote = null }) {
   injectStyle();
   const draft = getDraft();
@@ -695,6 +700,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
       h("ol", {}, ...steps,
         h("li", {}, linkWatch ? "Then come back here: this page notices by itself, or press " : "Then: ", button("Check link", () => checkLink(), { primary: true }), h("span", { class: "dim", text: ` The code works for ${mins} more minute${mins === 1 ? "" : "s"}.` }))),
       acct.account ? h("div", { class: "dim", text: `Switching from ${acct.account}: an install can switch accounts once a day, and accounts that share an install count as one voter.` }) : null,
+      privacyLine("Linking keeps your account name, its Undercards id and this device on the Wizascript server."),
       button("Cancel", () => { linking = null; stopWatch(); say(""); render(); }, { cls: "wz-gl-small" }));
   }
 
@@ -1040,6 +1046,7 @@ export function buildGalleryPanel({ requestRead, editorLabel, wheelPages, review
         h("span", { class: "wz-gl-by", text: author() ? `Posting as ${author()}` : "" })),
       h("div", { class: "wz-gl-revlist" }, rows),
       issues.length ? h("div", { class: "wz-gl-issues" }, issues.map((t) => h("div", { text: t }))) : null,
+      privacyLine("Your posts are public, with your account name, until you delete them."),
       h("div", { class: "wz-gl-note", style: { margin: "6px 0 0" } }, "Before uploading, check it follows the guidelines. ",
         draft.hideGuide ? button("Show guidelines", () => { setGuide(true); panel.scrollTop = 0; }, { cls: "wz-gl-small" }) : h("span", { text: "(They're at the top of this page.)" })),
       h("div", { class: "wz-gl-bar wz-gl-revfoot" },

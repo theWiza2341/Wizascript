@@ -1049,12 +1049,16 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
 
 ### New: Usage Statistics
 An **opt-in** plugin: share your PvP games, and see which cards, artifacts and souls everyone plays. Turn it on in the **Plugins** list; it asks once more before anything is sent, and it needs your Undercards account linked (Wizascript tab \u2192 **Undercards Account**).
-- Each of your PvP games sends your soul, the result, your division and Elo, your opponent's name and soul, and your **starting deck and artifacts**. CPU games are never sent.
+- Each of your PvP games sends your soul, the result, your division and Elo, your opponent's soul, and your **starting deck and artifacts**. CPU games are never sent. Your opponent's **name stays on your device** (your History shows it there).
 - **\u{1F4CA}** in the footer opens the statistics: cards, artifacts and souls by time range (Today, This Week, This Season, All Time) and division (including True Hub+, games started at 1820+ Elo). Search, sort, and an **Advanced** view.
 - No one's deck is ever shown: only totals, and today's ranked numbers leave out anything fewer than 3 players used.
 - Your **Profile** shows your stats per division, earlier seasons, and an **Elo Graph** you can move and resize.
 - Your **History** shows every PvP game this season, 20 a page (the mouse wheel turns pages).
-- **Delete My Data** on its tab removes everything you've sent.
+- **Download My Data** saves everything the Wizascript server keeps about you; **Delete My Data** removes everything you've sent.
+
+### Privacy
+- A **privacy notice** says what Wizascript keeps (linking, the Card Gallery, Usage Statistics), why, for how long, and how to see or delete it: [legal/PRIVACY.md](https://github.com/theWiza2341/Wizascript/blob/main/legal/PRIVACY.md). Links to it are in the Usage Statistics prompt, the Undercards Account dialog, and the gallery's Link and Submit screens.
+- The server now deletes old data by itself: Usage Statistics games 12 months after your last game (or 30 days after you unlink every device), and post notes' messages 12 months after they close.
 
 ## 1.7.4
 
@@ -1611,6 +1615,9 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     });
   }
 
+  // packages/core/privacy.js
+  var PRIVACY_URL = "https://github.com/theWiza2341/Wizascript/blob/main/legal/PRIVACY.md";
+
   // packages/core/http.js
   function gmRequest() {
     if (typeof GM_xmlhttpRequest === "function") return GM_xmlhttpRequest;
@@ -2067,6 +2074,12 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
         wrap.append(
           el3("p", { textContent: "Some features need to know which Undercards account you're on, like posting and voting in the Card Gallery." }),
           el3("p", { textContent: "You link once: Wizascript types a one-time line into void (chat room 0), and you press Enter to send it." }),
+          el3(
+            "p",
+            {},
+            el3("small", { textContent: "Linking keeps your account name, its Undercards id and this device on the Wizascript server. " }),
+            el3("a", { href: PRIVACY_URL, target: "_blank", rel: "noopener", textContent: "Privacy" })
+          ),
           el3("p", {}, go),
           codeEntry(el3, (name, key2) => {
             draw2();
@@ -2151,6 +2164,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     "wizascript.usageStats.games",
     "wizascript.usageStats.account",
     "wizascript.account.server",
+    // 1.8.0: opponents' names for History, kept on the device that recorded the game (the privacy notice says so).
+    "wizascript.usageStats.opponents",
     // 1.7.4 post notes: when this device last asked, and which new messages it already announced.
     "wizascript.cardMaker.notesCheck",
     "wizascript.cardMaker.notesShown"
@@ -3642,10 +3657,10 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       pages: "your Profile and History pages, every page's footer, and your matches",
       summary: "An opt-in: your PvP games go to the Wizascript server, for everyone's card stats and your own extra stats.",
       points: () => [
-        "Needs your Undercards account linked (Wizascript tab \u2192 <b>Undercards Account</b>). Each PvP game sends your soul, result, division, Elo, opponent and <b>starting deck</b>. CPU games never.",
+        "Needs your Undercards account linked (Wizascript tab \u2192 <b>Undercards Account</b>). Each PvP game sends your soul, result, division, Elo and <b>starting deck</b>. Opponents' names stay on your device. CPU games never.",
         "<b>\u{1F4CA}</b> in the footer: the cards, artifacts and souls everyone plays, by time range and division. No one's deck is ever shown.",
         "<b>Profile</b>: your stats per division and True Hub (1820+ Elo), earlier seasons with \u25C0 \u25B6, and the <b>Elo Graph</b>.",
-        "<b>History</b>: every PvP game this season, 20 a page. <b>Delete My Data</b> removes everything you've sent."
+        `<b>History</b>: every PvP game this season, 20 a page. <b>Download My Data</b> / <b>Delete My Data</b>: everything you've sent. <a href="` + PRIVACY_URL + '" target="_blank" rel="noopener">Privacy</a>'
       ]
     },
     cardHistory: {
@@ -15395,6 +15410,12 @@ ${NOTES_CSS}
   }
   var setColor = (set) => COLORS[(set.letter.charCodeAt(0) - 65) % COLORS.length];
   var sameCard = (p, source, group, raw) => p.source === source && p.editorGroup === group && p.name === (raw.name || "") && p.type === raw.type;
+  var privacyLine = (text) => h(
+    "div",
+    { class: "dim wz-gl-privacy", style: { margin: "4px 0 0", fontSize: "12px" } },
+    text + " ",
+    h("a", { href: PRIVACY_URL, target: "_blank", rel: "noopener", text: "Privacy" })
+  );
   function buildGalleryPanel({ requestRead, editorLabel, wheelPages, reviewerKey: reviewerKey2 = () => "", onKeyRejected = () => {
   }, linkSteps = null, watchLink = false, submitNote = null }) {
     injectStyle2();
@@ -16104,6 +16125,7 @@ ${NOTES_CSS}
           h("li", {}, linkWatch ? "Then come back here: this page notices by itself, or press " : "Then: ", button2("Check link", () => checkLink(), { primary: true }), h("span", { class: "dim", text: ` The code works for ${mins} more minute${mins === 1 ? "" : "s"}.` }))
         ),
         acct.account ? h("div", { class: "dim", text: `Switching from ${acct.account}: an install can switch accounts once a day, and accounts that share an install count as one voter.` }) : null,
+        privacyLine("Linking keeps your account name, its Undercards id and this device on the Wizascript server."),
         button2("Cancel", () => {
           linking = null;
           stopWatch();
@@ -16632,6 +16654,7 @@ ${NOTES_CSS}
         ),
         h("div", { class: "wz-gl-revlist" }, rows),
         issues.length ? h("div", { class: "wz-gl-issues" }, issues.map((t2) => h("div", { text: t2 }))) : null,
+        privacyLine("Your posts are public, with your account name, until you delete them."),
         h(
           "div",
           { class: "wz-gl-note", style: { margin: "6px 0 0" } },
@@ -18292,6 +18315,8 @@ ${NOTES_CSS}
   // packages/usage-stats/api.js
   var QUEUE = "wizascript.usageStats.queue";
   var GAMES_CACHE = "wizascript.usageStats.games";
+  var OPPONENTS = "wizascript.usageStats.opponents";
+  var MAX_OPPONENTS = 3e3;
   var MAX_QUEUE = 200;
   var MAX_AGE = 29 * 24 * 36e5;
   var GAMES_TTL = 10 * 6e4;
@@ -18309,6 +18334,28 @@ ${NOTES_CSS}
     }
   };
   var queued = () => read(QUEUE, []);
+  function rememberOpponent(gameId, name, at) {
+    if (!gameId || !name) return;
+    const cur = seasonOf(Date.now());
+    const all = read(OPPONENTS, {});
+    const keep = Object.entries(all).filter(([, v]) => v && v.s >= prevSeason(cur)).slice(-(MAX_OPPONENTS - 1));
+    write(OPPONENTS, { ...Object.fromEntries(keep), [gameId]: { n: String(name).slice(0, 30), s: seasonOf(at) } });
+  }
+  function pruneOpponents() {
+    const all = read(OPPONENTS, null);
+    if (!all) return;
+    const min = prevSeason(seasonOf(Date.now()));
+    const keep = Object.entries(all).filter(([, v]) => v && v.s >= min);
+    if (keep.length !== Object.keys(all).length) write(OPPONENTS, Object.fromEntries(keep));
+  }
+  var opponentOf = (gameId) => {
+    const v = read(OPPONENTS, {})[gameId];
+    return v ? v.n : null;
+  };
+  var prevSeason = (s) => {
+    const y = Number(s.slice(0, 4)), m = Number(s.slice(5, 7));
+    return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, "0")}`;
+  };
   function enqueue(game) {
     const self = selfInfo();
     const q = queued().filter((x) => x.game && Date.now() - x.game.at < MAX_AGE);
@@ -18332,7 +18379,7 @@ ${NOTES_CSS}
       const who = q[0];
       const batch = q.filter((x) => x.player === who.player && x.playerId === who.playerId).slice(0, 20);
       try {
-        const r = await authed("POST", "/v1/games", { player: who.player, playerId: who.playerId, games: batch.map((x) => x.game) });
+        const r = await authed("POST", "/v1/games", { player: who.player, playerId: who.playerId, games: batch.map(({ game: { enemyName, ...g } }) => g) });
         sent += r.saved || 0;
       } catch (e) {
         if (e.code === "renamed") {
@@ -18376,14 +18423,18 @@ ${NOTES_CSS}
   }
   async function optOut() {
     const r = await authed("POST", "/v1/games/optout");
-    write(QUEUE, []);
-    write(GAMES_CACHE, {});
+    clearLocal();
     return r.deleted || 0;
   }
   var clearLocal = () => {
     write(QUEUE, []);
     write(GAMES_CACHE, {});
+    write(OPPONENTS, {});
   };
+  async function exportMine() {
+    const server2 = await authed("GET", "/v1/me/export");
+    return { ...server2, thisDevice: { opponents: read(OPPONENTS, {}), waitingToSend: queued().map((x) => x.game) } };
+  }
   var statsCache = {};
   function getStats(w) {
     const hit = statsCache[w];
@@ -18471,7 +18522,6 @@ ${NOTES_CSS}
           newDivision: data2.newDivision || null,
           oldElo: Number.isInteger(data2.oldElo) ? data2.oldElo : null,
           newElo: Number.isInteger(data2.newElo) ? data2.newElo : null,
-          enemyName: m.enemyName || null,
           enemySoul: m.enemySoul || null,
           deck: m.deck || [],
           artifacts: m.artifacts || []
@@ -18483,10 +18533,11 @@ ${NOTES_CSS}
             log3("not linked: game not kept");
             return;
           }
+          rememberOpponent(game.gameId, m.enemyName, at);
           enqueue(game);
           setTimeout(() => flush(), 1500);
         });
-        log3(`recorded: ${win2 ? "win" : "loss"} ${game.soul} vs ${game.enemyName} (${game.oldDivision || "Unranked"} ${(_a = game.oldElo) != null ? _a : ""}\u2192${(_b = game.newElo) != null ? _b : ""})`);
+        log3(`recorded: ${win2 ? "win" : "loss"} ${game.soul} vs ${m.enemyName || "?"} (${game.oldDivision || "Unranked"} ${(_a = game.oldElo) != null ? _a : ""}\u2192${(_b = game.newElo) != null ? _b : ""})`);
       } catch (e) {
         log3("end:", e);
       }
@@ -18885,7 +18936,10 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       tr2.innerHTML = `
       <td class="${g.win ? "green" : "red"}">${g.win ? t("history-victory", "VICTORY") : t("history-defeat", "DEFEAT")}</td>
       <td>${soulHtml(g.soul)}</td>
-      <td>${g.enemyName ? `<span class="${esc3(g.enemySoul || "")}">${esc3(g.enemyName)}</span>` : '<span style="color:#888">\u2014</span>'}</td>
+      <td>${(() => {
+        const n = opponentOf(g.gameId);
+        return n ? `<span class="${esc3(g.enemySoul || "")}">${esc3(n)}</span>` : `<span style="color:#888" title="Opponents' names stay on the device that recorded the game">${g.enemySoul ? `<span class="${esc3(g.enemySoul)}">?</span>` : "\u2014"}</span>`;
+      })()}</td>
       <td>${t("game-type-pvp", "PvP")}</td>
       <td>${timeText(g.at)}</td>
       ${!ranked2 ? `<td class="wz-div-cell">${t("pvp-unranked", "Unranked")}</td>` : `<td class="wz-div-cell" title="${esc3(DIV_NAMES[g.oldDivision] || g.oldDivision)}${moved ? " \u2192 " + esc3(DIV_NAMES[g.newDivision] || g.newDivision) : ""}">${divIcon(g.oldDivision)}<span>${g.oldElo} \u2192 ${g.newElo}</span> <span class="${delta >= 0 ? "green" : "red"}">(${delta >= 0 ? "+" : ""}${delta})</span></td>`}`;
@@ -19494,11 +19548,10 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     };
     const linked = linkedAccount();
     const shown = dialog("Usage Statistics: opt in?", `
-    <p>While this is on, <b>each of your PvP games</b> is sent to the Wizascript server: your soul, the result, your division and Elo, your opponent's name and soul (kept for your History until the season ends), and <b>your starting deck and artifacts</b>.</p>
-    <p>Everyone's games together make the Usage Statistics (which cards, artifacts and souls are played). <b>No one can see your deck</b>: only totals are shown, and today's ranked numbers leave out anything fewer than 3 players used.</p>
-    <p>You also get your stats per division and an Elo Graph on your Profile, and every game this season on your History page.</p>
-    <p>${linked ? `Games are sent under your linked account, <b>${linked}</b>.` : "<b>It needs your Undercards account linked</b> (Wizascript tab \u2192 Undercards Account). Until then it does nothing."}</p>
-    <p>Turning it off later can delete everything you've sent.</p>`, [
+    <p>Sends <b>your own PvP games</b> (soul, result, division, Elo, <b>starting deck</b>) to the Wizascript server for statistics. <b>Opponents' names aren't sent.</b></p>
+    <p>Only totals are published; no one can see your deck.</p>
+    <p>${linked ? `Sent under your linked account, <b>${linked}</b>.` : "<b>Needs your Undercards account linked</b> (Wizascript tab \u2192 Undercards Account)."} Delete it any time with <b>Delete My Data</b>.</p>
+    <p><b>Under 15?</b> Ask a parent first. <a href="${PRIVACY_URL}" target="_blank" rel="noopener">Privacy</a></p>`, [
       { label: "Cancel", action: (d) => {
         undo2();
         d.close();
@@ -19528,6 +19581,24 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       { label: fromButton ? "Cancel" : "Keep them", action: (d) => d.close() },
       { label: "Delete my data", cssClass: "btn-danger", action: run }
     ]);
+  }
+  async function downloadData() {
+    try {
+      if (!await ensureAccount({ fresh: true })) {
+        toastMsg("Link your Undercards account first: the server only knows linked accounts.");
+        return;
+      }
+      const data2 = await exportMine();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(data2, null, 2)], { type: "application/json" }));
+      a.download = `wizascript-data-${data2.account || "account"}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1e4);
+    } catch (e) {
+      toastMsg(`Couldn't download: ${e.message || "the Wizascript server didn't answer"}.`);
+    }
   }
   var plugin = null;
   var toastMsg = (text) => {
@@ -19589,11 +19660,22 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       default: "Delete My Data"
     });
     registerSettingWidget("usageStats.deleteData", (el3) => asButton(() => "Delete My Data", () => offerDelete(true))(el3));
+    settings6.add("downloadData", {
+      name: "Download My Data",
+      note: "Saves everything the Wizascript server keeps about you as a file.",
+      type: "text",
+      default: "Download My Data"
+    });
+    registerSettingWidget("usageStats.downloadData", (el3) => asButton(() => "Download My Data", () => downloadData())(el3));
     onPluginToggled(PLUGIN_ID, (on) => {
       if (undoing) return;
       if (on) confirmOptIn();
       else offerDelete(false);
     });
+    try {
+      pruneOpponents();
+    } catch (e) {
+    }
     if (!isPluginEnabled(PLUGIN_ID)) {
       log3("turned off (Plugins list)");
       return;

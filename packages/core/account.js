@@ -17,6 +17,7 @@
 // for an alt; and a linked install can make a one-time code (WZL-XXXX-XXXX,
 // 10 minutes) to link another device (a phone) without typing in void there.
 
+import { PRIVACY_URL } from "./privacy.js";
 import { registerSettingWidget, asButton } from "./setting-widgets.js";
 import { getPageWindow } from "./page-window.js";
 import { canOpenVoid, openVoid } from "./uc-report.js";
@@ -356,6 +357,8 @@ function openAccountDialog(plugin) {
       wrap.append(
         el("p", { textContent: "Some features need to know which Undercards account you're on, like posting and voting in the Card Gallery." }),
         el("p", { textContent: "You link once: Wizascript types a one-time line into void (chat room 0), and you press Enter to send it." }),
+        el("p", {}, el("small", { textContent: "Linking keeps your account name, its Undercards id and this device on the Wizascript server. " }),
+          el("a", { href: PRIVACY_URL, target: "_blank", rel: "noopener", textContent: "Privacy" })),
         el("p", {}, go),
         codeEntry(el, (name, key) => { draw(); show(`Linked as ${name}.${key ? ` Your gallery key came too (${key.name}, ${key.role}).` : ""}`, true); }),
         status);

@@ -5,13 +5,18 @@
 //    next page load if the server can't be reached);
 //  - the player's own games per season (Profile, History), cached briefly;
 //  - the published statistics (the Usage Statistics window);
-//  - opting out (deletes everything sent under the account).
+//  - opting out (deletes everything sent under the account);
+//  - (1.8.0 privacy) opponents' names never leave this device: they're kept in
+//    GM next to the game id for History, until the season after they're from;
+//  - Download My Data: the server's copy (/v1/me/export) plus what's on this device.
 
 import { authed, call, accountChanged, selfInfo } from "../core/account.js";
 import { ensureAccount, seasonOf, log } from "./common.js";
 
 const QUEUE = "wizascript.usageStats.queue"; // [{ player, playerId, game }]
 const GAMES_CACHE = "wizascript.usageStats.games"; // { [season]: { at, data } }
+const OPPONENTS = "wizascript.usageStats.opponents"; // { [gameId]: { n: name, s: season } }, this device only
+const MAX_OPPONENTS = 3000;
 const MAX_QUEUE = 200;
 const MAX_AGE = 29 * 24 * 3600e3; // the server takes games up to 30 days old
 const GAMES_TTL = 10 * 60e3;
@@ -20,6 +25,26 @@ const read = (k, d) => { try { return JSON.parse(GM_getValue(k, "null")) || d; }
 const write = (k, v) => { try { GM_setValue(k, JSON.stringify(v)); } catch (e) { /* no GM */ } };
 
 export const queued = () => read(QUEUE, []);
+
+// ---- opponents' names: this device only -----------------------------------------------
+export function rememberOpponent(gameId, name, at) {
+  if (!gameId || !name) return;
+  const cur = seasonOf(Date.now());
+  const all = read(OPPONENTS, {});
+  // Keep this season's and last season's (a game near the 1st), drop older ones.
+  const keep = Object.entries(all).filter(([, v]) => v && v.s >= prevSeason(cur)).slice(-(MAX_OPPONENTS - 1));
+  write(OPPONENTS, { ...Object.fromEntries(keep), [gameId]: { n: String(name).slice(0, 30), s: seasonOf(at) } });
+}
+// Drop names older than last season (also when nothing new is recorded).
+export function pruneOpponents() {
+  const all = read(OPPONENTS, null);
+  if (!all) return;
+  const min = prevSeason(seasonOf(Date.now()));
+  const keep = Object.entries(all).filter(([, v]) => v && v.s >= min);
+  if (keep.length !== Object.keys(all).length) write(OPPONENTS, Object.fromEntries(keep));
+}
+export const opponentOf = (gameId) => { const v = read(OPPONENTS, {})[gameId]; return v ? v.n : null; };
+const prevSeason = (s) => { const y = Number(s.slice(0, 4)), m = Number(s.slice(5, 7)); return m === 1 ? `${y - 1}-12` : `${y}-${String(m - 1).padStart(2, "0")}`; };
 
 // A finished game, from the recorder.
 export function enqueue(game) {
@@ -45,7 +70,8 @@ async function doFlush() {
     const who = q[0];
     const batch = q.filter((x) => x.player === who.player && x.playerId === who.playerId).slice(0, 20);
     try {
-      const r = await authed("POST", "/v1/games", { player: who.player, playerId: who.playerId, games: batch.map((x) => x.game) });
+      // (Builds before 1.8.0 queued the opponent's name too: it's taken out here.)
+      const r = await authed("POST", "/v1/games", { player: who.player, playerId: who.playerId, games: batch.map(({ game: { enemyName, ...g } }) => g) });
       sent += r.saved || 0;
     } catch (e) {
       if (e.code === "renamed") { accountChanged(null, null); log("account renamed: unlinked; games kept until it's linked again"); return sent; }
@@ -80,11 +106,16 @@ export async function myGames(season, { fresh = false } = {}) {
 
 export async function optOut() {
   const r = await authed("POST", "/v1/games/optout");
-  write(QUEUE, []);
-  write(GAMES_CACHE, {});
+  clearLocal();
   return r.deleted || 0;
 }
-export const clearLocal = () => { write(QUEUE, []); write(GAMES_CACHE, {}); };
+export const clearLocal = () => { write(QUEUE, []); write(GAMES_CACHE, {}); write(OPPONENTS, {}); };
+
+// Download My Data: the server's copy and this device's.
+export async function exportMine() {
+  const server = await authed("GET", "/v1/me/export");
+  return { ...server, thisDevice: { opponents: read(OPPONENTS, {}), waitingToSend: queued().map((x) => x.game) } };
+}
 
 // ---- the published statistics --------------------------------------------------------------
 const statsCache = {};

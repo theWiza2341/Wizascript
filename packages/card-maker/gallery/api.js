@@ -48,6 +48,9 @@ export const reviewerAddJudge = (key, name) => admin("POST", "/v1/admin/reviewer
 export const reviewContest = (key, id) => admin("GET", `/v1/admin/contest?id=${encodeURIComponent(id)}`, key);
 export const reviewScore = (key, contest, post, score) => admin("POST", "/v1/admin/score", key, { contest, post, score });
 export const manageContest = (key, body) => admin("POST", "/v1/admin/contests", key, body);
+// 1.8.0: the kill switches (owner): { gallery, stats, note }
+export const pauseGet = (key) => admin("GET", "/v1/admin/pause", key);
+export const pauseSet = (key, body) => admin("POST", "/v1/admin/pause", key, body);
 // The contests, as the Worker has them now (status, deadline, entry counts).
 export const getContests = () => call("GET", "/v1/contests");
 export const reviewPending = (key) => admin("GET", "/v1/admin/pending", key);

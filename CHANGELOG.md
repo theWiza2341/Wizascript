@@ -17,6 +17,9 @@ An **opt-in** plugin: share your PvP games, and see which cards, artifacts and s
 - A **privacy notice** says what Wizascript keeps (linking, the Card Gallery, Usage Statistics), why, for how long, and how to see or delete it: [legal/PRIVACY.md](https://github.com/theWiza2341/Wizascript/blob/main/legal/PRIVACY.md). Links to it are in the Usage Statistics prompt, the Undercards Account dialog, and the gallery's Link and Submit screens.
 - The server now deletes old data by itself: Usage Statistics games 12 months after your last game (or 30 days after you unlink every device), and post notes' messages 12 months after they close.
 
+### Card Gallery
+- **Review on phones:** on a narrow screen (the gallery website on a phone), Review's menu sits on top as a row of buttons instead of squeezing the page.
+
 ## 1.7.4
 
 ### Card Gallery: notes

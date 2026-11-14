@@ -1060,6 +1060,9 @@ An **opt-in** plugin: share your PvP games, and see which cards, artifacts and s
 - A **privacy notice** says what Wizascript keeps (linking, the Card Gallery, Usage Statistics), why, for how long, and how to see or delete it: [legal/PRIVACY.md](https://github.com/theWiza2341/Wizascript/blob/main/legal/PRIVACY.md). Links to it are in the Usage Statistics prompt, the Undercards Account dialog, and the gallery's Link and Submit screens.
 - The server now deletes old data by itself: Usage Statistics games 12 months after your last game (or 30 days after you unlink every device), and post notes' messages 12 months after they close.
 
+### Card Gallery
+- **Review on phones:** on a narrow screen (the gallery website on a phone), Review's menu sits on top as a row of buttons instead of squeezing the page.
+
 ## 1.7.4
 
 ### Card Gallery: notes
@@ -13474,6 +13477,8 @@ Version: v${version}`;
   var reviewContest = (key2, id) => admin("GET", `/v1/admin/contest?id=${encodeURIComponent(id)}`, key2);
   var reviewScore = (key2, contest, post, score) => admin("POST", "/v1/admin/score", key2, { contest, post, score });
   var manageContest = (key2, body) => admin("POST", "/v1/admin/contests", key2, body);
+  var pauseGet = (key2) => admin("GET", "/v1/admin/pause", key2);
+  var pauseSet = (key2, body) => admin("POST", "/v1/admin/pause", key2, body);
   var getContests = () => call("GET", "/v1/contests");
   var reviewPending = (key2) => admin("GET", "/v1/admin/pending", key2);
   var reviewPost = (key2, id) => admin("GET", `/v1/admin/post?id=${encodeURIComponent(id)}`, key2);
@@ -15298,6 +15303,14 @@ Version: v${version}`;
 .wz-gl-rmenu button.on { background: #ffd84a; color: #000; }
 .wz-gl-rmenu .n { background: #e05a5a; color: #fff; border-radius: 9px; padding: 0 6px; font: 11px/16px Arial, sans-serif; }
 .wz-gl-rmenu .who { padding: 10px 12px; border-top: 2px solid #fff; font-size: 12px; opacity: .8; }
+/* phones (the gallery website): the Review menu goes on top as a row of buttons */
+@media (max-width: 640px) {
+  .wz-gl-rside { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .wz-gl-rmenu { position: static; flex-direction: row; flex-wrap: wrap; }
+  .wz-gl-rmenu button { flex: 1 1 auto; padding: 8px 10px; font-size: 14px; }
+  .wz-gl-rmenu button + button { border-top: 0; border-left: 1px solid #333; }
+  .wz-gl-rmenu .who { width: 100%; }
+}
 .wz-gl-ctag { display: inline-block; background: #3a2f0a; border: 1px solid #ffd84a; color: #ffd84a; font-size: 10px; padding: 0 4px; margin-left: 6px; }
 .wz-gl-target { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 8px; }
 .wz-gl-tabs { flex: none; }
@@ -15470,6 +15483,9 @@ ${NOTES_CSS}
       log: null,
       logOnly: "",
       reviewers: null,
+      pause: null,
+      pauseNote: "",
+      pausing: false,
       newKey: null,
       newName: "",
       newRole: "reviewer",
@@ -15663,13 +15679,13 @@ ${NOTES_CSS}
         if (staffNotes()) sections.push(["notes", "Notes", notes.staffUnread()]);
         sections.push(["log", "Log", 0]);
       }
-      if (isOwner()) sections.push(["contests", "Contests", 0], ["reviewers", "Reviewers", 0]);
+      if (isOwner()) sections.push(["contests", "Contests", 0], ["reviewers", "Reviewers", 0], ["switches", "Kill switches", 0]);
       if (!sections.some(([k]) => k === rev.section)) {
         rev.section = sections[0][0];
         if (rev.section === "judging") contests.loadJudging(true);
       }
       const who = rev.who ? `${isJudge() ? "Judging" : "Reviewing"} as ${rev.who.name}${realRole() === "owner" ? " (owner)" : ""}${viewAs ? `, previewing ${viewAs}` : ""}` : "";
-      const body = rev.section === "notes" ? notes.staffView() : rev.section === "log" ? logView() : rev.section === "reviewers" ? reviewersView() : rev.section === "judging" ? contests.judgingView() : rev.section === "contests" ? contests.manageView() : uploadsView();
+      const body = rev.section === "notes" ? notes.staffView() : rev.section === "log" ? logView() : rev.section === "reviewers" ? reviewersView() : rev.section === "switches" ? switchesView() : rev.section === "judging" ? contests.judgingView() : rev.section === "contests" ? contests.manageView() : uploadsView();
       const count = (n) => n ? h("span", { class: "n", text: String(n) }) : null;
       const menu3 = h(
         "div",
@@ -15699,6 +15715,7 @@ ${NOTES_CSS}
         loadReviewers();
         contests.refresh();
       }
+      if (k === "switches") loadPause();
       if (k === "judging") contests.loadJudging(true);
       if (k === "contests") contests.refresh(true);
       render3();
@@ -15757,7 +15774,8 @@ ${NOTES_CSS}
       undo_score: "undid a score on",
       score: "scored",
       note_open: "started a note on",
-      note_close: "closed the note on"
+      note_close: "closed the note on",
+      pause: "set"
     };
     function logLine(l) {
       const canUndo2 = realRole() === "owner" && !viewAs && l.undo && l.undo.ok;
@@ -15890,6 +15908,79 @@ ${NOTES_CSS}
         removeButton({ rerender: render3 }, r, { label: "Revoke", confirm: "Revoke?", title: `Stop ${r.name}'s key working`, run: revokeReviewer })
       ))));
       return h("div", {}, ...parts);
+    }
+    async function loadPause() {
+      try {
+        rev.pause = await pauseGet(reviewerKey2());
+        rev.pauseNote = rev.pause.note || "";
+        rev.sectionError = "";
+      } catch (e) {
+        rev.sectionError = errText(e);
+      }
+      if (open && tab === "review") render3();
+    }
+    async function setPause(change2) {
+      if (rev.pausing) return;
+      rev.pausing = true;
+      render3();
+      try {
+        rev.pause = await pauseSet(reviewerKey2(), { ...change2, note: rev.pauseNote.trim() });
+        say("Saved. Every player sees it within about 15 seconds.");
+      } catch (e) {
+        say(`Couldn't change it: ${errText(e)}`);
+      }
+      rev.pausing = false;
+      render3();
+    }
+    function switchesView() {
+      if (rev.sectionError) return h("div", { class: "wz-gl-issues", text: rev.sectionError });
+      if (!rev.pause) return h("p", { class: "wz-gl-note", text: "Loading\u2026" });
+      const row2 = (k, label2, what) => {
+        const on = !!rev.pause[k];
+        const armed = rev.pauseArmed === k;
+        const b = button2(rev.pausing ? "\u2026" : on ? `Turn ${label2} back on` : armed ? `Tap again to pause ${label2}` : `Pause ${label2}`, () => {
+          if (on) return setPause({ [k]: false });
+          if (!armed) {
+            rev.pauseArmed = k;
+            render3();
+            setTimeout(() => {
+              if (rev.pauseArmed === k) {
+                rev.pauseArmed = null;
+                render3();
+              }
+            }, 3e3);
+            return;
+          }
+          rev.pauseArmed = null;
+          setPause({ [k]: true });
+        }, { primary: on, title: what });
+        if (!on) {
+          b.style.background = armed ? "#c0392b" : "#6b1d1d";
+          b.style.borderColor = "#e55";
+          b.style.color = "#fff";
+        }
+        b.disabled = rev.pausing;
+        Object.assign(b.style, { minHeight: "44px", height: "auto", width: "100%", maxWidth: "360px", fontSize: "15px", whiteSpace: "normal" });
+        return h(
+          "div",
+          { class: "wz-gl-rev", style: { padding: "10px" } },
+          h("div", {}, h("b", { text: label2 }), " ", h("span", { class: on ? "red" : "green", style: { color: on ? "#f77" : "#7f7" }, text: on ? "PAUSED" : "running" })),
+          h("div", { class: "dim", text: what }),
+          h("div", { style: { marginTop: "6px" } }, b)
+        );
+      };
+      const note = h("input", { type: "text", maxLength: 200, value: rev.pauseNote, placeholder: "Optional message for players (e.g. Back tomorrow.)", style: { width: "100%", maxWidth: "420px" }, oninput: (e) => {
+        rev.pauseNote = e.target.value;
+      } });
+      return h(
+        "div",
+        {},
+        h("p", { class: "wz-gl-note", text: "Stop the server answering players, one area at a time. Your key keeps working, so you can switch it back from here. Browsing approved posts still works (they're on GitHub)." }),
+        row2("gallery", "Card Gallery", "Uploads, votes, totals, notes, contests, and review for every key but yours."),
+        row2("stats", "Usage Statistics", "Statistics, sending games, Profile and History extras. Games wait on players' devices; Download / Delete My Data still work."),
+        h("div", { class: "wz-gl-bar", style: { marginTop: "8px" } }, note),
+        h("p", { class: "dim", text: rev.pause.at ? `Last changed ${ago2(rev.pause.at)}${rev.pause.by ? ` by ${rev.pause.by}` : ""}. A flood of traffic needs Cloudflare's own switch (see the handbook).` : "A flood of traffic needs Cloudflare's own switch (see the handbook)." })
+      );
     }
     async function deleteMine(e) {
       try {

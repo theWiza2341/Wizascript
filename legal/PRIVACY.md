@@ -10,9 +10,9 @@ Wizascript is a free, fan-made UnderScript plugin for Undercards. It isn't made 
 
 Wizascript and its server are run by one person, as a hobby:
 
-- Discord: **[Discord Name]**
-- Undercards: **[Undercards Name]**
-- GitHub: **[GitHub Name]** ([theWiza2341/Wizascript](https://github.com/theWiza2341/Wizascript))
+- Discord: **wiza0**
+- Undercards: **:onu4head:**
+- GitHub: **theWiza2341** ([theWiza2341/Wizascript](https://github.com/theWiza2341/Wizascript))
 
 Ask me about anything on this page, or to see, correct or delete your data.
 

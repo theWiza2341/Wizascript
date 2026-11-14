@@ -79,6 +79,14 @@ export const PLUGINS = [
     note: "Flowery's voice lines, even when Flowery isn't on the board."
   },
   {
+    id: "usageStats",
+    category: "Plugins",
+    name: "Usage Statistics",
+    key: "usageStats.enabled",
+    // Opt-in: turning it on asks once more, since it sends your games.
+    note: "Opt in: share your PvP games for card stats and more Profile/History."
+  },
+  {
     id: "controller",
     category: "Plugins",
     name: "Controller Support",

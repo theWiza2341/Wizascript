@@ -29,6 +29,10 @@ const CATEGORY = "Wizascript";
 // Never in a backup: the Card Gallery's install secret. Anyone given the
 // file could post and vote as this player; a restored install links again.
 const SKIP_GM = new Set(["wizascript.migration.v150", "wizascript.lastSeenVersion", "wizascript.cardMaker.galleryAuth", "wizascript.cardMaker.galleryReview","wizascript.cardMaker.galleryReviewWho",
+  // 1.8.0 Usage Statistics: the send queue, cached server answers (opponents' names) and the account check stay on this device.
+  "wizascript.usageStats.queue", "wizascript.usageStats.games", "wizascript.usageStats.account", "wizascript.account.server",
+  // 1.8.0: opponents' names for History, kept on the device that recorded the game (the privacy notice says so).
+  "wizascript.usageStats.opponents",
   // 1.7.4 post notes: when this device last asked, and which new messages it already announced.
   "wizascript.cardMaker.notesCheck", "wizascript.cardMaker.notesShown"]);
 // Display-only rows on the Wizascript section itself.

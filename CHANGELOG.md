@@ -8,7 +8,7 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
 An **opt-in** plugin: share your PvP games, and see which cards, artifacts and souls everyone plays. Turn it on in the **Plugins** list; it asks once more before anything is sent, and it needs your Undercards account linked (Wizascript tab → **Undercards Account**).
 - Each of your PvP games sends your soul, the result, your division and Elo, your opponent's soul, and your **starting deck and artifacts**. CPU games are never sent. Your opponent's **name stays on your device** (your History shows it there).
 - **📊** in the footer opens the statistics: cards, artifacts and souls by time range (Today, This Week, This Season, All Time) and division (including True Hub+, games started at 1820+ Elo). Search, sort, and an **Advanced** view.
-- No one's deck is ever shown: only totals, and today's ranked numbers leave out anything fewer than 3 players used.
+- No one's deck is ever shown: only totals, and in every time range and division anything fewer than 3 players used is left out (a division with too few players is merged with the next one).
 - Your **Profile** shows your stats per division, earlier seasons, and an **Elo Graph** you can move and resize.
 - Your **History** shows every PvP game this season, 20 a page (the mouse wheel turns pages).
 - **Download My Data** saves everything the Wizascript server keeps about you; **Delete My Data** removes everything you've sent.

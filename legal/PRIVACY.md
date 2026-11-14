@@ -29,7 +29,7 @@ Ask me about anything on this page, or to see, correct or delete your data.
 
 **Opponents' names are never sent.** Usage Statistics keeps your opponent's name **only on the device that recorded the game**, so your History can show it. It's dropped after the season after the game ends.
 
-**Published statistics are totals only.** No one's deck can be seen. Today's ranked numbers leave out any card or artifact fewer than 3 players used, so a single player's deck can't be picked out.
+**Published statistics are totals only** (how often each card, artifact and soul is played, and its win rate), never a decklist. In every time range and division, any card or artifact fewer than 3 players used is left out, a division with too few players is merged with the next, and where fewer than 3 players played only the number of games is shown, so a single player's deck can't be picked out.
 
 ## Who else handles it
 

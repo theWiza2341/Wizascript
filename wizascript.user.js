@@ -1051,7 +1051,7 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
 An **opt-in** plugin: share your PvP games, and see which cards, artifacts and souls everyone plays. Turn it on in the **Plugins** list; it asks once more before anything is sent, and it needs your Undercards account linked (Wizascript tab \u2192 **Undercards Account**).
 - Each of your PvP games sends your soul, the result, your division and Elo, your opponent's soul, and your **starting deck and artifacts**. CPU games are never sent. Your opponent's **name stays on your device** (your History shows it there).
 - **\u{1F4CA}** in the footer opens the statistics: cards, artifacts and souls by time range (Today, This Week, This Season, All Time) and division (including True Hub+, games started at 1820+ Elo). Search, sort, and an **Advanced** view.
-- No one's deck is ever shown: only totals, and today's ranked numbers leave out anything fewer than 3 players used.
+- No one's deck is ever shown: only totals, and in every time range and division anything fewer than 3 players used is left out (a division with too few players is merged with the next one).
 - Your **Profile** shows your stats per division, earlier seasons, and an **Elo Graph** you can move and resize.
 - Your **History** shows every PvP game this season, 20 a page (the mouse wheel turns pages).
 - **Download My Data** saves everything the Wizascript server keeps about you; **Delete My Data** removes everything you've sent.
@@ -19223,7 +19223,6 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
   var WIN_KEY = "wizascript.usageStats.window";
   var STYLE_ID7 = "wz-us-usage-style";
   var TOP = 40;
-  var PRIVATE = [...LADDER, "TRUEHUB"];
   var TIMES = [["TODAY", "Today"], ["WEEK", "This Week"], ["SEASON", "This Season"], ["ALL", "All Time"]];
   var TIME_NAMES = Object.fromEntries(TIMES);
   var DIVS = ["TOTAL", ...LADDER, "UNRANKED", "TRUEHUB"];
@@ -19541,18 +19540,23 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       return;
     }
     const s = f.sel && f.sel[state3.div] || { games: 0, players: 0, souls: [], cards: [], arts: [] };
-    const priv = !!f.private && PRIVATE.includes(state3.div);
+    const priv = !!f.private;
+    const minP = f.minPlayers || 3;
     const pp = state3.perPlayer;
     const built = f.built ? Math.max(0, Math.round((Date.now() - f.built) / 6e4)) : null;
     countEl.textContent = `${s.games} game${s.games === 1 ? "" : "s"} \xB7 ${s.players} player${s.players === 1 ? "" : "s"}` + (built === null ? "" : ` \xB7 updated ${built < 1 ? "just now" : built < 60 ? `${built} min ago` : `${Math.round(built / 60)} h ago`}`);
     const notes = [];
     const others = (s.group || []).filter((d) => d !== state3.div);
-    if (others.length) notes.push(`Not enough players in ${NAMES[state3.div]} ${state3.time === "TODAY" ? "today" : "yet"}, so this includes ${others.map((d) => NAMES[d]).join(" and ")}.`);
-    if (priv) notes.push(`Today, cards and artifacts seen in fewer than ${f.minPlayers || 3} players' decks aren't shown in ranked divisions, for privacy and to avoid skew.`);
+    if (others.length) notes.push(`Not enough players in ${NAMES[state3.div]} ${state3.time === "TODAY" ? "today" : state3.time === "ALL" ? "in some months" : "in this time"}, so this includes ${others.map((d) => NAMES[d]).join(" and ")}.`);
+    if (priv) notes.push(`Cards and artifacts seen in fewer than ${minP} players' decks aren't shown, so no one's deck can be picked out.`);
     notes.push(pp ? "Counting each player once." : "Counting every game.");
     noteEl.textContent = notes.join(" ");
     if (!s.games) {
       body.innerHTML = '<div class="uw-empty">No games recorded for this time and division yet.</div>';
+      return;
+    }
+    if (priv && s.players < minP && s.games) {
+      body.innerHTML = `<div class="uw-empty">Fewer than ${minP} players here, so only the counts are shown.</div>`;
       return;
     }
     const total = pp ? s.players : s.games;
@@ -19576,7 +19580,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     }).sort((a, b) => b.use - a.use || b.st.w - a.st.w).map((r, i) => ({ ...r, rank: i + 1 }));
     const hiddenCount = priv && s.hidden ? isCards ? s.hidden.cards : s.hidden.arts : 0;
     const usedIds = new Set(rows.map((r) => r[0]));
-    const unused = priv ? [] : (isCards ? catalog.cards : catalog.arts).filter((c) => !usedIds.has(c.id)).map((item2) => ({ id: item2.id, item: item2 }));
+    const unused = (isCards ? catalog.cards : catalog.arts).filter((c) => !usedIds.has(c.id)).map((item2) => ({ id: item2.id, item: item2 }));
     const q = state3.q.trim().toLowerCase();
     const match = (r) => !q || String(r.item.name || "").toLowerCase().includes(q) || String(r.id) === q || String(r.id).startsWith(q);
     const cmp = {
@@ -19595,14 +19599,14 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     let html = `<table><tr><th>#</th><th>${isCards ? "Card" : "Artifact"}</th>${cols}${advHead}</tr>`;
     html += shown.slice(0, limit).map((r) => `<tr><td class="uw-rank">${r.rank}</td><td>${nameCell(r)}</td><td>${meter(r.use, isCards ? "" : "art")}</td>` + (isCards ? `<td>${r.st.n ? (r.st.copies / r.st.n).toFixed(1) : "-"}</td>` : "") + `<td>${rate(r.st.w, r.st.n)}</td>${state3.adv ? `<td>${r.st.g}</td><td>${r.st.p}</td>` : ""}</tr>`).join("");
     if (shown.length > limit) html += `<tr><td colspan="${ncols}" class="uw-hidden">${shown.length - limit} more used ${isCards ? "cards" : "artifacts"}: search or pick a sort to see them all.</td></tr>`;
-    if (q && !shown.length && !unusedShown.length) html += `<tr><td colspan="${ncols}" class="uw-hidden">Nothing matches \u201C${esc3(state3.q)}\u201D${priv ? ` (or it was seen in fewer than ${f.minPlayers || 3} players' decks today)` : ""}.</td></tr>`;
+    if (q && !shown.length && !unusedShown.length) html += `<tr><td colspan="${ncols}" class="uw-hidden">Nothing matches \u201C${esc3(state3.q)}\u201D.</td></tr>`;
     if (unusedShown.length) {
       const open = state3.showUnused || q && !shown.length;
-      html += `<tr class="uw-unused-head"><td colspan="${ncols}">${open ? "\u25BE" : "\u25B8"} Not used ${TIME_NAMES[state3.time].toLowerCase()} in ${NAMES[state3.div]}: ${unusedShown.length} ${isCards ? "card" : "artifact"}${unusedShown.length === 1 ? "" : "s"}</td></tr>`;
+      html += `<tr class="uw-unused-head"><td colspan="${ncols}">${open ? "\u25BE" : "\u25B8"} Not used ${TIME_NAMES[state3.time].toLowerCase()} in ${NAMES[state3.div]}${priv ? ` (or by fewer than ${minP} players)` : ""}: ${unusedShown.length} ${isCards ? "card" : "artifact"}${unusedShown.length === 1 ? "" : "s"}</td></tr>`;
       if (open) html += unusedShown.map((r) => `<tr class="uw-unused"><td class="uw-rank">\u2013</td><td>${nameCell(r)}</td><td>0.0%</td>${isCards ? "<td>\u2013</td>" : ""}<td>\u2013</td>${state3.adv ? "<td>0</td><td>0</td>" : ""}</tr>`).join("");
     }
     html += "</table>";
-    if (priv) html += `<div class="uw-hidden">${hiddenCount ? `${hiddenCount} more ${isCards ? "card" : "artifact"}${hiddenCount === 1 ? "" : "s"} not shown (fewer than ${f.minPlayers || 3} players). ` : ""}Unused ${isCards ? "cards" : "artifacts"} aren't listed today in ranked divisions.</div>`;
+    if (priv && hiddenCount) html += `<div class="uw-hidden">${hiddenCount} more ${isCards ? "card" : "artifact"}${hiddenCount === 1 ? "" : "s"} not shown (fewer than ${minP} players).</div>`;
     body.innerHTML = html;
     const head = body.querySelector(".uw-unused-head");
     if (head) head.addEventListener("click", () => {

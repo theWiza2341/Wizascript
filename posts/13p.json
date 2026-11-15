@@ -1,0 +1,19 @@
+{
+  "id": "13p",
+  "kind": "single",
+  "title": "Tao",
+  "author": "kherx",
+  "postedAt": 1794692898122,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Tao",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/13p-0-pic.png"
+    }
+  ]
+}

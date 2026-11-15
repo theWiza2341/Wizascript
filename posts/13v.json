@@ -1,0 +1,27 @@
+{
+  "id": "13v",
+  "kind": "set",
+  "title": "Vendy",
+  "author": "Jaded_Obscurity",
+  "postedAt": 1794713722097,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Vendy",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/13v-0-pic.png"
+    },
+    {
+      "type": "Monster",
+      "name": "Gravity Granola",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/13v-1-pic.png"
+    }
+  ]
+}

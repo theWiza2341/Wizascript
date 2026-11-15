@@ -1,0 +1,19 @@
+{
+  "id": "14c",
+  "kind": "single",
+  "title": "Ed",
+  "author": "Jaded_Obscurity",
+  "postedAt": 1794773689572,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Ed",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/14c-0-pic.png"
+    }
+  ]
+}

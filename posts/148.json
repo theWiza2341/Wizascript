@@ -1,0 +1,26 @@
+{
+  "id": "148",
+  "kind": "set",
+  "title": "Save Point",
+  "author": "Legacy_03",
+  "postedAt": 1794719441727,
+  "parts": [
+    {
+      "type": "Artifact",
+      "name": "Refuse to Die",
+      "desc": "Goal: 10. After an ally monster dies, gain a counter. Reward: If it was non-DT, summon a copy of the monster that triggered this reward and reset this quest. If you have 10 or less HP, the quest resets with 5 counters.",
+      "rarity": "TOKEN",
+      "art": "art/148-0.png"
+    },
+    {
+      "type": "Monster",
+      "name": "Save Point",
+      "desc": "Quest: In the face of death, you _Refuse to Die_. Delay: Summon an exact copy of the last ally that died this turn with full HP.",
+      "cost": 9,
+      "atk": 8,
+      "hp": 8,
+      "rarity": "BASE_DETERMINATION",
+      "art": "art/148-1.png"
+    }
+  ]
+}

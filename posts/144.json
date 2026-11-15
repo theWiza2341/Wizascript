@@ -1,0 +1,18 @@
+{
+  "id": "144",
+  "kind": "single",
+  "title": "Pedla",
+  "author": "Jaded_Obscurity",
+  "postedAt": 1794713722674,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Pedla",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/144-0-pic.png"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "14e",
+  "kind": "single",
+  "title": "Mooch",
+  "author": "Jaded_Obscurity",
+  "postedAt": 1794779363391,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Mooch",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/14e-0-pic.png"
+    }
+  ]
+}

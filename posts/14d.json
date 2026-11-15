@@ -1,0 +1,19 @@
+{
+  "id": "14d",
+  "kind": "single",
+  "title": "Delta-Rock",
+  "author": "Jaded_Obscurity",
+  "postedAt": 1794773689572,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Delta-Rock",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/14d-0-pic.png"
+    }
+  ]
+}

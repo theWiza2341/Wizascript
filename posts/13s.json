@@ -1,0 +1,19 @@
+{
+  "id": "13s",
+  "kind": "single",
+  "title": "Mr. Sunshine",
+  "author": "ElPapaFrita19",
+  "postedAt": 1794695802286,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Mr. Sunshine",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/13s-0-pic.png"
+    }
+  ]
+}

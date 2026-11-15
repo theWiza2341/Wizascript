@@ -1,0 +1,17 @@
+{
+  "id": "13t",
+  "kind": "single",
+  "title": "Pacify",
+  "author": "ElPapaFrita19",
+  "postedAt": 1794695802286,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Spell",
+      "name": "Pacify",
+      "desc": "",
+      "cost": null,
+      "picture": "art/13t-0-pic.png"
+    }
+  ]
+}

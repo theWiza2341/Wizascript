@@ -1,0 +1,18 @@
+{
+  "id": "141",
+  "kind": "single",
+  "title": "Mr.Screen",
+  "author": "Jaded_Obscurity",
+  "postedAt": 1794713722097,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Mr.Screen",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/141-0-pic.png"
+    }
+  ]
+}

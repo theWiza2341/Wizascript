@@ -1,0 +1,18 @@
+{
+  "id": "13x",
+  "kind": "single",
+  "title": "Manta",
+  "author": "Jaded_Obscurity",
+  "postedAt": 1794713722097,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Manta",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/13x-0-pic.png"
+    }
+  ]
+}

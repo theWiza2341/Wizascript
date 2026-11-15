@@ -1,0 +1,24 @@
+{
+  "id": "13u",
+  "kind": "set",
+  "title": "Boba Drinker",
+  "author": "Jaded_Obscurity",
+  "postedAt": 1794713722097,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Boba Drinker",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/13u-0-pic.png"
+    },
+    {
+      "type": "Enchantment",
+      "name": "Coolant",
+      "desc": "",
+      "picture": "art/13u-1-pic.png"
+    }
+  ]
+}

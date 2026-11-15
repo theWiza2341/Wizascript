@@ -1,0 +1,18 @@
+{
+  "id": "140",
+  "kind": "single",
+  "title": "Jandroid",
+  "author": "Jaded_Obscurity",
+  "postedAt": 1794713722097,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Jandroid",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/140-0-pic.png"
+    }
+  ]
+}

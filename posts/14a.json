@@ -1,0 +1,18 @@
+{
+  "id": "14a",
+  "kind": "single",
+  "title": "Cool Bone",
+  "author": "Swiss Elysi",
+  "postedAt": 1794771791928,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Cool Bone",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/14a-0-pic.png"
+    }
+  ]
+}

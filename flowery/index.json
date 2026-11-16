@@ -125,7 +125,15 @@
     },
     {
       "sound": "floweryDeath3",
-      "use": []
+      "use": [
+        {
+          "on": "demote",
+          "chance": 2,
+          "budget": false,
+          "key": "demote",
+          "label": "Demoted after a loss → \"I'm falling\""
+        }
+      ]
     },
     {
       "sound": "floweryVictory",

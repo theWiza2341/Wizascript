@@ -24,6 +24,9 @@
 //            "animation"   a game animation of `type` ("SILENCE", "HEAL", …)
 //            "overdraw"    a card is discarded because a hand is full
 //            "victory" / "defeat"   your match ends
+//            "demote" / "promote"   your match ends and your division went down / up
+//                        (1.8.2; ranked, placed players: the end message's old/new
+//                        division). Tried first; if no such rule plays, victory/defeat do
 //            "wizascript"  a Wizascript/site moment, `event`
 //   card, id    which card (name and/or game fixedId)
 //   type        for log / animation
@@ -53,7 +56,9 @@
 //   loopCopy    play: a copy the card made of itself (Loop) with no Loop left, of a card seen with Loop
 
 const norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-const KINDS = new Set(["play", "attack", "log", "animation", "overdraw", "kill", "generate", "victory", "defeat", "wizascript"]);
+const KINDS = new Set(["play", "attack", "log", "animation", "overdraw", "kill", "generate", "victory", "defeat", "demote", "promote", "wizascript"]);
+// Divisions, lowest first (for demote / promote).
+const DIVISIONS = ["MASTER", "HIGH_MASTER", "ULTIMATE_MASTER", "LEGEND"];
 const KEY_RE = /^[a-z0-9][a-z0-9-]{0,47}$/;
 const FILE_RE = /^[A-Za-z0-9_\-']+\.wav$/; // no commas (they wouldn't load), no paths
 const SOUND_RE = /^flowery[A-Za-z0-9]+$/;
@@ -383,7 +388,9 @@ export function createReactor({ rules, play, isOwn, settings, now = () => Date.n
       if (card) played = fire(find((r) => r.on === "overdraw" && cardMatches(r, card) && typeOk(r, card) && whoOk(r, pid)));
     } else if ((a === "getVictory" || a === "getDefeat") && settings().endLines && !settings().spectating) {
       const kind = a === "getVictory" ? "victory" : "defeat";
-      played = fire(find((r) => r.on === kind));
+      const was = DIVISIONS.indexOf(String(data.oldDivision || "").toUpperCase()), after = DIVISIONS.indexOf(String(data.newDivision || "").toUpperCase());
+      const move = was >= 0 && after >= 0 && after !== was ? (after < was ? "demote" : "promote") : null;
+      played = (move && fire(find((r) => r.on === move))) || fire(find((r) => r.on === kind));
     }
 
     if (EFFECTS.has(a) || RESETS.has(a)) lastAction = a;

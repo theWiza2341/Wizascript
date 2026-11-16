@@ -119,10 +119,11 @@ export function browseView(ctx) {
   const count = h("span", { class: "n" });
   const prev = h("button", { title: "Previous page", text: "‹", onclick: () => turn(-1) });
   const next = h("button", { title: "Next page", text: "›", onclick: () => turn(1) });
+  // ↻ sits by the pager (1.8.2): the bottom left belongs to the ⚿ / 📱 buttons.
   const foot = h("div", { class: "wz-gl-foot" },
-    ctx.onRefresh ? h("button", { type: "button", class: "wz-gl-refresh", title: "Load the latest posts and votes", text: "↻", onclick: () => ctx.onRefresh() }) : null,
     h("span", { class: "note", text: ctx.note || "" }),
     h("span", { class: "grow" }),
+    ctx.onRefresh ? h("button", { type: "button", class: "wz-gl-refresh", title: "Load the latest posts and votes", text: "↻", onclick: () => ctx.onRefresh() }) : null,
     h("div", { class: "wz-gl-pager" }, prev, count, next));
   const el = h("div", { class: "wz-gl-browse" }, h("div", { class: "wz-gl-listbar" }, segBar(ctx, dir), filterButtons(ctx)), area, foot);
 

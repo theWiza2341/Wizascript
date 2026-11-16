@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.8.1
+// @version      1.8.2
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -281,7 +281,7 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
   }
 
   // packages/core/version.js
-  var SUITE_VERSION = "1.8.1";
+  var SUITE_VERSION = "1.8.2";
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
@@ -1045,6 +1045,17 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
 
+## 1.8.2
+
+### Flowery Mode
+- Flowery can now react when a ranked loss **drops you a division** (and, later, when a win moves you up). The lines for it come with Flowery's line list, so they can be added without an update.
+
+### Changes
+- **Usage Statistics shows a lot more:** every card and artifact played in a division is shown once at least 3 different players have played there (before, each card needed 3 players of its own, which hid almost everything). Divisions with fewer players are still merged with the next one, and below 3 players only the number of games is shown.
+
+### Fixes
+- **Card Gallery:** the **\u21BB** refresh button in Browse sat under the \u26BF / \u{1F4F1} buttons and couldn't be clicked. It's now next to the page arrows (Card Maker and the gallery website).
+
 ## 1.8.1
 
 ### Fixes
@@ -1056,7 +1067,7 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
 An **opt-in** plugin: share your PvP games, and see which cards, artifacts and souls everyone plays. Turn it on in the **Plugins** list; it asks once more before anything is sent, and it needs your Undercards account linked (Wizascript tab \u2192 **Undercards Account**).
 - Each of your PvP games sends your soul, the result, your division and Elo, your opponent's soul, and your **starting deck and artifacts**. CPU games are never sent. Your opponent's **name stays on your device** (your History shows it there).
 - **\u{1F4CA}** in the footer opens the statistics: cards, artifacts and souls by time range (Today, This Week, This Season, All Time) and division (including True Hub+, games started at 1820+ Elo). Search, sort, and an **Advanced** view.
-- No one's deck is ever shown: only totals, and in every time range and division anything fewer than 3 players used is left out (a division with too few players is merged with the next one).
+- No one's deck is ever shown: only totals, and a division is only shown once at least 3 different players have played in it (a division with too few players is merged with the next one).
 - Your **Profile** shows your stats per division, earlier seasons, and an **Elo Graph** you can move and resize.
 - Your **History** shows every PvP game this season, 20 a page (the mouse wheel turns pages).
 - **Download My Data** saves everything the Wizascript server keeps about you; **Delete My Data** removes everything you've sent.
@@ -14124,9 +14135,9 @@ Version: v${version}`;
     const foot = h(
       "div",
       { class: "wz-gl-foot" },
-      ctx.onRefresh ? h("button", { type: "button", class: "wz-gl-refresh", title: "Load the latest posts and votes", text: "\u21BB", onclick: () => ctx.onRefresh() }) : null,
       h("span", { class: "note", text: ctx.note || "" }),
       h("span", { class: "grow" }),
+      ctx.onRefresh ? h("button", { type: "button", class: "wz-gl-refresh", title: "Load the latest posts and votes", text: "\u21BB", onclick: () => ctx.onRefresh() }) : null,
       h("div", { class: "wz-gl-pager" }, prev, count, next)
     );
     const el3 = h("div", { class: "wz-gl-browse" }, h("div", { class: "wz-gl-listbar" }, segBar(ctx, dir), filterButtons(ctx)), area, foot);
@@ -15264,6 +15275,8 @@ Version: v${version}`;
 .wz-key-status { min-height: 1.2em; margin-top: 8px !important; }
 .wz-cm-btn.wz-key-danger { background: #6b2f2f; border-color: #bf6f6f; }
 .wz-key-btn.wz-dev-btn { left: 44px; font-size: 15px; }
+/* 1.8.2: keep Browse's bottom bar clear of \u26BF and \u{1F4F1} */
+.wz-gl-foot { padding-left: 82px; }
 .wz-dev-choices { display: flex; gap: 8px; margin: 0 0 10px; }
 .wz-key-box .wz-dev-choices .wz-cm-btn { flex: 1; height: 40px; font-size: 15px; }
 .wz-dev-code { font: 24px "DTM-Mono", "DTM Mono", monospace; letter-spacing: 2px; text-align: center; padding: 8px; margin: 0 0 8px; background: #000; border: 1px solid #666; user-select: all; }
@@ -17549,7 +17562,8 @@ ${NOTES_CSS}
 
   // packages/flowery-mode/lines.js
   var norm = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-  var KINDS = /* @__PURE__ */ new Set(["play", "attack", "log", "animation", "overdraw", "kill", "generate", "victory", "defeat", "wizascript"]);
+  var KINDS = /* @__PURE__ */ new Set(["play", "attack", "log", "animation", "overdraw", "kill", "generate", "victory", "defeat", "demote", "promote", "wizascript"]);
+  var DIVISIONS = ["MASTER", "HIGH_MASTER", "ULTIMATE_MASTER", "LEGEND"];
   var KEY_RE = /^[a-z0-9][a-z0-9-]{0,47}$/;
   var FILE_RE = /^[A-Za-z0-9_\-']+\.wav$/;
   var SOUND_RE = /^flowery[A-Za-z0-9]+$/;
@@ -17853,7 +17867,9 @@ ${NOTES_CSS}
         if (card) played = fire(find((r) => r.on === "overdraw" && cardMatches(r, card) && typeOk(r, card) && whoOk(r, pid)));
       } else if ((a === "getVictory" || a === "getDefeat") && settings6().endLines && !settings6().spectating) {
         const kind = a === "getVictory" ? "victory" : "defeat";
-        played = fire(find((r) => r.on === kind));
+        const was = DIVISIONS.indexOf(String(data2.oldDivision || "").toUpperCase()), after = DIVISIONS.indexOf(String(data2.newDivision || "").toUpperCase());
+        const move = was >= 0 && after >= 0 && after !== was ? after < was ? "demote" : "promote" : null;
+        played = move && fire(find((r) => r.on === move)) || fire(find((r) => r.on === kind));
       }
       if (EFFECTS.has(a) || RESETS.has(a)) lastAction = a;
       return played;
@@ -19559,7 +19575,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     const notes = [];
     const others = (s.group || []).filter((d) => d !== state3.div);
     if (others.length) notes.push(`Not enough players in ${NAMES[state3.div]} ${state3.time === "TODAY" ? "today" : state3.time === "ALL" ? "in some months" : "in this time"}, so this includes ${others.map((d) => NAMES[d]).join(" and ")}.`);
-    if (priv) notes.push(`Cards and artifacts seen in fewer than ${minP} players' decks aren't shown, so no one's deck can be picked out.`);
+    if (priv) notes.push(`Shown only where at least ${minP} different players played, so no one's deck can be picked out.`);
     notes.push(pp ? "Counting each player once." : "Counting every game.");
     noteEl.textContent = notes.join(" ");
     if (!s.games) {
@@ -19613,7 +19629,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     if (q && !shown.length && !unusedShown.length) html += `<tr><td colspan="${ncols}" class="uw-hidden">Nothing matches \u201C${esc3(state3.q)}\u201D.</td></tr>`;
     if (unusedShown.length) {
       const open = state3.showUnused || q && !shown.length;
-      html += `<tr class="uw-unused-head"><td colspan="${ncols}">${open ? "\u25BE" : "\u25B8"} Not used ${TIME_NAMES[state3.time].toLowerCase()} in ${NAMES[state3.div]}${priv ? ` (or by fewer than ${minP} players)` : ""}: ${unusedShown.length} ${isCards ? "card" : "artifact"}${unusedShown.length === 1 ? "" : "s"}</td></tr>`;
+      html += `<tr class="uw-unused-head"><td colspan="${ncols}">${open ? "\u25BE" : "\u25B8"} Not used ${TIME_NAMES[state3.time].toLowerCase()} in ${NAMES[state3.div]}${hiddenCount ? ` (or hidden)` : ""}: ${unusedShown.length} ${isCards ? "card" : "artifact"}${unusedShown.length === 1 ? "" : "s"}</td></tr>`;
       if (open) html += unusedShown.map((r) => `<tr class="uw-unused"><td class="uw-rank">\u2013</td><td>${nameCell(r)}</td><td>0.0%</td>${isCards ? "<td>\u2013</td>" : ""}<td>\u2013</td>${state3.adv ? "<td>0</td><td>0</td>" : ""}</tr>`).join("");
     }
     html += "</table>";

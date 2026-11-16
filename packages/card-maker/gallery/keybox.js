@@ -250,6 +250,8 @@ export const KEYBOX_CSS = `
 .wz-key-status { min-height: 1.2em; margin-top: 8px !important; }
 .wz-cm-btn.wz-key-danger { background: #6b2f2f; border-color: #bf6f6f; }
 .wz-key-btn.wz-dev-btn { left: 44px; font-size: 15px; }
+/* 1.8.2: keep Browse's bottom bar clear of ⚿ and 📱 */
+.wz-gl-foot { padding-left: 82px; }
 .wz-dev-choices { display: flex; gap: 8px; margin: 0 0 10px; }
 .wz-key-box .wz-dev-choices .wz-cm-btn { flex: 1; height: 40px; font-size: 15px; }
 .wz-dev-code { font: 24px "DTM-Mono", "DTM Mono", monospace; letter-spacing: 2px; text-align: center; padding: 8px; margin: 0 0 8px; background: #000; border: 1px solid #666; user-select: all; }

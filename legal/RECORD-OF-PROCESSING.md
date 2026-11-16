@@ -54,7 +54,7 @@ Last updated: 2026-11-14 (Wizascript 1.8.0, server 1.10.0). Kept with the code s
 | Basis | **Consent** (6(1)(a)): the opt-in prompt; withdrawn by turning it off or Delete My Data |
 | Not collected | The opponent's name (kept only on the recording device, for History); anything about the opponent's cards; anything during play |
 | Retention | Decks: 8 days after the month ends (the month's statistics are rebuilt from them until then). Opponent's soul: until the month ends. Rows: 12 months after the account's last game (`KEEP_IDLE`), or 30 days after no device is linked (`KEEP_UNLINKED`). Published files: anonymous aggregates, kept |
-| Anonymity of output | Aggregates only, no decklists. In **every** window (Today, This Week, This Season, each frozen month, so All Time too): ranked divisions are grouped to ≥3 players; rows from <3 players are dropped everywhere (groups, Unranked, True Hub+); a selection with <3 players shows only its game/player counts; Total leaves out those cells and then uses only the souls shown (no working out by subtraction) |
+| Anonymity of output | Aggregates only, no decklists. In **every** window (Today, This Week, This Season, each frozen month, so All Time too): ranked divisions are grouped to ≥3 different players; a selection (group, Unranked, True Hub+) is shown in full only with ≥3 players, otherwise only its game/player counts; True Hub+ only when each top group's part below 1820 is empty or ≥3 players; Total leaves out every blanked selection's cards and then uses only the souls shown (no working out by subtraction). Anonymity by numbers (Worker 1.14); the minimum can be raised |
 | Tables | `games`, `stats_files` |
 
 ### 5. Abuse limits

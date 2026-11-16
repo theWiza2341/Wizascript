@@ -4,10 +4,10 @@
 // Maker's, or in its spot). It shows what the Wizascript server publishes from
 // every opted-in player's games (Worker 1.8 /v1/stats; format in
 // claude/worker-1.8.md): which cards, artifacts and souls are played, and how
-// they do, by time range and division. Nobody's own deck is ever shown: in every
-// time range and division (Worker 1.12) the server leaves out anything fewer than
-// 3 players used, merges thin divisions, and shows only counts where fewer than 3
-// players played; this window says so.
+// they do, by time range and division. Nobody's own deck is ever shown: a
+// division is only shown once at least 3 different players played in it (thin
+// divisions are merged; below 3 players only the counts are shown); this window
+// says so (Worker 1.14).
 
 import { getStats } from "./api.js";
 import { SOULS, LADDER, TRUE_HUB_ELO, t, esc, soulHtml, divHtml } from "./common.js";
@@ -287,7 +287,7 @@ function renderBody() {
   const notes = [];
   const others = (s.group || []).filter((d) => d !== state.div);
   if (others.length) notes.push(`Not enough players in ${NAMES[state.div]} ${state.time === "TODAY" ? "today" : state.time === "ALL" ? "in some months" : "in this time"}, so this includes ${others.map((d) => NAMES[d]).join(" and ")}.`);
-  if (priv) notes.push(`Cards and artifacts seen in fewer than ${minP} players' decks aren't shown, so no one's deck can be picked out.`);
+  if (priv) notes.push(`Shown only where at least ${minP} different players played, so no one's deck can be picked out.`);
   notes.push(pp ? "Counting each player once." : "Counting every game.");
   noteEl.textContent = notes.join(" ");
   if (!s.games) { body.innerHTML = '<div class="uw-empty">No games recorded for this time and division yet.</div>'; return; }
@@ -343,7 +343,7 @@ function renderBody() {
   if (q && !shown.length && !unusedShown.length) html += `<tr><td colspan="${ncols}" class="uw-hidden">Nothing matches “${esc(state.q)}”.</td></tr>`;
   if (unusedShown.length) {
     const open = state.showUnused || (q && !shown.length);
-    html += `<tr class="uw-unused-head"><td colspan="${ncols}">${open ? "▾" : "▸"} Not used ${TIME_NAMES[state.time].toLowerCase()} in ${NAMES[state.div]}${priv ? ` (or by fewer than ${minP} players)` : ""}: ${unusedShown.length} ${isCards ? "card" : "artifact"}${unusedShown.length === 1 ? "" : "s"}</td></tr>`;
+    html += `<tr class="uw-unused-head"><td colspan="${ncols}">${open ? "▾" : "▸"} Not used ${TIME_NAMES[state.time].toLowerCase()} in ${NAMES[state.div]}${hiddenCount ? ` (or hidden)` : ""}: ${unusedShown.length} ${isCards ? "card" : "artifact"}${unusedShown.length === 1 ? "" : "s"}</td></tr>`;
     if (open) html += unusedShown.map((r) => `<tr class="uw-unused"><td class="uw-rank">–</td><td>${nameCell(r)}</td><td>0.0%</td>${isCards ? "<td>–</td>" : ""}<td>–</td>${state.adv ? "<td>0</td><td>0</td>" : ""}</tr>`).join("");
   }
   html += "</table>";

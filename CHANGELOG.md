@@ -2,6 +2,17 @@
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
 
+## 1.8.2
+
+### Flowery Mode
+- Flowery can now react when a ranked loss **drops you a division** (and, later, when a win moves you up). The lines for it come with Flowery's line list, so they can be added without an update.
+
+### Changes
+- **Usage Statistics shows a lot more:** every card and artifact played in a division is shown once at least 3 different players have played there (before, each card needed 3 players of its own, which hid almost everything). Divisions with fewer players are still merged with the next one, and below 3 players only the number of games is shown.
+
+### Fixes
+- **Card Gallery:** the **↻** refresh button in Browse sat under the ⚿ / 📱 buttons and couldn't be clicked. It's now next to the page arrows (Card Maker and the gallery website).
+
 ## 1.8.1
 
 ### Fixes
@@ -13,7 +24,7 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
 An **opt-in** plugin: share your PvP games, and see which cards, artifacts and souls everyone plays. Turn it on in the **Plugins** list; it asks once more before anything is sent, and it needs your Undercards account linked (Wizascript tab → **Undercards Account**).
 - Each of your PvP games sends your soul, the result, your division and Elo, your opponent's soul, and your **starting deck and artifacts**. CPU games are never sent. Your opponent's **name stays on your device** (your History shows it there).
 - **📊** in the footer opens the statistics: cards, artifacts and souls by time range (Today, This Week, This Season, All Time) and division (including True Hub+, games started at 1820+ Elo). Search, sort, and an **Advanced** view.
-- No one's deck is ever shown: only totals, and in every time range and division anything fewer than 3 players used is left out (a division with too few players is merged with the next one).
+- No one's deck is ever shown: only totals, and a division is only shown once at least 3 different players have played in it (a division with too few players is merged with the next one).
 - Your **Profile** shows your stats per division, earlier seasons, and an **Elo Graph** you can move and resize.
 - Your **History** shows every PvP game this season, 20 a page (the mouse wheel turns pages).
 - **Download My Data** saves everything the Wizascript server keeps about you; **Delete My Data** removes everything you've sent.

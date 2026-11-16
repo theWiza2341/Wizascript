@@ -1,0 +1,18 @@
+{
+  "id": "14g",
+  "kind": "single",
+  "title": "Takoyaki Stand",
+  "author": "Legacy_03",
+  "postedAt": 1794790148860,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Takoyaki Stand",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/14g-0-pic.png"
+    }
+  ]
+}

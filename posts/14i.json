@@ -1,0 +1,19 @@
+{
+  "id": "14i",
+  "kind": "single",
+  "title": "Lanino & Elnina",
+  "author": "ElPapaFrita19",
+  "postedAt": 1794790691880,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Lanino & Elnina",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/14i-0-pic.png"
+    }
+  ]
+}

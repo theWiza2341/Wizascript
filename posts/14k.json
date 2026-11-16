@@ -1,0 +1,114 @@
+{
+  "id": "14k",
+  "kind": "set",
+  "title": "Switch Soul",
+  "author": "Legacy_03",
+  "postedAt": 1794793336749,
+  "parts": [
+    {
+      "type": "Spell",
+      "name": "Heartbreak",
+      "desc": "",
+      "cost": null,
+      "picture": "art/14k-0-pic.png"
+    },
+    {
+      "type": "Spell",
+      "name": "Date Night",
+      "desc": "",
+      "cost": null,
+      "picture": "art/14k-1-pic.png"
+    },
+    {
+      "type": "Spell",
+      "name": "Rejection",
+      "desc": "",
+      "cost": null,
+      "picture": "art/14k-2-pic.png"
+    },
+    {
+      "type": "Spell",
+      "name": "Cleave",
+      "desc": "",
+      "cost": null,
+      "picture": "art/14k-3-pic.png"
+    },
+    {
+      "type": "Spell",
+      "name": "Maze",
+      "desc": "",
+      "cost": null,
+      "picture": "art/14k-4-pic.png"
+    },
+    {
+      "type": "Spell",
+      "name": "Warped Perception",
+      "desc": "",
+      "cost": null,
+      "picture": "art/14k-5-pic.png"
+    },
+    {
+      "type": "Spell",
+      "name": "Transition",
+      "desc": "",
+      "cost": null,
+      "picture": "art/14k-6-pic.png"
+    },
+    {
+      "type": "Spell",
+      "name": "Mean Face",
+      "desc": "",
+      "cost": null,
+      "picture": "art/14k-7-pic.png"
+    },
+    {
+      "type": "Spell",
+      "name": "Elusive Exclusive",
+      "desc": "",
+      "cost": null,
+      "picture": "art/14k-8-pic.png"
+    },
+    {
+      "type": "Spell",
+      "name": "Tearjerker",
+      "desc": "",
+      "cost": null,
+      "picture": "art/14k-9-pic.png"
+    },
+    {
+      "type": "Spell",
+      "name": "Dance Battle",
+      "desc": "",
+      "cost": null,
+      "picture": "art/14k-10-pic.png"
+    },
+    {
+      "type": "Spell",
+      "name": "Royal Switch",
+      "desc": "",
+      "cost": null,
+      "picture": "art/14k-11-pic.png"
+    },
+    {
+      "type": "Monster",
+      "name": "Switch Doors",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/14k-12-pic.png"
+    },
+    {
+      "type": "Artifact",
+      "name": "Switch Soul Passive",
+      "desc": "Every other turn, the first time you summon a monster: Switch: Give it [[+1 ATK]] or [[+1 HP]].",
+      "rarity": "COMMON",
+      "art": "art/14k-13.png"
+    },
+    {
+      "type": "Enchantment",
+      "name": "Switch Spells",
+      "desc": "In this context, the switch spell would work based on the position of the monster the spell targeted."
+    }
+  ]
+}

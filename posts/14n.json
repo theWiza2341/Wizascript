@@ -1,0 +1,20 @@
+{
+  "id": "14n",
+  "kind": "single",
+  "title": "The Light",
+  "author": "Legacy_03",
+  "postedAt": 1794855398855,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "The Light",
+      "desc": "Transparency. Magic: Choose a monster in your hand (Max. EPIC) and give it +1 Loop. Delay: Replace the copy with an exact one and give it -2 cost (Min. 1 cost).",
+      "cost": 7,
+      "atk": 5,
+      "hp": 6,
+      "rarity": "DELTARUNE_LEGENDARY",
+      "art": "art/14n-0.png"
+    }
+  ]
+}

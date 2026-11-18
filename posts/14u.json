@@ -1,0 +1,19 @@
+{
+  "id": "14u",
+  "kind": "single",
+  "title": "Soap Bottle",
+  "author": "Legacy_03",
+  "postedAt": 1794940740007,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Soap Bottle",
+      "desc": "Magic: Remove a monsters stat changes.",
+      "cost": 4,
+      "atk": 3,
+      "hp": 4,
+      "rarity": "DELTARUNE_RARE",
+      "art": "art/14u-0.png"
+    }
+  ]
+}

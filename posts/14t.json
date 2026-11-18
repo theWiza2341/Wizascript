@@ -1,0 +1,19 @@
+{
+  "id": "14t",
+  "kind": "single",
+  "title": "Causal Kris",
+  "author": "Legacy_03",
+  "postedAt": 1794940740007,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Causal Kris",
+      "desc": "Transparency. Magic: Add a {Real Knife} to your hand. Support: Switch: Give a random TOKEN card in your [[hand]] or [[deck]] -1 cost.",
+      "cost": 8,
+      "atk": 4,
+      "hp": 6,
+      "rarity": "DELTARUNE_LEGENDARY",
+      "art": "art/14t-0.png"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "id": "152",
+  "kind": "set",
+  "title": "HE DEVELOPED?!",
+  "author": "Legacy_03",
+  "postedAt": 1794980154725,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Kooby",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/152-0-pic.png"
+    },
+    {
+      "type": "Monster",
+      "name": "Developed Kooby",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/152-1-pic.png"
+    }
+  ]
+}

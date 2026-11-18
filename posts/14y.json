@@ -1,0 +1,18 @@
+{
+  "id": "14y",
+  "kind": "single",
+  "title": "Hall Receptionist",
+  "author": "Legacy_03",
+  "postedAt": 1794940808195,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Hall Receptionist",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/14y-0-pic.png"
+    }
+  ]
+}

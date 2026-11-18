@@ -1,0 +1,29 @@
+{
+  "id": "14r",
+  "kind": "set",
+  "title": "Scarlet Mushroom",
+  "author": "Legacy_03",
+  "postedAt": 1794940740007,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Scarlet Shroom",
+      "desc": "Dust: Summon a {Spore Cloud}.",
+      "cost": 2,
+      "atk": 2,
+      "hp": 1,
+      "rarity": "DELTARUNE_COMMON",
+      "art": "art/14r-0.png"
+    },
+    {
+      "type": "Monster",
+      "name": "Spore Cloud",
+      "desc": "Taunt. Dust: Give its killer +1 Mold Spore.",
+      "cost": 2,
+      "atk": 1,
+      "hp": 1,
+      "rarity": "DELTARUNE_TOKEN",
+      "art": "art/14r-1.png"
+    }
+  ]
+}

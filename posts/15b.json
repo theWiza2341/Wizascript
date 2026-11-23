@@ -1,0 +1,19 @@
+{
+  "id": "15b",
+  "kind": "single",
+  "title": "Shovels x999",
+  "author": "clpb",
+  "postedAt": 1795267489114,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Shovels x999",
+      "desc": "Delay: Add a 0-Loop {Shovel} to your hand. Dust: Give it +1 Loop.",
+      "cost": 2,
+      "atk": 2,
+      "hp": 2,
+      "rarity": "DELTARUNE_EPIC",
+      "art": "art/15b-0.png"
+    }
+  ]
+}

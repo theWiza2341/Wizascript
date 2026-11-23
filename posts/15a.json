@@ -1,0 +1,19 @@
+{
+  "id": "15a",
+  "kind": "single",
+  "title": "Dog Statue",
+  "author": "clpb",
+  "postedAt": 1795267489114,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Dog Statue",
+      "desc": "After you summon a monster costing 1 or less G, turn it into {Too Many Dogs}.",
+      "cost": 7,
+      "atk": 4,
+      "hp": 6,
+      "rarity": "BASE_EPIC",
+      "art": "art/15a-0.png"
+    }
+  ]
+}

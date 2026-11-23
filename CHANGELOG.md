@@ -2,6 +2,16 @@
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
 
+## 1.8.3
+
+### Usage Statistics
+- **Count each player once** is now on by default, so one player's many games with one deck don't skew the numbers. Turn it off under **Advanced** to see every game counted.
+- **True Hub+** works like the divisions: it shows everything once at least 3 different players have played there.
+- Removed the **ID** sort and searching by ID number.
+
+### Fixes
+- An artifact the game no longer offers showed only as its number (like "#11"). It now shows its name.
+
 ## 1.8.2
 
 ### Flowery Mode

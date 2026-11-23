@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.8.2
+// @version      1.8.3
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -281,7 +281,7 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
   }
 
   // packages/core/version.js
-  var SUITE_VERSION = "1.8.2";
+  var SUITE_VERSION = "1.8.3";
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
@@ -1044,6 +1044,16 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
   var CHANGELOG_default = `# Changelog
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
+
+## 1.8.3
+
+### Usage Statistics
+- **Count each player once** is now on by default, so one player's many games with one deck don't skew the numbers. Turn it off under **Advanced** to see every game counted.
+- **True Hub+** works like the divisions: it shows everything once at least 3 different players have played there.
+- Removed the **ID** sort and searching by ID number.
+
+### Fixes
+- An artifact the game no longer offers showed only as its number (like "#11"). It now shows its name.
 
 ## 1.8.2
 
@@ -19249,7 +19259,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
   var DIVS = ["TOTAL", ...LADDER, "UNRANKED", "TRUEHUB"];
   var NAMES = { TOTAL: "Total", LEGEND: "LEGEND", ULTIMATE_MASTER: "Ultimate Master", HIGH_MASTER: "High Master", MASTER: "Master", UNRANKED: "Unranked", TRUEHUB: "True Hub+" };
   var VIEWS2 = [["CARDS", "Cards"], ["ARTIFACTS", "Artifacts"], ["SOULS", "Souls"]];
-  var SORTS = [["USAGE", "Most used"], ["WINRATE", "Win rate"], ["NAME", "Name"], ["ID", "ID"]];
+  var SORTS = [["USAGE", "Most used"], ["WINRATE", "Win rate"], ["NAME", "Name"]];
   var CATALOG_RARITIES = ["COMMON", "RARE", "EPIC", "LEGENDARY", "DETERMINATION"];
   var ICON = `<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#000"/>
 <rect x="4" y="9" width="3" height="7" fill="#43b05c"/><rect x="8.5" y="12" width="3" height="4" fill="#e04848"/><rect x="13" y="5" width="3" height="11" fill="#3b82f6"/>
@@ -19323,7 +19333,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     document.head.appendChild(st);
   }
   var win = null;
-  var state3 = { time: "SEASON", div: "TOTAL", view: "CARDS", adv: false, perPlayer: false, sort: "USAGE", q: "", showUnused: false };
+  var state3 = { time: "SEASON", div: "TOTAL", view: "CARDS", adv: false, perPlayer: true, sort: "USAGE", q: "", showUnused: false };
   var files = {};
   var loadError = "";
   toggleWindow = () => {
@@ -19426,15 +19436,18 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     await ensureCards();
     const cards2 = allCards();
     let arts = [];
+    let all = [];
     try {
-      arts = (await artifacts2()).filter((a) => !a.unavailable && !a.custom && !a.disabled);
+      all = await artifacts2();
     } catch (e) {
     }
     catalog = {
       cards: cards2.filter((c) => CATALOG_RARITIES.includes(c.rarity) && c.name),
-      arts,
+      // The "Not used" list: artifacts players can get now. Names: every artifact, so one
+      // the game marks unavailable (retired, event) still shows its name, not "#11" (1.8.3).
+      arts: all.filter((a) => !a.unavailable && !a.custom && !a.disabled),
       cardById: new Map(cards2.map((c) => [c.id, c])),
-      artById: new Map(arts.map((a) => [a.id, a]))
+      artById: new Map(all.map((a) => [a.id, a]))
     };
   }
   async function fetchWindow(w) {
@@ -19533,14 +19546,14 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       adv.innerHTML = `<input type="checkbox" ${state3.adv ? "checked" : ""}> Advanced`;
       adv.querySelector("input").addEventListener("change", (e) => {
         state3.adv = e.target.checked;
-        if (!state3.adv) state3.perPlayer = false;
+        if (!state3.adv) state3.perPlayer = true;
         render2();
       });
       right.appendChild(adv);
       if (state3.adv) {
         const pp = document.createElement("label");
         pp.className = "uw-adv";
-        pp.title = "Off: every game counts. On: each player counts once, however many games they played.";
+        pp.title = "On (default): each player counts once, however many games they played. Off: every game counts, so players with many games weigh more.";
         pp.innerHTML = `<input type="checkbox" ${state3.perPlayer ? "checked" : ""}> Count each player once`;
         pp.querySelector("input").addEventListener("change", (e) => {
           state3.perPlayer = e.target.checked;
@@ -19609,18 +19622,17 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     const usedIds = new Set(rows.map((r) => r[0]));
     const unused = (isCards ? catalog.cards : catalog.arts).filter((c) => !usedIds.has(c.id)).map((item2) => ({ id: item2.id, item: item2 }));
     const q = state3.q.trim().toLowerCase();
-    const match = (r) => !q || String(r.item.name || "").toLowerCase().includes(q) || String(r.id) === q || String(r.id).startsWith(q);
+    const match = (r) => !q || String(r.item.name || "").toLowerCase().includes(q);
     const cmp = {
       USAGE: (x, y) => x.rank - y.rank,
       WINRATE: (x, y) => (y.st.n ? y.st.w / y.st.n : 0) - (x.st.n ? x.st.w / x.st.n : 0) || x.rank - y.rank,
-      NAME: (x, y) => String(x.item.name).localeCompare(String(y.item.name)),
-      ID: (x, y) => x.id - y.id
+      NAME: (x, y) => String(x.item.name).localeCompare(String(y.item.name))
     }[state3.sort];
     const shown = used.filter(match).sort(cmp);
-    const unusedShown = unused.filter(match).sort(state3.sort === "ID" ? (x, y) => x.id - y.id : (x, y) => String(x.item.name).localeCompare(String(y.item.name)));
+    const unusedShown = unused.filter(match).sort((x, y) => String(x.item.name).localeCompare(String(y.item.name)));
     const limit = q || state3.sort !== "USAGE" ? Infinity : TOP;
     const img = (r) => isCards ? `/images/cards/${esc3(r.item.image || r.item.baseImage || "")}.png` : `/images/artifacts/${esc3(r.item.image || "")}.png`;
-    const nameCell = (r) => `<img class="uw-thumb" src="${img(r)}" onerror="this.style.visibility='hidden'"><span class="${isCards ? esc3(r.item.rarity || "") : r.item.legendary ? "yellow" : ""}">${esc3(r.item.name)}</span>${state3.sort === "ID" || state3.adv ? ` <span class="uw-id">#${r.id}</span>` : ""}`;
+    const nameCell = (r) => `<img class="uw-thumb" src="${img(r)}" onerror="this.style.visibility='hidden'"><span class="${isCards ? esc3(r.item.rarity || "") : r.item.legendary ? "yellow" : ""}">${esc3(r.item.name)}</span>${state3.adv ? ` <span class="uw-id">#${r.id}</span>` : ""}`;
     const cols = isCards ? "<th>In decks</th><th>Avg copies</th><th>Win rate</th>" : "<th>In decks</th><th>Win rate</th>";
     const ncols = 2 + (isCards ? 3 : 2) + (state3.adv ? 2 : 0);
     let html = `<table><tr><th>#</th><th>${isCards ? "Card" : "Artifact"}</th>${cols}${advHead}</tr>`;

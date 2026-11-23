@@ -21,7 +21,7 @@ const TIME_NAMES = Object.fromEntries(TIMES);
 const DIVS = ["TOTAL", ...LADDER, "UNRANKED", "TRUEHUB"];
 const NAMES = { TOTAL: "Total", LEGEND: "LEGEND", ULTIMATE_MASTER: "Ultimate Master", HIGH_MASTER: "High Master", MASTER: "Master", UNRANKED: "Unranked", TRUEHUB: "True Hub+" };
 const VIEWS = [["CARDS", "Cards"], ["ARTIFACTS", "Artifacts"], ["SOULS", "Souls"]];
-const SORTS = [["USAGE", "Most used"], ["WINRATE", "Win rate"], ["NAME", "Name"], ["ID", "ID"]];
+const SORTS = [["USAGE", "Most used"], ["WINRATE", "Win rate"], ["NAME", "Name"]]; // (1.8.3: no ID sort; players don't know ids)
 const CATALOG_RARITIES = ["COMMON", "RARE", "EPIC", "LEGENDARY", "DETERMINATION"];
 
 export const ICON = `<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#000"/>
@@ -94,7 +94,7 @@ function injectStyle() {
 
 // ---- the window ------------------------------------------------------------------
 let win = null;
-const state = { time: "SEASON", div: "TOTAL", view: "CARDS", adv: false, perPlayer: false, sort: "USAGE", q: "", showUnused: false };
+const state = { time: "SEASON", div: "TOTAL", view: "CARDS", adv: false, perPlayer: true, sort: "USAGE", q: "", showUnused: false }; // 1.8.3: each player counts once by default
 const files = {}; // window -> stats file
 let loadError = "";
 
@@ -157,12 +157,15 @@ async function loadCatalog() {
   await ensureCards();
   const cards = allCards();
   let arts = [];
-  try { arts = (await artifacts()).filter((a) => !a.unavailable && !a.custom && !a.disabled); } catch (e) { /* names will show as #id */ }
+  let all = [];
+  try { all = await artifacts(); } catch (e) { /* names will show as #id */ }
   catalog = {
     cards: cards.filter((c) => CATALOG_RARITIES.includes(c.rarity) && c.name),
-    arts,
+    // The "Not used" list: artifacts players can get now. Names: every artifact, so one
+    // the game marks unavailable (retired, event) still shows its name, not "#11" (1.8.3).
+    arts: all.filter((a) => !a.unavailable && !a.custom && !a.disabled),
     cardById: new Map(cards.map((c) => [c.id, c])),
-    artById: new Map(arts.map((a) => [a.id, a]))
+    artById: new Map(all.map((a) => [a.id, a]))
   };
 }
 async function fetchWindow(w) {
@@ -250,11 +253,11 @@ function render() {
     right.innerHTML = `<span class="uw-recorded" title="All PvP games recorded in this time range, every division incl. Unranked">${n} PvP game${n === 1 ? "" : "s"} recorded</span>`;
     const adv = document.createElement("label"); adv.className = "uw-adv";
     adv.innerHTML = `<input type="checkbox" ${state.adv ? "checked" : ""}> Advanced`;
-    adv.querySelector("input").addEventListener("change", (e) => { state.adv = e.target.checked; if (!state.adv) state.perPlayer = false; render(); });
+    adv.querySelector("input").addEventListener("change", (e) => { state.adv = e.target.checked; if (!state.adv) state.perPlayer = true; render(); });
     right.appendChild(adv);
     if (state.adv) {
       const pp = document.createElement("label"); pp.className = "uw-adv";
-      pp.title = "Off: every game counts. On: each player counts once, however many games they played.";
+      pp.title = "On (default): each player counts once, however many games they played. Off: every game counts, so players with many games weigh more.";
       pp.innerHTML = `<input type="checkbox" ${state.perPlayer ? "checked" : ""}> Count each player once`;
       pp.querySelector("input").addEventListener("change", (e) => { state.perPlayer = e.target.checked; render(); });
       right.appendChild(pp);
@@ -322,18 +325,17 @@ function renderBody() {
   // land here too, and the list's title says so.
   const unused = (isCards ? catalog.cards : catalog.arts).filter((c) => !usedIds.has(c.id)).map((item) => ({ id: item.id, item }));
   const q = state.q.trim().toLowerCase();
-  const match = (r) => !q || String(r.item.name || "").toLowerCase().includes(q) || String(r.id) === q || String(r.id).startsWith(q);
+  const match = (r) => !q || String(r.item.name || "").toLowerCase().includes(q);
   const cmp = {
     USAGE: (x, y) => x.rank - y.rank,
     WINRATE: (x, y) => (y.st.n ? y.st.w / y.st.n : 0) - (x.st.n ? x.st.w / x.st.n : 0) || x.rank - y.rank,
-    NAME: (x, y) => String(x.item.name).localeCompare(String(y.item.name)),
-    ID: (x, y) => x.id - y.id
+    NAME: (x, y) => String(x.item.name).localeCompare(String(y.item.name))
   }[state.sort];
   const shown = used.filter(match).sort(cmp);
-  const unusedShown = unused.filter(match).sort(state.sort === "ID" ? (x, y) => x.id - y.id : (x, y) => String(x.item.name).localeCompare(String(y.item.name)));
+  const unusedShown = unused.filter(match).sort((x, y) => String(x.item.name).localeCompare(String(y.item.name)));
   const limit = q || state.sort !== "USAGE" ? Infinity : TOP;
   const img = (r) => (isCards ? `/images/cards/${esc(r.item.image || r.item.baseImage || "")}.png` : `/images/artifacts/${esc(r.item.image || "")}.png`);
-  const nameCell = (r) => `<img class="uw-thumb" src="${img(r)}" onerror="this.style.visibility='hidden'"><span class="${isCards ? esc(r.item.rarity || "") : r.item.legendary ? "yellow" : ""}">${esc(r.item.name)}</span>${state.sort === "ID" || state.adv ? ` <span class="uw-id">#${r.id}</span>` : ""}`;
+  const nameCell = (r) => `<img class="uw-thumb" src="${img(r)}" onerror="this.style.visibility='hidden'"><span class="${isCards ? esc(r.item.rarity || "") : r.item.legendary ? "yellow" : ""}">${esc(r.item.name)}</span>${state.adv ? ` <span class="uw-id">#${r.id}</span>` : ""}`;
   const cols = isCards ? "<th>In decks</th><th>Avg copies</th><th>Win rate</th>" : "<th>In decks</th><th>Win rate</th>";
   const ncols = 2 + (isCards ? 3 : 2) + (state.adv ? 2 : 0);
   let html = `<table><tr><th>#</th><th>${isCards ? "Card" : "Artifact"}</th>${cols}${advHead}</tr>`;

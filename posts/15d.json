@@ -1,0 +1,19 @@
+{
+  "id": "15d",
+  "kind": "single",
+  "title": "Bounty Board",
+  "author": "PhantomFoxtrot",
+  "postedAt": 1795358640584,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Bounty Board",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/15d-0-pic.png"
+    }
+  ]
+}

@@ -18,6 +18,7 @@ const CSS = `
 #wz-season-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:10px 0 6px; position:relative; }
 #wz-season-bar .wz-divs { display:flex; gap:6px; flex-wrap:wrap; }
 #wz-season-bar .wz-div { background:transparent; color:#fff; border:1px solid #fff; padding:3px 10px; font:inherit; font-size:14px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+#wz-season-bar .wz-div * { pointer-events:none; }
 #wz-season-bar .wz-div img, #wz-season-bar .wz-div .divisionIcon { height:18px !important; width:auto !important; max-height:18px !important; margin:0 !important; }
 #wz-season-bar .wz-div:hover { background:rgba(255,255,255,.12); }
 #wz-season-bar .wz-div.on { background:#fff; color:#000; }

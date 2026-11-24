@@ -47,6 +47,7 @@ const CSS = `
 #wz-usage-win .uw-x { background:none; border:none; color:#fff; font-size:18px; line-height:1; cursor:pointer; }
 #wz-usage-win .uw-bar { display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:6px 10px 0; }
 #wz-usage-win .uw-btn { background:transparent; color:#fff; border:1px solid #fff; padding:3px 9px; font:inherit; font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+#wz-usage-win .uw-btn * { pointer-events:none; }
 #wz-usage-win .uw-btn:hover { background:rgba(255,255,255,.12); }
 #wz-usage-win .uw-btn.on { background:#fff; color:#000; }
 #wz-usage-win .uw-btn.th { border-color:#ffd700; color:#ffd700; } #wz-usage-win .uw-btn.th.on { background:#ffd700; color:#000; }
@@ -327,8 +328,9 @@ function render() {
   const sbar = win.querySelector(".uw-sbar");
   sbar.style.display = state.view === "SPELLS" ? "" : "none";
   if (state.view === "SPELLS") {
-    buttons(sbar, [["ALL", "All spells"], ...SOULS.map((x) => [x, x]), ["NEUTRAL", "Neutral"]], "spellSoul", (k) => (k === "ALL" ? "All spells" : k === "NEUTRAL" ? "Neutral" : `<img class="uw-soulimg" src="/images/souls/${esc(k)}.png" alt="" onerror="this.remove()">${soulHtml(k)}`));
-    sbar.querySelectorAll(".uw-btn").forEach((b, i) => { b.title = i === 0 ? "Every spell" : i > SOULS.length ? "Spells any soul can play" : "This soul's own spells, as a share of its decks"; });
+    if (!["ALL", ...SOULS].includes(state.spellSoul)) state.spellSoul = "ALL";
+    buttons(sbar, [["ALL", "All spells"], ...SOULS.map((x) => [x, x])], "spellSoul", (k) => (k === "ALL" ? "All spells" : `<img class="uw-soulimg" src="/images/souls/${esc(k)}.png" alt="" onerror="this.remove()">${soulHtml(k)}`));
+    sbar.querySelectorAll(".uw-btn").forEach((b, i) => { b.title = i === 0 ? "Every spell" : "This soul's own spells, as a share of its decks"; });
   }
   const tools = win.querySelector(".uw-tools");
   tools.style.display = state.view === "SOULS" || state.view === "COMBOS" ? "none" : "";
@@ -418,7 +420,7 @@ function renderBody() {
   const spells = state.view === "SPELLS";
   const soulF = spells && SOULS.includes(state.spellSoul) ? state.spellSoul : null;
   // Which cards this view shows (a card the catalogue doesn't know counts as a monster).
-  const fits = (c) => (!spells ? !isSpell(c) : isSpell(c) && (state.spellSoul === "ALL" || (state.spellSoul === "NEUTRAL" ? !spellSoul(c) : spellSoul(c) === soulF)));
+  const fits = (c) => (!spells ? !isSpell(c) : isSpell(c) && (!soulF || spellSoul(c) === soulF));
   // A soul's own spells are measured against that soul's decks (and its decks the week before).
   const soulRow = soulF && (s.souls || []).find((x) => x[0] === soulF);
   const base = soulF ? (soulRow ? (pp ? soulRow[4] : soulRow[1]) : 0) : total;

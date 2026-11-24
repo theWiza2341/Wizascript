@@ -26,7 +26,16 @@ export function sampleFiles(cards, arts, now = Date.now()) {
     const artRows = pickA.map((a, i) => { const g = Math.round(games * Math.max(0.03, 0.5 / (i + 1))); const p = Math.max(1, Math.round(pg * g / games)); const w = Math.round(g * (0.42 + r() * 0.16)); return [a.id, g, w, p, p, Math.round(p * w / Math.max(1, g) * 100) / 100]; });
     const souls = SOULS.map((s, i) => { const g = Math.round(games * [0.24, 0.18, 0.15, 0.14, 0.11, 0.1, 0.08][i]); const p = Math.max(1, Math.round(pg * g / games)); const w = Math.round(g * (0.44 + r() * 0.12)); return [s, g, w, p, p, Math.round(p * w / Math.max(1, g) * 100) / 100]; });
     const combos = [];
-    for (const s of SOULS.slice(0, 4)) for (const a of pickA.slice(0, 6)) { const g = Math.round(games * 0.05 * (0.5 + r())); const p = Math.max(3, Math.round(g / 3)); const w = Math.round(g * (0.4 + r() * 0.25)); combos.push([s, a.id, g, w, p, p, Math.round(p * w / Math.max(1, g) * 100) / 100]); }
+    // Each soul's artifacts as a share of THAT soul's games/players (never above 100%; decks take 2 artifacts, so shares add up to about 200%).
+    for (const so of souls.slice(0, 4)) {
+      const [soul, sg, , sp, spg] = so;
+      const shares = [0.72, 0.55, 0.33, 0.22, 0.12, 0.06].map((x) => Math.min(1, x * (0.85 + r() * 0.3)));
+      pickA.slice(0, 6).forEach((a, i) => {
+        const g = Math.round(sg * shares[i]), p = Math.min(sp, Math.max(1, Math.round(sp * shares[i]))), pgs = Math.round(spg * shares[i] * 100) / 100;
+        const w = Math.round(g * (0.4 + r() * 0.25));
+        if (g > 0) combos.push([soul, a.id, g, w, p, pgs, Math.round(pgs * w / Math.max(1, g) * 100) / 100]);
+      });
+    }
     return { games, players, souls, cards: cardsRows, arts: artRows, combos, hidden: { cards: 0, arts: 0 } };
   };
   const make = (window, games, players) => {

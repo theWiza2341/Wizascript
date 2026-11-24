@@ -1055,7 +1055,7 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
   - **Decks:** your decks, grouped automatically. Each deck shows its artifacts first, then each version's record and what changed (cards and artifacts), and how its cards compare with what others play in your division (staples, rare picks, off-meta). Click a deck's name to rename it; names stay on your device.
   - **Cards:** your win rate with each card next to the community's.
 - **Alts:** Profile, History, the Elo Graph and My Stats now have an account picker, so you can see each account you play on. They start on the account you're logged in to.
-- **Monsters** and **Spells** replace the Cards view. Spells has a filter by soul: each soul's own spells, ranked by how many of that soul's decks play them, or the neutral spells.
+- **Monsters** and **Spells** replace the Cards view. Spells has a filter by soul: each soul's own spells, ranked by how many of that soul's decks play them.
 - Cards show the game's rarity icon next to their name, and soul spells are named in their soul's colour.
 - **Soul + Artifact** view: which artifacts are played with each soul, and how they do, with a gap between souls.
 - **This Week** shows how each card changed since the week before (\u25B2 \u25BC, or "new"), with a **Rising** sort.
@@ -18648,11 +18648,14 @@ ${NOTES_CSS}
         return [s, g, w, p, p, Math.round(p * w / Math.max(1, g) * 100) / 100];
       });
       const combos = [];
-      for (const s of SOULS3.slice(0, 4)) for (const a of pickA.slice(0, 6)) {
-        const g = Math.round(games * 0.05 * (0.5 + r()));
-        const p = Math.max(3, Math.round(g / 3));
-        const w = Math.round(g * (0.4 + r() * 0.25));
-        combos.push([s, a.id, g, w, p, p, Math.round(p * w / Math.max(1, g) * 100) / 100]);
+      for (const so of souls.slice(0, 4)) {
+        const [soul, sg, , sp, spg] = so;
+        const shares = [0.72, 0.55, 0.33, 0.22, 0.12, 0.06].map((x) => Math.min(1, x * (0.85 + r() * 0.3)));
+        pickA.slice(0, 6).forEach((a, i) => {
+          const g = Math.round(sg * shares[i]), p = Math.min(sp, Math.max(1, Math.round(sp * shares[i]))), pgs = Math.round(spg * shares[i] * 100) / 100;
+          const w = Math.round(g * (0.4 + r() * 0.25));
+          if (g > 0) combos.push([soul, a.id, g, w, p, pgs, Math.round(pgs * w / Math.max(1, g) * 100) / 100]);
+        });
       }
       return { games, players, souls, cards: cardsRows, arts: artRows, combos, hidden: { cards: 0, arts: 0 } };
     };
@@ -18803,6 +18806,7 @@ ${NOTES_CSS}
 #wz-season-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:10px 0 6px; position:relative; }
 #wz-season-bar .wz-divs { display:flex; gap:6px; flex-wrap:wrap; }
 #wz-season-bar .wz-div { background:transparent; color:#fff; border:1px solid #fff; padding:3px 10px; font:inherit; font-size:14px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+#wz-season-bar .wz-div * { pointer-events:none; }
 #wz-season-bar .wz-div img, #wz-season-bar .wz-div .divisionIcon { height:18px !important; width:auto !important; max-height:18px !important; margin:0 !important; }
 #wz-season-bar .wz-div:hover { background:rgba(255,255,255,.12); }
 #wz-season-bar .wz-div.on { background:#fff; color:#000; }
@@ -19862,6 +19866,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
 #wz-usage-win .uw-x { background:none; border:none; color:#fff; font-size:18px; line-height:1; cursor:pointer; }
 #wz-usage-win .uw-bar { display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:6px 10px 0; }
 #wz-usage-win .uw-btn { background:transparent; color:#fff; border:1px solid #fff; padding:3px 9px; font:inherit; font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+#wz-usage-win .uw-btn * { pointer-events:none; }
 #wz-usage-win .uw-btn:hover { background:rgba(255,255,255,.12); }
 #wz-usage-win .uw-btn.on { background:#fff; color:#000; }
 #wz-usage-win .uw-btn.th { border-color:#ffd700; color:#ffd700; } #wz-usage-win .uw-btn.th.on { background:#ffd700; color:#000; }
@@ -20228,9 +20233,10 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     const sbar = win.querySelector(".uw-sbar");
     sbar.style.display = state3.view === "SPELLS" ? "" : "none";
     if (state3.view === "SPELLS") {
-      buttons(sbar, [["ALL", "All spells"], ...SOULS2.map((x) => [x, x]), ["NEUTRAL", "Neutral"]], "spellSoul", (k) => k === "ALL" ? "All spells" : k === "NEUTRAL" ? "Neutral" : `<img class="uw-soulimg" src="/images/souls/${esc3(k)}.png" alt="" onerror="this.remove()">${soulHtml(k)}`);
+      if (!["ALL", ...SOULS2].includes(state3.spellSoul)) state3.spellSoul = "ALL";
+      buttons(sbar, [["ALL", "All spells"], ...SOULS2.map((x) => [x, x])], "spellSoul", (k) => k === "ALL" ? "All spells" : `<img class="uw-soulimg" src="/images/souls/${esc3(k)}.png" alt="" onerror="this.remove()">${soulHtml(k)}`);
       sbar.querySelectorAll(".uw-btn").forEach((b, i) => {
-        b.title = i === 0 ? "Every spell" : i > SOULS2.length ? "Spells any soul can play" : "This soul's own spells, as a share of its decks";
+        b.title = i === 0 ? "Every spell" : "This soul's own spells, as a share of its decks";
       });
     }
     const tools = win.querySelector(".uw-tools");
@@ -20331,7 +20337,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     const isCards = state3.view === "MONSTERS" || state3.view === "SPELLS";
     const spells = state3.view === "SPELLS";
     const soulF = spells && SOULS2.includes(state3.spellSoul) ? state3.spellSoul : null;
-    const fits = (c) => !spells ? !isSpell(c) : isSpell(c) && (state3.spellSoul === "ALL" || (state3.spellSoul === "NEUTRAL" ? !spellSoul(c) : spellSoul(c) === soulF));
+    const fits = (c) => !spells ? !isSpell(c) : isSpell(c) && (!soulF || spellSoul(c) === soulF);
     const soulRow = soulF && (s.souls || []).find((x) => x[0] === soulF);
     const base = soulF ? soulRow ? pp ? soulRow[4] : soulRow[1] : 0 : total;
     const prevSoul = soulF && s.prev && (s.prev.souls || []).find((x) => x[0] === soulF);

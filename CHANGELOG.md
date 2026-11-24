@@ -10,7 +10,7 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
   - **Decks:** your decks, grouped automatically. Each deck shows its artifacts first, then each version's record and what changed (cards and artifacts), and how its cards compare with what others play in your division (staples, rare picks, off-meta). Click a deck's name to rename it; names stay on your device.
   - **Cards:** your win rate with each card next to the community's.
 - **Alts:** Profile, History, the Elo Graph and My Stats now have an account picker, so you can see each account you play on. They start on the account you're logged in to.
-- **Monsters** and **Spells** replace the Cards view. Spells has a filter by soul: each soul's own spells, ranked by how many of that soul's decks play them, or the neutral spells.
+- **Monsters** and **Spells** replace the Cards view. Spells has a filter by soul: each soul's own spells, ranked by how many of that soul's decks play them.
 - Cards show the game's rarity icon next to their name, and soul spells are named in their soul's colour.
 - **Soul + Artifact** view: which artifacts are played with each soul, and how they do, with a gap between souls.
 - **This Week** shows how each card changed since the week before (▲ ▼, or "new"), with a **Rising** sort.

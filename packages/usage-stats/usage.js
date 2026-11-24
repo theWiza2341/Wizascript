@@ -36,7 +36,8 @@ const CSS = `
 #wz-usage-btn a[aria-pressed="true"] svg { filter: drop-shadow(0 0 3px #fff); }
 #wz-usage-win { position:fixed; z-index:1000; min-width:560px; min-height:360px; display:flex; flex-direction:column; background:rgba(8,4,12,.96); border:1px solid #fff; box-shadow:0 6px 24px rgba(0,0,0,.7); color:#fff; font-size:14px; box-sizing:border-box; }
 #wz-usage-win .uw-title { display:flex; align-items:center; gap:8px; padding:4px 6px 4px 10px; border-bottom:1px solid rgba(255,255,255,.4); cursor:move; user-select:none; }
-#wz-usage-win .uw-title b { flex:1; font-weight:normal; }
+#wz-usage-win .uw-title b { font-weight:normal; }
+#wz-usage-win .uw-title .uw-sep { flex:1; }
 #wz-usage-win .uw-x { background:none; border:none; color:#fff; font-size:18px; line-height:1; cursor:pointer; }
 #wz-usage-win .uw-bar { display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:6px 10px 0; }
 #wz-usage-win .uw-btn { background:transparent; color:#fff; border:1px solid #fff; padding:3px 9px; font:inherit; font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
@@ -54,6 +55,7 @@ const CSS = `
 #wz-usage-win .uw-rank { color:#888; width:26px; text-align:right; }
 #wz-usage-win .uw-thumb { height:26px; width:26px; object-fit:cover; object-position:top; vertical-align:middle; margin-right:6px; border:1px solid rgba(255,255,255,.3); background:#111; }
 #wz-usage-win .uw-meter { position:relative; height:14px; width:120px; background:rgba(255,255,255,.08); display:inline-block; vertical-align:middle; margin-right:6px; }
+#wz-usage-win .uw-pct { display:inline-block; min-width:3.4em; text-align:right; }
 #wz-usage-win .uw-meter i { position:absolute; left:0; top:0; bottom:0; background:#4a8; }
 #wz-usage-win .uw-meter.art i { background:#c9a227; } #wz-usage-win .uw-meter.soul i { background:#58f; }
 #wz-usage-win .uw-empty { color:#999; text-align:center; padding:24px; }
@@ -69,10 +71,12 @@ const CSS = `
 #wz-usage-win tr.uw-unused-head td { color:#999; font-size:12px; cursor:pointer; padding:6px; user-select:none; }
 #wz-usage-win tr.uw-unused-head:hover td { color:#fff; }
 #wz-usage-win tr.uw-unused td { opacity:.55; }
-#wz-usage-win .uw-tabs { padding-top:8px; }
-#wz-usage-win .uw-tabs .uw-btn { font-size:14px; padding:4px 14px; }
+#wz-usage-win .uw-tabs { display:flex; align-self:flex-end; gap:4px; margin:0 0 -5px 10px; cursor:default; }
+#wz-usage-win .uw-tabs .uw-btn { font-size:13px; padding:3px 14px 4px; border-color:rgba(255,255,255,.5); border-bottom:1px solid #fff; color:#aaa; background:transparent; }
+#wz-usage-win .uw-tabs .uw-btn:hover { color:#fff; background:rgba(255,255,255,.08); }
+#wz-usage-win .uw-tabs .uw-btn.on { color:#fff; background:rgba(8,4,12,1); border-color:#fff; border-bottom-color:rgba(8,4,12,1); position:relative; z-index:1; }
 #wz-usage-win .uw-preview { margin:8px 10px 0; padding:6px 10px; border:1px solid #ffd84a; color:#ffd84a; font-size:13px; display:none; }
-#wz-usage-win .uw-delta { font-size:11px; margin-left:2px; } #wz-usage-win .uw-delta.up { color:#6c6; } #wz-usage-win .uw-delta.down { color:#e66; } #wz-usage-win .uw-delta.new { color:#ffd84a; }
+#wz-usage-win .uw-delta { font-size:11px; margin-left:14px; display:inline-block; min-width:3.5em; } #wz-usage-win .uw-delta.up { color:#6c6; } #wz-usage-win .uw-delta.down { color:#e66; } #wz-usage-win .uw-delta.new { color:#ffd84a; }
 #wz-usage-win .uw-grip { position:absolute; right:0; bottom:0; width:14px; height:14px; cursor:nwse-resize; background:linear-gradient(135deg, transparent 50%, rgba(255,255,255,.7) 50%); }
 `;
 
@@ -136,9 +140,8 @@ function build() {
   try { rect = { ...rect, ...JSON.parse(GM_getValue(WIN_KEY, "null")) }; } catch (e) { /* defaults */ }
   win = document.createElement("div"); win.id = "wz-usage-win"; win.style.display = "none";
   win.innerHTML = `
-    <div class="uw-title">${ICON}<b>Usage Statistics</b><span class="uw-meta uw-count"></span><button type="button" class="uw-x" title="Close">×</button></div>
+    <div class="uw-title">${ICON}<b>Usage Statistics</b><div class="uw-tabs"></div><span class="uw-sep"></span><span class="uw-meta uw-count"></span><button type="button" class="uw-x" title="Close">×</button></div>
     <div class="uw-preview"></div>
-    <div class="uw-bar uw-tabs"></div>
     <div class="uw-bar uw-time"></div>
     <div class="uw-bar uw-div"></div>
     <div class="uw-bar uw-view"></div>
@@ -154,7 +157,7 @@ function build() {
     const up = () => { document.removeEventListener("pointermove", mv, true); document.removeEventListener("pointerup", up, true); saveRect(); };
     document.addEventListener("pointermove", mv, true); document.addEventListener("pointerup", up, true);
   };
-  win.querySelector(".uw-title").addEventListener("pointerdown", (e) => { if (!e.target.closest(".uw-x")) follow(e, (s, dx, dy) => { rect.x = s.x + dx; rect.y = s.y + dy; }); });
+  win.querySelector(".uw-title").addEventListener("pointerdown", (e) => { if (!e.target.closest(".uw-x, .uw-tabs")) follow(e, (s, dx, dy) => { rect.x = s.x + dx; rect.y = s.y + dy; }); });
   win.querySelector(".uw-grip").addEventListener("pointerdown", (e) => follow(e, (s, dx, dy) => { rect.w = Math.max(560, s.w + dx); rect.h = Math.max(360, s.h + dy); }));
   addEventListener("resize", () => { if (win.style.display !== "none") keepOnScreen(); });
   const tools = win.querySelector(".uw-tools");
@@ -236,7 +239,7 @@ function timeTabs() {
 
 // ---- rendering ---------------------------------------------------------------------------
 const pct = (x) => `${(Math.round((x || 0) * 1000) / 10).toFixed(1)}%`;
-const meter = (x, cls = "") => `<span class="uw-meter ${cls}"><i style="width:${Math.min(100, (x || 0) * 100)}%"></i></span>${pct(x)}`;
+const meter = (x, cls = "") => `<span class="uw-meter ${cls}"><i style="width:${Math.min(100, (x || 0) * 100)}%"></i></span><span class="uw-pct">${pct(x)}</span>`;
 const rate = (w, n) => (n ? `<span class="${w / n >= 0.5 ? "green" : "red"}">${pct(w / n)}</span>` : "-");
 
 function buttons(box, list, key, labelFn, info = {}, extra) {

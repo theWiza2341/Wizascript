@@ -1,0 +1,18 @@
+{
+  "id": "15f",
+  "kind": "single",
+  "title": "Card Treasure",
+  "author": "bagels5899",
+  "postedAt": 1795483620972,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Card Treasure",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/15f-0-pic.png"
+    }
+  ]
+}

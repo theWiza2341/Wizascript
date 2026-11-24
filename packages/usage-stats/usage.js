@@ -9,8 +9,10 @@
 // divisions are merged; below 3 players only the counts are shown); this window
 // says so (Worker 1.14).
 
-import { getStats } from "./api.js";
-import { SOULS, LADDER, TRUE_HUB_ELO, t, esc, soulHtml, divHtml } from "./common.js";
+import { getStats, myGames, defaultPlayer } from "./api.js";
+import { SOULS, LADDER, TRUE_HUB_ELO, t, esc, soulHtml, divHtml, seasonOf, seasonLabel, loggedInName } from "./common.js";
+import { createMine } from "./mine.js";
+import { sampleFiles, sampleGames } from "./preview.js";
 import { allCards, ensureCards, artifacts } from "../misc/card-history/game.js";
 
 const WIN_KEY = "wizascript.usageStats.window"; // { x, y, w, h }
@@ -20,8 +22,8 @@ const TIMES = [["TODAY", "Today"], ["WEEK", "This Week"], ["SEASON", "This Seaso
 const TIME_NAMES = Object.fromEntries(TIMES);
 const DIVS = ["TOTAL", ...LADDER, "UNRANKED", "TRUEHUB"];
 const NAMES = { TOTAL: "Total", LEGEND: "LEGEND", ULTIMATE_MASTER: "Ultimate Master", HIGH_MASTER: "High Master", MASTER: "Master", UNRANKED: "Unranked", TRUEHUB: "True Hub+" };
-const VIEWS = [["CARDS", "Cards"], ["ARTIFACTS", "Artifacts"], ["SOULS", "Souls"]];
-const SORTS = [["USAGE", "Most used"], ["WINRATE", "Win rate"], ["NAME", "Name"]]; // (1.8.3: no ID sort; players don't know ids)
+const VIEWS = [["CARDS", "Cards"], ["ARTIFACTS", "Artifacts"], ["SOULS", "Souls"], ["COMBOS", "Soul + Artifact"]];
+const SORTS = [["USAGE", "Most used"], ["WINRATE", "Win rate"], ["TREND", "Rising (this week)"], ["NAME", "Name"]]; // (1.8.3: no ID sort; players don't know ids)
 const CATALOG_RARITIES = ["COMMON", "RARE", "EPIC", "LEGENDARY", "DETERMINATION"];
 
 export const ICON = `<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#000"/>
@@ -67,6 +69,10 @@ const CSS = `
 #wz-usage-win tr.uw-unused-head td { color:#999; font-size:12px; cursor:pointer; padding:6px; user-select:none; }
 #wz-usage-win tr.uw-unused-head:hover td { color:#fff; }
 #wz-usage-win tr.uw-unused td { opacity:.55; }
+#wz-usage-win .uw-tabs { padding-top:8px; }
+#wz-usage-win .uw-tabs .uw-btn { font-size:14px; padding:4px 14px; }
+#wz-usage-win .uw-preview { margin:8px 10px 0; padding:6px 10px; border:1px solid #ffd84a; color:#ffd84a; font-size:13px; display:none; }
+#wz-usage-win .uw-delta { font-size:11px; margin-left:2px; } #wz-usage-win .uw-delta.up { color:#6c6; } #wz-usage-win .uw-delta.down { color:#e66; } #wz-usage-win .uw-delta.new { color:#ffd84a; }
 #wz-usage-win .uw-grip { position:absolute; right:0; bottom:0; width:14px; height:14px; cursor:nwse-resize; background:linear-gradient(135deg, transparent 50%, rgba(255,255,255,.7) 50%); }
 `;
 
@@ -94,12 +100,28 @@ function injectStyle() {
 
 // ---- the window ------------------------------------------------------------------
 let win = null;
-const state = { time: "SEASON", div: "TOTAL", view: "CARDS", adv: false, perPlayer: true, sort: "USAGE", q: "", showUnused: false }; // 1.8.3: each player counts once by default
+const state = { tab: "COMMUNITY", time: "SEASON", div: "TOTAL", view: "CARDS", adv: false, perPlayer: true, sort: "USAGE", q: "", showUnused: false }; // 1.8.3: each player counts once by default
+let preview = false; // 1.8.3: sample data for players who haven't opted in (preview.js)
+const mine = createMine({
+  esc, soulHtml, divHtml, SOULS, LADDER, NAMES, seasonLabel, current: seasonOf(Date.now()),
+  catalog: () => catalog, community: () => files.SEASON, perPlayer: () => state.perPlayer,
+  self: () => (preview ? "You (sample)" : loggedInName()), defaultPlayer,
+  getGames: async (season, player) => {
+    if (!preview) return myGames(season, { player });
+    const games = season === seasonOf(Date.now()) ? sampleGames(catalog.cards, catalog.arts) : [];
+    return { season, player: "You (sample)", main: true, players: [{ name: "You (sample)", main: true, games: games.length }], seasons: [{ season: seasonOf(Date.now()), games: games.length }], games };
+  }
+});
 const files = {}; // window -> stats file
 let loadError = "";
 
 toggleWindow = () => { if (win && win.style.display !== "none") setOpen(false); else setOpen(true); };
-export const openUsageWindow = () => setOpen(true);
+export const toggleUsageWindow = () => toggleWindow();
+// preview: sample data, for players who haven't opted in (the window says so everywhere).
+export const openUsageWindow = ({ preview: p = false } = {}) => {
+  if (p !== preview) { preview = p; for (const k of Object.keys(files)) delete files[k]; mine.reset(); }
+  setOpen(true);
+};
 
 let rect = { x: null, y: null, w: 720, h: 520 };
 const saveRect = () => { try { GM_setValue(WIN_KEY, JSON.stringify(rect)); } catch (e) { /* no GM */ } };
@@ -115,6 +137,8 @@ function build() {
   win = document.createElement("div"); win.id = "wz-usage-win"; win.style.display = "none";
   win.innerHTML = `
     <div class="uw-title">${ICON}<b>Usage Statistics</b><span class="uw-meta uw-count"></span><button type="button" class="uw-x" title="Close">×</button></div>
+    <div class="uw-preview"></div>
+    <div class="uw-bar uw-tabs"></div>
     <div class="uw-bar uw-time"></div>
     <div class="uw-bar uw-div"></div>
     <div class="uw-bar uw-view"></div>
@@ -134,7 +158,7 @@ function build() {
   win.querySelector(".uw-grip").addEventListener("pointerdown", (e) => follow(e, (s, dx, dy) => { rect.w = Math.max(560, s.w + dx); rect.h = Math.max(360, s.h + dy); }));
   addEventListener("resize", () => { if (win.style.display !== "none") keepOnScreen(); });
   const tools = win.querySelector(".uw-tools");
-  tools.innerHTML = `<input type="search" class="uw-search" placeholder="Search by name or ID…"><span>Sort:</span><select class="uw-sort">${SORTS.map(([id, txt]) => `<option value="${id}">${txt}</option>`).join("")}</select>`;
+  tools.innerHTML = `<input type="search" class="uw-search" placeholder="Search by name…"><span>Sort:</span><select class="uw-sort">${SORTS.map(([id, txt]) => `<option value="${id}">${txt}</option>`).join("")}</select>`;
   tools.querySelector(".uw-search").addEventListener("input", (e) => { state.q = e.target.value; renderBody(); });
   tools.querySelector(".uw-sort").addEventListener("change", (e) => { state.sort = e.target.value; renderBody(); });
   // Typing in the window never reaches the game's hotkeys.
@@ -169,10 +193,12 @@ async function loadCatalog() {
   };
 }
 async function fetchWindow(w) {
+  if (preview) { await loadCatalog(); files[w] = sampleFiles(catalog.cards, catalog.arts)[w]; return; }
   try { files[w] = await getStats(w); loadError = ""; } catch (e) { loadError = e.message || "Couldn't reach the Wizascript server."; }
 }
 async function load() {
-  await Promise.all([fetchWindow("SEASON"), fetchWindow("ALL"), loadCatalog()]);
+  await loadCatalog();
+  await Promise.all([fetchWindow("SEASON"), fetchWindow("ALL")]);
   if (!files[state.time]) await fetchWindow(state.time);
   render();
 }
@@ -234,6 +260,22 @@ function buttons(box, list, key, labelFn, info = {}, extra) {
 
 function render() {
   if (!win || win.style.display === "none") return;
+  // 1.8.3: Community | My Stats; the preview banner.
+  const banner = win.querySelector(".uw-preview");
+  banner.style.display = preview ? "block" : "none";
+  banner.innerHTML = preview ? "<b>Preview with SAMPLE data</b>: not real players or games. To see real numbers and your own stats, turn on <b>Usage Statistics</b> in Wizascript's Plugins list (it asks first)." : "";
+  const tabs = win.querySelector(".uw-tabs");
+  tabs.innerHTML = [["COMMUNITY", "Community"], ["MINE", "My Stats"]].map(([k, label]) => `<button type="button" class="uw-btn${state.tab === k ? " on" : ""}" data-tab="${k}">${label}</button>`).join("");
+  tabs.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => { state.tab = b.dataset.tab; render(); }));
+  const communityBars = [".uw-time", ".uw-div", ".uw-view", ".uw-tools", ".uw-note"].map((c) => win.querySelector(c));
+  if (state.tab === "MINE") {
+    communityBars.forEach((el) => { el.style.display = "none"; });
+    const n = contributors();
+    win.querySelector(".uw-count").textContent = n ? `Built from ${n} players' games this month` : "";
+    mine.render(win.querySelector(".uw-body"), render);
+    return;
+  }
+  communityBars.forEach((el) => { el.style.display = ""; });
   const ti = timeTabs();
   if (ti[state.time] && ti[state.time].off) {
     const order = ["TODAY", "WEEK", "SEASON", "ALL"];
@@ -265,10 +307,24 @@ function render() {
     return [sep, right];
   });
   const tools = win.querySelector(".uw-tools");
-  tools.style.display = state.view === "SOULS" ? "none" : "";
-  tools.querySelector(".uw-search").placeholder = `Search ${state.view === "CARDS" ? "cards" : "artifacts"} by name or ID…`;
+  tools.style.display = state.view === "SOULS" || state.view === "COMBOS" ? "none" : "";
+  tools.querySelector(".uw-search").placeholder = `Search ${state.view === "CARDS" ? "cards" : "artifacts"} by name…`;
+  const trendOpt = tools.querySelector('.uw-sort option[value="TREND"]');
+  if (trendOpt) { trendOpt.disabled = state.time !== "WEEK"; if (state.time !== "WEEK" && state.sort === "TREND") { state.sort = "USAGE"; tools.querySelector(".uw-sort").value = "USAGE"; } }
   renderBody();
 }
+
+// 1.8.3: how many players' games this month's numbers come from.
+function contributors() { const f = files.SEASON; return f && f.sel && f.sel.TOTAL ? f.sel.TOTAL.players : 0; }
+// This Week's trend: the change in share since the 7 days before (percentage points), or "new".
+function trendOf(s, key, id, use, pp) {
+  if (state.time !== "WEEK" || !s.prev) return null;
+  const p = s.prev; const r = (p[key] || []).find((x) => x[0] === id);
+  const was = r ? (pp ? r[2] / (p.players || 1) : r[1] / (p.games || 1)) : 0;
+  return { was, d: use - was, isNew: !r };
+}
+const trendHtml = (tr) => (!tr ? "" : tr.isNew ? '<span class="uw-delta new" title="Not played the week before">new</span>'
+  : Math.abs(tr.d) < 0.005 ? "" : `<span class="uw-delta ${tr.d > 0 ? "up" : "down"}" title="Change since the week before">${tr.d > 0 ? "▲" : "▼"}${(Math.abs(tr.d) * 100).toFixed(1)}</span>`);
 
 function renderBody() {
   const body = win.querySelector(".uw-body");
@@ -290,6 +346,9 @@ function renderBody() {
   const notes = [];
   const others = (s.group || []).filter((d) => d !== state.div);
   if (others.length) notes.push(`Not enough players in ${NAMES[state.div]} ${state.time === "TODAY" ? "today" : state.time === "ALL" ? "in some months" : "in this time"}, so this includes ${others.map((d) => NAMES[d]).join(" and ")}.`);
+  const nC = contributors();
+  if (nC && !preview) notes.unshift(`Built from ${nC} players' games this month.`);
+  if (state.time === "WEEK") notes.push(s.prev ? "▲▼: change since the week before." : "No trend yet (not enough players the week before).");
   if (priv) notes.push(`Shown only where at least ${minP} different players played, so no one's deck can be picked out.`);
   notes.push(pp ? "Counting each player once." : "Counting every game.");
   noteEl.textContent = notes.join(" ");
@@ -303,11 +362,31 @@ function renderBody() {
     const by = new Map(s.souls.map((r) => [r[0], r]));
     const all = SOULS.map((soul) => {
       const r = by.get(soul) || [soul, 0, 0, 0, 0, 0];
-      return { soul, use: (pp ? r[4] : r[1]) / total, w: pp ? r[5] : r[2], n: pp ? r[4] : r[1], g: r[1], p: r[3] };
+      const use = (pp ? r[4] : r[1]) / total;
+      return { soul, use, w: pp ? r[5] : r[2], n: pp ? r[4] : r[1], g: r[1], p: r[3], tr: trendOf(s, "souls", soul, use, pp) };
     }).sort((a, b) => b.use - a.use);
     body.innerHTML = `<table><tr><th>Soul</th><th>Played</th><th>Win rate</th>${advHead}</tr>` + all.map((x) =>
       `<tr><td><img class="uw-thumb" style="border:none;background:none" src="/images/souls/${x.soul}.png" onerror="this.style.visibility='hidden'">${soulHtml(x.soul)}</td>
-        <td>${meter(x.use, "soul")}</td><td>${rate(x.w, x.n)}</td>${state.adv ? `<td>${x.g}</td><td>${x.p}</td>` : ""}</tr>`).join("") + "</table>";
+        <td>${meter(x.use, "soul")}${trendHtml(x.tr)}</td><td>${rate(x.w, x.n)}</td>${state.adv ? `<td>${x.g}</td><td>${x.p}</td>` : ""}</tr>`).join("") + "</table>";
+    return;
+  }
+  if (state.view === "COMBOS") {
+    // 1.8.3: rows [soul, artifact, games, wins, players, pGames, pWins]; share = of that soul's games.
+    const souls = new Map(s.souls.map((r) => [r[0], r]));
+    const list = (s.combos || []).map((r) => {
+      const so = souls.get(r[0]); const base = so ? (pp ? so[4] : so[1]) : 0;
+      return { soul: r[0], art: r[1], share: base ? (pp ? r[5] : r[2]) / base : 0, w: pp ? r[6] : r[3], n: pp ? r[5] : r[2], g: r[2], p: r[4] };
+    }).filter((x) => x.g > 0).sort((a, b) => a.soul.localeCompare(b.soul) || b.share - a.share);
+    if (!list.length) { body.innerHTML = '<div class="uw-empty">No soul + artifact combinations for this time and division yet (servers before 1.16 don\'t send them).</div>'; return; }
+    let html = `<table><tr><th>Soul</th><th>Artifact</th><th>Used with this soul</th><th>Win rate</th>${advHead}</tr>`;
+    let last = "";
+    for (const x of list) {
+      const a = catalog.artById.get(x.art) || { name: `#${x.art}`, image: "" };
+      html += `<tr><td>${x.soul !== last ? soulHtml(x.soul) : ""}</td><td><img class="uw-thumb" src="/images/artifacts/${esc(a.image || "")}.png" onerror="this.style.visibility='hidden'"><span class="${a.legendary ? "yellow" : ""}">${esc(a.name)}</span></td>
+        <td>${meter(x.share, "art")}</td><td>${rate(x.w, x.n)}</td>${state.adv ? `<td>${x.g}</td><td>${x.p}</td>` : ""}</tr>`;
+      last = x.soul;
+    }
+    body.innerHTML = html + "</table>";
     return;
   }
   const isCards = state.view === "CARDS";
@@ -317,7 +396,8 @@ function renderBody() {
     const st = isCards
       ? { g: r[1], w: pp ? r[6] : r[2], n: pp ? r[5] : r[1], copies: pp ? r[7] : r[3], p: r[4] }
       : { g: r[1], w: pp ? r[5] : r[2], n: pp ? r[4] : r[1], p: r[3] };
-    return { id: r[0], st, use: st.n / total, item: byId.get(r[0]) || { id: r[0], name: `#${r[0]}` } };
+    const use = st.n / total;
+    return { id: r[0], st, use, tr: trendOf(s, isCards ? "cards" : "arts", r[0], use, pp), item: byId.get(r[0]) || { id: r[0], name: `#${r[0]}` } };
   }).sort((a, b) => b.use - a.use || b.st.w - a.st.w).map((r, i) => ({ ...r, rank: i + 1 }));
   const hiddenCount = priv && s.hidden ? (isCards ? s.hidden.cards : s.hidden.arts) : 0;
   const usedIds = new Set(rows.map((r) => r[0]));
@@ -329,8 +409,9 @@ function renderBody() {
   const cmp = {
     USAGE: (x, y) => x.rank - y.rank,
     WINRATE: (x, y) => (y.st.n ? y.st.w / y.st.n : 0) - (x.st.n ? x.st.w / x.st.n : 0) || x.rank - y.rank,
+    TREND: (x, y) => ((y.tr ? (y.tr.isNew ? y.use : y.tr.d) : -1) - (x.tr ? (x.tr.isNew ? x.use : x.tr.d) : -1)) || x.rank - y.rank,
     NAME: (x, y) => String(x.item.name).localeCompare(String(y.item.name))
-  }[state.sort];
+  }[state.sort] || ((x, y) => x.rank - y.rank);
   const shown = used.filter(match).sort(cmp);
   const unusedShown = unused.filter(match).sort((x, y) => String(x.item.name).localeCompare(String(y.item.name)));
   const limit = q || state.sort !== "USAGE" ? Infinity : TOP;
@@ -339,7 +420,7 @@ function renderBody() {
   const cols = isCards ? "<th>In decks</th><th>Avg copies</th><th>Win rate</th>" : "<th>In decks</th><th>Win rate</th>";
   const ncols = 2 + (isCards ? 3 : 2) + (state.adv ? 2 : 0);
   let html = `<table><tr><th>#</th><th>${isCards ? "Card" : "Artifact"}</th>${cols}${advHead}</tr>`;
-  html += shown.slice(0, limit).map((r) => `<tr><td class="uw-rank">${r.rank}</td><td>${nameCell(r)}</td><td>${meter(r.use, isCards ? "" : "art")}</td>`
+  html += shown.slice(0, limit).map((r) => `<tr><td class="uw-rank">${r.rank}</td><td>${nameCell(r)}</td><td>${meter(r.use, isCards ? "" : "art")}${trendHtml(r.tr)}</td>`
     + (isCards ? `<td>${r.st.n ? (r.st.copies / r.st.n).toFixed(1) : "-"}</td>` : "") + `<td>${rate(r.st.w, r.st.n)}</td>${state.adv ? `<td>${r.st.g}</td><td>${r.st.p}</td>` : ""}</tr>`).join("");
   if (shown.length > limit) html += `<tr><td colspan="${ncols}" class="uw-hidden">${shown.length - limit} more used ${isCards ? "cards" : "artifacts"}: search or pick a sort to see them all.</td></tr>`;
   if (q && !shown.length && !unusedShown.length) html += `<tr><td colspan="${ncols}" class="uw-hidden">Nothing matches “${esc(state.q)}”.</td></tr>`;

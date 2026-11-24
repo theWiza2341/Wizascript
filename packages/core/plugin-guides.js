@@ -153,8 +153,8 @@ const GUIDES = {
     summary: "An opt-in: your PvP games go to the Wizascript server, for everyone's card stats and your own extra stats.",
     points: () => [
       'Needs your Undercards account linked (Wizascript tab → <b>Undercards Account</b>). Each PvP game sends your soul, result, division, Elo and <b>starting deck</b>. Opponents\' names stay on your device. CPU games never.',
-      '<b>📊</b> in the footer: the cards, artifacts and souls everyone plays, by time range and division. No one\'s deck is ever shown.',
-      '<b>Profile</b>: your stats per division and True Hub (1820+ Elo), earlier seasons with ◀ ▶, and the <b>Elo Graph</b>.',
+      `<b>📊</b> in the footer (or ${key("toggleUsageStats", "KeyI")}): <b>Community</b> shows what everyone plays (trends this week, soul + artifact combos); <b>My Stats</b> shows your decks, card win rates, matchups and streaks.`,
+      '<b>Profile</b>: your stats per division and True Hub (1820+ Elo), earlier seasons with ◀ ▶, the <b>Elo Graph</b>, and a switcher for your alts.',
       '<b>History</b>: every PvP game this season, 20 a page. <b>Download My Data</b> / <b>Delete My Data</b>: everything you\'ve sent. <a href="' + PRIVACY_URL + '" target="_blank" rel="noopener">Privacy</a>'
     ]
   },

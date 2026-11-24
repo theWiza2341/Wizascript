@@ -1,6 +1,6 @@
 # Wizascript privacy notice
 
-Last updated: 2026-11-14 (Wizascript 1.8.0, server 1.10.0)
+Last updated: 2026-11-23 (Wizascript 1.8.3, server 1.16.0)
 
 Wizascript is a free, fan-made UnderScript plugin for Undercards. It isn't made by or connected to Undercards' developers. This page says what Wizascript keeps about you, why, for how long, and how to see or delete it.
 
@@ -24,12 +24,12 @@ Ask me about anything on this page, or to see, correct or delete your data.
 | **Card Gallery posts** | Your cards (text and pictures), your account name, the post's status and any rejection reason | To show approved posts to everyone, and to review new ones | Legitimate interest: a public gallery you post to | Approved posts: until you delete them (Browse → Delete). Rejected: pictures 30 days, text kept for review. Ask me to remove them |
 | **Votes** | Your vote on each post, and which account cast it | Up/down totals | Legitimate interest | While the post exists, or until you change the vote |
 | **Post notes** | Messages between you and the gallery staff about your post | Talking about a post (and a rejection's reason) | Legitimate interest | Messages are deleted 12 months after the note closes |
-| **Usage Statistics** (opt-in) | Each of your own PvP games: soul, win or loss, division and Elo before and after, the opponent's soul, your **starting deck and artifacts**, time | Everyone's card, artifact and soul statistics; your own Profile and History extras | **Consent** (you turn it on and confirm) | Decks: until 8 days after the month ends. Opponent's soul: until the month ends. Games: 12 months after your last game, or 30 days after you unlink every device. Or until you press Delete My Data |
+| **Usage Statistics** (opt-in) | Each of your own PvP games: soul, win or loss, division and Elo before and after, the opponent's soul, your **starting deck and artifacts**, time | Everyone's card, artifact and soul statistics; your own Profile, History and My Stats (your decks, matchups, streaks and card win rates, shown only to you) | **Consent** (you turn it on and confirm) | Decks: until 15 days after the month ends. Opponent's soul: until the month ends. Games: 12 months after your last game, or 30 days after you unlink every device. Or until you press Delete My Data |
 | **Rate limits** | A scrambled (hashed) part of your IP address, with a counter | Stopping abuse | Legitimate interest | 2 days |
 
 **Opponents' names are never sent.** Usage Statistics keeps your opponent's name **only on the device that recorded the game**, so your History can show it. It's dropped after the season after the game ends.
 
-**Published statistics are totals only** (how often each card, artifact and soul is played, and its win rate), never a decklist. In every time range, a division's numbers are only shown once at least 3 different players have played in it: a division with fewer is merged with the next, and where fewer than 3 players played only the number of games is shown, so a single player's deck can't be picked out.
+**Published statistics are totals only** (how often each card, artifact and soul is played, and its win rate), never a decklist. In every time range, a division's numbers are only shown once at least 3 different players have played in it: a division with fewer is merged with the next, and where fewer than 3 players played only the number of games is shown, so a single player's deck can't be picked out. This Week also shows the change since the week before, only where the same division had at least 3 players in both weeks.
 
 ## Who else handles it
 
@@ -41,7 +41,7 @@ Nothing is sold, and nothing is used for ads.
 
 ## On your own device
 
-Wizascript keeps your settings, notes, tier lists, wishlist and similar data in your browser (Tampermonkey storage). This includes the opponents' names above. That data stays on your device unless you export a backup. Uninstalling Wizascript, or clearing its storage, removes it.
+Wizascript keeps your settings, notes, tier lists, wishlist and similar data in your browser (Tampermonkey storage). This includes the opponents' names above, the names you give your decks in My Stats, and, while Usage Statistics is off, a count of your PvP games (used only to show a reminder every 20 games, which you can turn off with "Don't ask again"). None of these are sent. That data stays on your device unless you export a backup. Uninstalling Wizascript, or clearing its storage, removes it.
 
 ## Your rights
 

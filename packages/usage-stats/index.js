@@ -31,7 +31,9 @@ import { PRIVACY_URL } from "../core/privacy.js";
 import { startRecorder } from "./recorder.js";
 import { startProfile, findStatsTable } from "./profile.js";
 import { startHistory, findHistoryTable } from "./history.js";
-import { addUsageButton } from "./usage.js";
+import { addUsageButton, toggleUsageWindow, openUsageWindow } from "./usage.js";
+import { startNudge } from "./nudge.js";
+import { registerKeybind } from "../core/keybinds.js";
 
 let graphSetting = null;
 let wheelSetting = null;
@@ -61,6 +63,8 @@ function confirmOptIn() {
     <p>Only totals are published; no one can see your deck.</p>
     <p>${linked ? `Sent under your linked account, <b>${linked}</b>.` : "<b>Needs your Undercards account linked</b> (Wizascript tab → Undercards Account)."} Delete it any time with <b>Delete My Data</b>.</p>
     <p><b>Under 15?</b> Ask a parent first. <a href="${PRIVACY_URL}" target="_blank" rel="noopener">Privacy</a></p>`, [
+    // Preview: leaves it off (the window would sit under this dialog), shows sample data.
+    { label: "Preview", action: (d) => { undo(); d.close(); openUsageWindow({ preview: true }); } },
     { label: "Cancel", action: (d) => { undo(); d.close(); } },
     { label: "Opt in", cssClass: "btn-success", action: (d) => d.close() }
   ]);
@@ -148,7 +152,14 @@ export function initUsageStats(p) {
   onPluginToggled(PLUGIN_ID, (on) => { if (undoing) return; if (on) confirmOptIn(); else offerDelete(false); });
 
   try { pruneOpponents(); } catch (e) { /* no GM */ }
-  if (!isPluginEnabled(PLUGIN_ID)) { log("turned off (Plugins list)"); return; }
+  // 1.8.3: Primary + I opens and closes the window (only while the plugin is on).
+  registerKeybind(plugin, { key: "toggleUsageStats", name: "Toggle Usage Statistics", defaultCode: "KeyI", packageLabel: "Usage Statistics", onMatch: () => toggleUsageWindow() });
+  if (!isPluginEnabled(PLUGIN_ID)) {
+    log("turned off (Plugins list)");
+    // 1.8.3: not opted in: a reminder every 20 PvP games, with a preview (nudge.js).
+    startNudge(plugin, { openPreview: () => openUsageWindow({ preview: true }) });
+    return;
+  }
 
   // The recorder listens from the start (the match begins before the server
   // answers), but only keeps a game when the account is linked.

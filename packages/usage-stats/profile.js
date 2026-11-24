@@ -9,8 +9,8 @@
 // Total is the site's own numbers (every game, also those Wizascript didn't see);
 // everything else is the games Wizascript recorded.
 
-import { myGames } from "./api.js";
-import { SOULS, LADDER, TRUE_HUB_ELO, DIV_NAMES, minElos, divHtml, seasonOf, shiftSeason, seasonLabel, log } from "./common.js";
+import { myGames, defaultPlayer } from "./api.js";
+import { SOULS, LADDER, TRUE_HUB_ELO, DIV_NAMES, minElos, divHtml, seasonOf, shiftSeason, seasonLabel, log, esc, loggedInName } from "./common.js";
 
 const GRAPH_KEY = "wizascript.usageStats.graph"; // { x, y, w, h, open }
 const STYLE_ID = "wz-us-profile-style";
@@ -30,6 +30,7 @@ const CSS = `
 #wz-season-bar .wz-arrow { background:none; border:none; color:#fff; font:inherit; font-size:1em; cursor:pointer; padding:0 4px; }
 #wz-season-bar .wz-arrow:disabled { opacity:.25; cursor:default; }
 #wz-season-bar .wz-msg { width:100%; color:#aaa; font-size:13px; }
+#wz-season-bar .wz-player, #wz-season-bar .wz-player option { background:#222; color:#fff; border:1px solid #fff; font:inherit; font-size:14px; padding:2px 4px; }
 #wz-elo-win { position:fixed; z-index:1000; min-width:260px; min-height:130px; display:flex; flex-direction:column; background:rgba(10,5,15,.92); border:1px solid #fff; box-shadow:0 4px 16px rgba(0,0,0,.6); font-family:inherit; color:#fff; box-sizing:border-box; }
 #wz-elo-win .wz-title { display:flex; align-items:center; justify-content:space-between; padding:3px 6px 3px 8px; border-bottom:1px solid rgba(255,255,255,.4); cursor:move; user-select:none; font-size:13px; }
 #wz-elo-win .wz-x { background:none; border:none; color:#fff; font:inherit; font-size:16px; line-height:1; cursor:pointer; padding:0 4px; }
@@ -82,7 +83,9 @@ export function startProfile({ showGraph }) {
   seasonBox.innerHTML = '<button type="button" class="wz-arrow" data-d="-1" title="Earlier season">◀</button><span class="wz-label"></span><button type="button" class="wz-arrow" data-d="1" title="Later season">▶</button>';
   seasonBox.title = "A season is a calendar month";
   const right = document.createElement("div"); right.className = "wz-right";
-  right.append(graphBtn, seasonBox);
+  // 1.8.3: the account switcher (main and alts); starts on the account that's logged in.
+  const playerSel = document.createElement("select"); playerSel.className = "wz-player"; playerSel.title = "Which of your accounts"; playerSel.style.display = "none";
+  right.append(playerSel, graphBtn, seasonBox);
   const msg = document.createElement("div"); msg.className = "wz-msg";
   bar.append(divsBox, right, msg);
   if (heading) heading.style.display = "none";
@@ -125,13 +128,24 @@ export function startProfile({ showGraph }) {
 
   // ---- data ----
   const current = seasonOf(Date.now());
-  const state = { season: current, div: "TOTAL", earliest: current, data: {}, loading: false, error: "" };
+  const state = { season: current, div: "TOTAL", earliest: current, data: {}, loading: false, error: "", player: null, players: [], main: true };
+  const self = loggedInName();
+  // The site's own numbers (this season's Total) are for the account that's logged in.
+  const isSelf = () => (self ? state.player && state.player.toLowerCase() === self.toLowerCase() : state.main);
+  const dkey = (season) => `${state.player || ""}|${season}`;
+  const gamesOf = (season) => state.data[dkey(season)];
   async function load(season) {
-    if (state.data[season]) return;
+    if (state.player && gamesOf(season)) return;
     state.loading = true; render();
     try {
-      const d = await myGames(season);
-      state.data[season] = d.games || [];
+      let d = await myGames(season, { player: state.player || "" });
+      if (!state.player) {
+        const want = defaultPlayer(d.players, self);
+        if (want && want !== d.player) d = await myGames(season, { player: want });
+      }
+      state.player = d.player || state.player; state.main = d.main !== false; state.players = d.players || state.players;
+      state.data[dkey(season)] = d.games || [];
+      state.earliest = current;
       const first = (d.seasons || [])[0];
       if (first && first.season < state.earliest) state.earliest = first.season;
       state.error = "";
@@ -154,9 +168,9 @@ export function startProfile({ showGraph }) {
   // ---- the graph: Elo after each ranked game; the selected division's band shaded ----
   const SVGNS = "http://www.w3.org/2000/svg";
   function drawChart() {
-    const games = state.data[state.season] || [];
+    const games = gamesOf(state.season) || [];
     const bucket = state.div;
-    win.querySelector(".wz-wtitle").textContent = `Elo Graph · ${seasonLabel(state.season)}` + (bucket !== "TOTAL" ? ` · ${DIV_NAMES[bucket]}` : "");
+    win.querySelector(".wz-wtitle").textContent = `Elo Graph · ${state.players.length > 1 && state.player ? state.player + " · " : ""}${seasonLabel(state.season)}` + (bucket !== "TOTAL" ? ` · ${DIV_NAMES[bucket]}` : "");
     if (win.style.display === "none") return;
     chart.innerHTML = "";
     const pts = games.filter(ranked).filter((g) => g.newElo !== null && g.newElo !== undefined);
@@ -203,7 +217,13 @@ export function startProfile({ showGraph }) {
   }
 
   function render() {
-    const games = state.data[state.season] || [];
+    const games = gamesOf(state.season) || [];
+    playerSel.style.display = state.players.length > 1 ? "" : "none";
+    if (state.players.length > 1 && playerSel.dataset.list !== JSON.stringify(state.players.map((p) => p.name))) {
+      playerSel.dataset.list = JSON.stringify(state.players.map((p) => p.name));
+      playerSel.innerHTML = state.players.map((p) => `<option value="${esc(p.name)}">${esc(p.name)}${p.main ? " (main)" : " (alt)"}</option>`).join("");
+    }
+    if (state.player) playerSel.value = state.player;
     const seen = new Set(games.flatMap(bucketsOf));
     const buckets = [...[...LADDER, "UNRANKED"].filter((d) => seen.has(d)), ...(seen.has("TRUEHUB") ? ["TRUEHUB"] : [])];
     if (state.div !== "TOTAL" && !buckets.includes(state.div)) state.div = "TOTAL";
@@ -213,7 +233,7 @@ export function startProfile({ showGraph }) {
       b.className = "wz-div" + (d === "TRUEHUB" ? " th" : "") + (state.div === d ? " on" : "");
       b.innerHTML = divHtml(d);
       b.title = d === "TRUEHUB" ? `Games started at ${TRUE_HUB_ELO}+ Elo (True Hub decks can be posted)`
-        : d === "TOTAL" ? (state.season === current ? "Every PvP game this season (the site's own numbers)" : "Every recorded game that season") : DIV_NAMES[d];
+        : d === "TOTAL" ? (state.season === current && isSelf() ? "Every PvP game this season (the site's own numbers)" : "Every recorded game that season") : DIV_NAMES[d];
       b.addEventListener("click", () => { state.div = d; render(); });
       divsBox.appendChild(b);
     }
@@ -223,7 +243,7 @@ export function startProfile({ showGraph }) {
     graphBtn.style.display = showGraph() ? "" : "none";
     if (!showGraph() && win.style.display !== "none") setOpen(false, false);
     if (emptyRow) { emptyRow.remove(); emptyRow = null; }
-    if (state.season === current && state.div === "TOTAL") restoreRows();
+    if (state.season === current && state.div === "TOTAL" && isSelf()) restoreRows();
     else {
       const per = Object.fromEntries(SOULS.map((s) => [s, { w: 0, l: 0 }]));
       for (const g of games) if ((state.div === "TOTAL" || bucketsOf(g).includes(state.div)) && per[g.soul]) per[g.soul][g.win ? "w" : "l"]++;
@@ -240,6 +260,7 @@ export function startProfile({ showGraph }) {
     msg.style.display = msg.textContent ? "" : "none";
     drawChart();
   }
+  playerSel.addEventListener("change", () => { state.player = playerSel.value; state.div = "TOTAL"; render(); load(state.season); });
   seasonBox.querySelectorAll(".wz-arrow").forEach((a) => a.addEventListener("click", () => {
     state.season = shiftSeason(state.season, Number(a.dataset.d));
     render(); load(state.season);

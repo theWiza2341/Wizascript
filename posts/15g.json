@@ -1,0 +1,18 @@
+{
+  "id": "15g",
+  "kind": "single",
+  "title": "Bath Bombs",
+  "author": "bagels5899",
+  "postedAt": 1795483620972,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Bath Bombs",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/15g-0-pic.png"
+    }
+  ]
+}

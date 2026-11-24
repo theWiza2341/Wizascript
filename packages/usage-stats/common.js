@@ -61,6 +61,14 @@ export function ensureAccount({ fresh = false } = {}) {
   }
   return checking;
 }
+// The Undercards name logged in now: the page's own globals, or the last page that had them
+// (the Profile page has none).
+const SELF_KEY = "wizascript.usageStats.self";
+export function loggedInName() {
+  const self = selfInfo();
+  if (self.selfName) { try { if (GM_getValue(SELF_KEY, "") !== self.selfName) GM_setValue(SELF_KEY, self.selfName); } catch (e) { /* no GM */ } return self.selfName; }
+  try { return GM_getValue(SELF_KEY, "") || ""; } catch (e) { return ""; }
+}
 onAccountChange((name) => {
   try { GM_setValue(ACCOUNT_CACHE, JSON.stringify({ name: name || null, at: Date.now(), self: selfInfo().selfName })); } catch (e) { /* no GM */ }
 });

@@ -1,6 +1,6 @@
 # Record of processing (GDPR art. 30)
 
-Last updated: 2026-11-14 (Wizascript 1.8.0, server 1.10.0). Kept with the code so it changes with it. The public notice is [PRIVACY.md](PRIVACY.md).
+Last updated: 2026-11-23 (Wizascript 1.8.3, server 1.16.0). Kept with the code so it changes with it. The public notice is [PRIVACY.md](PRIVACY.md).
 
 **Controller:** the Wizascript maintainer, an individual hobby project (contact in PRIVACY.md). No employees. No EU establishment.
 
@@ -47,14 +47,14 @@ Last updated: 2026-11-14 (Wizascript 1.8.0, server 1.10.0). Kept with the code s
 
 | | |
 |---|---|
-| Purpose | Published card/artifact/soul usage statistics; the player's own Profile and History extras |
+| Purpose | Published card/artifact/soul usage statistics (with soul + artifact pairs and week-on-week trends); the player's own Profile, History and My Stats (their own decks, matchups, streaks, card win rates; each account they play on, alts included) |
 | People | Players who turn it on and confirm (opponents: see the balancing test below) |
 | Data | Per PvP game: soul, result, division and Elo before/after, ranked flag, the opponent's **soul** (not name), starting deck and artifacts, time; the player name and id it was played on (alts) |
 | Source | The player's own browser: the game's end message and the player's saved deck |
 | Basis | **Consent** (6(1)(a)): the opt-in prompt; withdrawn by turning it off or Delete My Data |
 | Not collected | The opponent's name (kept only on the recording device, for History); anything about the opponent's cards; anything during play |
-| Retention | Decks: 8 days after the month ends (the month's statistics are rebuilt from them until then). Opponent's soul: until the month ends. Rows: 12 months after the account's last game (`KEEP_IDLE`), or 30 days after no device is linked (`KEEP_UNLINKED`). Published files: anonymous aggregates, kept |
-| Anonymity of output | Aggregates only, no decklists. In **every** window (Today, This Week, This Season, each frozen month, so All Time too): ranked divisions are grouped to ≥3 different players; a selection (group, Unranked, True Hub+) is shown in full only with ≥3 players, otherwise only its game/player counts; True Hub+ only when each top group's part below 1820 is empty or ≥3 players; Total leaves out every blanked selection's cards and then uses only the souls shown (no working out by subtraction). Anonymity by numbers (Worker 1.14); the minimum can be raised |
+| Retention | Decks: 15 days after the month ends (`KEEP_DECKS`; the month's statistics are rebuilt from them, and This Week's comparison with the week before reaches up to 7 days back into the last month). Shown back only to the player in their own games (`/v1/me/games`). Opponent's soul: until the month ends. Rows: 12 months after the account's last game (`KEEP_IDLE`), or 30 days after no device is linked (`KEEP_UNLINKED`). Published files: anonymous aggregates, kept |
+| Anonymity of output | Aggregates only, no decklists. In **every** window (Today, This Week, This Season, each frozen month, so All Time too): ranked divisions are grouped to ≥3 different players; a selection (group, Unranked, True Hub+) is shown in full only with ≥3 players, otherwise only its game/player counts; True Hub+ like any division (≥3 players; since Worker 1.15 the part of a top group below 1820 can be worked out by subtraction, accepted under anonymity by numbers); Total leaves out every blanked selection's cards and then uses only the souls shown (no working out by subtraction). Trends (Worker 1.16): the week before is only given for a selection shown in full with ≥3 players in both weeks. Soul + artifact pairs follow the same blanking as cards. Anonymity by numbers (Worker 1.14); the minimum can be raised |
 | Tables | `games`, `stats_files` |
 
 ### 5. Abuse limits
@@ -88,4 +88,5 @@ HTTPS only; install secrets and gallery keys stored as SHA-256 hashes; device-co
 ## Known gaps / decisions
 
 - **EU representative (art. 27):** not appointed. A free hobby project with no EU establishment; noted as a known gap, reviewed if the project grows.
+- **Device-only data (1.8.3):** deck names in My Stats, the logged-in name, and, while the plugin is off, a PvP game count for the every-20-games reminder (`nudgeCount`, `nudgeOff`) stay in the browser and are never sent. The reminder is the one thing a turned-off Usage Statistics does, on purpose; "Don't ask again" ends it.
 - **Age:** no age check; the opt-in prompt and notice ask under-15s to involve a parent.

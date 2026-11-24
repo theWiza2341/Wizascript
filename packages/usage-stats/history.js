@@ -8,8 +8,8 @@
 // the table (True Hub Bridge's style); the mouse wheel over the table turns
 // pages (setting).
 
-import { myGames, opponentOf } from "./api.js";
-import { DIV_NAMES, t, esc, soulHtml, seasonOf, log } from "./common.js";
+import { myGames, opponentOf, defaultPlayer } from "./api.js";
+import { DIV_NAMES, t, esc, soulHtml, seasonOf, log, loggedInName } from "./common.js";
 
 const PER_PAGE = 20;
 const STYLE_ID = "wz-us-history-style";
@@ -19,6 +19,7 @@ const CSS = `
 #wz-hist-pager { display:flex; align-items:center; justify-content:flex-end; gap:6px; margin:8px 0; }
 #wz-hist-pager select, #wz-hist-pager option { color:#fff; background:#222; border:1px solid #fff; }
 #wz-hist-pager .wz-note { margin-right:auto; color:#aaa; font-size:13px; }
+#wz-hist-pager .wz-player { margin-left:12px; }
 `;
 
 export function findHistoryTable() {
@@ -48,6 +49,11 @@ export function startHistory({ wheelPaging }) {
   // With fewer than 20 rows the site shows every game there is.
   const boundary = siteRows.length >= PER_PAGE ? Date.now() - (Math.max(0, ...siteRows.map(ageOf)) + 1) * 60e3 : Infinity;
   let games = [];
+  // 1.8.3: which account (main or an alt). The site's own rows (page 1) are the logged-in
+  // account's; for another account every page is Wizascript's recorded games.
+  const self = loggedInName();
+  let player = null, players = [], main = true;
+  const own = () => (self ? !!player && player.toLowerCase() === self.toLowerCase() : main);
 
   const timeText = (at) => {
     const min = Math.max(0, Math.floor((Date.now() - at) / 60e3));
@@ -72,27 +78,31 @@ export function startHistory({ wheelPaging }) {
   };
 
   const pager = document.createElement("div"); pager.id = "wz-hist-pager";
-  pager.innerHTML = '<span class="wz-note"></span><button type="button" class="btn btn-primary" data-d="-1">&#10094;</button><select></select><span>/</span><span class="wz-max"></span><button type="button" class="btn btn-primary" data-d="1">&#10095;</button>';
+  pager.innerHTML = '<span class="wz-note"></span><button type="button" class="btn btn-primary" data-d="-1">&#10094;</button><select></select><span>/</span><span class="wz-max"></span><button type="button" class="btn btn-primary" data-d="1">&#10095;</button><select class="wz-player" title="Which of your accounts" style="display:none"></select>';
   table.before(pager);
   const note = pager.querySelector(".wz-note");
   const sel = pager.querySelector("select");
   const [prevBtn, nextBtn] = pager.querySelectorAll("button");
+  const playerSel = pager.querySelector(".wz-player");
   let page = 1, added = [], status = ""; // page 1 only shows a note when something went wrong
-  const pages = () => 1 + Math.ceil(games.length / PER_PAGE);
+  const pages = () => (own() ? 1 + Math.ceil(games.length / PER_PAGE) : Math.max(1, Math.ceil(games.length / PER_PAGE)));
 
   function render() {
     added.forEach((r) => r.remove()); added = [];
-    siteRows.forEach((r) => { r.style.display = page === 1 ? "" : "none"; });
-    if (page === 1) eloHead.remove(); else header.appendChild(eloHead);
-    if (page > 1) {
-      added = games.slice((page - 2) * PER_PAGE, (page - 1) * PER_PAGE).map(rowFor);
+    const site = own() && page === 1;
+    siteRows.forEach((r) => { r.style.display = site ? "" : "none"; });
+    if (site) eloHead.remove(); else header.appendChild(eloHead);
+    if (!site) {
+      const first = own() ? (page - 2) * PER_PAGE : (page - 1) * PER_PAGE;
+      added = games.slice(first, first + PER_PAGE).map(rowFor);
       (table.tBodies[0] || table).append(...added);
     }
+    playerSel.style.display = players.length > 1 ? "" : "none";
     const n = pages();
     sel.innerHTML = Array.from({ length: n }, (_, i) => `<option value="${i + 1}"${i + 1 === page ? " selected" : ""}>${i + 1}</option>`).join("");
     pager.querySelector(".wz-max").textContent = n;
     prevBtn.disabled = page <= 1; nextBtn.disabled = page >= n;
-    note.textContent = page > 1 ? "Older PvP games this season, recorded by Wizascript" : status;
+    note.textContent = status || (!site ? (own() ? "Older PvP games this season, recorded by Wizascript" : `${player}'s PvP games this season, recorded by Wizascript`) : "");
   }
   const go = (p) => { const n = Math.min(pages(), Math.max(1, p)); if (n !== page) { page = n; render(); } };
   pager.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => go(page + Number(b.dataset.d))));
@@ -109,9 +119,20 @@ export function startHistory({ wheelPaging }) {
   }, { passive: false });
   render();
 
-  myGames(seasonOf(Date.now())).then((d) => {
-    games = (d.games || []).filter((g) => g.at < boundary).sort((a, b) => b.at - a.at);
-    render();
-  }, (e) => { status = `Wizascript: ${e.message || "couldn't load recorded games"}`; log("history:", e); render(); });
+  async function load() {
+    try {
+      let d = await myGames(seasonOf(Date.now()), { player: player || "" });
+      if (!player) { const want = defaultPlayer(d.players, self); if (want && want !== d.player) d = await myGames(seasonOf(Date.now()), { player: want }); }
+      player = d.player || player; main = d.main !== false; players = d.players || players;
+      playerSel.innerHTML = players.map((p) => `<option value="${esc(p.name)}">${esc(p.name)}${p.main ? " (main)" : " (alt)"}</option>`).join("");
+      if (player) playerSel.value = player;
+      // On your own account page 1 is the site's rows, so recorded pages start after them.
+      games = (d.games || []).filter((g) => !own() || g.at < boundary).sort((a, b) => b.at - a.at);
+      status = "";
+    } catch (e) { status = `Wizascript: ${e.message || "couldn't load recorded games"}`; log("history:", e); }
+    page = Math.min(page, pages()); render();
+  }
+  playerSel.addEventListener("change", () => { player = playerSel.value; page = 1; load(); });
+  load();
   return { render };
 }

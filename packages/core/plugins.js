@@ -84,7 +84,8 @@ export const PLUGINS = [
     name: "Usage Statistics",
     key: "usageStats.enabled",
     // Opt-in: turning it on asks once more, since it sends your games.
-    note: "Opt in: share your PvP games for card stats and more Profile/History."
+    note: "Opt in: share your PvP games for card stats and more Profile/History.",
+    usesKeybinds: true
   },
   {
     id: "controller",
@@ -238,7 +239,8 @@ const LABEL_TO_PLUGIN = {
   "Notepad": "notepad",
   "Card Tracker": "cardTracker",
   "Tier List": "tierList",
-  "Card Maker": "cardMaker"
+  "Card Maker": "cardMaker",
+  "Usage Statistics": "usageStats"
 };
 
 export function pluginIdForLabel(label) {

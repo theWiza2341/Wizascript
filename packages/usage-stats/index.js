@@ -25,13 +25,16 @@ import { registerSettingWidget, asButton } from "../core/setting-widgets.js";
 import { getPageWindow } from "../core/page-window.js";
 import { matchesPage } from "../core/page-match.js";
 import { linkedAccount } from "../core/account.js";
-import { PLUGIN_ID, ensureAccount, ownPage, log } from "./common.js";
-import { flush, optOut, clearLocal, queued, exportMine, pruneOpponents } from "./api.js";
+import { PLUGIN_ID, ensureAccount, ownPage, log, seasonOf } from "./common.js";
+import { flush, optOut, clearLocal, queued, exportMine, pruneOpponents, setPreviewGames } from "./api.js";
+import { sampleGames } from "./preview.js";
 import { PRIVACY_URL } from "../core/privacy.js";
 import { startRecorder } from "./recorder.js";
 import { startProfile, findStatsTable } from "./profile.js";
 import { startHistory, findHistoryTable } from "./history.js";
-import { addUsageButton } from "./usage.js";
+import { addUsageButton, toggleUsageWindow, openUsageWindow } from "./usage.js";
+import { startNudge } from "./nudge.js";
+import { registerKeybind } from "../core/keybinds.js";
 
 let graphSetting = null;
 let wheelSetting = null;
@@ -61,10 +64,43 @@ function confirmOptIn() {
     <p>Only totals are published; no one can see your deck.</p>
     <p>${linked ? `Sent under your linked account, <b>${linked}</b>.` : "<b>Needs your Undercards account linked</b> (Wizascript tab → Undercards Account)."} Delete it any time with <b>Delete My Data</b>.</p>
     <p><b>Under 15?</b> Ask a parent first. <a href="${PRIVACY_URL}" target="_blank" rel="noopener">Privacy</a></p>`, [
+    // Previews leave it off and show sample data: the window (Settings close so it's in view), or Profile / History.
+    { label: "Preview Window", action: (d) => { undo(); d.close(); closeSettings(); openUsageWindow({ preview: true }); } },
+    { label: "Preview Profile", action: (d) => { undo(); d.close(); location.href = previewUrl("Profile"); } },
+    { label: "Preview History", action: (d) => { undo(); d.close(); location.href = previewUrl("History"); } },
     { label: "Cancel", action: (d) => { undo(); d.close(); } },
     { label: "Opt in", cssClass: "btn-success", action: (d) => d.close() }
   ]);
   if (!shown && !window.confirm("Usage Statistics sends each of your PvP games, including your starting deck, to the Wizascript server. Opt in?")) undo();
+}
+
+// Closes UnderScript's Settings (and any other open dialog), so a preview isn't hidden behind it.
+function closeSettings() {
+  try { const BD = getPageWindow().BootstrapDialog; Object.values((BD && BD.dialogs) || {}).forEach((d) => { try { d.close(); } catch (e) { /* gone */ } }); } catch (e) { /* no dialogs */ }
+}
+
+// 1.8.3: Profile / History previews for players who haven't opted in: the page with
+// sample games (nothing sent or fetched), a banner, and a way out. /Profile?wzPreview=1.
+const PREVIEW_PARAM = "wzPreview";
+const SAMPLE = "You (sample)";
+const previewUrl = (page) => `/${page}?${PREVIEW_PARAM}=1`;
+function startPagePreview() {
+  if (!new URLSearchParams(location.search).has(PREVIEW_PARAM)) return false;
+  const onProfile = matchesPage("/Profile"), onHistory = matchesPage("/History");
+  if (!onProfile && !onHistory) return false;
+  const cur = seasonOf(Date.now());
+  const games = sampleGames([], []); // Profile and History don't show decks
+  // main: false keeps the page from mixing in the site's own (real) numbers.
+  setPreviewGames(async (season) => ({ season, player: SAMPLE, main: false, players: [{ name: SAMPLE, main: true, games: games.length }], seasons: [{ season: cur, games: games.length }], games: season === cur ? games : [] }));
+  const bar = document.createElement("div");
+  bar.id = "wz-usage-preview-bar";
+  bar.style.cssText = "background:#3a2a00;color:#ffd84a;border:1px solid #ffd84a;padding:6px 14px;margin:6px 0;font-size:14px;text-align:center;";
+  bar.innerHTML = `<b>Preview with SAMPLE data</b>: not your real games. Turn on <b>Usage Statistics</b> in Wizascript's Plugins list to see your own. <a href="${location.pathname}" style="color:#fff;margin-left:8px;text-decoration:underline">Exit preview</a>`;
+  // Above the season bar (Profile) or the pager (History), once they're drawn.
+  const place = (ok, anchorId) => { const a = document.getElementById(anchorId); if (a) a.before(bar); else document.body.prepend(bar); return ok; };
+  if (onProfile) startOnTable("Profile (preview)", findStatsTable, () => place(startProfile({ showGraph: () => true }), "wz-season-bar"));
+  else startOnTable("History (preview)", findHistoryTable, () => place(startHistory({ wheelPaging: () => !wheelSetting || !!wheelSetting.value() }), "wz-hist-pager"));
+  return true;
 }
 
 // Turning it off offers to delete what was sent.
@@ -148,7 +184,15 @@ export function initUsageStats(p) {
   onPluginToggled(PLUGIN_ID, (on) => { if (undoing) return; if (on) confirmOptIn(); else offerDelete(false); });
 
   try { pruneOpponents(); } catch (e) { /* no GM */ }
-  if (!isPluginEnabled(PLUGIN_ID)) { log("turned off (Plugins list)"); return; }
+  // 1.8.3: Primary + I opens and closes the window (only while the plugin is on).
+  registerKeybind(plugin, { key: "toggleUsageStats", name: "Toggle Usage Statistics", defaultCode: "KeyI", packageLabel: "Usage Statistics", onMatch: () => toggleUsageWindow() });
+  if (!isPluginEnabled(PLUGIN_ID)) {
+    log("turned off (Plugins list)");
+    // 1.8.3: not opted in: a reminder every 20 PvP games, with a preview (nudge.js).
+    if (startPagePreview()) return;
+    startNudge(plugin, { openPreview: () => openUsageWindow({ preview: true }) });
+    return;
+  }
 
   // The recorder listens from the start (the match begins before the server
   // answers), but only keeps a game when the account is linked.

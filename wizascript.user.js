@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wizascript
 // @namespace    https://github.com/theWiza2341/Wizascript
-// @version      1.8.2
+// @version      1.8.3
 // @description  All-in-one UnderScript plugin suite for Undercards.
 // @author       TheWiza2341
 // @match        https://undercards.net/*
@@ -281,7 +281,7 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
   }
 
   // packages/core/version.js
-  var SUITE_VERSION = "1.8.2";
+  var SUITE_VERSION = "1.8.3";
 
   // packages/core/bootstrap.js
   var SUITE_NAME = "Wizascript";
@@ -474,7 +474,8 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
       name: "Usage Statistics",
       key: "usageStats.enabled",
       // Opt-in: turning it on asks once more, since it sends your games.
-      note: "Opt in: share your PvP games for card stats and more Profile/History."
+      note: "Opt in: share your PvP games for card stats and more Profile/History.",
+      usesKeybinds: true
     },
     {
       id: "controller",
@@ -605,7 +606,8 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
     "Notepad": "notepad",
     "Card Tracker": "cardTracker",
     "Tier List": "tierList",
-    "Card Maker": "cardMaker"
+    "Card Maker": "cardMaker",
+    "Usage Statistics": "usageStats"
   };
   function pluginIdForLabel(label2) {
     return LABEL_TO_PLUGIN[label2] || null;
@@ -1044,6 +1046,29 @@ if (location.hostname === "undercard.feildmaster.com" || (location.hostname === 
   var CHANGELOG_default = `# Changelog
 
 All notable changes to Wizascript are recorded here, newest first. The Changelog button in Wizascript's settings shows this file.
+
+## 1.8.3
+
+### Usage Statistics
+- **My Stats** tab, next to **Community**, for your own games:
+  - **Overview:** your record, current and best streaks, your sessions (games played close together) and how you do against each opponent soul.
+  - **Decks:** your decks, grouped automatically. Each deck shows its artifacts first, then each version's record and what changed (cards and artifacts), and how its cards compare with what others play in your division (staples, rare picks, off-meta). Click a deck's name to rename it; names stay on your device.
+  - **Cards:** your win rate with each card next to the community's.
+- **Alts:** Profile, History, the Elo Graph and My Stats now have an account picker, so you can see each account you play on. They start on the account you're logged in to.
+- **Monsters** and **Spells** replace the Cards view. Spells has a filter by soul: each soul's own spells, ranked by how many of that soul's decks play them.
+- Cards show the game's rarity icon next to their name, and soul spells are named in their soul's colour.
+- **Soul + Artifact** view: which artifacts are played with each soul, and how they do, with a gap between souls.
+- **This Week** shows how each card changed since the week before (\u25B2 \u25BC, or "new"), with a **Rising** sort.
+- The window says how many players' games the statistics come from this month.
+- **Keybind:** Primary + I opens and closes the window (change it under Keybinds).
+- **Preview:** the opt-in prompt can preview the window, your Profile or your History with sample data, without turning anything on.
+- If Usage Statistics is off, a small reminder appears every 20 PvP games, with **Preview** and **Don't ask again**. The count stays on your device.
+- **Count each player once** is now on by default, so one player's many games with one deck don't skew the numbers. Turn it off under **Advanced** to see every game counted.
+- **True Hub+** works like the divisions: it shows everything once at least 3 different players have played there.
+- Removed the **ID** sort and searching by ID number.
+
+### Fixes
+- An artifact the game no longer offers showed only as its number (like "#11"). It now shows its name.
 
 ## 1.8.2
 
@@ -1525,10 +1550,10 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   var CATEGORY = "Wizascript";
   var LOGO_SIZE_PX = 96;
   function addLogo(anyRowInput) {
-    const set = anyRowInput.closest("fieldset");
-    if (!set || set.querySelector(".wizascript-logo")) return;
-    set.style.position = "relative";
-    set.style.minHeight = `${LOGO_SIZE_PX + 24}px`;
+    const set2 = anyRowInput.closest("fieldset");
+    if (!set2 || set2.querySelector(".wizascript-logo")) return;
+    set2.style.position = "relative";
+    set2.style.minHeight = `${LOGO_SIZE_PX + 24}px`;
     const img = document.createElement("img");
     img.className = "wizascript-logo";
     img.src = logo_default;
@@ -1544,7 +1569,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       objectFit: "contain",
       pointerEvents: "none"
     });
-    set.appendChild(img);
+    set2.appendChild(img);
   }
   function escapeHtml(s) {
     return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -2180,6 +2205,7 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
     "wizascript.cardMaker.galleryReviewWho",
     // 1.8.0 Usage Statistics: the send queue, cached server answers (opponents' names) and the account check stay on this device.
     "wizascript.usageStats.queue",
+    "wizascript.usageStats.self",
     "wizascript.usageStats.games",
     "wizascript.usageStats.account",
     "wizascript.account.server",
@@ -2258,12 +2284,12 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
   async function exportBackup() {
     const backup = collectBackup();
     const code = await encodeCode(KIND, backup);
-    const day = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+    const day2 = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
     showExportDialog({
       title: "Back Up Wizascript Settings",
       intro: `This code holds all your Wizascript settings and saved data (${describe2(backup)}). Keep it somewhere safe, then use "Restore" on another browser or after reinstalling.`,
       code,
-      fileName: `wizascript-backup-${day}.txt`
+      fileName: `wizascript-backup-${day2}.txt`
     });
   }
   function importBackup() {
@@ -3677,8 +3703,8 @@ Wizascript is now listed in UnderScript's plugin directory, so this update is al
       summary: "An opt-in: your PvP games go to the Wizascript server, for everyone's card stats and your own extra stats.",
       points: () => [
         "Needs your Undercards account linked (Wizascript tab \u2192 <b>Undercards Account</b>). Each PvP game sends your soul, result, division, Elo and <b>starting deck</b>. Opponents' names stay on your device. CPU games never.",
-        "<b>\u{1F4CA}</b> in the footer: the cards, artifacts and souls everyone plays, by time range and division. No one's deck is ever shown.",
-        "<b>Profile</b>: your stats per division and True Hub (1820+ Elo), earlier seasons with \u25C0 \u25B6, and the <b>Elo Graph</b>.",
+        `<b>\u{1F4CA}</b> in the footer (or ${key("toggleUsageStats", "KeyI")}): <b>Community</b> shows what everyone plays (trends this week, soul + artifact combos); <b>My Stats</b> shows your decks, card win rates, matchups and streaks.`,
+        "<b>Profile</b>: your stats per division and True Hub (1820+ Elo), earlier seasons with \u25C0 \u25B6, the <b>Elo Graph</b>, and a switcher for your alts.",
         `<b>History</b>: every PvP game this season, 20 a page. <b>Download My Data</b> / <b>Delete My Data</b>: everything you've sent. <a href="` + PRIVACY_URL + '" target="_blank" rel="noopener">Privacy</a>'
       ]
     },
@@ -10304,8 +10330,8 @@ Version: v${version}`;
         return false;
       }
       if (f.monster || f.spell) {
-        const isSpell = Number(c.typeCard) === 1;
-        if (!(f.monster && !isSpell || f.spell && isSpell)) return false;
+        const isSpell2 = Number(c.typeCard) === 1;
+        if (!(f.monster && !isSpell2 || f.spell && isSpell2)) return false;
       }
       if (f.tribes && !(Number(c.typeCard) !== 1 && Array.isArray(c.tribes) && c.tribes.length)) return false;
       if (f.sets.size && !f.sets.has(c.extension)) return false;
@@ -10753,7 +10779,7 @@ Version: v${version}`;
       defs.forEach((d) => g.appendChild(makeToggle(d, isOn2, flip)));
       return g;
     }
-    const flipSet = (set) => (v) => set.has(v) ? set.delete(v) : set.add(v);
+    const flipSet = (set2) => (v) => set2.has(v) ? set2.delete(v) : set2.add(v);
     const cardToggles = document.createElement("div");
     cardToggles.className = "wz-tl-card-toggles";
     cardToggles.append(
@@ -11225,7 +11251,7 @@ Version: v${version}`;
   function center(r) {
     return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
   }
-  function createPad({ root, tiers, picker, preview, closeListsMenu, isListsMenuOpen, hide }) {
+  function createPad({ root, tiers, picker, preview: preview2, closeListsMenu, isListsMenuOpen, hide }) {
     let focusId = null;
     let lastRect = null;
     let held = null;
@@ -11354,8 +11380,8 @@ Version: v${version}`;
       const wantPreview = el3 && el3.classList.contains("wz-tl-tile") && !held && !sendMenu ? el3 : null;
       if (wantPreview !== previewFor) {
         previewFor = wantPreview;
-        if (wantPreview) preview.showNear(wantPreview);
-        else preview.hide();
+        if (wantPreview) preview2.showNear(wantPreview);
+        else preview2.hide();
       }
       syncHeld();
     }
@@ -11370,7 +11396,7 @@ Version: v${version}`;
       }
       root.querySelectorAll(".wz-tl-pad-held").forEach((n) => n.classList.remove("wz-tl-pad-held"));
       root.classList.remove("wz-tl-pad");
-      preview.hide();
+      preview2.hide();
     }
     function nav(dir) {
       const list = items();
@@ -11715,18 +11741,18 @@ Version: v${version}`;
     if (!shared || shared.format !== 1 || !Array.isArray(shared.tags)) {
       throw new Error("That code isn't a Card Tags code this version understands.");
     }
-    const summary = { created: [], merged: [], cardsTagged: 0 };
+    const summary2 = { created: [], merged: [], cardsTagged: 0 };
     shared.tags.forEach((st) => {
       const name = String(st && st.name || "").trim();
       if (!name) return;
       let tag = data.tags.find((t2) => t2.name.toLowerCase() === name.toLowerCase());
       if (tag) {
-        summary.merged.push(tag.name);
+        summary2.merged.push(tag.name);
       } else {
         const color = /^#[0-9a-f]{3,8}$/i.test(st.color || "") ? st.color : DEFAULT_COLORS[data.tags.length % DEFAULT_COLORS.length];
         tag = { id: genTagId(), name, color };
         data.tags.push(tag);
-        summary.created.push(name);
+        summary2.created.push(name);
       }
       (Array.isArray(st.cards) ? st.cards : []).forEach((rawId) => {
         const cardId = String(rawId);
@@ -11734,11 +11760,11 @@ Version: v${version}`;
         const current = data.cardTags[cardId] || [];
         if (current.includes(tag.id)) return;
         data.cardTags[cardId] = [...current, tag.id];
-        summary.cardsTagged++;
+        summary2.cardsTagged++;
       });
     });
     writeData(data);
-    return summary;
+    return summary2;
   }
 
   // packages/misc/tier-list/index.js
@@ -11769,8 +11795,8 @@ Version: v${version}`;
   function applyLook() {
     if (!mounted) return;
     const root = mounted.win.root;
-    const pct2 = parseInt(setting2("opacity", "100%"), 10);
-    root.style.setProperty("--wz-tl-opacity", String((Number.isFinite(pct2) ? Math.min(100, Math.max(50, pct2)) : 100) / 100));
+    const pct3 = parseInt(setting2("opacity", "100%"), 10);
+    root.style.setProperty("--wz-tl-opacity", String((Number.isFinite(pct3) ? Math.min(100, Math.max(50, pct3)) : 100) / 100));
     root.classList.toggle("wz-tl-nonames", !setting2("showNames", true));
   }
   function previewDelayMs() {
@@ -12019,14 +12045,14 @@ Version: v${version}`;
         if (e.target.closest("input, select, textarea")) e.stopPropagation();
       }, { signal });
     });
-    let preview = null;
+    let preview2 = null;
     const drag = attachDrag({
       root: win2.root,
       signal,
       pageItemKey,
       buildGhost: (key2) => buildTile(key2),
       onDragStart: () => {
-        if (preview) preview.hide();
+        if (preview2) preview2.hide();
         tiers.closeEditor();
         closeListsMenu();
       },
@@ -12038,7 +12064,7 @@ Version: v${version}`;
         }
       }
     });
-    preview = attachPreview({ root: win2.root, signal, isDragging: drag.isDragging, getDelayMs: previewDelayMs });
+    preview2 = attachPreview({ root: win2.root, signal, isDragging: drag.isDragging, getDelayMs: previewDelayMs });
     const unsubscribe = subscribe(() => {
       renderAll();
       ensureArtifacts();
@@ -12052,7 +12078,7 @@ Version: v${version}`;
       root: win2.root,
       tiers,
       picker,
-      preview,
+      preview: preview2,
       closeListsMenu,
       isListsMenuOpen: () => !!listsMenu,
       hide: () => hideTierList()
@@ -13431,14 +13457,14 @@ Version: v${version}`;
     const used = new Set(d.groups.map((g) => g.letter));
     let letter = "A";
     while (used.has(letter)) letter = String.fromCharCode(letter.charCodeAt(0) + 1);
-    const set = { id: nextId(), letter, name };
-    d.groups.push(set);
+    const set2 = { id: nextId(), letter, name };
+    d.groups.push(set2);
     members.forEach((p) => {
-      p.group = set.id;
+      p.group = set2.id;
       p.sel = false;
     });
     tidySets();
-    return set;
+    return set2;
   }
   function markUploaded(sent) {
     const d = getDraft();
@@ -13712,7 +13738,7 @@ Version: v${version}`;
   var WHY = { closed: "closed", approved: "the post was approved", cancelled: "the upload was cancelled", withdrawn: "the entry was withdrawn", deleted: "the post was deleted" };
   function createNotes(ctx) {
     const staff = { open: null, closed: null, archive: false, loading: false, error: "", at: 0 };
-    const mine = { list: null, loading: false, error: "", at: 0 };
+    const mine2 = { list: null, loading: false, error: "", at: 0 };
     let cur = null;
     let compose = null;
     async function refreshStaff(force) {
@@ -13732,23 +13758,23 @@ Version: v${version}`;
       ctx.changed();
     }
     async function refreshMine(force) {
-      if (mine.loading || !force && mine.at && Date.now() - mine.at < 3e4) return;
-      mine.loading = true;
+      if (mine2.loading || !force && mine2.at && Date.now() - mine2.at < 3e4) return;
+      mine2.loading = true;
       try {
-        mine.list = (await myNotes()).threads;
-        mine.error = "";
-        mine.at = Date.now();
+        mine2.list = (await myNotes()).threads;
+        mine2.error = "";
+        mine2.at = Date.now();
       } catch (e) {
-        mine.list = e && e.code === "not_linked" ? [] : mine.list;
-        mine.error = e && e.code === "not_linked" ? "" : ctx.errText(e);
+        mine2.list = e && e.code === "not_linked" ? [] : mine2.list;
+        mine2.error = e && e.code === "not_linked" ? "" : ctx.errText(e);
       }
-      mine.loading = false;
+      mine2.loading = false;
       ctx.changed();
     }
     const staffUnread = () => (staff.open || []).filter((t2) => t2.unread).length;
-    const mineUnread = () => (mine.list || []).filter((t2) => t2.unread).length;
-    const hasMine = () => !!(mine.list && mine.list.length);
-    const mineFor = (postId) => (mine.list || []).find((t2) => t2.post === postId && t2.status === "open") || null;
+    const mineUnread = () => (mine2.list || []).filter((t2) => t2.unread).length;
+    const hasMine = () => !!(mine2.list && mine2.list.length);
+    const mineFor = (postId) => (mine2.list || []).find((t2) => t2.post === postId && t2.status === "open") || null;
     async function openThread(id, side) {
       compose = null;
       cur = { id, side, thread: null, messages: [], error: "", draft: cur && cur.id === id ? cur.draft : "", sending: false };
@@ -13758,7 +13784,7 @@ Version: v${version}`;
         if (!cur || cur.id !== id) return;
         cur.thread = r.thread;
         cur.messages = r.messages;
-        const list = side === "staff" ? [...staff.open || [], ...staff.closed || []] : mine.list || [];
+        const list = side === "staff" ? [...staff.open || [], ...staff.closed || []] : mine2.list || [];
         list.filter((t2) => t2.id === id).forEach((t2) => {
           t2.unread = false;
         });
@@ -13954,15 +13980,15 @@ Version: v${version}`;
     function mineView() {
       if (cur && cur.side === "author") return threadView();
       const head = h("div", { class: "wz-gl-bar" }, h("b", { text: "Notes from the gallery staff" }), h("span", { class: "wz-gl-grow" }), button2("\u21BB Refresh", () => refreshMine(true)));
-      if (mine.error) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: mine.error }));
-      if (!mine.list) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Loading\u2026" }));
-      if (!mine.list.length) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "No notes. When the gallery staff write about one of your posts, it shows here." }));
+      if (mine2.error) return h("div", {}, head, h("div", { class: "wz-gl-issues", text: mine2.error }));
+      if (!mine2.list) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "Loading\u2026" }));
+      if (!mine2.list.length) return h("div", {}, head, h("p", { class: "wz-gl-note", text: "No notes. When the gallery staff write about one of your posts, it shows here." }));
       return h(
         "div",
         {},
         head,
         h("p", { class: "wz-gl-note", text: "About your posts. Answer here; either side can close a note when it's settled." }),
-        h("div", { class: "wz-nt-list" }, mine.list.map((t2) => row2(t2, "author")))
+        h("div", { class: "wz-nt-list" }, mine2.list.map((t2) => row2(t2, "author")))
       );
     }
     return { refreshStaff, refreshMine, staffUnread, mineUnread, hasMine, mineFor, openThread, startNote, staffView, mineView, inThread: () => !!(cur || compose), reset() {
@@ -14531,8 +14557,8 @@ Version: v${version}`;
     function slots() {
       const c = active();
       if (!c || c.status !== "open") return null;
-      const mine = ctx.acct.contest && ctx.acct.contest.id === c.id ? ctx.acct.contest : null;
-      const used = mine ? mine.used : 0;
+      const mine2 = ctx.acct.contest && ctx.acct.contest.id === c.id ? ctx.acct.contest : null;
+      const used = mine2 ? mine2.used : 0;
       return { contest: c, used, max: c.maxEntries, left: Math.max(0, c.maxEntries - used) };
     }
     function shownSlots(c) {
@@ -14686,12 +14712,12 @@ Version: v${version}`;
     function runningView(c) {
       const s = shownSlots(c);
       const open = c.status === "open";
-      const mine = ownItems(c);
+      const mine2 = ownItems(c);
       const others = othersOf(c).map((e) => entryItem(e));
-      const items = mine.concat(others);
+      const items = mine2.concat(others);
       const main = mainPart({
         heading: "Entries",
-        extra: h("span", { class: "n", text: `${c.entries}${mine.length ? ` \xB7 ${mine.length} yours` : ""}` }),
+        extra: h("span", { class: "n", text: `${c.entries}${mine2.length ? ` \xB7 ${mine2.length} yours` : ""}` }),
         items,
         key: `${c.id}:run`,
         empty: c.entries ? "* They'll show here in a few minutes." : "* None yet. Be the first!",
@@ -14700,7 +14726,7 @@ Version: v${version}`;
       const side = sideInfo(c, [
         h("div", { class: "m" }, deadline(c)),
         open ? [h("div", { style: { marginTop: "10px" } }, h("span", { text: "Your entries: " }), pips(s)), enterButton(c, s, true)] : null,
-        mine.length ? h("div", { class: "wz-gl-cmine" }, h("b", { text: "Your entries" }), ownEntries(c).map((e) => h("div", {}, h("span", { text: e.title || "(no name)" }), h("span", { class: "dim", text: e.status === "approved" ? "entered" : e.status === "pending" ? "waiting" : "not approved" })))) : null
+        mine2.length ? h("div", { class: "wz-gl-cmine" }, h("b", { text: "Your entries" }), ownEntries(c).map((e) => h("div", {}, h("span", { text: e.title || "(no name)" }), h("span", { class: "dim", text: e.status === "approved" ? "entered" : e.status === "pending" ? "waiting" : "not approved" })))) : null
       ]);
       return h("div", { class: "wz-gl-cvbody wz-gl-cside" }, side, main);
     }
@@ -14776,8 +14802,8 @@ Version: v${version}`;
     }
     const unscored = () => js.data ? js.data.entries.filter((e) => !js.data.myScores[e.id]).length : 0;
     async function score(e, n) {
-      const mine = js.data.myScores[e.id] || 0;
-      const value = mine === n ? 0 : n;
+      const mine2 = js.data.myScores[e.id] || 0;
+      const value = mine2 === n ? 0 : n;
       try {
         await reviewScore(ctx.reviewerKey(), js.id, e.id, value);
         if (value) js.data.myScores[e.id] = value;
@@ -14860,11 +14886,11 @@ Version: v${version}`;
       if (!n) return h("div", {}, headBar, notes, h("p", { class: "wz-gl-note", text: "No approved entries yet. Approve them in Uploads." }));
       const sorted = scores ? d.entries.slice().sort((a, b) => ((scores[b.id] || {}).avg || 0) - ((scores[a.id] || {}).avg || 0)) : d.entries;
       const items = sorted.map((e) => {
-        const mine = d.myScores[e.id] || 0;
+        const mine2 = d.myScores[e.id] || 0;
         const btns = h(
           "div",
           { class: "wz-gl-scores", title: "Your score" },
-          SCORES.map((k) => h("button", { type: "button", class: `wz-gl-scorebtn${mine === k ? " on" : ""}${k % 1 ? " half" : ""}`, text: String(k), title: `${k}: ${SCORE_NAMES[k]}`, onclick: () => score(e, k) }))
+          SCORES.map((k) => h("button", { type: "button", class: `wz-gl-scorebtn${mine2 === k ? " on" : ""}${k % 1 ? " half" : ""}`, text: String(k), title: `${k}: ${SCORE_NAMES[k]}`, onclick: () => score(e, k) }))
         );
         return entryItem({ ...e, status: "approved" }, { below: h("div", { class: "wz-gl-judge" }, btns, extra(e)) });
       });
@@ -15439,7 +15465,7 @@ ${NOTES_CSS}
     s.textContent = CSS4;
     (document.head || document.documentElement).appendChild(s);
   }
-  var setColor = (set) => COLORS[(set.letter.charCodeAt(0) - 65) % COLORS.length];
+  var setColor = (set2) => COLORS[(set2.letter.charCodeAt(0) - 65) % COLORS.length];
   var sameCard = (p, source, group, raw) => p.source === source && p.editorGroup === group && p.name === (raw.name || "") && p.type === raw.type;
   var privacyLine = (text) => h(
     "div",
@@ -15655,7 +15681,7 @@ ${NOTES_CSS}
       list.forEach((o) => {
         counts2[o.status] = (counts2[o.status] || 0) + 1;
       });
-      const summary = Object.entries(counts2).map(([k, n]) => `${n} ${k === "deleted" ? "deleted" : CTX_LABEL[k] || k}`).join(", ");
+      const summary2 = Object.entries(counts2).map(([k, n]) => `${n} ${k === "deleted" ? "deleted" : CTX_LABEL[k] || k}`).join(", ");
       const isOpen = rev.ctxOpen[p.id] !== void 0 ? rev.ctxOpen[p.id] : nSame > 0;
       const head = h(
         "button",
@@ -15665,7 +15691,7 @@ ${NOTES_CSS}
         } },
         h("b", { text: `${isOpen ? "\u25BE" : "\u25B8"} Their other posts ${where}: ${list.length}` }),
         nSame ? h("span", { class: "wz-gl-ctxsame", text: ` \xB7 ${nSame} with a matching name` }) : null,
-        h("span", { class: "dim", text: ` (${summary}).${alts}` })
+        h("span", { class: "dim", text: ` (${summary2}).${alts}` })
       );
       if (!isOpen) return h("div", { class: "wz-gl-ctx" }, head);
       const items = list.map((o) => {
@@ -15717,8 +15743,8 @@ ${NOTES_CSS}
     function tokenWarning() {
       const d = realRole() === "owner" && rev.health ? rev.health.tokenDaysLeft : null;
       if (d === null || d === void 0 || d >= 30) return null;
-      const when2 = rev.health.tokenExpires ? ` (${new Date(rev.health.tokenExpires.replace(" UTC", "Z").replace(" ", "T")).toLocaleDateString()})` : "";
-      return h("div", { class: "wz-gl-issues wz-gl-tokenwarn" }, d <= 0 ? `The gallery server's GitHub key has run out${when2}. Approvals and contest results can't be published until you make a new one: see "Once a year" in the Worker's README.` : `The gallery server's GitHub key runs out in ${d} day${d === 1 ? "" : "s"}${when2}. Make a new one before then: see "Once a year" in the Worker's README.`);
+      const when3 = rev.health.tokenExpires ? ` (${new Date(rev.health.tokenExpires.replace(" UTC", "Z").replace(" ", "T")).toLocaleDateString()})` : "";
+      return h("div", { class: "wz-gl-issues wz-gl-tokenwarn" }, d <= 0 ? `The gallery server's GitHub key has run out${when3}. Approvals and contest results can't be published until you make a new one: see "Once a year" in the Worker's README.` : `The gallery server's GitHub key runs out in ${d} day${d === 1 ? "" : "s"}${when3}. Make a new one before then: see "Once a year" in the Worker's README.`);
     }
     function openSection(k) {
       rev.section = k;
@@ -16633,20 +16659,20 @@ ${NOTES_CSS}
     }
     function setsRow() {
       if (!draft2.groups.length) return null;
-      return h("div", { class: "wz-gl-sets" }, draft2.groups.map((set) => h(
+      return h("div", { class: "wz-gl-sets" }, draft2.groups.map((set2) => h(
         "span",
-        { class: "wz-gl-set", style: { borderColor: setColor(set) } },
-        h("b", { text: set.letter }),
-        h("input", { type: "text", placeholder: "Set name", maxLength: 40, value: set.name, oninput: (e) => {
-          set.name = e.target.value;
+        { class: "wz-gl-set", style: { borderColor: setColor(set2) } },
+        h("b", { text: set2.letter }),
+        h("input", { type: "text", placeholder: "Set name", maxLength: 40, value: set2.name, oninput: (e) => {
+          set2.name = e.target.value;
           saveDraft();
         } }),
-        `${draft2.parts.filter((p) => p.group === set.id).length} parts`
+        `${draft2.parts.filter((p) => p.group === set2.id).length} parts`
       )));
     }
     function tray() {
       return h("div", { class: "wz-gl-tray" }, draft2.parts.map((p) => {
-        const set = draft2.groups.find((g) => g.id === p.group);
+        const set2 = draft2.groups.find((g) => g.id === p.group);
         const zoom = h("div", { class: "wz-gl-zoom", title: "Click to select", onclick: () => {
           p.sel = !p.sel;
           render3();
@@ -16666,7 +16692,7 @@ ${NOTES_CSS}
         return h(
           "div",
           { class: `wz-gl-part${p.sel ? " sel" : ""}` },
-          set ? h("span", { class: "wz-gl-badge", text: set.letter, style: { background: setColor(set) } }) : null,
+          set2 ? h("span", { class: "wz-gl-badge", text: set2.letter, style: { background: setColor(set2) } }) : null,
           button2("\xD7", () => {
             draft2.parts.splice(draft2.parts.indexOf(p), 1);
             changed4();
@@ -16720,13 +16746,13 @@ ${NOTES_CSS}
     function uploadBox() {
       const list = entries();
       const nCards = draft2.parts.length;
-      const summary = `${list.length} entr${list.length === 1 ? "y" : "ies"} (${nCards} card${nCards === 1 ? "" : "s"})`;
+      const summary2 = `${list.length} entr${list.length === 1 ? "y" : "ies"} (${nCards} card${nCards === 1 ? "" : "s"})`;
       if (!reviewing) {
         const s = targetSlots();
         return h(
           "div",
           { class: "wz-gl-upload" },
-          h("span", { text: `Ready to upload: ${summary}${s ? `, into ${s.contest.title}` : ""}.` }),
+          h("span", { text: `Ready to upload: ${summary2}${s ? `, into ${s.contest.title}` : ""}.` }),
           h("span", { class: "wz-gl-grow" }),
           button2("Review upload", () => {
             reviewing = true;
@@ -16757,7 +16783,7 @@ ${NOTES_CSS}
         h(
           "div",
           { class: "wz-gl-bar" },
-          h("b", { text: into ? `Enter ${summary} in ${into.contest.title}` : `Upload ${summary}` }),
+          h("b", { text: into ? `Enter ${summary2} in ${into.contest.title}` : `Upload ${summary2}` }),
           h("span", { class: "wz-gl-grow" }),
           h("span", { class: "wz-gl-by", text: author() ? `Posting as ${author()}` : "" })
         ),
@@ -17705,19 +17731,19 @@ ${NOTES_CSS}
       if (names.includes("loop") && card.fixedId != null) loopSeen.add(card.fixedId);
       if (card.id == null || card.typeCard !== 0) return;
       const id = boardId(card.id);
-      const set = statusEver.get(id) || /* @__PURE__ */ new Set();
-      names.forEach((n) => set.add(n));
-      statusEver.set(id, set);
+      const set2 = statusEver.get(id) || /* @__PURE__ */ new Set();
+      names.forEach((n) => set2.add(n));
+      statusEver.set(id, set2);
     };
     const hadStatus = (card, name) => hasStatus(card, name) || !!card && card.id != null && (statusEver.get(boardId(card.id)) || /* @__PURE__ */ new Set()).has(name);
     const isLoopCopy = (card) => !!card && card.creatorInfo && card.creatorInfo.typeCreator >= 0 && card.creatorInfo.id === card.fixedId && !hasStatus(card, "loop") && loopSeen.has(card.fixedId);
     const roll = (n) => n <= 1 || Math.floor(random() * n) === 0;
     function whoOk(rule, playerId) {
       const s = settings6();
-      const mine = isOwn(playerId);
-      if (!s.spectating && !mine && !s.opponent) return false;
-      if (rule.who === "me") return mine;
-      if (rule.who === "opponent") return !mine;
+      const mine2 = isOwn(playerId);
+      if (!s.spectating && !mine2 && !s.opponent) return false;
+      if (rule.who === "me") return mine2;
+      if (rule.who === "opponent") return !mine2;
       return true;
     }
     function fire(matches) {
@@ -17737,8 +17763,8 @@ ${NOTES_CSS}
         const exact = (m) => m.rule.key && settings6().percent ? settings6().percent(m.rule.key) : null;
         const passed = matches.filter((m) => {
           if (!(roomy || budgetFree(m))) return false;
-          const pct2 = every ? null : exact(m);
-          if (pct2 != null) return pct2 > 0 && random() * 100 < pct2;
+          const pct3 = every ? null : exact(m);
+          if (pct3 != null) return pct3 > 0 && random() * 100 < pct3;
           return roll(scaled(m.rule.chance));
         });
         if (!passed.length) return null;
@@ -17899,8 +17925,8 @@ ${NOTES_CSS}
       const r = m.rule;
       if (!r.key || seen2.has(r.key)) continue;
       seen2.add(r.key);
-      const pct2 = r.always ? 100 : Math.round(1e3 / r.chance) / 10;
-      out.push({ key: r.key, label: r.label || r.key, pct: pct2, always: r.always });
+      const pct3 = r.always ? 100 : Math.round(1e3 / r.chance) / 10;
+      out.push({ key: r.key, label: r.label || r.key, pct: pct3, always: r.always });
     }
     return out;
   }
@@ -18406,6 +18432,22 @@ ${NOTES_CSS}
     }
     return checking3;
   }
+  var SELF_KEY = "wizascript.usageStats.self";
+  function loggedInName() {
+    const self = selfInfo();
+    if (self.selfName) {
+      try {
+        if (GM_getValue(SELF_KEY, "") !== self.selfName) GM_setValue(SELF_KEY, self.selfName);
+      } catch (e) {
+      }
+      return self.selfName;
+    }
+    try {
+      return GM_getValue(SELF_KEY, "") || "";
+    } catch (e) {
+      return "";
+    }
+  }
   onAccountChange((name) => {
     try {
       GM_setValue(ACCOUNT_CACHE, JSON.stringify({ name: name || null, at: Date.now(), self: selfInfo().selfName }));
@@ -18515,23 +18557,35 @@ ${NOTES_CSS}
   }
   function dropGamesCache(season) {
     const c = read(GAMES_CACHE, {});
-    if (c[season]) {
-      delete c[season];
+    const keys = Object.keys(c).filter((k) => k === season || k.startsWith(season + "|"));
+    if (keys.length) {
+      keys.forEach((k) => delete c[k]);
       write(GAMES_CACHE, c);
     }
   }
-  async function myGames(season, { fresh = false } = {}) {
+  var previewSource = null;
+  function setPreviewGames(fn) {
+    previewSource = fn;
+  }
+  async function myGames(season, { fresh = false, player = "" } = {}) {
+    if (previewSource) return previewSource(season, player);
+    const key2 = `${season}|${player}`;
     const c = read(GAMES_CACHE, {});
-    const hit = c[season];
+    const hit = c[key2];
     if (!fresh && hit && Date.now() - hit.at < GAMES_TTL) return hit.data;
-    const data2 = await authed("GET", `/v1/games?season=${encodeURIComponent(season)}`);
+    const data2 = await authed("GET", `/v1/games?season=${encodeURIComponent(season)}${player ? `&player=${encodeURIComponent(player)}` : ""}`);
     const keep = {};
-    Object.entries(c).sort((a, b) => b[1].at - a[1].at).slice(0, 3).forEach(([k, v]) => {
+    Object.entries(c).sort((a, b) => b[1].at - a[1].at).slice(0, 5).forEach(([k, v]) => {
       keep[k] = v;
     });
-    keep[season] = { at: Date.now(), data: data2 };
+    keep[key2] = { at: Date.now(), data: data2 };
     write(GAMES_CACHE, keep);
     return data2;
+  }
+  function defaultPlayer(players, self) {
+    const list = players || [];
+    const me = self && list.find((p) => p.name.toLowerCase() === self.toLowerCase());
+    return (me || list.find((p) => p.main) || list[0] || {}).name || "";
   }
   async function optOut() {
     const r = await authed("POST", "/v1/games/optout");
@@ -18557,6 +18611,102 @@ ${NOTES_CSS}
     });
     statsCache[w] = { at: Date.now(), p };
     return p;
+  }
+
+  // packages/usage-stats/preview.js
+  var SOULS3 = ["DETERMINATION", "BRAVERY", "INTEGRITY", "JUSTICE", "KINDNESS", "PATIENCE", "PERSEVERANCE"];
+  var DIVS = ["LEGEND", "ULTIMATE_MASTER", "HIGH_MASTER", "MASTER"];
+  function rng(seed) {
+    let s = seed >>> 0;
+    return () => {
+      s = s * 1664525 + 1013904223 >>> 0;
+      return s / 4294967296;
+    };
+  }
+  function sampleFiles(cards2, arts, now = Date.now()) {
+    const r = rng(7);
+    const pickC = cards2.slice(0, 400).filter((_, i) => i % 3 === 0).slice(0, 90);
+    const pickA = arts.slice(0, 40);
+    const sel = (players, games, spread) => {
+      const pg = players;
+      const souls = SOULS3.map((s, i) => {
+        const g = Math.round(games * [0.24, 0.18, 0.15, 0.14, 0.11, 0.1, 0.08][i]);
+        const p = Math.max(1, Math.round(pg * g / games));
+        const w = Math.round(g * (0.44 + r() * 0.12));
+        return [s, g, w, p, p, Math.round(p * w / Math.max(1, g) * 100) / 100];
+      });
+      const soulBy = new Map(souls.map((x) => [x[0], x]));
+      const cardsRows = pickC.map((c, i) => {
+        const use = Math.max(0.02, Math.min(0.9, spread / (i + 3) + r() * 0.08));
+        const so = Number(c.typeCard) === 1 && c.soul && soulBy.get(typeof c.soul === "object" ? c.soul.name : c.soul);
+        const g = Math.round((so ? so[1] : games) * use), p = so ? Math.min(so[3], Math.max(1, Math.round(so[3] * use))) : Math.max(1, Math.round(pg * use));
+        const w = Math.round(g * (0.4 + r() * 0.22));
+        return [c.id, g, w, Math.round(g * (1.2 + r())), p, p, Math.round(p * (w / Math.max(1, g)) * 100) / 100, Math.round(p * 1.6 * 100) / 100];
+      }).filter((x) => x[1] > 0);
+      const artRaw = pickA.map((_, i) => Math.max(0.03, 0.5 / (i + 1)));
+      const artScale = 1.75 / (artRaw.reduce((n, x) => n + x, 0) || 1);
+      const artRows = pickA.map((a, i) => {
+        const g = Math.round(games * Math.min(0.9, artRaw[i] * artScale));
+        const p = Math.max(1, Math.round(pg * g / games));
+        const w = Math.round(g * (0.42 + r() * 0.16));
+        return [a.id, g, w, p, p, Math.round(p * w / Math.max(1, g) * 100) / 100];
+      });
+      const combos = [];
+      for (const so of souls.slice(0, 4)) {
+        const [soul, sg, , sp, spg] = so;
+        const raw = [0.72, 0.55, 0.33, 0.22, 0.12, 0.06].map((x) => x * (0.85 + r() * 0.3));
+        const k = 1.75 / raw.reduce((n, x) => n + x, 0);
+        const shares = raw.map((x) => Math.min(0.9, x * k));
+        pickA.slice(0, 6).forEach((a, i) => {
+          const g = Math.round(sg * shares[i]), p = Math.min(sp, Math.max(1, Math.round(sp * shares[i]))), pgs = Math.round(spg * shares[i] * 100) / 100;
+          const w = Math.round(g * (0.4 + r() * 0.25));
+          if (g > 0) combos.push([soul, a.id, g, w, p, pgs, Math.round(pgs * w / Math.max(1, g) * 100) / 100]);
+        });
+      }
+      return { games, players, souls, cards: cardsRows, arts: artRows, combos, hidden: { cards: 0, arts: 0 } };
+    };
+    const make = (window2, games, players) => {
+      const out = { format: 1, window: window2, built: now - 9 * 6e4, private: true, minPlayers: 3, allReady: false, preview: true, counts: { TODAY: 38, WEEK: 412, SEASON: 1250 }, sel: {} };
+      out.sel.TOTAL = sel(players, games, 3);
+      DIVS.forEach((d, i) => {
+        out.sel[d] = sel(Math.max(3, Math.round(players * [0.12, 0.2, 0.3, 0.38][i])), Math.round(games * [0.1, 0.2, 0.3, 0.4][i]), 2.5);
+      });
+      out.sel.UNRANKED = sel(Math.round(players * 0.3), Math.round(games * 0.2), 2);
+      out.sel.TRUEHUB = sel(Math.max(3, Math.round(players * 0.1)), Math.round(games * 0.08), 2);
+      if (window2 === "WEEK") for (const k of Object.keys(out.sel)) {
+        const s = out.sel[k];
+        s.prev = { games: s.games, players: s.players, cards: s.cards.map((x) => {
+          const f = 0.7 + r() * 0.3;
+          return [x[0], Math.round(x[1] * f), Math.round(x[5] * f * 100) / 100];
+        }), arts: s.arts.map((x) => [x[0], x[1], x[4]]), souls: s.souls.map((x) => [x[0], x[1], x[4]]) };
+      }
+      return out;
+    };
+    return { TODAY: make("TODAY", 38, 14), WEEK: make("WEEK", 412, 46), SEASON: make("SEASON", 1250, 84), ALL: { format: 1, window: "ALL", locked: true, preview: true, counts: { ALL: 0 }, sel: {} } };
+  }
+  function sampleGames(cards2, arts, now = Date.now()) {
+    const r = rng(11);
+    const ids = cards2.slice(0, 300).map((c2) => c2.id);
+    const size = Math.max(3, Math.min(14, Math.floor(ids.length / 4)));
+    const cut = (k) => Math.floor(ids.length * k / 4);
+    const deck = (start) => ids.slice(start, start + size).map((id, i) => [id, i % 3 === 0 ? 2 : 1]);
+    const a = deck(cut(0)), b = deck(cut(1)), c = deck(cut(2));
+    const extra = ids.slice(cut(3), cut(3) + 2);
+    const a2 = a.slice(0, Math.max(1, a.length - 2)).concat(extra.map((id, i) => [id, i ? 1 : 2]));
+    const art = (n) => arts.slice(n, n + 2).map((x) => x.id);
+    const plans = [["DETERMINATION", a, art(0)], ["DETERMINATION", a2, art(0)], ["PATIENCE", b, art(3)], ["JUSTICE", c, art(6)]];
+    const games = [];
+    let elo = 1640, at = now - 20 * 864e5;
+    for (let i = 0; i < 64; i++) {
+      const [soul, d, ar] = plans[i < 18 ? 0 : i < 40 ? i % 3 === 0 ? 2 : 1 : i % 2 ? 3 : 1];
+      const win2 = r() < (d === a2 ? 0.62 : 0.48);
+      const old = elo;
+      elo += win2 ? 12 + Math.round(r() * 6) : -(10 + Math.round(r() * 6));
+      const div = (e) => e >= 2e3 ? "LEGEND" : e >= 1800 ? "ULTIMATE_MASTER" : e >= 1650 ? "HIGH_MASTER" : "MASTER";
+      at += (i % 6 === 0 ? 20 * 36e5 : 0) + 9 * 6e4 + Math.round(r() * 8 * 6e4);
+      games.push({ gameId: "preview" + i, at: Math.min(at, now - 6e4), soul, win: win2, rankedUnlocked: true, oldDivision: div(old), newDivision: div(elo), oldElo: old, newElo: elo, enemySoul: SOULS3[Math.floor(r() * 7)], deck: d, arts: ar });
+    }
+    return games;
   }
 
   // packages/usage-stats/recorder.js
@@ -18665,6 +18815,7 @@ ${NOTES_CSS}
 #wz-season-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:10px 0 6px; position:relative; }
 #wz-season-bar .wz-divs { display:flex; gap:6px; flex-wrap:wrap; }
 #wz-season-bar .wz-div { background:transparent; color:#fff; border:1px solid #fff; padding:3px 10px; font:inherit; font-size:14px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+#wz-season-bar .wz-div * { pointer-events:none; }
 #wz-season-bar .wz-div img, #wz-season-bar .wz-div .divisionIcon { height:18px !important; width:auto !important; max-height:18px !important; margin:0 !important; }
 #wz-season-bar .wz-div:hover { background:rgba(255,255,255,.12); }
 #wz-season-bar .wz-div.on { background:#fff; color:#000; }
@@ -18677,6 +18828,7 @@ ${NOTES_CSS}
 #wz-season-bar .wz-arrow { background:none; border:none; color:#fff; font:inherit; font-size:1em; cursor:pointer; padding:0 4px; }
 #wz-season-bar .wz-arrow:disabled { opacity:.25; cursor:default; }
 #wz-season-bar .wz-msg { width:100%; color:#aaa; font-size:13px; }
+#wz-season-bar .wz-player, #wz-season-bar .wz-player option { background:#222; color:#fff; border:1px solid #fff; font:inherit; font-size:14px; padding:2px 4px; }
 #wz-elo-win { position:fixed; z-index:1000; min-width:260px; min-height:130px; display:flex; flex-direction:column; background:rgba(10,5,15,.92); border:1px solid #fff; box-shadow:0 4px 16px rgba(0,0,0,.6); font-family:inherit; color:#fff; box-sizing:border-box; }
 #wz-elo-win .wz-title { display:flex; align-items:center; justify-content:space-between; padding:3px 6px 3px 8px; border-bottom:1px solid rgba(255,255,255,.4); cursor:move; user-select:none; font-size:13px; }
 #wz-elo-win .wz-x { background:none; border:none; color:#fff; font:inherit; font-size:16px; line-height:1; cursor:pointer; padding:0 4px; }
@@ -18735,7 +18887,11 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     seasonBox.title = "A season is a calendar month";
     const right = document.createElement("div");
     right.className = "wz-right";
-    right.append(graphBtn, seasonBox);
+    const playerSel = document.createElement("select");
+    playerSel.className = "wz-player";
+    playerSel.title = "Which of your accounts";
+    playerSel.style.display = "none";
+    right.append(playerSel, graphBtn, seasonBox);
     const msg = document.createElement("div");
     msg.className = "wz-msg";
     bar.append(divsBox, right, msg);
@@ -18825,14 +18981,26 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       if (win2.style.display !== "none") drawChart();
     }).observe(win2);
     const current = seasonOf(Date.now());
-    const state4 = { season: current, div: "TOTAL", earliest: current, data: {}, loading: false, error: "" };
+    const state4 = { season: current, div: "TOTAL", earliest: current, data: {}, loading: false, error: "", player: null, players: [], main: true };
+    const self = loggedInName();
+    const isSelf = () => self ? state4.player && state4.player.toLowerCase() === self.toLowerCase() : state4.main;
+    const dkey = (season) => `${state4.player || ""}|${season}`;
+    const gamesOf = (season) => state4.data[dkey(season)];
     async function load4(season) {
-      if (state4.data[season]) return;
+      if (state4.player && gamesOf(season)) return;
       state4.loading = true;
       render3();
       try {
-        const d = await myGames(season);
-        state4.data[season] = d.games || [];
+        let d = await myGames(season, { player: state4.player || "" });
+        if (!state4.player) {
+          const want = defaultPlayer(d.players, self);
+          if (want && want !== d.player) d = await myGames(season, { player: want });
+        }
+        state4.player = d.player || state4.player;
+        state4.main = d.main !== false;
+        state4.players = d.players || state4.players;
+        state4.data[dkey(season)] = d.games || [];
+        state4.earliest = current;
         const first = (d.seasons || [])[0];
         if (first && first.season < state4.earliest) state4.earliest = first.season;
         state4.error = "";
@@ -18851,13 +19019,13 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     };
     const setRow = (i, w, l) => {
       const c = rows[i].children;
-      const rate2 = fmtRate(w, l);
+      const rate3 = fmtRate(w, l);
       c[1].textContent = w;
       c[1].className = "green";
       c[2].textContent = l;
       c[2].className = "red";
-      c[3].textContent = rate2.text;
-      c[3].className = rate2.cls;
+      c[3].textContent = rate3.text;
+      c[3].className = rate3.cls;
     };
     const restoreRows = () => rows.forEach((r, i) => [...r.children].slice(1).forEach((td, j) => {
       td.innerHTML = original[i][j].html;
@@ -18866,9 +19034,9 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     let emptyRow = null;
     const SVGNS = "http://www.w3.org/2000/svg";
     function drawChart() {
-      const games = state4.data[state4.season] || [];
+      const games = gamesOf(state4.season) || [];
       const bucket = state4.div;
-      win2.querySelector(".wz-wtitle").textContent = `Elo Graph \xB7 ${seasonLabel(state4.season)}` + (bucket !== "TOTAL" ? ` \xB7 ${DIV_NAMES[bucket]}` : "");
+      win2.querySelector(".wz-wtitle").textContent = `Elo Graph \xB7 ${state4.players.length > 1 && state4.player ? state4.player + " \xB7 " : ""}${seasonLabel(state4.season)}` + (bucket !== "TOTAL" ? ` \xB7 ${DIV_NAMES[bucket]}` : "");
       if (win2.style.display === "none") return;
       chart.innerHTML = "";
       const pts = games.filter(ranked).filter((g) => g.newElo !== null && g.newElo !== void 0);
@@ -18897,7 +19065,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       }
       for (const e of Object.values(MIN_ELOS)) if (e > lo && e < hi) add("line", { x1: 0, x2: W2, y1: y(e), y2: y(e), stroke: "rgba(255,255,255,.35)", "stroke-dasharray": "3 3", "vector-effect": "non-scaling-stroke" });
       if (TRUE_HUB_ELO > lo && TRUE_HUB_ELO < hi) add("line", { x1: 0, x2: W2, y1: y(TRUE_HUB_ELO), y2: y(TRUE_HUB_ELO), stroke: "rgba(255,215,0,.6)", "stroke-dasharray": "2 2", "vector-effect": "non-scaling-stroke" });
-      const pct2 = (e) => `calc(18px + ${(y(e) / H2).toFixed(4)} * (100% - 26px))`;
+      const pct3 = (e) => `calc(18px + ${(y(e) / H2).toFixed(4)} * (100% - 26px))`;
       const SHORT = { MASTER: "M", HIGH_MASTER: "HM", ULTIMATE_MASTER: "UM", LEGEND: "L" };
       const labels = Object.entries(MIN_ELOS).filter(([, e]) => e > lo && e < hi).map(([d, e]) => [`${SHORT[d] || d} ${e}`, e, ""]);
       if (TRUE_HUB_ELO > lo && TRUE_HUB_ELO < hi) labels.push([`TH ${TRUE_HUB_ELO}`, TRUE_HUB_ELO, "th"]);
@@ -18910,7 +19078,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
         const l = document.createElement("div");
         l.className = "lbl " + cls;
         l.textContent = text;
-        l.style.top = pct2(e);
+        l.style.top = pct3(e);
         chart.appendChild(l);
       }
       add("polyline", { points: [`0,${y(pts[0].oldElo)}`, ...pts.map((g, i) => `${x(i + 1)},${y(g.newElo)}`)].join(" "), fill: "none", stroke: "#fff", "stroke-width": 1.5, "vector-effect": "non-scaling-stroke" });
@@ -18928,7 +19096,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
         const i = Math.max(0, Math.min(pts.length - 1, Math.round((e.clientX - r.left) / r.width * pts.length) - 1));
         const g = pts[i];
         dot.style.left = `calc(8px + ${(x(i + 1) / W2).toFixed(4)} * (100% - 56px))`;
-        dot.style.top = pct2(g.newElo);
+        dot.style.top = pct3(g.newElo);
         dot.style.display = "block";
         tip.textContent = `Game ${i + 1}: ${g.win ? "Win" : "Loss"} \xB7 ${g.oldElo} \u2192 ${g.newElo}${g.oldElo >= TRUE_HUB_ELO ? " \xB7 True Hub" : ""}`;
       });
@@ -18938,7 +19106,13 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       });
     }
     function render3() {
-      const games = state4.data[state4.season] || [];
+      const games = gamesOf(state4.season) || [];
+      playerSel.style.display = state4.players.length > 1 ? "" : "none";
+      if (state4.players.length > 1 && playerSel.dataset.list !== JSON.stringify(state4.players.map((p) => p.name))) {
+        playerSel.dataset.list = JSON.stringify(state4.players.map((p) => p.name));
+        playerSel.innerHTML = state4.players.map((p) => `<option value="${esc3(p.name)}">${esc3(p.name)}${p.main ? " (main)" : " (alt)"}</option>`).join("");
+      }
+      if (state4.player) playerSel.value = state4.player;
       const seen2 = new Set(games.flatMap(bucketsOf));
       const buckets = [...[...LADDER, "UNRANKED"].filter((d) => seen2.has(d)), ...seen2.has("TRUEHUB") ? ["TRUEHUB"] : []];
       if (state4.div !== "TOTAL" && !buckets.includes(state4.div)) state4.div = "TOTAL";
@@ -18948,7 +19122,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
         b.type = "button";
         b.className = "wz-div" + (d === "TRUEHUB" ? " th" : "") + (state4.div === d ? " on" : "");
         b.innerHTML = divHtml(d);
-        b.title = d === "TRUEHUB" ? `Games started at ${TRUE_HUB_ELO}+ Elo (True Hub decks can be posted)` : d === "TOTAL" ? state4.season === current ? "Every PvP game this season (the site's own numbers)" : "Every recorded game that season" : DIV_NAMES[d];
+        b.title = d === "TRUEHUB" ? `Games started at ${TRUE_HUB_ELO}+ Elo (True Hub decks can be posted)` : d === "TOTAL" ? state4.season === current && isSelf() ? "Every PvP game this season (the site's own numbers)" : "Every recorded game that season" : DIV_NAMES[d];
         b.addEventListener("click", () => {
           state4.div = d;
           render3();
@@ -18965,7 +19139,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
         emptyRow.remove();
         emptyRow = null;
       }
-      if (state4.season === current && state4.div === "TOTAL") restoreRows();
+      if (state4.season === current && state4.div === "TOTAL" && isSelf()) restoreRows();
       else {
         const per = Object.fromEntries(SOULS2.map((s) => [s, { w: 0, l: 0 }]));
         for (const g of games) if ((state4.div === "TOTAL" || bucketsOf(g).includes(state4.div)) && per[g.soul]) per[g.soul][g.win ? "w" : "l"]++;
@@ -18986,6 +19160,12 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       msg.style.display = msg.textContent ? "" : "none";
       drawChart();
     }
+    playerSel.addEventListener("change", () => {
+      state4.player = playerSel.value;
+      state4.div = "TOTAL";
+      render3();
+      load4(state4.season);
+    });
     seasonBox.querySelectorAll(".wz-arrow").forEach((a) => a.addEventListener("click", () => {
       state4.season = shiftSeason(state4.season, Number(a.dataset.d));
       render3();
@@ -19007,6 +19187,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
 #wz-hist-pager { display:flex; align-items:center; justify-content:flex-end; gap:6px; margin:8px 0; }
 #wz-hist-pager select, #wz-hist-pager option { color:#fff; background:#222; border:1px solid #fff; }
 #wz-hist-pager .wz-note { margin-right:auto; color:#aaa; font-size:13px; }
+#wz-hist-pager .wz-player { margin-left:12px; }
 `;
   function findHistoryTable() {
     return [...document.querySelectorAll("table.table")].find((tb) => tb.querySelector('[data-i18n*="history-result"]')) || null;
@@ -19033,6 +19214,9 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     eloHead.textContent = "Elo";
     const boundary = siteRows.length >= PER_PAGE ? Date.now() - (Math.max(0, ...siteRows.map(ageOf)) + 1) * 6e4 : Infinity;
     let games = [];
+    const self = loggedInName();
+    let player = null, players = [], main = true;
+    const own = () => self ? !!player && player.toLowerCase() === self.toLowerCase() : main;
     const timeText = (at) => {
       const min = Math.max(0, Math.floor((Date.now() - at) / 6e4));
       const d = Math.floor(min / 1440), hh = Math.floor(min % 1440 / 60), m = min % 60;
@@ -19059,31 +19243,35 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     };
     const pager = document.createElement("div");
     pager.id = "wz-hist-pager";
-    pager.innerHTML = '<span class="wz-note"></span><button type="button" class="btn btn-primary" data-d="-1">&#10094;</button><select></select><span>/</span><span class="wz-max"></span><button type="button" class="btn btn-primary" data-d="1">&#10095;</button>';
+    pager.innerHTML = '<span class="wz-note"></span><button type="button" class="btn btn-primary" data-d="-1">&#10094;</button><select></select><span>/</span><span class="wz-max"></span><button type="button" class="btn btn-primary" data-d="1">&#10095;</button><select class="wz-player" title="Which of your accounts" style="display:none"></select>';
     table.before(pager);
     const note = pager.querySelector(".wz-note");
     const sel = pager.querySelector("select");
     const [prevBtn, nextBtn] = pager.querySelectorAll("button");
+    const playerSel = pager.querySelector(".wz-player");
     let page = 1, added = [], status = "";
-    const pages = () => 1 + Math.ceil(games.length / PER_PAGE);
+    const pages = () => own() ? 1 + Math.ceil(games.length / PER_PAGE) : Math.max(1, Math.ceil(games.length / PER_PAGE));
     function render3() {
       added.forEach((r) => r.remove());
       added = [];
+      const site = own() && page === 1;
       siteRows.forEach((r) => {
-        r.style.display = page === 1 ? "" : "none";
+        r.style.display = site ? "" : "none";
       });
-      if (page === 1) eloHead.remove();
+      if (site) eloHead.remove();
       else header.appendChild(eloHead);
-      if (page > 1) {
-        added = games.slice((page - 2) * PER_PAGE, (page - 1) * PER_PAGE).map(rowFor);
+      if (!site) {
+        const first = own() ? (page - 2) * PER_PAGE : (page - 1) * PER_PAGE;
+        added = games.slice(first, first + PER_PAGE).map(rowFor);
         (table.tBodies[0] || table).append(...added);
       }
+      playerSel.style.display = players.length > 1 ? "" : "none";
       const n = pages();
       sel.innerHTML = Array.from({ length: n }, (_, i) => `<option value="${i + 1}"${i + 1 === page ? " selected" : ""}>${i + 1}</option>`).join("");
       pager.querySelector(".wz-max").textContent = n;
       prevBtn.disabled = page <= 1;
       nextBtn.disabled = page >= n;
-      note.textContent = page > 1 ? "Older PvP games this season, recorded by Wizascript" : status;
+      note.textContent = status || (!site ? own() ? "Older PvP games this season, recorded by Wizascript" : `${player}'s PvP games this season, recorded by Wizascript` : "");
     }
     const go = (p) => {
       const n = Math.min(pages(), Math.max(1, p));
@@ -19106,15 +19294,432 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       go(next);
     }, { passive: false });
     render3();
-    myGames(seasonOf(Date.now())).then((d) => {
-      games = (d.games || []).filter((g) => g.at < boundary).sort((a, b) => b.at - a.at);
+    async function load4() {
+      try {
+        let d = await myGames(seasonOf(Date.now()), { player: player || "" });
+        if (!player) {
+          const want = defaultPlayer(d.players, self);
+          if (want && want !== d.player) d = await myGames(seasonOf(Date.now()), { player: want });
+        }
+        player = d.player || player;
+        main = d.main !== false;
+        players = d.players || players;
+        playerSel.innerHTML = players.map((p) => `<option value="${esc3(p.name)}">${esc3(p.name)}${p.main ? " (main)" : " (alt)"}</option>`).join("");
+        if (player) playerSel.value = player;
+        games = (d.games || []).filter((g) => !own() || g.at < boundary).sort((a, b) => b.at - a.at);
+        status = "";
+      } catch (e) {
+        status = `Wizascript: ${e.message || "couldn't load recorded games"}`;
+        log3("history:", e);
+      }
+      page = Math.min(page, pages());
       render3();
-    }, (e) => {
-      status = `Wizascript: ${e.message || "couldn't load recorded games"}`;
-      log3("history:", e);
-      render3();
+    }
+    playerSel.addEventListener("change", () => {
+      player = playerSel.value;
+      page = 1;
+      load4();
     });
+    load4();
     return { render: render3 };
+  }
+
+  // packages/usage-stats/mine.js
+  var SESSION_GAP = 45 * 6e4;
+  var SIMILAR = 0.6;
+  var NAMES_KEY = "wizascript.usageStats.deckNames";
+  var rate = (w, n) => n ? w / n : 0;
+  function summary(games) {
+    const g = games.slice().sort((a, b) => a.at - b.at);
+    let best = 0, worst = 0, run = 0;
+    for (const x of g) {
+      run = x.win ? run > 0 ? run + 1 : 1 : run < 0 ? run - 1 : -1;
+      best = Math.max(best, run);
+      worst = Math.min(worst, run);
+    }
+    const wins = g.filter((x) => x.win).length;
+    return { games: g.length, wins, losses: g.length - wins, current: run, bestWin: best, worstLoss: -worst };
+  }
+  function sessions(games, gap = SESSION_GAP) {
+    const g = games.slice().sort((a, b) => a.at - b.at);
+    const out = [];
+    for (const x of g) {
+      const cur = out[out.length - 1];
+      if (!cur || x.at - cur.end > gap) out.push({ start: x.at, end: x.at, games: [x] });
+      else {
+        cur.end = x.at;
+        cur.games.push(x);
+      }
+    }
+    return out.map((s) => {
+      const ranked2 = s.games.filter((x) => x.rankedUnlocked && Number.isInteger(x.oldElo) && Number.isInteger(x.newElo));
+      const wins = s.games.filter((x) => x.win).length;
+      return { start: s.start, end: s.end, games: s.games.length, wins, losses: s.games.length - wins, elo: ranked2.length ? ranked2[ranked2.length - 1].newElo - ranked2[0].oldElo : null };
+    });
+  }
+  function matchups(games, soul = "ALL") {
+    const m = {};
+    for (const x of games) {
+      if (!x.enemySoul || soul !== "ALL" && x.soul !== soul) continue;
+      const r = m[x.enemySoul] || (m[x.enemySoul] = { soul: x.enemySoul, games: 0, wins: 0 });
+      r.games++;
+      if (x.win) r.wins++;
+    }
+    return Object.values(m).sort((a, b) => b.games - a.games);
+  }
+  var deckKey = (x) => `${x.soul}|${(x.deck || []).slice().sort((a, b) => a[0] - b[0]).map((c) => c.join(":")).join(",")}|${(x.arts || []).slice().sort((a, b) => a - b).join(",")}`;
+  var asMap = (deck) => new Map((deck || []).map(([id, n]) => [id, n]));
+  function similarity(a, b) {
+    const A = asMap(a), B = asMap(b);
+    let both = 0, all = 0;
+    for (const id of /* @__PURE__ */ new Set([...A.keys(), ...B.keys()])) {
+      const x = A.get(id) || 0, y = B.get(id) || 0;
+      both += Math.min(x, y);
+      all += Math.max(x, y);
+    }
+    return all ? both / all : 0;
+  }
+  function changes(from, to) {
+    const A = asMap(from), B = asMap(to), add = [], drop = [];
+    for (const id of /* @__PURE__ */ new Set([...A.keys(), ...B.keys()])) {
+      const d = (B.get(id) || 0) - (A.get(id) || 0);
+      if (d > 0) add.push([id, d]);
+      else if (d < 0) drop.push([id, -d]);
+    }
+    return { add, drop };
+  }
+  function artChanges(from, to) {
+    const A = new Set(from || []), B = new Set(to || []);
+    return { add: [...B].filter((x) => !A.has(x)), drop: [...A].filter((x) => !B.has(x)) };
+  }
+  function deckFamilies(games) {
+    const versions = /* @__PURE__ */ new Map();
+    for (const x of games.slice().sort((a, b) => a.at - b.at)) {
+      if (!x.deck || !x.deck.length) continue;
+      const k = deckKey(x);
+      const v = versions.get(k) || { key: k, soul: x.soul, deck: x.deck, arts: x.arts || [], games: 0, wins: 0, first: x.at, last: x.at };
+      v.games++;
+      if (x.win) v.wins++;
+      v.last = x.at;
+      versions.set(k, v);
+    }
+    const fams = [];
+    for (const v of [...versions.values()].sort((a, b) => a.first - b.first)) {
+      let best = null, score = 0;
+      for (const f of fams) {
+        if (f.soul !== v.soul) continue;
+        const s = Math.max(...f.versions.map((u) => similarity(u.deck, v.deck)));
+        if (s >= SIMILAR && s > score) {
+          best = f;
+          score = s;
+        }
+      }
+      if (best) best.versions.push(v);
+      else fams.push({ key: v.key, soul: v.soul, versions: [v] });
+    }
+    for (const f of fams) {
+      f.games = f.versions.reduce((n, v) => n + v.games, 0);
+      f.wins = f.versions.reduce((n, v) => n + v.wins, 0);
+      f.last = Math.max(...f.versions.map((v) => v.last));
+    }
+    return fams.sort((a, b) => b.last - a.last);
+  }
+  function cardRates(games) {
+    const m = /* @__PURE__ */ new Map();
+    for (const x of games) for (const [id] of x.deck || []) {
+      const r = m.get(id) || { id, games: 0, wins: 0 };
+      r.games++;
+      if (x.win) r.wins++;
+      m.set(id, r);
+    }
+    return [...m.values()];
+  }
+  var CSS8 = `
+#wz-usage-win .uw-mine { display:flex; flex-direction:column; gap:10px; padding-top:8px; }
+#wz-usage-win .uw-cards3 { display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:8px; }
+#wz-usage-win .uw-stat { border:1px solid rgba(255,255,255,.25); padding:6px 8px; }
+#wz-usage-win .uw-stat b { display:block; font-size:18px; font-weight:normal; }
+#wz-usage-win .uw-stat span { color:#aaa; font-size:12px; }
+#wz-usage-win h4 { margin:6px 0 2px; font-size:13px; font-weight:normal; color:#ccc; text-transform:uppercase; letter-spacing:.04em; }
+#wz-usage-win .uw-deck { border:1px solid rgba(255,255,255,.25); margin-bottom:6px; }
+#wz-usage-win .uw-deck-head { display:flex; align-items:center; gap:10px; padding:6px 8px; cursor:pointer; }
+#wz-usage-win .uw-deck-head:hover { background:rgba(255,255,255,.06); }
+#wz-usage-win .uw-deck-head .nm { flex:1; }
+/* The game's soul names open its help popup on click: in a deck's header the click should open the deck. */
+#wz-usage-win .uw-nohelp, #wz-usage-win .uw-nohelp * { pointer-events:none; }
+#wz-usage-win .uw-deck-body { padding:4px 8px 8px; border-top:1px solid rgba(255,255,255,.15); }
+#wz-usage-win .uw-chg .add { color:#6c6; } #wz-usage-win .uw-chg .drop { color:#e66; }
+#wz-usage-win .uw-tag { font-size:11px; padding:0 5px; border:1px solid #888; color:#ccc; margin-left:4px; }
+#wz-usage-win .uw-deck-name { background:transparent; color:#fff; border:1px solid transparent; font:inherit; padding:1px 4px; width:100%; max-width:340px; cursor:text; }
+#wz-usage-win .uw-deck-name::placeholder { color:#fff; opacity:1; }
+#wz-usage-win .uw-deck-name:hover { border-color:rgba(255,255,255,.35); }
+#wz-usage-win .uw-deck-name:focus { border-color:#fff; background:#111; outline:none; }
+#wz-usage-win .uw-deck-name:focus::placeholder { color:#777; }
+#wz-usage-win .uw-arts { display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; }
+#wz-usage-win .uw-art { display:inline-flex; align-items:center; gap:4px; }
+#wz-usage-win .uw-art img { width:24px; height:24px; object-fit:contain; }
+#wz-usage-win .uw-chg .uw-art img { width:18px; height:18px; }
+#wz-usage-win .uw-chg .arts { display:flex; flex-wrap:wrap; align-items:center; gap:2px 8px; margin-top:2px; }
+#wz-usage-win .uw-chg .arts .to { font-size:16px; color:#ccc; }
+#wz-usage-win select.uw-sel, #wz-usage-win select.uw-sel option { background:#222; color:#fff; border:1px solid #888; font:inherit; font-size:13px; }
+#wz-usage-win .uw-delta.up { color:#6c6; } #wz-usage-win .uw-delta.down { color:#e66; }
+`;
+  var cssDone = false;
+  var pct = (x) => `${(Math.round((x || 0) * 1e3) / 10).toFixed(1)}%`;
+  var wr = (w, n) => n ? `<span class="${w / n >= 0.5 ? "green" : "red"}">${pct(w / n)}</span>` : "-";
+  var when2 = (t2) => new Date(t2).toLocaleString(void 0, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  var day = (t2) => new Date(t2).toLocaleDateString(void 0, { month: "short", day: "numeric" });
+  var readNames = () => {
+    try {
+      return JSON.parse(GM_getValue(NAMES_KEY, "{}")) || {};
+    } catch (e) {
+      return {};
+    }
+  };
+  var saveName = (k, v) => {
+    const n = readNames();
+    if (v) n[k] = v;
+    else delete n[k];
+    try {
+      GM_setValue(NAMES_KEY, JSON.stringify(n));
+    } catch (e) {
+    }
+  };
+  function createMine(ctx) {
+    const st = { player: null, season: ctx.current, view: "OVERVIEW", compare: "AUTO", soul: "ALL", minGames: 3, open: {}, data: null, players: [], seasons: [], error: "", loading: false, q: "" };
+    async function load4(rerender) {
+      st.loading = true;
+      rerender();
+      try {
+        let d = await ctx.getGames(st.season, st.player || "");
+        if (!st.player) {
+          const want = ctx.defaultPlayer(d.players, ctx.self());
+          if (want && want !== d.player) d = await ctx.getGames(st.season, want);
+        }
+        st.player = d.player;
+        st.data = d;
+        st.players = d.players || [];
+        st.seasons = (d.seasons || []).map((x) => x.season);
+        st.error = "";
+      } catch (e) {
+        st.error = e.message || "Couldn't reach the Wizascript server.";
+      }
+      st.loading = false;
+      rerender();
+    }
+    function compareSel() {
+      var _a;
+      const f = ctx.community();
+      if (!f || !f.sel) return { div: "TOTAL", s: null };
+      let div = st.compare;
+      if (div === "AUTO") {
+        const n = {};
+        for (const g of st.data && st.data.games || []) if (g.rankedUnlocked && g.oldDivision) n[g.oldDivision] = (n[g.oldDivision] || 0) + 1;
+        div = ((_a = Object.entries(n).sort((a, b) => b[1] - a[1])[0]) == null ? void 0 : _a[0]) || "TOTAL";
+      }
+      const s = f.sel[div];
+      return { div, s: s && s.cards && s.cards.length ? s : f.sel.TOTAL };
+    }
+    const cardName2 = (id) => {
+      const c = ctx.catalog().cardById.get(id);
+      return c ? c.name : `#${id}`;
+    };
+    const artName = (id) => {
+      const a = ctx.catalog().artById.get(id);
+      return a ? a.name : `#${id}`;
+    };
+    const artHtml = (id) => {
+      const a = ctx.catalog().artById.get(id);
+      return `<span class="uw-art"><img src="/images/artifacts/${ctx.esc(a && a.image || "")}.png" alt="" onerror="this.style.visibility='hidden'"><span class="${a && a.legendary ? "yellow" : ""}">${ctx.esc(artName(id))}</span></span>`;
+    };
+    function bar(rerender) {
+      const e = ctx.esc;
+      const players = st.players.length > 1 ? `<label class="uw-adv">Account <select class="uw-sel uw-player">${st.players.map((p) => `<option value="${e(p.name)}"${p.name === st.player ? " selected" : ""}>${e(p.name)}${p.main ? " (main)" : " (alt)"}</option>`).join("")}</select></label>` : st.player ? `<span class="uw-meta">${e(st.player)}</span>` : "";
+      const seasons = [.../* @__PURE__ */ new Set([ctx.current, ...st.seasons])].sort().reverse();
+      const seasonSel = `<label class="uw-adv">Season <select class="uw-sel uw-season">${seasons.map((s) => `<option value="${s}"${s === st.season ? " selected" : ""}>${ctx.seasonLabel(s)}</option>`).join("")}</select></label>`;
+      const views = [["OVERVIEW", "Overview"], ["DECKS", "Decks"], ["CARDS", "Cards"]].map(([k, t2]) => `<button type="button" class="uw-btn${st.view === k ? " on" : ""}" data-mv="${k}">${t2}</button>`).join("");
+      const el3 = document.createElement("div");
+      el3.className = "uw-bar";
+      el3.innerHTML = `${views}<span class="uw-sep"></span>${players}${seasonSel}`;
+      el3.querySelectorAll("[data-mv]").forEach((b) => b.addEventListener("click", () => {
+        st.view = b.dataset.mv;
+        rerender();
+      }));
+      const ps = el3.querySelector(".uw-player");
+      if (ps) ps.addEventListener("change", () => {
+        st.player = ps.value;
+        load4(rerender);
+      });
+      el3.querySelector(".uw-season").addEventListener("change", (ev) => {
+        st.season = ev.target.value;
+        load4(rerender);
+      });
+      return el3;
+    }
+    function overview(games) {
+      const e = ctx.esc;
+      const s = summary(games);
+      const cur = s.current > 0 ? `${s.current} win${s.current === 1 ? "" : "s"}` : s.current < 0 ? `${-s.current} loss${s.current === -1 ? "" : "es"}` : "-";
+      let html = `<div class="uw-cards3">
+      <div class="uw-stat"><b>${s.wins}\u2013${s.losses}</b><span>Record (${wr(s.wins, s.games)})</span></div>
+      <div class="uw-stat"><b>${cur}</b><span>Current streak</span></div>
+      <div class="uw-stat"><b>${s.bestWin}</b><span>Best win streak</span></div>
+      <div class="uw-stat"><b>${s.worstLoss}</b><span>Longest losing streak</span></div></div>`;
+      const ss = sessions(games).reverse().slice(0, 8);
+      html += `<h4>Sessions</h4><table><tr><th>Started</th><th>Games</th><th>Record</th><th>Win rate</th><th>Elo</th></tr>` + ss.map((x) => `<tr><td>${when2(x.start)}</td><td>${x.games}</td><td>${x.wins}\u2013${x.losses}</td><td>${wr(x.wins, x.games)}</td><td>${x.elo === null ? "-" : `<span class="uw-delta ${x.elo >= 0 ? "up" : "down"}">${x.elo >= 0 ? "+" : ""}${x.elo}</span>`}</td></tr>`).join("") + "</table>";
+      const souls = [...new Set(games.map((g) => g.soul))];
+      const mm = matchups(games, st.soul);
+      html += `<h4>Matchups by opponent soul</h4><div class="uw-bar" style="padding:0 0 4px">Playing as <select class="uw-sel uw-msoul"><option value="ALL">any soul</option>${souls.map((x) => `<option value="${x}"${x === st.soul ? " selected" : ""}>${e(x)}</option>`).join("")}</select></div>`;
+      html += mm.length ? `<table><tr><th>Opponent's soul</th><th>Games</th><th>Record</th><th>Win rate</th></tr>` + mm.map((x) => `<tr><td>${ctx.soulHtml(x.soul)}</td><td>${x.games}</td><td>${x.wins}\u2013${x.games - x.wins}</td><td>${wr(x.wins, x.games)}</td></tr>`).join("") + "</table>" : `<div class="uw-hidden">No opponent souls recorded${st.season !== ctx.current ? " (they're only kept for the current season)" : ""}.</div>`;
+      return html;
+    }
+    function decks(games, rerender) {
+      const e = ctx.esc;
+      const fams = deckFamilies(games);
+      if (!fams.length) return `<div class="uw-empty">No starting decks recorded${st.season !== ctx.current ? " for this season (decks are kept until about two weeks after the month ends)" : " yet"}.</div>`;
+      const names = readNames();
+      const { div, s } = compareSel();
+      const meta = new Map((s && s.cards || []).map((r) => [r[0], r]));
+      const pp = ctx.perPlayer();
+      const tot = s ? pp ? s.players : s.games : 0;
+      const useOf = (id) => {
+        const r = meta.get(id);
+        return r && tot ? (pp ? r[5] : r[1]) / tot : 0;
+      };
+      const wrOf = (id) => {
+        const r = meta.get(id);
+        return r ? pp ? rate(r[6], r[5]) : rate(r[2], r[1]) : null;
+      };
+      const label2 = (f) => {
+        const latest = f.versions[f.versions.length - 1];
+        const top = latest.deck.slice().sort((a, b) => b[1] - a[1] || useOf(a[0]) - useOf(b[0])).slice(0, 3).map(([id]) => cardName2(id));
+        return top.join(", ");
+      };
+      const autoLabel = label2;
+      let html = `<div class="uw-hidden">Each game's starting deck is a version; versions that share most of their cards are one deck. Compared with ${e(ctx.NAMES[div] || div)}, this season.</div>`;
+      for (const f of fams) {
+        const open = !!st.open[f.key];
+        const latest = f.versions[f.versions.length - 1];
+        html += `<div class="uw-deck"><div class="uw-deck-head" data-fam="${e(f.key)}">
+        <span>${open ? "\u25BE" : "\u25B8"}</span><span class="uw-nohelp">${ctx.soulHtml(f.soul)}</span><span class="nm"><input type="text" class="uw-deck-name" data-ren="${e(f.key)}" maxlength="40" value="${e(names[f.key] || "")}" placeholder="${e(autoLabel(f))}" title="Click to name this deck (kept on this device; empty = automatic)" spellcheck="false"></span>
+        <span>${f.wins}\u2013${f.games - f.wins} \xB7 ${wr(f.wins, f.games)}</span><span class="uw-meta">${f.versions.length} version${f.versions.length === 1 ? "" : "s"} \xB7 ${day(f.last)}</span></div>`;
+        if (open) {
+          html += `<div class="uw-deck-body">`;
+          if (latest.arts.length) html += `<h4>Artifacts</h4><div class="uw-arts">${latest.arts.map(artHtml).join("")}</div>`;
+          html += `<h4>Versions</h4><table><tr><th>Played</th><th>Games</th><th>Win rate</th><th>Changes</th></tr>`;
+          f.versions.forEach((v, i) => {
+            const c = i ? changes(f.versions[i - 1].deck, v.deck) : null;
+            const list = (xs, cls, sign) => xs.map(([id, n]) => `<span class="${cls}">${sign}${n > 1 ? n + "\xD7 " : ""}${e(cardName2(id))}</span>`).join(", ");
+            const ac = i ? artChanges(f.versions[i - 1].arts, v.arts) : null;
+            const cardsTxt = c ? [list(c.add, "add", "+"), list(c.drop, "drop", "\u2212")].filter(Boolean).join(", ") : "";
+            const artsTxt = ac && (ac.add.length || ac.drop.length) ? `<span class="arts">Artifacts: ${ac.drop.map(artHtml).join(" ") || "none"}<span class="to">\u2192</span>${ac.add.map(artHtml).join(" ") || "none"}</span>` : "";
+            html += `<tr><td>${day(v.first)}${v.last - v.first > 864e5 ? `\u2013${day(v.last)}` : ""}</td><td>${v.games}</td><td>${wr(v.wins, v.games)}</td><td class="uw-chg">${!i ? "first version" : (cardsTxt || (artsTxt ? "" : "same cards")) + artsTxt}</td></tr>`;
+          });
+          html += `</table><h4>Latest version vs the meta</h4><table><tr><th>Card</th><th>Copies</th><th>In ${e(ctx.NAMES[div] || div)} decks</th><th>Community win rate</th><th></th></tr>`;
+          for (const [id, n] of latest.deck.slice().sort((a, b) => useOf(b[0]) - useOf(a[0]))) {
+            const u = useOf(id), w = wrOf(id);
+            const tag = !meta.has(id) ? '<span class="uw-tag">off-meta</span>' : u >= 0.3 ? '<span class="uw-tag">staple</span>' : u < 0.05 ? '<span class="uw-tag">rare pick</span>' : "";
+            html += `<tr><td>${ctx.cardLabel(id)}</td><td>${n}</td><td>${meta.has(id) ? pct(u) : "-"}</td><td>${w === null ? "-" : wr(w, 1)}</td><td>${tag}</td></tr>`;
+          }
+          html += "</table></div>";
+        }
+        html += "</div>";
+      }
+      return html;
+    }
+    function cards2(games) {
+      const e = ctx.esc;
+      const { div, s } = compareSel();
+      const pp = ctx.perPlayer();
+      const meta = new Map((s && s.cards || []).map((r) => [r[0], r]));
+      const q = st.q.trim().toLowerCase();
+      const rows = cardRates(games).filter((r) => r.games >= st.minGames && (!q || cardName2(r.id).toLowerCase().includes(q))).map((r) => {
+        const m = meta.get(r.id);
+        const cw = m ? pp ? rate(m[6], m[5]) : rate(m[2], m[1]) : null;
+        return { ...r, mine: rate(r.wins, r.games), cw };
+      }).sort((a, b) => b.games - a.games || b.mine - a.mine);
+      let html = `<div class="uw-bar" style="padding:0 0 4px"><input type="search" class="uw-search uw-mq" placeholder="Search cards\u2026" value="${e(st.q)}">
+      <label class="uw-adv">At least <select class="uw-sel uw-min">${[1, 3, 5, 10].map((n) => `<option${n === st.minGames ? " selected" : ""}>${n}</option>`).join("")}</select> games</label>
+      <span class="uw-meta">Community: ${e(ctx.NAMES[div] || div)}, this season</span></div>`;
+      if (!rows.length) return html + `<div class="uw-empty">No cards with ${st.minGames}+ games${q ? " matching that" : ""}.</div>`;
+      html += `<table><tr><th>Card</th><th>Your games</th><th>Your win rate</th><th>Community</th><th>Difference</th></tr>` + rows.map((r) => {
+        const d = r.cw === null ? null : r.mine - r.cw;
+        return `<tr><td>${ctx.cardLabel(r.id)}</td><td>${r.games}</td><td>${wr(r.wins, r.games)}</td><td>${r.cw === null ? "-" : wr(r.cw, 1)}</td>
+        <td>${d === null ? "-" : `<span class="uw-delta ${d >= 0 ? "up" : "down"}">${d >= 0 ? "+" : ""}${(Math.round(d * 1e3) / 10).toFixed(1)}</span>`}</td></tr>`;
+      }).join("") + "</table>";
+      return html;
+    }
+    function render3(container, rerender) {
+      if (!cssDone) {
+        const el3 = document.createElement("style");
+        el3.textContent = CSS8;
+        document.head.appendChild(el3);
+        cssDone = true;
+      }
+      container.replaceChildren();
+      const wrap = document.createElement("div");
+      wrap.className = "uw-mine";
+      if (!st.data && !st.loading && !st.error) load4(rerender);
+      wrap.appendChild(bar(rerender));
+      const body = document.createElement("div");
+      const games = st.data && st.data.games || [];
+      body.innerHTML = st.error ? `<div class="uw-empty">${ctx.esc(st.error)}</div>` : !st.data ? '<div class="uw-empty">Loading your games\u2026</div>' : !games.length ? `<div class="uw-empty">No games recorded for ${ctx.esc(st.player || "this account")} in ${ctx.seasonLabel(st.season)}.</div>` : st.view === "DECKS" ? decks(games, rerender) : st.view === "CARDS" ? cards2(games) : overview(games);
+      wrap.appendChild(body);
+      container.appendChild(wrap);
+      body.querySelectorAll("[data-fam]").forEach((h2) => h2.addEventListener("click", (ev) => {
+        if (ev.target.closest(".uw-deck-name")) return;
+        st.open[h2.dataset.fam] = !st.open[h2.dataset.fam];
+        rerender();
+      }));
+      body.querySelectorAll("input[data-ren]").forEach((inp) => {
+        let cancel = false;
+        inp.addEventListener("keydown", (ev) => {
+          ev.stopPropagation();
+          if (ev.key === "Enter") inp.blur();
+          else if (ev.key === "Escape") {
+            cancel = true;
+            inp.value = readNames()[inp.dataset.ren] || "";
+            inp.blur();
+          }
+        });
+        ["keyup", "keypress"].forEach((t2) => inp.addEventListener(t2, (ev) => ev.stopPropagation()));
+        inp.addEventListener("blur", () => {
+          if (cancel) {
+            cancel = false;
+            return;
+          }
+          const v = inp.value.trim().slice(0, 40);
+          if (v !== (readNames()[inp.dataset.ren] || "")) saveName(inp.dataset.ren, v);
+          inp.value = v;
+        });
+      });
+      const ms = body.querySelector(".uw-msoul");
+      if (ms) ms.addEventListener("change", () => {
+        st.soul = ms.value;
+        rerender();
+      });
+      const mq = body.querySelector(".uw-mq");
+      if (mq) mq.addEventListener("input", () => {
+        st.q = mq.value;
+        const pos = mq.selectionStart;
+        rerender();
+        const n = container.querySelector(".uw-mq");
+        if (n) {
+          n.focus();
+          n.setSelectionRange(pos, pos);
+        }
+      });
+      const mn = body.querySelector(".uw-min");
+      if (mn) mn.addEventListener("change", () => {
+        st.minGames = Number(mn.value);
+        rerender();
+      });
+    }
+    return { render: render3, reset: () => {
+      st.data = null;
+      st.player = null;
+      st.error = "";
+    } };
   }
 
   // packages/misc/card-history/game.js
@@ -19246,24 +19851,34 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
   var TOP = 40;
   var TIMES = [["TODAY", "Today"], ["WEEK", "This Week"], ["SEASON", "This Season"], ["ALL", "All Time"]];
   var TIME_NAMES = Object.fromEntries(TIMES);
-  var DIVS = ["TOTAL", ...LADDER, "UNRANKED", "TRUEHUB"];
+  var DIVS2 = ["TOTAL", ...LADDER, "UNRANKED", "TRUEHUB"];
   var NAMES = { TOTAL: "Total", LEGEND: "LEGEND", ULTIMATE_MASTER: "Ultimate Master", HIGH_MASTER: "High Master", MASTER: "Master", UNRANKED: "Unranked", TRUEHUB: "True Hub+" };
-  var VIEWS2 = [["CARDS", "Cards"], ["ARTIFACTS", "Artifacts"], ["SOULS", "Souls"]];
-  var SORTS = [["USAGE", "Most used"], ["WINRATE", "Win rate"], ["NAME", "Name"], ["ID", "ID"]];
+  var VIEWS2 = [["MONSTERS", "Monsters"], ["SPELLS", "Spells"], ["ARTIFACTS", "Artifacts"], ["SOULS", "Souls"], ["COMBOS", "Soul + Artifact"]];
+  var isSpell = (c) => Number(c && c.typeCard) === 1;
+  var spellSoul = (c) => {
+    const x = c && c.soul;
+    return (x && typeof x === "object" ? x.name : x) || null;
+  };
+  var rarityIcon = (c) => c && c.rarity ? `<img class="uw-rar" src="/images/rarity/${esc3(c.extension || "BASE")}_${esc3(c.rarity)}.png" alt="" title="${esc3(c.rarity.charAt(0) + c.rarity.slice(1).toLowerCase())}" onerror="this.remove()">` : "";
+  var cardLabel = (c) => `${rarityIcon(c)}<span class="${esc3(spellSoul(c) || c && c.rarity || "")}">${esc3(c && c.name || "")}</span>`;
+  var SORTS = [["USAGE", "Most used"], ["WINRATE", "Win rate"], ["TREND", "Rising (this week)"], ["NAME", "Name"]];
   var CATALOG_RARITIES = ["COMMON", "RARE", "EPIC", "LEGENDARY", "DETERMINATION"];
   var ICON = `<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#000"/>
 <rect x="4" y="9" width="3" height="7" fill="#43b05c"/><rect x="8.5" y="12" width="3" height="4" fill="#e04848"/><rect x="13" y="5" width="3" height="11" fill="#3b82f6"/>
 <rect x="3" y="16" width="14" height="1" fill="#888"/></svg>`;
-  var CSS8 = `
+  var CSS9 = `
 #wz-usage-btn a { display:flex; align-items:center; }
 #wz-usage-btn svg { vertical-align:-5px; }
 #wz-usage-btn a[aria-pressed="true"] svg { filter: drop-shadow(0 0 3px #fff); }
 #wz-usage-win { position:fixed; z-index:1000; min-width:560px; min-height:360px; display:flex; flex-direction:column; background:rgba(8,4,12,.96); border:1px solid #fff; box-shadow:0 6px 24px rgba(0,0,0,.7); color:#fff; font-size:14px; box-sizing:border-box; }
 #wz-usage-win .uw-title { display:flex; align-items:center; gap:8px; padding:4px 6px 4px 10px; border-bottom:1px solid rgba(255,255,255,.4); cursor:move; user-select:none; }
-#wz-usage-win .uw-title b { flex:1; font-weight:normal; }
+#wz-usage-win .uw-title b { font-weight:normal; }
+#wz-usage-win .uw-title .uw-sep { flex:1; }
 #wz-usage-win .uw-x { background:none; border:none; color:#fff; font-size:18px; line-height:1; cursor:pointer; }
 #wz-usage-win .uw-bar { display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:6px 10px 0; }
 #wz-usage-win .uw-btn { background:transparent; color:#fff; border:1px solid #fff; padding:3px 9px; font:inherit; font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
+#wz-usage-win .uw-btn * { pointer-events:none; }
+#wz-usage-win .uw-nohelp, #wz-usage-win .uw-nohelp * { pointer-events:none; }
 #wz-usage-win .uw-btn:hover { background:rgba(255,255,255,.12); }
 #wz-usage-win .uw-btn.on { background:#fff; color:#000; }
 #wz-usage-win .uw-btn.th { border-color:#ffd700; color:#ffd700; } #wz-usage-win .uw-btn.th.on { background:#ffd700; color:#000; }
@@ -19278,6 +19893,13 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
 #wz-usage-win .uw-rank { color:#888; width:26px; text-align:right; }
 #wz-usage-win .uw-thumb { height:26px; width:26px; object-fit:cover; object-position:top; vertical-align:middle; margin-right:6px; border:1px solid rgba(255,255,255,.3); background:#111; }
 #wz-usage-win .uw-meter { position:relative; height:14px; width:120px; background:rgba(255,255,255,.08); display:inline-block; vertical-align:middle; margin-right:6px; }
+#wz-usage-win .uw-rar { width:18px; height:18px; object-fit:contain; vertical-align:middle; margin-right:5px; }
+#wz-usage-win .uw-sbar { gap:4px; }
+#wz-usage-win .uw-sbar .uw-btn { font-size:12px; padding:2px 6px; }
+#wz-usage-win .uw-sbar .uw-btn.on { background:rgba(255,255,255,.18); color:#fff; box-shadow:inset 0 -2px 0 #fff; }
+#wz-usage-win .uw-soulimg { width:14px; height:14px; object-fit:contain; }
+#wz-usage-win tr.uw-gap td { height:18px; border:none !important; background:transparent !important; }
+#wz-usage-win .uw-pct { display:inline-block; min-width:3.4em; text-align:right; }
 #wz-usage-win .uw-meter i { position:absolute; left:0; top:0; bottom:0; background:#4a8; }
 #wz-usage-win .uw-meter.art i { background:#c9a227; } #wz-usage-win .uw-meter.soul i { background:#58f; }
 #wz-usage-win .uw-empty { color:#999; text-align:center; padding:24px; }
@@ -19293,6 +19915,12 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
 #wz-usage-win tr.uw-unused-head td { color:#999; font-size:12px; cursor:pointer; padding:6px; user-select:none; }
 #wz-usage-win tr.uw-unused-head:hover td { color:#fff; }
 #wz-usage-win tr.uw-unused td { opacity:.55; }
+#wz-usage-win .uw-tabs { display:flex; align-self:flex-end; gap:4px; margin:0 0 -5px 10px; cursor:default; }
+#wz-usage-win .uw-tabs .uw-btn { font-size:13px; padding:3px 14px 4px; border-color:rgba(255,255,255,.5); border-bottom:1px solid #fff; color:#aaa; background:transparent; }
+#wz-usage-win .uw-tabs .uw-btn:hover { color:#fff; background:rgba(255,255,255,.08); }
+#wz-usage-win .uw-tabs .uw-btn.on { color:#fff; background:rgba(8,4,12,1); border-color:#fff; border-bottom-color:rgba(8,4,12,1); position:relative; z-index:1; }
+#wz-usage-win .uw-preview { margin:8px 10px 0; padding:6px 10px; border:1px solid #ffd84a; color:#ffd84a; font-size:13px; display:none; }
+#wz-usage-win .uw-delta { font-size:11px; margin-left:14px; display:inline-block; min-width:3.5em; } #wz-usage-win .uw-delta.up { color:#6c6; } #wz-usage-win .uw-delta.down { color:#e66; } #wz-usage-win .uw-delta.new { color:#ffd84a; }
 #wz-usage-win .uw-grip { position:absolute; right:0; bottom:0; width:14px; height:14px; cursor:nwse-resize; background:linear-gradient(135deg, transparent 50%, rgba(255,255,255,.7) 50%); }
 `;
   var footerItem = null;
@@ -19319,16 +19947,47 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     if (document.getElementById(STYLE_ID7)) return;
     const st = document.createElement("style");
     st.id = STYLE_ID7;
-    st.textContent = CSS8;
+    st.textContent = CSS9;
     document.head.appendChild(st);
   }
   var win = null;
-  var state3 = { time: "SEASON", div: "TOTAL", view: "CARDS", adv: false, perPlayer: false, sort: "USAGE", q: "", showUnused: false };
+  var state3 = { tab: "COMMUNITY", time: "SEASON", div: "TOTAL", view: "MONSTERS", spellSoul: "ALL", adv: false, perPlayer: true, sort: "USAGE", q: "", showUnused: false };
+  var preview = false;
+  var mine = createMine({
+    esc: esc3,
+    soulHtml,
+    divHtml,
+    SOULS: SOULS2,
+    LADDER,
+    NAMES,
+    seasonLabel,
+    current: seasonOf(Date.now()),
+    cardLabel: (id) => cardLabel(catalog.cardById.get(id) || { name: `#${id}` }),
+    catalog: () => catalog,
+    community: () => files.SEASON,
+    perPlayer: () => state3.perPlayer,
+    self: () => preview ? "You (sample)" : loggedInName(),
+    defaultPlayer,
+    getGames: async (season, player) => {
+      if (!preview) return myGames(season, { player });
+      const games = season === seasonOf(Date.now()) ? sampleGames(catalog.cards, catalog.arts) : [];
+      return { season, player: "You (sample)", main: true, players: [{ name: "You (sample)", main: true, games: games.length }], seasons: [{ season: seasonOf(Date.now()), games: games.length }], games };
+    }
+  });
   var files = {};
   var loadError = "";
   toggleWindow = () => {
     if (win && win.style.display !== "none") setOpen(false);
     else setOpen(true);
+  };
+  var toggleUsageWindow = () => toggleWindow();
+  var openUsageWindow = ({ preview: p = false } = {}) => {
+    if (p !== preview) {
+      preview = p;
+      for (const k of Object.keys(files)) delete files[k];
+      mine.reset();
+    }
+    setOpen(true);
   };
   var rect = { x: null, y: null, w: 720, h: 520 };
   var saveRect = () => {
@@ -19355,10 +20014,12 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     win.id = "wz-usage-win";
     win.style.display = "none";
     win.innerHTML = `
-    <div class="uw-title">${ICON}<b>Usage Statistics</b><span class="uw-meta uw-count"></span><button type="button" class="uw-x" title="Close">\xD7</button></div>
+    <div class="uw-title">${ICON}<b>Usage Statistics</b><div class="uw-tabs"></div><span class="uw-sep"></span><span class="uw-meta uw-count"></span><button type="button" class="uw-x" title="Close">\xD7</button></div>
+    <div class="uw-preview"></div>
     <div class="uw-bar uw-time"></div>
     <div class="uw-bar uw-div"></div>
     <div class="uw-bar uw-view"></div>
+    <div class="uw-bar uw-sbar"></div>
     <div class="uw-bar uw-tools"></div>
     <div class="uw-note"></div>
     <div class="uw-body"></div><div class="uw-grip"></div>`;
@@ -19380,7 +20041,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       document.addEventListener("pointerup", up, true);
     };
     win.querySelector(".uw-title").addEventListener("pointerdown", (e) => {
-      if (!e.target.closest(".uw-x")) follow(e, (s, dx, dy) => {
+      if (!e.target.closest(".uw-x, .uw-tabs")) follow(e, (s, dx, dy) => {
         rect.x = s.x + dx;
         rect.y = s.y + dy;
       });
@@ -19393,7 +20054,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       if (win.style.display !== "none") keepOnScreen2();
     });
     const tools = win.querySelector(".uw-tools");
-    tools.innerHTML = `<input type="search" class="uw-search" placeholder="Search by name or ID\u2026"><span>Sort:</span><select class="uw-sort">${SORTS.map(([id, txt]) => `<option value="${id}">${txt}</option>`).join("")}</select>`;
+    tools.innerHTML = `<input type="search" class="uw-search" placeholder="Search by name\u2026"><span>Sort:</span><select class="uw-sort">${SORTS.map(([id, txt]) => `<option value="${id}">${txt}</option>`).join("")}</select>`;
     tools.querySelector(".uw-search").addEventListener("input", (e) => {
       state3.q = e.target.value;
       renderBody();
@@ -19426,18 +20087,26 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     await ensureCards();
     const cards2 = allCards();
     let arts = [];
+    let all = [];
     try {
-      arts = (await artifacts2()).filter((a) => !a.unavailable && !a.custom && !a.disabled);
+      all = await artifacts2();
     } catch (e) {
     }
     catalog = {
       cards: cards2.filter((c) => CATALOG_RARITIES.includes(c.rarity) && c.name),
-      arts,
+      // The "Not used" list: artifacts players can get now. Names: every artifact, so one
+      // the game marks unavailable (retired, event) still shows its name, not "#11" (1.8.3).
+      arts: all.filter((a) => !a.unavailable && !a.custom && !a.disabled),
       cardById: new Map(cards2.map((c) => [c.id, c])),
-      artById: new Map(arts.map((a) => [a.id, a]))
+      artById: new Map(all.map((a) => [a.id, a]))
     };
   }
   async function fetchWindow(w) {
+    if (preview) {
+      await loadCatalog();
+      files[w] = sampleFiles(catalog.cards, catalog.arts)[w];
+      return;
+    }
     try {
       files[w] = await getStats(w);
       loadError = "";
@@ -19446,7 +20115,8 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     }
   }
   async function load2() {
-    await Promise.all([fetchWindow("SEASON"), fetchWindow("ALL"), loadCatalog()]);
+    await loadCatalog();
+    await Promise.all([fetchWindow("SEASON"), fetchWindow("ALL")]);
     if (!files[state3.time]) await fetchWindow(state3.time);
     render2();
   }
@@ -19480,14 +20150,14 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     const loaded = Object.values(files).filter(Boolean);
     if (!loaded.some((f) => f.allReady === true) || files.ALL && files.ALL.locked) {
       const at = files.ALL && files.ALL.opensAt || (loaded.find((f) => f.allOpensAt) || {}).allOpensAt;
-      const when2 = at ? ` (${new Date(at).toLocaleDateString(void 0, { month: "long", day: "numeric", timeZone: "UTC" })})` : "";
-      info.ALL = { off: true, why: `Starts after the first full season${when2}` };
+      const when3 = at ? ` (${new Date(at).toLocaleDateString(void 0, { month: "long", day: "numeric", timeZone: "UTC" })})` : "";
+      info.ALL = { off: true, why: `Starts after the first full season${when3}` };
     }
     return info;
   }
-  var pct = (x) => `${(Math.round((x || 0) * 1e3) / 10).toFixed(1)}%`;
-  var meter = (x, cls = "") => `<span class="uw-meter ${cls}"><i style="width:${Math.min(100, (x || 0) * 100)}%"></i></span>${pct(x)}`;
-  var rate = (w, n) => n ? `<span class="${w / n >= 0.5 ? "green" : "red"}">${pct(w / n)}</span>` : "-";
+  var pct2 = (x) => `${(Math.round((x || 0) * 1e3) / 10).toFixed(1)}%`;
+  var meter = (x, cls = "") => `<span class="uw-meter ${cls}"><i style="width:${Math.min(100, (x || 0) * 100)}%"></i></span><span class="uw-pct">${pct2(x)}</span>`;
+  var rate2 = (w, n) => n ? `<span class="${w / n >= 0.5 ? "green" : "red"}">${pct2(w / n)}</span>` : "-";
   function buttons(box, list, key2, labelFn, info = {}, extra) {
     box.replaceChildren();
     for (const [id, text] of list) {
@@ -19509,6 +20179,28 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
   }
   function render2() {
     if (!win || win.style.display === "none") return;
+    const banner = win.querySelector(".uw-preview");
+    banner.style.display = preview ? "block" : "none";
+    banner.innerHTML = preview ? "<b>Preview with SAMPLE data</b>: not real players or games. To see real numbers and your own stats, turn on <b>Usage Statistics</b> in Wizascript's Plugins list (it asks first)." : "";
+    const tabs = win.querySelector(".uw-tabs");
+    tabs.innerHTML = [["COMMUNITY", "Community"], ["MINE", "My Stats"]].map(([k, label2]) => `<button type="button" class="uw-btn${state3.tab === k ? " on" : ""}" data-tab="${k}">${label2}</button>`).join("");
+    tabs.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => {
+      state3.tab = b.dataset.tab;
+      render2();
+    }));
+    const communityBars = [".uw-time", ".uw-div", ".uw-view", ".uw-sbar", ".uw-tools", ".uw-note"].map((c) => win.querySelector(c));
+    if (state3.tab === "MINE") {
+      communityBars.forEach((el3) => {
+        el3.style.display = "none";
+      });
+      const n = contributors();
+      win.querySelector(".uw-count").textContent = n ? `Built from ${n} players' games this month` : "";
+      mine.render(win.querySelector(".uw-body"), render2);
+      return;
+    }
+    communityBars.forEach((el3) => {
+      el3.style.display = "";
+    });
     const ti = timeTabs();
     if (ti[state3.time] && ti[state3.time].off) {
       const order = ["TODAY", "WEEK", "SEASON", "ALL"];
@@ -19517,10 +20209,10 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     }
     const f = files[state3.time];
     const di = {};
-    for (const d of DIVS) di[d] = d === "TOTAL" || !f || f.sel && f.sel[d] && f.sel[d].games ? { off: false } : { off: true, why: "No games in this division for this time range" };
+    for (const d of DIVS2) di[d] = d === "TOTAL" || !f || f.sel && f.sel[d] && f.sel[d].games ? { off: false } : { off: true, why: "No games in this division for this time range" };
     if (di[state3.div].off) state3.div = "TOTAL";
     buttons(win.querySelector(".uw-time"), TIMES, "time", null, ti);
-    buttons(win.querySelector(".uw-div"), DIVS.map((d) => [d]), "div", (d) => d === "TRUEHUB" ? NAMES[d] : divHtml(d), di);
+    buttons(win.querySelector(".uw-div"), DIVS2.map((d) => [d]), "div", (d) => d === "TRUEHUB" ? NAMES[d] : divHtml(d), di);
     buttons(win.querySelector(".uw-view"), VIEWS2, "view", null, {}, () => {
       const sep = document.createElement("span");
       sep.className = "uw-sep";
@@ -19533,14 +20225,14 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       adv.innerHTML = `<input type="checkbox" ${state3.adv ? "checked" : ""}> Advanced`;
       adv.querySelector("input").addEventListener("change", (e) => {
         state3.adv = e.target.checked;
-        if (!state3.adv) state3.perPlayer = false;
+        if (!state3.adv) state3.perPlayer = true;
         render2();
       });
       right.appendChild(adv);
       if (state3.adv) {
         const pp = document.createElement("label");
         pp.className = "uw-adv";
-        pp.title = "Off: every game counts. On: each player counts once, however many games they played.";
+        pp.title = "On (default): each player counts once, however many games they played. Off: every game counts, so players with many games weigh more.";
         pp.innerHTML = `<input type="checkbox" ${state3.perPlayer ? "checked" : ""}> Count each player once`;
         pp.querySelector("input").addEventListener("change", (e) => {
           state3.perPlayer = e.target.checked;
@@ -19550,11 +20242,40 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       }
       return [sep, right];
     });
+    const sbar = win.querySelector(".uw-sbar");
+    sbar.style.display = state3.view === "SPELLS" ? "" : "none";
+    if (state3.view === "SPELLS") {
+      if (!["ALL", ...SOULS2].includes(state3.spellSoul)) state3.spellSoul = "ALL";
+      buttons(sbar, [["ALL", "All spells"], ...SOULS2.map((x) => [x, x])], "spellSoul", (k) => k === "ALL" ? "All spells" : `<img class="uw-soulimg" src="/images/souls/${esc3(k)}.png" alt="" onerror="this.remove()">${soulHtml(k)}`);
+      sbar.querySelectorAll(".uw-btn").forEach((b, i) => {
+        b.title = i === 0 ? "Every spell" : "This soul's own spells, as a share of its decks";
+      });
+    }
     const tools = win.querySelector(".uw-tools");
-    tools.style.display = state3.view === "SOULS" ? "none" : "";
-    tools.querySelector(".uw-search").placeholder = `Search ${state3.view === "CARDS" ? "cards" : "artifacts"} by name or ID\u2026`;
+    tools.style.display = state3.view === "SOULS" || state3.view === "COMBOS" ? "none" : "";
+    tools.querySelector(".uw-search").placeholder = `Search ${state3.view === "MONSTERS" ? "monsters" : state3.view === "SPELLS" ? "spells" : "artifacts"} by name\u2026`;
+    const trendOpt = tools.querySelector('.uw-sort option[value="TREND"]');
+    if (trendOpt) {
+      trendOpt.disabled = state3.time !== "WEEK";
+      if (state3.time !== "WEEK" && state3.sort === "TREND") {
+        state3.sort = "USAGE";
+        tools.querySelector(".uw-sort").value = "USAGE";
+      }
+    }
     renderBody();
   }
+  function contributors() {
+    const f = files.SEASON;
+    return f && f.sel && f.sel.TOTAL ? f.sel.TOTAL.players : 0;
+  }
+  function trendOf(s, key2, id, use, pp) {
+    if (state3.time !== "WEEK" || !s.prev) return null;
+    const p = s.prev;
+    const r = (p[key2] || []).find((x) => x[0] === id);
+    const was = r ? pp ? r[2] / (p.players || 1) : r[1] / (p.games || 1) : 0;
+    return { was, d: use - was, isNew: !r };
+  }
+  var trendHtml = (tr2) => !tr2 ? "" : tr2.isNew ? '<span class="uw-delta new" title="Not played the week before">new</span>' : Math.abs(tr2.d) < 5e-3 ? "" : `<span class="uw-delta ${tr2.d > 0 ? "up" : "down"}" title="Change since the week before">${tr2.d > 0 ? "\u25B2" : "\u25BC"}${(Math.abs(tr2.d) * 100).toFixed(1)}</span>`;
   function renderBody() {
     const body = win.querySelector(".uw-body");
     const noteEl = win.querySelector(".uw-note");
@@ -19575,6 +20296,9 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     const notes = [];
     const others = (s.group || []).filter((d) => d !== state3.div);
     if (others.length) notes.push(`Not enough players in ${NAMES[state3.div]} ${state3.time === "TODAY" ? "today" : state3.time === "ALL" ? "in some months" : "in this time"}, so this includes ${others.map((d) => NAMES[d]).join(" and ")}.`);
+    const nC = contributors();
+    if (nC && !preview) notes.unshift(`Built from ${nC} players' games this month.`);
+    if (state3.time === "WEEK") notes.push(s.prev ? "\u25B2\u25BC: change since the week before." : "No trend yet (not enough players the week before).");
     if (priv) notes.push(`Shown only where at least ${minP} different players played, so no one's deck can be picked out.`);
     notes.push(pp ? "Counting each player once." : "Counting every game.");
     noteEl.textContent = notes.join(" ");
@@ -19592,44 +20316,86 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       const by = new Map(s.souls.map((r) => [r[0], r]));
       const all = SOULS2.map((soul) => {
         const r = by.get(soul) || [soul, 0, 0, 0, 0, 0];
-        return { soul, use: (pp ? r[4] : r[1]) / total, w: pp ? r[5] : r[2], n: pp ? r[4] : r[1], g: r[1], p: r[3] };
+        const use = (pp ? r[4] : r[1]) / total;
+        return { soul, use, w: pp ? r[5] : r[2], n: pp ? r[4] : r[1], g: r[1], p: r[3], tr: trendOf(s, "souls", soul, use, pp) };
       }).sort((a, b) => b.use - a.use);
       body.innerHTML = `<table><tr><th>Soul</th><th>Played</th><th>Win rate</th>${advHead}</tr>` + all.map((x) => `<tr><td><img class="uw-thumb" style="border:none;background:none" src="/images/souls/${x.soul}.png" onerror="this.style.visibility='hidden'">${soulHtml(x.soul)}</td>
-        <td>${meter(x.use, "soul")}</td><td>${rate(x.w, x.n)}</td>${state3.adv ? `<td>${x.g}</td><td>${x.p}</td>` : ""}</tr>`).join("") + "</table>";
+        <td>${meter(x.use, "soul")}${trendHtml(x.tr)}</td><td>${rate2(x.w, x.n)}</td>${state3.adv ? `<td>${x.g}</td><td>${x.p}</td>` : ""}</tr>`).join("") + "</table>";
       return;
     }
-    const isCards = state3.view === "CARDS";
-    const rows = isCards ? s.cards : s.arts;
+    if (state3.view === "COMBOS") {
+      const souls = new Map(s.souls.map((r) => [r[0], r]));
+      const list = (s.combos || []).map((r) => {
+        const so = souls.get(r[0]);
+        const base2 = so ? pp ? so[4] : so[1] : 0;
+        return { soul: r[0], art: r[1], share: base2 ? (pp ? r[5] : r[2]) / base2 : 0, w: pp ? r[6] : r[3], n: pp ? r[5] : r[2], g: r[2], p: r[4] };
+      }).filter((x) => x.g > 0).sort((a, b) => a.soul.localeCompare(b.soul) || b.share - a.share);
+      if (!list.length) {
+        body.innerHTML = `<div class="uw-empty">No soul + artifact combinations for this time and division yet (servers before 1.16 don't send them).</div>`;
+        return;
+      }
+      let html2 = `<table><tr><th>Soul</th><th>Artifact</th><th title="Share of this soul&#39;s decks with this artifact. A deck holds 1 or 2 artifacts, so each soul&#39;s rows add up to between 100% and 200%.">Used with this soul \u24D8</th><th>Win rate</th>${advHead}</tr>`;
+      let last = "";
+      for (const x of list) {
+        const a = catalog.artById.get(x.art) || { name: `#${x.art}`, image: "" };
+        if (last && x.soul !== last) html2 += `<tr class="uw-gap"><td colspan="${state3.adv ? 6 : 4}"></td></tr>`;
+        html2 += `<tr><td>${x.soul !== last ? soulHtml(x.soul) : ""}</td><td><img class="uw-thumb" src="/images/artifacts/${esc3(a.image || "")}.png" onerror="this.style.visibility='hidden'"><span class="${a.legendary ? "yellow" : ""}">${esc3(a.name)}</span></td>
+        <td>${meter(x.share, "art")}</td><td>${rate2(x.w, x.n)}</td>${state3.adv ? `<td>${x.g}</td><td>${x.p}</td>` : ""}</tr>`;
+        last = x.soul;
+      }
+      body.innerHTML = html2 + "</table>";
+      return;
+    }
+    const isCards = state3.view === "MONSTERS" || state3.view === "SPELLS";
+    const spells = state3.view === "SPELLS";
+    const soulF = spells && SOULS2.includes(state3.spellSoul) ? state3.spellSoul : null;
+    const fits = (c) => !spells ? !isSpell(c) : isSpell(c) && (!soulF || spellSoul(c) === soulF);
+    const soulRow = soulF && (s.souls || []).find((x) => x[0] === soulF);
+    const base = soulF ? soulRow ? pp ? soulRow[4] : soulRow[1] : 0 : total;
+    const prevSoul = soulF && s.prev && (s.prev.souls || []).find((x) => x[0] === soulF);
+    const prevBase = soulF ? prevSoul ? pp ? prevSoul[2] : prevSoul[1] : 0 : null;
+    const unknown = (id) => ({ id, name: `#${id}` });
+    const rows = isCards ? s.cards.filter((r) => fits(catalog.cardById.get(r[0]) || unknown(r[0]))) : s.arts;
     const byId2 = isCards ? catalog.cardById : catalog.artById;
     const used = rows.map((r) => {
       const st = isCards ? { g: r[1], w: pp ? r[6] : r[2], n: pp ? r[5] : r[1], copies: pp ? r[7] : r[3], p: r[4] } : { g: r[1], w: pp ? r[5] : r[2], n: pp ? r[4] : r[1], p: r[3] };
-      return { id: r[0], st, use: st.n / total, item: byId2.get(r[0]) || { id: r[0], name: `#${r[0]}` } };
+      const use = base ? st.n / base : 0;
+      let tr2 = trendOf(s, isCards ? "cards" : "arts", r[0], use, pp);
+      if (tr2 && soulF) {
+        const pr = (s.prev.cards || []).find((x) => x[0] === r[0]);
+        const was = pr && prevBase ? (pp ? pr[2] : pr[1]) / prevBase : 0;
+        tr2 = prevBase ? { was, d: use - was, isNew: !pr } : null;
+      }
+      return { id: r[0], st, use, tr: tr2, item: byId2.get(r[0]) || unknown(r[0]) };
     }).sort((a, b) => b.use - a.use || b.st.w - a.st.w).map((r, i) => ({ ...r, rank: i + 1 }));
     const hiddenCount = priv && s.hidden ? isCards ? s.hidden.cards : s.hidden.arts : 0;
     const usedIds = new Set(rows.map((r) => r[0]));
-    const unused = (isCards ? catalog.cards : catalog.arts).filter((c) => !usedIds.has(c.id)).map((item2) => ({ id: item2.id, item: item2 }));
+    const unused = (isCards ? catalog.cards.filter(fits) : catalog.arts).filter((c) => !usedIds.has(c.id)).map((item2) => ({ id: item2.id, item: item2 }));
+    const noun = spells ? "spell" : isCards ? "monster" : "artifact";
     const q = state3.q.trim().toLowerCase();
-    const match = (r) => !q || String(r.item.name || "").toLowerCase().includes(q) || String(r.id) === q || String(r.id).startsWith(q);
+    const match = (r) => !q || String(r.item.name || "").toLowerCase().includes(q);
     const cmp = {
       USAGE: (x, y) => x.rank - y.rank,
       WINRATE: (x, y) => (y.st.n ? y.st.w / y.st.n : 0) - (x.st.n ? x.st.w / x.st.n : 0) || x.rank - y.rank,
-      NAME: (x, y) => String(x.item.name).localeCompare(String(y.item.name)),
-      ID: (x, y) => x.id - y.id
-    }[state3.sort];
+      TREND: (x, y) => (y.tr ? y.tr.isNew ? y.use : y.tr.d : -1) - (x.tr ? x.tr.isNew ? x.use : x.tr.d : -1) || x.rank - y.rank,
+      NAME: (x, y) => String(x.item.name).localeCompare(String(y.item.name))
+    }[state3.sort] || ((x, y) => x.rank - y.rank);
     const shown = used.filter(match).sort(cmp);
-    const unusedShown = unused.filter(match).sort(state3.sort === "ID" ? (x, y) => x.id - y.id : (x, y) => String(x.item.name).localeCompare(String(y.item.name)));
+    const unusedShown = unused.filter(match).sort((x, y) => String(x.item.name).localeCompare(String(y.item.name)));
     const limit = q || state3.sort !== "USAGE" ? Infinity : TOP;
     const img = (r) => isCards ? `/images/cards/${esc3(r.item.image || r.item.baseImage || "")}.png` : `/images/artifacts/${esc3(r.item.image || "")}.png`;
-    const nameCell = (r) => `<img class="uw-thumb" src="${img(r)}" onerror="this.style.visibility='hidden'"><span class="${isCards ? esc3(r.item.rarity || "") : r.item.legendary ? "yellow" : ""}">${esc3(r.item.name)}</span>${state3.sort === "ID" || state3.adv ? ` <span class="uw-id">#${r.id}</span>` : ""}`;
-    const cols = isCards ? "<th>In decks</th><th>Avg copies</th><th>Win rate</th>" : "<th>In decks</th><th>Win rate</th>";
+    const nameCell = (r) => `<img class="uw-thumb" src="${img(r)}" onerror="this.style.visibility='hidden'">${isCards ? cardLabel(r.item) : `<span class="${r.item.legendary ? "yellow" : ""}">${esc3(r.item.name)}</span>`}${state3.adv ? ` <span class="uw-id">#${r.id}</span>` : ""}`;
+    const inDecks = soulF ? `In ${soulHtml(soulF)} decks` : "In decks";
+    const why = isCards ? `Share of ${soulF ? `${soulF} ` : ""}decks with this ${spells ? "spell" : "monster"}. A deck holds many cards, so these add up to more than 100%.` : "Share of decks with this artifact. A deck holds 1 or 2 artifacts, so these add up to between 100% and 200%.";
+    const cols = isCards ? `<th title="${esc3(why)}"><span class="uw-nohelp">${inDecks}</span> \u24D8</th><th>Avg copies</th><th>Win rate</th>` : `<th title="${esc3(why)}">In decks \u24D8</th><th>Win rate</th>`;
     const ncols = 2 + (isCards ? 3 : 2) + (state3.adv ? 2 : 0);
-    let html = `<table><tr><th>#</th><th>${isCards ? "Card" : "Artifact"}</th>${cols}${advHead}</tr>`;
-    html += shown.slice(0, limit).map((r) => `<tr><td class="uw-rank">${r.rank}</td><td>${nameCell(r)}</td><td>${meter(r.use, isCards ? "" : "art")}</td>` + (isCards ? `<td>${r.st.n ? (r.st.copies / r.st.n).toFixed(1) : "-"}</td>` : "") + `<td>${rate(r.st.w, r.st.n)}</td>${state3.adv ? `<td>${r.st.g}</td><td>${r.st.p}</td>` : ""}</tr>`).join("");
-    if (shown.length > limit) html += `<tr><td colspan="${ncols}" class="uw-hidden">${shown.length - limit} more used ${isCards ? "cards" : "artifacts"}: search or pick a sort to see them all.</td></tr>`;
+    let html = `<table><tr><th>#</th><th>${spells ? "Spell" : isCards ? "Monster" : "Artifact"}</th>${cols}${advHead}</tr>`;
+    html += shown.slice(0, limit).map((r) => `<tr><td class="uw-rank">${r.rank}</td><td>${nameCell(r)}</td><td>${meter(r.use, isCards ? "" : "art")}${trendHtml(r.tr)}</td>` + (isCards ? `<td>${r.st.n ? (r.st.copies / r.st.n).toFixed(1) : "-"}</td>` : "") + `<td>${rate2(r.st.w, r.st.n)}</td>${state3.adv ? `<td>${r.st.g}</td><td>${r.st.p}</td>` : ""}</tr>`).join("");
+    if (shown.length > limit) html += `<tr><td colspan="${ncols}" class="uw-hidden">${shown.length - limit} more used ${noun}s: search or pick a sort to see them all.</td></tr>`;
     if (q && !shown.length && !unusedShown.length) html += `<tr><td colspan="${ncols}" class="uw-hidden">Nothing matches \u201C${esc3(state3.q)}\u201D.</td></tr>`;
     if (unusedShown.length) {
       const open = state3.showUnused || q && !shown.length;
-      html += `<tr class="uw-unused-head"><td colspan="${ncols}">${open ? "\u25BE" : "\u25B8"} Not used ${TIME_NAMES[state3.time].toLowerCase()} in ${NAMES[state3.div]}${hiddenCount ? ` (or hidden)` : ""}: ${unusedShown.length} ${isCards ? "card" : "artifact"}${unusedShown.length === 1 ? "" : "s"}</td></tr>`;
+      html += `<tr class="uw-unused-head"><td colspan="${ncols}">${open ? "\u25BE" : "\u25B8"} Not used ${TIME_NAMES[state3.time].toLowerCase()} in ${NAMES[state3.div]}${hiddenCount ? ` (or hidden)` : ""}: ${unusedShown.length} ${noun}${unusedShown.length === 1 ? "" : "s"}</td></tr>`;
       if (open) html += unusedShown.map((r) => `<tr class="uw-unused"><td class="uw-rank">\u2013</td><td>${nameCell(r)}</td><td>0.0%</td>${isCards ? "<td>\u2013</td>" : ""}<td>\u2013</td>${state3.adv ? "<td>0</td><td>0</td>" : ""}</tr>`).join("");
     }
     html += "</table>";
@@ -19640,6 +20406,60 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       state3.showUnused = !(state3.showUnused || q && !shown.length);
       renderBody();
     });
+  }
+
+  // packages/usage-stats/nudge.js
+  var COUNT_KEY = "wizascript.usageStats.nudgeCount";
+  var OFF_KEY = "wizascript.usageStats.nudgeOff";
+  var NUDGE_EVERY = 20;
+  var get = (k, d) => {
+    try {
+      return GM_getValue(k, d);
+    } catch (e) {
+      return d;
+    }
+  };
+  var set = (k, v) => {
+    try {
+      GM_setValue(k, v);
+    } catch (e) {
+    }
+  };
+  function startNudge(plugin2, { openPreview }) {
+    if (get(OFF_KEY, false) || !matchesPage("/Game")) return;
+    const onEnd = (data2) => {
+      if (!data2 || data2.gameType !== "RANKED" || get(OFF_KEY, false)) return;
+      const n = Number(get(COUNT_KEY, 0)) + 1;
+      set(COUNT_KEY, n);
+      if (n % NUDGE_EVERY) return;
+      log3(`nudge after ${n} PvP games`);
+      const show = (players) => {
+        try {
+          plugin2.toast({
+            title: "Usage Statistics",
+            text: `You've played ${n} PvP games with Wizascript. Turn on <b>Usage Statistics</b> (opt-in, in the Plugins list) to see your deck records, matchups and win rates${players ? `, built with ${players} players this month` : ""}.`,
+            className: "dismissable",
+            buttons: [
+              { text: "Preview", className: "dismiss", ...toastClick(() => openPreview()) },
+              { text: "Don't ask again", className: "dismiss", ...toastClick(() => set(OFF_KEY, true)) }
+            ]
+          });
+        } catch (e) {
+          log3("nudge toast failed:", e);
+        }
+      };
+      let done = false;
+      const once = (p) => {
+        if (!done) {
+          done = true;
+          show(p);
+        }
+      };
+      getStats("SEASON").then((f) => once(f && f.sel && f.sel.TOTAL ? f.sel.TOTAL.players : 0), () => once(0));
+      setTimeout(() => once(0), 4e3);
+    };
+    plugin2.events.on("getVictory", onEnd);
+    plugin2.events.on("getDefeat", onEnd);
   }
 
   // packages/usage-stats/index.js
@@ -19674,6 +20494,23 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     <p>Only totals are published; no one can see your deck.</p>
     <p>${linked ? `Sent under your linked account, <b>${linked}</b>.` : "<b>Needs your Undercards account linked</b> (Wizascript tab \u2192 Undercards Account)."} Delete it any time with <b>Delete My Data</b>.</p>
     <p><b>Under 15?</b> Ask a parent first. <a href="${PRIVACY_URL}" target="_blank" rel="noopener">Privacy</a></p>`, [
+      // Previews leave it off and show sample data: the window (Settings close so it's in view), or Profile / History.
+      { label: "Preview Window", action: (d) => {
+        undo2();
+        d.close();
+        closeSettings();
+        openUsageWindow({ preview: true });
+      } },
+      { label: "Preview Profile", action: (d) => {
+        undo2();
+        d.close();
+        location.href = previewUrl("Profile");
+      } },
+      { label: "Preview History", action: (d) => {
+        undo2();
+        d.close();
+        location.href = previewUrl("History");
+      } },
       { label: "Cancel", action: (d) => {
         undo2();
         d.close();
@@ -19681,6 +20518,42 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       { label: "Opt in", cssClass: "btn-success", action: (d) => d.close() }
     ]);
     if (!shown && !window.confirm("Usage Statistics sends each of your PvP games, including your starting deck, to the Wizascript server. Opt in?")) undo2();
+  }
+  function closeSettings() {
+    try {
+      const BD = getPageWindow().BootstrapDialog;
+      Object.values(BD && BD.dialogs || {}).forEach((d) => {
+        try {
+          d.close();
+        } catch (e) {
+        }
+      });
+    } catch (e) {
+    }
+  }
+  var PREVIEW_PARAM = "wzPreview";
+  var SAMPLE = "You (sample)";
+  var previewUrl = (page) => `/${page}?${PREVIEW_PARAM}=1`;
+  function startPagePreview() {
+    if (!new URLSearchParams(location.search).has(PREVIEW_PARAM)) return false;
+    const onProfile = matchesPage("/Profile"), onHistory = matchesPage("/History");
+    if (!onProfile && !onHistory) return false;
+    const cur = seasonOf(Date.now());
+    const games = sampleGames([], []);
+    setPreviewGames(async (season) => ({ season, player: SAMPLE, main: false, players: [{ name: SAMPLE, main: true, games: games.length }], seasons: [{ season: cur, games: games.length }], games: season === cur ? games : [] }));
+    const bar = document.createElement("div");
+    bar.id = "wz-usage-preview-bar";
+    bar.style.cssText = "background:#3a2a00;color:#ffd84a;border:1px solid #ffd84a;padding:6px 14px;margin:6px 0;font-size:14px;text-align:center;";
+    bar.innerHTML = `<b>Preview with SAMPLE data</b>: not your real games. Turn on <b>Usage Statistics</b> in Wizascript's Plugins list to see your own. <a href="${location.pathname}" style="color:#fff;margin-left:8px;text-decoration:underline">Exit preview</a>`;
+    const place = (ok, anchorId) => {
+      const a = document.getElementById(anchorId);
+      if (a) a.before(bar);
+      else document.body.prepend(bar);
+      return ok;
+    };
+    if (onProfile) startOnTable("Profile (preview)", findStatsTable, () => place(startProfile({ showGraph: () => true }), "wz-season-bar"));
+    else startOnTable("History (preview)", findHistoryTable, () => place(startHistory({ wheelPaging: () => !wheelSetting2 || !!wheelSetting2.value() }), "wz-hist-pager"));
+    return true;
   }
   function offerDelete(fromButton = false) {
     const run = async (d) => {
@@ -19798,8 +20671,11 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       pruneOpponents();
     } catch (e) {
     }
+    registerKeybind(plugin, { key: "toggleUsageStats", name: "Toggle Usage Statistics", defaultCode: "KeyI", packageLabel: "Usage Statistics", onMatch: () => toggleUsageWindow() });
     if (!isPluginEnabled(PLUGIN_ID)) {
       log3("turned off (Plugins list)");
+      if (startPagePreview()) return;
+      startNudge(plugin, { openPreview: () => openUsageWindow({ preview: true }) });
       return;
     }
     const onGame = matchesPage("/Game");
@@ -20439,8 +21315,8 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     lightLabel.className = "wizascript-notepad-lightness-label";
     lightLabel.textContent = "Light";
     lightnessRow.append(darkLabel, lightnessSlider, lightLabel);
-    const preview = document.createElement("div");
-    preview.className = "wizascript-notepad-color-preview";
+    const preview2 = document.createElement("div");
+    preview2.className = "wizascript-notepad-color-preview";
     function updateIndicatorPosition() {
       const rad = hue * Math.PI / 180;
       const dist = saturation * WHEEL_RADIUS;
@@ -20463,7 +21339,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     }
     function notify2() {
       const color = currentColor();
-      preview.style.background = color;
+      preview2.style.background = color;
       onChange(color);
     }
     function pickFromEvent(e) {
@@ -20496,7 +21372,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     }, { signal });
     updateIndicatorPosition();
     notify2();
-    container.append(wheelWrapper, lightnessRow, preview);
+    container.append(wheelWrapper, lightnessRow, preview2);
     return { element: container, getColor: currentColor, getState: currentState, setState: setState2 };
   }
 
@@ -21735,7 +22611,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
 
   // packages/misc/wishlist/styles.js
   var STYLE_ID8 = "wizascript-wishlist-style";
-  var CSS9 = `
+  var CSS10 = `
 .wz-wl-menu { position: fixed; z-index: 2147483000; min-width: 170px; max-width: 280px; background: #000; color: #fff;
   border: 1px solid #fff; font-size: 14px; user-select: none; box-shadow: 0 2px 8px rgba(0,0,0,.6); margin: 0; padding: 0; }
 .wz-wl-menu header { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-bottom: 1px solid #555; }
@@ -21774,7 +22650,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     if (document.getElementById(STYLE_ID8)) return;
     const style = document.createElement("style");
     style.id = STYLE_ID8;
-    style.textContent = CSS9;
+    style.textContent = CSS10;
     (document.head || document.documentElement).appendChild(style);
   }
 
@@ -22695,9 +23571,9 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       return;
     }
     let badge = node.querySelector(":scope > .wz-ch-badge, :scope .wz-ch-badge");
-    const mine = isReported(t2);
+    const mine2 = isReported(t2);
     const others = remoteCount(t2);
-    if (!mine && !others) {
+    if (!mine2 && !others) {
       if (badge) badge.remove();
       return;
     }
@@ -22706,11 +23582,11 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       badge.className = "wz-ch-badge";
       (node.querySelector(".wz-ch-badge-spot") || node).appendChild(badge);
     }
-    badge.textContent = mine ? "\u2691" : "\u26A0";
-    badge.classList.toggle("wz-ch-badge-mine", mine);
+    badge.textContent = mine2 ? "\u2691" : "\u26A0";
+    badge.classList.toggle("wz-ch-badge-mine", mine2);
     const lines = [];
     if (others) lines.push(`Reported as inaccurate by ${others} player${others === 1 ? "" : "s"}. Being checked.`);
-    if (mine) lines.push("You reported this. Right-click to undo; send it from My Reports.");
+    if (mine2) lines.push("You reported this. Right-click to undo; send it from My Reports.");
     badge.title = lines.join("\n");
   }
   function repaintAll(root) {
@@ -22731,13 +23607,13 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
   function openMenu2(node, x, y) {
     closeReportMenu();
     const t2 = JSON.parse(node.dataset.wzChReport);
-    const mine = isReported(t2);
+    const mine2 = isReported(t2);
     menu2 = document.createElement("ul");
     menu2.className = "wz-ch-menu";
     const head = document.createElement("header");
     head.textContent = `${t2.name} - ${t2.label === "today" ? "today" : t2.label}`;
     const li = document.createElement("li");
-    li.textContent = mine ? "\u2691 Undo my report" : "\u2691 Report as Bugged/Inaccurate";
+    li.textContent = mine2 ? "\u2691 Undo my report" : "\u2691 Report as Bugged/Inaccurate";
     li.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -22888,11 +23764,11 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     const before = v.label.match(/^Before\s+(Alpha|Beta)\s*([\d.]+)/i);
     if (before) return { text: `<${/alpha/i.test(before[1]) ? "A" : ""}${before[2]}`, title: `${v.label} (from the wiki's Previous Versions page)` };
     if (/^Pre-?Alpha$/i.test(v.label)) return { text: "PA", title: "Pre-Alpha (from the Miraheze wiki)" };
-    const when2 = v.date ? ` (${v.date})` : "";
+    const when3 = v.date ? ` (${v.date})` : "";
     const a = v.label.match(/^Alpha\s*([\d.]+)/i);
-    if (a) return { text: `A${a[1]}`, uncertain: !!v.guessed, title: `${v.guessed ? "Probably " : ""}${v.label}${when2}` };
+    if (a) return { text: `A${a[1]}`, uncertain: !!v.guessed, title: `${v.guessed ? "Probably " : ""}${v.label}${when3}` };
     const m = v.label.match(/^Beta\s*([\d.]+)/i);
-    return { text: m ? m[1] : v.label, uncertain: !!v.guessed, title: `${v.guessed ? "Probably " : ""}${v.label}${when2}` };
+    return { text: m ? m[1] : v.label, uncertain: !!v.guessed, title: `${v.guessed ? "Probably " : ""}${v.label}${when3}` };
   }
   function fitText2(desc, html) {
     const inner = document.createElement("div");
@@ -23236,7 +24112,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
 
   // packages/misc/card-history/styles.js
   var STYLE_ID9 = "wizascript-card-history-style";
-  var CSS10 = `
+  var CSS11 = `
 .wz-ch-loading { min-height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
 .wz-ch-loading-title { font-size: 20px; }
 .wz-ch-step { font-size: 13px; opacity: .75; }
@@ -23286,7 +24162,7 @@ ${ver.note}` : "") + (todayHtml !== void 0 ? "\nToday's version." : "");
     if (document.getElementById(STYLE_ID9)) return;
     const st = document.createElement("style");
     st.id = STYLE_ID9;
-    st.textContent = CSS10;
+    st.textContent = CSS11;
     (document.head || document.documentElement).appendChild(st);
   }
 

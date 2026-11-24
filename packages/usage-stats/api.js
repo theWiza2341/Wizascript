@@ -14,7 +14,7 @@ import { authed, call, accountChanged, selfInfo } from "../core/account.js";
 import { ensureAccount, seasonOf, log } from "./common.js";
 
 const QUEUE = "wizascript.usageStats.queue"; // [{ player, playerId, game }]
-const GAMES_CACHE = "wizascript.usageStats.games"; // { [season]: { at, data } }
+const GAMES_CACHE = "wizascript.usageStats.games"; // { ["season|player"]: { at, data } }
 const OPPONENTS = "wizascript.usageStats.opponents"; // { [gameId]: { n: name, s: season } }, this device only
 const MAX_OPPONENTS = 3000;
 const MAX_QUEUE = 200;
@@ -89,19 +89,33 @@ async function doFlush() {
 // ---- your own games (Profile, History) --------------------------------------------------
 function dropGamesCache(season) {
   const c = read(GAMES_CACHE, {});
-  if (c[season]) { delete c[season]; write(GAMES_CACHE, c); }
+  const keys = Object.keys(c).filter((k) => k === season || k.startsWith(season + "|"));
+  if (keys.length) { keys.forEach((k) => delete c[k]); write(GAMES_CACHE, c); }
 }
-export async function myGames(season, { fresh = false } = {}) {
+// One account's games that season (1.8.3: player = an alt's name; none = the main
+// account). The answer also lists every account with games (players) for the switcher.
+// 1.8.3: Profile/History previews (not opted in) answer with sample games instead.
+let previewSource = null;
+export function setPreviewGames(fn) { previewSource = fn; }
+export async function myGames(season, { fresh = false, player = "" } = {}) {
+  if (previewSource) return previewSource(season, player);
+  const key = `${season}|${player}`;
   const c = read(GAMES_CACHE, {});
-  const hit = c[season];
+  const hit = c[key];
   if (!fresh && hit && Date.now() - hit.at < GAMES_TTL) return hit.data;
-  const data = await authed("GET", `/v1/games?season=${encodeURIComponent(season)}`);
+  const data = await authed("GET", `/v1/games?season=${encodeURIComponent(season)}${player ? `&player=${encodeURIComponent(player)}` : ""}`);
   const keep = {};
-  // keep at most 4 seasons cached
-  Object.entries(c).sort((a, b) => b[1].at - a[1].at).slice(0, 3).forEach(([k, v]) => { keep[k] = v; });
-  keep[season] = { at: Date.now(), data };
+  // keep at most 6 season/account answers cached
+  Object.entries(c).sort((a, b) => b[1].at - a[1].at).slice(0, 5).forEach(([k, v]) => { keep[k] = v; });
+  keep[key] = { at: Date.now(), data };
   write(GAMES_CACHE, keep);
   return data;
+}
+// The account a page should start on: the one logged in now (if it has games), else the main one.
+export function defaultPlayer(players, self) {
+  const list = players || [];
+  const me = self && list.find((p) => p.name.toLowerCase() === self.toLowerCase());
+  return (me || list.find((p) => p.main) || list[0] || {}).name || "";
 }
 
 export async function optOut() {

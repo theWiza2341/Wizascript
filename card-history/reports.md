@@ -4,7 +4,7 @@ Built from the UC Report Hub (`theWiza2341/UC-Plugin-Report-Hub`, tag WZ) by `bu
 
 A version gets a ⚠ for every player once 2 different players report it, or when its key is in `confirmed`. Put a key in `ignored` once it's fixed or isn't a bug.
 
-3 reports read: 41 versions reported, 1 written bug reports.
+4 reports read: 41 versions reported, 2 written bug reports.
 
 ## Card History
 
@@ -56,4 +56,5 @@ A version gets a ⚠ for every player once 2 different players report it, or whe
 
 | When | From | Version | Report |
 |---|---|---|---|
+| 2026-11-22 18:31 | gilzinPvP | 1.8.2 | the 76.0 version of glitch in it's card history is badly formated |
 | 2026-10-09 14:06 | bantikat | 1.6.0 | <You can wishlist the free cosmetics <:Hue:1556086712470605906>> |

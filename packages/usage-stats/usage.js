@@ -22,7 +22,13 @@ const TIMES = [["TODAY", "Today"], ["WEEK", "This Week"], ["SEASON", "This Seaso
 const TIME_NAMES = Object.fromEntries(TIMES);
 const DIVS = ["TOTAL", ...LADDER, "UNRANKED", "TRUEHUB"];
 const NAMES = { TOTAL: "Total", LEGEND: "LEGEND", ULTIMATE_MASTER: "Ultimate Master", HIGH_MASTER: "High Master", MASTER: "Master", UNRANKED: "Unranked", TRUEHUB: "True Hub+" };
-const VIEWS = [["CARDS", "Cards"], ["ARTIFACTS", "Artifacts"], ["SOULS", "Souls"], ["COMBOS", "Soul + Artifact"]];
+const VIEWS = [["MONSTERS", "Monsters"], ["SPELLS", "Spells"], ["ARTIFACTS", "Artifacts"], ["SOULS", "Souls"], ["COMBOS", "Soul + Artifact"]];
+// 1.8.3: cards split into monsters and spells (the game's typeCard: 1 = spell). Soul spells
+// (a card's soul.name) are named in their soul's colour; every card gets its rarity icon.
+const isSpell = (c) => Number(c && c.typeCard) === 1;
+const spellSoul = (c) => { const x = c && c.soul; return (x && typeof x === "object" ? x.name : x) || null; };
+const rarityIcon = (c) => (c && c.rarity ? `<img class="uw-rar" src="/images/rarity/${esc(c.extension || "BASE")}_${esc(c.rarity)}.png" alt="" title="${esc(c.rarity.charAt(0) + c.rarity.slice(1).toLowerCase())}" onerror="this.remove()">` : "");
+export const cardLabel = (c) => `${rarityIcon(c)}<span class="${esc(spellSoul(c) || (c && c.rarity) || "")}">${esc((c && c.name) || "")}</span>`;
 const SORTS = [["USAGE", "Most used"], ["WINRATE", "Win rate"], ["TREND", "Rising (this week)"], ["NAME", "Name"]]; // (1.8.3: no ID sort; players don't know ids)
 const CATALOG_RARITIES = ["COMMON", "RARE", "EPIC", "LEGENDARY", "DETERMINATION"];
 
@@ -55,6 +61,11 @@ const CSS = `
 #wz-usage-win .uw-rank { color:#888; width:26px; text-align:right; }
 #wz-usage-win .uw-thumb { height:26px; width:26px; object-fit:cover; object-position:top; vertical-align:middle; margin-right:6px; border:1px solid rgba(255,255,255,.3); background:#111; }
 #wz-usage-win .uw-meter { position:relative; height:14px; width:120px; background:rgba(255,255,255,.08); display:inline-block; vertical-align:middle; margin-right:6px; }
+#wz-usage-win .uw-rar { width:18px; height:18px; object-fit:contain; vertical-align:middle; margin-right:5px; }
+#wz-usage-win .uw-sbar { gap:4px; }
+#wz-usage-win .uw-sbar .uw-btn { font-size:12px; padding:2px 6px; }
+#wz-usage-win .uw-sbar .uw-btn.on { background:rgba(255,255,255,.18); color:#fff; box-shadow:inset 0 -2px 0 #fff; }
+#wz-usage-win .uw-soulimg { width:14px; height:14px; object-fit:contain; }
 #wz-usage-win tr.uw-gap td { height:18px; border:none !important; background:transparent !important; }
 #wz-usage-win .uw-pct { display:inline-block; min-width:3.4em; text-align:right; }
 #wz-usage-win .uw-meter i { position:absolute; left:0; top:0; bottom:0; background:#4a8; }
@@ -105,10 +116,11 @@ function injectStyle() {
 
 // ---- the window ------------------------------------------------------------------
 let win = null;
-const state = { tab: "COMMUNITY", time: "SEASON", div: "TOTAL", view: "CARDS", adv: false, perPlayer: true, sort: "USAGE", q: "", showUnused: false }; // 1.8.3: each player counts once by default
+const state = { tab: "COMMUNITY", time: "SEASON", div: "TOTAL", view: "MONSTERS", spellSoul: "ALL", adv: false, perPlayer: true, sort: "USAGE", q: "", showUnused: false }; // 1.8.3: each player counts once by default
 let preview = false; // 1.8.3: sample data for players who haven't opted in (preview.js)
 const mine = createMine({
   esc, soulHtml, divHtml, SOULS, LADDER, NAMES, seasonLabel, current: seasonOf(Date.now()),
+  cardLabel: (id) => cardLabel(catalog.cardById.get(id) || { name: `#${id}` }),
   catalog: () => catalog, community: () => files.SEASON, perPlayer: () => state.perPlayer,
   self: () => (preview ? "You (sample)" : loggedInName()), defaultPlayer,
   getGames: async (season, player) => {
@@ -146,6 +158,7 @@ function build() {
     <div class="uw-bar uw-time"></div>
     <div class="uw-bar uw-div"></div>
     <div class="uw-bar uw-view"></div>
+    <div class="uw-bar uw-sbar"></div>
     <div class="uw-bar uw-tools"></div>
     <div class="uw-note"></div>
     <div class="uw-body"></div><div class="uw-grip"></div>`;
@@ -271,7 +284,7 @@ function render() {
   const tabs = win.querySelector(".uw-tabs");
   tabs.innerHTML = [["COMMUNITY", "Community"], ["MINE", "My Stats"]].map(([k, label]) => `<button type="button" class="uw-btn${state.tab === k ? " on" : ""}" data-tab="${k}">${label}</button>`).join("");
   tabs.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => { state.tab = b.dataset.tab; render(); }));
-  const communityBars = [".uw-time", ".uw-div", ".uw-view", ".uw-tools", ".uw-note"].map((c) => win.querySelector(c));
+  const communityBars = [".uw-time", ".uw-div", ".uw-view", ".uw-sbar", ".uw-tools", ".uw-note"].map((c) => win.querySelector(c));
   if (state.tab === "MINE") {
     communityBars.forEach((el) => { el.style.display = "none"; });
     const n = contributors();
@@ -310,9 +323,16 @@ function render() {
     }
     return [sep, right];
   });
+  // Spells: by soul (each soul's own spells, as a share of that soul's decks), or neutral spells.
+  const sbar = win.querySelector(".uw-sbar");
+  sbar.style.display = state.view === "SPELLS" ? "" : "none";
+  if (state.view === "SPELLS") {
+    buttons(sbar, [["ALL", "All spells"], ...SOULS.map((x) => [x, x]), ["NEUTRAL", "Neutral"]], "spellSoul", (k) => (k === "ALL" ? "All spells" : k === "NEUTRAL" ? "Neutral" : `<img class="uw-soulimg" src="/images/souls/${esc(k)}.png" alt="" onerror="this.remove()">${soulHtml(k)}`));
+    sbar.querySelectorAll(".uw-btn").forEach((b, i) => { b.title = i === 0 ? "Every spell" : i > SOULS.length ? "Spells any soul can play" : "This soul's own spells, as a share of its decks"; });
+  }
   const tools = win.querySelector(".uw-tools");
   tools.style.display = state.view === "SOULS" || state.view === "COMBOS" ? "none" : "";
-  tools.querySelector(".uw-search").placeholder = `Search ${state.view === "CARDS" ? "cards" : "artifacts"} by name…`;
+  tools.querySelector(".uw-search").placeholder = `Search ${state.view === "MONSTERS" ? "monsters" : state.view === "SPELLS" ? "spells" : "artifacts"} by name…`;
   const trendOpt = tools.querySelector('.uw-sort option[value="TREND"]');
   if (trendOpt) { trendOpt.disabled = state.time !== "WEEK"; if (state.time !== "WEEK" && state.sort === "TREND") { state.sort = "USAGE"; tools.querySelector(".uw-sort").value = "USAGE"; } }
   renderBody();
@@ -394,21 +414,38 @@ function renderBody() {
     body.innerHTML = html + "</table>";
     return;
   }
-  const isCards = state.view === "CARDS";
-  const rows = isCards ? s.cards : s.arts;
+  const isCards = state.view === "MONSTERS" || state.view === "SPELLS";
+  const spells = state.view === "SPELLS";
+  const soulF = spells && SOULS.includes(state.spellSoul) ? state.spellSoul : null;
+  // Which cards this view shows (a card the catalogue doesn't know counts as a monster).
+  const fits = (c) => (!spells ? !isSpell(c) : isSpell(c) && (state.spellSoul === "ALL" || (state.spellSoul === "NEUTRAL" ? !spellSoul(c) : spellSoul(c) === soulF)));
+  // A soul's own spells are measured against that soul's decks (and its decks the week before).
+  const soulRow = soulF && (s.souls || []).find((x) => x[0] === soulF);
+  const base = soulF ? (soulRow ? (pp ? soulRow[4] : soulRow[1]) : 0) : total;
+  const prevSoul = soulF && s.prev && (s.prev.souls || []).find((x) => x[0] === soulF);
+  const prevBase = soulF ? (prevSoul ? (pp ? prevSoul[2] : prevSoul[1]) : 0) : null;
+  const unknown = (id) => ({ id, name: `#${id}` });
+  const rows = isCards ? s.cards.filter((r) => fits(catalog.cardById.get(r[0]) || unknown(r[0]))) : s.arts;
   const byId = isCards ? catalog.cardById : catalog.artById;
   const used = rows.map((r) => {
     const st = isCards
       ? { g: r[1], w: pp ? r[6] : r[2], n: pp ? r[5] : r[1], copies: pp ? r[7] : r[3], p: r[4] }
       : { g: r[1], w: pp ? r[5] : r[2], n: pp ? r[4] : r[1], p: r[3] };
-    const use = st.n / total;
-    return { id: r[0], st, use, tr: trendOf(s, isCards ? "cards" : "arts", r[0], use, pp), item: byId.get(r[0]) || { id: r[0], name: `#${r[0]}` } };
+    const use = base ? st.n / base : 0;
+    let tr = trendOf(s, isCards ? "cards" : "arts", r[0], use, pp);
+    if (tr && soulF) { // against the soul's decks the week before
+      const pr = (s.prev.cards || []).find((x) => x[0] === r[0]);
+      const was = pr && prevBase ? (pp ? pr[2] : pr[1]) / prevBase : 0;
+      tr = prevBase ? { was, d: use - was, isNew: !pr } : null;
+    }
+    return { id: r[0], st, use, tr, item: byId.get(r[0]) || unknown(r[0]) };
   }).sort((a, b) => b.use - a.use || b.st.w - a.st.w).map((r, i) => ({ ...r, rank: i + 1 }));
   const hiddenCount = priv && s.hidden ? (isCards ? s.hidden.cards : s.hidden.arts) : 0;
   const usedIds = new Set(rows.map((r) => r[0]));
   // Unused = in the catalogue with no shown row. Hidden rows (fewer than minP players)
   // land here too, and the list's title says so.
-  const unused = (isCards ? catalog.cards : catalog.arts).filter((c) => !usedIds.has(c.id)).map((item) => ({ id: item.id, item }));
+  const unused = (isCards ? catalog.cards.filter(fits) : catalog.arts).filter((c) => !usedIds.has(c.id)).map((item) => ({ id: item.id, item }));
+  const noun = spells ? "spell" : isCards ? "monster" : "artifact";
   const q = state.q.trim().toLowerCase();
   const match = (r) => !q || String(r.item.name || "").toLowerCase().includes(q);
   const cmp = {
@@ -421,17 +458,18 @@ function renderBody() {
   const unusedShown = unused.filter(match).sort((x, y) => String(x.item.name).localeCompare(String(y.item.name)));
   const limit = q || state.sort !== "USAGE" ? Infinity : TOP;
   const img = (r) => (isCards ? `/images/cards/${esc(r.item.image || r.item.baseImage || "")}.png` : `/images/artifacts/${esc(r.item.image || "")}.png`);
-  const nameCell = (r) => `<img class="uw-thumb" src="${img(r)}" onerror="this.style.visibility='hidden'"><span class="${isCards ? esc(r.item.rarity || "") : r.item.legendary ? "yellow" : ""}">${esc(r.item.name)}</span>${state.adv ? ` <span class="uw-id">#${r.id}</span>` : ""}`;
-  const cols = isCards ? "<th>In decks</th><th>Avg copies</th><th>Win rate</th>" : "<th>In decks</th><th>Win rate</th>";
+  const nameCell = (r) => `<img class="uw-thumb" src="${img(r)}" onerror="this.style.visibility='hidden'">${isCards ? cardLabel(r.item) : `<span class="${r.item.legendary ? "yellow" : ""}">${esc(r.item.name)}</span>`}${state.adv ? ` <span class="uw-id">#${r.id}</span>` : ""}`;
+  const inDecks = soulF ? `In ${soulHtml(soulF)} decks` : "In decks";
+  const cols = isCards ? `<th>${inDecks}</th><th>Avg copies</th><th>Win rate</th>` : "<th>In decks</th><th>Win rate</th>";
   const ncols = 2 + (isCards ? 3 : 2) + (state.adv ? 2 : 0);
-  let html = `<table><tr><th>#</th><th>${isCards ? "Card" : "Artifact"}</th>${cols}${advHead}</tr>`;
+  let html = `<table><tr><th>#</th><th>${spells ? "Spell" : isCards ? "Monster" : "Artifact"}</th>${cols}${advHead}</tr>`;
   html += shown.slice(0, limit).map((r) => `<tr><td class="uw-rank">${r.rank}</td><td>${nameCell(r)}</td><td>${meter(r.use, isCards ? "" : "art")}${trendHtml(r.tr)}</td>`
     + (isCards ? `<td>${r.st.n ? (r.st.copies / r.st.n).toFixed(1) : "-"}</td>` : "") + `<td>${rate(r.st.w, r.st.n)}</td>${state.adv ? `<td>${r.st.g}</td><td>${r.st.p}</td>` : ""}</tr>`).join("");
-  if (shown.length > limit) html += `<tr><td colspan="${ncols}" class="uw-hidden">${shown.length - limit} more used ${isCards ? "cards" : "artifacts"}: search or pick a sort to see them all.</td></tr>`;
+  if (shown.length > limit) html += `<tr><td colspan="${ncols}" class="uw-hidden">${shown.length - limit} more used ${noun}s: search or pick a sort to see them all.</td></tr>`;
   if (q && !shown.length && !unusedShown.length) html += `<tr><td colspan="${ncols}" class="uw-hidden">Nothing matches “${esc(state.q)}”.</td></tr>`;
   if (unusedShown.length) {
     const open = state.showUnused || (q && !shown.length);
-    html += `<tr class="uw-unused-head"><td colspan="${ncols}">${open ? "▾" : "▸"} Not used ${TIME_NAMES[state.time].toLowerCase()} in ${NAMES[state.div]}${hiddenCount ? ` (or hidden)` : ""}: ${unusedShown.length} ${isCards ? "card" : "artifact"}${unusedShown.length === 1 ? "" : "s"}</td></tr>`;
+    html += `<tr class="uw-unused-head"><td colspan="${ncols}">${open ? "▾" : "▸"} Not used ${TIME_NAMES[state.time].toLowerCase()} in ${NAMES[state.div]}${hiddenCount ? ` (or hidden)` : ""}: ${unusedShown.length} ${noun}${unusedShown.length === 1 ? "" : "s"}</td></tr>`;
     if (open) html += unusedShown.map((r) => `<tr class="uw-unused"><td class="uw-rank">–</td><td>${nameCell(r)}</td><td>0.0%</td>${isCards ? "<td>–</td>" : ""}<td>–</td>${state.adv ? "<td>0</td><td>0</td>" : ""}</tr>`).join("");
   }
   html += "</table>";

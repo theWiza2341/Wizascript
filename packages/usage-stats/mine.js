@@ -148,7 +148,7 @@ const day = (t) => new Date(t).toLocaleDateString(undefined, { month: "short", d
 const readNames = () => { try { return JSON.parse(GM_getValue(NAMES_KEY, "{}")) || {}; } catch (e) { return {}; } };
 const saveName = (k, v) => { const n = readNames(); if (v) n[k] = v; else delete n[k]; try { GM_setValue(NAMES_KEY, JSON.stringify(n)); } catch (e) { /* no GM */ } };
 
-// ctx: { esc, soulHtml, divHtml, SOULS, LADDER, NAMES, catalog(), community(), perPlayer(),
+// ctx: { esc, soulHtml, cardLabel(id), divHtml, SOULS, LADDER, NAMES, catalog(), community(), perPlayer(),
 //        getGames(season, player) → Promise<data>, self(), defaultPlayer(players, self), seasonLabel, current, preview }
 export function createMine(ctx) {
   const st = { player: null, season: ctx.current, view: "OVERVIEW", compare: "AUTO", soul: "ALL", minGames: 3, open: {}, data: null, players: [], seasons: [], error: "", loading: false, q: "" };
@@ -179,7 +179,6 @@ export function createMine(ctx) {
     return { div, s: s && s.cards && s.cards.length ? s : f.sel.TOTAL };
   }
   const cardName = (id) => { const c = ctx.catalog().cardById.get(id); return c ? c.name : `#${id}`; };
-  const cardCls = (id) => { const c = ctx.catalog().cardById.get(id); return c ? ctx.esc(c.rarity || "") : ""; };
   const artName = (id) => { const a = ctx.catalog().artById.get(id); return a ? a.name : `#${id}`; };
   // An artifact with its picture (the game's own /images/artifacts/ PNG), gold if legendary.
   const artHtml = (id) => {
@@ -263,7 +262,7 @@ export function createMine(ctx) {
         for (const [id, n] of latest.deck.slice().sort((a, b) => useOf(b[0]) - useOf(a[0]))) {
           const u = useOf(id), w = wrOf(id);
           const tag = !meta.has(id) ? '<span class="uw-tag">off-meta</span>' : u >= 0.3 ? '<span class="uw-tag">staple</span>' : u < 0.05 ? '<span class="uw-tag">rare pick</span>' : "";
-          html += `<tr><td><span class="${cardCls(id)}">${e(cardName(id))}</span></td><td>${n}</td><td>${meta.has(id) ? pct(u) : "-"}</td><td>${w === null ? "-" : wr(w, 1)}</td><td>${tag}</td></tr>`;
+          html += `<tr><td>${ctx.cardLabel(id)}</td><td>${n}</td><td>${meta.has(id) ? pct(u) : "-"}</td><td>${w === null ? "-" : wr(w, 1)}</td><td>${tag}</td></tr>`;
         }
         html += "</table></div>";
       }
@@ -287,7 +286,7 @@ export function createMine(ctx) {
     if (!rows.length) return html + `<div class="uw-empty">No cards with ${st.minGames}+ games${q ? " matching that" : ""}.</div>`;
     html += `<table><tr><th>Card</th><th>Your games</th><th>Your win rate</th><th>Community</th><th>Difference</th></tr>` + rows.map((r) => {
       const d = r.cw === null ? null : r.mine - r.cw;
-      return `<tr><td><span class="${cardCls(r.id)}">${e(cardName(r.id))}</span></td><td>${r.games}</td><td>${wr(r.wins, r.games)}</td><td>${r.cw === null ? "-" : wr(r.cw, 1)}</td>
+      return `<tr><td>${ctx.cardLabel(r.id)}</td><td>${r.games}</td><td>${wr(r.wins, r.games)}</td><td>${r.cw === null ? "-" : wr(r.cw, 1)}</td>
         <td>${d === null ? "-" : `<span class="uw-delta ${d >= 0 ? "up" : "down"}">${d >= 0 ? "+" : ""}${(Math.round(d * 1000) / 10).toFixed(1)}</span>`}</td></tr>`;
     }).join("") + "</table>";
     return html;

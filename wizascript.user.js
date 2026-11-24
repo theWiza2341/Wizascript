@@ -1055,6 +1055,8 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
   - **Decks:** your decks, grouped automatically. Each deck shows its artifacts first, then each version's record and what changed (cards and artifacts), and how its cards compare with what others play in your division (staples, rare picks, off-meta). Click a deck's name to rename it; names stay on your device.
   - **Cards:** your win rate with each card next to the community's.
 - **Alts:** Profile, History, the Elo Graph and My Stats now have an account picker, so you can see each account you play on. They start on the account you're logged in to.
+- **Monsters** and **Spells** replace the Cards view. Spells has a filter by soul: each soul's own spells, ranked by how many of that soul's decks play them, or the neutral spells.
+- Cards show the game's rarity icon next to their name, and soul spells are named in their soul's colour.
 - **Soul + Artifact** view: which artifacts are played with each soul, and how they do, with a gap between souls.
 - **This Week** shows how each card changed since the week before (\u25B2 \u25BC, or "new"), with a **Rising** sort.
 - The window says how many players' games the statistics come from this month.
@@ -10328,8 +10330,8 @@ Version: v${version}`;
         return false;
       }
       if (f.monster || f.spell) {
-        const isSpell = Number(c.typeCard) === 1;
-        if (!(f.monster && !isSpell || f.spell && isSpell)) return false;
+        const isSpell2 = Number(c.typeCard) === 1;
+        if (!(f.monster && !isSpell2 || f.spell && isSpell2)) return false;
       }
       if (f.tribes && !(Number(c.typeCard) !== 1 && Array.isArray(c.tribes) && c.tribes.length)) return false;
       if (f.sets.size && !f.sets.has(c.extension)) return false;
@@ -19507,10 +19509,6 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       const c = ctx.catalog().cardById.get(id);
       return c ? c.name : `#${id}`;
     };
-    const cardCls = (id) => {
-      const c = ctx.catalog().cardById.get(id);
-      return c ? ctx.esc(c.rarity || "") : "";
-    };
     const artName = (id) => {
       const a = ctx.catalog().artById.get(id);
       return a ? a.name : `#${id}`;
@@ -19606,7 +19604,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
           for (const [id, n] of latest.deck.slice().sort((a, b) => useOf(b[0]) - useOf(a[0]))) {
             const u = useOf(id), w = wrOf(id);
             const tag = !meta.has(id) ? '<span class="uw-tag">off-meta</span>' : u >= 0.3 ? '<span class="uw-tag">staple</span>' : u < 0.05 ? '<span class="uw-tag">rare pick</span>' : "";
-            html += `<tr><td><span class="${cardCls(id)}">${e(cardName2(id))}</span></td><td>${n}</td><td>${meta.has(id) ? pct(u) : "-"}</td><td>${w === null ? "-" : wr(w, 1)}</td><td>${tag}</td></tr>`;
+            html += `<tr><td>${ctx.cardLabel(id)}</td><td>${n}</td><td>${meta.has(id) ? pct(u) : "-"}</td><td>${w === null ? "-" : wr(w, 1)}</td><td>${tag}</td></tr>`;
           }
           html += "</table></div>";
         }
@@ -19631,7 +19629,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       if (!rows.length) return html + `<div class="uw-empty">No cards with ${st.minGames}+ games${q ? " matching that" : ""}.</div>`;
       html += `<table><tr><th>Card</th><th>Your games</th><th>Your win rate</th><th>Community</th><th>Difference</th></tr>` + rows.map((r) => {
         const d = r.cw === null ? null : r.mine - r.cw;
-        return `<tr><td><span class="${cardCls(r.id)}">${e(cardName2(r.id))}</span></td><td>${r.games}</td><td>${wr(r.wins, r.games)}</td><td>${r.cw === null ? "-" : wr(r.cw, 1)}</td>
+        return `<tr><td>${ctx.cardLabel(r.id)}</td><td>${r.games}</td><td>${wr(r.wins, r.games)}</td><td>${r.cw === null ? "-" : wr(r.cw, 1)}</td>
         <td>${d === null ? "-" : `<span class="uw-delta ${d >= 0 ? "up" : "down"}">${d >= 0 ? "+" : ""}${(Math.round(d * 1e3) / 10).toFixed(1)}</span>`}</td></tr>`;
       }).join("") + "</table>";
       return html;
@@ -19840,7 +19838,14 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
   var TIME_NAMES = Object.fromEntries(TIMES);
   var DIVS2 = ["TOTAL", ...LADDER, "UNRANKED", "TRUEHUB"];
   var NAMES = { TOTAL: "Total", LEGEND: "LEGEND", ULTIMATE_MASTER: "Ultimate Master", HIGH_MASTER: "High Master", MASTER: "Master", UNRANKED: "Unranked", TRUEHUB: "True Hub+" };
-  var VIEWS2 = [["CARDS", "Cards"], ["ARTIFACTS", "Artifacts"], ["SOULS", "Souls"], ["COMBOS", "Soul + Artifact"]];
+  var VIEWS2 = [["MONSTERS", "Monsters"], ["SPELLS", "Spells"], ["ARTIFACTS", "Artifacts"], ["SOULS", "Souls"], ["COMBOS", "Soul + Artifact"]];
+  var isSpell = (c) => Number(c && c.typeCard) === 1;
+  var spellSoul = (c) => {
+    const x = c && c.soul;
+    return (x && typeof x === "object" ? x.name : x) || null;
+  };
+  var rarityIcon = (c) => c && c.rarity ? `<img class="uw-rar" src="/images/rarity/${esc3(c.extension || "BASE")}_${esc3(c.rarity)}.png" alt="" title="${esc3(c.rarity.charAt(0) + c.rarity.slice(1).toLowerCase())}" onerror="this.remove()">` : "";
+  var cardLabel = (c) => `${rarityIcon(c)}<span class="${esc3(spellSoul(c) || c && c.rarity || "")}">${esc3(c && c.name || "")}</span>`;
   var SORTS = [["USAGE", "Most used"], ["WINRATE", "Win rate"], ["TREND", "Rising (this week)"], ["NAME", "Name"]];
   var CATALOG_RARITIES = ["COMMON", "RARE", "EPIC", "LEGENDARY", "DETERMINATION"];
   var ICON = `<svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><rect width="20" height="20" rx="3" fill="#000"/>
@@ -19871,6 +19876,11 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
 #wz-usage-win .uw-rank { color:#888; width:26px; text-align:right; }
 #wz-usage-win .uw-thumb { height:26px; width:26px; object-fit:cover; object-position:top; vertical-align:middle; margin-right:6px; border:1px solid rgba(255,255,255,.3); background:#111; }
 #wz-usage-win .uw-meter { position:relative; height:14px; width:120px; background:rgba(255,255,255,.08); display:inline-block; vertical-align:middle; margin-right:6px; }
+#wz-usage-win .uw-rar { width:18px; height:18px; object-fit:contain; vertical-align:middle; margin-right:5px; }
+#wz-usage-win .uw-sbar { gap:4px; }
+#wz-usage-win .uw-sbar .uw-btn { font-size:12px; padding:2px 6px; }
+#wz-usage-win .uw-sbar .uw-btn.on { background:rgba(255,255,255,.18); color:#fff; box-shadow:inset 0 -2px 0 #fff; }
+#wz-usage-win .uw-soulimg { width:14px; height:14px; object-fit:contain; }
 #wz-usage-win tr.uw-gap td { height:18px; border:none !important; background:transparent !important; }
 #wz-usage-win .uw-pct { display:inline-block; min-width:3.4em; text-align:right; }
 #wz-usage-win .uw-meter i { position:absolute; left:0; top:0; bottom:0; background:#4a8; }
@@ -19924,7 +19934,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     document.head.appendChild(st);
   }
   var win = null;
-  var state3 = { tab: "COMMUNITY", time: "SEASON", div: "TOTAL", view: "CARDS", adv: false, perPlayer: true, sort: "USAGE", q: "", showUnused: false };
+  var state3 = { tab: "COMMUNITY", time: "SEASON", div: "TOTAL", view: "MONSTERS", spellSoul: "ALL", adv: false, perPlayer: true, sort: "USAGE", q: "", showUnused: false };
   var preview = false;
   var mine = createMine({
     esc: esc3,
@@ -19935,6 +19945,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     NAMES,
     seasonLabel,
     current: seasonOf(Date.now()),
+    cardLabel: (id) => cardLabel(catalog.cardById.get(id) || { name: `#${id}` }),
     catalog: () => catalog,
     community: () => files.SEASON,
     perPlayer: () => state3.perPlayer,
@@ -19991,6 +20002,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     <div class="uw-bar uw-time"></div>
     <div class="uw-bar uw-div"></div>
     <div class="uw-bar uw-view"></div>
+    <div class="uw-bar uw-sbar"></div>
     <div class="uw-bar uw-tools"></div>
     <div class="uw-note"></div>
     <div class="uw-body"></div><div class="uw-grip"></div>`;
@@ -20159,7 +20171,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       state3.tab = b.dataset.tab;
       render2();
     }));
-    const communityBars = [".uw-time", ".uw-div", ".uw-view", ".uw-tools", ".uw-note"].map((c) => win.querySelector(c));
+    const communityBars = [".uw-time", ".uw-div", ".uw-view", ".uw-sbar", ".uw-tools", ".uw-note"].map((c) => win.querySelector(c));
     if (state3.tab === "MINE") {
       communityBars.forEach((el3) => {
         el3.style.display = "none";
@@ -20213,9 +20225,17 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       }
       return [sep, right];
     });
+    const sbar = win.querySelector(".uw-sbar");
+    sbar.style.display = state3.view === "SPELLS" ? "" : "none";
+    if (state3.view === "SPELLS") {
+      buttons(sbar, [["ALL", "All spells"], ...SOULS2.map((x) => [x, x]), ["NEUTRAL", "Neutral"]], "spellSoul", (k) => k === "ALL" ? "All spells" : k === "NEUTRAL" ? "Neutral" : `<img class="uw-soulimg" src="/images/souls/${esc3(k)}.png" alt="" onerror="this.remove()">${soulHtml(k)}`);
+      sbar.querySelectorAll(".uw-btn").forEach((b, i) => {
+        b.title = i === 0 ? "Every spell" : i > SOULS2.length ? "Spells any soul can play" : "This soul's own spells, as a share of its decks";
+      });
+    }
     const tools = win.querySelector(".uw-tools");
     tools.style.display = state3.view === "SOULS" || state3.view === "COMBOS" ? "none" : "";
-    tools.querySelector(".uw-search").placeholder = `Search ${state3.view === "CARDS" ? "cards" : "artifacts"} by name\u2026`;
+    tools.querySelector(".uw-search").placeholder = `Search ${state3.view === "MONSTERS" ? "monsters" : state3.view === "SPELLS" ? "spells" : "artifacts"} by name\u2026`;
     const trendOpt = tools.querySelector('.uw-sort option[value="TREND"]');
     if (trendOpt) {
       trendOpt.disabled = state3.time !== "WEEK";
@@ -20289,8 +20309,8 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       const souls = new Map(s.souls.map((r) => [r[0], r]));
       const list = (s.combos || []).map((r) => {
         const so = souls.get(r[0]);
-        const base = so ? pp ? so[4] : so[1] : 0;
-        return { soul: r[0], art: r[1], share: base ? (pp ? r[5] : r[2]) / base : 0, w: pp ? r[6] : r[3], n: pp ? r[5] : r[2], g: r[2], p: r[4] };
+        const base2 = so ? pp ? so[4] : so[1] : 0;
+        return { soul: r[0], art: r[1], share: base2 ? (pp ? r[5] : r[2]) / base2 : 0, w: pp ? r[6] : r[3], n: pp ? r[5] : r[2], g: r[2], p: r[4] };
       }).filter((x) => x.g > 0).sort((a, b) => a.soul.localeCompare(b.soul) || b.share - a.share);
       if (!list.length) {
         body.innerHTML = `<div class="uw-empty">No soul + artifact combinations for this time and division yet (servers before 1.16 don't send them).</div>`;
@@ -20308,17 +20328,32 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       body.innerHTML = html2 + "</table>";
       return;
     }
-    const isCards = state3.view === "CARDS";
-    const rows = isCards ? s.cards : s.arts;
+    const isCards = state3.view === "MONSTERS" || state3.view === "SPELLS";
+    const spells = state3.view === "SPELLS";
+    const soulF = spells && SOULS2.includes(state3.spellSoul) ? state3.spellSoul : null;
+    const fits = (c) => !spells ? !isSpell(c) : isSpell(c) && (state3.spellSoul === "ALL" || (state3.spellSoul === "NEUTRAL" ? !spellSoul(c) : spellSoul(c) === soulF));
+    const soulRow = soulF && (s.souls || []).find((x) => x[0] === soulF);
+    const base = soulF ? soulRow ? pp ? soulRow[4] : soulRow[1] : 0 : total;
+    const prevSoul = soulF && s.prev && (s.prev.souls || []).find((x) => x[0] === soulF);
+    const prevBase = soulF ? prevSoul ? pp ? prevSoul[2] : prevSoul[1] : 0 : null;
+    const unknown = (id) => ({ id, name: `#${id}` });
+    const rows = isCards ? s.cards.filter((r) => fits(catalog.cardById.get(r[0]) || unknown(r[0]))) : s.arts;
     const byId2 = isCards ? catalog.cardById : catalog.artById;
     const used = rows.map((r) => {
       const st = isCards ? { g: r[1], w: pp ? r[6] : r[2], n: pp ? r[5] : r[1], copies: pp ? r[7] : r[3], p: r[4] } : { g: r[1], w: pp ? r[5] : r[2], n: pp ? r[4] : r[1], p: r[3] };
-      const use = st.n / total;
-      return { id: r[0], st, use, tr: trendOf(s, isCards ? "cards" : "arts", r[0], use, pp), item: byId2.get(r[0]) || { id: r[0], name: `#${r[0]}` } };
+      const use = base ? st.n / base : 0;
+      let tr2 = trendOf(s, isCards ? "cards" : "arts", r[0], use, pp);
+      if (tr2 && soulF) {
+        const pr = (s.prev.cards || []).find((x) => x[0] === r[0]);
+        const was = pr && prevBase ? (pp ? pr[2] : pr[1]) / prevBase : 0;
+        tr2 = prevBase ? { was, d: use - was, isNew: !pr } : null;
+      }
+      return { id: r[0], st, use, tr: tr2, item: byId2.get(r[0]) || unknown(r[0]) };
     }).sort((a, b) => b.use - a.use || b.st.w - a.st.w).map((r, i) => ({ ...r, rank: i + 1 }));
     const hiddenCount = priv && s.hidden ? isCards ? s.hidden.cards : s.hidden.arts : 0;
     const usedIds = new Set(rows.map((r) => r[0]));
-    const unused = (isCards ? catalog.cards : catalog.arts).filter((c) => !usedIds.has(c.id)).map((item2) => ({ id: item2.id, item: item2 }));
+    const unused = (isCards ? catalog.cards.filter(fits) : catalog.arts).filter((c) => !usedIds.has(c.id)).map((item2) => ({ id: item2.id, item: item2 }));
+    const noun = spells ? "spell" : isCards ? "monster" : "artifact";
     const q = state3.q.trim().toLowerCase();
     const match = (r) => !q || String(r.item.name || "").toLowerCase().includes(q);
     const cmp = {
@@ -20331,16 +20366,17 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     const unusedShown = unused.filter(match).sort((x, y) => String(x.item.name).localeCompare(String(y.item.name)));
     const limit = q || state3.sort !== "USAGE" ? Infinity : TOP;
     const img = (r) => isCards ? `/images/cards/${esc3(r.item.image || r.item.baseImage || "")}.png` : `/images/artifacts/${esc3(r.item.image || "")}.png`;
-    const nameCell = (r) => `<img class="uw-thumb" src="${img(r)}" onerror="this.style.visibility='hidden'"><span class="${isCards ? esc3(r.item.rarity || "") : r.item.legendary ? "yellow" : ""}">${esc3(r.item.name)}</span>${state3.adv ? ` <span class="uw-id">#${r.id}</span>` : ""}`;
-    const cols = isCards ? "<th>In decks</th><th>Avg copies</th><th>Win rate</th>" : "<th>In decks</th><th>Win rate</th>";
+    const nameCell = (r) => `<img class="uw-thumb" src="${img(r)}" onerror="this.style.visibility='hidden'">${isCards ? cardLabel(r.item) : `<span class="${r.item.legendary ? "yellow" : ""}">${esc3(r.item.name)}</span>`}${state3.adv ? ` <span class="uw-id">#${r.id}</span>` : ""}`;
+    const inDecks = soulF ? `In ${soulHtml(soulF)} decks` : "In decks";
+    const cols = isCards ? `<th>${inDecks}</th><th>Avg copies</th><th>Win rate</th>` : "<th>In decks</th><th>Win rate</th>";
     const ncols = 2 + (isCards ? 3 : 2) + (state3.adv ? 2 : 0);
-    let html = `<table><tr><th>#</th><th>${isCards ? "Card" : "Artifact"}</th>${cols}${advHead}</tr>`;
+    let html = `<table><tr><th>#</th><th>${spells ? "Spell" : isCards ? "Monster" : "Artifact"}</th>${cols}${advHead}</tr>`;
     html += shown.slice(0, limit).map((r) => `<tr><td class="uw-rank">${r.rank}</td><td>${nameCell(r)}</td><td>${meter(r.use, isCards ? "" : "art")}${trendHtml(r.tr)}</td>` + (isCards ? `<td>${r.st.n ? (r.st.copies / r.st.n).toFixed(1) : "-"}</td>` : "") + `<td>${rate2(r.st.w, r.st.n)}</td>${state3.adv ? `<td>${r.st.g}</td><td>${r.st.p}</td>` : ""}</tr>`).join("");
-    if (shown.length > limit) html += `<tr><td colspan="${ncols}" class="uw-hidden">${shown.length - limit} more used ${isCards ? "cards" : "artifacts"}: search or pick a sort to see them all.</td></tr>`;
+    if (shown.length > limit) html += `<tr><td colspan="${ncols}" class="uw-hidden">${shown.length - limit} more used ${noun}s: search or pick a sort to see them all.</td></tr>`;
     if (q && !shown.length && !unusedShown.length) html += `<tr><td colspan="${ncols}" class="uw-hidden">Nothing matches \u201C${esc3(state3.q)}\u201D.</td></tr>`;
     if (unusedShown.length) {
       const open = state3.showUnused || q && !shown.length;
-      html += `<tr class="uw-unused-head"><td colspan="${ncols}">${open ? "\u25BE" : "\u25B8"} Not used ${TIME_NAMES[state3.time].toLowerCase()} in ${NAMES[state3.div]}${hiddenCount ? ` (or hidden)` : ""}: ${unusedShown.length} ${isCards ? "card" : "artifact"}${unusedShown.length === 1 ? "" : "s"}</td></tr>`;
+      html += `<tr class="uw-unused-head"><td colspan="${ncols}">${open ? "\u25BE" : "\u25B8"} Not used ${TIME_NAMES[state3.time].toLowerCase()} in ${NAMES[state3.div]}${hiddenCount ? ` (or hidden)` : ""}: ${unusedShown.length} ${noun}${unusedShown.length === 1 ? "" : "s"}</td></tr>`;
       if (open) html += unusedShown.map((r) => `<tr class="uw-unused"><td class="uw-rank">\u2013</td><td>${nameCell(r)}</td><td>0.0%</td>${isCards ? "<td>\u2013</td>" : ""}<td>\u2013</td>${state3.adv ? "<td>0</td><td>0</td>" : ""}</tr>`).join("");
     }
     html += "</table>";

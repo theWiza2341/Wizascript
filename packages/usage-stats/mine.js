@@ -123,6 +123,8 @@ const CSS = `
 #wz-usage-win .uw-deck-head { display:flex; align-items:center; gap:10px; padding:6px 8px; cursor:pointer; }
 #wz-usage-win .uw-deck-head:hover { background:rgba(255,255,255,.06); }
 #wz-usage-win .uw-deck-head .nm { flex:1; }
+/* The game's soul names open its help popup on click: in a deck's header the click should open the deck. */
+#wz-usage-win .uw-nohelp, #wz-usage-win .uw-nohelp * { pointer-events:none; }
 #wz-usage-win .uw-deck-body { padding:4px 8px 8px; border-top:1px solid rgba(255,255,255,.15); }
 #wz-usage-win .uw-chg .add { color:#6c6; } #wz-usage-win .uw-chg .drop { color:#e66; }
 #wz-usage-win .uw-tag { font-size:11px; padding:0 5px; border:1px solid #888; color:#ccc; margin-left:4px; }
@@ -244,7 +246,7 @@ export function createMine(ctx) {
       const open = !!st.open[f.key];
       const latest = f.versions[f.versions.length - 1];
       html += `<div class="uw-deck"><div class="uw-deck-head" data-fam="${e(f.key)}">
-        <span>${open ? "▾" : "▸"}</span><span>${ctx.soulHtml(f.soul)}</span><span class="nm"><input type="text" class="uw-deck-name" data-ren="${e(f.key)}" maxlength="40" value="${e(names[f.key] || "")}" placeholder="${e(autoLabel(f))}" title="Click to name this deck (kept on this device; empty = automatic)" spellcheck="false"></span>
+        <span>${open ? "▾" : "▸"}</span><span class="uw-nohelp">${ctx.soulHtml(f.soul)}</span><span class="nm"><input type="text" class="uw-deck-name" data-ren="${e(f.key)}" maxlength="40" value="${e(names[f.key] || "")}" placeholder="${e(autoLabel(f))}" title="Click to name this deck (kept on this device; empty = automatic)" spellcheck="false"></span>
         <span>${f.wins}–${f.games - f.wins} · ${wr(f.wins, f.games)}</span><span class="uw-meta">${f.versions.length} version${f.versions.length === 1 ? "" : "s"} · ${day(f.last)}</span></div>`;
       if (open) {
         html += `<div class="uw-deck-body">`;

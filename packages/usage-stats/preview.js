@@ -27,12 +27,17 @@ export function sampleFiles(cards, arts, now = Date.now()) {
       const w = Math.round(g * (0.4 + r() * 0.22));
       return [c.id, g, w, Math.round(g * (1.2 + r())), p, p, Math.round(p * (w / Math.max(1, g)) * 100) / 100, Math.round(p * 1.6 * 100) / 100];
     }).filter((x) => x[1] > 0);
-    const artRows = pickA.map((a, i) => { const g = Math.round(games * Math.max(0.03, 0.5 / (i + 1))); const p = Math.max(1, Math.round(pg * g / games)); const w = Math.round(g * (0.42 + r() * 0.16)); return [a.id, g, w, p, p, Math.round(p * w / Math.max(1, g) * 100) / 100]; });
+    // A deck takes 1-2 artifacts, so their shares add up to between 100% and 200% (here about 175%).
+    const artRaw = pickA.map((_, i) => Math.max(0.03, 0.5 / (i + 1)));
+    const artScale = 1.75 / (artRaw.reduce((n, x) => n + x, 0) || 1);
+    const artRows = pickA.map((a, i) => { const g = Math.round(games * Math.min(0.9, artRaw[i] * artScale)); const p = Math.max(1, Math.round(pg * g / games)); const w = Math.round(g * (0.42 + r() * 0.16)); return [a.id, g, w, p, p, Math.round(p * w / Math.max(1, g) * 100) / 100]; });
     const combos = [];
     // Each soul's artifacts as a share of THAT soul's games/players (never above 100%; decks take 2 artifacts, so shares add up to about 200%).
     for (const so of souls.slice(0, 4)) {
       const [soul, sg, , sp, spg] = so;
-      const shares = [0.72, 0.55, 0.33, 0.22, 0.12, 0.06].map((x) => Math.min(1, x * (0.85 + r() * 0.3)));
+      const raw = [0.72, 0.55, 0.33, 0.22, 0.12, 0.06].map((x) => x * (0.85 + r() * 0.3));
+      const k = 1.75 / raw.reduce((n, x) => n + x, 0); // 1-2 artifacts per deck: about 175% per soul
+      const shares = raw.map((x) => Math.min(0.9, x * k));
       pickA.slice(0, 6).forEach((a, i) => {
         const g = Math.round(sg * shares[i]), p = Math.min(sp, Math.max(1, Math.round(sp * shares[i]))), pgs = Math.round(spg * shares[i] * 100) / 100;
         const w = Math.round(g * (0.4 + r() * 0.25));

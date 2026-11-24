@@ -48,6 +48,7 @@ const CSS = `
 #wz-usage-win .uw-bar { display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:6px 10px 0; }
 #wz-usage-win .uw-btn { background:transparent; color:#fff; border:1px solid #fff; padding:3px 9px; font:inherit; font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
 #wz-usage-win .uw-btn * { pointer-events:none; }
+#wz-usage-win .uw-nohelp, #wz-usage-win .uw-nohelp * { pointer-events:none; }
 #wz-usage-win .uw-btn:hover { background:rgba(255,255,255,.12); }
 #wz-usage-win .uw-btn.on { background:#fff; color:#000; }
 #wz-usage-win .uw-btn.th { border-color:#ffd700; color:#ffd700; } #wz-usage-win .uw-btn.th.on { background:#ffd700; color:#000; }
@@ -404,7 +405,7 @@ function renderBody() {
       return { soul: r[0], art: r[1], share: base ? (pp ? r[5] : r[2]) / base : 0, w: pp ? r[6] : r[3], n: pp ? r[5] : r[2], g: r[2], p: r[4] };
     }).filter((x) => x.g > 0).sort((a, b) => a.soul.localeCompare(b.soul) || b.share - a.share);
     if (!list.length) { body.innerHTML = '<div class="uw-empty">No soul + artifact combinations for this time and division yet (servers before 1.16 don\'t send them).</div>'; return; }
-    let html = `<table><tr><th>Soul</th><th>Artifact</th><th>Used with this soul</th><th>Win rate</th>${advHead}</tr>`;
+    let html = `<table><tr><th>Soul</th><th>Artifact</th><th title="Share of this soul&#39;s decks with this artifact. A deck holds 1 or 2 artifacts, so each soul&#39;s rows add up to between 100% and 200%.">Used with this soul ⓘ</th><th>Win rate</th>${advHead}</tr>`;
     let last = "";
     for (const x of list) {
       const a = catalog.artById.get(x.art) || { name: `#${x.art}`, image: "" };
@@ -462,7 +463,9 @@ function renderBody() {
   const img = (r) => (isCards ? `/images/cards/${esc(r.item.image || r.item.baseImage || "")}.png` : `/images/artifacts/${esc(r.item.image || "")}.png`);
   const nameCell = (r) => `<img class="uw-thumb" src="${img(r)}" onerror="this.style.visibility='hidden'">${isCards ? cardLabel(r.item) : `<span class="${r.item.legendary ? "yellow" : ""}">${esc(r.item.name)}</span>`}${state.adv ? ` <span class="uw-id">#${r.id}</span>` : ""}`;
   const inDecks = soulF ? `In ${soulHtml(soulF)} decks` : "In decks";
-  const cols = isCards ? `<th>${inDecks}</th><th>Avg copies</th><th>Win rate</th>` : "<th>In decks</th><th>Win rate</th>";
+  // Each row is the share of decks that include it. A deck holds many cards and 1-2 artifacts, so unlike Souls these add up to more than 100%.
+  const why = isCards ? `Share of ${soulF ? `${soulF} ` : ""}decks with this ${spells ? "spell" : "monster"}. A deck holds many cards, so these add up to more than 100%.` : "Share of decks with this artifact. A deck holds 1 or 2 artifacts, so these add up to between 100% and 200%.";
+  const cols = isCards ? `<th title="${esc(why)}"><span class="uw-nohelp">${inDecks}</span> ⓘ</th><th>Avg copies</th><th>Win rate</th>` : `<th title="${esc(why)}">In decks ⓘ</th><th>Win rate</th>`;
   const ncols = 2 + (isCards ? 3 : 2) + (state.adv ? 2 : 0);
   let html = `<table><tr><th>#</th><th>${spells ? "Spell" : isCards ? "Monster" : "Artifact"}</th>${cols}${advHead}</tr>`;
   html += shown.slice(0, limit).map((r) => `<tr><td class="uw-rank">${r.rank}</td><td>${nameCell(r)}</td><td>${meter(r.use, isCards ? "" : "art")}${trendHtml(r.tr)}</td>`

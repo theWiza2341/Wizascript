@@ -18643,8 +18643,10 @@ ${NOTES_CSS}
         const w = Math.round(g * (0.4 + r() * 0.22));
         return [c.id, g, w, Math.round(g * (1.2 + r())), p, p, Math.round(p * (w / Math.max(1, g)) * 100) / 100, Math.round(p * 1.6 * 100) / 100];
       }).filter((x) => x[1] > 0);
+      const artRaw = pickA.map((_, i) => Math.max(0.03, 0.5 / (i + 1)));
+      const artScale = 1.75 / (artRaw.reduce((n, x) => n + x, 0) || 1);
       const artRows = pickA.map((a, i) => {
-        const g = Math.round(games * Math.max(0.03, 0.5 / (i + 1)));
+        const g = Math.round(games * Math.min(0.9, artRaw[i] * artScale));
         const p = Math.max(1, Math.round(pg * g / games));
         const w = Math.round(g * (0.42 + r() * 0.16));
         return [a.id, g, w, p, p, Math.round(p * w / Math.max(1, g) * 100) / 100];
@@ -18652,7 +18654,9 @@ ${NOTES_CSS}
       const combos = [];
       for (const so of souls.slice(0, 4)) {
         const [soul, sg, , sp, spg] = so;
-        const shares = [0.72, 0.55, 0.33, 0.22, 0.12, 0.06].map((x) => Math.min(1, x * (0.85 + r() * 0.3)));
+        const raw = [0.72, 0.55, 0.33, 0.22, 0.12, 0.06].map((x) => x * (0.85 + r() * 0.3));
+        const k = 1.75 / raw.reduce((n, x) => n + x, 0);
+        const shares = raw.map((x) => Math.min(0.9, x * k));
         pickA.slice(0, 6).forEach((a, i) => {
           const g = Math.round(sg * shares[i]), p = Math.min(sp, Math.max(1, Math.round(sp * shares[i]))), pgs = Math.round(spg * shares[i] * 100) / 100;
           const w = Math.round(g * (0.4 + r() * 0.25));
@@ -19441,6 +19445,8 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
 #wz-usage-win .uw-deck-head { display:flex; align-items:center; gap:10px; padding:6px 8px; cursor:pointer; }
 #wz-usage-win .uw-deck-head:hover { background:rgba(255,255,255,.06); }
 #wz-usage-win .uw-deck-head .nm { flex:1; }
+/* The game's soul names open its help popup on click: in a deck's header the click should open the deck. */
+#wz-usage-win .uw-nohelp, #wz-usage-win .uw-nohelp * { pointer-events:none; }
 #wz-usage-win .uw-deck-body { padding:4px 8px 8px; border-top:1px solid rgba(255,255,255,.15); }
 #wz-usage-win .uw-chg .add { color:#6c6; } #wz-usage-win .uw-chg .drop { color:#e66; }
 #wz-usage-win .uw-tag { font-size:11px; padding:0 5px; border:1px solid #888; color:#ccc; margin-left:4px; }
@@ -19595,7 +19601,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
         const open = !!st.open[f.key];
         const latest = f.versions[f.versions.length - 1];
         html += `<div class="uw-deck"><div class="uw-deck-head" data-fam="${e(f.key)}">
-        <span>${open ? "\u25BE" : "\u25B8"}</span><span>${ctx.soulHtml(f.soul)}</span><span class="nm"><input type="text" class="uw-deck-name" data-ren="${e(f.key)}" maxlength="40" value="${e(names[f.key] || "")}" placeholder="${e(autoLabel(f))}" title="Click to name this deck (kept on this device; empty = automatic)" spellcheck="false"></span>
+        <span>${open ? "\u25BE" : "\u25B8"}</span><span class="uw-nohelp">${ctx.soulHtml(f.soul)}</span><span class="nm"><input type="text" class="uw-deck-name" data-ren="${e(f.key)}" maxlength="40" value="${e(names[f.key] || "")}" placeholder="${e(autoLabel(f))}" title="Click to name this deck (kept on this device; empty = automatic)" spellcheck="false"></span>
         <span>${f.wins}\u2013${f.games - f.wins} \xB7 ${wr(f.wins, f.games)}</span><span class="uw-meta">${f.versions.length} version${f.versions.length === 1 ? "" : "s"} \xB7 ${day(f.last)}</span></div>`;
         if (open) {
           html += `<div class="uw-deck-body">`;
@@ -19872,6 +19878,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
 #wz-usage-win .uw-bar { display:flex; align-items:center; gap:6px; flex-wrap:wrap; padding:6px 10px 0; }
 #wz-usage-win .uw-btn { background:transparent; color:#fff; border:1px solid #fff; padding:3px 9px; font:inherit; font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; white-space:nowrap; }
 #wz-usage-win .uw-btn * { pointer-events:none; }
+#wz-usage-win .uw-nohelp, #wz-usage-win .uw-nohelp * { pointer-events:none; }
 #wz-usage-win .uw-btn:hover { background:rgba(255,255,255,.12); }
 #wz-usage-win .uw-btn.on { background:#fff; color:#000; }
 #wz-usage-win .uw-btn.th { border-color:#ffd700; color:#ffd700; } #wz-usage-win .uw-btn.th.on { background:#ffd700; color:#000; }
@@ -20327,7 +20334,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
         body.innerHTML = `<div class="uw-empty">No soul + artifact combinations for this time and division yet (servers before 1.16 don't send them).</div>`;
         return;
       }
-      let html2 = `<table><tr><th>Soul</th><th>Artifact</th><th>Used with this soul</th><th>Win rate</th>${advHead}</tr>`;
+      let html2 = `<table><tr><th>Soul</th><th>Artifact</th><th title="Share of this soul&#39;s decks with this artifact. A deck holds 1 or 2 artifacts, so each soul&#39;s rows add up to between 100% and 200%.">Used with this soul \u24D8</th><th>Win rate</th>${advHead}</tr>`;
       let last = "";
       for (const x of list) {
         const a = catalog.artById.get(x.art) || { name: `#${x.art}`, image: "" };
@@ -20379,7 +20386,8 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     const img = (r) => isCards ? `/images/cards/${esc3(r.item.image || r.item.baseImage || "")}.png` : `/images/artifacts/${esc3(r.item.image || "")}.png`;
     const nameCell = (r) => `<img class="uw-thumb" src="${img(r)}" onerror="this.style.visibility='hidden'">${isCards ? cardLabel(r.item) : `<span class="${r.item.legendary ? "yellow" : ""}">${esc3(r.item.name)}</span>`}${state3.adv ? ` <span class="uw-id">#${r.id}</span>` : ""}`;
     const inDecks = soulF ? `In ${soulHtml(soulF)} decks` : "In decks";
-    const cols = isCards ? `<th>${inDecks}</th><th>Avg copies</th><th>Win rate</th>` : "<th>In decks</th><th>Win rate</th>";
+    const why = isCards ? `Share of ${soulF ? `${soulF} ` : ""}decks with this ${spells ? "spell" : "monster"}. A deck holds many cards, so these add up to more than 100%.` : "Share of decks with this artifact. A deck holds 1 or 2 artifacts, so these add up to between 100% and 200%.";
+    const cols = isCards ? `<th title="${esc3(why)}"><span class="uw-nohelp">${inDecks}</span> \u24D8</th><th>Avg copies</th><th>Win rate</th>` : `<th title="${esc3(why)}">In decks \u24D8</th><th>Win rate</th>`;
     const ncols = 2 + (isCards ? 3 : 2) + (state3.adv ? 2 : 0);
     let html = `<table><tr><th>#</th><th>${spells ? "Spell" : isCards ? "Monster" : "Artifact"}</th>${cols}${advHead}</tr>`;
     html += shown.slice(0, limit).map((r) => `<tr><td class="uw-rank">${r.rank}</td><td>${nameCell(r)}</td><td>${meter(r.use, isCards ? "" : "art")}${trendHtml(r.tr)}</td>` + (isCards ? `<td>${r.st.n ? (r.st.copies / r.st.n).toFixed(1) : "-"}</td>` : "") + `<td>${rate2(r.st.w, r.st.n)}</td>${state3.adv ? `<td>${r.st.g}</td><td>${r.st.p}</td>` : ""}</tr>`).join("");

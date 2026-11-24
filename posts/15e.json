@@ -1,0 +1,18 @@
+{
+  "id": "15e",
+  "kind": "single",
+  "title": "Top Bakery Sweets",
+  "author": "bagels5899",
+  "postedAt": 1795483620972,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Top Bakery Sweets",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/15e-0-pic.png"
+    }
+  ]
+}

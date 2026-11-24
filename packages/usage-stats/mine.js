@@ -67,6 +67,10 @@ export function changes(from, to) {
   }
   return { add, drop };
 }
+export function artChanges(from, to) {
+  const A = new Set(from || []), B = new Set(to || []);
+  return { add: [...B].filter((x) => !A.has(x)), drop: [...A].filter((x) => !B.has(x)) };
+}
 // Games with a starting deck → decks (families), newest first. Each: { key, soul,
 // versions: [{ key, deck, arts, games, wins, first, last }] (oldest first), games, wins, last }.
 export function deckFamilies(games) {
@@ -122,7 +126,17 @@ const CSS = `
 #wz-usage-win .uw-deck-body { padding:4px 8px 8px; border-top:1px solid rgba(255,255,255,.15); }
 #wz-usage-win .uw-chg .add { color:#6c6; } #wz-usage-win .uw-chg .drop { color:#e66; }
 #wz-usage-win .uw-tag { font-size:11px; padding:0 5px; border:1px solid #888; color:#ccc; margin-left:4px; }
-#wz-usage-win .uw-rename { background:none; border:none; color:#aaa; cursor:pointer; font-size:12px; padding:0 4px; }
+#wz-usage-win .uw-deck-name { background:transparent; color:#fff; border:1px solid transparent; font:inherit; padding:1px 4px; width:100%; max-width:340px; cursor:text; }
+#wz-usage-win .uw-deck-name::placeholder { color:#fff; opacity:1; }
+#wz-usage-win .uw-deck-name:hover { border-color:rgba(255,255,255,.35); }
+#wz-usage-win .uw-deck-name:focus { border-color:#fff; background:#111; outline:none; }
+#wz-usage-win .uw-deck-name:focus::placeholder { color:#777; }
+#wz-usage-win .uw-arts { display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; }
+#wz-usage-win .uw-art { display:inline-flex; align-items:center; gap:4px; }
+#wz-usage-win .uw-art img { width:24px; height:24px; object-fit:contain; }
+#wz-usage-win .uw-chg .uw-art img { width:18px; height:18px; }
+#wz-usage-win .uw-chg .arts { display:flex; flex-wrap:wrap; align-items:center; gap:2px 8px; margin-top:2px; }
+#wz-usage-win .uw-chg .arts .to { font-size:16px; color:#ccc; }
 #wz-usage-win select.uw-sel, #wz-usage-win select.uw-sel option { background:#222; color:#fff; border:1px solid #888; font:inherit; font-size:13px; }
 #wz-usage-win .uw-delta.up { color:#6c6; } #wz-usage-win .uw-delta.down { color:#e66; }
 `;
@@ -167,6 +181,11 @@ export function createMine(ctx) {
   const cardName = (id) => { const c = ctx.catalog().cardById.get(id); return c ? c.name : `#${id}`; };
   const cardCls = (id) => { const c = ctx.catalog().cardById.get(id); return c ? ctx.esc(c.rarity || "") : ""; };
   const artName = (id) => { const a = ctx.catalog().artById.get(id); return a ? a.name : `#${id}`; };
+  // An artifact with its picture (the game's own /images/artifacts/ PNG), gold if legendary.
+  const artHtml = (id) => {
+    const a = ctx.catalog().artById.get(id);
+    return `<span class="uw-art"><img src="/images/artifacts/${ctx.esc((a && a.image) || "")}.png" alt="" onerror="this.style.visibility='hidden'"><span class="${a && a.legendary ? "yellow" : ""}">${ctx.esc(artName(id))}</span></span>`;
+  };
 
   function bar(rerender) {
     const e = ctx.esc;
@@ -218,21 +237,27 @@ export function createMine(ctx) {
     const label = (f) => {
       const latest = f.versions[f.versions.length - 1];
       const top = latest.deck.slice().sort((a, b) => b[1] - a[1] || useOf(a[0]) - useOf(b[0])).slice(0, 3).map(([id]) => cardName(id));
-      return names[f.key] || top.join(", ");
+      return top.join(", ");
     };
+    const autoLabel = label;
     let html = `<div class="uw-hidden">Each game's starting deck is a version; versions that share most of their cards are one deck. Compared with ${e(ctx.NAMES[div] || div)}, this season.</div>`;
     for (const f of fams) {
       const open = !!st.open[f.key];
       const latest = f.versions[f.versions.length - 1];
       html += `<div class="uw-deck"><div class="uw-deck-head" data-fam="${e(f.key)}">
-        <span>${open ? "▾" : "▸"}</span><span>${ctx.soulHtml(f.soul)}</span><span class="nm">${e(label(f))}<button type="button" class="uw-rename" data-ren="${e(f.key)}" title="Name this deck (kept on this device)">✎</button></span>
+        <span>${open ? "▾" : "▸"}</span><span>${ctx.soulHtml(f.soul)}</span><span class="nm"><input type="text" class="uw-deck-name" data-ren="${e(f.key)}" maxlength="40" value="${e(names[f.key] || "")}" placeholder="${e(autoLabel(f))}" title="Click to name this deck (kept on this device; empty = automatic)" spellcheck="false"></span>
         <span>${f.wins}–${f.games - f.wins} · ${wr(f.wins, f.games)}</span><span class="uw-meta">${f.versions.length} version${f.versions.length === 1 ? "" : "s"} · ${day(f.last)}</span></div>`;
       if (open) {
-        html += `<div class="uw-deck-body"><h4>Versions</h4><table><tr><th>Played</th><th>Games</th><th>Win rate</th><th>Changes</th></tr>`;
+        html += `<div class="uw-deck-body">`;
+        if (latest.arts.length) html += `<h4>Artifacts</h4><div class="uw-arts">${latest.arts.map(artHtml).join("")}</div>`;
+        html += `<h4>Versions</h4><table><tr><th>Played</th><th>Games</th><th>Win rate</th><th>Changes</th></tr>`;
         f.versions.forEach((v, i) => {
           const c = i ? changes(f.versions[i - 1].deck, v.deck) : null;
           const list = (xs, cls, sign) => xs.map(([id, n]) => `<span class="${cls}">${sign}${n > 1 ? n + "× " : ""}${e(cardName(id))}</span>`).join(", ");
-          html += `<tr><td>${day(v.first)}${v.last - v.first > 864e5 ? `–${day(v.last)}` : ""}</td><td>${v.games}</td><td>${wr(v.wins, v.games)}</td><td class="uw-chg">${c ? [list(c.add, "add", "+"), list(c.drop, "drop", "−")].filter(Boolean).join(", ") || "same cards" : "first version"}</td></tr>`;
+          const ac = i ? artChanges(f.versions[i - 1].arts, v.arts) : null;
+          const cardsTxt = c ? [list(c.add, "add", "+"), list(c.drop, "drop", "−")].filter(Boolean).join(", ") : "";
+          const artsTxt = ac && (ac.add.length || ac.drop.length) ? `<span class="arts">Artifacts: ${ac.drop.map(artHtml).join(" ") || "none"}<span class="to">→</span>${ac.add.map(artHtml).join(" ") || "none"}</span>` : "";
+          html += `<tr><td>${day(v.first)}${v.last - v.first > 864e5 ? `–${day(v.last)}` : ""}</td><td>${v.games}</td><td>${wr(v.wins, v.games)}</td><td class="uw-chg">${!i ? "first version" : (cardsTxt || (artsTxt ? "" : "same cards")) + artsTxt}</td></tr>`;
         });
         html += `</table><h4>Latest version vs the meta</h4><table><tr><th>Card</th><th>Copies</th><th>In ${e(ctx.NAMES[div] || div)} decks</th><th>Community win rate</th><th></th></tr>`;
         for (const [id, n] of latest.deck.slice().sort((a, b) => useOf(b[0]) - useOf(a[0]))) {
@@ -240,9 +265,7 @@ export function createMine(ctx) {
           const tag = !meta.has(id) ? '<span class="uw-tag">off-meta</span>' : u >= 0.3 ? '<span class="uw-tag">staple</span>' : u < 0.05 ? '<span class="uw-tag">rare pick</span>' : "";
           html += `<tr><td><span class="${cardCls(id)}">${e(cardName(id))}</span></td><td>${n}</td><td>${meta.has(id) ? pct(u) : "-"}</td><td>${w === null ? "-" : wr(w, 1)}</td><td>${tag}</td></tr>`;
         }
-        html += "</table>";
-        if (latest.arts.length) html += `<div class="uw-meta" style="margin-top:4px">Artifacts: ${latest.arts.map((a) => e(artName(a))).join(", ")}</div>`;
-        html += "</div>";
+        html += "</table></div>";
       }
       html += "</div>";
     }
@@ -285,12 +308,23 @@ export function createMine(ctx) {
     wrap.appendChild(body);
     container.appendChild(wrap);
     // listeners inside the body
-    body.querySelectorAll("[data-fam]").forEach((h) => h.addEventListener("click", (ev) => { if (ev.target.closest(".uw-rename")) return; st.open[h.dataset.fam] = !st.open[h.dataset.fam]; rerender(); }));
-    body.querySelectorAll("[data-ren]").forEach((b) => b.addEventListener("click", () => {
-      const cur = readNames()[b.dataset.ren] || "";
-      const v = prompt("Name this deck (only on this device; empty = automatic):", cur);
-      if (v !== null) { saveName(b.dataset.ren, v.trim().slice(0, 40)); rerender(); }
-    }));
+    body.querySelectorAll("[data-fam]").forEach((h) => h.addEventListener("click", (ev) => { if (ev.target.closest(".uw-deck-name")) return; st.open[h.dataset.fam] = !st.open[h.dataset.fam]; rerender(); }));
+    // The deck's name is a text box in its header (like Patch Maker's labels): type, then Enter or click away to keep it; Esc undoes.
+    body.querySelectorAll("input[data-ren]").forEach((inp) => {
+      let cancel = false;
+      inp.addEventListener("keydown", (ev) => {
+        ev.stopPropagation(); // no game or Wizascript hotkeys while typing
+        if (ev.key === "Enter") inp.blur();
+        else if (ev.key === "Escape") { cancel = true; inp.value = readNames()[inp.dataset.ren] || ""; inp.blur(); }
+      });
+      ["keyup", "keypress"].forEach((t) => inp.addEventListener(t, (ev) => ev.stopPropagation()));
+      inp.addEventListener("blur", () => {
+        if (cancel) { cancel = false; return; }
+        const v = inp.value.trim().slice(0, 40);
+        if (v !== (readNames()[inp.dataset.ren] || "")) saveName(inp.dataset.ren, v);
+        inp.value = v;
+      });
+    });
     const ms = body.querySelector(".uw-msoul"); if (ms) ms.addEventListener("change", () => { st.soul = ms.value; rerender(); });
     const mq = body.querySelector(".uw-mq"); if (mq) mq.addEventListener("input", () => { st.q = mq.value; const pos = mq.selectionStart; rerender(); const n = container.querySelector(".uw-mq"); if (n) { n.focus(); n.setSelectionRange(pos, pos); } });
     const mn = body.querySelector(".uw-min"); if (mn) mn.addEventListener("change", () => { st.minGames = Number(mn.value); rerender(); });

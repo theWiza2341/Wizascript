@@ -94,7 +94,11 @@ function dropGamesCache(season) {
 }
 // One account's games that season (1.8.3: player = an alt's name; none = the main
 // account). The answer also lists every account with games (players) for the switcher.
+// 1.8.3: Profile/History previews (not opted in) answer with sample games instead.
+let previewSource = null;
+export function setPreviewGames(fn) { previewSource = fn; }
 export async function myGames(season, { fresh = false, player = "" } = {}) {
+  if (previewSource) return previewSource(season, player);
   const key = `${season}|${player}`;
   const c = read(GAMES_CACHE, {});
   const hit = c[key];

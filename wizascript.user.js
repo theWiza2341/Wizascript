@@ -1052,14 +1052,14 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
 ### Usage Statistics
 - **My Stats** tab, next to **Community**, for your own games:
   - **Overview:** your record, current and best streaks, your sessions (games played close together) and how you do against each opponent soul.
-  - **Decks:** your decks, grouped automatically. Each version shows what changed, its record, and how its cards compare with what others play in your division (staples, rare picks, off-meta). Click \u270E to rename a deck; names stay on your device.
+  - **Decks:** your decks, grouped automatically. Each deck shows its artifacts first, then each version's record and what changed (cards and artifacts), and how its cards compare with what others play in your division (staples, rare picks, off-meta). Click a deck's name to rename it; names stay on your device.
   - **Cards:** your win rate with each card next to the community's.
 - **Alts:** Profile, History, the Elo Graph and My Stats now have an account picker, so you can see each account you play on. They start on the account you're logged in to.
-- **Soul + Artifact** view: which artifacts are played with each soul, and how they do.
+- **Soul + Artifact** view: which artifacts are played with each soul, and how they do, with a gap between souls.
 - **This Week** shows how each card changed since the week before (\u25B2 \u25BC, or "new"), with a **Rising** sort.
 - The window says how many players' games the statistics come from this month.
 - **Keybind:** Primary + I opens and closes the window (change it under Keybinds).
-- **Preview:** the opt-in prompt has a Preview button that shows the window with sample data, without turning anything on.
+- **Preview:** the opt-in prompt can preview the window, your Profile or your History with sample data, without turning anything on.
 - If Usage Statistics is off, a small reminder appears every 20 PvP games, with **Preview** and **Don't ask again**. The count stays on your device.
 - **Count each player once** is now on by default, so one player's many games with one deck don't skew the numbers. Turn it off under **Advanced** to see every game counted.
 - **True Hub+** works like the divisions: it shows everything once at least 3 different players have played there.
@@ -18561,7 +18561,12 @@ ${NOTES_CSS}
       write(GAMES_CACHE, c);
     }
   }
+  var previewSource = null;
+  function setPreviewGames(fn) {
+    previewSource = fn;
+  }
   async function myGames(season, { fresh = false, player = "" } = {}) {
+    if (previewSource) return previewSource(season, player);
     const key2 = `${season}|${player}`;
     const c = read(GAMES_CACHE, {});
     const hit = c[key2];
@@ -18604,6 +18609,90 @@ ${NOTES_CSS}
     });
     statsCache[w] = { at: Date.now(), p };
     return p;
+  }
+
+  // packages/usage-stats/preview.js
+  var SOULS3 = ["DETERMINATION", "BRAVERY", "INTEGRITY", "JUSTICE", "KINDNESS", "PATIENCE", "PERSEVERANCE"];
+  var DIVS = ["LEGEND", "ULTIMATE_MASTER", "HIGH_MASTER", "MASTER"];
+  function rng(seed) {
+    let s = seed >>> 0;
+    return () => {
+      s = s * 1664525 + 1013904223 >>> 0;
+      return s / 4294967296;
+    };
+  }
+  function sampleFiles(cards2, arts, now = Date.now()) {
+    const r = rng(7);
+    const pickC = cards2.slice(0, 400).filter((_, i) => i % 3 === 0).slice(0, 90);
+    const pickA = arts.slice(0, 40);
+    const sel = (players, games, spread) => {
+      const pg = players;
+      const cardsRows = pickC.map((c, i) => {
+        const use = Math.max(0.02, Math.min(0.9, spread / (i + 3) + r() * 0.08));
+        const g = Math.round(games * use), p = Math.max(1, Math.round(pg * use));
+        const w = Math.round(g * (0.4 + r() * 0.22));
+        return [c.id, g, w, Math.round(g * (1.2 + r())), p, p, Math.round(p * (w / Math.max(1, g)) * 100) / 100, Math.round(p * 1.6 * 100) / 100];
+      }).filter((x) => x[1] > 0);
+      const artRows = pickA.map((a, i) => {
+        const g = Math.round(games * Math.max(0.03, 0.5 / (i + 1)));
+        const p = Math.max(1, Math.round(pg * g / games));
+        const w = Math.round(g * (0.42 + r() * 0.16));
+        return [a.id, g, w, p, p, Math.round(p * w / Math.max(1, g) * 100) / 100];
+      });
+      const souls = SOULS3.map((s, i) => {
+        const g = Math.round(games * [0.24, 0.18, 0.15, 0.14, 0.11, 0.1, 0.08][i]);
+        const p = Math.max(1, Math.round(pg * g / games));
+        const w = Math.round(g * (0.44 + r() * 0.12));
+        return [s, g, w, p, p, Math.round(p * w / Math.max(1, g) * 100) / 100];
+      });
+      const combos = [];
+      for (const s of SOULS3.slice(0, 4)) for (const a of pickA.slice(0, 6)) {
+        const g = Math.round(games * 0.05 * (0.5 + r()));
+        const p = Math.max(3, Math.round(g / 3));
+        const w = Math.round(g * (0.4 + r() * 0.25));
+        combos.push([s, a.id, g, w, p, p, Math.round(p * w / Math.max(1, g) * 100) / 100]);
+      }
+      return { games, players, souls, cards: cardsRows, arts: artRows, combos, hidden: { cards: 0, arts: 0 } };
+    };
+    const make = (window2, games, players) => {
+      const out = { format: 1, window: window2, built: now - 9 * 6e4, private: true, minPlayers: 3, allReady: false, preview: true, counts: { TODAY: 38, WEEK: 412, SEASON: 1250 }, sel: {} };
+      out.sel.TOTAL = sel(players, games, 3);
+      DIVS.forEach((d, i) => {
+        out.sel[d] = sel(Math.max(3, Math.round(players * [0.12, 0.2, 0.3, 0.38][i])), Math.round(games * [0.1, 0.2, 0.3, 0.4][i]), 2.5);
+      });
+      out.sel.UNRANKED = sel(Math.round(players * 0.3), Math.round(games * 0.2), 2);
+      out.sel.TRUEHUB = sel(Math.max(3, Math.round(players * 0.1)), Math.round(games * 0.08), 2);
+      if (window2 === "WEEK") for (const k of Object.keys(out.sel)) {
+        const s = out.sel[k];
+        s.prev = { games: Math.round(s.games * 0.9), players: s.players, cards: s.cards.map((x) => [x[0], Math.round(x[1] * (0.7 + r() * 0.5)), Math.round(x[5] * (0.7 + r() * 0.5) * 100) / 100]), arts: s.arts.map((x) => [x[0], x[1], x[4]]), souls: s.souls.map((x) => [x[0], x[1], x[4]]) };
+      }
+      return out;
+    };
+    return { TODAY: make("TODAY", 38, 14), WEEK: make("WEEK", 412, 46), SEASON: make("SEASON", 1250, 84), ALL: { format: 1, window: "ALL", locked: true, preview: true, counts: { ALL: 0 }, sel: {} } };
+  }
+  function sampleGames(cards2, arts, now = Date.now()) {
+    const r = rng(11);
+    const ids = cards2.slice(0, 300).map((c2) => c2.id);
+    const size = Math.max(3, Math.min(14, Math.floor(ids.length / 4)));
+    const cut = (k) => Math.floor(ids.length * k / 4);
+    const deck = (start) => ids.slice(start, start + size).map((id, i) => [id, i % 3 === 0 ? 2 : 1]);
+    const a = deck(cut(0)), b = deck(cut(1)), c = deck(cut(2));
+    const extra = ids.slice(cut(3), cut(3) + 2);
+    const a2 = a.slice(0, Math.max(1, a.length - 2)).concat(extra.map((id, i) => [id, i ? 1 : 2]));
+    const art = (n) => arts.slice(n, n + 2).map((x) => x.id);
+    const plans = [["DETERMINATION", a, art(0)], ["DETERMINATION", a2, art(0)], ["PATIENCE", b, art(3)], ["JUSTICE", c, art(6)]];
+    const games = [];
+    let elo = 1640, at = now - 20 * 864e5;
+    for (let i = 0; i < 64; i++) {
+      const [soul, d, ar] = plans[i < 18 ? 0 : i < 40 ? i % 3 === 0 ? 2 : 1 : i % 2 ? 3 : 1];
+      const win2 = r() < (d === a2 ? 0.62 : 0.48);
+      const old = elo;
+      elo += win2 ? 12 + Math.round(r() * 6) : -(10 + Math.round(r() * 6));
+      const div = (e) => e >= 2e3 ? "LEGEND" : e >= 1800 ? "ULTIMATE_MASTER" : e >= 1650 ? "HIGH_MASTER" : "MASTER";
+      at += (i % 6 === 0 ? 20 * 36e5 : 0) + 9 * 6e4 + Math.round(r() * 8 * 6e4);
+      games.push({ gameId: "preview" + i, at: Math.min(at, now - 6e4), soul, win: win2, rankedUnlocked: true, oldDivision: div(old), newDivision: div(elo), oldElo: old, newElo: elo, enemySoul: SOULS3[Math.floor(r() * 7)], deck: d, arts: ar });
+    }
+    return games;
   }
 
   // packages/usage-stats/recorder.js
@@ -19284,6 +19373,10 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     }
     return { add, drop };
   }
+  function artChanges(from, to) {
+    const A = new Set(from || []), B = new Set(to || []);
+    return { add: [...B].filter((x) => !A.has(x)), drop: [...A].filter((x) => !B.has(x)) };
+  }
   function deckFamilies(games) {
     const versions = /* @__PURE__ */ new Map();
     for (const x of games.slice().sort((a, b) => a.at - b.at)) {
@@ -19340,7 +19433,17 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
 #wz-usage-win .uw-deck-body { padding:4px 8px 8px; border-top:1px solid rgba(255,255,255,.15); }
 #wz-usage-win .uw-chg .add { color:#6c6; } #wz-usage-win .uw-chg .drop { color:#e66; }
 #wz-usage-win .uw-tag { font-size:11px; padding:0 5px; border:1px solid #888; color:#ccc; margin-left:4px; }
-#wz-usage-win .uw-rename { background:none; border:none; color:#aaa; cursor:pointer; font-size:12px; padding:0 4px; }
+#wz-usage-win .uw-deck-name { background:transparent; color:#fff; border:1px solid transparent; font:inherit; padding:1px 4px; width:100%; max-width:340px; cursor:text; }
+#wz-usage-win .uw-deck-name::placeholder { color:#fff; opacity:1; }
+#wz-usage-win .uw-deck-name:hover { border-color:rgba(255,255,255,.35); }
+#wz-usage-win .uw-deck-name:focus { border-color:#fff; background:#111; outline:none; }
+#wz-usage-win .uw-deck-name:focus::placeholder { color:#777; }
+#wz-usage-win .uw-arts { display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; }
+#wz-usage-win .uw-art { display:inline-flex; align-items:center; gap:4px; }
+#wz-usage-win .uw-art img { width:24px; height:24px; object-fit:contain; }
+#wz-usage-win .uw-chg .uw-art img { width:18px; height:18px; }
+#wz-usage-win .uw-chg .arts { display:flex; flex-wrap:wrap; align-items:center; gap:2px 8px; margin-top:2px; }
+#wz-usage-win .uw-chg .arts .to { font-size:16px; color:#ccc; }
 #wz-usage-win select.uw-sel, #wz-usage-win select.uw-sel option { background:#222; color:#fff; border:1px solid #888; font:inherit; font-size:13px; }
 #wz-usage-win .uw-delta.up { color:#6c6; } #wz-usage-win .uw-delta.down { color:#e66; }
 `;
@@ -19412,6 +19515,10 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       const a = ctx.catalog().artById.get(id);
       return a ? a.name : `#${id}`;
     };
+    const artHtml = (id) => {
+      const a = ctx.catalog().artById.get(id);
+      return `<span class="uw-art"><img src="/images/artifacts/${ctx.esc(a && a.image || "")}.png" alt="" onerror="this.style.visibility='hidden'"><span class="${a && a.legendary ? "yellow" : ""}">${ctx.esc(artName(id))}</span></span>`;
+    };
     function bar(rerender) {
       const e = ctx.esc;
       const players = st.players.length > 1 ? `<label class="uw-adv">Account <select class="uw-sel uw-player">${st.players.map((p) => `<option value="${e(p.name)}"${p.name === st.player ? " selected" : ""}>${e(p.name)}${p.main ? " (main)" : " (alt)"}</option>`).join("")}</select></label>` : st.player ? `<span class="uw-meta">${e(st.player)}</span>` : "";
@@ -19473,21 +19580,27 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       const label2 = (f) => {
         const latest = f.versions[f.versions.length - 1];
         const top = latest.deck.slice().sort((a, b) => b[1] - a[1] || useOf(a[0]) - useOf(b[0])).slice(0, 3).map(([id]) => cardName2(id));
-        return names[f.key] || top.join(", ");
+        return top.join(", ");
       };
+      const autoLabel = label2;
       let html = `<div class="uw-hidden">Each game's starting deck is a version; versions that share most of their cards are one deck. Compared with ${e(ctx.NAMES[div] || div)}, this season.</div>`;
       for (const f of fams) {
         const open = !!st.open[f.key];
         const latest = f.versions[f.versions.length - 1];
         html += `<div class="uw-deck"><div class="uw-deck-head" data-fam="${e(f.key)}">
-        <span>${open ? "\u25BE" : "\u25B8"}</span><span>${ctx.soulHtml(f.soul)}</span><span class="nm">${e(label2(f))}<button type="button" class="uw-rename" data-ren="${e(f.key)}" title="Name this deck (kept on this device)">\u270E</button></span>
+        <span>${open ? "\u25BE" : "\u25B8"}</span><span>${ctx.soulHtml(f.soul)}</span><span class="nm"><input type="text" class="uw-deck-name" data-ren="${e(f.key)}" maxlength="40" value="${e(names[f.key] || "")}" placeholder="${e(autoLabel(f))}" title="Click to name this deck (kept on this device; empty = automatic)" spellcheck="false"></span>
         <span>${f.wins}\u2013${f.games - f.wins} \xB7 ${wr(f.wins, f.games)}</span><span class="uw-meta">${f.versions.length} version${f.versions.length === 1 ? "" : "s"} \xB7 ${day(f.last)}</span></div>`;
         if (open) {
-          html += `<div class="uw-deck-body"><h4>Versions</h4><table><tr><th>Played</th><th>Games</th><th>Win rate</th><th>Changes</th></tr>`;
+          html += `<div class="uw-deck-body">`;
+          if (latest.arts.length) html += `<h4>Artifacts</h4><div class="uw-arts">${latest.arts.map(artHtml).join("")}</div>`;
+          html += `<h4>Versions</h4><table><tr><th>Played</th><th>Games</th><th>Win rate</th><th>Changes</th></tr>`;
           f.versions.forEach((v, i) => {
             const c = i ? changes(f.versions[i - 1].deck, v.deck) : null;
             const list = (xs, cls, sign) => xs.map(([id, n]) => `<span class="${cls}">${sign}${n > 1 ? n + "\xD7 " : ""}${e(cardName2(id))}</span>`).join(", ");
-            html += `<tr><td>${day(v.first)}${v.last - v.first > 864e5 ? `\u2013${day(v.last)}` : ""}</td><td>${v.games}</td><td>${wr(v.wins, v.games)}</td><td class="uw-chg">${c ? [list(c.add, "add", "+"), list(c.drop, "drop", "\u2212")].filter(Boolean).join(", ") || "same cards" : "first version"}</td></tr>`;
+            const ac = i ? artChanges(f.versions[i - 1].arts, v.arts) : null;
+            const cardsTxt = c ? [list(c.add, "add", "+"), list(c.drop, "drop", "\u2212")].filter(Boolean).join(", ") : "";
+            const artsTxt = ac && (ac.add.length || ac.drop.length) ? `<span class="arts">Artifacts: ${ac.drop.map(artHtml).join(" ") || "none"}<span class="to">\u2192</span>${ac.add.map(artHtml).join(" ") || "none"}</span>` : "";
+            html += `<tr><td>${day(v.first)}${v.last - v.first > 864e5 ? `\u2013${day(v.last)}` : ""}</td><td>${v.games}</td><td>${wr(v.wins, v.games)}</td><td class="uw-chg">${!i ? "first version" : (cardsTxt || (artsTxt ? "" : "same cards")) + artsTxt}</td></tr>`;
           });
           html += `</table><h4>Latest version vs the meta</h4><table><tr><th>Card</th><th>Copies</th><th>In ${e(ctx.NAMES[div] || div)} decks</th><th>Community win rate</th><th></th></tr>`;
           for (const [id, n] of latest.deck.slice().sort((a, b) => useOf(b[0]) - useOf(a[0]))) {
@@ -19495,9 +19608,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
             const tag = !meta.has(id) ? '<span class="uw-tag">off-meta</span>' : u >= 0.3 ? '<span class="uw-tag">staple</span>' : u < 0.05 ? '<span class="uw-tag">rare pick</span>' : "";
             html += `<tr><td><span class="${cardCls(id)}">${e(cardName2(id))}</span></td><td>${n}</td><td>${meta.has(id) ? pct(u) : "-"}</td><td>${w === null ? "-" : wr(w, 1)}</td><td>${tag}</td></tr>`;
           }
-          html += "</table>";
-          if (latest.arts.length) html += `<div class="uw-meta" style="margin-top:4px">Artifacts: ${latest.arts.map((a) => e(artName(a))).join(", ")}</div>`;
-          html += "</div>";
+          html += "</table></div>";
         }
         html += "</div>";
       }
@@ -19543,18 +19654,32 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       wrap.appendChild(body);
       container.appendChild(wrap);
       body.querySelectorAll("[data-fam]").forEach((h2) => h2.addEventListener("click", (ev) => {
-        if (ev.target.closest(".uw-rename")) return;
+        if (ev.target.closest(".uw-deck-name")) return;
         st.open[h2.dataset.fam] = !st.open[h2.dataset.fam];
         rerender();
       }));
-      body.querySelectorAll("[data-ren]").forEach((b) => b.addEventListener("click", () => {
-        const cur = readNames()[b.dataset.ren] || "";
-        const v = prompt("Name this deck (only on this device; empty = automatic):", cur);
-        if (v !== null) {
-          saveName(b.dataset.ren, v.trim().slice(0, 40));
-          rerender();
-        }
-      }));
+      body.querySelectorAll("input[data-ren]").forEach((inp) => {
+        let cancel = false;
+        inp.addEventListener("keydown", (ev) => {
+          ev.stopPropagation();
+          if (ev.key === "Enter") inp.blur();
+          else if (ev.key === "Escape") {
+            cancel = true;
+            inp.value = readNames()[inp.dataset.ren] || "";
+            inp.blur();
+          }
+        });
+        ["keyup", "keypress"].forEach((t2) => inp.addEventListener(t2, (ev) => ev.stopPropagation()));
+        inp.addEventListener("blur", () => {
+          if (cancel) {
+            cancel = false;
+            return;
+          }
+          const v = inp.value.trim().slice(0, 40);
+          if (v !== (readNames()[inp.dataset.ren] || "")) saveName(inp.dataset.ren, v);
+          inp.value = v;
+        });
+      });
       const ms = body.querySelector(".uw-msoul");
       if (ms) ms.addEventListener("change", () => {
         st.soul = ms.value;
@@ -19582,90 +19707,6 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       st.player = null;
       st.error = "";
     } };
-  }
-
-  // packages/usage-stats/preview.js
-  var SOULS3 = ["DETERMINATION", "BRAVERY", "INTEGRITY", "JUSTICE", "KINDNESS", "PATIENCE", "PERSEVERANCE"];
-  var DIVS = ["LEGEND", "ULTIMATE_MASTER", "HIGH_MASTER", "MASTER"];
-  function rng(seed) {
-    let s = seed >>> 0;
-    return () => {
-      s = s * 1664525 + 1013904223 >>> 0;
-      return s / 4294967296;
-    };
-  }
-  function sampleFiles(cards2, arts, now = Date.now()) {
-    const r = rng(7);
-    const pickC = cards2.slice(0, 400).filter((_, i) => i % 3 === 0).slice(0, 90);
-    const pickA = arts.slice(0, 40);
-    const sel = (players, games, spread) => {
-      const pg = players;
-      const cardsRows = pickC.map((c, i) => {
-        const use = Math.max(0.02, Math.min(0.9, spread / (i + 3) + r() * 0.08));
-        const g = Math.round(games * use), p = Math.max(1, Math.round(pg * use));
-        const w = Math.round(g * (0.4 + r() * 0.22));
-        return [c.id, g, w, Math.round(g * (1.2 + r())), p, p, Math.round(p * (w / Math.max(1, g)) * 100) / 100, Math.round(p * 1.6 * 100) / 100];
-      }).filter((x) => x[1] > 0);
-      const artRows = pickA.map((a, i) => {
-        const g = Math.round(games * Math.max(0.03, 0.5 / (i + 1)));
-        const p = Math.max(1, Math.round(pg * g / games));
-        const w = Math.round(g * (0.42 + r() * 0.16));
-        return [a.id, g, w, p, p, Math.round(p * w / Math.max(1, g) * 100) / 100];
-      });
-      const souls = SOULS3.map((s, i) => {
-        const g = Math.round(games * [0.24, 0.18, 0.15, 0.14, 0.11, 0.1, 0.08][i]);
-        const p = Math.max(1, Math.round(pg * g / games));
-        const w = Math.round(g * (0.44 + r() * 0.12));
-        return [s, g, w, p, p, Math.round(p * w / Math.max(1, g) * 100) / 100];
-      });
-      const combos = [];
-      for (const s of SOULS3.slice(0, 4)) for (const a of pickA.slice(0, 6)) {
-        const g = Math.round(games * 0.05 * (0.5 + r()));
-        const p = Math.max(3, Math.round(g / 3));
-        const w = Math.round(g * (0.4 + r() * 0.25));
-        combos.push([s, a.id, g, w, p, p, Math.round(p * w / Math.max(1, g) * 100) / 100]);
-      }
-      return { games, players, souls, cards: cardsRows, arts: artRows, combos, hidden: { cards: 0, arts: 0 } };
-    };
-    const make = (window2, games, players) => {
-      const out = { format: 1, window: window2, built: now - 9 * 6e4, private: true, minPlayers: 3, allReady: false, preview: true, counts: { TODAY: 38, WEEK: 412, SEASON: 1250 }, sel: {} };
-      out.sel.TOTAL = sel(players, games, 3);
-      DIVS.forEach((d, i) => {
-        out.sel[d] = sel(Math.max(3, Math.round(players * [0.12, 0.2, 0.3, 0.38][i])), Math.round(games * [0.1, 0.2, 0.3, 0.4][i]), 2.5);
-      });
-      out.sel.UNRANKED = sel(Math.round(players * 0.3), Math.round(games * 0.2), 2);
-      out.sel.TRUEHUB = sel(Math.max(3, Math.round(players * 0.1)), Math.round(games * 0.08), 2);
-      if (window2 === "WEEK") for (const k of Object.keys(out.sel)) {
-        const s = out.sel[k];
-        s.prev = { games: Math.round(s.games * 0.9), players: s.players, cards: s.cards.map((x) => [x[0], Math.round(x[1] * (0.7 + r() * 0.5)), Math.round(x[5] * (0.7 + r() * 0.5) * 100) / 100]), arts: s.arts.map((x) => [x[0], x[1], x[4]]), souls: s.souls.map((x) => [x[0], x[1], x[4]]) };
-      }
-      return out;
-    };
-    return { TODAY: make("TODAY", 38, 14), WEEK: make("WEEK", 412, 46), SEASON: make("SEASON", 1250, 84), ALL: { format: 1, window: "ALL", locked: true, preview: true, counts: { ALL: 0 }, sel: {} } };
-  }
-  function sampleGames(cards2, arts, now = Date.now()) {
-    const r = rng(11);
-    const ids = cards2.slice(0, 300).map((c2) => c2.id);
-    const size = Math.max(3, Math.min(14, Math.floor(ids.length / 4)));
-    const cut = (k) => Math.floor(ids.length * k / 4);
-    const deck = (start) => ids.slice(start, start + size).map((id, i) => [id, i % 3 === 0 ? 2 : 1]);
-    const a = deck(cut(0)), b = deck(cut(1)), c = deck(cut(2));
-    const extra = ids.slice(cut(3), cut(3) + 2);
-    const a2 = a.slice(0, Math.max(1, a.length - 2)).concat(extra.map((id, i) => [id, i ? 1 : 2]));
-    const art = (n) => arts.slice(n, n + 2).map((x) => x.id);
-    const plans = [["DETERMINATION", a, art(0)], ["DETERMINATION", a2, art(0)], ["PATIENCE", b, art(3)], ["JUSTICE", c, art(6)]];
-    const games = [];
-    let elo = 1640, at = now - 20 * 864e5;
-    for (let i = 0; i < 64; i++) {
-      const [soul, d, ar] = plans[i < 18 ? 0 : i < 40 ? i % 3 === 0 ? 2 : 1 : i % 2 ? 3 : 1];
-      const win2 = r() < (d === a2 ? 0.62 : 0.48);
-      const old = elo;
-      elo += win2 ? 12 + Math.round(r() * 6) : -(10 + Math.round(r() * 6));
-      const div = (e) => e >= 2e3 ? "LEGEND" : e >= 1800 ? "ULTIMATE_MASTER" : e >= 1650 ? "HIGH_MASTER" : "MASTER";
-      at += (i % 6 === 0 ? 20 * 36e5 : 0) + 9 * 6e4 + Math.round(r() * 8 * 6e4);
-      games.push({ gameId: "preview" + i, at: Math.min(at, now - 6e4), soul, win: win2, rankedUnlocked: true, oldDivision: div(old), newDivision: div(elo), oldElo: old, newElo: elo, enemySoul: SOULS3[Math.floor(r() * 7)], deck: d, arts: ar });
-    }
-    return games;
   }
 
   // packages/misc/card-history/game.js
@@ -19830,6 +19871,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
 #wz-usage-win .uw-rank { color:#888; width:26px; text-align:right; }
 #wz-usage-win .uw-thumb { height:26px; width:26px; object-fit:cover; object-position:top; vertical-align:middle; margin-right:6px; border:1px solid rgba(255,255,255,.3); background:#111; }
 #wz-usage-win .uw-meter { position:relative; height:14px; width:120px; background:rgba(255,255,255,.08); display:inline-block; vertical-align:middle; margin-right:6px; }
+#wz-usage-win tr.uw-gap td { height:18px; border:none !important; background:transparent !important; }
 #wz-usage-win .uw-pct { display:inline-block; min-width:3.4em; text-align:right; }
 #wz-usage-win .uw-meter i { position:absolute; left:0; top:0; bottom:0; background:#4a8; }
 #wz-usage-win .uw-meter.art i { background:#c9a227; } #wz-usage-win .uw-meter.soul i { background:#58f; }
@@ -20258,6 +20300,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       let last = "";
       for (const x of list) {
         const a = catalog.artById.get(x.art) || { name: `#${x.art}`, image: "" };
+        if (last && x.soul !== last) html2 += `<tr class="uw-gap"><td colspan="${state3.adv ? 6 : 4}"></td></tr>`;
         html2 += `<tr><td>${x.soul !== last ? soulHtml(x.soul) : ""}</td><td><img class="uw-thumb" src="/images/artifacts/${esc3(a.image || "")}.png" onerror="this.style.visibility='hidden'"><span class="${a.legendary ? "yellow" : ""}">${esc3(a.name)}</span></td>
         <td>${meter(x.share, "art")}</td><td>${rate2(x.w, x.n)}</td>${state3.adv ? `<td>${x.g}</td><td>${x.p}</td>` : ""}</tr>`;
         last = x.soul;
@@ -20396,11 +20439,22 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     <p>Only totals are published; no one can see your deck.</p>
     <p>${linked ? `Sent under your linked account, <b>${linked}</b>.` : "<b>Needs your Undercards account linked</b> (Wizascript tab \u2192 Undercards Account)."} Delete it any time with <b>Delete My Data</b>.</p>
     <p><b>Under 15?</b> Ask a parent first. <a href="${PRIVACY_URL}" target="_blank" rel="noopener">Privacy</a></p>`, [
-      // Preview: leaves it off (the window would sit under this dialog), shows sample data.
-      { label: "Preview", action: (d) => {
+      // Previews leave it off and show sample data: the window (Settings close so it's in view), or Profile / History.
+      { label: "Preview Window", action: (d) => {
         undo2();
         d.close();
+        closeSettings();
         openUsageWindow({ preview: true });
+      } },
+      { label: "Preview Profile", action: (d) => {
+        undo2();
+        d.close();
+        location.href = previewUrl("Profile");
+      } },
+      { label: "Preview History", action: (d) => {
+        undo2();
+        d.close();
+        location.href = previewUrl("History");
       } },
       { label: "Cancel", action: (d) => {
         undo2();
@@ -20409,6 +20463,42 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
       { label: "Opt in", cssClass: "btn-success", action: (d) => d.close() }
     ]);
     if (!shown && !window.confirm("Usage Statistics sends each of your PvP games, including your starting deck, to the Wizascript server. Opt in?")) undo2();
+  }
+  function closeSettings() {
+    try {
+      const BD = getPageWindow().BootstrapDialog;
+      Object.values(BD && BD.dialogs || {}).forEach((d) => {
+        try {
+          d.close();
+        } catch (e) {
+        }
+      });
+    } catch (e) {
+    }
+  }
+  var PREVIEW_PARAM = "wzPreview";
+  var SAMPLE = "You (sample)";
+  var previewUrl = (page) => `/${page}?${PREVIEW_PARAM}=1`;
+  function startPagePreview() {
+    if (!new URLSearchParams(location.search).has(PREVIEW_PARAM)) return false;
+    const onProfile = matchesPage("/Profile"), onHistory = matchesPage("/History");
+    if (!onProfile && !onHistory) return false;
+    const cur = seasonOf(Date.now());
+    const games = sampleGames([], []);
+    setPreviewGames(async (season) => ({ season, player: SAMPLE, main: false, players: [{ name: SAMPLE, main: true, games: games.length }], seasons: [{ season: cur, games: games.length }], games: season === cur ? games : [] }));
+    const bar = document.createElement("div");
+    bar.id = "wz-usage-preview-bar";
+    bar.style.cssText = "background:#3a2a00;color:#ffd84a;border:1px solid #ffd84a;padding:6px 14px;margin:6px 0;font-size:14px;text-align:center;";
+    bar.innerHTML = `<b>Preview with SAMPLE data</b>: not your real games. Turn on <b>Usage Statistics</b> in Wizascript's Plugins list to see your own. <a href="${location.pathname}" style="color:#fff;margin-left:8px;text-decoration:underline">Exit preview</a>`;
+    const place = (ok, anchorId) => {
+      const a = document.getElementById(anchorId);
+      if (a) a.before(bar);
+      else document.body.prepend(bar);
+      return ok;
+    };
+    if (onProfile) startOnTable("Profile (preview)", findStatsTable, () => place(startProfile({ showGraph: () => true }), "wz-season-bar"));
+    else startOnTable("History (preview)", findHistoryTable, () => place(startHistory({ wheelPaging: () => !wheelSetting2 || !!wheelSetting2.value() }), "wz-hist-pager"));
+    return true;
   }
   function offerDelete(fromButton = false) {
     const run = async (d) => {
@@ -20529,6 +20619,7 @@ tr.wz-empty td { color:#999; text-align:center; font-size:13px; }
     registerKeybind(plugin, { key: "toggleUsageStats", name: "Toggle Usage Statistics", defaultCode: "KeyI", packageLabel: "Usage Statistics", onMatch: () => toggleUsageWindow() });
     if (!isPluginEnabled(PLUGIN_ID)) {
       log3("turned off (Plugins list)");
+      if (startPagePreview()) return;
       startNudge(plugin, { openPreview: () => openUsageWindow({ preview: true }) });
       return;
     }

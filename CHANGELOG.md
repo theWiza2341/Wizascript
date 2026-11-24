@@ -7,14 +7,14 @@ All notable changes to Wizascript are recorded here, newest first. The Changelog
 ### Usage Statistics
 - **My Stats** tab, next to **Community**, for your own games:
   - **Overview:** your record, current and best streaks, your sessions (games played close together) and how you do against each opponent soul.
-  - **Decks:** your decks, grouped automatically. Each version shows what changed, its record, and how its cards compare with what others play in your division (staples, rare picks, off-meta). Click ✎ to rename a deck; names stay on your device.
+  - **Decks:** your decks, grouped automatically. Each deck shows its artifacts first, then each version's record and what changed (cards and artifacts), and how its cards compare with what others play in your division (staples, rare picks, off-meta). Click a deck's name to rename it; names stay on your device.
   - **Cards:** your win rate with each card next to the community's.
 - **Alts:** Profile, History, the Elo Graph and My Stats now have an account picker, so you can see each account you play on. They start on the account you're logged in to.
-- **Soul + Artifact** view: which artifacts are played with each soul, and how they do.
+- **Soul + Artifact** view: which artifacts are played with each soul, and how they do, with a gap between souls.
 - **This Week** shows how each card changed since the week before (▲ ▼, or "new"), with a **Rising** sort.
 - The window says how many players' games the statistics come from this month.
 - **Keybind:** Primary + I opens and closes the window (change it under Keybinds).
-- **Preview:** the opt-in prompt has a Preview button that shows the window with sample data, without turning anything on.
+- **Preview:** the opt-in prompt can preview the window, your Profile or your History with sample data, without turning anything on.
 - If Usage Statistics is off, a small reminder appears every 20 PvP games, with **Preview** and **Don't ask again**. The count stays on your device.
 - **Count each player once** is now on by default, so one player's many games with one deck don't skew the numbers. Turn it off under **Advanced** to see every game counted.
 - **True Hub+** works like the divisions: it shows everything once at least 3 different players have played there.

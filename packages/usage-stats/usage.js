@@ -55,6 +55,7 @@ const CSS = `
 #wz-usage-win .uw-rank { color:#888; width:26px; text-align:right; }
 #wz-usage-win .uw-thumb { height:26px; width:26px; object-fit:cover; object-position:top; vertical-align:middle; margin-right:6px; border:1px solid rgba(255,255,255,.3); background:#111; }
 #wz-usage-win .uw-meter { position:relative; height:14px; width:120px; background:rgba(255,255,255,.08); display:inline-block; vertical-align:middle; margin-right:6px; }
+#wz-usage-win tr.uw-gap td { height:18px; border:none !important; background:transparent !important; }
 #wz-usage-win .uw-pct { display:inline-block; min-width:3.4em; text-align:right; }
 #wz-usage-win .uw-meter i { position:absolute; left:0; top:0; bottom:0; background:#4a8; }
 #wz-usage-win .uw-meter.art i { background:#c9a227; } #wz-usage-win .uw-meter.soul i { background:#58f; }
@@ -385,6 +386,7 @@ function renderBody() {
     let last = "";
     for (const x of list) {
       const a = catalog.artById.get(x.art) || { name: `#${x.art}`, image: "" };
+      if (last && x.soul !== last) html += `<tr class="uw-gap"><td colspan="${state.adv ? 6 : 4}"></td></tr>`;
       html += `<tr><td>${x.soul !== last ? soulHtml(x.soul) : ""}</td><td><img class="uw-thumb" src="/images/artifacts/${esc(a.image || "")}.png" onerror="this.style.visibility='hidden'"><span class="${a.legendary ? "yellow" : ""}">${esc(a.name)}</span></td>
         <td>${meter(x.share, "art")}</td><td>${rate(x.w, x.n)}</td>${state.adv ? `<td>${x.g}</td><td>${x.p}</td>` : ""}</tr>`;
       last = x.soul;

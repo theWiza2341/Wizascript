@@ -1,0 +1,50 @@
+{
+  "id": "15h",
+  "kind": "set",
+  "title": "Trihecta",
+  "author": "Venoblade",
+  "postedAt": 1795551129644,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Tri",
+      "desc": "Armor. Magic: If you have {Hec} and {Ta}, turn into {Trihecta} and Erase them.",
+      "cost": 2,
+      "atk": 2,
+      "hp": 1,
+      "rarity": "UTY_RARE",
+      "art": "art/15h-0.png"
+    },
+    {
+      "type": "Monster",
+      "name": "Hec",
+      "desc": "Haste. Magic: If you have {Tri} and {Ta}, turn into {Trihecta} and Erase them.",
+      "cost": 2,
+      "atk": 2,
+      "hp": 2,
+      "rarity": "UTY_RARE",
+      "art": "art/15h-1.png"
+    },
+    {
+      "type": "Monster",
+      "name": "Ta",
+      "desc": "Taunt. Magic: If you have {Tri} and {Hec}, turn into {Trihecta} and Erase them.",
+      "cost": 2,
+      "atk": 2,
+      "hp": 2,
+      "rarity": "UTY_RARE",
+      "art": "art/15h-2.png"
+    },
+    {
+      "type": "Monster",
+      "name": "Trihecta",
+      "desc": "Haste. Armor. Taunt. Dust: Summon {Tri}, {Hec}, and {Ta}.",
+      "cost": 7,
+      "atk": 7,
+      "hp": 5,
+      "rarity": "UTY_TOKEN",
+      "art": "art/15h-3.png"
+    }
+  ]
+}

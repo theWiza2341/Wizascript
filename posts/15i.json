@@ -1,0 +1,27 @@
+{
+  "id": "15i",
+  "kind": "set",
+  "title": "Pixel Goods",
+  "author": "Legacy_03",
+  "postedAt": 1795563696134,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Power Croissant",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/15i-0-pic.png"
+    },
+    {
+      "type": "Monster",
+      "name": "Pixel Candy",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/15i-1-pic.png"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "16a",
+  "kind": "single",
+  "title": "Super Nubert",
+  "author": "IceNovice4163",
+  "postedAt": 1795639253025,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Super Nubert",
+      "desc": "Haste. Candy. This card's ATK and HP buffs are doubled.",
+      "cost": 6,
+      "atk": 4,
+      "hp": 5,
+      "rarity": "DELTARUNE_EPIC",
+      "art": "art/16a-0.png"
+    }
+  ]
+}

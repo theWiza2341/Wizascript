@@ -1,0 +1,19 @@
+{
+  "id": "16j",
+  "kind": "single",
+  "title": "Hex_Flame_1",
+  "author": "TheLudicrousLuv",
+  "postedAt": 1795726211454,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Hex_Flame_1",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/16j-0-pic.png"
+    }
+  ]
+}

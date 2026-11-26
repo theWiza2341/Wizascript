@@ -1,0 +1,19 @@
+{
+  "id": "16d",
+  "kind": "single",
+  "title": "Tissue Box",
+  "author": "Legacy_03",
+  "postedAt": 1795647937750,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Tissue Box",
+      "desc": "Dust: If this was killed by a spell, give a random non-TOKEN spell in your hand -3 cost. Otherwise, give a random monster in your deck -2 cost.",
+      "cost": 4,
+      "atk": 4,
+      "hp": 3,
+      "rarity": "DELTARUNE_RARE",
+      "art": "art/16d-0.png"
+    }
+  ]
+}

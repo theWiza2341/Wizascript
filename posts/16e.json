@@ -1,0 +1,19 @@
+{
+  "id": "16e",
+  "kind": "single",
+  "title": "Idol Pink",
+  "author": "Legacy_03",
+  "postedAt": 1795648589862,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Idol Pink",
+      "desc": "Haste. Turn start: Halve a random enemy monster's stats. Earn G equal to stats halved.",
+      "cost": 8,
+      "atk": 6,
+      "hp": 7,
+      "rarity": "DELTARUNE_LEGENDARY",
+      "art": "art/16e-0.png"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "16g",
+  "kind": "single",
+  "title": "Broken Axis",
+  "author": "Legacy_03",
+  "postedAt": 1795648589862,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Broken Axis",
+      "desc": "Armor. Haste. After this takes DMG, gain ATK equal to missing HP.",
+      "cost": 5,
+      "atk": 1,
+      "hp": 7,
+      "rarity": "UTY_EPIC",
+      "art": "art/16g-0.png"
+    }
+  ]
+}

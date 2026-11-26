@@ -1,0 +1,19 @@
+{
+  "id": "164",
+  "kind": "single",
+  "title": "Rainy Kid",
+  "author": "IceNovice4163",
+  "postedAt": 1795639253025,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Rainy Kid",
+      "desc": "Magic: Give the lowest cost non-TOKEN spell in your hand +1 Loop.",
+      "cost": 1,
+      "atk": 2,
+      "hp": 1,
+      "rarity": "DELTARUNE_COMMON",
+      "art": "art/164-0.png"
+    }
+  ]
+}

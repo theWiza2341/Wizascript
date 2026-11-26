@@ -1,0 +1,19 @@
+{
+  "id": "169",
+  "kind": "single",
+  "title": "Farmer Shi",
+  "author": "IceNovice4163",
+  "postedAt": 1795639253025,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Farmer Shi",
+      "desc": "Need: 2+ unique ally 0-cost monsters. Magic: Add a copy of each ally 0-cost monster to your hand with +1/+1.",
+      "cost": 2,
+      "atk": 2,
+      "hp": 3,
+      "rarity": "DELTARUNE_EPIC",
+      "art": "art/169-0.png"
+    }
+  ]
+}

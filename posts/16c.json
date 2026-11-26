@@ -1,0 +1,29 @@
+{
+  "id": "16c",
+  "kind": "set",
+  "title": "Justice Axe",
+  "author": "IceNovice4163",
+  "postedAt": 1795639402248,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Justice Axe",
+      "desc": "Magic: Choose a monster. Add a {Bouncing Shell} to your hand with its ATK as base ATK.",
+      "cost": 5,
+      "atk": 4,
+      "hp": 6,
+      "rarity": "DELTARUNE_EPIC",
+      "art": "art/16c-0.png"
+    },
+    {
+      "type": "Monster",
+      "name": "Bouncing Shell",
+      "desc": "Haste. Bullseye: Add a copy of this to your hand with -1/-1/-1 base stats.",
+      "cost": 3,
+      "atk": 3,
+      "hp": 3,
+      "rarity": "DELTARUNE_TOKEN",
+      "art": "art/16c-1.png"
+    }
+  ]
+}

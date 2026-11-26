@@ -1,0 +1,19 @@
+{
+  "id": "16b",
+  "kind": "single",
+  "title": "Hacker",
+  "author": "IceNovice4163",
+  "postedAt": 1795639253025,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Hacker",
+      "desc": "Need: You spent G on 6+ other cards of unique cost. Magic: Look at the top 6 cards of your deck. Draw one with -4 cost.",
+      "cost": 8,
+      "atk": 8,
+      "hp": 8,
+      "rarity": "DELTARUNE_EPIC",
+      "art": "art/16b-0.png"
+    }
+  ]
+}

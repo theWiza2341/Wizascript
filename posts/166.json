@@ -1,0 +1,19 @@
+{
+  "id": "166",
+  "kind": "single",
+  "title": "Pixel Friend",
+  "author": "IceNovice4163",
+  "postedAt": 1795639253025,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Pixel Friend",
+      "desc": "Darkspawn. Haste. Magic: For every 2 monsters that died last turn, summon a {Pixel Friend}.",
+      "cost": 4,
+      "atk": 2,
+      "hp": 3,
+      "rarity": "DELTARUNE_RARE",
+      "art": "art/166-0.png"
+    }
+  ]
+}

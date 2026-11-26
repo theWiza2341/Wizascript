@@ -1,0 +1,19 @@
+{
+  "id": "16f",
+  "kind": "single",
+  "title": "Zenith Talon",
+  "author": "Legacy_03",
+  "postedAt": 1795648589862,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Zenith Talon",
+      "desc": "Charge. After this attacks the opponent, deal 1 DMG to all enemy monsters.",
+      "cost": 6,
+      "atk": 5,
+      "hp": 3,
+      "rarity": "UTY_EPIC",
+      "art": "art/16f-0.png"
+    }
+  ]
+}

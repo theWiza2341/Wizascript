@@ -1,0 +1,19 @@
+{
+  "id": "168",
+  "kind": "single",
+  "title": "Wireframe Queen",
+  "author": "IceNovice4163",
+  "postedAt": 1795639253025,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Wireframe Queen",
+      "desc": "Turn start: If your hand is full, give the highest cost card in your hand -2 cost.",
+      "cost": 5,
+      "atk": 5,
+      "hp": 6,
+      "rarity": "DELTARUNE_RARE",
+      "art": "art/168-0.png"
+    }
+  ]
+}

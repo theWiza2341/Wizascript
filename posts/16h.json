@@ -1,0 +1,19 @@
+{
+  "id": "16h",
+  "kind": "single",
+  "title": "Barrel",
+  "author": "Legacy_03",
+  "postedAt": 1795648589862,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Barrel",
+      "desc": "Magic: Switch: Catch an [[Enemy]] or [[Ally]] monster to gain its stats. Dust: Release the caught monster.",
+      "cost": 4,
+      "atk": 1,
+      "hp": 2,
+      "rarity": "UTY_RARE",
+      "art": "art/16h-0.png"
+    }
+  ]
+}

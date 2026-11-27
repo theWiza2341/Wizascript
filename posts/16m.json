@@ -1,0 +1,18 @@
+{
+  "id": "16m",
+  "kind": "single",
+  "title": "Thrash Tank",
+  "author": "Legacy_03",
+  "postedAt": 1795735121716,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Thrash Tank",
+      "desc": "",
+      "cost": null,
+      "atk": null,
+      "hp": null,
+      "picture": "art/16m-0-pic.png"
+    }
+  ]
+}

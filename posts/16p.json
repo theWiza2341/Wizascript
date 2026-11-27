@@ -1,0 +1,19 @@
+{
+  "id": "16p",
+  "kind": "single",
+  "title": "Giant Hand",
+  "author": "Legacy_03",
+  "postedAt": 1795768815982,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Giant Hand",
+      "desc": "Taunt. You don't draw a card at the start of your turn. Turn start: Give this and 2 cards in your hand +2 HP.",
+      "cost": 5,
+      "atk": 3,
+      "hp": 6,
+      "rarity": "DELTARUNE_EPIC",
+      "art": "art/16p-0.png"
+    }
+  ]
+}

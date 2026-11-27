@@ -1,0 +1,19 @@
+{
+  "id": "16r",
+  "kind": "single",
+  "title": "Dogmobile",
+  "author": "Legacy_03",
+  "postedAt": 1795768815982,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Dogmobile",
+      "desc": "Charge. All allies take +1 DMG.",
+      "cost": 5,
+      "atk": 5,
+      "hp": 3,
+      "rarity": "DELTARUNE_RARE",
+      "art": "art/16r-0.png"
+    }
+  ]
+}

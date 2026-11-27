@@ -1,0 +1,19 @@
+{
+  "id": "16t",
+  "kind": "single",
+  "title": "Recursive Book",
+  "author": "Legacy_03",
+  "postedAt": 1795768815982,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Recursive Book",
+      "desc": "Taunt. Turbo: Gain +1 Loop. Turn start: Send the copy to the top of your deck with +1/+1/+1 base stats.",
+      "cost": 3,
+      "atk": 2,
+      "hp": 4,
+      "rarity": "BASE_RARE",
+      "art": "art/16t-0.png"
+    }
+  ]
+}

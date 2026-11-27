@@ -1,0 +1,44 @@
+{
+  "id": "16l",
+  "kind": "set",
+  "title": "Eram DT (V.2)",
+  "author": "Legacy_03",
+  "postedAt": 1795733459007,
+  "contest": "c6",
+  "parts": [
+    {
+      "type": "Artifact",
+      "name": "Become a HERO",
+      "desc": "Goal: 35. After an ally monster attacks and kills an enemy monster, gain a counter for all excess DMG dealt. After you summon {Pixel Kris} or {White Cloak} gain 5 counters. Reward: Equip _The Shadow Mantle_.",
+      "rarity": "TOKEN",
+      "art": "art/16l-0.png"
+    },
+    {
+      "type": "Artifact",
+      "name": "The Shadow Mantle",
+      "desc": "After an ally monster attacks and kills an enemy monster, gain a counter for all excess DMG dealt. Turn end: Draw a card and give it +1/+1 for every 3 counters this has and lose all counters. If this had 9+ counters, also give it Darkspawn. Shock: Add a {Friendling} to the enemy deck.",
+      "rarity": "TOKEN",
+      "art": "art/16l-1.png"
+    },
+    {
+      "type": "Monster",
+      "name": "Mantle Holder",
+      "desc": "Haste. Darkspawn. Quest: _Become a HERO_. Magic and Turn start: Add a {Friendling} to the top of the enemy deck.",
+      "cost": 11,
+      "atk": 7,
+      "hp": 10,
+      "rarity": "DELTARUNE_DETERMINATION",
+      "art": "art/16l-2.png"
+    },
+    {
+      "type": "Monster",
+      "name": "Friendling",
+      "desc": "Darkspawn. Magic: Draw a card (Except {Friendling}). Dust: If this was killed by an enemy monster, give it Candy.",
+      "cost": 1,
+      "atk": 2,
+      "hp": 2,
+      "rarity": "DELTARUNE_TOKEN",
+      "art": "art/16l-3.png"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "16s",
+  "kind": "single",
+  "title": "Elevator",
+  "author": "Legacy_03",
+  "postedAt": 1795768815982,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Elevator",
+      "desc": "Delay: Send an ally to the bottom of your deck with -1 cost.",
+      "cost": 6,
+      "atk": 4,
+      "hp": 8,
+      "rarity": "BASE_RARE",
+      "art": "art/16s-0.png"
+    }
+  ]
+}

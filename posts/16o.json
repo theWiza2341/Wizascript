@@ -1,0 +1,19 @@
+{
+  "id": "16o",
+  "kind": "single",
+  "title": "Acid Castle",
+  "author": "Legacy_03",
+  "postedAt": 1795768815982,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Acid Castle",
+      "desc": "Taunt. Dust: If this isn't generated, summon an {Acid Castle} for the opponent.",
+      "cost": 3,
+      "atk": 3,
+      "hp": 5,
+      "rarity": "DELTARUNE_RARE",
+      "art": "art/16o-0.png"
+    }
+  ]
+}

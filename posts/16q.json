@@ -1,0 +1,19 @@
+{
+  "id": "16q",
+  "kind": "single",
+  "title": "Hacker",
+  "author": "Legacy_03",
+  "postedAt": 1795768815982,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Hacker",
+      "desc": "Dodge (1). Need: You've played a card of every non-DT rarity this turn. Magic: Steal 5 HP from the opponent.",
+      "cost": 6,
+      "atk": 4,
+      "hp": 4,
+      "rarity": "DELTARUNE_EPIC",
+      "art": "art/16q-0.png"
+    }
+  ]
+}

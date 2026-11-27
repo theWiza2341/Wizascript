@@ -1,0 +1,19 @@
+{
+  "id": "16n",
+  "kind": "single",
+  "title": "Tree Graffiti",
+  "author": "Legacy_03",
+  "postedAt": 1795768815982,
+  "parts": [
+    {
+      "type": "Monster",
+      "name": "Tree Graffiti",
+      "desc": "Transparency. After this loses Transparency, draw a card. Give it -2 cost if this doesn't have full HP.",
+      "cost": 4,
+      "atk": 2,
+      "hp": 4,
+      "rarity": "DELTARUNE_RARE",
+      "art": "art/16n-0.png"
+    }
+  ]
+}
